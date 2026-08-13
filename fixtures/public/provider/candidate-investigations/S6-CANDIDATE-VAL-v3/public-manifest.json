@@ -1,0 +1,51 @@
+{
+  "schema_identity": "infinium.evaluation.candidate-investigation-public-manifest/1.0.0",
+  "package_identity": "S6-CANDIDATE-VAL-v3",
+  "package_version": "2.0.0",
+  "fixture_id": "S6-CANDIDATE-VAL-v3",
+  "fixture_version": "2.0.0",
+  "partition": "validation",
+  "status": "oracle-frozen-pre-comparison",
+  "answer_free_product_inputs": true,
+  "oracle_frozen_before_product_comparison": true,
+  "network_required": false,
+  "provider_request_count": 0,
+  "credential_operation_count": 0,
+  "product_input_files": [
+    "execution-input.v1.json",
+    "context-manifest.v1.json",
+    "retained-transcripts.v1.json"
+  ],
+  "file_identities": [
+    {
+      "path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/execution-input.v1.json",
+      "bytes": 12403,
+      "sha256": "99029f0834e03e72bbba69ad4991a7ca22c441ce4888cfcfac31e7ca7e74fbe7"
+    },
+    {
+      "path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/context-manifest.v1.json",
+      "bytes": 2150,
+      "sha256": "cc83747261efce58206f4ee71d5fae147392d4cb644e90eacaa7e2c4e414aed6"
+    },
+    {
+      "path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/retained-transcripts.v1.json",
+      "bytes": 11180,
+      "sha256": "c150c07d2d9456261bc6458a64a3f2a6fb20851e4b257c858573817962772bd8"
+    },
+    {
+      "path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/oracle.v1.json",
+      "bytes": 49685,
+      "sha256": "0914b4c83eb215418cb28c34ff71018fb2ca2453da8ccc712164c06657b1ecb9"
+    },
+    {
+      "path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/oracle-provenance.v1.json",
+      "bytes": 3586,
+      "sha256": "addbf13b4848660ec0abd21e1f28233a5cef80c5cab075b9ad096aa93bc5badd"
+    },
+    {
+      "path": "contracts/json-schema/candidate-investigation-oracle.v1.schema.json",
+      "bytes": 11482,
+      "sha256": "70eee2d67b70411838566fdb42f12181cb45d218f17237ec67c3cea286631ab0"
+    }
+  ]
+}

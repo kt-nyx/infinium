@@ -1,0 +1,1467 @@
+{
+  "schema_id": "infinium.evaluation.candidate-investigation-oracle/v1",
+  "package_id": "S6-CANDIDATE-VAL-v3",
+  "partition": "validation",
+  "expected_identity": {
+    "operation_id": "op-q7m4",
+    "host_authorization_id": "auth-r8n5",
+    "analysis_run_id": "run-s9p6",
+    "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+    "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e"
+  },
+  "expected_context_manifest_sha256": "cc83747261efce58206f4ee71d5fae147392d4cb644e90eacaa7e2c4e414aed6",
+  "scenarios": [
+    {
+      "transcript_id": "tr-a2d6",
+      "transcript_state": "completed",
+      "response_record_id": "rr-b3e7",
+      "response_fingerprint": "f123a03ea3ac9aa8246f56ff6172329dcd0a44ad42cf39c343381e16bece55fb",
+      "model_used": true,
+      "provider_used": true,
+      "audit_only": false,
+      "forbidden_authority_detected": false,
+      "disposition": "accepted",
+      "replay_state": "retained-response",
+      "context_id": "cx-a7k2",
+      "hypothesis_id": "hy-c9n4",
+      "raw_intermediate_ids": [
+        "tr-a2d6",
+        "rr-b3e7",
+        "pr-c4f8"
+      ],
+      "canonical_investigation_sha256": "9117a454d323054a72e0db1cf187dfcf147dd6ceb37bd283ed401dd3befc0363",
+      "abstention_kinds": [],
+      "gap_kinds": [],
+      "audit_reasons": [
+        "pr-c4f8:admitted:exact-candidate-hypothesis-evidence-links-admitted"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-b8m3",
+        "participant_ids": [
+          "pt-d1p5",
+          "pt-e2q6"
+        ],
+        "participant_roles": [
+          "upstream",
+          "downstream"
+        ],
+        "causal_path_ids": [
+          "cp-f3r7",
+          "cp-g4s8"
+        ],
+        "dependency_closure_id": "dc-h5t9",
+        "evidence_ids": [
+          "ev-j6u1"
+        ],
+        "hypothesis_proposals": [
+          {
+            "proposal_id": "pr-c4f8",
+            "candidate_id": "cd-b8m3",
+            "hypothesis": "Unit Lumen may alter the ordering established by Unit Nacre when both transform the same record batch.",
+            "supporting_evidence_ids": [
+              "ev-j6u1"
+            ],
+            "contradicting_evidence_ids": [],
+            "missing_information": [],
+            "state": "admitted",
+            "reason": "exact-candidate-hypothesis-evidence-links-admitted"
+          }
+        ],
+        "abstentions": [],
+        "gaps": [],
+        "validation_ids": [
+          "validation-pr-c4f8"
+        ],
+        "admission_link_ids": [
+          "admission-pr-c4f8"
+        ],
+        "admission_links": [
+          {
+            "admission_id": "admission-pr-c4f8",
+            "proposal_id": "pr-c4f8",
+            "authorization_id": "auth-r8n5",
+            "operation_id": "op-q7m4",
+            "response_record_id": "rr-b3e7",
+            "owner_kind": "analysis-run",
+            "owner_id": "run-s9p6",
+            "root_subject_id": "cd-b8m3",
+            "validation_id": "validation-pr-c4f8",
+            "application_link_id": "ea-k7v2",
+            "state": "admitted"
+          }
+        ]
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-j6u1",
+          "evidence_application_link_id": "ea-k7v2",
+          "source_acquisition_id": "aq-m8w3",
+          "source_admission_id": "sa-n9x4",
+          "source_application_link_id": "sl-p1y5",
+          "source_revision_id": "sr-q2z6",
+          "passage_id": "ps-r3a7",
+          "relationship": "supporting",
+          "availability": "available",
+          "content_sha256": "9d4b9bea0d5dab3f83bd1f8b1eb157c3a12075d047677c482f2a92b08e0e9954"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-b5h9",
+      "transcript_state": "completed",
+      "response_record_id": "rr-c6j1",
+      "response_fingerprint": "5c48de0c78408955a10fa5f40595b318baa040e1d25a29d73c1492e28743e6f5",
+      "model_used": true,
+      "provider_used": true,
+      "audit_only": false,
+      "forbidden_authority_detected": false,
+      "disposition": "rejected-matched-negative",
+      "replay_state": "retained-response",
+      "context_id": "cx-b4d8",
+      "hypothesis_id": "hy-d6g1",
+      "raw_intermediate_ids": [
+        "tr-b5h9",
+        "rr-c6j1",
+        "pr-d7k2"
+      ],
+      "canonical_investigation_sha256": "37a2a5a45e15604e0b010376daa294373cf534382073d0fdbf9ac211016e5bfa",
+      "abstention_kinds": [],
+      "gap_kinds": [],
+      "audit_reasons": [
+        "pr-d7k2:rejected:supporting-evidence-absent"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-c5f9",
+        "participant_ids": [
+          "pt-e7h2",
+          "pt-f8j3"
+        ],
+        "participant_roles": [
+          "left-channel",
+          "right-channel"
+        ],
+        "causal_path_ids": [
+          "cp-g9k4"
+        ],
+        "dependency_closure_id": "dc-h1m5",
+        "evidence_ids": [
+          "ev-j2n6"
+        ],
+        "hypothesis_proposals": [
+          {
+            "proposal_id": "pr-d7k2",
+            "candidate_id": "cd-c5f9",
+            "hypothesis": "Unit Parchment may alter Unit Quartz when they process separate immutable channels.",
+            "supporting_evidence_ids": [],
+            "contradicting_evidence_ids": [],
+            "missing_information": [
+              "A shared mutable dependency has not been observed."
+            ],
+            "state": "rejected",
+            "reason": "supporting-evidence-absent"
+          }
+        ],
+        "abstentions": [],
+        "gaps": [
+          "No shared channel evidence is retained."
+        ],
+        "validation_ids": [
+          "validation-pr-d7k2"
+        ],
+        "admission_link_ids": [
+          "admission-pr-d7k2"
+        ],
+        "admission_links": [
+          {
+            "admission_id": "admission-pr-d7k2",
+            "proposal_id": "pr-d7k2",
+            "authorization_id": "auth-r8n5",
+            "operation_id": "op-q7m4",
+            "response_record_id": "rr-c6j1",
+            "owner_kind": "analysis-run",
+            "owner_id": "run-s9p6",
+            "root_subject_id": "cd-c5f9",
+            "validation_id": "validation-pr-d7k2",
+            "application_link_id": "ea-k3p7",
+            "state": "rejected"
+          }
+        ]
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-j2n6",
+          "evidence_application_link_id": "ea-k3p7",
+          "source_acquisition_id": "aq-m4q8",
+          "source_admission_id": "sa-n5r9",
+          "source_application_link_id": "sl-p6s1",
+          "source_revision_id": "sr-q7t2",
+          "passage_id": "ps-r8u3",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "d5f8bedfeb48770cb8d5fde7953d74e92c15bc5a34bf8dce8b3b6b139fe5596c"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-c8m3",
+      "transcript_state": "completed",
+      "response_record_id": "rr-d9n4",
+      "response_fingerprint": "e661ddd1f25404593903a31bae3395b4a7ebfed9786ad6d92c8577d005d3a074",
+      "model_used": true,
+      "provider_used": true,
+      "audit_only": false,
+      "forbidden_authority_detected": true,
+      "disposition": "rejected-hostile-authority",
+      "replay_state": "retained-response",
+      "context_id": "cx-c6h1",
+      "hypothesis_id": "hy-e8k3",
+      "raw_intermediate_ids": [
+        "tr-c8m3",
+        "rr-d9n4",
+        "pr-e1p5"
+      ],
+      "canonical_investigation_sha256": "a660926ce1d289d7dddd1e38cbb48c985214233e6978990e46fc735572e37fde",
+      "abstention_kinds": [],
+      "gap_kinds": [],
+      "audit_reasons": [
+        "pr-e1p5:rejected:model-proposed-forbidden-authority"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-d7j2",
+        "participant_ids": [
+          "pt-f9m4",
+          "pt-g1n5"
+        ],
+        "participant_roles": [
+          "producer",
+          "reconciler"
+        ],
+        "causal_path_ids": [
+          "cp-h2p6"
+        ],
+        "dependency_closure_id": "dc-j3q7",
+        "evidence_ids": [
+          "ev-k4r8"
+        ],
+        "hypothesis_proposals": [
+          {
+            "proposal_id": "pr-e1p5",
+            "candidate_id": "cd-d7j2",
+            "hypothesis": "Unit Rill may interact with Unit Sable during staged reconciliation.",
+            "supporting_evidence_ids": [],
+            "contradicting_evidence_ids": [],
+            "missing_information": [],
+            "state": "rejected",
+            "reason": "model-proposed-forbidden-authority"
+          }
+        ],
+        "abstentions": [],
+        "gaps": [],
+        "validation_ids": [
+          "validation-pr-e1p5"
+        ],
+        "admission_link_ids": [
+          "admission-pr-e1p5"
+        ],
+        "admission_links": [
+          {
+            "admission_id": "admission-pr-e1p5",
+            "proposal_id": "pr-e1p5",
+            "authorization_id": "auth-r8n5",
+            "operation_id": "op-q7m4",
+            "response_record_id": "rr-d9n4",
+            "owner_kind": "analysis-run",
+            "owner_id": "run-s9p6",
+            "root_subject_id": "cd-d7j2",
+            "validation_id": "validation-pr-e1p5",
+            "application_link_id": "ea-m5s9",
+            "state": "rejected"
+          }
+        ]
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-k4r8",
+          "evidence_application_link_id": "ea-m5s9",
+          "source_acquisition_id": "aq-n6t1",
+          "source_admission_id": "sa-p7u2",
+          "source_application_link_id": "sl-q8v3",
+          "source_revision_id": "sr-r9w4",
+          "passage_id": "ps-s1x5",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "3ea475e4dcf4ea336f440f5106ca875000e2e4b4461dd53d6638a44c4f0e5917"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-d2q6",
+      "transcript_state": "malformed",
+      "response_record_id": "rr-e3r7",
+      "response_fingerprint": "c44a106922b65cc11b4dcce4c5530653ca1b4fe75973447f5922719626bbccad",
+      "model_used": true,
+      "provider_used": true,
+      "audit_only": false,
+      "forbidden_authority_detected": false,
+      "disposition": "rejected-malformed",
+      "replay_state": "retained-response",
+      "context_id": "cx-d8m3",
+      "hypothesis_id": "hy-f1p5",
+      "raw_intermediate_ids": [
+        "tr-d2q6",
+        "rr-e3r7"
+      ],
+      "canonical_investigation_sha256": "24356775b71d3f4522eb902c8a0a3c9f1f981d0e3708e5667f6ba7bf2ae8e61b",
+      "abstention_kinds": [],
+      "gap_kinds": [
+        "malformed-response"
+      ],
+      "audit_reasons": [
+        "provider-response-malformed"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-e9n4",
+        "participant_ids": [
+          "pt-g2q6",
+          "pt-h3r7"
+        ],
+        "participant_roles": [
+          "batch-source",
+          "converger"
+        ],
+        "causal_path_ids": [
+          "cp-j4s8"
+        ],
+        "dependency_closure_id": "dc-k5t9",
+        "evidence_ids": [
+          "ev-m6u1"
+        ],
+        "hypothesis_proposals": [],
+        "abstentions": [],
+        "gaps": [
+          "The retained structure could not be decoded."
+        ],
+        "validation_ids": [],
+        "admission_link_ids": [],
+        "admission_links": []
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-m6u1",
+          "evidence_application_link_id": "ea-n7v2",
+          "source_acquisition_id": "aq-p8w3",
+          "source_admission_id": "sa-q9x4",
+          "source_application_link_id": "sl-r1y5",
+          "source_revision_id": "sr-s2z6",
+          "passage_id": "ps-t3a7",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "09437d42366fa3416a20845bc6f8dd776d463138156e0e453afa2189bdd8039a"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-e4s8",
+      "transcript_state": "refusal",
+      "response_record_id": "rr-f5t9",
+      "response_fingerprint": "f1e45652a33d069b8335d7bf2c280d5d4868eb989549e6587e50e2d1004142c8",
+      "model_used": true,
+      "provider_used": true,
+      "audit_only": false,
+      "forbidden_authority_detected": false,
+      "disposition": "rejected-refusal",
+      "replay_state": "retained-response",
+      "context_id": "cx-e1q5",
+      "hypothesis_id": "hy-g3s7",
+      "raw_intermediate_ids": [
+        "tr-e4s8",
+        "rr-f5t9"
+      ],
+      "canonical_investigation_sha256": "ac9908835119004f980823fc79309047053b0091fe6ba2e112554450dc9c6e5d",
+      "abstention_kinds": [
+        "provider-refusal"
+      ],
+      "gap_kinds": [
+        "provider-refusal"
+      ],
+      "audit_reasons": [
+        "provider-response-refusal"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-f2r6",
+        "participant_ids": [
+          "pt-h4t8",
+          "pt-j5u9"
+        ],
+        "participant_roles": [
+          "cursor-owner",
+          "observer"
+        ],
+        "causal_path_ids": [
+          "cp-k6v1"
+        ],
+        "dependency_closure_id": "dc-m7w2",
+        "evidence_ids": [
+          "ev-n8x3"
+        ],
+        "hypothesis_proposals": [],
+        "abstentions": [
+          "The retained response declined the bounded analysis."
+        ],
+        "gaps": [
+          "No proposal content was returned."
+        ],
+        "validation_ids": [],
+        "admission_link_ids": [],
+        "admission_links": []
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-n8x3",
+          "evidence_application_link_id": "ea-p9y4",
+          "source_acquisition_id": "aq-q1z5",
+          "source_admission_id": "sa-r2a6",
+          "source_application_link_id": "sl-s3b7",
+          "source_revision_id": "sr-t4c8",
+          "passage_id": "ps-u5d9",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "09cd84e50b84cb56074aa7ffe0e1dd1fab41e2fe6d7d279dc3179f357cee45ea"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-f6u1",
+      "transcript_state": "incomplete",
+      "response_record_id": "rr-g7v2",
+      "response_fingerprint": "a5a0a3853e90da46a86483b0a37e3990b36c5d7da068a9807a34ffa8d1f1ac62",
+      "model_used": true,
+      "provider_used": true,
+      "audit_only": false,
+      "forbidden_authority_detected": false,
+      "disposition": "rejected-incomplete",
+      "replay_state": "retained-response",
+      "context_id": "cx-f3u7",
+      "hypothesis_id": "hy-h5w9",
+      "raw_intermediate_ids": [
+        "tr-f6u1",
+        "rr-g7v2"
+      ],
+      "canonical_investigation_sha256": "6dc81cad3d4b2111f110ace553b248d4c9b04ef0dbae6fa03f40decd972fb737",
+      "abstention_kinds": [],
+      "gap_kinds": [
+        "incomplete-response"
+      ],
+      "audit_reasons": [
+        "provider-response-incomplete"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-g4v8",
+        "participant_ids": [
+          "pt-j6x1",
+          "pt-k7y2"
+        ],
+        "participant_roles": [
+          "checkpoint-writer",
+          "checkpoint-reader"
+        ],
+        "causal_path_ids": [
+          "cp-m8z3"
+        ],
+        "dependency_closure_id": "dc-n9a4",
+        "evidence_ids": [
+          "ev-p1b5"
+        ],
+        "hypothesis_proposals": [],
+        "abstentions": [],
+        "gaps": [
+          "The checkpoint analysis ended before a bounded result was formed."
+        ],
+        "validation_ids": [],
+        "admission_link_ids": [],
+        "admission_links": []
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-p1b5",
+          "evidence_application_link_id": "ea-q2c6",
+          "source_acquisition_id": "aq-r3d7",
+          "source_admission_id": "sa-s4e8",
+          "source_application_link_id": "sl-t5f9",
+          "source_revision_id": "sr-u6g1",
+          "passage_id": "ps-v7h2",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "671f5c91a75f29fdbe9be78c516130acd573e8d3438d0dafa4c75ead1af3440e"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-g8w3",
+      "transcript_state": "completed",
+      "response_record_id": "rr-h9x4",
+      "response_fingerprint": "750ccbc1edf2629b4e681d6c8742d569d42b5b8088b6b3180150f2edeed4024b",
+      "model_used": true,
+      "provider_used": true,
+      "audit_only": true,
+      "forbidden_authority_detected": false,
+      "disposition": "rejected-deleted-audit-only",
+      "replay_state": "audit-only",
+      "context_id": "cx-g5y9",
+      "hypothesis_id": "hy-j7a2",
+      "raw_intermediate_ids": [
+        "tr-g8w3",
+        "rr-h9x4",
+        "pr-j1y5"
+      ],
+      "canonical_investigation_sha256": "61399c3446be13d8d662346a03654f8593a91a8f2b314303623127877d6c2b72",
+      "abstention_kinds": [],
+      "gap_kinds": [
+        "deleted-evidence"
+      ],
+      "audit_reasons": [
+        "pr-j1y5:deleted:referenced-evidence-deleted"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-h6z1",
+        "participant_ids": [
+          "pt-k8b3",
+          "pt-m9c4"
+        ],
+        "participant_roles": [
+          "suppressor",
+          "target"
+        ],
+        "causal_path_ids": [
+          "cp-n1d5"
+        ],
+        "dependency_closure_id": "dc-p2e6",
+        "evidence_ids": [
+          "ev-q3f7"
+        ],
+        "hypothesis_proposals": [
+          {
+            "proposal_id": "pr-j1y5",
+            "candidate_id": "cd-h6z1",
+            "hypothesis": "Unit Zephyr may suppress Unit Alloy when a retired observation is the only retained basis.",
+            "supporting_evidence_ids": [
+              "ev-q3f7"
+            ],
+            "contradicting_evidence_ids": [],
+            "missing_information": [],
+            "state": "deleted",
+            "reason": "referenced-evidence-deleted"
+          }
+        ],
+        "abstentions": [],
+        "gaps": [],
+        "validation_ids": [
+          "validation-pr-j1y5"
+        ],
+        "admission_link_ids": [
+          "admission-pr-j1y5"
+        ],
+        "admission_links": [
+          {
+            "admission_id": "admission-pr-j1y5",
+            "proposal_id": "pr-j1y5",
+            "authorization_id": "auth-r8n5",
+            "operation_id": "op-q7m4",
+            "response_record_id": "rr-h9x4",
+            "owner_kind": "analysis-run",
+            "owner_id": "run-s9p6",
+            "root_subject_id": "cd-h6z1",
+            "validation_id": "validation-pr-j1y5",
+            "application_link_id": "ea-r4g8",
+            "state": "deleted"
+          }
+        ]
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-q3f7",
+          "evidence_application_link_id": "ea-r4g8",
+          "source_acquisition_id": "aq-s5h9",
+          "source_admission_id": "sa-t6j1",
+          "source_application_link_id": "sl-u7k2",
+          "source_revision_id": "sr-v8m3",
+          "passage_id": "ps-w9n4",
+          "relationship": "supporting",
+          "availability": "deleted",
+          "content_sha256": "7688cf92674c3a0117ef3f2fd44054eda33d8c86c7a2623c8b74b1432045aca8"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-h2z6",
+      "transcript_state": "drift",
+      "response_record_id": "rr-j3a7",
+      "response_fingerprint": "2d98af6bec7505b71962975640ccca48d16c537c7d7f4a3c3c0da55bdf2a69fc",
+      "model_used": true,
+      "provider_used": true,
+      "audit_only": false,
+      "forbidden_authority_detected": false,
+      "disposition": "rejected-identity-drift",
+      "replay_state": "failed-identity-drift",
+      "context_id": "cx-h7c2",
+      "hypothesis_id": "hy-k9e4",
+      "raw_intermediate_ids": [
+        "tr-h2z6",
+        "rr-j3a7"
+      ],
+      "canonical_investigation_sha256": "6906a452292ca636192564a2427a66d1f244dbf45eb2e4549161062abde6e678",
+      "abstention_kinds": [],
+      "gap_kinds": [
+        "identity-drift"
+      ],
+      "audit_reasons": [
+        "provider-response-drift"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-j8d3",
+        "participant_ids": [
+          "pt-m1f5",
+          "pt-n2g6"
+        ],
+        "participant_roles": [
+          "redirector",
+          "receiver"
+        ],
+        "causal_path_ids": [
+          "cp-p3h7"
+        ],
+        "dependency_closure_id": "dc-q4j8",
+        "evidence_ids": [
+          "ev-r5k9"
+        ],
+        "hypothesis_proposals": [],
+        "abstentions": [],
+        "gaps": [
+          "The retained response no longer binds the authorized identity."
+        ],
+        "validation_ids": [],
+        "admission_link_ids": [],
+        "admission_links": []
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-r5k9",
+          "evidence_application_link_id": "ea-s6m1",
+          "source_acquisition_id": "aq-t7n2",
+          "source_admission_id": "sa-u8p3",
+          "source_application_link_id": "sl-v9q4",
+          "source_revision_id": "sr-w1r5",
+          "passage_id": "ps-x2s6",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "8b88c12bd47ebf64941d4256a953173643e2359b4f4fddf60ef8462bab00de9b"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-j4b8",
+      "transcript_state": "completed",
+      "response_record_id": "rr-k5c9",
+      "response_fingerprint": "42596d46a1ed53d08c11db089f3ada8277d23b8732c21295e10de2a103684441",
+      "model_used": true,
+      "provider_used": true,
+      "audit_only": false,
+      "forbidden_authority_detected": false,
+      "disposition": "accepted-conditional",
+      "replay_state": "retained-response",
+      "context_id": "cx-j9g4",
+      "hypothesis_id": "hy-m2j6",
+      "raw_intermediate_ids": [
+        "tr-j4b8",
+        "rr-k5c9",
+        "pr-m6d1"
+      ],
+      "canonical_investigation_sha256": "4102e880f404e74182dcc7552b3dd38c1a3ddda387d17407e3c199dda6b1434b",
+      "abstention_kinds": [],
+      "gap_kinds": [],
+      "audit_reasons": [
+        "pr-m6d1:admitted:exact-candidate-hypothesis-evidence-links-admitted"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-k1h5",
+        "participant_ids": [
+          "pt-n3k7",
+          "pt-p4m8"
+        ],
+        "participant_roles": [
+          "scheduler",
+          "scheduled-unit"
+        ],
+        "causal_path_ids": [
+          "cp-q5n9",
+          "cp-r6p1"
+        ],
+        "dependency_closure_id": "dc-s7q2",
+        "evidence_ids": [
+          "ev-t8r3"
+        ],
+        "hypothesis_proposals": [
+          {
+            "proposal_id": "pr-m6d1",
+            "candidate_id": "cd-k1h5",
+            "hypothesis": "Unit Dovetail may reorder Unit Ember only while the lunar scheduling flag is active.",
+            "supporting_evidence_ids": [
+              "ev-t8r3"
+            ],
+            "contradicting_evidence_ids": [],
+            "missing_information": [
+              "The scheduling flag must be checked for the application instance."
+            ],
+            "state": "admitted",
+            "reason": "exact-candidate-hypothesis-evidence-links-admitted"
+          }
+        ],
+        "abstentions": [],
+        "gaps": [],
+        "validation_ids": [
+          "validation-pr-m6d1"
+        ],
+        "admission_link_ids": [
+          "admission-pr-m6d1"
+        ],
+        "admission_links": [
+          {
+            "admission_id": "admission-pr-m6d1",
+            "proposal_id": "pr-m6d1",
+            "authorization_id": "auth-r8n5",
+            "operation_id": "op-q7m4",
+            "response_record_id": "rr-k5c9",
+            "owner_kind": "analysis-run",
+            "owner_id": "run-s9p6",
+            "root_subject_id": "cd-k1h5",
+            "validation_id": "validation-pr-m6d1",
+            "application_link_id": "ea-u9s4",
+            "state": "admitted"
+          }
+        ]
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-t8r3",
+          "evidence_application_link_id": "ea-u9s4",
+          "source_acquisition_id": "aq-v1t5",
+          "source_admission_id": "sa-w2u6",
+          "source_application_link_id": "sl-x3v7",
+          "source_revision_id": "sr-y4w8",
+          "passage_id": "ps-z5x9",
+          "relationship": "supporting",
+          "availability": "available",
+          "content_sha256": "00573ba8b94ddaea183763fb6ae64cdf070f947cd364f46553ebdcc89e908038"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-k7e2",
+      "transcript_state": "completed",
+      "response_record_id": "rr-m8f3",
+      "response_fingerprint": "f3c312e0842a70523db6cc79a919913acd5ca9d9f340390d083b9ab29b657959",
+      "model_used": true,
+      "provider_used": true,
+      "audit_only": false,
+      "forbidden_authority_detected": false,
+      "disposition": "rejected-unsupported",
+      "replay_state": "retained-response",
+      "context_id": "cx-k2m6",
+      "hypothesis_id": "hy-n4p8",
+      "raw_intermediate_ids": [
+        "tr-k7e2",
+        "rr-m8f3",
+        "pr-n9g4"
+      ],
+      "canonical_investigation_sha256": "2d1057ff53dfaa5536dc81e168848e78acbe860c71e8ccae0695ad7aa05a0378",
+      "abstention_kinds": [],
+      "gap_kinds": [
+        "unsupported-hypothesis"
+      ],
+      "audit_reasons": [
+        "pr-n9g4:unsupported:proposal-declared-unsupported"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-m3n7",
+        "participant_ids": [
+          "pt-p5q9",
+          "pt-q6r1"
+        ],
+        "participant_roles": [
+          "cache-writer",
+          "cache-reader"
+        ],
+        "causal_path_ids": [
+          "cp-r7s2"
+        ],
+        "dependency_closure_id": "dc-s8t3",
+        "evidence_ids": [
+          "ev-u9v4"
+        ],
+        "hypothesis_proposals": [
+          {
+            "proposal_id": "pr-n9g4",
+            "candidate_id": "cd-m3n7",
+            "hypothesis": "Unit Fallow may shadow Unit Gimbal across unrelated cache partitions.",
+            "supporting_evidence_ids": [],
+            "contradicting_evidence_ids": [],
+            "missing_information": [
+              "No common cache key is retained."
+            ],
+            "state": "unsupported",
+            "reason": "proposal-declared-unsupported"
+          }
+        ],
+        "abstentions": [],
+        "gaps": [
+          "A shared partition relationship is absent."
+        ],
+        "validation_ids": [
+          "validation-pr-n9g4"
+        ],
+        "admission_link_ids": [
+          "admission-pr-n9g4"
+        ],
+        "admission_links": [
+          {
+            "admission_id": "admission-pr-n9g4",
+            "proposal_id": "pr-n9g4",
+            "authorization_id": "auth-r8n5",
+            "operation_id": "op-q7m4",
+            "response_record_id": "rr-m8f3",
+            "owner_kind": "analysis-run",
+            "owner_id": "run-s9p6",
+            "root_subject_id": "cd-m3n7",
+            "validation_id": "validation-pr-n9g4",
+            "application_link_id": "ea-v1w5",
+            "state": "unsupported"
+          }
+        ]
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-u9v4",
+          "evidence_application_link_id": "ea-v1w5",
+          "source_acquisition_id": "aq-w2x6",
+          "source_admission_id": "sa-x3y7",
+          "source_application_link_id": "sl-y4z8",
+          "source_revision_id": "sr-z5a9",
+          "passage_id": "ps-a6b1",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "b8155ed342365be98253a95cd7d7ef93aad3af3575ec520e202c1172cfb21da3"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-m1h5",
+      "transcript_state": "completed",
+      "response_record_id": "rr-n2j6",
+      "response_fingerprint": "fa6ce127c0e0e78b4d9f7ea9025fadc66392ebfa369e2fd27ec360be79349f48",
+      "model_used": true,
+      "provider_used": true,
+      "audit_only": false,
+      "forbidden_authority_detected": false,
+      "disposition": "rejected-contradiction-abstained",
+      "replay_state": "retained-response",
+      "context_id": "cx-m4q8",
+      "hypothesis_id": "hy-p6s1",
+      "raw_intermediate_ids": [
+        "tr-m1h5",
+        "rr-n2j6",
+        "pr-p3k7"
+      ],
+      "canonical_investigation_sha256": "07aeed55583313defae6093080263f569c1d2cb6c1fbb9f60414df81263350ef",
+      "abstention_kinds": [
+        "contradiction-unresolved"
+      ],
+      "gap_kinds": [],
+      "audit_reasons": [
+        "pr-p3k7:abstained:contradicting-evidence-requires-abstention"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-n5r9",
+        "participant_ids": [
+          "pt-q7t2",
+          "pt-r8u3"
+        ],
+        "participant_roles": [
+          "accelerator",
+          "observed-unit"
+        ],
+        "causal_path_ids": [
+          "cp-s9v4"
+        ],
+        "dependency_closure_id": "dc-t1w5",
+        "evidence_ids": [
+          "ev-v2x6",
+          "ev-w4e8"
+        ],
+        "hypothesis_proposals": [
+          {
+            "proposal_id": "pr-p3k7",
+            "candidate_id": "cd-n5r9",
+            "hypothesis": "Unit Harbor may accelerate Unit Indigo although one retained observation reports the opposite ordering.",
+            "supporting_evidence_ids": [
+              "ev-v2x6"
+            ],
+            "contradicting_evidence_ids": [
+              "ev-w4e8"
+            ],
+            "missing_information": [
+              "A decisive ordering observation is still required."
+            ],
+            "state": "abstained",
+            "reason": "contradicting-evidence-requires-abstention"
+          }
+        ],
+        "abstentions": [
+          "The bounded observations conflict."
+        ],
+        "gaps": [
+          "No decisive ordering evidence is retained."
+        ],
+        "validation_ids": [
+          "validation-pr-p3k7"
+        ],
+        "admission_link_ids": [
+          "admission-pr-p3k7"
+        ],
+        "admission_links": [
+          {
+            "admission_id": "admission-pr-p3k7",
+            "proposal_id": "pr-p3k7",
+            "authorization_id": "auth-r8n5",
+            "operation_id": "op-q7m4",
+            "response_record_id": "rr-n2j6",
+            "owner_kind": "analysis-run",
+            "owner_id": "run-s9p6",
+            "root_subject_id": "cd-n5r9",
+            "validation_id": "validation-pr-p3k7",
+            "application_link_id": "ea-w3y7",
+            "state": "abstained"
+          }
+        ]
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-v2x6",
+          "evidence_application_link_id": "ea-w3y7",
+          "source_acquisition_id": "aq-x4z8",
+          "source_admission_id": "sa-y5a9",
+          "source_application_link_id": "sl-z6b1",
+          "source_revision_id": "sr-a7c2",
+          "passage_id": "ps-b8d3",
+          "relationship": "supporting",
+          "availability": "available",
+          "content_sha256": "d37125198c545b31f636b02ad7cf5a1ce05e35cc63b0c37499d011616bad6079"
+        },
+        {
+          "evidence_id": "ev-w4e8",
+          "evidence_application_link_id": "ea-x5f9",
+          "source_acquisition_id": "aq-y6g1",
+          "source_admission_id": "sa-z7h2",
+          "source_application_link_id": "sl-a8j3",
+          "source_revision_id": "sr-b9k4",
+          "passage_id": "ps-c1m5",
+          "relationship": "contradicting",
+          "availability": "available",
+          "content_sha256": "a2a3922392d39a4249445d5d12348ac08a867ea5760ad03340aa3ce1889a4e76"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-n4m8",
+      "transcript_state": "completed",
+      "response_record_id": "rr-p5n9",
+      "response_fingerprint": "faa1ca69b8e5e2ed5c6904d43d2a5e2072b8c234d51fba800d6cf057ecfaf13d",
+      "model_used": true,
+      "provider_used": true,
+      "audit_only": false,
+      "forbidden_authority_detected": false,
+      "disposition": "rejected-explicit-abstention",
+      "replay_state": "retained-response",
+      "context_id": "cx-n6u1",
+      "hypothesis_id": "hy-q8w3",
+      "raw_intermediate_ids": [
+        "tr-n4m8",
+        "rr-p5n9",
+        "pr-q6p1"
+      ],
+      "canonical_investigation_sha256": "00ee1010e03c0b767e0ba2b41cce40f8c7e746548be966cd1c14a3c85e6ff7de",
+      "abstention_kinds": [
+        "explicit-undetermined"
+      ],
+      "gap_kinds": [],
+      "audit_reasons": [
+        "pr-q6p1:abstained:proposal-declared-abstained"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-p7v2",
+        "participant_ids": [
+          "pt-r9x4",
+          "pt-s1y5"
+        ],
+        "participant_roles": [
+          "junction",
+          "consumer"
+        ],
+        "causal_path_ids": [
+          "cp-t2z6"
+        ],
+        "dependency_closure_id": "dc-u3a7",
+        "evidence_ids": [
+          "ev-x4b8"
+        ],
+        "hypothesis_proposals": [
+          {
+            "proposal_id": "pr-q6p1",
+            "candidate_id": "cd-p7v2",
+            "hypothesis": "Unit Juncture may influence Unit Kestrel, but the bounded observations do not establish a direction.",
+            "supporting_evidence_ids": [],
+            "contradicting_evidence_ids": [],
+            "missing_information": [
+              "Directional evidence is required."
+            ],
+            "state": "abstained",
+            "reason": "proposal-declared-abstained"
+          }
+        ],
+        "abstentions": [
+          "A direction cannot be established."
+        ],
+        "gaps": [
+          "Directional evidence is absent."
+        ],
+        "validation_ids": [
+          "validation-pr-q6p1"
+        ],
+        "admission_link_ids": [
+          "admission-pr-q6p1"
+        ],
+        "admission_links": [
+          {
+            "admission_id": "admission-pr-q6p1",
+            "proposal_id": "pr-q6p1",
+            "authorization_id": "auth-r8n5",
+            "operation_id": "op-q7m4",
+            "response_record_id": "rr-p5n9",
+            "owner_kind": "analysis-run",
+            "owner_id": "run-s9p6",
+            "root_subject_id": "cd-p7v2",
+            "validation_id": "validation-pr-q6p1",
+            "application_link_id": "ea-y5c9",
+            "state": "abstained"
+          }
+        ]
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-x4b8",
+          "evidence_application_link_id": "ea-y5c9",
+          "source_acquisition_id": "aq-z6d1",
+          "source_admission_id": "sa-a7e2",
+          "source_application_link_id": "sl-b8f3",
+          "source_revision_id": "sr-c9g4",
+          "passage_id": "ps-d1h5",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "435dfe03473489cba8c0f41ae6d3d2c11169fc7d08a7772925696f2f4eabbab8"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-p7q2",
+      "transcript_state": "not-used",
+      "response_record_id": "rr-q8r3",
+      "response_fingerprint": "2eaf8a08a51e7eae6ae300bb8977e4a6507a4cdfafab7927c8379b2c868768bd",
+      "model_used": false,
+      "provider_used": false,
+      "audit_only": false,
+      "forbidden_authority_detected": false,
+      "disposition": "not-used",
+      "replay_state": "not-applicable",
+      "context_id": "cx-p8y3",
+      "hypothesis_id": "hy-r1a5",
+      "raw_intermediate_ids": [
+        "tr-p7q2",
+        "rr-q8r3"
+      ],
+      "canonical_investigation_sha256": "e9449d1ccbb807aed4093ea6a55a43f5db33a23390db24a18b86a9ac2922c58c",
+      "abstention_kinds": [],
+      "gap_kinds": [
+        "provider-not-used"
+      ],
+      "audit_reasons": [
+        "model-not-used"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-q9z4",
+        "participant_ids": [
+          "pt-s2b6",
+          "pt-t3c7"
+        ],
+        "participant_roles": [
+          "verifier",
+          "verified-unit"
+        ],
+        "causal_path_ids": [
+          "cp-u4d8"
+        ],
+        "dependency_closure_id": "dc-v5e9",
+        "evidence_ids": [
+          "ev-y6f1"
+        ],
+        "hypothesis_proposals": [],
+        "abstentions": [],
+        "gaps": [
+          "The optional investigation was not requested."
+        ],
+        "validation_ids": [],
+        "admission_link_ids": [],
+        "admission_links": []
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-y6f1",
+          "evidence_application_link_id": "ea-z7g2",
+          "source_acquisition_id": "aq-a8h3",
+          "source_admission_id": "sa-b9j4",
+          "source_application_link_id": "sl-c1k5",
+          "source_revision_id": "sr-d2m6",
+          "passage_id": "ps-e3n7",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "a40b1f3a05352872f7e0fac090e1e6c3a315d9227d4de115b73ee97a82e321c0"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-q9s4",
+      "transcript_state": "unavailable",
+      "response_record_id": "rr-r1t5",
+      "response_fingerprint": "86ce87c4ad9673cbee65c98e4324de58287f33ffd5c0ee9659b2fd54b0259c21",
+      "model_used": false,
+      "provider_used": false,
+      "audit_only": false,
+      "forbidden_authority_detected": false,
+      "disposition": "unavailable-provider",
+      "replay_state": "unavailable",
+      "context_id": "cx-q1c5",
+      "hypothesis_id": "hy-s3e7",
+      "raw_intermediate_ids": [
+        "tr-q9s4",
+        "rr-r1t5"
+      ],
+      "canonical_investigation_sha256": "9ef8fec9944993d49ec33fe5dfaad57afdcb94b339b864e7643b0362f20b784a",
+      "abstention_kinds": [],
+      "gap_kinds": [
+        "provider-unavailable"
+      ],
+      "audit_reasons": [
+        "provider-unavailable"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-r2d6",
+        "participant_ids": [
+          "pt-t4f8",
+          "pt-u5g9"
+        ],
+        "participant_roles": [
+          "interleaver",
+          "stream"
+        ],
+        "causal_path_ids": [
+          "cp-v6h1"
+        ],
+        "dependency_closure_id": "dc-w7j2",
+        "evidence_ids": [
+          "ev-z8k3"
+        ],
+        "hypothesis_proposals": [],
+        "abstentions": [],
+        "gaps": [
+          "The optional provider capability is unavailable."
+        ],
+        "validation_ids": [],
+        "admission_link_ids": [],
+        "admission_links": []
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-z8k3",
+          "evidence_application_link_id": "ea-a9m4",
+          "source_acquisition_id": "aq-b1n5",
+          "source_admission_id": "sa-c2p6",
+          "source_application_link_id": "sl-d3q7",
+          "source_revision_id": "sr-e4r8",
+          "passage_id": "ps-f5s9",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "7873aef8ced031500b4f88817c7405439fde9491aa908649ca54cc79b88f2e8b"
+        }
+      ]
+    },
+    {
+      "transcript_id": "tr-r2u6",
+      "transcript_state": "completed",
+      "response_record_id": "rr-s3v7",
+      "response_fingerprint": "815ab9ba078702d7542853a1b703e06dbbead3406e56dfc64c93456cc83132b3",
+      "model_used": true,
+      "provider_used": true,
+      "audit_only": false,
+      "forbidden_authority_detected": false,
+      "disposition": "rejected-unavailable",
+      "replay_state": "retained-response",
+      "context_id": "cx-r3g7",
+      "hypothesis_id": "hy-t5j9",
+      "raw_intermediate_ids": [
+        "tr-r2u6",
+        "rr-s3v7",
+        "pr-t4w8"
+      ],
+      "canonical_investigation_sha256": "550383e296fa7aa67a362d0e4d5df2c6af3fdaa3c602c6fe6666e0d66eeeca8d",
+      "abstention_kinds": [],
+      "gap_kinds": [
+        "evidence-unavailable"
+      ],
+      "audit_reasons": [
+        "pr-t4w8:unavailable:referenced-evidence-unavailable"
+      ],
+      "investigation": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "op-q7m4",
+        "owner_kind": "analysis-run",
+        "owner_id": "run-s9p6",
+        "analysis_run_id": "run-s9p6",
+        "candidate_id": "cd-s4h8",
+        "participant_ids": [
+          "pt-u6k1",
+          "pt-v7m2"
+        ],
+        "participant_roles": [
+          "synchronizer",
+          "replica"
+        ],
+        "causal_path_ids": [
+          "cp-w8n3"
+        ],
+        "dependency_closure_id": "dc-x9p4",
+        "evidence_ids": [
+          "ev-a1q5"
+        ],
+        "hypothesis_proposals": [
+          {
+            "proposal_id": "pr-t4w8",
+            "candidate_id": "cd-s4h8",
+            "hypothesis": "Unit Quill may synchronize Unit Ripple using an observation whose durable body is unavailable.",
+            "supporting_evidence_ids": [
+              "ev-a1q5"
+            ],
+            "contradicting_evidence_ids": [],
+            "missing_information": [],
+            "state": "unavailable",
+            "reason": "referenced-evidence-unavailable"
+          }
+        ],
+        "abstentions": [],
+        "gaps": [],
+        "validation_ids": [
+          "validation-pr-t4w8"
+        ],
+        "admission_link_ids": [
+          "admission-pr-t4w8"
+        ],
+        "admission_links": [
+          {
+            "admission_id": "admission-pr-t4w8",
+            "proposal_id": "pr-t4w8",
+            "authorization_id": "auth-r8n5",
+            "operation_id": "op-q7m4",
+            "response_record_id": "rr-s3v7",
+            "owner_kind": "analysis-run",
+            "owner_id": "run-s9p6",
+            "root_subject_id": "cd-s4h8",
+            "validation_id": "validation-pr-t4w8",
+            "application_link_id": "ea-b2r6",
+            "state": "unavailable"
+          }
+        ]
+      },
+      "source_acquisition_links": [
+        {
+          "evidence_id": "ev-a1q5",
+          "evidence_application_link_id": "ea-b2r6",
+          "source_acquisition_id": "aq-c3s7",
+          "source_admission_id": "sa-d4t8",
+          "source_application_link_id": "sl-e5u9",
+          "source_revision_id": "sr-f6v1",
+          "passage_id": "ps-g7w2",
+          "relationship": "supporting",
+          "availability": "unavailable",
+          "content_sha256": "a82cac076f5b01b4b0f9c9151d2d02b0ba095bb64ad439b51afcc0e9bea28fcd"
+        }
+      ]
+    }
+  ],
+  "aggregate_expectations": {
+    "scenario_count": 15,
+    "proposal_count": 9,
+    "admitted_proposal_count": 2,
+    "rejected_proposal_count": 7,
+    "admission_link_count": 9,
+    "model_used_scenario_count": 13,
+    "no_model_scenario_count": 2,
+    "unavailable_provider_scenario_count": 1,
+    "distinct_operation_id_count": 1,
+    "positive_and_matched_negative_share_operation": true,
+    "retained_response_scenario_count": 11,
+    "audit_only_scenario_count": 1,
+    "failed_identity_drift_scenario_count": 1,
+    "forbidden_authority_scenario_count": 1,
+    "network_send_count": 0,
+    "credential_operation_count": 0,
+    "source_refresh_count": 0,
+    "scenario_transcript_ids": [
+      "tr-a2d6",
+      "tr-b5h9",
+      "tr-c8m3",
+      "tr-d2q6",
+      "tr-e4s8",
+      "tr-f6u1",
+      "tr-g8w3",
+      "tr-h2z6",
+      "tr-j4b8",
+      "tr-k7e2",
+      "tr-m1h5",
+      "tr-n4m8",
+      "tr-p7q2",
+      "tr-q9s4",
+      "tr-r2u6"
+    ],
+    "scenario_canonical_investigation_sha256": [
+      "9117a454d323054a72e0db1cf187dfcf147dd6ceb37bd283ed401dd3befc0363",
+      "37a2a5a45e15604e0b010376daa294373cf534382073d0fdbf9ac211016e5bfa",
+      "a660926ce1d289d7dddd1e38cbb48c985214233e6978990e46fc735572e37fde",
+      "24356775b71d3f4522eb902c8a0a3c9f1f981d0e3708e5667f6ba7bf2ae8e61b",
+      "ac9908835119004f980823fc79309047053b0091fe6ba2e112554450dc9c6e5d",
+      "6dc81cad3d4b2111f110ace553b248d4c9b04ef0dbae6fa03f40decd972fb737",
+      "61399c3446be13d8d662346a03654f8593a91a8f2b314303623127877d6c2b72",
+      "6906a452292ca636192564a2427a66d1f244dbf45eb2e4549161062abde6e678",
+      "4102e880f404e74182dcc7552b3dd38c1a3ddda387d17407e3c199dda6b1434b",
+      "2d1057ff53dfaa5536dc81e168848e78acbe860c71e8ccae0695ad7aa05a0378",
+      "07aeed55583313defae6093080263f569c1d2cb6c1fbb9f60414df81263350ef",
+      "00ee1010e03c0b767e0ba2b41cce40f8c7e746548be966cd1c14a3c85e6ff7de",
+      "e9449d1ccbb807aed4093ea6a55a43f5db33a23390db24a18b86a9ac2922c58c",
+      "9ef8fec9944993d49ec33fe5dfaad57afdcb94b339b864e7643b0362f20b784a",
+      "550383e296fa7aa67a362d0e4d5df2c6af3fdaa3c602c6fe6666e0d66eeeca8d"
+    ]
+  },
+  "frozen_boundaries": {
+    "oracle_frozen_before_product_comparison": true,
+    "answer_isolated": true,
+    "partition": "validation",
+    "product_output_used": false,
+    "product_implementation_used": false,
+    "prior_oracle_bytes_inspected": false,
+    "prior_validation_bytes_preserved": true,
+    "replacement_history": [
+      "S6-CANDIDATE-VAL-v2 retained as rejected development evidence after exact semantic reuse was independently detected",
+      "S6-CANDIDATE-VAL-v3 is the materially independent validation replacement"
+    ]
+  },
+  "forbidden_claims": [
+    "finding authority",
+    "case or grouping authority",
+    "taxonomy authority",
+    "readiness or reliability",
+    "private or held-out evaluation",
+    "network or provider execution",
+    "credential or native execution"
+  ]
+}

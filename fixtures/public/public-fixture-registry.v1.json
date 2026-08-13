@@ -1,8 +1,8 @@
 {
-  "schema_identity": "infinium.repository.public-fixture-registry/1.5.0",
-  "registry_version": "1.5.0",
+  "schema_identity": "infinium.repository.public-fixture-registry/1.6.0",
+  "registry_version": "1.6.0",
   "status": "current",
-  "package_count": 34,
+  "package_count": 35,
   "packages": [
     {
       "package_identity": "S6-CANDIDATE-DEV-v1",
@@ -22,7 +22,17 @@
       "authority_file": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v2/public-manifest.json",
       "authority_bytes": 1806,
       "authority_sha256": "08affc2265f390f0a11243e571c765adc06d455a86201bbbb2105f7ed695a045",
-      "authority_status": "oracle-frozen-pre-comparison-independent-validation-replacement"
+      "authority_status": "rejected-development-evidence"
+    },
+    {
+      "package_identity": "S6-CANDIDATE-VAL-v3",
+      "package_version": "2.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3",
+      "authority_file": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/public-manifest.json",
+      "authority_bytes": 2035,
+      "authority_sha256": "b42dff12144f192c1e7a913a3a99433398f0f2d41148a3353f7aa9cf89154323",
+      "authority_status": "oracle-frozen-pre-comparison-current-validation-authority"
     },
     {
       "package_identity": "S6-CANDIDATE-DEV-v2",
@@ -41,7 +51,7 @@
       "package_path": "fixtures/public/provider/source-claims/S6-CLAIM-DEV-v1",
       "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-DEV-v1/public-manifest.json",
       "authority_bytes": 1321,
-        "authority_sha256": "7a7b3ea24a218ec1ebb811c96f39a3b7f197938960bcbd9ec15eb2f54b1ff61b"
+      "authority_sha256": "7a7b3ea24a218ec1ebb811c96f39a3b7f197938960bcbd9ec15eb2f54b1ff61b"
     },
     {
       "package_identity": "S6-CLAIM-VAL-v1",
@@ -50,7 +60,7 @@
       "package_path": "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1",
       "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1/public-manifest.json",
       "authority_bytes": 1320,
-        "authority_sha256": "0f95265340873dc4abb083c6f857db9e8786c6e1ba36da385f07c876afe1c13f"
+      "authority_sha256": "0f95265340873dc4abb083c6f857db9e8786c6e1ba36da385f07c876afe1c13f"
     },
     {
       "package_identity": "M1-PLAT-PROVIDER-CAPABILITY-DEV-v1",
