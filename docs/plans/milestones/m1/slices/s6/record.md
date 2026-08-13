@@ -4653,3 +4653,30 @@ and zero-process cleanup conform. No effect occurred. WP4 remains closed until
 the exact replacement manifest receives explicit owner native-effect
 acceptance.
 WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/cedc4c47-0c58-490e-8d14-5159362aadf3 sha256=6a2c1f39137de8e40d9e9574ba963d39c8bbdb7c880663a363cc69e65145c952 close_ready_commit=478fe41660a0de91b87e602452e267fa50961393 expires_at_utc=2026-08-15T15:36:55.1098222Z
+
+## WP4 replacement native execution — terminal cleanup-uncertain — 2026-08-13
+
+The exact authorized replacement command ran once from clean marker commit
+`685fb6fc4c5648af52d04236cd14986601e022a5`. It passed semantic validation,
+Release build, and focused non-native tests, consumed one-shot lock
+`46db701e2593a3516e638aa0d7deba6b381a6ab0b639b7f77990c8b3fd0da391.json`,
+then entered `interactive-entry-submit`. After the operator interaction, the
+coordinator attempted the phase's bounded cleanup and exited with typed code 68
+and non-secret `InvalidOperationException` after 169.3 seconds.
+
+No final native evidence, summary, canonical call trace, aggregate count,
+canary receipt, or 12-target absence proof was produced. The retained partial
+state contains only initial/interactive databases, a 224-byte cleanup-attempt
+helper receipt, empty stdout, and 93-byte typed stderr. All coordinator/helper/
+test processes exited and exact-root cleanup found zero survivors. The gate
+reports zero DNS, network, and provider operations before the coordinator
+failure; no real/API credential was used.
+
+Because exact-target absence is not proven, the entire `cedc4c47` namespace,
+all 12 targets, its output root, and its one-shot authority are terminally
+blocked and non-reusable. No later credential API call or retry is permitted.
+WP4 is not accepted. A separately authorized recovery/absence-proof operation
+would require fresh owner authority specifically for known exact-target
+cleanup; ordinary requalification authority cannot reinterpret or bypass this
+cleanup uncertainty.
+WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/cedc4c47-0c58-490e-8d14-5159362aadf3 sha256=6a2c1f39137de8e40d9e9574ba963d39c8bbdb7c880663a363cc69e65145c952 execution_head_commit=685fb6fc4c5648af52d04236cd14986601e022a5 status=failed-cleanup-uncertain exit_code=68 namespace_blocked=true later_native_calls=0
