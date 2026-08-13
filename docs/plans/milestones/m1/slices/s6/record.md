@@ -4754,3 +4754,26 @@ warnings/errors, focused authorization regressions passed 14/14, and the gate
 script parses successfully. Fresh independent pre-effect acceptance and the
 canonical standing-owner recovery marker remain mandatory before the sole
 cleanup attempt.
+
+Fresh pre-effect review returned `CORRECT` without native effect. The prior
+PowerShell oracle did not require a `CredFree` target fingerprint to equal its
+originating successful `CredReadW` target, and its regression asserted source
+strings rather than executing semantic mutations. Review also found the
+recovery JSON Schema left nested authority objects unconstrained and the
+manifest validator did not bind the full failed authority, namespace/reuse,
+ordered target slots, prohibitions, limits, cleanup counters, or derived
+command/output root. The `dea7e27a` proposal is therefore stale,
+non-executable, and was never run.
+
+The corrected gate delegates final evidence acceptance to a pure effect-free
+validator. It enforces canonical operation/result/null fields, same-target and
+same-scenario allocation/free pairing, exact inventory and terminal absence,
+trace-derived counts/maxima, identity, namespace state, and every zero-effect
+counter. Executable regressions accept one canonical synthetic document and
+reject 19 evidence mutations. The nested closed schema and semantic manifest
+validator reject eight further authority mutations covering binding,
+namespace, target order, forbidden calls, limits, cleanup, command, and extra
+properties. Release build passed with zero warnings/errors and focused
+authorization tests passed 16/16. No credential, DNS, network, provider, or
+billable operation occurred. A new recovery identity must be generated and
+bound after this correction commit.

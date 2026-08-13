@@ -228,6 +228,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'eng/validate-m1-slice6-wp4-authorization.ps1',
         'eng/validate-m1-slice6-wp4-authorization-v2.ps1',
         'eng/validate-m1-slice6-wp4-recovery.ps1',
+        'eng/validate-m1-slice6-wp4-recovery-evidence.ps1',
         'eng/verify-m1-slice6.ps1',
         'eng/verify-m1-slice6-wp3-upgrade.ps1',
         'fixtures/public/public-fixture-registry.v1.json',
@@ -1749,19 +1750,9 @@ function Invoke-CredentialNativeRecoveryGate {
     $helper=Join-Path $repoRoot 'src/Infinium.CredentialHelper/bin/Release/net10.0/Infinium.CredentialHelper.exe';$evidence=Join-Path $resolvedOutputRoot 'credential-native-recovery-evidence.v1.json'
     $psi=[Diagnostics.ProcessStartInfo]::new($helper);$psi.UseShellExecute=$false;$psi.CreateNoWindow=$true;$psi.Environment.Clear();foreach($a in @('--credential-native-recovery','--manifest',$path,'--manifest-sha256',$sha,'--manifest-id',[string]$m.manifest_id,'--evidence',$evidence)){$psi.ArgumentList.Add($a)}
     $p=[Diagnostics.Process]::Start($psi);if(-not$p.WaitForExit(120000)){$p.Kill($true);throw 'Recovery deadline exceeded; namespace remains blocked.'};if($p.ExitCode-ne0){throw "Recovery helper failed $($p.ExitCode); namespace remains blocked."}
+    & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp4-recovery-evidence.ps1') -ManifestPath $path -ManifestSha256 $sha -ManifestId ([string]$m.manifest_id) -EvidencePath $evidence
+    if($LASTEXITCODE-ne0){throw 'Recovery evidence semantic validation failed; namespace remains blocked.'}
     $ev=Get-Content $evidence -Raw|ConvertFrom-Json -Depth 100
-    $expectedTargets=@{};foreach($target in $m.disposable_namespace.targets){$expectedTargets[[string]$target.alias]=[string]$target.target_fingerprint_sha256}
-    if($ev.schema-ne'infinium.m1-s6.wp4.credential-native-recovery-evidence/v1'-or$ev.manifest_id-ne$m.manifest_id-or$ev.manifest_sha256-ne$sha-or$ev.status-ne'passed'-or[bool]$ev.namespace_blocked-or$ev.network_operations-ne0-or$ev.dns_operations-ne0-or$ev.provider_operations-ne0-or$ev.billable_operations-ne0){throw 'Recovery evidence identity/effect oracle failed.'}
-    $absence=@($ev.target_absence);if($absence.Count-ne12-or@($absence.alias|Sort-Object -Unique).Count-ne12){throw 'Recovery absence inventory is not exact.'}
-    foreach ($item in $absence) {if(-not$expectedTargets.ContainsKey([string]$item.alias)-or$expectedTargets[[string]$item.alias]-ne[string]$item.target_fingerprint_sha256-or$item.result-ne'ERROR_NOT_FOUND'){throw 'Recovery target absence binding failed.'}}
-    $trace=@($ev.native_call_trace);$allowed=@('CredReadW','CredDeleteW','CredFree');$read=0;$delete=0;$free=0;$allocations=@{};$lastByTarget=@{}
-    for($i=0;$i-lt$trace.Count;$i++){$item=$trace[$i];if([int64]$item.sequence-ne$i+1-or$item.operation-notin$allowed-or$expectedTargets.Values-notcontains[string]$item.target_fingerprint_sha256){throw 'Recovery trace order/operation/target failed.'};$lastByTarget[[string]$item.target_fingerprint_sha256]=$item
-      if($item.operation-eq'CredReadW'){$read++;if($item.result-eq'success'){if($null-eq$item.allocation_id-or$allocations.ContainsKey([string]$item.allocation_id)){throw 'Recovery read allocation invalid.'};$allocations[[string]$item.allocation_id]=@{sequence=$item.sequence;free=0}}elseif($null-ne$item.allocation_id){throw 'Failed recovery read allocated memory.'}}
-      elseif($item.operation-eq'CredDeleteW'){$delete++}
-      else{$free++;if($null-eq$item.paired_allocation_id-or-not$allocations.ContainsKey([string]$item.paired_allocation_id)-or$allocations[[string]$item.paired_allocation_id].free-ne0-or$item.sequence-le$allocations[[string]$item.paired_allocation_id].sequence){throw 'Recovery free pairing invalid.'};$allocations[[string]$item.paired_allocation_id].free=1}}
-    if(@($allocations.Values|?{$_.free-ne1}).Count-ne0){throw 'Recovery successful read lacks exactly one later free.'}
-    $counts=$ev.native_call_counts;if($counts.cred_write_w-ne0-or$counts.cred_read_w-ne$read-or$counts.cred_delete_w-ne$delete-or$counts.cred_free-ne$free-or$counts.total-ne$trace.Count-or$read-gt36-or$delete-gt12-or$free-gt12-or$trace.Count-gt60){throw 'Recovery trace-derived count oracle failed.'}
-    foreach ($fp in $expectedTargets.Values) {if(-not$lastByTarget.ContainsKey([string]$fp)-or$lastByTarget[[string]$fp].operation-ne'CredReadW'-or$lastByTarget[[string]$fp].result-ne'ERROR_NOT_FOUND'){throw 'Recovery terminal per-target absence trace failed.'}}
     Write-Receipt 'CredentialNativeRecovery' ([ordered]@{manifest_id=$m.manifest_id;manifest_sha256=$sha;target_absence_count=12;native_call_counts=$ev.native_call_counts;network_operations=0;provider_operations=0;namespace_disposition='cleanup-confirmed-absent-never-reuse'}) 'passed' $true
 }
 

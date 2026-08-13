@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Infinium.CredentialHelper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -22,21 +24,6 @@ public sealed class CredentialNativeAuthorizationTests
     private static readonly string[] ExpectedCanarySurfaceNames = ["stdout", "receipt"];
     private static readonly string[] ExpectedRawTargetEncodings = ["utf-8", "utf-16le"];
     private static readonly string[] RecoveryAllowedCalls = ["CredReadW", "CredDeleteW", "CredFree"];
-    private static readonly string[] RecoveryOracleMessages =
-    [
-        "Recovery requires branch codex/m1-s6.",
-        "Recovery requires a fresh absent output root.",
-        "Recovery evidence identity/effect oracle failed.",
-        "Recovery target absence binding failed.",
-        "Recovery trace order/operation/target failed.",
-        "Recovery read allocation invalid.",
-        "Failed recovery read allocated memory.",
-        "Recovery free pairing invalid.",
-        "Recovery successful read lacks exactly one later free.",
-        "Recovery trace-derived count oracle failed.",
-        "Recovery terminal per-target absence trace failed.",
-    ];
-
     [TestMethod]
     [TestCategory("Unit")]
     [TestCategory("Security")]
@@ -232,13 +219,233 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.IsGreaterThanOrEqualTo(0, gateStart);
         Assert.IsGreaterThan(gateStart, dispatch);
         string recoveryGate = gate[gateStart..dispatch];
-        foreach (string required in RecoveryOracleMessages)
+        Assert.IsTrue(recoveryGate.Contains("validate-m1-slice6-wp4-recovery-evidence.ps1",
+            StringComparison.Ordinal));
+        Assert.IsTrue(recoveryGate.Contains("Recovery requires branch codex/m1-s6.", StringComparison.Ordinal));
+        Assert.IsTrue(recoveryGate.Contains("Recovery requires a fresh absent output root.", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    public void RecoveryEvidenceValidatorAcceptsCanonicalEvidenceAndRejectsSemanticMutations()
+    {
+        string root = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp4-credential-native-recovery.v1.json");
+        byte[] manifestBytes = File.ReadAllBytes(manifestPath);
+        string sha = Convert.ToHexStringLower(SHA256.HashData(manifestBytes));
+        JsonObject manifest = JsonNode.Parse(manifestBytes)!.AsObject();
+        string id = manifest["manifest_id"]!.GetValue<string>();
+        JsonArray targets = manifest["disposable_namespace"]!["targets"]!.AsArray();
+        JsonArray absence = [];
+        foreach (JsonNode? target in targets)
         {
-            Assert.IsTrue(recoveryGate.Contains(required, StringComparison.Ordinal), required);
+            absence.Add(new JsonObject
+            {
+                ["alias"] = target!["alias"]!.GetValue<string>(),
+                ["target_fingerprint_sha256"] = target["target_fingerprint_sha256"]!.GetValue<string>(),
+                ["result"] = "ERROR_NOT_FOUND",
+            });
         }
-        Assert.IsTrue(recoveryGate.Contains("$ev.manifest_sha256-ne$sha", StringComparison.Ordinal));
-        Assert.IsTrue(recoveryGate.Contains("$ev.dns_operations-ne0", StringComparison.Ordinal));
-        Assert.IsTrue(recoveryGate.Contains("$ev.billable_operations-ne0", StringComparison.Ordinal));
+        string first = targets[0]!["target_fingerprint_sha256"]!.GetValue<string>();
+        JsonArray trace =
+        [
+            Trace(1, "CredReadW", first, "success", 17, null),
+            Trace(2, "CredFree", first, "released", null, 17),
+            Trace(3, "CredDeleteW", first, "success", null, null),
+            Trace(4, "CredReadW", first, "ERROR_NOT_FOUND", null, null),
+        ];
+        long sequence = 5;
+        foreach (JsonNode? target in targets.Skip(1))
+        {
+            trace.Add(Trace(sequence++, "CredReadW",
+                target!["target_fingerprint_sha256"]!.GetValue<string>(), "ERROR_NOT_FOUND", null, null));
+        }
+        JsonObject valid = new()
+        {
+            ["schema"] = "infinium.m1-s6.wp4.credential-native-recovery-evidence/v1",
+            ["status"] = "passed",
+            ["manifest_id"] = id,
+            ["manifest_sha256"] = sha,
+            ["target_absence"] = absence,
+            ["native_call_counts"] = new JsonObject
+            {
+                ["cred_write_w"] = 0, ["cred_read_w"] = 13, ["cred_delete_w"] = 1,
+                ["cred_free"] = 1, ["total"] = 15,
+            },
+            ["native_call_trace"] = trace,
+            ["namespace_blocked"] = false,
+            ["network_operations"] = 0,
+            ["dns_operations"] = 0,
+            ["provider_operations"] = 0,
+            ["billable_operations"] = 0,
+        };
+
+        AssertEvidenceValidation(root, manifestPath, sha, id, valid, expectedSuccess: true);
+        Reject(node => node["schema"] = "mutated");
+        Reject(node => node["target_absence"]![0]!["alias"] = "mutated");
+        Reject(node => node["target_absence"]![0]!["target_fingerprint_sha256"] = new string('f', 64));
+        Reject(node => node["native_call_trace"]![0]!["operation"] = "CredEnumerateW");
+        Reject(node => node["native_call_trace"]![0]!["sequence"] = 2);
+        Reject(node =>
+        {
+            JsonArray items = node["native_call_trace"]!.AsArray();
+            for (int index = 0; index < 24; index++)
+            {
+                items.Insert(3, Trace(0, "CredReadW", first, "ERROR_NOT_FOUND", null, null));
+            }
+            Renumber(items);
+            node["native_call_counts"]!["cred_read_w"] = 37;
+            node["native_call_counts"]!["total"] = 39;
+        });
+        Reject(node => node["native_call_trace"]![1]!["target_fingerprint_sha256"] =
+            targets[1]!["target_fingerprint_sha256"]!.GetValue<string>());
+        Reject(node =>
+        {
+            JsonArray items = node["native_call_trace"]!.AsArray();
+            items.RemoveAt(1);
+            Renumber(items);
+            node["native_call_counts"]!["cred_free"] = 0;
+            node["native_call_counts"]!["total"] = 14;
+        });
+        Reject(node =>
+        {
+            JsonArray items = node["native_call_trace"]!.AsArray();
+            items.Insert(2, Trace(0, "CredFree", first, "released", null, 17));
+            Renumber(items);
+            node["native_call_counts"]!["cred_free"] = 2;
+            node["native_call_counts"]!["total"] = 16;
+        });
+        Reject(node =>
+        {
+            JsonArray items = node["native_call_trace"]!.AsArray();
+            JsonNode free = items[1]!.DeepClone();
+            items.RemoveAt(1);
+            items.Insert(0, free);
+            Renumber(items);
+        });
+        Reject(node => node["native_call_trace"]![4]!["allocation_id"] = 99);
+        Reject(node => node["native_call_trace"]![4]!["paired_allocation_id"] = 17);
+        Reject(node => node["native_call_trace"]![2]!["allocation_id"] = 99);
+        Reject(node => node["native_call_trace"]![2]!["paired_allocation_id"] = 17);
+        Reject(node => node["native_call_trace"]![1]!["allocation_id"] = 99);
+        Reject(node => node["native_call_trace"]![1]!["paired_allocation_id"] = null);
+        Reject(node => node["native_call_trace"]![1]!["result"] = "success");
+        Reject(node =>
+        {
+            JsonArray items = node["native_call_trace"]!.AsArray();
+            items.RemoveAt(14);
+            node["native_call_counts"]!["cred_read_w"] = 12;
+            node["native_call_counts"]!["total"] = 14;
+        });
+        Reject(node => node["namespace_blocked"] = true);
+        Reject(node => node["dns_operations"] = 1);
+        Reject(node => node["billable_operations"] = 1);
+
+        void Reject(Action<JsonObject> mutate)
+        {
+            JsonObject mutation = valid.DeepClone().AsObject();
+            mutate(mutation);
+            AssertEvidenceValidation(root, manifestPath, sha, id, mutation, expectedSuccess: false);
+        }
+
+        static void Renumber(JsonArray items)
+        {
+            for (int index = 0; index < items.Count; index++) { items[index]!["sequence"] = index + 1; }
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    public void RecoveryManifestValidatorRejectsNestedAuthorityMutations()
+    {
+        string root = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp4-credential-native-recovery.v1.json");
+        JsonObject valid = JsonNode.Parse(File.ReadAllBytes(manifestPath))!.AsObject();
+        AssertManifestValidation(root, valid, expectedSuccess: true);
+        Reject(node => node["binding"]!["failed_manifest_sha256"] = new string('0', 64));
+        Reject(node => node["disposable_namespace"]!["namespace_id"] = "mutated");
+        Reject(node => node["disposable_namespace"]!["targets"]![0]!["alias"] = "interactive-cancel");
+        Reject(node => node["native_boundary"]!["forbidden"]!.AsArray().RemoveAt(0));
+        Reject(node => node["native_boundary"]!["fallback"] = "alternate-store");
+        Reject(node => node["limits"]!["CredReadW"] = 37);
+        Reject(node => node["cleanup_contract"]!["dns_operations"] = 1);
+        Reject(node => node["execution_command"] = "mutated");
+        Reject(node => node["binding"]!["unexpected"] = true);
+
+        void Reject(Action<JsonObject> mutate)
+        {
+            JsonObject mutation = valid.DeepClone().AsObject();
+            mutate(mutation);
+            AssertManifestValidation(root, mutation, expectedSuccess: false);
+        }
+    }
+
+    private static JsonObject Trace(long sequence, string operation, string fingerprint, string result,
+        long? allocationId, long? pairedAllocationId) => new()
+    {
+        ["sequence"] = sequence,
+        ["operation"] = operation,
+        ["target_fingerprint_sha256"] = fingerprint,
+        ["scenario"] = "cleanup-only-recovery",
+        ["result"] = result,
+        ["allocation_id"] = allocationId,
+        ["paired_allocation_id"] = pairedAllocationId,
+    };
+
+    private static void AssertEvidenceValidation(string root, string manifestPath, string sha, string id,
+        JsonObject evidence, bool expectedSuccess)
+    {
+        string tempRoot = Path.Combine(root, "artifacts", "test-temp", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        string evidencePath = Path.Combine(tempRoot, "evidence.json");
+        try
+        {
+            File.WriteAllText(evidencePath, evidence.ToJsonString());
+            int exitCode = RunPwsh(root, "eng/validate-m1-slice6-wp4-recovery-evidence.ps1",
+                "-ManifestPath", manifestPath, "-ManifestSha256", sha, "-ManifestId", id,
+                "-EvidencePath", evidencePath);
+            Assert.AreEqual(expectedSuccess ? 0 : 1, exitCode);
+        }
+        finally { Directory.Delete(tempRoot, recursive: true); }
+    }
+
+    private static void AssertManifestValidation(string root, JsonObject manifest, bool expectedSuccess)
+    {
+        string tempRoot = Path.Combine(root, "artifacts", "test-temp", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        string manifestPath = Path.Combine(tempRoot, "manifest.json");
+        try
+        {
+            File.WriteAllText(manifestPath, manifest.ToJsonString());
+            string relative = Path.GetRelativePath(root, manifestPath);
+            int exitCode = RunPwsh(root, "eng/validate-m1-slice6-wp4-recovery.ps1", "-ManifestPath", relative);
+            Assert.AreEqual(expectedSuccess ? 0 : 1, exitCode);
+        }
+        finally { Directory.Delete(tempRoot, recursive: true); }
+    }
+
+    private static int RunPwsh(string root, params string[] arguments)
+    {
+        ProcessStartInfo start = new("pwsh.exe")
+        {
+            WorkingDirectory = root,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        };
+        start.ArgumentList.Add("-NoProfile");
+        start.ArgumentList.Add("-ExecutionPolicy");
+        start.ArgumentList.Add("Bypass");
+        start.ArgumentList.Add("-File");
+        foreach (string argument in arguments) { start.ArgumentList.Add(argument); }
+        using Process process = Process.Start(start)!;
+        Assert.IsTrue(process.WaitForExit(15_000), "Recovery validator process exceeded its safe deadline.");
+        return process.ExitCode;
     }
 
     private static int CountOccurrences(string value, string token)
