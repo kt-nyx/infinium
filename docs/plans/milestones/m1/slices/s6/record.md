@@ -4344,3 +4344,91 @@ network/provider request, Credential Manager operation, source refresh,
 private/evaluator/archive access, protected effect, WP8 work, current-state
 advance, or push occurred. This candidate awaits fresh independent semantic
 acceptance review and does not self-accept WP7.
+
+## WP7 independent validation replacement and terminal acceptance candidate — 2026-08-13
+
+This append-only entry supersedes the preceding WP7 candidate with exact final
+product commit `59367a7479a7395b173b974bf720543aab2404d4`. The genuinely novel,
+opaque, answer-free VAL-v3 inputs were frozen before comparison at exact commit
+`d2d7cb63b903f9a9facd1b6f78352c1f19ab49a6`; their execution-input,
+context-manifest, and retained-transcript SHA-256 values are respectively
+`99029f0834e03e72bbba69ad4991a7ca22c441ce4888cfcfac31e7ca7e74fbe7`,
+`cc83747261efce58206f4ee71d5fae147392d4cb644e90eacaa7e2c4e414aed6`,
+and `c150c07d2d9456261bc6458a64a3f2a6fb20851e4b257c858573817962772bd8`.
+The fresh answer-isolated oracle author `/root/wp7_val_v3_oracle_author`
+froze the independent oracle authority at exact pre-comparison commit
+`e9b032366552aa67649636655ed07a3bb50bb3b1`. Its oracle, provenance,
+public-manifest, and strict oracle-schema SHA-256 values are respectively
+`0914b4c83eb215418cb28c34ff71018fb2ca2453da8ccc712164c06657b1ecb9`,
+`addbf13b4848660ec0abd21e1f28233a5cef80c5cab075b9ad096aa93bc5badd`,
+`b42dff12144f192c1e7a913a3a99433398f0f2d41148a3353f7aa9cf89154323`,
+and `70eee2d67b70411838566fdb42f12181cb45d218f17237ec67c3cea286631ab0`.
+Hypothesis, response-fingerprint, and opaque-identifier collision counts were
+all zero. Registry `1.6.0` retains VAL-v2 byte-for-byte as rejected development
+evidence and binds VAL-v3 as current validation authority. Every older v1,
+DEV-v2, and rejected VAL-v2 byte remains unchanged.
+
+The product comparison matched all 15 independently frozen VAL-v3 scenarios.
+The typed oracle reader and verifier now execute exact root identity and
+context-manifest assertions; every scenario, result, investigation document,
+proposal, admission link, source-acquisition link, raw-intermediate ID,
+canonical investigation hash, abstention/gap kind, audit reason, ordered list,
+aggregate count/hash, frozen boundary, and forbidden claim. Direct mutation
+families prove that each material field, list, root assertion, aggregate, and
+boundary rejects independently. The current DEV-v2 development package remains
+readable through its preserved legacy evidence path, while acceptance depends
+on the complete independent VAL-v3 authority.
+
+Terminal persistence review then found one bounded retained-response envelope
+gap. `PersistCandidateInvestigation` now rejects before its transaction unless
+`ResponseRecordId`, `ProviderAttemptId`, `RequestId`, and `DispatchFenceId` are
+all present and nonblank or all absent. Exact transcript validation additionally
+requires the all-present tuple for model-used retained responses and the
+all-absent tuple for no-model/unavailable terminals. Four partial-response,
+four extra-no-model, all-absent model-used, and all-present no-model direct
+persistence mutations reject and leave zero candidate outcome rows.
+
+Final focused gates passed: `CandidateSemantics` Unit 6/0/0, Contract 8/0/0,
+Integration 4/0/0, and Evaluation 1/0/0; its 1,775-byte receipt has SHA-256
+`51b7e86d68b8150c4960164b75e319e731e495c1b8d65a8a3bd0b1f5f283a6f0`.
+`ProvenanceReplay` passed Contract 8/0/0, Integration 4/0/0, and Evaluation
+1/0/0; its 1,668-byte receipt has SHA-256
+`4cb5a9bdf43b6d2e68948fe916d22363cdc9b210b07af060055b37674b9187d9`.
+
+The exact final non-live floor used pinned .NET SDK `10.0.303`. Locked restore
+and the fresh Release build passed with zero warnings/errors. Category floors
+passed Unit 225/0/1, Contract 132/0/0, Integration 108/0/0, Evaluation 64/0/8,
+Security 15/0/0, and Fault 3/0/0. The unfiltered solution passed Unit 238/0/1,
+Contract 169/0/0, Integration 120/0/0, Evaluation 66/0/8, Security 19/0/0,
+and Fault 7/0/0. Formatting, dependency-manifest, documentation, and diff checks
+passed. The analysis `All` gate passed Contracts, Documentation, Candidates,
+CandidateScale, Cases, Replay, Output, Safety, Comprehensive, and Traceability;
+its 764-byte receipt has SHA-256
+`acb63dc0d96e111d52ebe49f9094f96367e541e0dc43e741881a8c0cd7f2036b`.
+
+Candidate-bound `Layer6Review` passed from exact accepted WP7 handoff
+`c588ef2b588b851a9948d3ed3d2b43205ebf500a` through exact final candidate
+`59367a7479a7395b173b974bf720543aab2404d4`: 61 changed paths and zero
+allowed-path, protected/private/archive, strict-JSON, or relative-link failures.
+Its 1,358-byte receipt has SHA-256
+`bd132d7639273b5f4c26c9f46677918b678b82da0cdcd1885ade70c896b07ff3`.
+The retained status/claim and unsupported/gap inventories remain review inputs,
+not independent acceptance by themselves.
+
+Fresh terminal reviewer `/root/wp7_final_candidate_review` returned `ACCEPT`
+against exact product candidate
+`59367a7479a7395b173b974bf720543aab2404d4`. The independent oracle reviewer's
+`ACCEPT` over the complete VAL-v3 comparison carries through the final
+persistence-only response-envelope correction because no oracle, fixture,
+registry, verifier, or product semantic-output path changed afterward. These
+are independent review judgments; owner acceptance remains a separate
+documentation handoff.
+
+Two combined category wrappers ended nonzero before completing every category;
+each affected exact category was rerun independently and passed, followed by a
+green unfiltered solution and `All` gate. Exact-root cleanup resolved
+`Z:\Development\Large Projects\Skyrim\infinium` after every terminal run and
+proved zero repository-owned `dotnet`, `testhost`, or `vstest.console` survivor.
+No API key, DNS, network/provider request, Credential Manager operation, source
+refresh, private/evaluator/archive access, protected effect, WP8 work,
+current-state advance, or push occurred in the implementation candidate.
