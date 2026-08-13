@@ -4452,3 +4452,39 @@ is stale and may not be reused. This handoff does not authorize
 `CredentialNative`, Credential Manager access, target creation/reuse, native
 helper execution, network/provider/source-refresh activity, private material,
 WP8 implementation, any later package, or push.
+
+## WP4 post-WP7 non-secret authorization preparation — 2026-08-13
+
+Preparation began from exact clean handoff
+`5df6b621a6ea0031066b2afbfbe204799854910e`, retaining accepted WP3
+`b32939e8b7491a5c47453f912d25dd98c090f103`, accepted WP7 product
+`59367a7479a7395b173b974bf720543aab2404d4`, and accepted WP7 evidence
+`51251c0e0eb98d67dbc9b295b9ff084ebca33890` as ancestors. The fresh
+preparation artifact is
+`wp4-credential-native-authorization.post-wp7.json`, with manifest identity
+`infinium.m1-s6.wp4.credential-native-authorization/6255a2d0-4a88-42ea-814f-0da2bbb7f445`,
+new disposable namespace and exact-target fingerprints, and expiry
+`2026-08-15T08:19:33.3049512Z`.
+
+The artifact is deliberately non-executable and grants no effect authority.
+The tracked schema, validator, tests, and `CredentialNative` gate remain bound
+to the stale preceding v2 identity and therefore fail closed for this new ID.
+This is not repaired under the documentation-only handoff. Owner acceptance of
+the preparation artifact may authorize only a bounded non-native consumer-
+binding correction. After that correction, exact candidate binding changes
+the manifest bytes, so a new exact-byte executable manifest, fresh independent
+Windows credential/security review, and explicit native-effect acceptance are
+still mandatory before the proposed command may run.
+
+No Credential Manager or native credential API was called; no target was
+derived outside static documentation or created; and DNS, network, provider,
+billable, API-key, private-fixture, archive, WP8, later-package, and push counts
+remain zero.
+
+Strict JSON parsing, unique target/fingerprint checks, recomputation of all 12
+target fingerprints, exact allowed-call ordering, deadline partition, nine-
+scenario count, zero-effect fields, documentation validation, and diff hygiene
+passed. The prepared manifest is 15,208 bytes with SHA-256
+`a2551d378f371c8512d8883cca1f698674ab8642792b6f827617991eaa70f051`.
+Its independent review and candidate-bound Layer 6 results are recorded only
+after the exact documentation candidate is committed.

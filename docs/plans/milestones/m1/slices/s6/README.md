@@ -37,6 +37,12 @@ WP4 authorization-manifest preparation and review; its prior native
 authorization is stale/non-authoritative and no `CredentialNative` or
 Credential Manager operation is authorized. WP8 remains blocked until WP4 is
 freshly authorized, executed, independently accepted, and the handoff advances.
+[The fresh post-WP7 WP4 preparation manifest](wp4-credential-native-authorization.post-wp7.json)
+records the proposed disposable boundary for owner review. It has no effect
+authority and the current `CredentialNative` gate intentionally rejects its
+new identity; owner acceptance may authorize only the bounded non-native
+consumer-binding correction. A later exact executable manifest, fresh review,
+and explicit native-effect acceptance remain required.
 [Current project state](../../../../../current-state.md) authorizes only the
 exact active package and governs automatic non-live progression. Disposable
 native qualification, production-profile enrollment/verification, and each of
