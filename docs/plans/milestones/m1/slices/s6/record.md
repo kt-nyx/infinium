@@ -4596,3 +4596,21 @@ closure, branch isolation, owner/native marker absence, and zero repository-
 owned process survivors. No native effect occurred. WP4 remains unaccepted and
 closed until the owner explicitly accepts the exact final manifest bytes.
 WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/ecc56ea0-6ba7-4664-9cf1-8763bc3a26af sha256=703475a8d5fa9cf911c0d5a2b4f2576d3070bc551ff281070f38ba2cebe39d0b close_ready_commit=9c61f5af1ac7bbb14dae2737ca2220848a063697 expires_at_utc=2026-08-15T15:18:47.8649525Z
+
+## WP4 v2 owner-authorized pre-effect gate refusal — 2026-08-13
+
+From clean authorization commit `58e7cbcc79f2773110fd22d8268680af417905a5`,
+the exact owner-authorized command refused before build, helper launch, one-shot
+lock creation, UI, or any native credential call. The exact post-binding drift
+check found that final freeze commit `1c485f707c97021ffd47bc1e9981893182bb3687`
+changed the superseded preparation manifest as well as the allowed final
+manifest and record, while the gate permits only the latter two paths after
+close-ready commit `9c61f5af1ac7bbb14dae2737ca2220848a063697`.
+
+The output root exists but is empty; the one-shot authority-lock root remains
+absent. Credential Manager, target, helper, DNS, network, provider, billable,
+and API-key operation counts are zero, and no repository-owned helper,
+coordinator, `dotnet`, or `testhost` process survives. This is a pre-effect
+authority-binding defect, not cleanup ambiguity. The accepted manifest bytes
+must not be changed or retried silently; a fresh manifest/candidate binding and
+exact owner acceptance are required before another command attempt.
