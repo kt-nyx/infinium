@@ -4777,3 +4777,12 @@ properties. Release build passed with zero warnings/errors and focused
 authorization tests passed 16/16. No credential, DNS, network, provider, or
 billable operation occurred. A new recovery identity must be generated and
 bound after this correction commit.
+
+Fresh recovery identity
+`infinium.m1-s6.wp4.credential-native-recovery/9bd05d02-23e0-4855-bdbd-2cb3781c94fa`
+supersedes every earlier unexecuted recovery proposal. It uses a new derived
+one-shot lock, output root `artifacts/m1-slice6/wp4-native-recovery-9bd05d02`,
+and expiry `2026-08-14T16:22:37.5981138Z`. Only the original 12 blocked
+`cedc4c47` exact targets remain unchanged. The draft has no effect authority
+and cannot execute until its exact close-ready correction commit is bound,
+safe gates pass, and fresh independent pre-effect review accepts it.

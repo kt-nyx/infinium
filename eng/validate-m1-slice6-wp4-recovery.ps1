@@ -74,6 +74,7 @@ if ($m.cleanup_contract.success -cne 'each fingerprint ends with exact ERROR_NOT
 $prepared = [DateTimeOffset]::Parse([string]$m.prepared_at_utc)
 $expires = [DateTimeOffset]::Parse([string]$m.expires_at_utc)
 if ($expires -le $prepared -or ($expires - $prepared) -gt [TimeSpan]::FromHours(24)) { throw 'Recovery expiry is not finite.' }
+if ($expires -le [DateTimeOffset]::UtcNow) { throw 'Recovery authority is expired.' }
 $shortId = ([string]$m.manifest_id).Split('/')[-1].Split('-')[0]
 $expectedCommand = "powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNativeRecovery -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.v1.json -OutputRoot artifacts/m1-slice6/wp4-native-recovery-$shortId"
 if ($m.execution_command -cne $expectedCommand) { throw 'Recovery command/output root differs.' }

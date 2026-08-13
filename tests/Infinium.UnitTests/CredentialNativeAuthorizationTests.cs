@@ -284,10 +284,14 @@ public sealed class CredentialNativeAuthorizationTests
 
         AssertEvidenceValidation(root, manifestPath, sha, id, valid, expectedSuccess: true);
         Reject(node => node["schema"] = "mutated");
+        Reject(node => node["manifest_id"] = "mutated");
+        Reject(node => node["manifest_sha256"] = new string('0', 64));
+        Reject(node => node["status"] = "failed");
         Reject(node => node["target_absence"]![0]!["alias"] = "mutated");
         Reject(node => node["target_absence"]![0]!["target_fingerprint_sha256"] = new string('f', 64));
         Reject(node => node["native_call_trace"]![0]!["operation"] = "CredEnumerateW");
         Reject(node => node["native_call_trace"]![0]!["sequence"] = 2);
+        Reject(node => node["native_call_trace"]![0]!["scenario"] = "mutated");
         Reject(node =>
         {
             JsonArray items = node["native_call_trace"]!.AsArray();
@@ -340,7 +344,9 @@ public sealed class CredentialNativeAuthorizationTests
             node["native_call_counts"]!["total"] = 14;
         });
         Reject(node => node["namespace_blocked"] = true);
+        Reject(node => node["network_operations"] = 1);
         Reject(node => node["dns_operations"] = 1);
+        Reject(node => node["provider_operations"] = 1);
         Reject(node => node["billable_operations"] = 1);
 
         void Reject(Action<JsonObject> mutate)
@@ -444,7 +450,12 @@ public sealed class CredentialNativeAuthorizationTests
         start.ArgumentList.Add("-File");
         foreach (string argument in arguments) { start.ArgumentList.Add(argument); }
         using Process process = Process.Start(start)!;
-        Assert.IsTrue(process.WaitForExit(15_000), "Recovery validator process exceeded its safe deadline.");
+        if (!process.WaitForExit(15_000))
+        {
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit();
+            Assert.Fail("Recovery validator process exceeded its safe deadline and was terminated.");
+        }
         return process.ExitCode;
     }
 

@@ -65,7 +65,7 @@ for ($index = 0; $index -lt $trace.Count; $index++) {
     if ([int64]$item.sequence -ne $index + 1 -or
         $allowedOperations -cnotcontains [string]$item.operation -or
         $knownFingerprints -cnotcontains $fingerprint -or
-        [string]::IsNullOrWhiteSpace([string]$item.scenario)) {
+        [string]$item.scenario -cne 'cleanup-only-recovery') {
         throw 'Recovery trace order/operation/target failed.'
     }
     $lastByTarget[$fingerprint] = $item
