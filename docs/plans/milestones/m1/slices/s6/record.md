@@ -4705,3 +4705,17 @@ The exact close-ready recovery candidate is
 Validation reports ready but `execution_authorized: false` with zero native,
 network, and provider operations. Fresh independent review and the canonical
 standing-owner recovery marker remain required before the one recovery run.
+
+Pre-effect reviewer `/root/wp4_manifest_review` returned `CORRECT`: the native
+boundary was cleanup-only, but the outer success oracle did not independently
+prove exact evidence identity, alias/fingerprint inventory, canonical trace,
+trace-derived counts/maxima, read/allocation/free pairing, terminal per-target
+absence, namespace state, and all zero external-effect counters. No recovery
+effect had run.
+
+The gate now checks every one of those facts, requires branch `codex/m1-s6`
+and a fresh absent output root, and refuses a pass receipt on any mismatch.
+Mutation-sensitive source-bound regressions cover each failure family. Release
+build again passed with zero warnings/errors and focused authorization tests
+passed 14/14. The prior recovery manifest binding is stale; it will be rebound
+after this corrected oracle is committed.

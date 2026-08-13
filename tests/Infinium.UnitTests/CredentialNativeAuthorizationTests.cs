@@ -22,6 +22,20 @@ public sealed class CredentialNativeAuthorizationTests
     private static readonly string[] ExpectedCanarySurfaceNames = ["stdout", "receipt"];
     private static readonly string[] ExpectedRawTargetEncodings = ["utf-8", "utf-16le"];
     private static readonly string[] RecoveryAllowedCalls = ["CredReadW", "CredDeleteW", "CredFree"];
+    private static readonly string[] RecoveryOracleMessages =
+    [
+        "Recovery requires branch codex/m1-s6.",
+        "Recovery requires a fresh absent output root.",
+        "Recovery evidence identity/effect oracle failed.",
+        "Recovery target absence binding failed.",
+        "Recovery trace order/operation/target failed.",
+        "Recovery read allocation invalid.",
+        "Failed recovery read allocated memory.",
+        "Recovery free pairing invalid.",
+        "Recovery successful read lacks exactly one later free.",
+        "Recovery trace-derived count oracle failed.",
+        "Recovery terminal per-target absence trace failed.",
+    ];
 
     [TestMethod]
     [TestCategory("Unit")]
@@ -211,6 +225,20 @@ public sealed class CredentialNativeAuthorizationTests
         string recoveryBranch = program[recovery..qualification];
         Assert.IsFalse(recoveryBranch.Contains("NativeQualificationSecretSource", StringComparison.Ordinal));
         Assert.IsFalse(recoveryBranch.Contains("OpenAiResponsesAdapter", StringComparison.Ordinal));
+
+        string gate = File.ReadAllText(Path.Combine(root, "eng", "verify-m1-slice6.ps1"));
+        int gateStart = gate.IndexOf("function Invoke-CredentialNativeRecoveryGate", StringComparison.Ordinal);
+        int dispatch = gate.IndexOf("'CredentialNativeRecovery' { Invoke-CredentialNativeRecoveryGate }", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, gateStart);
+        Assert.IsGreaterThan(gateStart, dispatch);
+        string recoveryGate = gate[gateStart..dispatch];
+        foreach (string required in RecoveryOracleMessages)
+        {
+            Assert.IsTrue(recoveryGate.Contains(required, StringComparison.Ordinal), required);
+        }
+        Assert.IsTrue(recoveryGate.Contains("$ev.manifest_sha256-ne$sha", StringComparison.Ordinal));
+        Assert.IsTrue(recoveryGate.Contains("$ev.dns_operations-ne0", StringComparison.Ordinal));
+        Assert.IsTrue(recoveryGate.Contains("$ev.billable_operations-ne0", StringComparison.Ordinal));
     }
 
     private static int CountOccurrences(string value, string token)
