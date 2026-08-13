@@ -5046,3 +5046,40 @@ correction; the close-ready implementation binding and effect boundary are
 unchanged.
 
 WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/a1976c78-a49b-4581-9a8c-9b6172484e0b sha256=484d385a44c7988fd3311ce05014f53e70d2ef012cb20ba7b2eb625b78f91601 close_ready_commit=a0a467a64566877aa647a238372f78f2673b4956 expires_at_utc=2026-08-15T18:24:20.5325020Z
+
+## WP4 `a1976c78` terminal pre-operation failure — 2026-08-13
+
+The exact authorized gate ran once from clean execution HEAD
+`9d02fd7201270225896dce41ac0f95ca05cc4c49` and terminated with coordinator
+exit code 68. The retained artifact
+`artifacts/m1-slice6/wp4-native-a1976c78/credential-native-primary-failure.v2.json`
+is 1,105 bytes with SHA-256
+`8be23f88abac3ae68308d105b6c0548c546832350d67e9539e89160b6322cce7`.
+It records `failed-primary-cleanup-confirmed`, outer
+`EndOfStreamException`, `cleanup_confirmed=true`,
+`namespace_blocked=false`, and `later_native_calls=0`.
+
+No native scenario was admitted and the retained aggregate is
+W0/R0/D0/F0/T0. The initial state contains no credential intent or profile
+rows. No credential-manager cleanup call was needed because no credential
+operation started. The fresh output contains no final gate receipt. The
+one-shot lock
+`artifacts/m1-slice6/wp4-native-authority-locks/c94ea7df8f471b14f37df80736ffa58a15c6146449fa3e4c4e28c57372711284.json`
+is 443 bytes with SHA-256
+`0c0a55699a94df116ebd4793bc5dbb310c35c0d57b4864b3b6334f5c52a29ad2`
+and marks this authority consumed before native launch and permanently
+non-reusable. Repository-owned .NET, testhost, helper, and coordinator process
+survivors were zero after the terminal path.
+
+The visible dialog observation during the overall gate command preceded the
+native one-shot lock and occurred while mandatory safe tests were still
+running. It therefore is not evidence that an `a1976c78` native scenario
+started or that the owner submitted or cancelled native entry. The native
+runner began at `2026-08-13T18:34:20Z` and ended at
+`2026-08-13T18:34:50Z`; its helper closed the private response before a
+complete metrics frame. The helper catch path returned a typed exit code but
+did not serialize its inner fixed reason, trace, or runtime facts, so the
+retained outer `EndOfStreamException` does not prove the exact inner failure.
+That evidence-loss seam and safe-test UI visibility are bounded non-native
+correction requirements; this record does not infer a more specific cause.
+WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/a1976c78-a49b-4581-9a8c-9b6172484e0b sha256=484d385a44c7988fd3311ce05014f53e70d2ef012cb20ba7b2eb625b78f91601 execution_head_commit=9d02fd7201270225896dce41ac0f95ca05cc4c49 status=failed-primary-cleanup-confirmed native_calls=0 namespace_blocked=false later_native_calls=0 evidence_sha256=8be23f88abac3ae68308d105b6c0548c546832350d67e9539e89160b6322cce7
