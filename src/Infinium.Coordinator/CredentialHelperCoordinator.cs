@@ -696,7 +696,7 @@ public sealed class CredentialHelperCoordinator
         {
             if (values.TryGetValue("x-ratelimit-limit-" + suffix, out long limit)
                 && values.TryGetValue("x-ratelimit-remaining-" + suffix, out long remaining)
-                && limit >= 0 && remaining >= 0)
+                && limit >= 0 && remaining >= 0 && remaining <= limit)
             {
                 result.Add(new("model", dimension, ProviderAvailabilityState.Available,
                     limit, remaining, new UtcTimestamp(observedAt), null));

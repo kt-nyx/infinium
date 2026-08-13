@@ -48,7 +48,7 @@ public sealed class ProviderAdapterIntegrationTests
         Assert.IsTrue(result.Admitted);
         Assert.AreEqual(1, result.SendCount);
         Assert.IsFalse(result.RetryPermitted);
-        Assert.AreEqual(HeaderFingerprint("req_offline_1"), result.ProviderRequestId);
+        Assert.AreEqual("req_offline_1", result.ProviderRequestId);
         Assert.AreEqual("resp_offline_1", result.ProviderResponseId);
         Assert.AreEqual("POST", server.Method);
         Assert.AreEqual("/v1/responses", server.Path);
@@ -129,13 +129,13 @@ public sealed class ProviderAdapterIntegrationTests
     }
 
     [TestMethod]
-    public async Task ResponseHeadersRetainOnlyTypedFiniteFactsAndHashRequestIdentity()
+    public async Task ResponseHeadersRetainOnlyTypedFiniteFactsAndExactSafeRequestIdentity()
     {
         const string canary = "sk-header-echo-must-not-be-retained";
         await using ProviderLoopbackServer server = new(
             ProviderAdapterTestData.CompletedResponse(), responseHeaders: new Dictionary<string, string>
             {
-                ["x-request-id"] = canary,
+                ["x-request-id"] = "Bearer " + canary,
                 ["x-ratelimit-limit-requests"] = "100",
                 ["x-ratelimit-limit-tokens"] = "999999999999999999999999999999999999",
                 ["x-ratelimit-remaining-tokens"] = canary,
@@ -152,13 +152,61 @@ public sealed class ProviderAdapterIntegrationTests
             ProviderAdapterTestData.CanonicalRequest(), Encoding.ASCII.GetBytes("sk-request-secret"),
             ProviderAdapterTestData.Limits(), "client-header-safety", CancellationToken.None);
 
-        Assert.AreEqual(HeaderFingerprint(canary), result.ProviderRequestId);
+        Assert.IsNull(result.ProviderRequestId);
         Assert.HasCount(1, result.RateHeaders);
         Assert.AreEqual("x-ratelimit-limit-requests", result.RateHeaders[0].Name);
         Assert.AreEqual(100L, result.RateHeaders[0].Value);
         byte[] envelope = OpenAiStagedResponseEnvelope.Create(result);
         Assert.IsFalse(Encoding.UTF8.GetString(envelope).Contains(canary, StringComparison.Ordinal));
-        Assert.IsFalse(result.ProviderRequestId!.Contains(canary, StringComparison.Ordinal));
+        Assert.IsNull(result.ProviderRequestId);
+    }
+
+    [TestMethod]
+    public async Task ResponseHeadersDropInconsistentRatePairsBeforePersistence()
+    {
+        await using ProviderLoopbackServer server = new(
+            ProviderAdapterTestData.CompletedResponse(), responseHeaders: new Dictionary<string, string>
+            {
+                ["x-request-id"] = "req.safe:offline-2",
+                ["x-ratelimit-limit-requests"] = "10",
+                ["x-ratelimit-remaining-requests"] = "11",
+                ["x-ratelimit-limit-tokens"] = "100",
+                ["x-ratelimit-remaining-tokens"] = "90",
+            });
+        using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
+        OpenAiResponsesResult result = await adapter.SendOnceAsync(
+            ProviderAdapterTestData.CanonicalRequest(), "sk-rate-pair"u8.ToArray(),
+            ProviderAdapterTestData.Limits(), "client-rate-pair", CancellationToken.None);
+
+        Assert.AreEqual("req.safe:offline-2", result.ProviderRequestId);
+        Assert.IsFalse(result.RateHeaders.Any(header => header.Name.EndsWith("requests", StringComparison.Ordinal)));
+        Assert.HasCount(2, result.RateHeaders);
+        Assert.AreEqual(100L, result.RateHeaders.Single(header => header.Name == "x-ratelimit-limit-tokens").Value);
+        Assert.AreEqual(90L, result.RateHeaders.Single(header => header.Name == "x-ratelimit-remaining-tokens").Value);
+        byte[] envelope = OpenAiStagedResponseEnvelope.Create(result);
+        Assert.IsTrue(OpenAiStagedResponseEnvelope.TryRead(envelope, out _, out byte[] headerReceipt));
+        IReadOnlyList<OpenAiRateHeader> stagedRates = OpenAiStagedResponseEnvelope.RateHeaders(headerReceipt);
+        Assert.HasCount(2, stagedRates);
+        Assert.IsFalse(stagedRates.Any(header => header.Name.EndsWith("requests", StringComparison.Ordinal)));
+    }
+
+    [TestMethod]
+    public async Task FormerRequestIdFingerprintShapeIsUnavailableRatherThanReinterpretedAsExact()
+    {
+        await using ProviderLoopbackServer server = new(
+            ProviderAdapterTestData.CompletedResponse(), responseHeaders: new Dictionary<string, string>
+            {
+                ["x-request-id"] = "sha256:" + new string('a', 64),
+            });
+        using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
+        OpenAiResponsesResult result = await adapter.SendOnceAsync(
+            ProviderAdapterTestData.CanonicalRequest(), "sk-request-id-shape"u8.ToArray(),
+            ProviderAdapterTestData.Limits(), "client-request-id-shape", CancellationToken.None);
+
+        Assert.IsNull(result.ProviderRequestId);
+        byte[] envelope = OpenAiStagedResponseEnvelope.Create(result);
+        Assert.IsTrue(OpenAiStagedResponseEnvelope.TryRead(envelope, out _, out byte[] headerReceipt));
+        Assert.IsNull(OpenAiStagedResponseEnvelope.ProviderRequestId(headerReceipt));
     }
 
     [TestMethod]
@@ -278,8 +326,46 @@ public sealed class ProviderAdapterIntegrationTests
         Assert.AreEqual(HelperOutcomeV2.Completed, terminal.Receipt.Outcome);
         Assert.IsTrue(OpenAiStagedResponseEnvelope.TryRead(envelope, out byte[] replayRaw, out byte[] headers));
         CollectionAssert.AreEqual(raw, replayRaw);
-        Assert.AreEqual(HeaderFingerprint("req-helper-adapter-1"), OpenAiStagedResponseEnvelope.ProviderRequestId(headers));
+        Assert.AreEqual("req-helper-adapter-1", OpenAiStagedResponseEnvelope.ProviderRequestId(headers));
         CollectionAssert.AreEqual(canonical, server.RequestBody);
+    }
+
+    [TestMethod]
+    public async Task ProviderAdapterHelperTurnsSecretEchoIntoNoStageAmbiguousHold()
+    {
+        const string canary = "sk-helper-secret-echo";
+        await using ProviderLoopbackServer server = new(
+            JsonSerializer.SerializeToUtf8Bytes(new { echo = canary }));
+        using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
+        using DeterministicFakeSecureStore store = new();
+        store.WriteExact(new("profile-1", "generation-1"), Encoding.ASCII.GetBytes(canary));
+        byte[] canonical = ProviderAdapterTestData.CanonicalRequest();
+        HelperPrivateFrameV2 assignment = HelperTestFrames.DispatchAssignment();
+        assignment.Assignment.ProviderRequest.CanonicalRequestBytes = ByteString.CopyFrom(canonical);
+        assignment.Assignment.ProviderRequest.CanonicalRequest = Digest(canonical);
+        assignment.Assignment.ProviderRequest.RequestFingerprintSha256 = ByteString.CopyFrom(SHA256.HashData(canonical));
+        HelperPrivateFrameV2 revalidation = HelperTestFrames.Revalidation();
+        revalidation.DispatchRevalidation.CanonicalRequest = Digest(canonical);
+        revalidation.DispatchRevalidation.RequestFingerprintSha256 = ByteString.CopyFrom(SHA256.HashData(canonical));
+        OneShotHelperEngine engine = new(store, new ProviderTestTimeProvider(), providerTransport: adapter);
+        using MemoryStream request = new();
+        await HelperPrivateProtocolV2.WriteAsync(request, HelperTestFrames.DispatchBootstrap(), CancellationToken.None);
+        await HelperPrivateProtocolV2.WriteAsync(request, assignment, CancellationToken.None);
+        await HelperPrivateProtocolV2.WriteAsync(request, revalidation, CancellationToken.None);
+        request.Position = 0;
+        using MemoryStream response = new();
+        await engine.RunAsync(request, response, CancellationToken.None);
+
+        byte[] bytes = response.ToArray();
+        int frameLength = checked(4 + (int)System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(bytes));
+        HelperPrivateFrameV2 terminal = HelperPrivateProtocolV2.Decode(bytes.AsSpan(0, frameLength), 4);
+        int stagedLength = checked((int)System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(frameLength)));
+        Assert.AreEqual(HelperOutcomeV2.TransportMayHaveStarted, terminal.Receipt.Outcome);
+        Assert.IsTrue(terminal.Receipt.TransportMayHaveStarted);
+        Assert.AreEqual(UsageReceiptStateV2.Ambiguous, terminal.Receipt.UsageReceiptState);
+        Assert.AreEqual(0, stagedLength);
+        Assert.AreEqual(frameLength + 4, bytes.Length);
+        Assert.IsTrue(bytes.AsSpan().IndexOf(Encoding.UTF8.GetBytes(canary)) < 0);
     }
 
     private static Infinium.Contracts.Protobuf.Common.V1.ContentDigest Digest(ReadOnlySpan<byte> bytes) => new()
@@ -288,9 +374,6 @@ public sealed class ProviderAdapterIntegrationTests
         Value = ByteString.CopyFrom(SHA256.HashData(bytes)),
         SizeBytes = checked((ulong)bytes.Length),
     };
-
-    private static string HeaderFingerprint(string value) =>
-        "sha256:" + Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
 
     private sealed class ProviderTestTimeProvider : TimeProvider
     {

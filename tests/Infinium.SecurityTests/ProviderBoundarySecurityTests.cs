@@ -1,4 +1,6 @@
 using System.Text;
+using System.Text.Json;
+using Infinium.Domain.Contracts;
 using Infinium.OpenAI;
 namespace Infinium.Tests;
 
@@ -37,6 +39,93 @@ public sealed class ProviderBoundarySecurityTests
         Assert.IsFalse(Encoding.UTF8.GetString(result.ToSecretFreeDiagnosticBytes()).Contains(canary, StringComparison.Ordinal));
         Assert.IsFalse(result.RateHeaders.Any(header => header.Name.Contains(canary, StringComparison.Ordinal)));
         Assert.IsFalse(result.ProviderRequestId?.Contains(canary, StringComparison.Ordinal) ?? false);
+    }
+
+    [TestMethod]
+    [DataRow("raw")]
+    [DataRow("base64")]
+    [DataRow("percent")]
+    [DataRow("percent-lower")]
+    public async Task CompleteSecretEchoIsClearedBeforeStagingAndBecomesTypedAmbiguousHold(string representation)
+    {
+        const string canary = "sk-WP5/echo+92";
+        string echoed = representation switch
+        {
+            "raw" => canary,
+            "base64" => Convert.ToBase64String(Encoding.UTF8.GetBytes(canary)),
+            "percent" => Uri.EscapeDataString(canary),
+            "percent-lower" => Uri.EscapeDataString(canary)
+                .Replace("%2F", "%2f", StringComparison.Ordinal)
+                .Replace("%2B", "%2b", StringComparison.Ordinal),
+            _ => throw new InvalidOperationException("Unsupported test representation."),
+        };
+        await using ProviderLoopbackServer server = new(JsonSerializer.SerializeToUtf8Bytes(new { echo = echoed }));
+        using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
+        byte[] secret = Encoding.UTF8.GetBytes(canary);
+        OpenAiResponsesResult result;
+        try
+        {
+            result = await adapter.SendOnceAsync(
+                ProviderAdapterTestData.CanonicalRequest(), secret, ProviderAdapterTestData.Limits(),
+                "client-secret-echo", CancellationToken.None);
+        }
+        finally
+        {
+            System.Security.Cryptography.CryptographicOperations.ZeroMemory(secret);
+        }
+
+        Assert.AreEqual(ProviderResponseState.Unknown, result.State);
+        Assert.AreEqual("security_secret_echo", result.ErrorCode);
+        Assert.AreEqual("security_secret_echo", result.AdmissionReason);
+        Assert.IsTrue(result.TransportMayHaveStarted);
+        Assert.IsFalse(result.RetryPermitted);
+        Assert.IsNull(result.RawResponseBytes);
+        Assert.IsNull(result.ProviderRequestId);
+        Assert.HasCount(0, result.RateHeaders);
+        Assert.AreEqual(UsageReceiptState.Ambiguous, result.Usage.ReceiptState);
+        Assert.AreEqual(ProviderAvailabilityState.Unavailable, result.Usage.DispatchCount.Availability);
+        Assert.ThrowsExactly<InvalidOperationException>(() => OpenAiStagedResponseEnvelope.Create(result));
+        Assert.IsFalse(Encoding.UTF8.GetString(result.ToSecretFreeDiagnosticBytes())
+            .Contains(canary, StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    public async Task ExactSecretInRequestIdIsUnavailableAndCannotCreateAStagedReceipt()
+    {
+        const string canary = "sk-WP5-header-secret-92";
+        await using ProviderLoopbackServer server = new(
+            ProviderAdapterTestData.CompletedResponse(), responseHeaders: new Dictionary<string, string>
+            {
+                ["x-request-id"] = canary,
+                ["x-ratelimit-limit-requests"] = "100",
+            });
+        using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
+        OpenAiResponsesResult result = await adapter.SendOnceAsync(
+            ProviderAdapterTestData.CanonicalRequest(), Encoding.UTF8.GetBytes(canary),
+            ProviderAdapterTestData.Limits(), "client-secret-header", CancellationToken.None);
+
+        Assert.AreEqual(ProviderResponseState.Unknown, result.State);
+        Assert.AreEqual("security_secret_echo", result.ErrorCode);
+        Assert.IsNull(result.ProviderRequestId);
+        Assert.IsNull(result.RawResponseBytes);
+        Assert.HasCount(0, result.RateHeaders);
+    }
+
+    [TestMethod]
+    public async Task PartialSecretSubstringIsNotMisclassifiedAsACompleteEcho()
+    {
+        const string canary = "sk-WP5-partial-secret-boundary";
+        string prefixOnly = canary[..12];
+        await using ProviderLoopbackServer server = new(
+            ProviderAdapterTestData.CompletedResponse(outputText: JsonSerializer.Serialize(new { ok = prefixOnly })));
+        using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
+        OpenAiResponsesResult result = await adapter.SendOnceAsync(
+            ProviderAdapterTestData.CanonicalRequest(), Encoding.UTF8.GetBytes(canary),
+            ProviderAdapterTestData.Limits(), "client-partial-echo", CancellationToken.None);
+
+        Assert.AreNotEqual("security_secret_echo", result.ErrorCode);
+        Assert.IsNotNull(result.RawResponseBytes);
+        Assert.IsFalse(result.Admitted);
     }
 
     [TestMethod]

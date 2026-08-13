@@ -36,7 +36,7 @@ public static class OpenAiStagedResponseEnvelope
             state = result.State,
             http_status = result.HttpStatus,
             provider_response_id = result.ProviderResponseId,
-            provider_request_id = result.ProviderRequestId,
+            provider_request_id = OpenAiResponsesAdapter.SanitizeProviderRequestId(result.ProviderRequestId),
             returned_model = result.ReturnedModel,
             returned_service_tier = result.ReturnedServiceTier,
             refusal_code = result.RefusalCode,
@@ -78,7 +78,9 @@ public static class OpenAiStagedResponseEnvelope
     {
         using JsonDocument document = JsonDocument.Parse(headerReceipt.ToArray());
         return document.RootElement.TryGetProperty("provider_request_id", out JsonElement value)
-            && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+            && value.ValueKind == JsonValueKind.String
+            ? OpenAiResponsesAdapter.SanitizeProviderRequestId(value.GetString())
+            : null;
     }
 
     public static int HttpStatus(ReadOnlySpan<byte> headerReceipt)
@@ -518,16 +520,29 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
         {
             using HttpResponseMessage response = await client.SendAsync(
                 request, HttpCompletionOption.ResponseHeadersRead, deadline.Token).ConfigureAwait(false);
-            IReadOnlyList<OpenAiRateHeader> rateHeaders = CaptureHeaders(response);
             byte[]? raw = await ReadBoundedAsync(response.Content, limits.MaximumRawResponseBytes, deadline.Token)
                 .ConfigureAwait(false);
             if (raw is null)
             {
+                if (ContainsSecretEcho(response, [], secret.Span))
+                {
+                    return Failure(ProviderResponseState.Unknown, (int)response.StatusCode, true,
+                        "security_secret_echo", [], clientRequestId, null, sendCount: 1);
+                }
+                IReadOnlyList<OpenAiRateHeader> oversizedRateHeaders = CaptureHeaders(response);
                 return Failure(ProviderResponseState.Oversized, (int)response.StatusCode, true, "response_too_large",
-                    rateHeaders, clientRequestId, ProviderRequestId(response), sendCount: 1) with
+                    oversizedRateHeaders, clientRequestId, ProviderRequestId(response), sendCount: 1) with
                 { RequestedOutputSchemaBytes = OpenAiResponsesCanonicalSerializer.OutputSchemaBytes(canonicalRequest.Span) };
             }
 
+            if (ContainsSecretEcho(response, raw, secret.Span))
+            {
+                CryptographicOperations.ZeroMemory(raw);
+                return Failure(ProviderResponseState.Unknown, (int)response.StatusCode, true,
+                    "security_secret_echo", [], clientRequestId, null, sendCount: 1);
+            }
+
+            IReadOnlyList<OpenAiRateHeader> rateHeaders = CaptureHeaders(response);
             return OpenAiResponsesResponseCodec.Parse(raw, (int)response.StatusCode, clientRequestId,
                 ProviderRequestId(response), rateHeaders,
                 OpenAiResponsesCanonicalSerializer.OutputSchemaBytes(canonicalRequest.Span));
@@ -587,8 +602,111 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
             }
             return result.ToArray();
         }
-        finally { ArrayPool<byte>.Shared.Return(buffer, clearArray: true); }
+        finally
+        {
+            if (result.TryGetBuffer(out ArraySegment<byte> retainedBuffer) && retainedBuffer.Array is not null)
+            {
+                CryptographicOperations.ZeroMemory(retainedBuffer.Array.AsSpan(0, checked((int)result.Length)));
+            }
+            ArrayPool<byte>.Shared.Return(buffer, clearArray: true);
+        }
     }
+
+    private static bool ContainsSecretEcho(
+        HttpResponseMessage response,
+        ReadOnlySpan<byte> raw,
+        ReadOnlySpan<byte> secret)
+    {
+        byte[] base64 = [];
+        byte[] percentEncoded = [];
+        byte[] percentEncodedLower = [];
+        byte[] jsonString = [];
+        try
+        {
+            base64 = Encoding.ASCII.GetBytes(Convert.ToBase64String(secret));
+            percentEncoded = PercentEncode(secret, lowerHex: false);
+            percentEncodedLower = PercentEncode(secret, lowerHex: true);
+            jsonString = JsonSerializer.SerializeToUtf8Bytes(Encoding.UTF8.GetString(secret));
+            if (ContainsCompleteRepresentation(raw, secret, base64, percentEncoded, percentEncodedLower, jsonString))
+            {
+                return true;
+            }
+
+            foreach ((string _, IEnumerable<string> values) in response.Headers.Concat(response.Content.Headers))
+            {
+                foreach (string value in values)
+                {
+                    byte[] headerBytes = Encoding.UTF8.GetBytes(value);
+                    try
+                    {
+                        if (ContainsCompleteRepresentation(
+                            headerBytes, secret, base64, percentEncoded, percentEncodedLower, jsonString))
+                        {
+                            return true;
+                        }
+                    }
+                    finally
+                    {
+                        CryptographicOperations.ZeroMemory(headerBytes);
+                    }
+                }
+            }
+
+            return false;
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(base64);
+            CryptographicOperations.ZeroMemory(percentEncoded);
+            CryptographicOperations.ZeroMemory(percentEncodedLower);
+            CryptographicOperations.ZeroMemory(jsonString);
+        }
+    }
+
+    private static bool ContainsCompleteRepresentation(
+        ReadOnlySpan<byte> value,
+        ReadOnlySpan<byte> secret,
+        ReadOnlySpan<byte> base64,
+        ReadOnlySpan<byte> percentEncoded,
+        ReadOnlySpan<byte> percentEncodedLower,
+        ReadOnlySpan<byte> jsonString) =>
+        value.IndexOf(secret) >= 0
+        || value.IndexOf(base64) >= 0
+        || value.IndexOf(percentEncoded) >= 0
+        || value.IndexOf(percentEncodedLower) >= 0
+        || jsonString.Length > 2 && value.IndexOf(jsonString[1..^1]) >= 0;
+
+    private static byte[] PercentEncode(ReadOnlySpan<byte> value, bool lowerHex)
+    {
+        int encodedLength = 0;
+        foreach (byte current in value)
+        {
+            encodedLength = checked(encodedLength + (IsUrlUnreserved(current) ? 1 : 3));
+        }
+        byte[] encoded = new byte[encodedLength];
+        string hex = lowerHex ? "0123456789abcdef" : "0123456789ABCDEF";
+        for (int source = 0, target = 0; source < value.Length; source++)
+        {
+            byte current = value[source];
+            if (IsUrlUnreserved(current))
+            {
+                encoded[target++] = current;
+            }
+            else
+            {
+                encoded[target++] = (byte)'%';
+                encoded[target++] = (byte)hex[current >> 4];
+                encoded[target++] = (byte)hex[current & 0x0F];
+            }
+        }
+        return encoded;
+    }
+
+    private static bool IsUrlUnreserved(byte value) =>
+        value is >= (byte)'A' and <= (byte)'Z'
+            or >= (byte)'a' and <= (byte)'z'
+            or >= (byte)'0' and <= (byte)'9'
+            or (byte)'-' or (byte)'_' or (byte)'.' or (byte)'~';
 
     private static OpenAiRateHeader[] CaptureHeaders(HttpResponseMessage response)
     {
@@ -612,14 +730,33 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
         return SanitizeRetainedHeaders(result).ToArray();
     }
 
-    internal static IReadOnlyList<OpenAiRateHeader> SanitizeRetainedHeaders(IEnumerable<OpenAiRateHeader> headers) =>
-        headers.Where(header => NumericResponseHeaders.Contains(header.Name)
+    internal static IReadOnlyList<OpenAiRateHeader> SanitizeRetainedHeaders(IEnumerable<OpenAiRateHeader> headers)
+    {
+        OpenAiRateHeader[] unique = headers.Where(header => NumericResponseHeaders.Contains(header.Name)
                 && header.Value >= 0 && header.Value <= MaximumHeaderValue(header.Name))
             .GroupBy(header => header.Name, StringComparer.OrdinalIgnoreCase)
             .Where(group => group.Count() == 1)
             .Select(group => new OpenAiRateHeader(group.Key.ToLowerInvariant(), group.Single().Value))
+            .ToArray();
+        Dictionary<string, long> values = unique.ToDictionary(header => header.Name, header => header.Value,
+            StringComparer.Ordinal);
+        HashSet<string> inconsistent = new(StringComparer.Ordinal);
+        foreach (string suffix in new[] { "requests", "input-tokens", "output-tokens", "tokens" })
+        {
+            string limitName = "x-ratelimit-limit-" + suffix;
+            string remainingName = "x-ratelimit-remaining-" + suffix;
+            if (values.TryGetValue(limitName, out long limit)
+                && values.TryGetValue(remainingName, out long remaining)
+                && remaining > limit)
+            {
+                inconsistent.Add(limitName);
+                inconsistent.Add(remainingName);
+            }
+        }
+        return unique.Where(header => !inconsistent.Contains(header.Name))
             .OrderBy(header => header.Name, StringComparer.Ordinal)
             .ToArray();
+    }
 
     private static long MaximumHeaderValue(string name) =>
         name.Equals("openai-processing-ms", StringComparison.OrdinalIgnoreCase)
@@ -633,12 +770,21 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
             return null;
         }
         string[] exactValues = values.ToArray();
-        if (exactValues.Length != 1 || exactValues[0].Length is 0 or > 1_024)
+        if (exactValues.Length != 1)
         {
             return null;
         }
-        return "sha256:" + Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(exactValues[0])));
+        return SanitizeProviderRequestId(exactValues[0]);
     }
+
+    internal static string? SanitizeProviderRequestId(string? value) =>
+        value is not null
+        && value.Length is > 0 and <= 128
+        && !value.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase)
+        && value.All(character => char.IsAsciiLetterOrDigit(character)
+            || character is '.' or '_' or ':' or '-')
+            ? value
+            : null;
 
     internal static ProviderUsageContract UnavailableUsage(UsageReceiptState state)
     {
@@ -683,6 +829,7 @@ public static class OpenAiResponsesResponseCodec
         ReadOnlyMemory<byte> requestedOutputSchema = default)
     {
         byte[] retained = raw.ToArray();
+        providerRequestId = OpenAiResponsesAdapter.SanitizeProviderRequestId(providerRequestId);
         rateHeaders = OpenAiResponsesAdapter.SanitizeRetainedHeaders(rateHeaders);
         try
         {

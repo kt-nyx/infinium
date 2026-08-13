@@ -396,7 +396,11 @@ public sealed class OneShotHelperEngine
             OperationKind = assignment.OperationKind,
             Limits = assignment.Limits?.Clone(),
             DispatchDeadline = assignment.ProviderRequest?.DispatchDeadline?.Clone(),
-            UsageReceiptState = hasResponse ? UsageReceiptStateV2.Complete : UsageReceiptStateV2.NotDispatched,
+            UsageReceiptState = hasResponse
+                ? UsageReceiptStateV2.Complete
+                : outcome == HelperOutcomeV2.TransportMayHaveStarted
+                    ? UsageReceiptStateV2.Ambiguous
+                    : UsageReceiptStateV2.NotDispatched,
             NonSecretReceipt = Digest(Encoding.UTF8.GetBytes(
                 $"{assignment.AssignmentId}/{assignment.CommandId}/{outcome}")),
         };
