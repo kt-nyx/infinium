@@ -4728,3 +4728,18 @@ bound to corrected close-ready candidate
 `7c0587fa880153463f99aec9aea5dc32b8bb43944c70da31b8d56f561585c444`.
 The preceding `d01bfda6` recovery proposal is stale/non-executable and was
 never run. Validation remains effect-free pending fresh review.
+
+The `3850c033` proposal is also stale/non-executable and was never run. Its
+post-freeze gate contained a PowerShell parser defect in two evidence-oracle
+`foreach` statements. Commit `09d49de7504f010c80d8d0b494cdb9d6c0807973`
+corrects only that syntax; no native credential operation occurred. Because
+the executable gate changed after the proposal's close-ready binding, that
+proposal cannot be reinterpreted or accepted.
+
+Fresh recovery identity
+`infinium.m1-s6.wp4.credential-native-recovery/dea7e27a-beb9-41b0-8345-b878baf26240`
+supersedes it, with distinct output and derived one-shot lock identity and
+expiry `2026-08-14T16:03:47.6519894Z`. It retains only the original 12 blocked
+`cedc4c47` exact targets because those are the objects requiring absence proof.
+The draft is non-executable until its exact close-ready commit is bound and
+fresh independent pre-effect review accepts the final bytes.
