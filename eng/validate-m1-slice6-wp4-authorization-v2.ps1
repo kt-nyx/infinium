@@ -31,7 +31,7 @@ if (-not (Test-Json -LiteralPath $resolvedManifest -SchemaFile $schema -ErrorAct
 $bytes = [IO.File]::ReadAllBytes($resolvedManifest)
 $text = [Text.Encoding]::UTF8.GetString($bytes)
 $manifest = $text | ConvertFrom-Json -Depth 100 -DateKind String
-$expectedManifestId = 'infinium.m1-s6.wp4.credential-native-authorization/ecc56ea0-6ba7-4664-9cf1-8763bc3a26af'
+$expectedManifestId = 'infinium.m1-s6.wp4.credential-native-authorization/cedc4c47-0c58-490e-8d14-5159362aadf3'
 $expectedWp3 = 'b32939e8b7491a5c47453f912d25dd98c090f103'
 $expectedWp7Product = '59367a7479a7395b173b974bf720543aab2404d4'
 $expectedWp7Evidence = '51251c0e0eb98d67dbc9b295b9ff084ebca33890'
@@ -197,7 +197,7 @@ foreach ($scenario in $manifest.required_scenarios) {
     }
 }
 
-$expectedCommand = 'powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNative -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp4-native-ecc56ea0'
+$expectedCommand = 'powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNative -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp4-native-cedc4c47'
 if ($manifest.execution_command -ne $expectedCommand -or
     -not ([string]$manifest.acceptance_binding.recording).Contains(
         'WP4_V2_OWNER_ACCEPTANCE manifest_id=<manifest_id> sha256=<manifest_sha256> close_ready_commit=<close_ready_implementation_commit> expires_at_utc=<expires_at_utc>',

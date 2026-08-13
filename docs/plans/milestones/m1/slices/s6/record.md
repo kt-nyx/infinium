@@ -4614,3 +4614,22 @@ coordinator, `dotnet`, or `testhost` process survives. This is a pre-effect
 authority-binding defect, not cleanup ambiguity. The accepted manifest bytes
 must not be changed or retried silently; a fresh manifest/candidate binding and
 exact owner acceptance are required before another command attempt.
+
+## WP4 replacement authority draft after pre-effect refusal — 2026-08-13
+
+The owner authorized preparation only of a fresh replacement authority from
+clean failure-evidence commit `fb2a522898d4efc64fb2a01b80c0ae48656cfb1c`.
+The refused `ecc56ea0-6ba7-4664-9cf1-8763bc3a26af` manifest is consumed,
+stale, and non-retryable; its namespace and 12 targets remain unused but are
+permanently non-reusable. Its `wp4-native-ecc56ea0` output root exists empty
+and is also terminally non-reusable.
+
+Replacement draft identity
+`infinium.m1-s6.wp4.credential-native-authorization/cedc4c47-0c58-490e-8d14-5159362aadf3`
+uses a new namespace, 12 newly derived exact targets, expiry
+`2026-08-15T15:36:55.1098222Z`, and new output root
+`artifacts/m1-slice6/wp4-native-cedc4c47`. Its close-ready commit remains all
+zeroes and its status remains `draft-close-ready-binding-pending`; therefore it
+has no effect authority. This draft commit includes all schema, validator,
+test, gate identity, old-authority disposition, and executable consumer bytes
+so that only the final manifest and append-only record may change afterward.
