@@ -35,7 +35,7 @@ public sealed record SourceClaimScenarioOracle(
     bool ForbiddenAuthorityDetected);
 public sealed record SourceClaimAggregateOracle(
     int ScenarioCount, int AcceptedProposalCount, int RejectedProposalCount, int ApplicationLinkCount,
-    int ProviderOperationCount, int ModelUsedScenarioCount, int DistinctOperationIdCount, int NoModelScenarioCount,
+    int ModelUsedScenarioCount, int DistinctOperationIdCount, int NoModelScenarioCount,
     int ProposalCount, int AbstentionCount, int GapCount, int RetainedResponseScenarioCount,
     int AuditOnlyScenarioCount, int FailedIdentityDriftScenarioCount, int ForbiddenAuthorityScenarioCount,
     int NetworkSendCount, int CredentialOperationCount);
@@ -120,6 +120,10 @@ public static class SourceClaimFixtureReader
                 "source-claim-context.v1.schema.json");
             SourceClaimExecutionInput input = Deserialize<SourceClaimExecutionInput>(
                 productDocuments["execution-input.v1.json"].Document.RootElement);
+            if (input.PackageId != manifest.PackageIdentity)
+            {
+                throw new InvalidDataException("Source-claim execution input is not bound to the manifest package identity.");
+            }
             SourceClaimRetainedTranscript[] transcripts = Deserialize<SourceClaimRetainedTranscript[]>(
                 productDocuments["retained-transcripts.v1.json"].Document.RootElement.GetProperty("transcripts"));
             SourceClaimContextMinimizer.ValidateInput(input);
@@ -392,8 +396,7 @@ public static class SourceClaimOracleVerifier
             + SourceClaimTransparencyRenderer.RenderHuman(actual);
         if (actual.Scenarios.Count != aggregate.ScenarioCount
             || accepted != aggregate.AcceptedProposalCount || rejectedCount != aggregate.RejectedProposalCount
-            || applications != aggregate.ApplicationLinkCount || providers != aggregate.ProviderOperationCount
-            || providers != aggregate.ModelUsedScenarioCount
+            || applications != aggregate.ApplicationLinkCount || providers != aggregate.ModelUsedScenarioCount
             || package.Transcripts.Select(x => x.OperationId).Distinct(StringComparer.Ordinal).Count()
                 != aggregate.DistinctOperationIdCount
             || package.Transcripts.Count - providers != aggregate.NoModelScenarioCount

@@ -38,6 +38,27 @@ public sealed class SourceClaimFixtureIntegrityTests
 
     [TestMethod]
     [TestCategory("Contract")]
+    public void SourceClaimPackageRejectsResealedExecutionInputFromAnotherPackageIdentity()
+    {
+        using TemporaryPackage package = TemporaryPackage.Copy("S6-CLAIM-DEV-v1");
+        JsonObject input = package.ReadObject("execution-input.v1.json");
+        input["package_id"] = "S6-CLAIM-VAL-v1";
+        package.WriteObject("execution-input.v1.json", input);
+        package.Reseal("execution-input.v1.json");
+
+        JsonObject provenance = package.ReadObject("oracle-provenance.v1.json");
+        provenance["input_identities"]!["execution-input.v1.json"] =
+            Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(package.Path("execution-input.v1.json"))));
+        package.WriteObject("oracle-provenance.v1.json", provenance);
+        package.Reseal("oracle-provenance.v1.json");
+
+        InvalidDataException error = Assert.ThrowsExactly<InvalidDataException>(
+            () => SourceClaimFixtureReader.ReadForContractTest(package.Root));
+        StringAssert.Contains(error.Message, "manifest package identity");
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
     public void SourceClaimAnswerIsolationIsRecursiveButTreatsPassageTextAsInert()
     {
         using JsonDocument inert = JsonDocument.Parse(
@@ -116,10 +137,12 @@ public sealed class SourceClaimFixtureIntegrityTests
     private sealed class TemporaryPackage : IDisposable
     {
         private readonly string source;
+        private readonly string container;
 
-        private TemporaryPackage(string source, string root)
+        private TemporaryPackage(string source, string container, string root)
         {
             this.source = source;
+            this.container = container;
             Root = root;
         }
 
@@ -128,13 +151,15 @@ public sealed class SourceClaimFixtureIntegrityTests
         public static TemporaryPackage Copy(string package)
         {
             string source = PackageRoot(package);
-            string root = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Infinium-SourceClaim-" + Guid.NewGuid().ToString("N"));
+            string container = System.IO.Path.Combine(
+                System.IO.Path.GetTempPath(), "Infinium-SourceClaim-" + Guid.NewGuid().ToString("N"));
+            string root = System.IO.Path.Combine(container, package);
             Directory.CreateDirectory(root);
             foreach (string file in Directory.EnumerateFiles(source))
             {
                 File.Copy(file, System.IO.Path.Combine(root, System.IO.Path.GetFileName(file)));
             }
-            return new(source, root);
+            return new(source, container, root);
         }
 
         public string Path(string file) => System.IO.Path.Combine(Root, file);
@@ -169,9 +194,9 @@ public sealed class SourceClaimFixtureIntegrityTests
 
         public void Dispose()
         {
-            if (Directory.Exists(Root))
+            if (Directory.Exists(container))
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(container, recursive: true);
             }
         }
     }

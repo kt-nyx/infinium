@@ -11,7 +11,7 @@
       "package_path": "fixtures/public/provider/source-claims/S6-CLAIM-DEV-v1",
       "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-DEV-v1/public-manifest.json",
       "authority_bytes": 1321,
-      "authority_sha256": "01d4d6c22342200bf22d4a8252896abca30a1e60f9c7c7b6d09cf8a01cda0371"
+        "authority_sha256": "c3b3b1087b184d8c0c4d8c1afc06289b48cf31b71168952b1100c23a4f0597f1"
     },
     {
       "package_identity": "S6-CLAIM-VAL-v1",
@@ -20,7 +20,7 @@
       "package_path": "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1",
       "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1/public-manifest.json",
       "authority_bytes": 1320,
-      "authority_sha256": "7c512d4b1da30600401cc4a57b1903558c358df519ebe74febde2e155e70ec76"
+        "authority_sha256": "918edde1b818f73cea9bfbd532b66c976cdd43d6a921636cad8ba32c4813f0bb"
     },
     {
       "package_identity": "M1-PLAT-PROVIDER-CAPABILITY-DEV-v1",

@@ -115,8 +115,16 @@ public sealed class PersistenceAndLifecycleTests
             "FOREIGN KEY(validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,state)");
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name='provider_semantic_admission_application_guard';";
         string admissionGuardSql = (string)command.ExecuteScalar()!;
-        StringAssert.Contains(admissionGuardSql, "link.application_link_id = NEW.application_link_id");
+        StringAssert.Contains(admissionGuardSql, "link.evidence_application_link_id = NEW.application_link_id");
         StringAssert.Contains(admissionGuardSql, "candidate.candidate_id = NEW.root_subject_id AND candidate.run_id = NEW.owner_id");
+        Assert.IsFalse(admissionGuardSql.Contains("evidence_acquisition_application_links", StringComparison.Ordinal));
+        command.CommandText =
+            "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name='evidence_acquisition_application_admitted_artifact_guard';";
+        string consumptionGuardSql = (string)command.ExecuteScalar()!;
+        StringAssert.Contains(consumptionGuardSql, "admission.owner_kind='evidence-acquisition-run'");
+        StringAssert.Contains(consumptionGuardSql, "admission.state='admitted'");
+        StringAssert.Contains(consumptionGuardSql, "admission.admitted_artifact_id=NEW.admitted_artifact_id");
+        StringAssert.Contains(consumptionGuardSql, "admission.created_at <= NEW.created_at");
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name='provider_cancelled_response_operation_root_guard';";
         string cancellationRootSql = (string)command.ExecuteScalar()!;
         StringAssert.Contains(cancellationRootSql, "provider_operation_authorizations a");
@@ -1274,36 +1282,45 @@ public sealed class PersistenceAndLifecycleTests
               'source-valid','source-2','fixture','1',NULL,NULL,
               'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',0,'unavailable','unavailable','unavailable',
               '2026-08-10T00:01:10.0000000+00:00');
+            """;
+        Assert.AreEqual(6, command.ExecuteNonQuery());
+        command.CommandText =
+            """
             INSERT INTO evidence_acquisition_application_links VALUES(
-              'source-application-early','acquisition-restore','run-restore','application-restore','cost-restore','artifact-1',
-              '2026-08-10T00:01:10.0000000+00:00');
-            INSERT INTO evidence_acquisition_application_links VALUES(
-              'source-application-future','acquisition-restore','run-restore','application-restore','cost-restore','artifact-2',
-              '2026-08-10T00:01:15.0000000+00:00');
-            INSERT INTO evidence_acquisition_application_links VALUES(
-              'source-application-valid','acquisition-restore','run-restore','application-restore','cost-restore','artifact-3',
+              'source-application-premature','acquisition-restore','run-restore','application-restore','cost-restore','payload-1',
               '2026-08-10T00:01:10.0000000+00:00');
             """;
-        Assert.AreEqual(9, command.ExecuteNonQuery());
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
         command.CommandText =
             """
             INSERT INTO provider_semantic_proposals(
               proposal_id,authorization_id,operation_id,provider_attempt_id,request_id,response_record_id,
               dispatch_fence_id,owner_kind,owner_id,root_subject_id,application_link_id,proposal_kind,payload_id,created_at)
             VALUES('proposal-future-source','authorization-source','operation-source','attempt-source','request-source','response-source',
-              'fence-source','evidence-acquisition-run','acquisition-restore','source-future','source-application-early',
+              'fence-source','evidence-acquisition-run','acquisition-restore','source-future','provider-returned-application',
               'source-claim','payload-1','2026-08-10T00:01:14.0000000+00:00');
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
         command.CommandText = command.CommandText
-            .Replace("proposal-future-source", "proposal-future-source-application", StringComparison.Ordinal)
-            .Replace("source-future", "source-valid", StringComparison.Ordinal)
-            .Replace("source-application-early", "source-application-future", StringComparison.Ordinal);
-        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
-        command.CommandText = command.CommandText
-            .Replace("proposal-future-source-application", "proposal-valid-source-roots", StringComparison.Ordinal)
-            .Replace("source-application-future", "source-application-valid", StringComparison.Ordinal);
+            .Replace("proposal-future-source", "proposal-valid-source-roots", StringComparison.Ordinal)
+            .Replace("source-future", "source-valid", StringComparison.Ordinal);
         Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_semantic_validations VALUES(
+              'validation-valid-source','proposal-valid-source-roots','operation-source','response-source',
+              'evidence-acquisition-run','acquisition-restore','source-valid','admitted','policy-1','synthetic',
+              '2026-08-10T00:01:15.0000000+00:00');
+            INSERT INTO provider_semantic_admissions VALUES(
+              'admission-valid-source','proposal-valid-source-roots','operation-source','response-source',
+              'evidence-acquisition-run','acquisition-restore','source-valid','validation-valid-source',
+              'provider-returned-application','admitted','policy-1','synthetic','payload-1',
+              '2026-08-10T00:01:16.0000000+00:00');
+            INSERT INTO evidence_acquisition_application_links VALUES(
+              'consumer-application-valid','acquisition-restore','run-restore','application-restore','cost-restore','payload-1',
+              '2026-08-10T00:01:17.0000000+00:00');
+            """;
+        Assert.AreEqual(3, command.ExecuteNonQuery());
         command.CommandText =
             """
             DROP TRIGGER provider_semantic_proposal_root_guard;

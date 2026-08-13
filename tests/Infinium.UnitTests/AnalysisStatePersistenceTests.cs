@@ -149,6 +149,11 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'wp5_schema_extension_id';"));
         Assert.AreEqual(
+            ProviderPersistenceDeclarations.Wp6CorrectionMigrationId,
+            ScalarText(
+                connection,
+                "SELECT value FROM store_metadata WHERE key = 'wp6_schema_correction_id';"));
+        Assert.AreEqual(
             "4|5",
             ScalarText(
                 connection,

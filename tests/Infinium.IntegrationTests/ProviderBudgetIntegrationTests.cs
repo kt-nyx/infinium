@@ -19,6 +19,8 @@ public sealed class ProviderBudgetIntegrationTests
         DateTimeOffset.Parse("2026-08-10T00:00:00.0000000+00:00", System.Globalization.CultureInfo.InvariantCulture);
     private static readonly string[] OutputGaps =
         ["provider-billing-unavailable", "prepaid-credit-unavailable"];
+    private static readonly string[] NonAdmittedSourceClaimStates = ["unsupported", "abstained", "deleted"];
+    private static readonly string[] AllSourceClaimStates = ["admitted", "unsupported", "abstained", "deleted"];
     private static readonly JsonSerializerOptions FaultEvidenceJsonOptions = new() { WriteIndented = true };
 
     [TestMethod]
@@ -459,10 +461,12 @@ public sealed class ProviderBudgetIntegrationTests
         context.Store.RegisterSourceClaimAcquisition(new(
             "acquisition-restore", "install-restore", "context-restore", "config-restore", "manifest-restore",
             "run-restore", "application-restore", "cost-restore", "source-claim-job", "source-claim-command",
-            "source-claim-parent", [new("application-dev-p01", "source-claim-artifact")],
-            "source-claim-revision", BaseTime.AddSeconds(6)));
+            "source-claim-parent", "source-claim-revision", BaseTime.AddSeconds(6)));
+        Assert.IsEmpty(context.Store.ReadSourceClaimApplicationLinks("acquisition-restore"),
+            "Acquisition registration must not pre-author provider proposal or application identities.");
         (SourceClaimExecutionInput fixtureInput, SourceClaimRetainedTranscript[] fixtureTranscripts) =
             SourceClaimAdmissionIntegrationTests.Load("S6-CLAIM-DEV-v1");
+        const string deletedText = "This retained passage has been deleted and is audit-only.";
         SourceClaimExecutionInput input = fixtureInput with
         {
             AcquisitionRunId = "acquisition-restore",
@@ -473,13 +477,42 @@ public sealed class ProviderBudgetIntegrationTests
             ApplicationScopeId = "application-restore",
             CostAttributionScopeId = "cost-restore",
             SourceRevisionId = "source-claim-revision",
-            Passages = fixtureInput.Passages.Select(x => x with { SourceRevisionId = "source-claim-revision" }).ToArray(),
+            Passages =
+            [
+                .. fixtureInput.Passages.Select(x => x with { SourceRevisionId = "source-claim-revision" }),
+                new("deleted-provider-passage", "source-claim-revision", deletedText,
+                    Convert.ToHexStringLower(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(deletedText))), true),
+            ],
         };
         SourceClaimRetainedTranscript transcript = fixtureTranscripts[0] with
         {
+            TranscriptId = "provider-returned-arbitrary-set",
             OperationId = "operation-restore",
             ResponseRecordId = "source-claim-persist:response",
             SourceRevisionId = "source-claim-revision",
+            Proposals =
+            [
+                fixtureTranscripts[0].Proposals[0] with { ProposalId = "provider-returned-arbitrary-omega" },
+                fixtureTranscripts[1].Proposals[0] with
+                {
+                    ProposalId = "provider-returned-arbitrary-unsupported",
+                    PassageId = fixtureInput.Passages[1].PassageId,
+                },
+                fixtureTranscripts[1].Proposals[0] with
+                {
+                    ProposalId = "provider-returned-arbitrary-abstained",
+                    PassageId = fixtureInput.Passages[1].PassageId,
+                    State = "abstained",
+                },
+                fixtureTranscripts[0].Proposals[0] with
+                {
+                    ProposalId = "provider-returned-arbitrary-deleted",
+                    PassageId = "deleted-provider-passage",
+                    ConditionIds = [],
+                    ConditionScope = "unconditional",
+                },
+            ],
+            Gaps = ["Provider returned non-admitted proposals alongside the admitted proposal."],
         };
         SourceClaimAcquisitionCoordinator coordinator = new(context.Store);
         Assert.ThrowsExactly<InvalidDataException>(() => coordinator.AdmitRetainedTranscript(
@@ -489,19 +522,44 @@ public sealed class ProviderBudgetIntegrationTests
             input, transcript, "authorization-settlement", "attempt-settlement", "request-settlement",
             gate.DispatchFenceId, BaseTime.AddSeconds(8));
         SourceClaimPersistenceReceipt persisted = admission.Persistence;
-        Assert.AreEqual(1, persisted.AdmissionCount);
-        Assert.AreEqual("admitted", context.Store.ReadSourceClaimAdmissions("acquisition-restore").Single().State);
+        Assert.AreEqual(4, persisted.AdmissionCount);
+        ProviderSemanticAdmissionReadModel[] admissions = context.Store
+            .ReadSourceClaimAdmissions("acquisition-restore").ToArray();
+        CollectionAssert.AreEquivalent(AllSourceClaimStates, admissions.Select(x => x.State).ToArray());
+        Assert.IsEmpty(context.Store.ReadSourceClaimApplicationLinks("acquisition-restore"),
+            "Persistence and admission must not imply later consuming-analysis application.");
         SourceClaimExtractionDocument document = context.Store.ReadSourceClaimExtraction(
-            "acquisition-restore", "admission-dev-p01");
-        Assert.AreEqual("authorization-settlement", document.AdmissionLinks.Single().AuthorizationId.Value);
+            "acquisition-restore", "admission-provider-returned-arbitrary-omega");
+        Assert.IsTrue(document.AdmissionLinks.All(x => x.AuthorizationId.Value == "authorization-settlement"));
         Assert.ThrowsExactly<InvalidDataException>(() => context.Store.PersistSourceClaimExtraction(new(
             document, "authorization-settlement", "wrong-response", "attempt-settlement", "request-settlement",
             gate.DispatchFenceId, BaseTime.AddSeconds(9))));
+        foreach (string state in NonAdmittedSourceClaimStates)
+        {
+            ProviderSemanticAdmissionReadModel nonAdmitted = admissions.Single(x => x.State == state);
+            Assert.ThrowsExactly<InvalidDataException>(() => context.Store.ConsumeAdmittedSourceClaim(new(
+                "consumer-link-" + state, "acquisition-restore", nonAdmitted.AdmissionId, "run-restore",
+                "application-restore", "cost-restore", BaseTime.AddSeconds(9))));
+        }
+        Assert.IsEmpty(context.Store.ReadSourceClaimApplicationLinks("acquisition-restore"));
+        Assert.ThrowsExactly<InvalidDataException>(() => context.Store.ConsumeAdmittedSourceClaim(new(
+            "consumer-link-before-admission", "acquisition-restore",
+            "admission-provider-returned-arbitrary-omega", "run-restore",
+            "application-restore", "cost-restore", BaseTime.AddSeconds(7))));
+        SourceClaimConsumptionReceipt consumed = context.Store.ConsumeAdmittedSourceClaim(new(
+            "consumer-analysis-source-claim-link", "acquisition-restore",
+            "admission-provider-returned-arbitrary-omega", "run-restore",
+            "application-restore", "cost-restore", BaseTime.AddSeconds(10)));
+        SourceClaimApplicationReadModel applied = context.Store
+            .ReadSourceClaimApplicationLinks("acquisition-restore").Single();
+        Assert.AreEqual(consumed.AdmittedArtifactId, applied.AdmittedArtifactId);
+        Assert.AreEqual("consumer-analysis-source-claim-link", applied.ApplicationLinkId);
         ProviderTerminalPublicationArtifacts publication = accounting.PublishTerminalV2(
             new("run-restore"), new("local-run-output-v1"), "local-output-v1"u8.ToArray(),
             "local-cli-v1"u8.ToArray(), new("operation-restore"), BaseTime.AddSeconds(11));
         Assert.AreEqual("acquisition-restore", publication.RunOutputV2.EvidenceAcquisitionRunIds.Single().Value);
-        Assert.AreEqual("admission-dev-p01", publication.RunOutputV2.ProviderOperations.Single().AdmissionId?.Value);
+        Assert.AreEqual("admission-provider-returned-arbitrary-omega",
+            publication.RunOutputV2.ProviderOperations.Single().AdmissionId?.Value);
 
         BackupArtifact backup = context.Store.CreateBackup("Wp6SourceClaim", BaseTime.AddSeconds(12));
         string restoredRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp6-Restore-" + Guid.NewGuid().ToString("N"));
@@ -513,9 +571,12 @@ public sealed class ProviderBudgetIntegrationTests
             }
             using StoragePaths restoredPaths = new(restoredRoot);
             using AuthoritativeStore restored = new(restoredPaths);
-            Assert.AreEqual("admitted", restored.ReadSourceClaimAdmissions("acquisition-restore").Single().State);
-            Assert.AreEqual("dev-p01", restored.ReadSourceClaimExtraction(
-                "acquisition-restore", "admission-dev-p01").ClaimProposals.Single().ProposalId.Value);
+            Assert.AreEqual(4, restored.ReadSourceClaimAdmissions("acquisition-restore").Count);
+            Assert.IsTrue(restored.ReadSourceClaimExtraction(
+                "acquisition-restore", "admission-provider-returned-arbitrary-omega").ClaimProposals
+                .Any(x => x.ProposalId.Value == "provider-returned-arbitrary-omega"));
+            Assert.AreEqual("consumer-analysis-source-claim-link",
+                restored.ReadSourceClaimApplicationLinks("acquisition-restore").Single().ApplicationLinkId);
             _ = restored.RebuildProviderBudgetProjections(BaseTime.AddSeconds(13));
         }
         finally

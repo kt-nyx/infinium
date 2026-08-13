@@ -16,11 +16,8 @@ public sealed record SourceClaimAcquisitionRegistration(
     string JobNodeId,
     string CommandId,
     string ParentLinkId,
-    IReadOnlyList<SourceClaimApplicationRegistration> ApplicationLinks,
     string SourceRevisionId,
     DateTimeOffset OccurredAt);
-
-public sealed record SourceClaimApplicationRegistration(string ApplicationLinkId, string AdmittedArtifactId);
 
 public sealed record SourceClaimPersistenceRequest(
     SourceClaimExtractionDocument Document,
@@ -39,17 +36,34 @@ public sealed record SourceClaimPersistenceReceipt(
     int AdmissionCount,
     IReadOnlyList<string> ApplicationLinkIds);
 
+public sealed record SourceClaimConsumptionRequest(
+    string ApplicationLinkId,
+    string AcquisitionRunId,
+    string AdmissionId,
+    string ParentAnalysisRunId,
+    string ApplicationScopeId,
+    string CostAttributionScopeId,
+    DateTimeOffset OccurredAt);
+
+public sealed record SourceClaimConsumptionReceipt(
+    string ApplicationLinkId,
+    string AcquisitionRunId,
+    string AdmissionId,
+    string AdmittedArtifactId);
+
+public sealed record SourceClaimApplicationReadModel(
+    string ApplicationLinkId,
+    string AcquisitionRunId,
+    string ParentAnalysisRunId,
+    string ApplicationScopeId,
+    string CostAttributionScopeId,
+    string AdmittedArtifactId);
+
 public partial class AuthoritativeStore
 {
     public void RegisterSourceClaimAcquisition(SourceClaimAcquisitionRegistration request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        if (request.ApplicationLinks.Count is < 1 or > 64
-            || request.ApplicationLinks.Select(x => x.ApplicationLinkId).Distinct(StringComparer.Ordinal).Count()
-                != request.ApplicationLinks.Count)
-        {
-            throw new InvalidDataException("Source-claim acquisition requires a bounded unique application-link set.");
-        }
         lock (gate)
         {
             using SqliteTransaction transaction = BeginImmediateTransaction();
@@ -93,15 +107,6 @@ public partial class AuthoritativeStore
                     throw new InvalidDataException("Source-claim acquisition registration contradicts the retained acquisition root.");
                 }
             }
-            foreach (SourceClaimApplicationRegistration link in request.ApplicationLinks)
-            {
-                Execute(
-                    "INSERT INTO evidence_acquisition_application_links VALUES($application,$acquisition,$run,$scope,$cost,$artifact,$now);",
-                    transaction, ("$application", link.ApplicationLinkId), ("$acquisition", request.AcquisitionRunId),
-                    ("$run", request.ParentAnalysisRunId), ("$scope", request.ApplicationScopeId),
-                    ("$cost", request.CostAttributionScopeId), ("$artifact", link.AdmittedArtifactId),
-                    ("$now", ToText(request.OccurredAt)));
-            }
             using SqliteCommand source = connection.CreateCommand();
             source.Transaction = transaction;
             source.CommandText = "SELECT 1 FROM documentation_revisions WHERE documentation_revision_id=$revision;";
@@ -111,6 +116,80 @@ public partial class AuthoritativeStore
                 throw new InvalidOperationException("Source-claim acquisition requires an exact retained documentation revision.");
             }
             transaction.Commit();
+        }
+    }
+
+    public SourceClaimConsumptionReceipt ConsumeAdmittedSourceClaim(SourceClaimConsumptionRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginImmediateTransaction();
+            using SqliteCommand admitted = connection.CreateCommand();
+            admitted.Transaction = transaction;
+            admitted.CommandText =
+                """
+                SELECT admission.admitted_artifact_id
+                FROM provider_semantic_admissions admission
+                JOIN evidence_acquisition_runs acquisition
+                  ON acquisition.acquisition_run_id=admission.owner_id
+                WHERE admission.admission_id=$admission
+                  AND admission.owner_kind='evidence-acquisition-run'
+                  AND admission.owner_id=$acquisition
+                  AND admission.state='admitted'
+                  AND admission.admitted_artifact_id IS NOT NULL
+                  AND acquisition.parent_analysis_run_id=$run
+                  AND acquisition.application_scope_id=$scope
+                  AND acquisition.cost_attribution_scope_id=$cost
+                  AND admission.created_at <= $now;
+                """;
+            admitted.Parameters.AddWithValue("$admission", request.AdmissionId);
+            admitted.Parameters.AddWithValue("$acquisition", request.AcquisitionRunId);
+            admitted.Parameters.AddWithValue("$run", request.ParentAnalysisRunId);
+            admitted.Parameters.AddWithValue("$scope", request.ApplicationScopeId);
+            admitted.Parameters.AddWithValue("$cost", request.CostAttributionScopeId);
+            admitted.Parameters.AddWithValue("$now", ToText(request.OccurredAt));
+            string admittedArtifactId = admitted.ExecuteScalar() as string
+                ?? throw new InvalidDataException(
+                    "Source-claim consumption requires an exact admitted artifact owned by the acquisition.");
+            Execute(
+                """
+                INSERT INTO evidence_acquisition_application_links VALUES(
+                  $application,$acquisition,$run,$scope,$cost,$artifact,$now);
+                """,
+                transaction,
+                ("$application", request.ApplicationLinkId), ("$acquisition", request.AcquisitionRunId),
+                ("$run", request.ParentAnalysisRunId), ("$scope", request.ApplicationScopeId),
+                ("$cost", request.CostAttributionScopeId), ("$artifact", admittedArtifactId),
+                ("$now", ToText(request.OccurredAt)));
+            transaction.Commit();
+            return new(request.ApplicationLinkId, request.AcquisitionRunId, request.AdmissionId, admittedArtifactId);
+        }
+    }
+
+    public IReadOnlyList<SourceClaimApplicationReadModel> ReadSourceClaimApplicationLinks(string acquisitionRunId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(acquisitionRunId);
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT application_link_id,acquisition_run_id,analysis_run_id,application_scope_id,
+                  cost_attribution_scope_id,admitted_artifact_id
+                FROM evidence_acquisition_application_links
+                WHERE acquisition_run_id=$acquisition
+                ORDER BY application_link_id;
+                """;
+            command.Parameters.AddWithValue("$acquisition", acquisitionRunId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            List<SourceClaimApplicationReadModel> results = [];
+            while (reader.Read())
+            {
+                results.Add(new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+                    reader.GetString(4), reader.GetString(5)));
+            }
+            return results;
         }
     }
 
