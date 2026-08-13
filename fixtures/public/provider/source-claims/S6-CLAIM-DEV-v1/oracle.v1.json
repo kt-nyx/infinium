@@ -159,7 +159,7 @@
       "expected_response_fingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
       "expected_model_used": true,
       "expected_result": "accepted-conditional-applicability",
-      "expected_proposals": [{"proposal_id":"dev-p06","passage_id":"passage-alder","claim":"Feature Alder is enabled only when mode Copper is selected.","condition_ids":["condition-mode-copper"],"claim_kind":"documentation-claim","condition_scope":"conditional","authority_category":"informational","application_semantics":"evidence-only","input_state":"proposed","reason":"Applicability is conditional on mode Copper.","expected_state":"admitted"}],
+      "expected_proposals": [{"proposal_id":"dev-p06","passage_id":"passage-alder","claim":"Feature Alder is enabled only when mode Copper is selected.","condition_ids":["condition-mode-copper"],"claim_kind":"documentation-claim","condition_scope":"conditional","authority_category":"informational","application_semantics":"applicability-only","input_state":"proposed","reason":"Applicability is conditional on mode Copper.","expected_state":"admitted"}],
       "expected_proposal_states": {"dev-p06": "admitted"},
       "admitted_proposal_ids": ["dev-p06"],
       "rejected_proposal_ids": [],

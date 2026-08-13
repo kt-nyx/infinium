@@ -12,9 +12,9 @@
   "file_identities": [
     {"path":"context-manifest.v1.json","role":"product-input","bytes":509,"sha256":"4cc8b5e17085c8c6eaab578d5a2b198446cf19eda2f446c5cbf96681fd5d44f9"},
     {"path":"execution-input.v1.json","role":"product-input","bytes":1706,"sha256":"c49353836803ae46b6cf87e8c40c26aa7c3fc5bbfccec3589fe3c6419daff6ab"},
-    {"path":"oracle-provenance.v1.json","role":"oracle-provenance","bytes":2044,"sha256":"8c842e2f56061ebc26cd12f899c65bb535a729df6e01e2c15fbd1126042af773"},
-    {"path":"oracle.v1.json","role":"oracle","bytes":11494,"sha256":"e20cfbd7754d37000411ec04f2b00698316eefa240f85a4979545ea40c93cdd0"},
-    {"path":"retained-transcripts.v1.json","role":"product-input","bytes":5038,"sha256":"d6a9ddac2bf2c25c3d421ba6a678d7745832450ccd5f7a27802261e37238be68"}
+    {"path":"oracle-provenance.v1.json","role":"oracle-provenance","bytes":2242,"sha256":"c39e2c41e860e7ef442dae7671f7dd9fa678e9566d39ccefb15e41a6451c662d"},
+    {"path":"oracle.v1.json","role":"oracle","bytes":11499,"sha256":"cbace58001184cae5126525f817956fb0400d80b5069e4fe51e0485a5f01fa66"},
+    {"path":"retained-transcripts.v1.json","role":"product-input","bytes":5043,"sha256":"b19c40069021afdb2b04a8b0b2ccc6eb535d207fa77ad0e939001a5b1fd0a268"}
   ],
   "answer_free": true,
   "network_required": false
