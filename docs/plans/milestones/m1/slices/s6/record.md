@@ -5242,3 +5242,37 @@ was performed. WP4 qualification is not accepted; any correction and future
 attempt require a fresh manifest, namespace, targets, exact-byte review, and
 owner authority.
 WP4_V2_NATIVE_FAILURE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/16df3175-42ef-4a87-83ee-58766a0b15f1 execution_head_commit=b5bbe2f4d39884742800a7a6e6b84e615b33c0b5 evidence_sha256=f9d4e1a882f37b9d9c666bac2bb7cb517ea6367839b2b0e775e70ae52f3099ec authority_lock_sha256=f932541f83c87a36a1842b232dbcaa933a23e9ce5213275611cef57e44bdf9f3 status=failed-primary-cleanup-confirmed cleanup_scope=three-queued-exact-targets whole_namespace_absence=false namespace_disposition=consumed-never-reuse native_calls=admitted-phases-W1-R22-D2-F3-T28-plus-rejected-phase-unobserved later_native_calls=0
+
+## WP4 rejected-phase evidence retention correction — 2026-08-13
+
+The retained `16df3175` state proves that the maximum-size helper receipt and
+`active-unverified` lifecycle transition completed before the supervisor
+rejected that phase, but the old runner did not retain the rejected raw trace,
+metrics, canaries, or exact validation stage. The exact historical validator
+trigger is therefore underdetermined and is not guessed.
+
+The bounded non-native correction makes every post-helper validation failure
+observable before any phase can be discarded. Preflight, credential
+transition, interrupted transition, cleanup, absence-only cleanup, and fake
+dispatch now take a nonthrowing sanitized observation before `Capture`, any
+phase-specific oracle, or phase admission. It retains exact assignment and
+bootstrap profile/generation identities, resolved allowed target
+fingerprints, canonical trace and trace-derived counts when valid, raw byte
+lengths and SHA-256 plus parse disposition when invalid, entry cleanup,
+canaries, staging, lifecycle, process/Job containment, and namespace-reuse
+facts. The first rejected phase is immutable through later cleanup. Typed
+stage/reason codes distinguish process/Job, trace, exact-target, canary, UI,
+lifecycle, and phase-admission failures without arbitrary exception text.
+
+Phase-specific absence and cleanup oracles now run before phase admission, so
+a rejected phase cannot appear simultaneously in admitted scenarios or be
+double-counted in admitted aggregate calls. Parsed-but-semantically-null and
+malformed trace/canary/UI payloads retain their raw facts and map to their
+exact bounded stage. Deterministic regressions prove maximum-size W1/R1/F1
+post-store retention with lifecycle and staging, first-failure preservation,
+serialized exact identity context, malformed and semantic-null evidence,
+preflight rejection without admission, and cleanup rejection that sets
+ambiguity and blocks the namespace without admission. A fresh independent
+review accepted the correction for freeze. No Credential Manager, manual UI,
+DNS, network, provider, billable, private-fixture, archive, later-package, or
+push operation occurred during this correction.

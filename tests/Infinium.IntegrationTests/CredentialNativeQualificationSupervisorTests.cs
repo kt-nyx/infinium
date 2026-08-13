@@ -1209,6 +1209,419 @@ public sealed class CredentialNativeQualificationSupervisorTests
         }
     }
 
+    [TestMethod]
+    public void MaximumSizeCaptureRetainsCompletedRawTraceBeforePostStoreOracleRejects()
+    {
+        const string profile = "wp4-size-valid";
+        const string generation = "g001";
+        const string assignmentId = "wp4-v2/credential-size-boundaries/maximum";
+        const string fingerprint = "abababababababababababababababababababababababababababababababab";
+        HelperPrivateFrameV2 bootstrap = CredentialBootstrap(profile, generation, 121);
+        HelperPrivateFrameV2 assignment = CredentialAssignment(
+            profile, generation, HelperAssignmentKindV2.Enroll, assignmentId);
+        CredentialNativeCallTraceEntry[] trace =
+        [
+            new(1, "CredWriteW", fingerprint, assignmentId, "success", null, null),
+            new(2, "CredReadW", fingerprint, assignmentId, "success", 1, null),
+            new(3, "CredFree", fingerprint, assignmentId, "released", null, 1),
+        ];
+        CredentialNativeCanaryEvidence rejectedCanary = new(
+            1, 0, ["utf-8", "utf-16le"],
+            [new("private protocol response", "private-pipe-bytes", 223, 1, 0)]);
+        HelperProcessReceipt process = new(
+            ProcessId: 50121,
+            ExitCode: 0,
+            BinarySha256: new string('b', 64),
+            Receipt: new HelperReceiptV2
+            {
+                Outcome = HelperOutcomeV2.Completed,
+                AssignmentId = assignmentId,
+            },
+            StagedResponseBytes: [],
+            InheritedPrivateHandleCount: 2,
+            StandardProtocolHandleCount: 0,
+            ListenerCount: 0,
+            NetworkOperationCount: 0,
+            NativeCredentialOperationCount: trace.Length,
+            ProcessTreeSurvivorCount: 0,
+            ProcessTreeTerminated: true,
+            RetryAttempted: false,
+            NativeCallTraceBytes: JsonSerializer.SerializeToUtf8Bytes(trace),
+            NativeEntryCleanupBytes: null,
+            NativeCanaryEvidenceBytes: JsonSerializer.SerializeToUtf8Bytes(rejectedCanary),
+            ContainmentProbeExecuted: true,
+            ExcludedHandleAccessible: false,
+            ActiveProcessCountBeforeJobClose: 0,
+            TotalContainedProcessCount: 2);
+        HelperStagingReceipt staging = new(
+            "credential-size-boundaries-maximum-attempt",
+            "staging/credential-size-boundaries-maximum-attempt/helper-receipt.v2.pb",
+            217,
+            new string('c', 64),
+            null,
+            0,
+            null,
+            StagedBeforeAdmission: true,
+            CoordinatorOnlyAdmission: true);
+        CredentialProfileProjection projection = new(
+            profile,
+            generation,
+            GenerationOrdinal: 1,
+            RevocationEpoch: 0,
+            LifecycleState: "active-unverified",
+            VerificationState: "unavailable",
+            CapabilitySnapshotId: "capability",
+            AccountIdentityId: "account",
+            BillingScopeIdentityId: "billing",
+            IntentId: "credential-size-boundaries-maximum-attempt-credential-transition:terminal",
+            RecoveryDisposition: "not-required",
+            CleanupDisposition: "not-requested",
+            ProjectionVersion: 2,
+            UpdatedAt: BaseTime);
+        string root = Path.Combine(
+            Path.GetTempPath(), "Infinium-Wp4-Maximum-Retention-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
+        using CredentialNativeQualificationSupervisor supervisor = new(
+            new CredentialHelperCoordinator(store, Launcher(Path.Combine(root, "fake-store"))),
+            expectedInheritedPrivateHandleCount: 2,
+            targetFingerprints: new Dictionary<string, string>
+            {
+                [profile + "/" + generation] = fingerprint,
+            });
+
+        InvalidDataException failure = Assert.ThrowsExactly<InvalidDataException>(() =>
+            supervisor.CapturePhaseForTest(
+                "maximum",
+                bootstrap,
+                assignment,
+                new CoordinatedHelperReceipt(process, staging),
+                projection));
+        Assert.AreEqual(
+            CredentialNativeManualValidationStage.Canary,
+            failure.Data[nameof(CredentialNativeManualValidationStage)]);
+
+        CredentialNativeRejectedPhaseEvidence retained = supervisor.RejectedPhaseForTest
+            ?? throw new AssertFailedException("The rejected maximum-size phase was discarded.");
+        Assert.AreEqual(assignmentId, retained.AssignmentId);
+        Assert.AreEqual("maximum", retained.PhaseId);
+        Assert.AreEqual(profile, retained.AssignmentProfileId);
+        Assert.AreEqual(generation, retained.AssignmentGenerationId);
+        Assert.AreEqual(profile, retained.BootstrapProfileId);
+        Assert.AreEqual(generation, retained.BootstrapGenerationId);
+        CollectionAssert.AreEqual(new[] { fingerprint }, retained.ResolvedAllowedTargetFingerprints.ToArray());
+        Assert.AreEqual(HelperOutcomeV2.Completed, retained.Outcome);
+        Assert.AreEqual(3, retained.ReportedNativeOperationCount);
+        Assert.AreEqual(1, retained.CanonicalCallCounts?.CredWriteW);
+        Assert.AreEqual(1, retained.CanonicalCallCounts?.CredReadW);
+        Assert.AreEqual(0, retained.CanonicalCallCounts?.CredDeleteW);
+        Assert.AreEqual(1, retained.CanonicalCallCounts?.CredFree);
+        Assert.AreEqual(3, retained.CanonicalCallCounts?.Total);
+        Assert.IsTrue(retained.CanonicalCallTrace?.Select(item => item.Operation)
+            .SequenceEqual(["CredWriteW", "CredReadW", "CredFree"], StringComparer.Ordinal));
+        Assert.AreEqual(staging.Sha256, retained.Staging.ReceiptSha256);
+        Assert.IsTrue(retained.Staging.StagedBeforeAdmission);
+        Assert.AreEqual("active-unverified", retained.Lifecycle?.LifecycleState);
+        Assert.AreEqual(projection.IntentId, retained.Lifecycle?.IntentId);
+        Assert.AreEqual("canonical-validated", retained.NativeTraceParseResult);
+        Assert.AreEqual("parsed", retained.CanaryParseResult);
+        Assert.AreEqual(1, retained.Canaries?.SecretMatches);
+        Assert.AreEqual(nameof(CredentialNativeManualValidationStage.Canary), retained.ValidationStage);
+        Assert.AreEqual("canary-evidence-rejected", retained.ValidationReason);
+        Assert.AreEqual(0, retained.ProcessTreeSurvivorCount);
+        Assert.IsTrue(retained.ProcessTreeTerminated);
+
+        Assert.ThrowsExactly<InvalidDataException>(() => supervisor.CapturePhaseForTest(
+            "maximum",
+            bootstrap,
+            assignment,
+            new CoordinatedHelperReceipt(
+                process with { ProcessTreeSurvivorCount = 1 },
+                staging),
+            projection));
+        Assert.AreEqual(nameof(CredentialNativeManualValidationStage.Canary),
+            supervisor.RejectedPhaseForTest?.ValidationStage,
+            "A later cleanup/capture rejection must not overwrite the first rejected phase.");
+
+        CredentialNativeQualificationEvidence snapshot = supervisor.SnapshotForTest();
+        Assert.AreEqual(0, snapshot.NativeCallCounts.Total,
+            "Rejected phase calls must not be double-counted as admitted phase calls.");
+        Assert.AreEqual(0, snapshot.Scenarios.Count);
+        Assert.AreEqual(3, snapshot.RejectedPhase?.CanonicalCallCounts?.Total);
+
+        CredentialNativeQualificationEvidence terminal = new(
+            BaseTime,
+            BaseTime.AddSeconds(1),
+            1650,
+            120,
+            30,
+            1800,
+            NamespaceBlocked: true,
+            CleanupAmbiguous: false,
+            new(0, 0, 0, 0, 0),
+            StaleGate: null,
+            FailedManualPhase: null,
+            RejectedPhase: retained,
+            Scenarios: []);
+        using JsonDocument serialized = JsonDocument.Parse(
+            CredentialNativeQualificationRunner.SerializeEvidenceForTest(terminal));
+        JsonElement retainedJson = serialized.RootElement.GetProperty("rejected_phase");
+        Assert.AreEqual("maximum", retainedJson.GetProperty("phase_id").GetString());
+        Assert.AreEqual(profile, retainedJson.GetProperty("assignment_profile_id").GetString());
+        Assert.AreEqual(generation, retainedJson.GetProperty("assignment_generation_id").GetString());
+        Assert.AreEqual(profile, retainedJson.GetProperty("bootstrap_profile_id").GetString());
+        Assert.AreEqual(generation, retainedJson.GetProperty("bootstrap_generation_id").GetString());
+        Assert.AreEqual(fingerprint,
+            retainedJson.GetProperty("resolved_allowed_target_fingerprints")[0].GetString());
+        Assert.AreEqual(3,
+            retainedJson.GetProperty("canonical_call_counts").GetProperty("total").GetInt32());
+        Assert.AreEqual(3, retainedJson.GetProperty("canonical_call_trace").GetArrayLength());
+        Assert.AreEqual("Canary", retainedJson.GetProperty("validation_stage").GetString());
+        Assert.AreEqual("canary-evidence-rejected",
+            retainedJson.GetProperty("validation_reason").GetString());
+    }
+
+    [TestMethod]
+    public void RejectedPhaseObservationRetainsMalformedPayloadFactsWithoutThrowingBeforeTypedStage()
+    {
+        const string profile = "wp4-size-valid";
+        const string generation = "g001";
+        const string assignmentId = "wp4-v2/credential-size-boundaries/maximum";
+        const string fingerprint = "abababababababababababababababababababababababababababababababab";
+        HelperPrivateFrameV2 bootstrap = CredentialBootstrap(profile, generation, 122);
+        HelperPrivateFrameV2 assignment = CredentialAssignment(
+            profile, generation, HelperAssignmentKindV2.Enroll, assignmentId);
+        byte[] validTrace = "[]"u8.ToArray();
+        byte[] validCanary = JsonSerializer.SerializeToUtf8Bytes(new CredentialNativeCanaryEvidence(
+            0, 0, ["utf-8", "utf-16le"],
+            [new("private protocol request", "private-pipe-bytes", 0, 0, 0)]));
+        JsonNode nullCanaryNode = JsonNode.Parse(validCanary)
+            ?? throw new AssertFailedException("The canary fixture did not parse.");
+        nullCanaryNode["RawTargetEncodings"] = null;
+        byte[] nullCanary = JsonSerializer.SerializeToUtf8Bytes(nullCanaryNode);
+        HelperProcessReceipt valid = new(
+            50122, 0, new string('b', 64),
+            new HelperReceiptV2 { Outcome = HelperOutcomeV2.Completed, AssignmentId = assignmentId },
+            [], 2, 0, 0, 0, 0, 0, true, false,
+            validTrace, null, validCanary, true, false, 0, 2);
+        HelperStagingReceipt staging = new(
+            "maximum-malformed", "staging/maximum-malformed/helper-receipt.v2.pb",
+            217, new string('c', 64), null, 0, null, true, true);
+        (string Name, HelperProcessReceipt Process, CredentialNativeManualValidationStage Stage, string Parse)[] cases =
+        [
+            ("trace-null", valid with
+                {
+                    NativeCallTraceBytes = "[null]"u8.ToArray(),
+                    NativeCredentialOperationCount = 1,
+                }, CredentialNativeManualValidationStage.NativeTrace, "malformed-InvalidDataException"),
+            ("trace-null-property", valid with
+                {
+                    NativeCallTraceBytes = "[{\"sequence\":1,\"operation\":null,\"targetFingerprintSha256\":null,\"scenario\":null,\"result\":null}]"u8.ToArray(),
+                    NativeCredentialOperationCount = 1,
+                }, CredentialNativeManualValidationStage.NativeTrace, "malformed-InvalidDataException"),
+            ("canary-json", valid with
+                {
+                    NativeCanaryEvidenceBytes = "{"u8.ToArray(),
+                }, CredentialNativeManualValidationStage.Canary, "malformed-JsonException"),
+            ("canary-null-required", valid with
+                {
+                    NativeCanaryEvidenceBytes = nullCanary,
+                }, CredentialNativeManualValidationStage.Canary, "parsed"),
+            ("entry-json", valid with
+                {
+                    NativeEntryCleanupBytes = "{"u8.ToArray(),
+                }, CredentialNativeManualValidationStage.ManualUi, "malformed-JsonException"),
+        ];
+
+        foreach ((string name, HelperProcessReceipt process, CredentialNativeManualValidationStage stage, string parse) in cases)
+        {
+            string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-Rejected-Payload-" + name + "-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
+            using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
+            using CredentialNativeQualificationSupervisor supervisor = new(
+                new CredentialHelperCoordinator(store, Launcher(Path.Combine(root, "fake-store"))),
+                expectedInheritedPrivateHandleCount: 2,
+                targetFingerprints: new Dictionary<string, string>
+                {
+                    [profile + "/" + generation] = fingerprint,
+                });
+            Assert.ThrowsExactly<InvalidDataException>(() => supervisor.CapturePhaseForTest(
+                "maximum", bootstrap, assignment, new CoordinatedHelperReceipt(process, staging)));
+            CredentialNativeRejectedPhaseEvidence retained = supervisor.RejectedPhaseForTest
+                ?? throw new AssertFailedException(name + " discarded its raw observation.");
+            Assert.AreEqual(stage.ToString(), retained.ValidationStage, name);
+            Assert.AreEqual(process.NativeCallTraceBytes?.Length ?? 0, retained.NativeTraceByteLength, name);
+            Assert.AreEqual(process.NativeEntryCleanupBytes?.Length ?? 0, retained.EntryCleanupByteLength, name);
+            Assert.AreEqual(process.NativeCanaryEvidenceBytes?.Length ?? 0, retained.CanaryByteLength, name);
+            if (stage == CredentialNativeManualValidationStage.NativeTrace)
+            {
+                Assert.AreEqual(parse, retained.NativeTraceParseResult, name);
+                Assert.IsNotNull(retained.NativeTraceSha256, name);
+            }
+            else if (stage == CredentialNativeManualValidationStage.Canary)
+            {
+                Assert.AreEqual(parse, retained.CanaryParseResult, name);
+                Assert.IsNotNull(retained.CanarySha256, name);
+            }
+            else
+            {
+                Assert.AreEqual(parse, retained.EntryCleanupParseResult, name);
+                Assert.IsNotNull(retained.EntryCleanupSha256, name);
+            }
+        }
+
+        CredentialNativeEntryCleanupEvidence entry = FailedReadinessCleanup();
+        JsonNode nullEntryNode = JsonNode.Parse(JsonSerializer.SerializeToUtf8Bytes(entry))
+            ?? throw new AssertFailedException("The entry fixture did not parse.");
+        nullEntryNode["Readiness"]!["DesktopNameSha256"] = null;
+        byte[] nullEntry = JsonSerializer.SerializeToUtf8Bytes(nullEntryNode);
+        HelperPrivateFrameV2 manualBootstrap = CredentialBootstrap("wp4-interactive-primary", generation, 124);
+        HelperPrivateFrameV2 manualAssignment = CredentialAssignment(
+            "wp4-interactive-primary", generation, HelperAssignmentKindV2.Enroll,
+            "wp4-v2/interactive-entry-submit/submit");
+        string manualRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-Rejected-Entry-Null-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(manualRoot);
+        using AuthoritativeStore manualStore = new(new StoragePaths(Path.Combine(manualRoot, "product")));
+        using CredentialNativeQualificationSupervisor manualSupervisor = new(
+            new CredentialHelperCoordinator(manualStore, Launcher(Path.Combine(manualRoot, "fake-store"))),
+            expectedInheritedPrivateHandleCount: 2,
+            targetFingerprints: new Dictionary<string, string>
+            {
+                ["wp4-interactive-primary/" + generation] = fingerprint,
+            });
+        HelperProcessReceipt manualProcess = valid with
+        {
+            Receipt = new HelperReceiptV2
+            {
+                Outcome = HelperOutcomeV2.FailedKnown,
+                AssignmentId = manualAssignment.Assignment.AssignmentId,
+            },
+            NativeEntryCleanupBytes = nullEntry,
+        };
+        Assert.ThrowsExactly<InvalidDataException>(() => manualSupervisor.CapturePhaseForTest(
+            "submit", manualBootstrap, manualAssignment,
+            new CoordinatedHelperReceipt(manualProcess, staging)));
+        CredentialNativeRejectedPhaseEvidence manualRetained = manualSupervisor.RejectedPhaseForTest
+            ?? throw new AssertFailedException("The semantic-null entry was discarded.");
+        Assert.AreEqual(nameof(CredentialNativeManualValidationStage.ManualUi), manualRetained.ValidationStage);
+        Assert.AreEqual("entry-cleanup-semantic-rejected", manualRetained.ValidationReason);
+        Assert.AreEqual("parsed", manualRetained.EntryCleanupParseResult);
+        Assert.AreEqual(nullEntry.Length, manualRetained.EntryCleanupByteLength);
+        Assert.IsNotNull(manualRetained.EntryCleanupSha256);
+        Assert.AreEqual(0, manualSupervisor.SnapshotForTest().Scenarios.Count);
+        _ = CredentialNativeQualificationRunner.SerializeEvidenceForTest(manualSupervisor.SnapshotForTest());
+    }
+
+    [TestMethod]
+    public void PreflightOracleRejectsBeforeScenarioAdmissionAndAggregateCounting()
+    {
+        const string profile = "wp4-size-valid";
+        const string generation = "g001";
+        const string assignmentId = "wp4-v2/credential-size-boundaries/preflight-maximum";
+        const string fingerprint = "abababababababababababababababababababababababababababababababab";
+        HelperPrivateFrameV2 bootstrap = CredentialBootstrap(profile, generation, 123);
+        HelperPrivateFrameV2 assignment = CredentialAssignment(
+            profile, generation, HelperAssignmentKindV2.Verify, assignmentId);
+        CredentialNativeCallTraceEntry[] mutatingTrace =
+        [
+            new(1, "CredWriteW", fingerprint, assignmentId, "success", null, null),
+        ];
+        HelperProcessReceipt process = new(
+            50123, 0, new string('b', 64),
+            new HelperReceiptV2 { Outcome = HelperOutcomeV2.FailedKnown, AssignmentId = assignmentId },
+            [], 2, 0, 0, 0, 1, 0, true, false,
+            JsonSerializer.SerializeToUtf8Bytes(mutatingTrace),
+            null,
+            JsonSerializer.SerializeToUtf8Bytes(new CredentialNativeCanaryEvidence(
+                0, 0, ["utf-8", "utf-16le"],
+                [new("private protocol request", "private-pipe-bytes", 0, 0, 0)])),
+            true, false, 0, 2);
+        HelperStagingReceipt staging = new(
+            assignmentId + "-preflight", "none", 0, new string('0', 64),
+            null, 0, null, false, true);
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-Preflight-Oracle-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
+        using CredentialNativeQualificationSupervisor supervisor = new(
+            new CredentialHelperCoordinator(store, Launcher(Path.Combine(root, "fake-store"))),
+            expectedInheritedPrivateHandleCount: 2,
+            targetFingerprints: new Dictionary<string, string>
+            {
+                [profile + "/" + generation] = fingerprint,
+            });
+
+        InvalidDataException failure = Assert.ThrowsExactly<InvalidDataException>(() =>
+            supervisor.CapturePreflightPhaseForTest(
+                "credential-size-boundaries",
+                "preflight-maximum",
+                bootstrap,
+                assignment,
+                new CoordinatedHelperReceipt(process, staging)));
+        Assert.AreEqual("preflight-absence-oracle-rejected",
+            failure.Data["CredentialNativeManualValidationReasonCode"]);
+        CredentialNativeQualificationEvidence snapshot = supervisor.SnapshotForTest();
+        Assert.AreEqual(0, snapshot.Scenarios.Count);
+        Assert.AreEqual(0, snapshot.NativeCallCounts.Total);
+        Assert.AreEqual(1, snapshot.RejectedPhase?.CanonicalCallCounts?.CredWriteW);
+        Assert.AreEqual("preflight-absence-oracle-rejected", snapshot.RejectedPhase?.ValidationReason);
+    }
+
+    [TestMethod]
+    public void CleanupAbsenceOracleSetsAmbiguityBeforeAdmissionAndAggregateCounting()
+    {
+        const string profile = "wp4-interactive-primary";
+        const string generation = "g001";
+        const string assignmentId = "wp4-v2/interactive-entry-submit/cleanup";
+        const string fingerprint = "abababababababababababababababababababababababababababababababab";
+        HelperPrivateFrameV2 bootstrap = CredentialBootstrap(profile, generation, 125);
+        HelperPrivateFrameV2 assignment = CredentialAssignment(
+            profile, generation, HelperAssignmentKindV2.Delete, assignmentId);
+        CredentialNativeCallTraceEntry[] incompleteTrace =
+        [
+            new(1, "CredDeleteW", fingerprint, assignmentId, "success", null, null),
+        ];
+        HelperProcessReceipt process = new(
+            50125, 0, new string('b', 64),
+            new HelperReceiptV2 { Outcome = HelperOutcomeV2.Completed, AssignmentId = assignmentId },
+            [], 2, 0, 0, 0, 1, 0, true, false,
+            JsonSerializer.SerializeToUtf8Bytes(incompleteTrace),
+            null,
+            JsonSerializer.SerializeToUtf8Bytes(new CredentialNativeCanaryEvidence(
+                0, 0, ["utf-8", "utf-16le"],
+                [new("private protocol request", "private-pipe-bytes", 0, 0, 0)])),
+            true, false, 0, 2);
+        HelperStagingReceipt staging = new(
+            "cleanup-incomplete", "staging/cleanup-incomplete/helper-receipt.v2.pb",
+            224, new string('c', 64), null, 0, null, true, true);
+        CredentialProfileProjection projection = new(
+            profile, generation, 1, 1, "deleted", "unavailable",
+            null, null, null, "cleanup-incomplete:terminal", "not-required", "confirmed", 3, BaseTime);
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-Cleanup-Oracle-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
+        using CredentialNativeQualificationSupervisor supervisor = new(
+            new CredentialHelperCoordinator(store, Launcher(Path.Combine(root, "fake-store"))),
+            expectedInheritedPrivateHandleCount: 2,
+            targetFingerprints: new Dictionary<string, string>
+            {
+                [profile + "/" + generation] = fingerprint,
+            });
+
+        InvalidDataException failure = Assert.ThrowsExactly<InvalidDataException>(() =>
+            supervisor.CaptureCleanupPhaseForTest(
+                "interactive-entry-submit", "cleanup", bootstrap, assignment,
+                new CoordinatedHelperReceipt(process, staging), projection));
+        Assert.AreEqual("cleanup-absence-oracle-rejected",
+            failure.Data["CredentialNativeManualValidationReasonCode"]);
+        CredentialNativeQualificationEvidence snapshot = supervisor.SnapshotForTest();
+        Assert.IsTrue(snapshot.CleanupAmbiguous);
+        Assert.IsTrue(snapshot.NamespaceBlocked);
+        Assert.AreEqual(0, snapshot.Scenarios.Count);
+        Assert.AreEqual(0, snapshot.NativeCallCounts.Total);
+        Assert.AreEqual(1, snapshot.RejectedPhase?.CanonicalCallCounts?.CredDeleteW);
+        Assert.AreEqual("cleanup-absence-oracle-rejected", snapshot.RejectedPhase?.ValidationReason);
+    }
+
     private static OneShotCredentialHelperLauncher Launcher(string fakeStoreRoot)
     {
         string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");

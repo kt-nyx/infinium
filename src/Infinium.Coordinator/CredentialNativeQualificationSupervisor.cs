@@ -167,7 +167,53 @@ internal sealed record CredentialNativeQualificationEvidence(
     CredentialNativeCallCounts NativeCallCounts,
     CredentialNativeStaleGateEvidence? StaleGate,
     CredentialNativeFailedManualPhaseEvidence? FailedManualPhase,
+    CredentialNativeRejectedPhaseEvidence? RejectedPhase,
     IReadOnlyList<CredentialNativeQualificationScenarioEvidence> Scenarios);
+
+internal sealed record CredentialNativeRejectedPhaseEvidence(
+    string PhaseId,
+    string AssignmentId,
+    HelperAssignmentKindV2 AssignmentKind,
+    string? AssignmentProfileId,
+    string? AssignmentGenerationId,
+    string? BootstrapProfileId,
+    string? BootstrapGenerationId,
+    IReadOnlyList<string> ResolvedAllowedTargetFingerprints,
+    HelperOutcomeV2 Outcome,
+    int ProcessId,
+    int ReportedNativeOperationCount,
+    CredentialNativeCallCounts? CanonicalCallCounts,
+    IReadOnlyList<CredentialNativeCallTraceEntry>? CanonicalCallTrace,
+    CredentialNativeEntryCleanupEvidence? EntryCleanup,
+    CredentialNativeCanaryEvidence? Canaries,
+    CredentialNativeStagingEvidence Staging,
+    CredentialNativeLifecycleEvidence? Lifecycle,
+    int NativeTraceByteLength,
+    string? NativeTraceSha256,
+    string NativeTraceParseResult,
+    int EntryCleanupByteLength,
+    string? EntryCleanupSha256,
+    string EntryCleanupParseResult,
+    int CanaryByteLength,
+    string? CanarySha256,
+    string CanaryParseResult,
+    int ExitCode,
+    string BinarySha256,
+    int InheritedPrivateHandleCount,
+    int StandardProtocolHandleCount,
+    int ListenerCount,
+    int NetworkOperationCount,
+    int ProcessTreeSurvivorCount,
+    bool ProcessTreeTerminated,
+    bool RetryAttempted,
+    bool ContainmentProbeExecuted,
+    bool ExcludedHandleAccessible,
+    int ActiveProcessCountBeforeJobClose,
+    int TotalContainedProcessCount,
+    bool NamespaceReuseBlocked,
+    string? NamespaceReuseBlockReason,
+    string ValidationStage,
+    string ValidationReason);
 
 internal sealed record CredentialNativeFailedManualPhaseEvidence(
     string AssignmentId,
@@ -318,6 +364,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
     private bool namespaceBlocked;
     private bool cleanupAmbiguous;
     private CredentialNativeFailedManualPhaseEvidence? failedManualPhase;
+    private CredentialNativeRejectedPhaseEvidence? rejectedPhase;
     private bool disposed;
     private CredentialNativeStaleGateEvidence? staleGate;
 
@@ -375,18 +422,48 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
             null,
             StagedBeforeAdmission: false,
             CoordinatorOnlyAdmission: true));
-        CredentialNativeQualificationPhaseEvidence evidence = Capture(
-            phaseId, assignment.Assignment, bootstrap.Bootstrap, helper, projection: null, dispatch: null);
-        if (expectedInheritedPrivateHandleCount == 2
-            && (evidence.Process.NativeCallTrace.Any(item => item.Operation != "CredReadW" && item.Operation != "CredFree")
-                || !evidence.Process.NativeCallTrace.Any(item =>
-                    item.Operation == "CredReadW" && item.Result == "ERROR_NOT_FOUND")))
-        {
-            throw new InvalidOperationException("Native preflight did not prove exact ERROR_NOT_FOUND without mutation.");
-        }
-        Add(scenarioId, evidence);
-        return evidence;
+        return CapturePreflightPhase(scenarioId, phaseId, bootstrap, assignment, helper);
     }
+
+    private CredentialNativeQualificationPhaseEvidence CapturePreflightPhase(
+        string scenarioId,
+        string phaseId,
+        HelperPrivateFrameV2 bootstrap,
+        HelperPrivateFrameV2 assignment,
+        CoordinatedHelperReceipt helper)
+    {
+        CredentialNativeRejectedPhaseEvidence raw = ObserveRejectedPhase(
+            phaseId, bootstrap.Bootstrap, assignment.Assignment, helper, projection: null);
+        try
+        {
+            CredentialNativeQualificationPhaseEvidence evidence = Capture(
+                phaseId, assignment.Assignment, bootstrap.Bootstrap, helper, projection: null, dispatch: null);
+            if (expectedInheritedPrivateHandleCount == 2
+                && (evidence.Process.NativeCallTrace.Any(item => item.Operation != "CredReadW" && item.Operation != "CredFree")
+                    || !evidence.Process.NativeCallTrace.Any(item =>
+                        item.Operation == "CredReadW" && item.Result == "ERROR_NOT_FOUND")))
+            {
+                throw ValidationFailure(
+                    CredentialNativeManualValidationStage.PhaseCapture,
+                    "preflight-absence-oracle-rejected");
+            }
+            AddValidated(scenarioId, evidence);
+            return evidence;
+        }
+        catch (Exception exception)
+        {
+            PromoteRejectedPhase(raw, ClassifyValidationFailure(exception));
+            throw;
+        }
+    }
+
+    internal CredentialNativeQualificationPhaseEvidence CapturePreflightPhaseForTest(
+        string scenarioId,
+        string phaseId,
+        HelperPrivateFrameV2 bootstrap,
+        HelperPrivateFrameV2 assignment,
+        CoordinatedHelperReceipt helper) =>
+        CapturePreflightPhase(scenarioId, phaseId, bootstrap, assignment, helper);
 
     internal async Task<CredentialNativeQualificationPhaseEvidence> ExecuteCredentialTransitionPhaseAsync(
         string scenarioId,
@@ -406,26 +483,41 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
                 assignment,
                 authoritativeNow,
                 bounded.Token).ConfigureAwait(false);
-        CredentialNativeFailedManualPhaseEvidence? rawManual = ObserveManualPhase(
-            assignment.Assignment, helper);
-        CredentialNativeQualificationPhaseEvidence evidence;
+        return CaptureCredentialTransitionPhase(
+            scenarioId, phaseId, bootstrap, assignment, helper, projection);
+    }
+
+    private CredentialNativeQualificationPhaseEvidence CaptureCredentialTransitionPhase(
+        string scenarioId,
+        string phaseId,
+        HelperPrivateFrameV2 bootstrap,
+        HelperPrivateFrameV2 assignment,
+        CoordinatedHelperReceipt helper,
+        CredentialProfileProjection projection)
+    {
+        CredentialNativeRejectedPhaseEvidence raw = ObserveRejectedPhase(
+            phaseId, bootstrap.Bootstrap, assignment.Assignment, helper, projection);
+        CredentialNativeFailedManualPhaseEvidence? rawManual = ObserveManualPhase(assignment.Assignment, helper);
         try
         {
-            evidence = Capture(
+            CredentialNativeQualificationPhaseEvidence evidence = Capture(
                 phaseId,
                 assignment.Assignment,
                 bootstrap.Bootstrap,
                 helper,
                 projection,
                 dispatch: null);
+            AddValidated(scenarioId, evidence);
+            return evidence;
         }
         catch (Exception exception)
         {
-            PromoteManualFailure(rawManual, ClassifyValidationFailure(exception));
+            (CredentialNativeManualValidationStage Stage, string ReasonCode) failure =
+                ClassifyValidationFailure(exception);
+            PromoteRejectedPhase(raw, failure);
+            PromoteManualFailure(rawManual, failure);
             throw;
         }
-        Add(scenarioId, evidence);
-        return evidence;
     }
 
     internal async Task<CredentialNativeQualificationPhaseEvidence> ExecuteInterruptedCredentialTransitionPhaseAsync(
@@ -452,15 +544,26 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         }
         catch (CredentialLifecycleInterruptionException interruption)
         {
-            CredentialNativeQualificationPhaseEvidence evidence = Capture(
-                phaseId,
-                assignment.Assignment,
-                bootstrap.Bootstrap,
-                interruption.Helper,
-                interruption.DurableProjection,
-                dispatch: null);
-            Add(scenarioId, evidence);
-            return evidence;
+            CredentialNativeRejectedPhaseEvidence raw = ObserveRejectedPhase(
+                phaseId, bootstrap.Bootstrap, assignment.Assignment,
+                interruption.Helper, interruption.DurableProjection);
+            try
+            {
+                CredentialNativeQualificationPhaseEvidence evidence = Capture(
+                    phaseId,
+                    assignment.Assignment,
+                    bootstrap.Bootstrap,
+                    interruption.Helper,
+                    interruption.DurableProjection,
+                    dispatch: null);
+                AddValidated(scenarioId, evidence);
+                return evidence;
+            }
+            catch (Exception exception)
+            {
+                PromoteRejectedPhase(raw, ClassifyValidationFailure(exception));
+                throw;
+            }
         }
     }
 
@@ -492,25 +595,57 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         (CoordinatedHelperReceipt helper, CredentialProfileProjection projection) =
             await coordinator.ExecuteCredentialTransitionAsync(
                 attemptId, bootstrap, assignment, authoritativeNow, bounded.Token).ConfigureAwait(false);
-        CredentialNativeQualificationPhaseEvidence evidence = Capture(
-            phaseId,
-            assignment.Assignment,
-            bootstrap.Bootstrap,
-            helper,
-            projection,
-            dispatch: null);
-        Add(scenarioId, evidence);
-        if (helper.Process.Receipt.Outcome != HelperOutcomeV2.Completed
-            || expectedInheritedPrivateHandleCount == 2
-                && !evidence.Process.NativeCallTrace.Any(item =>
-                    item.Operation == "CredReadW" && item.Result == "ERROR_NOT_FOUND"))
-        {
-            RecordCleanupAmbiguity(scenarioId, phaseId);
-            throw new InvalidOperationException(
-                "Exact-target cleanup did not produce a confirmed ERROR_NOT_FOUND absence proof.");
-        }
-        return evidence;
+        return CaptureCleanupPhase(
+            scenarioId, phaseId, bootstrap, assignment, helper, projection);
     }
+
+    private CredentialNativeQualificationPhaseEvidence CaptureCleanupPhase(
+        string scenarioId,
+        string phaseId,
+        HelperPrivateFrameV2 bootstrap,
+        HelperPrivateFrameV2 assignment,
+        CoordinatedHelperReceipt helper,
+        CredentialProfileProjection projection)
+    {
+        CredentialNativeRejectedPhaseEvidence raw = ObserveRejectedPhase(
+            phaseId, bootstrap.Bootstrap, assignment.Assignment, helper, projection);
+        try
+        {
+            CredentialNativeQualificationPhaseEvidence evidence = Capture(
+                phaseId,
+                assignment.Assignment,
+                bootstrap.Bootstrap,
+                helper,
+                projection,
+                dispatch: null);
+            if (helper.Process.Receipt.Outcome != HelperOutcomeV2.Completed
+                || expectedInheritedPrivateHandleCount == 2
+                    && !evidence.Process.NativeCallTrace.Any(item =>
+                        item.Operation == "CredReadW" && item.Result == "ERROR_NOT_FOUND"))
+            {
+                RecordCleanupAmbiguity(scenarioId, phaseId);
+                throw ValidationFailure(
+                    CredentialNativeManualValidationStage.PhaseCapture,
+                    "cleanup-absence-oracle-rejected");
+            }
+            AddValidated(scenarioId, evidence);
+            return evidence;
+        }
+        catch (Exception exception)
+        {
+            PromoteRejectedPhase(raw, ClassifyValidationFailure(exception));
+            throw;
+        }
+    }
+
+    internal CredentialNativeQualificationPhaseEvidence CaptureCleanupPhaseForTest(
+        string scenarioId,
+        string phaseId,
+        HelperPrivateFrameV2 bootstrap,
+        HelperPrivateFrameV2 assignment,
+        CoordinatedHelperReceipt helper,
+        CredentialProfileProjection projection) =>
+        CaptureCleanupPhase(scenarioId, phaseId, bootstrap, assignment, helper, projection);
 
     internal async Task<CredentialNativeQualificationPhaseEvidence> ExecuteAbsenceOnlyCleanupPhaseAsync(
         string scenarioId,
@@ -528,18 +663,30 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         CoordinatedHelperReceipt helper = new(process, new(
             assignment.Assignment.AssignmentId + "-absence",
             "none", 0, new string('0', 64), null, 0, null, false, true));
-        CredentialNativeQualificationPhaseEvidence evidence = Capture(
-            phaseId, assignment.Assignment, bootstrap.Bootstrap, helper, projection: null, dispatch: null);
-        Add(scenarioId, evidence);
-        if (process.Receipt.Outcome != HelperOutcomeV2.Completed
-            || expectedInheritedPrivateHandleCount == 2
-                && !evidence.Process.NativeCallTrace.Any(item =>
-                    item.Operation == "CredReadW" && item.Result == "ERROR_NOT_FOUND"))
+        CredentialNativeRejectedPhaseEvidence raw = ObserveRejectedPhase(
+            phaseId, bootstrap.Bootstrap, assignment.Assignment, helper, projection: null);
+        try
         {
-            RecordCleanupAmbiguity(scenarioId, phaseId);
-            throw new InvalidOperationException("Exact predecessor absence cleanup was not confirmed.");
+            CredentialNativeQualificationPhaseEvidence evidence = Capture(
+                phaseId, assignment.Assignment, bootstrap.Bootstrap, helper, projection: null, dispatch: null);
+            if (process.Receipt.Outcome != HelperOutcomeV2.Completed
+                || expectedInheritedPrivateHandleCount == 2
+                    && !evidence.Process.NativeCallTrace.Any(item =>
+                        item.Operation == "CredReadW" && item.Result == "ERROR_NOT_FOUND"))
+            {
+                RecordCleanupAmbiguity(scenarioId, phaseId);
+                throw ValidationFailure(
+                    CredentialNativeManualValidationStage.PhaseCapture,
+                    "cleanup-absence-oracle-rejected");
+            }
+            AddValidated(scenarioId, evidence);
+            return evidence;
         }
-        return evidence;
+        catch (Exception exception)
+        {
+            PromoteRejectedPhase(raw, ClassifyValidationFailure(exception));
+            throw;
+        }
     }
 
     internal async Task<CredentialNativeQualificationPhaseEvidence> ExecuteAuthoritativeDispatchPhaseAsync(
@@ -565,17 +712,17 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
             authoritativeNow,
             bounded.Token).ConfigureAwait(false);
         ProviderDispatchGateReceipt finalGate = result.FinalGate;
-        if (!finalGate.Authorized)
+        CredentialNativeRejectedPhaseEvidence raw = ObserveRejectedPhase(
+            phaseId, bootstrap.Bootstrap, assignment.Assignment, result.Helper, projection: null);
+        try
         {
-            throw new InvalidDataException("The qualification dispatch did not pass its real authoritative final gate.");
-        }
-        CredentialNativeQualificationPhaseEvidence evidence = Capture(
-            phaseId,
-            assignment.Assignment,
-            bootstrap.Bootstrap,
-            result.Helper,
-            projection: null,
-            new(
+            if (!finalGate.Authorized)
+            {
+                throw ValidationFailure(
+                    CredentialNativeManualValidationStage.PhaseCapture,
+                    "authoritative-dispatch-gate-rejected");
+            }
+            CredentialNativeDispatchEvidence dispatch = new(
                 finalGate.DispatchFenceId,
                 finalGate.ReservationId,
                 finalGate.CoordinatorFencingEpoch,
@@ -587,9 +734,22 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
                 "may-have-started-durable",
                 result.Settlement.Kind.ToString(),
                 result.Persisted.ResponseId,
-                result.Persisted.UsageEntryId));
-        Add(scenarioId, evidence);
-        return evidence;
+                result.Persisted.UsageEntryId);
+            CredentialNativeQualificationPhaseEvidence evidence = Capture(
+                phaseId,
+                assignment.Assignment,
+                bootstrap.Bootstrap,
+                result.Helper,
+                projection: null,
+                dispatch);
+            AddValidated(scenarioId, evidence);
+            return evidence;
+        }
+        catch (Exception exception)
+        {
+            PromoteRejectedPhase(raw, ClassifyValidationFailure(exception));
+            throw;
+        }
     }
 
     internal void RecordCleanupAmbiguity(string scenarioId, string phaseId)
@@ -760,8 +920,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
                 process.NativeCredentialOperationCount,
                 requireTrace: expectedInheritedPrivateHandleCount == 2);
         }
-        catch (Exception exception) when (exception is InvalidDataException
-            or System.Text.Json.JsonException or NotSupportedException)
+        catch (Exception exception) when (IsBoundedEvidenceShapeFailure(exception))
         {
             throw ValidationFailure(
                 CredentialNativeManualValidationStage.NativeTrace,
@@ -769,9 +928,13 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
                 exception);
         }
         string profileId = assignment.AccessProfileId?.Value
-            ?? throw new InvalidDataException("Qualification evidence requires an exact profile identity.");
+            ?? throw ValidationFailure(
+                CredentialNativeManualValidationStage.ExactTarget,
+                "assignment-profile-identity-missing");
         string generationId = assignment.GenerationId?.Value
-            ?? throw new InvalidDataException("Qualification evidence requires an exact generation identity.");
+            ?? throw ValidationFailure(
+                CredentialNativeManualValidationStage.ExactTarget,
+                "assignment-generation-identity-missing");
         if (trace.Any(item => item.Scenario != assignment.AssignmentId))
         {
             throw ValidationFailure(
@@ -804,8 +967,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
                 process.NativeCanaryEvidenceBytes,
                 requireEvidence: expectedInheritedPrivateHandleCount == 2);
         }
-        catch (Exception exception) when (exception is InvalidDataException
-            or System.Text.Json.JsonException or NotSupportedException)
+        catch (Exception exception) when (IsBoundedEvidenceShapeFailure(exception))
         {
             throw ValidationFailure(
                 CredentialNativeManualValidationStage.Canary,
@@ -817,8 +979,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         {
             entryCleanup = ParseEntryCleanup(process.NativeEntryCleanupBytes);
         }
-        catch (Exception exception) when (exception is InvalidDataException
-            or System.Text.Json.JsonException or NotSupportedException)
+        catch (Exception exception) when (IsBoundedEvidenceShapeFailure(exception))
         {
             throw ValidationFailure(
                 CredentialNativeManualValidationStage.ManualUi,
@@ -827,8 +988,11 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         }
         bool manualEntry = expectedInheritedPrivateHandleCount == 2
             && RequiresManualEntryEvidence(assignment.AssignmentId, assignment.AssignmentKind);
-        bool invalidManualEntry = manualEntry
-            && (entryCleanup is null || !entryCleanup.InitialBlank || !entryCleanup.Terminal
+        bool invalidManualEntry;
+        try
+        {
+            invalidManualEntry = manualEntry
+                && (entryCleanup is null || !entryCleanup.InitialBlank || !entryCleanup.Terminal
                 || !entryCleanup.WindowDestroyed || !entryCleanup.BuffersCleared
                 || !entryCleanup.ThreadJoined || !entryCleanup.ClipboardMessagesBlocked
                 || entryCleanup.PreReadinessTerminalMessages < 0
@@ -919,6 +1083,14 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
                 || process.Receipt.Outcome == HelperOutcomeV2.Cancelled && entryCleanup.Action != "cancel"
                 || process.Receipt.Outcome == HelperOutcomeV2.Completed && entryCleanup.Action != "submit"
                 || entryCleanup.Action is not ("submit" or "cancel"));
+        }
+        catch (Exception exception) when (IsBoundedEvidenceShapeFailure(exception))
+        {
+            throw ValidationFailure(
+                CredentialNativeManualValidationStage.ManualUi,
+                "entry-cleanup-semantic-rejected",
+                exception);
+        }
         if (invalidManualEntry)
         {
             throw ValidationFailure(
@@ -997,6 +1169,21 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         phases.Add(evidence);
     }
 
+    private void AddValidated(string scenarioId, CredentialNativeQualificationPhaseEvidence evidence)
+    {
+        try
+        {
+            Add(scenarioId, evidence);
+        }
+        catch (Exception exception) when (exception is InvalidDataException or ArgumentException)
+        {
+            throw ValidationFailure(
+                CredentialNativeManualValidationStage.PhaseCapture,
+                "phase-admission-rejected",
+                exception);
+        }
+    }
+
     internal static string ClassifyManualPhaseFailure(
         HelperOutcomeV2 outcome,
         bool? initialBlank,
@@ -1018,6 +1205,156 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
             "wp4-v2/backup-restore-reauthentication/restored-new-generation",
         ],
         StringComparer.Ordinal);
+
+    private CredentialNativeRejectedPhaseEvidence ObserveRejectedPhase(
+        string phaseId,
+        HelperBootstrapV2 bootstrap,
+        HelperAssignmentV2 assignment,
+        CoordinatedHelperReceipt helper,
+        CredentialProfileProjection? projection)
+    {
+        HelperProcessReceipt process = helper.Process;
+        IReadOnlyList<CredentialNativeCallTraceEntry>? trace = null;
+        CredentialNativeCallCounts? counts = null;
+        string traceParse = "absent";
+        try
+        {
+            trace = ParseAndValidateTrace(
+                process.NativeCallTraceBytes,
+                process.NativeCredentialOperationCount,
+                requireTrace: process.NativeCallTraceBytes is not null);
+            traceParse = "canonical-validated";
+            counts = new(
+                trace.Count(item => item.Operation == "CredWriteW"),
+                trace.Count(item => item.Operation == "CredReadW"),
+                trace.Count(item => item.Operation == "CredDeleteW"),
+                trace.Count(item => item.Operation == "CredFree"),
+                trace.Count);
+        }
+        catch (Exception exception)
+        {
+            traceParse = "malformed-" + exception.GetType().Name;
+        }
+
+        CredentialNativeEntryCleanupEvidence? entry = null;
+        string entryParse = "absent";
+        if (process.NativeEntryCleanupBytes is not null)
+        {
+            try
+            {
+                entry = System.Text.Json.JsonSerializer.Deserialize<CredentialNativeEntryCleanupEvidence>(
+                    process.NativeEntryCleanupBytes, TraceJsonOptions);
+                entryParse = entry is null ? "json-null" : "parsed";
+            }
+            catch (Exception exception)
+            {
+                entryParse = "malformed-" + exception.GetType().Name;
+            }
+        }
+
+        CredentialNativeCanaryEvidence? canaries = null;
+        string canaryParse = "absent";
+        if (process.NativeCanaryEvidenceBytes is not null)
+        {
+            try
+            {
+                canaries = System.Text.Json.JsonSerializer.Deserialize<CredentialNativeCanaryEvidence>(
+                    process.NativeCanaryEvidenceBytes, TraceJsonOptions);
+                canaryParse = canaries is null ? "json-null" : "parsed";
+            }
+            catch (Exception exception)
+            {
+                canaryParse = "malformed-" + exception.GetType().Name;
+            }
+        }
+
+        CredentialNativeLifecycleEvidence? lifecycle = projection is null
+            ? null
+            : new(
+                projection.ProfileId,
+                projection.GenerationId,
+                projection.GenerationOrdinal,
+                projection.RevocationEpoch,
+                projection.LifecycleState,
+                projection.VerificationState,
+                projection.RecoveryDisposition,
+                projection.CleanupDisposition,
+                projection.ProjectionVersion,
+                projection.IntentId);
+        string? assignmentProfile = assignment.AccessProfileId?.Value;
+        string? assignmentGeneration = assignment.GenerationId?.Value;
+        string? bootstrapProfile = bootstrap.Credential?.AccessProfileId?.Value;
+        string? bootstrapGeneration = bootstrap.Credential?.GenerationId?.Value;
+        string[] allowedFingerprints = new[]
+            {
+                assignmentProfile is null || assignmentGeneration is null
+                    ? null
+                    : assignmentProfile + "/" + assignmentGeneration,
+                bootstrapProfile is null || bootstrapGeneration is null
+                    ? null
+                    : bootstrapProfile + "/" + bootstrapGeneration,
+            }
+            .Where(key => key is not null && targetFingerprints.ContainsKey(key))
+            .Select(key => targetFingerprints[key!])
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        return new(
+            phaseId,
+            assignment.AssignmentId,
+            assignment.AssignmentKind,
+            assignmentProfile,
+            assignmentGeneration,
+            bootstrapProfile,
+            bootstrapGeneration,
+            allowedFingerprints,
+            process.Receipt.Outcome,
+            process.ProcessId,
+            process.NativeCredentialOperationCount,
+            counts,
+            trace,
+            entry,
+            canaries,
+            StagingEvidence(helper.Staging),
+            lifecycle,
+            ByteLength(process.NativeCallTraceBytes),
+            ByteHash(process.NativeCallTraceBytes),
+            traceParse,
+            ByteLength(process.NativeEntryCleanupBytes),
+            ByteHash(process.NativeEntryCleanupBytes),
+            entryParse,
+            ByteLength(process.NativeCanaryEvidenceBytes),
+            ByteHash(process.NativeCanaryEvidenceBytes),
+            canaryParse,
+            process.ExitCode,
+            process.BinarySha256,
+            process.InheritedPrivateHandleCount,
+            process.StandardProtocolHandleCount,
+            process.ListenerCount,
+            process.NetworkOperationCount,
+            process.ProcessTreeSurvivorCount,
+            process.ProcessTreeTerminated,
+            process.RetryAttempted,
+            process.ContainmentProbeExecuted,
+            process.ExcludedHandleAccessible,
+            process.ActiveProcessCountBeforeJobClose,
+            process.TotalContainedProcessCount,
+            process.NativeNamespaceReuseBlocked,
+            process.NativeNamespaceReuseBlockReason,
+            "raw-observation",
+            "pending-validation");
+    }
+
+    private void PromoteRejectedPhase(
+        CredentialNativeRejectedPhaseEvidence raw,
+        (CredentialNativeManualValidationStage Stage, string ReasonCode) failure)
+    {
+        rejectedPhase ??= raw with
+        {
+            ValidationStage = failure.Stage.ToString(),
+            ValidationReason = failure.ReasonCode,
+        };
+    }
 
     private static CredentialNativeFailedManualPhaseEvidence? ObserveManualPhase(
         HelperAssignmentV2 assignment,
@@ -1166,6 +1503,16 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         return failure;
     }
 
+    private static bool IsBoundedEvidenceShapeFailure(Exception exception) => exception is
+        InvalidDataException
+        or System.Text.Json.JsonException
+        or NotSupportedException
+        or NullReferenceException
+        or KeyNotFoundException
+        or ArgumentNullException
+        or FormatException
+        or OverflowException;
+
     private static string? ByteHash(byte[]? value) => value is null
         ? null
         : Convert.ToHexStringLower(SHA256.HashData(value));
@@ -1207,6 +1554,44 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
     }
 
     internal CredentialNativeFailedManualPhaseEvidence? FailedManualPhaseForTest => failedManualPhase;
+
+    internal void CapturePhaseForTest(
+        string phaseId,
+        HelperPrivateFrameV2 bootstrap,
+        HelperPrivateFrameV2 assignment,
+        CoordinatedHelperReceipt helper,
+        CredentialProfileProjection? projection = null)
+    {
+        if (projection is not null)
+        {
+            _ = CaptureCredentialTransitionPhase(
+                CredentialNativeQualificationPhasesV2.Parse(
+                    assignment.Assignment.AssignmentId,
+                    assignment.Assignment.AssignmentKind).ScenarioId,
+                phaseId,
+                bootstrap,
+                assignment,
+                helper,
+                projection);
+            return;
+        }
+        CredentialNativeRejectedPhaseEvidence raw = ObserveRejectedPhase(
+            phaseId, bootstrap.Bootstrap, assignment.Assignment, helper, projection: null);
+        try
+        {
+            _ = Capture(
+                phaseId, assignment.Assignment, bootstrap.Bootstrap, helper, projection: null, dispatch: null);
+        }
+        catch (Exception exception)
+        {
+            PromoteRejectedPhase(raw, ClassifyValidationFailure(exception));
+            throw;
+        }
+    }
+
+    internal CredentialNativeRejectedPhaseEvidence? RejectedPhaseForTest => rejectedPhase;
+
+    internal CredentialNativeQualificationEvidence SnapshotForTest() => Snapshot();
 
     private static CredentialNativeStagingEvidence StagingEvidence(HelperStagingReceipt staging) => new(
         staging.AttemptId,
@@ -1283,6 +1668,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         AggregateCallCounts(),
         staleGate,
         failedManualPhase,
+        rejectedPhase,
         scenarios
             .OrderBy(pair => pair.Key, StringComparer.Ordinal)
             .Select(pair => new CredentialNativeQualificationScenarioEvidence(pair.Key, pair.Value.ToArray()))
