@@ -4832,3 +4832,10 @@ retired without retry despite the pre-effect classification. Absolute-path
 handling is corrected with an executable regression before any fresh recovery
 identity is prepared.
 WP4_RECOVERY_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-recovery/6a1e3f05-2189-46f8-8dff-48edb40496dc sha256=014d0f66463bd780d031718b88eba36f75efb5829afef78cb11383da24a374c4 execution_head_commit=1bfb59aaec9b4c0ff5b2f8d5119cd5c954331be8 status=failed-pre-effect-validator-path native_calls=0 namespace_blocked=true later_native_calls=0
+
+Fresh recovery identity
+`infinium.m1-s6.wp4.credential-native-recovery/89baee92-14d6-4f2b-a970-0fe6be15c54c`
+supersedes the pre-effect-refused authority. It has output root
+`artifacts/m1-slice6/wp4-native-recovery-89baee92`, a new derived one-shot
+lock, and expiry `2026-08-14T16:37:12.0906842Z`. It remains a non-executable
+draft pending exact close-ready binding and a fresh independent review.
