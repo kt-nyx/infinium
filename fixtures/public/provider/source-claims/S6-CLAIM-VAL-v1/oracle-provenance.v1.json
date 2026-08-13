@@ -18,6 +18,7 @@
     {"state": "authored-validation", "reason": "public validation expectations independently derived before comparison"},
     {"state": "authority-abstention-coverage-correction", "reason": "before corrected comparison, added a distinct explicit abstention case without contradiction, refusal, or empty-result semantics"},
     {"state": "authority-structural-admission-correction", "reason": "before corrected comparison, bound exact host authorization and generic structural claim, condition, authority, and application semantics"},
+    {"state": "authority-aggregate-meaning-correction", "reason": "before corrected comparison, removed a misleading provider operation count because mutually exclusive harness scenarios share one retained operation identity"},
     {"state": "frozen-validation", "reason": "oracle identity fixed before product observation"}
   ],
   "replacement_rule": "If this oracle drives a product, prompt, schema, or oracle correction, replace it with a materially independent oracle before another validation comparison."
