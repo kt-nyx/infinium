@@ -3752,3 +3752,23 @@ operation, source/Nexus/search refresh, private/evaluator/archive access,
 protected external effect, WP7 behavior, current-state advancement, or push
 occurred. This is an implementation candidate awaiting fresh independent WP6
 review; it is not self-accepted and does not authorize WP7.
+
+The product implementation was committed as exact candidate
+`f3b73b1399b6a13e666a8de23861a7fec199a3c5`. Its first exact candidate-bound
+`Layer6Review` exposed a verification-gate path-authority defect: the retained
+WP1-era allowlist did not yet include the accepted WP6 semantic fixture catalog
+or public source-claim package root. Bounded gate correction
+`8cfcf6276978f18e9eb3ce8aa6cc671a1261296a` adds only those two WP6 paths and
+an exact contract regression; it does not broaden protected, private, archive,
+network, credential, or later-package authority. The focused gate-contract test
+passed 1/0/0.
+
+Candidate-bound `Layer6Review` then passed from exact WP6 baseline
+`f6e155766a16b5c3b3c48cd233950ccb01126f90` through exact final candidate
+`8cfcf6276978f18e9eb3ce8aa6cc671a1261296a`: 35 changed paths, zero allowed-
+path failures, zero strict-JSON failures, zero relative-link failures, and zero
+private/archive matches. Its 1,358-byte receipt has SHA-256
+`b1230e70c4b28d9b2ea45268f1f5f0fd393daa81459d013c9f543cd26940424f`.
+The post-gate exact-root cleanup again matched zero repository-owned
+`dotnet`/`testhost` processes and verified zero survivors. This retained
+evidence remains candidate-only and does not self-accept WP6.
