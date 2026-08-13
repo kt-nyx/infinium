@@ -5276,3 +5276,31 @@ ambiguity and blocks the namespace without admission. A fresh independent
 review accepted the correction for freeze. No Credential Manager, manual UI,
 DNS, network, provider, billable, private-fixture, archive, later-package, or
 push operation occurred during this correction.
+
+## WP4 fresh post-`16df3175` authority preparation — 2026-08-13
+
+The rejected-phase evidence correction is frozen at commit
+`009cc71dbd5dd4308e7cfc0de729a7f71c3e7fb5`; fresh schema, validator, gate,
+and authorization-test consumer binding is frozen at close-ready commit
+`2d786c271b2b52e8513c215ceaed2812417a2754`. The consumed `16df3175`
+authority remains bound to manifest SHA-256
+`6e0d5212747405a4f54e0ad18808a5ac8eaab5f147cf7c3204917c41660eee13`,
+terminal artifact SHA-256
+`f9d4e1a882f37b9d9c666bac2bb7cb517ea6367839b2b0e775e70ae52f3099ec`,
+and authority-lock SHA-256
+`f932541f83c87a36a1842b232dbcaa933a23e9ce5213275611cef57e44bdf9f3`.
+Its three affected targets have exact cleanup/absence proof; whole-namespace
+absence is unproven, and the namespace remains terminally blocked and never
+reusable.
+
+Fresh preparation reserves manifest identity
+`infinium.m1-s6.wp4.credential-native-authorization/ad876b9a-9f45-4eb4-8d12-5970d76dd4ea`,
+namespace `m1-s6-wp4-native-ad876b9a-9f45-4eb4-8d12-5970d76dd4ea`,
+12 newly derived exact targets, output root
+`artifacts/m1-slice6/wp4-native-ad876b9a`, and finite expiry
+`2026-08-15T20:55:00.0000000Z`. Structural and semantic validation reports
+20,951 exact bytes and SHA-256
+`5ee6cf409f3144303659cfec20f0fb234127a54bb8dfed8f67b3462d6c16a559`.
+The manifest is non-authorizing: there is no owner marker, execution marker,
+output root, or one-shot lock for this identity, and all credential, DNS,
+network, provider, and billable operation counts for preparation are zero.
