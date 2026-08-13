@@ -4595,3 +4595,4 @@ Layer 6 checks, all target fingerprints and no-reuse rules, stale-authority
 closure, branch isolation, owner/native marker absence, and zero repository-
 owned process survivors. No native effect occurred. WP4 remains unaccepted and
 closed until the owner explicitly accepts the exact final manifest bytes.
+WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/ecc56ea0-6ba7-4664-9cf1-8763bc3a26af sha256=703475a8d5fa9cf911c0d5a2b4f2576d3070bc551ff281070f38ba2cebe39d0b close_ready_commit=9c61f5af1ac7bbb14dae2737ca2220848a063697 expires_at_utc=2026-08-15T15:18:47.8649525Z
