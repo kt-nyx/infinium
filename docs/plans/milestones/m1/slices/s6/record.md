@@ -5026,3 +5026,15 @@ trace, exact-target drift, malformed and semantically failed canaries,
 malformed UI evidence, negative pre-readiness counters, and an expected helper
 outcome rejected by a later oracle. No native credential, provider, network,
 or private operation occurred during this correction.
+
+Fresh replacement authority now uses schema identity
+`infinium.repository.wp4-credential-native-authorization/1.2.0`, which names
+the consumed `e0cb0693` one-shot artifact accurately as an authority lock
+rather than a nonexistent gate receipt. The new manifest reserves identity
+`infinium.m1-s6.wp4.credential-native-authorization/a1976c78-a49b-4581-9a8c-9b6172484e0b`,
+namespace `m1-s6-wp4-native-a1976c78-a49b-4581-9a8c-9b6172484e0b`, 12 newly
+derived exact targets, output root
+`artifacts/m1-slice6/wp4-native-a1976c78`, and finite expiry
+`2026-08-15T18:24:20.5325020Z`. It binds close-ready consumer commit
+`a0a467a64566877aa647a238372f78f2673b4956`. No owner marker or native effect
+is recorded for this replacement authority.
