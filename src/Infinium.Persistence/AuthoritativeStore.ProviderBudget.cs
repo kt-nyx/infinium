@@ -964,7 +964,7 @@ public sealed partial class AuthoritativeStore
                   r.provider_response_id,r.raw_response_payload_id,r.response_headers_payload_id,
                   reservation.maximum_nano_usd,usage.calculated_nano_usd,
                   finalization.admission_state,event.event_kind,replay.replay_state,replay.replay_edge_id,
-                  r.authorization_id,r.operation_kind,replay.effective_configuration_id,usage.usage_entry_id,
+                  r.authorization_id,r.operation_kind,r.owner_kind,r.owner_id,replay.effective_configuration_id,usage.usage_entry_id,
                   settlement.settlement_id
                 FROM provider_responses r
                 JOIN provider_reservations reservation ON reservation.operation_id=r.operation_id
@@ -993,6 +993,8 @@ public sealed partial class AuthoritativeStore
             string replayEdgeId;
             string authorizationId;
             string operationKind;
+            string ownerKind;
+            string ownerId;
             string effectiveConfigurationId;
             string usageEntryId;
             string? settlementId;
@@ -1017,9 +1019,11 @@ public sealed partial class AuthoritativeStore
                 replayEdgeId = reader.GetString(12);
                 authorizationId = reader.GetString(13);
                 operationKind = reader.GetString(14);
-                effectiveConfigurationId = reader.GetString(15);
-                usageEntryId = reader.GetString(16);
-                settlementId = reader.IsDBNull(17) ? null : reader.GetString(17);
+                ownerKind = reader.GetString(15);
+                ownerId = reader.GetString(16);
+                effectiveConfigurationId = reader.GetString(17);
+                usageEntryId = reader.GetString(18);
+                settlementId = reader.IsDBNull(19) ? null : reader.GetString(19);
             }
             bool unresolved = eventKind.StartsWith("retained-", StringComparison.Ordinal);
             ProviderOperationState state = unresolved ? ProviderOperationState.UnresolvedHold
@@ -1029,7 +1033,7 @@ public sealed partial class AuthoritativeStore
                 replayState, responseId, httpStatus, clientRequestId,
                 providerRequestId, providerResponseId, ReadRetainedPayloadBytes(rawPayloadId),
                 headersPayloadId is null ? null : ReadRetainedPayloadBytes(headersPayloadId), replayEdgeId,
-                authorizationId, operationKind, effectiveConfigurationId, usageEntryId, settlementId);
+                authorizationId, operationKind, ownerKind, ownerId, effectiveConfigurationId, usageEntryId, settlementId);
         }
     }
 

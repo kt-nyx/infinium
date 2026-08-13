@@ -887,7 +887,20 @@ documentation/search/tool output and expects it to remain untrusted data.
 All provider IDs, content, and usage are marked synthetic. These packages do
 not call a network or use credentials.
 
-### 10.3 Live source-claim extraction package
+### 10.3 Deterministic source-claim packages
+
+`S6-CLAIM-DEV-v1` and `S6-CLAIM-VAL-v1` are the public development and
+validation packages for source-claim acquisition before any live request.
+Their product-reachable inputs contain only invented public passages, exact
+source/passage identities, a minimized-context manifest, and retained
+synthetic provider transcripts. A separate author froze the harness-only
+oracles before product comparison. Together they cover positive,
+unsupported, conditional/version-scoped, contradiction, abstention, empty,
+hostile, malformed, refusal, incomplete, deleted, drift, and no-model states.
+They perform zero network, credential, provider, token-count, or source-refresh
+operations and do not create local facts, findings, cases, or taxonomy.
+
+### 10.4 Live source-claim extraction package
 
 `LLM-CLAIM-LIVE-VAL` is a project-authored validation package for the accepted
 source-claim extraction contract. It contains:
@@ -913,7 +926,7 @@ tolerance, explicit abstention where evidence is insufficient, no invented
 local state or source authority, and complete retained provenance. The raw
 model output remains a proposal until host validation admits it.
 
-### 10.4 Live evidence-bound candidate-investigation package
+### 10.5 Live evidence-bound candidate-investigation package
 
 `LLM-INVESTIGATE-LIVE-VAL` is a project-authored validation package for the
 accepted evidence-bound candidate-investigation contract. It supplies, in one

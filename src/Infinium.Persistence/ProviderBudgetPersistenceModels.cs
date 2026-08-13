@@ -135,6 +135,8 @@ public sealed record ProviderOperationReadModel(
     string ReplayEdgeId,
     string AuthorizationId,
     string OperationKind,
+    string OwnerKind,
+    string OwnerId,
     string EffectiveConfigurationId,
     string UsageEntryId,
     string? SettlementId);

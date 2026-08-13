@@ -14,3 +14,10 @@ This library is not an evaluator protocol, scorer, oracle authority, held-out
 workflow, or product runtime dependency. It does not reference archived
 evaluator code or schemas, private fixture material, or candidate/product
 output. Public product-fixture tests reference this project directly.
+
+The source-claim reader closes the registered `S6-CLAIM-DEV-v1` and
+`S6-CLAIM-VAL-v1` packages. It strictly parses only their answer-free execution
+input, minimized-context manifest, deterministic retained transcripts, and
+separately frozen harness oracle/provenance. Product code receives no oracle
+document, and these packages perform no network, credential, or source-refresh
+operation.

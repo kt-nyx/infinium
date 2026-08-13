@@ -1,9 +1,27 @@
 {
-  "schema_identity": "infinium.repository.public-fixture-registry/1.2.0",
-  "registry_version": "1.2.0",
+  "schema_identity": "infinium.repository.public-fixture-registry/1.3.0",
+  "registry_version": "1.3.0",
   "status": "current",
-  "package_count": 29,
+  "package_count": 31,
   "packages": [
+    {
+      "package_identity": "S6-CLAIM-DEV-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/source-claims/S6-CLAIM-DEV-v1",
+      "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-DEV-v1/public-manifest.json",
+      "authority_bytes": 538,
+      "authority_sha256": "819292e6c192d7e761a3cf29f3ee30f14c488e882bc1a0494b9618d32b22d0f6"
+    },
+    {
+      "package_identity": "S6-CLAIM-VAL-v1",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1",
+      "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1/public-manifest.json",
+      "authority_bytes": 537,
+      "authority_sha256": "49dfbf0ba405da11e7dec853fe694a9e2510be6fcbe7b3532cb55e5300836096"
+    },
     {
       "package_identity": "M1-PLAT-PROVIDER-CAPABILITY-DEV-v1",
       "package_version": "1.0.0",

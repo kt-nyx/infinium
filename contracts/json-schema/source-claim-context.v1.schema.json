@@ -1,0 +1,5 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://schemas.infinium.dev/json-schema/source-claim-context.v1.schema.json","title":"infinium.llm.source-claim-context/v1","type":"object","additionalProperties":false,
+  "required":["schema_id","schema_version","acquisition_run_id","source_revision_id","selection_policy","passage_ids","text_sha256"],
+  "properties":{"schema_id":{"const":"infinium.llm.source-claim-context/v1"},"schema_version":{"const":"1"},"acquisition_run_id":{"$ref":"common.v1.schema.json#/$defs/identifier"},"source_revision_id":{"$ref":"common.v1.schema.json#/$defs/identifier"},"selection_policy":{"const":"exact-declared-passages-in-declared-order/v1"},"passage_ids":{"type":"array","minItems":1,"maxItems":64,"uniqueItems":true,"items":{"$ref":"common.v1.schema.json#/$defs/identifier"}},"text_sha256":{"type":"array","minItems":1,"maxItems":64,"items":{"$ref":"common.v1.schema.json#/$defs/fingerprint"}}}
+}

@@ -3689,3 +3689,66 @@ non-authoritative for a new native effect. Credential Manager, API key,
 network/provider request, source refresh, private or held-out fixtures,
 archive/legacy access, protected external effect, WP7 or later-package work,
 and push remain prohibited. This handoff contains no WP6 product code.
+
+## WP6 implementation candidate and retained non-live evidence — 2026-08-12
+
+WP6 implementation began from exact clean handoff
+`f6e155766a16b5c3b3c48cd233950ccb01126f90` on `codex/m1-s6`. The package
+implements only accepted-plan section 17: the versioned
+`infinium.m1-s6.source-claim-prompt/v1`, strict answer-free execution/context/
+retained-transcript contracts, deterministic transcript admission, host-owned
+citation/identity/schema checks, evidence-acquisition persistence and
+application links, additive v2 publication/query transparency, semantic
+replay or audit-only degradation, and a distinct no-model path. Source claims
+remain untrusted proposals; the implementation does not create local facts,
+findings, cases, grouping, thresholds, taxonomy, or expected truth.
+
+Fresh answer-isolated oracle author `/root/wp6_acceptance_matrix` froze the
+public harness oracles before product comparison. The final oracle/manifest
+lineage is `6c19720d` -> `2a7ded6e` -> `a79d5a37` -> `7efe2cb0`; the latter
+two corrections separately added the missing empty state and conventional
+manifest identity fields without inspecting product output. Final DEV oracle
+is 4,734 bytes/SHA-256
+`b5995366ed2ff120dde3b1535a5ffb6722cfa80a81a35525b6121f627e1f194d`;
+VAL is 6,003 bytes/SHA-256
+`3857e0c180a86bc331fef2bd7b459c5bad35f570907f065976acf50f52dc096a`.
+DEV/VAL answer-free execution-input SHA-256 values are respectively
+`78b062e72265b2a16fbe40967ade07290763b6ae9b12d77d2a5923be16157ccc`
+and `ca9012b7689895c3d156ff6dd1efe601ad03c8742ee1e846a930543a05091cde`;
+retained-transcript SHA-256 values are
+`d722a831b3d02ababf605953571926a3cc522814a51aa625b076b5bfee2328fe`
+and `82e2e67f2f5686e68253df38556b7de0faa33641361768a74eaa4c0d9bae9fa9`.
+
+The final exact `SourceClaimSemantics` command passed Unit 3/0/0, Contract
+2/0/0, Integration 4/0/0, and Evaluation 2/0/0. Its 1,354-byte retained
+receipt has SHA-256
+`7e49100c3638b83de50acabae283e301b48b17b3254ea97f619c0c489c58c4e6`
+and records all thirteen required state classes plus zero network, credential,
+source-refresh, and private-fixture operations. The full Contract project
+passed 157/0/0. The exact accumulated solution filters passed Unit 220 with
+one existing platform skip; Integration 104 plus one Contract and one
+Evaluation integration-tagged test; Evaluation 63 with eight expected private
+platform skips plus Contract 16 and Integration 6; Security 15 plus Unit 49
+with one existing platform skip, Contract 51, Integration 16, and Evaluation
+7 with two expected private skips; and Fault 3 plus Unit 32, Contract 44,
+Integration 20, and Evaluation 9 with three expected private skips. The final
+unfiltered solution passed Unit 233/0/1, Contract 157/0/0, Integration
+116/0/0, Evaluation 65/0/8, Security 19/0/0, and Fault 7/0/0. Release build
+was zero warnings/errors; format, dependency-manifest, and diff checks passed.
+
+The first accumulated Integration run correctly exposed that the prior WP2
+simulator test attempted to publish a source-claim operation without semantic
+admissions. The bounded correction makes source-claim publication fail before
+any output binding unless exact evidence-acquisition ownership and retained
+admissions exist; a new production persistence/readback/publication regression
+then proves the positive path. This was ordinary WP6 closure, not a weakening
+of the gate.
+
+The exact-root process-cleanup procedure resolved
+`Z:\Development\Large Projects\Skyrim\infinium`, matched zero repository-owned
+`dotnet`/`testhost` processes before cleanup, and verified zero survivors.
+No API key, DNS, network/provider request, token-count call, Credential Manager
+operation, source/Nexus/search refresh, private/evaluator/archive access,
+protected external effect, WP7 behavior, current-state advancement, or push
+occurred. This is an implementation candidate awaiting fresh independent WP6
+review; it is not self-accepted and does not authorize WP7.

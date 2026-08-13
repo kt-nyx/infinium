@@ -100,8 +100,6 @@ public sealed class ProviderAccountingCoordinator
         DateTimeOffset createdAt)
     {
         ProviderOperationReadModel operation = store.ReadProviderOperation(operationId.Value);
-        ProviderRunOutputV2BindingReceipt binding = store.BindProviderRunOutputV2(
-            runId.Value, operation.EffectiveConfigurationId, canonicalLocalRunOutputV1, createdAt);
         ProviderOperationKind operationKind = operation.OperationKind switch
         {
             "transport-qualification" => ProviderOperationKind.TransportQualification,
@@ -109,8 +107,30 @@ public sealed class ProviderAccountingCoordinator
             "candidate-investigation" => ProviderOperationKind.CandidateInvestigation,
             _ => throw new InvalidDataException("The persisted provider operation kind is outside the closed WP5 profile."),
         };
+        OpaqueId? acquisitionRunId = null;
+        OpaqueId? admissionId = null;
+        IReadOnlyList<OpaqueId> acquisitionRunIds = [];
+        if (operationKind == ProviderOperationKind.SourceClaimExtraction)
+        {
+            if (operation.OwnerKind != "evidence-acquisition-run")
+            {
+                throw new InvalidDataException("Source-claim publication requires evidence-acquisition ownership.");
+            }
+            IReadOnlyList<ProviderSemanticAdmissionReadModel> admissions = store.ReadSourceClaimAdmissions(operation.OwnerId);
+            if (admissions.Count == 0 || admissions.Any(x => x.OperationId != operation.OperationId
+                || x.ResponseRecordId != operation.ResponseId))
+            {
+                throw new InvalidDataException("Source-claim publication requires exact retained semantic admissions.");
+            }
+            acquisitionRunId = new(operation.OwnerId);
+            acquisitionRunIds = [acquisitionRunId];
+            admissionId = new(admissions.OrderByDescending(x => x.State == "admitted")
+                .ThenBy(x => x.AdmissionId, StringComparer.Ordinal).First().AdmissionId);
+        }
+        ProviderRunOutputV2BindingReceipt binding = store.BindProviderRunOutputV2(
+            runId.Value, operation.EffectiveConfigurationId, canonicalLocalRunOutputV1, createdAt);
         ProviderPublicationReferenceContract publication = new(
-            operationId, operationKind, null, new(operation.AuthorizationId), new(operation.ResponseId), null,
+            operationId, operationKind, acquisitionRunId, new(operation.AuthorizationId), new(operation.ResponseId), admissionId,
             new(operation.UsageEntryId), operation.SettlementId is null ? null : new(operation.SettlementId),
             new(operation.ReplayEdgeId), "live", true,
             OpenAiResponsesCanonicalSerializer.InputBoundPolicyId,
@@ -118,7 +138,7 @@ public sealed class ProviderAccountingCoordinator
             new(operation.AuthorizationId));
         RunOutputV2Document runOutput = ProviderContractFactories.CreateRunOutputV2Supplement(
             runId, localRunOutputV1Id, canonicalLocalRunOutputV1, new(operation.EffectiveConfigurationId),
-            [publication], [], [], [], []);
+            [publication], acquisitionRunIds, [], [], []);
         OpenAiResponsesResult replay = Replay(new(operationId, new(operation.ResponseId), false));
         ProviderOperationSummaryProjection projection = QueryOperation(new(operationId, true, true, true));
         CliSummaryV2Document cli = ProviderContractFactories.CreateTerminalCliSummaryV2Supplement(

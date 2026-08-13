@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'Adapter', 'OfflineSafetyReplay', 'Layer6Review')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -958,6 +958,47 @@ function Invoke-OfflineSafetyReplayGate {
     })
 }
 
+function Invoke-SourceClaimSemanticsGate {
+    Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' 'FullyQualifiedName~SourceClaimExtraction|FullyQualifiedName~ProviderContext'
+    Invoke-DotnetTest 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' 'FullyQualifiedName~SourceClaimExtraction|FullyQualifiedName~ProviderProvenance'
+    Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' 'FullyQualifiedName~SourceClaimAdmission|FullyQualifiedName~SourceClaimReplay'
+    Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' 'FullyQualifiedName~LlmClaimTransparency|FullyQualifiedName~Slice5ProviderAdmission'
+    Assert-Slice5V1Unchanged
+    $packages = @('S6-CLAIM-DEV-v1', 'S6-CLAIM-VAL-v1')
+    $identities = @()
+    foreach ($package in $packages) {
+        $root = Join-Path $repoRoot "fixtures/public/provider/source-claims/$package"
+        $manifest = Get-Content -Raw -LiteralPath (Join-Path $root 'public-manifest.json') | ConvertFrom-Json
+        if ($manifest.status -ne 'oracle-frozen-pre-comparison' -or -not $manifest.answer_free -or $manifest.network_required) {
+            throw "SourceClaimSemantics package $package is not frozen, answer-free, and offline."
+        }
+        $inputText = Get-Content -Raw -LiteralPath (Join-Path $root 'execution-input.v1.json')
+        foreach ($forbidden in @('expected_', 'ground_truth', 'matched_negative', 'correct_answer')) {
+            if ($inputText.IndexOf($forbidden, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                throw "SourceClaimSemantics found expected-answer token '$forbidden' in product input."
+            }
+        }
+        $identities += [ordered]@{
+            package_id = $package
+            manifest_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+            input_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'execution-input.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+            transcript_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'retained-transcripts.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+            oracle_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'oracle.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+        }
+    }
+    Write-Receipt 'SourceClaimSemantics' ([ordered]@{
+        packages = $identities
+        prompt_id = 'infinium.m1-s6.source-claim-prompt/v1'
+        prompt_sha256 = 'd2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84'
+        provider_transcript_states = @('valid-positive','unsupported-negative','conditional-version','contradiction','abstention','empty','hostile','malformed','refusal','incomplete','deleted','drift','no-model')
+        network_operations = 0
+        credential_operations = 0
+        source_refresh_operations = 0
+        private_fixture_operations = 0
+        slice5_v1_unchanged = $true
+    })
+}
+
 function Invoke-ConsumedCredentialNativeV1Gate {
     throw 'CredentialNative v1 is consumed and terminal; its retained implementation is historical evidence only.'
     if ([string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
@@ -1541,6 +1582,7 @@ try {
         'CredentialNative' { Invoke-CredentialNativeGate }
         'Adapter' { Invoke-AdapterGate }
         'OfflineSafetyReplay' { Invoke-OfflineSafetyReplayGate }
+        'SourceClaimSemantics' { Invoke-SourceClaimSemanticsGate }
         'Layer6Review' { Invoke-Layer6ReviewGate }
     }
 } finally {

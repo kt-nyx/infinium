@@ -392,13 +392,9 @@ public sealed class ProviderBudgetIntegrationTests
         Assert.AreEqual(ProviderResponseState.Malformed, replay.State);
         Assert.IsFalse(replay.NetworkUsed);
         Assert.AreEqual(0, replay.SendCount);
-        ProviderTerminalPublicationArtifacts publication = coordinator.PublishTerminalV2(
+        Assert.ThrowsExactly<InvalidDataException>(() => coordinator.PublishTerminalV2(
             new("run-restore"), new("local-run-output-v1"), "local-output-v1"u8.ToArray(),
-            "local-cli-v1"u8.ToArray(), new("operation-restore"), BaseTime.AddSeconds(11));
-        Assert.AreEqual("production-simulator:response:replay",
-            publication.RunOutputV2.ProviderOperations.Single().ReplayEdgeId?.Value);
-        Assert.AreEqual("live", publication.CliSummaryV2.ProviderState);
-        Assert.AreEqual("retained-response", publication.CliSummaryV2.ReplayState);
+            "local-cli-v1"u8.ToArray(), new("operation-restore"), BaseTime.AddSeconds(11)));
         using SqliteConnection database = new($"Data Source={context.Store.Paths.Database};Mode=ReadOnly;Pooling=False");
         database.Open();
         using SqliteCommand command = database.CreateCommand();
@@ -432,6 +428,58 @@ public sealed class ProviderBudgetIntegrationTests
               AND response.dispatch_fence_id='fence-settlement';
             """;
         Assert.AreEqual(1L, (long)command.ExecuteScalar()!);
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public void SourceClaimAdmissionPersistsReadsBackAndPublishesExactAcquisitionOwnership()
+    {
+        using BudgetContext context = BudgetContext.Create();
+        _ = context.Store.ReserveProviderBudget(1, context.Request);
+        ProviderDispatchGateReceipt gate = context.Store.AuthorizeProviderDispatch(context.GateRequest);
+        ProviderAccountingCoordinator accounting = new(context.Store);
+        _ = accounting.SimulatePersistAndSettle(
+            gate, "authorization-settlement", "operation-restore", "reservation-settlement",
+            "attempt-settlement", "request-settlement", "source-claim-persist",
+            ProviderSimulatorOutcome.Completed, new(65_536, 20, 10, 1_048_576, 1, 400_000, 120_000),
+            BaseTime.AddSeconds(7));
+        using (SqliteConnection database = new($"Data Source={context.Store.Paths.Database};Pooling=False"))
+        {
+            database.Open();
+            using SqliteCommand seed = database.CreateCommand();
+            seed.CommandText =
+                """
+                INSERT INTO documentation_revisions VALUES(
+                  'source-claim-revision','source-claim-doc','fixture','1',NULL,NULL,
+                  'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',0,
+                  'unavailable','unavailable','unavailable','2026-08-10T00:00:06.0000000+00:00');
+                INSERT INTO evidence_acquisition_application_links VALUES(
+                  'source-claim-application','acquisition-restore','run-restore','application-restore','cost-restore',
+                  'source-claim-artifact','2026-08-10T00:00:06.0000000+00:00');
+                """;
+            Assert.AreEqual(2, seed.ExecuteNonQuery());
+        }
+        SourceClaimExtractionDocument document = new(
+            ContractConstants.SourceClaimExtractionSchemaId, "1", new("acquisition-restore"), new("operation-restore"),
+            "evidence-acquisition-run", new("acquisition-restore"), new("run-restore"), new("application-restore"),
+            new("cost-restore"), new("source-claim-revision"), [new("source-claim-passage")], "Exact fixture claim",
+            [new(new("source-claim-proposal"), new("source-claim-passage"), "Synthetic cited proposal", [],
+                ProposalAdmissionState.Admitted, "exact-citation-and-identity-admitted")], [], [], [],
+            [new("source-claim-validation")], [new("source-claim-application")],
+            [new(new("source-claim-admission"), new("source-claim-proposal"), new("authorization-settlement"),
+                new("operation-restore"), new("source-claim-persist:response"), "evidence-acquisition-run",
+                new("acquisition-restore"), new("source-claim-revision"), new("source-claim-validation"),
+                new("source-claim-application"), ProposalAdmissionState.Admitted)]);
+        SourceClaimPersistenceReceipt persisted = context.Store.PersistSourceClaimExtraction(new(
+            document, "authorization-settlement", "source-claim-persist:response", "attempt-settlement",
+            "request-settlement", gate.DispatchFenceId, BaseTime.AddSeconds(8)));
+        Assert.AreEqual(1, persisted.AdmissionCount);
+        Assert.AreEqual("admitted", context.Store.ReadSourceClaimAdmissions("acquisition-restore").Single().State);
+        ProviderTerminalPublicationArtifacts publication = accounting.PublishTerminalV2(
+            new("run-restore"), new("local-run-output-v1"), "local-output-v1"u8.ToArray(),
+            "local-cli-v1"u8.ToArray(), new("operation-restore"), BaseTime.AddSeconds(11));
+        Assert.AreEqual("acquisition-restore", publication.RunOutputV2.EvidenceAcquisitionRunIds.Single().Value);
+        Assert.AreEqual("source-claim-admission", publication.RunOutputV2.ProviderOperations.Single().AdmissionId?.Value);
     }
 
     [TestMethod]
