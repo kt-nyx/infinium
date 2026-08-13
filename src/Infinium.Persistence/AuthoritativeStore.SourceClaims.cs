@@ -477,6 +477,15 @@ public partial class AuthoritativeStore
     private static CandidateHostContextSnapshot ValidateCandidatePersistenceRequest(
         CandidateInvestigationPersistenceRequest request)
     {
+        string?[] responseEnvelope =
+        [request.ResponseRecordId, request.ProviderAttemptId, request.RequestId, request.DispatchFenceId];
+        bool allAbsent = responseEnvelope.All(value => value is null);
+        bool allPresent = responseEnvelope.All(value => !string.IsNullOrWhiteSpace(value));
+        if (!allAbsent && !allPresent)
+        {
+            throw new InvalidDataException(
+                "Candidate persistence requires an all-present retained response envelope or an all-absent no-model envelope.");
+        }
         CandidateInvestigationDocument document = request.Document;
         if (request.EvidenceBindings.Count == 0
             || request.EvidenceBindings.Select(x => x.EvidenceId).Distinct(StringComparer.Ordinal).Count()

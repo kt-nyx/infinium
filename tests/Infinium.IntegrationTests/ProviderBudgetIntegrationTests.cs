@@ -1045,8 +1045,39 @@ public sealed class ProviderBudgetIntegrationTests
         CandidateInvestigationScenarioResult partialScenario =
             CandidateInvestigationEngine.Execute(partialInput, [transcript]).Scenarios.Single();
         CandidateEvidenceProvenanceBinding extraBinding = CandidateBinding(secondEvidence);
+        CandidateInvestigationRetainedTranscript noModelTranscript = transcript with
+        {
+            ResponseState = "not-used",
+            Proposals = [],
+            Abstentions = ["Model execution was not selected."],
+            Gaps = ["No model response is available."],
+            ModelUsed = false,
+        };
+        CandidateInvestigationScenarioResult noModelScenario =
+            CandidateInvestigationEngine.Execute(input, [noModelTranscript]).Scenarios.Single();
+        CandidateInvestigationPersistenceRequest responseEnvelope =
+            CandidatePersistenceRequest(directScenario, input, transcript, [directBinding], "outcome-direct-envelope");
+        CandidateInvestigationPersistenceRequest noModelEnvelope =
+            CandidatePersistenceRequest(noModelScenario, input, noModelTranscript, [directBinding], "outcome-no-model-envelope");
         foreach (CandidateInvestigationPersistenceRequest invalidRequest in new[]
                  {
+                     responseEnvelope with { ResponseRecordId = null },
+                     responseEnvelope with { ProviderAttemptId = null },
+                     responseEnvelope with { RequestId = null },
+                     responseEnvelope with { DispatchFenceId = null },
+                     responseEnvelope with
+                     {
+                         ResponseRecordId = null, ProviderAttemptId = null, RequestId = null, DispatchFenceId = null,
+                     },
+                     noModelEnvelope with { ResponseRecordId = "extra-response" },
+                     noModelEnvelope with { ProviderAttemptId = "extra-attempt" },
+                     noModelEnvelope with { RequestId = "extra-request" },
+                     noModelEnvelope with { DispatchFenceId = "extra-fence" },
+                     noModelEnvelope with
+                     {
+                         ResponseRecordId = "extra-response", ProviderAttemptId = "extra-attempt",
+                         RequestId = "extra-request", DispatchFenceId = "extra-fence",
+                     },
                      CandidatePersistenceRequest(directScenario, input, transcript, [], "outcome-direct-empty"),
                      CandidatePersistenceRequest(partialScenario, partialInput, transcript, [directBinding], "outcome-direct-partial"),
                      CandidatePersistenceRequest(directScenario, input, transcript, [directBinding, extraBinding], "outcome-direct-extra"),
