@@ -21,6 +21,8 @@ public sealed class ProviderLayer6VerifierContractTests
             "[switch] $OwnerTestProcessCleanup",
             "merge-base --is-ancestor",
             "layer6-changed-paths.json",
+            "docs/evaluation/specifications/semantic-fixture-catalog.md",
+            "fixtures/public/provider/source-claims/",
             "layer6-relative-links.json",
             "layer6-changed-json.json",
             "layer6-status-claims.json",

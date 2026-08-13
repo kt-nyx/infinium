@@ -205,6 +205,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'dependencies/dependency-curation.json',
         'dependencies/dependency-manifest.json',
         'docs/evaluation/repository-evaluation-authority.v1.json',
+        'docs/evaluation/specifications/semantic-fixture-catalog.md',
         'docs/plans/milestones/m1/slices/s6/README.md',
         'docs/plans/milestones/m1/slices/s6/record.md',
         'docs/plans/milestones/m1/slices/s6/wp1-contract-traceability.v1.json',
@@ -254,6 +255,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'tests/Infinium.EvaluationTests/',
         'fixtures/public/platform/provider-budget/',
         'fixtures/public/platform/provider-offline/',
+        'fixtures/public/provider/source-claims/',
         'src/Infinium.Persistence/',
         'tests/Infinium.ContractTests/',
         'tests/Infinium.UnitTests/'
