@@ -3772,3 +3772,70 @@ private/archive matches. Its 1,358-byte receipt has SHA-256
 The post-gate exact-root cleanup again matched zero repository-owned
 `dotnet`/`testhost` processes and verified zero survivors. This retained
 evidence remains candidate-only and does not self-accept WP6.
+
+## WP6 independent-review bounded correction — 2026-08-12
+
+Fresh oracle/provenance and semantic reviews of exact evidence head
+`d88e4f8324d08eeaba162fe3f3806c61cb487ab4` found bounded WP6 verification
+and seam defects. The correction remains within accepted-plan section 17 and
+closes them without a live/provider/private effect:
+
+1. DEV and VAL now contain fourteen distinct transcript scenarios. Conditional
+   applicability and version-scoped claims are separate structural states, and
+   explicit abstention is separate from contradiction, refusal, empty, and
+   no-model. `SourceClaimSemantics` derives its inventory from retained input
+   classifications rather than publishing a literal list.
+2. The strict typed reader closes registry-to-manifest-to-file bytes and SHA-256
+   identities, package/partition/references, exact minimizer context bytes,
+   recursive answer isolation for every declared product input, and exact
+   provenance input hashes. Inert passage text remains data even when it names
+   hostile or answer-like words. Mutation regressions cover byte closure,
+   context derivation, manifest/provenance closure, nested keys/values, exact
+   identities, response/proposal/result/replay fields, aggregates, frozen
+   boundaries, and forbidden claims.
+3. The versioned host policy now consumes typed claim kind, condition scope,
+   authority category, and application semantics. Phrase/purpose heuristics are
+   removed; hostile paraphrases reject structurally and benign matched-negative
+   wording does not fabricate protected-effect authority.
+4. Execution input binds the exact host authorization. Every admission link
+   retains it, the coordinator refuses a different authorization, persistence
+   rejects authorization/response seam disagreement, and replay validates the
+   entire input/transcript envelope before fingerprint handling while preserving
+   no-model, deleted, drift, and retained failure dispositions.
+5. The production integration path now calls acquisition registration, engine,
+   coordinator persistence, typed extraction-payload readback, additive
+   publication, backup/restore, and projection rebuild. Negative authorization
+   and response identity paths fail closed.
+
+The final answer-isolated oracle lineage ends at exact precomparison commit
+`05cd25b51eb0018179a55a7f85300f4ec556ce0a`. DEV manifest/oracle/provenance
+are respectively 1,321 bytes/SHA-256
+`01d4d6c22342200bf22d4a8252896abca30a1e60f9c7c7b6d09cf8a01cda0371`,
+11,499 bytes/SHA-256
+`cbace58001184cae5126525f817956fb0400d80b5069e4fe51e0485a5f01fa66`,
+and 2,242 bytes/SHA-256
+`c39e2c41e860e7ef442dae7671f7dd9fa678e9566d39ccefb15e41a6451c662d`.
+VAL remains 1,320 bytes/SHA-256
+`7c512d4b1da30600401cc4a57b1903558c358df519ebe74febde2e155e70ec76`,
+13,698 bytes/SHA-256
+`f62492b22a700dc7325c90ea47f607411f41e945dcaaa9a6808af4e632dde009`,
+and 1,687 bytes/SHA-256
+`7a98b503388f272698ce2f94e5dd05c1338a9e55e44bd02c45c01e71e1334c79`.
+
+The corrected exact `SourceClaimSemantics` command passed Unit 4/0/0,
+Contract 5/0/0, Integration 4/0/0, and Evaluation 2/0/0. Its 2,820-byte
+receipt has SHA-256
+`499be1e4421fdf6da25e73962dbbf743bcd056c32fdbff049e065ad35d3ed0a3`
+and retains exact manifest, input, context, transcript, oracle, provenance,
+partition, and all fourteen scenario classifications. The unfiltered solution
+passed Unit 234/0/1, Contract 160/0/0, Integration 116/0/0, Evaluation 65/0/8,
+Security 19/0/0, and Fault 7/0/0. Release build, format, dependency-manifest,
+documentation, and diff checks passed. The complete non-live analysis pipeline
+(`Contracts`, `Documentation`, `Candidates`, `CandidateScale`, `Cases`,
+`Replay`, `Output`, `Safety`, `Comprehensive`, and `All`) passed.
+
+No API key, DNS, network/provider request, token-count call, Credential Manager
+operation, source/Nexus/search refresh, private/evaluator/archive access,
+protected external effect, WP7 behavior, current-state advancement, or push
+occurred. This is a corrected WP6 candidate awaiting fresh independent
+re-review; it is not self-accepted and does not authorize WP7.

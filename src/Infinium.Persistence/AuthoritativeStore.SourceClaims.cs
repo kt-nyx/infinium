@@ -55,7 +55,7 @@ public partial class AuthoritativeStore
             using SqliteTransaction transaction = BeginImmediateTransaction();
             Execute(
                 """
-                INSERT INTO evidence_acquisition_runs VALUES(
+                INSERT OR IGNORE INTO evidence_acquisition_runs VALUES(
                   $acquisition,$snapshot,$context,$configuration,$manifest,$run,$scope,$cost,'running',$now);
                 INSERT INTO evidence_acquisition_job_nodes VALUES($job,$acquisition,'source-claim-extraction','running',$now);
                 INSERT INTO evidence_acquisition_commands VALUES($command,$acquisition,'provider-operation',$now,'recorded');
@@ -69,6 +69,30 @@ public partial class AuthoritativeStore
                 ("$scope", request.ApplicationScopeId), ("$cost", request.CostAttributionScopeId),
                 ("$job", request.JobNodeId), ("$command", request.CommandId), ("$parent", request.ParentLinkId),
                 ("$now", ToText(request.OccurredAt)));
+            using (SqliteCommand acquisition = connection.CreateCommand())
+            {
+                acquisition.Transaction = transaction;
+                acquisition.CommandText =
+                    """
+                    SELECT 1 FROM evidence_acquisition_runs
+                    WHERE acquisition_run_id=$acquisition AND installation_snapshot_id=$snapshot
+                      AND analysis_context_id=$context AND effective_configuration_id=$configuration
+                      AND resolved_input_manifest_id=$manifest AND parent_analysis_run_id=$run
+                      AND application_scope_id=$scope AND cost_attribution_scope_id=$cost;
+                    """;
+                acquisition.Parameters.AddWithValue("$acquisition", request.AcquisitionRunId);
+                acquisition.Parameters.AddWithValue("$snapshot", request.InstallationSnapshotId);
+                acquisition.Parameters.AddWithValue("$context", request.AnalysisContextId);
+                acquisition.Parameters.AddWithValue("$configuration", request.EffectiveConfigurationId);
+                acquisition.Parameters.AddWithValue("$manifest", request.ResolvedInputManifestId);
+                acquisition.Parameters.AddWithValue("$run", request.ParentAnalysisRunId);
+                acquisition.Parameters.AddWithValue("$scope", request.ApplicationScopeId);
+                acquisition.Parameters.AddWithValue("$cost", request.CostAttributionScopeId);
+                if (acquisition.ExecuteScalar() is null)
+                {
+                    throw new InvalidDataException("Source-claim acquisition registration contradicts the retained acquisition root.");
+                }
+            }
             foreach (SourceClaimApplicationRegistration link in request.ApplicationLinks)
             {
                 Execute(
@@ -95,9 +119,44 @@ public partial class AuthoritativeStore
         ArgumentNullException.ThrowIfNull(request);
         ProviderOperationContractInvariants.Validate(request.Document);
         SourceClaimExtractionDocument document = request.Document;
+        if (document.AdmissionLinks.Any(link => link.AuthorizationId.Value != request.AuthorizationId
+                || link.ResponseRecordId.Value != request.ResponseRecordId))
+        {
+            throw new InvalidDataException("Source-claim persistence requires exact authorization and response identities on every admission link.");
+        }
         lock (gate)
         {
             using SqliteTransaction transaction = BeginImmediateTransaction();
+            using (SqliteCommand authority = connection.CreateCommand())
+            {
+                authority.Transaction = transaction;
+                authority.CommandText =
+                    """
+                    SELECT 1 FROM provider_operation_authorizations authorization
+                    JOIN provider_responses response
+                      ON response.authorization_id=authorization.authorization_id
+                     AND response.operation_id=authorization.operation_id
+                    WHERE authorization.authorization_id=$authorization
+                      AND authorization.operation_id=$operation
+                      AND authorization.owner_kind=$owner_kind AND authorization.owner_id=$owner
+                      AND authorization.operation_kind='source-claim-extraction'
+                      AND response.response_record_id=$response
+                      AND response.provider_attempt_id=$attempt AND response.request_id=$request
+                      AND response.dispatch_fence_id=$fence;
+                    """;
+                authority.Parameters.AddWithValue("$authorization", request.AuthorizationId);
+                authority.Parameters.AddWithValue("$operation", document.OperationId.Value);
+                authority.Parameters.AddWithValue("$owner_kind", document.OwnerKind);
+                authority.Parameters.AddWithValue("$owner", document.OwnerId.Value);
+                authority.Parameters.AddWithValue("$response", request.ResponseRecordId);
+                authority.Parameters.AddWithValue("$attempt", request.ProviderAttemptId);
+                authority.Parameters.AddWithValue("$request", request.RequestId);
+                authority.Parameters.AddWithValue("$fence", request.DispatchFenceId);
+                if (authority.ExecuteScalar() is null)
+                {
+                    throw new InvalidDataException("Source-claim persistence requires the exact retained authorization and response authority.");
+                }
+            }
             foreach (ProviderSemanticAdmissionLinkContract link in document.AdmissionLinks)
             {
                 CitationProposalContract proposal = document.ClaimProposals.Single(x => x.ProposalId == link.ProposalId);
@@ -167,6 +226,33 @@ public partial class AuthoritativeStore
                     reader.GetString(8), reader.GetString(9)));
             }
             return results;
+        }
+    }
+
+    public SourceClaimExtractionDocument ReadSourceClaimExtraction(string acquisitionRunId, string admissionId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(acquisitionRunId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(admissionId);
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT proposal.payload_id FROM provider_semantic_admissions admission
+                JOIN provider_semantic_proposals proposal ON proposal.proposal_id=admission.proposal_id
+                WHERE admission.admission_id=$admission AND admission.owner_kind='evidence-acquisition-run'
+                  AND admission.owner_id=$owner;
+                """;
+            command.Parameters.AddWithValue("$admission", admissionId);
+            command.Parameters.AddWithValue("$owner", acquisitionRunId);
+            string payloadId = command.ExecuteScalar() as string
+                ?? throw new KeyNotFoundException("The exact source-claim extraction admission does not exist.");
+            byte[] bytes = ReadRetainedPayloadBytes(payloadId)
+                ?? throw new InvalidDataException("The retained source-claim extraction payload is unavailable.");
+            SourceClaimExtractionDocument document = JsonSerializer.Deserialize<SourceClaimExtractionDocument>(bytes)
+                ?? throw new InvalidDataException("The retained source-claim extraction payload is invalid.");
+            ProviderOperationContractInvariants.Validate(document);
+            return document;
         }
     }
 

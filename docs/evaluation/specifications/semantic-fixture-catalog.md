@@ -894,8 +894,9 @@ validation packages for source-claim acquisition before any live request.
 Their product-reachable inputs contain only invented public passages, exact
 source/passage identities, a minimized-context manifest, and retained
 synthetic provider transcripts. A separate author froze the harness-only
-oracles before product comparison. Together they cover positive,
-unsupported, conditional/version-scoped, contradiction, abstention, empty,
+oracles before product comparison. Together they cover fourteen distinct
+transcript scenarios: positive, unsupported, conditional applicability,
+version-scoped, contradiction, explicit abstention, empty,
 hostile, malformed, refusal, incomplete, deleted, drift, and no-model states.
 They perform zero network, credential, provider, token-count, or source-refresh
 operations and do not create local facts, findings, cases, or taxonomy.

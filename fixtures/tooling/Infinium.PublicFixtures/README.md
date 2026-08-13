@@ -20,4 +20,7 @@ The source-claim reader closes the registered `S6-CLAIM-DEV-v1` and
 input, minimized-context manifest, deterministic retained transcripts, and
 separately frozen harness oracle/provenance. Product code receives no oracle
 document, and these packages perform no network, credential, or source-refresh
-operation.
+operation. The reader verifies registry-bound manifest bytes, transitive hashes
+for every non-manifest file, exact deterministic context derivation, recursive
+answer isolation, typed oracle/provenance closure, and all fourteen scenario
+expectation families before comparison.

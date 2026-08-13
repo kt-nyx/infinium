@@ -17,26 +17,7 @@ public sealed class SourceClaimTransparencyEvaluationTests
             SourceClaimFixturePackage package = SourceClaimFixtureReader.Read(Path.Combine(
                 RepositoryRoot(), "fixtures", "public", "provider", "source-claims", packageId));
             SourceClaimAcquisitionResult actual = SourceClaimAcquisitionEngine.Execute(package.ExecutionInput, package.Transcripts);
-            JsonElement expected = package.Oracle;
-            Assert.AreEqual(expected.GetProperty("expected_identity").GetProperty("acquisition_run_id").GetString(),
-                actual.Scenarios[0].Extraction.AcquisitionRunId.Value);
-            foreach (JsonElement scenarioOracle in expected.GetProperty("scenarios").EnumerateArray())
-            {
-                string transcriptId = scenarioOracle.GetProperty("transcript_id").GetString()!;
-                SourceClaimScenarioResult scenario = actual.Scenarios.Single(x => x.TranscriptId == transcriptId);
-                HashSet<string> expectedAdmitted = scenarioOracle.GetProperty("admitted_proposal_ids").EnumerateArray()
-                    .Select(x => x.GetString()!).ToHashSet(StringComparer.Ordinal);
-                HashSet<string> actualAdmitted = scenario.Extraction.ClaimProposals
-                    .Where(x => x.State == ProposalAdmissionState.Admitted).Select(x => x.ProposalId.Value)
-                    .ToHashSet(StringComparer.Ordinal);
-                Assert.IsTrue(expectedAdmitted.SetEquals(actualAdmitted), transcriptId + " admitted proposals");
-                Assert.AreEqual(scenarioOracle.GetProperty("expected_abstention_count").GetInt32(), scenario.Extraction.Abstentions.Count);
-                Assert.AreEqual(scenarioOracle.GetProperty("expected_gap_count").GetInt32(), scenario.Extraction.Gaps.Count);
-                Assert.AreEqual(scenarioOracle.GetProperty("contradiction_evidence_ids").GetArrayLength(),
-                    scenario.Extraction.ContradictionEvidenceIds.Count);
-                int actualApplied = scenario.Extraction.AdmissionLinks.Count(x => x.State == ProposalAdmissionState.Admitted);
-                Assert.AreEqual(scenarioOracle.GetProperty("expected_application_link_count").GetInt32(), actualApplied);
-            }
+            SourceClaimOracleVerifier.Verify(package, actual);
             string human = SourceClaimTransparencyRenderer.RenderHuman(actual);
             StringAssert.Contains(human, "network not used");
             StringAssert.Contains(human, "private verdict not performed");

@@ -28,6 +28,7 @@ public sealed record SourceClaimExecutionInput(
     string PackageId,
     string AcquisitionRunId,
     string OperationId,
+    string HostAuthorizationId,
     string OwnerKind,
     string OwnerId,
     string ParentAnalysisRunId,
@@ -44,6 +45,10 @@ public sealed record SourceClaimTranscriptProposal(
     string PassageId,
     string Claim,
     IReadOnlyList<string> ConditionIds,
+    string ClaimKind,
+    string ConditionScope,
+    string AuthorityCategory,
+    string ApplicationSemantics,
     string State,
     string Reason);
 
@@ -65,9 +70,12 @@ public sealed record SourceClaimRetainedTranscript(
 public sealed record SourceClaimScenarioResult(
     string TranscriptId,
     string TranscriptState,
+    string Disposition,
     string ReplayState,
     SourceClaimExtractionDocument Extraction,
     string CanonicalExtractionSha256,
+    IReadOnlyList<string> AbstentionKinds,
+    IReadOnlyList<string> GapKinds,
     IReadOnlyList<string> AuditReasons);
 
 public sealed record SourceClaimAcquisitionResult(
@@ -94,7 +102,11 @@ public static class SourceClaimContextMinimizer
             passage_ids = input.Passages.Select(passage => passage.PassageId).ToArray(),
             text_sha256 = input.Passages.Select(passage => passage.TextSha256).ToArray(),
         };
-        return JsonSerializer.SerializeToUtf8Bytes(manifest, JsonOptions);
+        byte[] canonical = JsonSerializer.SerializeToUtf8Bytes(manifest, JsonOptions);
+        byte[] retained = new byte[canonical.Length + 1];
+        canonical.CopyTo(retained, 0);
+        retained[^1] = (byte)'\n';
+        return retained;
     }
 
     public static void ValidateInput(SourceClaimExecutionInput input)
@@ -102,6 +114,7 @@ public static class SourceClaimContextMinimizer
         ArgumentNullException.ThrowIfNull(input);
         if (input.SchemaId != "infinium.llm.source-claim-execution-input/v1" || input.SchemaVersion != "1"
             || input.OwnerKind != "evidence-acquisition-run" || input.OwnerId != input.AcquisitionRunId
+            || string.IsNullOrWhiteSpace(input.HostAuthorizationId)
             || input.PromptId != SourceClaimPromptV1.Id || input.PromptFingerprint != SourceClaimPromptV1.Fingerprint
             || input.Passages.Count is < 1 or > 64 || string.IsNullOrWhiteSpace(input.DeclaredPurpose)
             || input.Passages.Select(x => x.PassageId).Distinct(StringComparer.Ordinal).Count() != input.Passages.Count
@@ -109,12 +122,6 @@ public static class SourceClaimContextMinimizer
                 || x.TextSha256 != Hash(x.Text) || string.IsNullOrWhiteSpace(x.PassageId)))
         {
             throw new InvalidDataException("Source-claim input is not the exact closed answer-free context contract.");
-        }
-        string serialized = JsonSerializer.Serialize(input, JsonOptions);
-        string[] forbidden = ["expected_", "oracle", "ground_truth", "matched_negative", "correct_answer"];
-        if (forbidden.Any(value => serialized.Contains(value, StringComparison.OrdinalIgnoreCase)))
-        {
-            throw new InvalidDataException("Product-reachable source-claim input contains expected-answer authority.");
         }
     }
 
@@ -130,6 +137,7 @@ public static class SourceClaimContextMinimizer
             PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
             WriteIndented = false,
             UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+            RespectRequiredConstructorParameters = true,
             TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
         };
         options.MakeReadOnly();
@@ -165,11 +173,13 @@ public static class SourceClaimAcquisitionEngine
         SourceClaimRetainedTranscript transcript,
         string retainedResponseFingerprint)
     {
+        SourceClaimContextMinimizer.ValidateInput(input);
+        ValidateTranscriptEnvelope(input, transcript);
         if (transcript.ResponseFingerprint != retainedResponseFingerprint)
         {
             return AuditOnly(input, transcript, "retained-response-fingerprint-drift");
         }
-        return Admit(input, transcript) with { ReplayState = "retained-response" };
+        return Admit(input, transcript);
     }
 
     private static SourceClaimScenarioResult Admit(SourceClaimExecutionInput input, SourceClaimRetainedTranscript transcript)
@@ -181,7 +191,7 @@ public static class SourceClaimAcquisitionEngine
         }
         if (transcript.ResponseState != "completed")
         {
-            return AuditOnly(input, transcript, "provider-response-" + transcript.ResponseState);
+            return FailureResult(input, transcript);
         }
         if (transcript.Proposals.Count == 0)
         {
@@ -196,7 +206,7 @@ public static class SourceClaimAcquisitionEngine
         List<string> audit = [];
         foreach (SourceClaimTranscriptProposal candidate in transcript.Proposals)
         {
-            ProposalAdmissionState state = ValidateProposal(candidate, input, passages, out string reason);
+            ProposalAdmissionState state = ValidateProposal(candidate, passages, out string reason);
             OpaqueId validationId = new("validation-" + candidate.ProposalId);
             OpaqueId applicationId = new("application-" + candidate.ProposalId);
             validations.Add(validationId);
@@ -204,7 +214,7 @@ public static class SourceClaimAcquisitionEngine
             proposals.Add(new(new(candidate.ProposalId), new(candidate.PassageId), candidate.Claim,
                 candidate.ConditionIds.Select(x => new OpaqueId(x)).ToArray(), state, reason));
             links.Add(new(new("admission-" + candidate.ProposalId), new(candidate.ProposalId),
-                new("offline-transcript-authority"), new(input.OperationId), new(transcript.ResponseRecordId),
+                new(input.HostAuthorizationId), new(input.OperationId), new(transcript.ResponseRecordId),
                 input.OwnerKind, new(input.OwnerId), new(input.SourceRevisionId), validationId, applicationId, state));
             audit.Add(candidate.ProposalId + ":" + ToWire(state) + ":" + reason);
         }
@@ -221,13 +231,29 @@ public static class SourceClaimAcquisitionEngine
             gaps, validations, applications, links);
         ProviderOperationContractInvariants.Validate(document);
         byte[] canonical = ProviderContractJsonCodecs.Serialize(document);
-        return new(transcript.TranscriptId, transcript.ResponseState, deleted ? "audit-only" : "retained-response", document,
-            Convert.ToHexStringLower(SHA256.HashData(canonical)), audit);
+        string disposition = deleted ? "rejected-deleted-audit-only"
+            : proposals.Any(x => x.Reason == "model-proposed-forbidden-authority") ? "rejected-hostile-authority"
+            : proposals.Any(x => x.State == ProposalAdmissionState.Abstained)
+                ? transcript.ContradictionEvidenceIds.Count == 0 ? "rejected-explicit-abstention"
+                    : "rejected-contradiction-abstained"
+            : proposals.Any(x => x.State == ProposalAdmissionState.Unsupported) ? "rejected-unsupported"
+            : transcript.Proposals.Any(x => x.ApplicationSemantics == "applicability-only")
+                ? "accepted-conditional-applicability"
+            : transcript.Proposals.Any(x => x.ConditionScope == "version-scoped") ? "accepted-conditional" : "accepted";
+        string[] abstentionKinds = proposals.Any(x => x.State == ProposalAdmissionState.Abstained)
+            ? [transcript.ContradictionEvidenceIds.Count == 0 ? "explicit-undetermined" : "contradiction-unresolved"] : [];
+        string[] gapKinds = deleted ? ["deleted-source-passage"]
+            : proposals.Any(x => x.State == ProposalAdmissionState.Unsupported) ? ["unsupported-claim"]
+            : proposals.Any(x => x.State == ProposalAdmissionState.Abstained)
+                ? [transcript.ContradictionEvidenceIds.Count == 0 ? "definitive-source-missing"
+                    : "non-contradictory-authority-missing"] : [];
+        return new(transcript.TranscriptId, transcript.ResponseState, disposition,
+            deleted ? "audit-only" : "retained-response", document,
+            Convert.ToHexStringLower(SHA256.HashData(canonical)), abstentionKinds, gapKinds, audit);
     }
 
     private static ProposalAdmissionState ValidateProposal(
         SourceClaimTranscriptProposal proposal,
-        SourceClaimExecutionInput input,
         Dictionary<string, SourceClaimPassageInput> passages,
         out string reason)
     {
@@ -262,23 +288,20 @@ public static class SourceClaimAcquisitionEngine
             reason = "unknown-proposal-state";
             return ProposalAdmissionState.Rejected;
         }
-        string[] forbiddenAuthority =
-        [
-            "reveal credential", "reveal secret", "contact an external", "network request",
-            "mark every claim admitted", "create finding", "create case", "change taxonomy",
-        ];
-        if (forbiddenAuthority.Any(x => proposal.Claim.Contains(x, StringComparison.OrdinalIgnoreCase))
-            || proposal.Claim.Contains("credential", StringComparison.OrdinalIgnoreCase)
-                && proposal.Claim.Contains("reveal", StringComparison.OrdinalIgnoreCase)
-            || proposal.Claim.Contains("external service", StringComparison.OrdinalIgnoreCase))
+        if (proposal.ClaimKind != "documentation-claim"
+            || proposal.ApplicationSemantics is not ("evidence-only" or "applicability-only")
+            || proposal.AuthorityCategory is not ("informational" or "protected-effect-request")
+            || proposal.ConditionScope is not ("unconditional" or "conditional" or "version-scoped")
+            || proposal.ApplicationSemantics == "applicability-only" && proposal.ConditionScope == "unconditional"
+            || proposal.ConditionScope == "unconditional" && proposal.ConditionIds.Count != 0
+            || proposal.ConditionScope != "unconditional" && proposal.ConditionIds.Count == 0)
         {
-            reason = "model-proposed-forbidden-authority";
+            reason = "structural-host-policy-rejected";
             return ProposalAdmissionState.Rejected;
         }
-        if (input.DeclaredPurpose.Contains("version", StringComparison.OrdinalIgnoreCase)
-            && proposal.ConditionIds.Count == 0)
+        if (proposal.AuthorityCategory == "protected-effect-request")
         {
-            reason = "required-version-condition-missing";
+            reason = "model-proposed-forbidden-authority";
             return ProposalAdmissionState.Rejected;
         }
         reason = "exact-citation-and-identity-admitted";
@@ -301,13 +324,42 @@ public static class SourceClaimAcquisitionEngine
             input.Passages.Select(x => new OpaqueId(x.PassageId)).ToArray(), input.DeclaredPurpose,
             [new(proposalId, new(input.Passages[0].PassageId), reason, [], state, reason)], [],
             transcript.ResponseState == "refusal" ? [reason] : [], [reason], [validationId], [applicationId],
-            [new(new("admission-" + transcript.TranscriptId), proposalId, new("offline-transcript-authority"),
+            [new(new("admission-" + transcript.TranscriptId), proposalId, new(input.HostAuthorizationId),
                 new(input.OperationId), new(transcript.ResponseRecordId), input.OwnerKind, new(input.OwnerId),
                 new(input.SourceRevisionId), validationId, applicationId, state)]);
         ProviderOperationContractInvariants.Validate(document);
         byte[] canonical = ProviderContractJsonCodecs.Serialize(document);
-        return new(transcript.TranscriptId, transcript.ResponseState, "audit-only", document,
-            Convert.ToHexStringLower(SHA256.HashData(canonical)), [reason]);
+        return new(transcript.TranscriptId, transcript.ResponseState, "rejected-identity-drift", "audit-only", document,
+            Convert.ToHexStringLower(SHA256.HashData(canonical)), [], ["identity-drift"], [reason]);
+    }
+
+    private static SourceClaimScenarioResult FailureResult(
+        SourceClaimExecutionInput input,
+        SourceClaimRetainedTranscript transcript)
+    {
+        string reason = "provider-response-" + transcript.ResponseState;
+        string replayState = transcript.ResponseState == "drift" ? "failed-identity-drift" : "retained-response";
+        string[] abstentions = transcript.ResponseState == "refusal" ? [reason] : [];
+        string[] abstentionKinds = transcript.ResponseState == "refusal" ? ["provider-refusal"] : [];
+        string gapKind = transcript.ResponseState switch
+        {
+            "malformed" => "malformed-response",
+            "refusal" => "provider-refusal",
+            "incomplete" => "incomplete-response",
+            "drift" => "identity-drift",
+            _ => throw new InvalidDataException("Unknown retained response failure state."),
+        };
+        SourceClaimExtractionDocument document = new(
+            ContractConstants.SourceClaimExtractionSchemaId, "1", new(input.AcquisitionRunId), new(input.OperationId),
+            input.OwnerKind, new(input.OwnerId), new(input.ParentAnalysisRunId), new(input.ApplicationScopeId),
+            new(input.CostAttributionScopeId), new(input.SourceRevisionId),
+            input.Passages.Select(x => new OpaqueId(x.PassageId)).ToArray(), input.DeclaredPurpose,
+            [], [], abstentions, [reason], [], [], []);
+        ProviderOperationContractInvariants.Validate(document);
+        byte[] canonical = ProviderContractJsonCodecs.Serialize(document);
+        return new(transcript.TranscriptId, transcript.ResponseState, "rejected-" +
+            (transcript.ResponseState == "drift" ? "identity-drift" : transcript.ResponseState), replayState,
+            document, Convert.ToHexStringLower(SHA256.HashData(canonical)), abstentionKinds, [gapKind], [reason]);
     }
 
     private static SourceClaimScenarioResult NoModel(
@@ -322,8 +374,8 @@ public static class SourceClaimAcquisitionEngine
             [], [], [], transcript.Gaps.Count == 0 ? ["Provider was not used."] : transcript.Gaps, [], [], []);
         ProviderOperationContractInvariants.Validate(document);
         byte[] canonical = ProviderContractJsonCodecs.Serialize(document);
-        return new(transcript.TranscriptId, transcript.ResponseState, "not-applicable", document,
-            Convert.ToHexStringLower(SHA256.HashData(canonical)), ["model-not-used"]);
+        return new(transcript.TranscriptId, transcript.ResponseState, "not-used", "not-applicable", document,
+            Convert.ToHexStringLower(SHA256.HashData(canonical)), [], ["provider-not-used"], ["model-not-used"]);
     }
 
     private static SourceClaimScenarioResult EmptyCompleted(
@@ -343,8 +395,9 @@ public static class SourceClaimAcquisitionEngine
             transcript.Abstentions, transcript.Gaps, [], [], []);
         ProviderOperationContractInvariants.Validate(document);
         byte[] canonical = ProviderContractJsonCodecs.Serialize(document);
-        return new(transcript.TranscriptId, transcript.ResponseState, "retained-response", document,
-            Convert.ToHexStringLower(SHA256.HashData(canonical)), ["completed-empty-with-explicit-abstention-and-gap"]);
+        return new(transcript.TranscriptId, transcript.ResponseState, "empty-abstained", "retained-response", document,
+            Convert.ToHexStringLower(SHA256.HashData(canonical)), ["empty-supported-result"],
+            ["supported-claim-missing"], ["completed-empty-with-explicit-abstention-and-gap"]);
     }
 
     private static void ValidateTranscriptEnvelope(SourceClaimExecutionInput input, SourceClaimRetainedTranscript transcript)
@@ -353,7 +406,9 @@ public static class SourceClaimAcquisitionEngine
             || transcript.PromptId != input.PromptId || transcript.PromptFingerprint != input.PromptFingerprint
             || transcript.ResponseFingerprint.Length != 64
             || transcript.ResponseState is not ("completed" or "refusal" or "incomplete" or "malformed" or "empty" or "drift" or "not-used")
-            || transcript.Proposals.Count > 64 || transcript.Abstentions.Count > 64 || transcript.Gaps.Count > 64)
+            || transcript.Proposals.Count > 64 || transcript.Abstentions.Count > 64 || transcript.Gaps.Count > 64
+            || transcript.ModelUsed != (transcript.ResponseState != "not-used")
+            || !transcript.ModelUsed && transcript.Proposals.Count != 0)
         {
             throw new InvalidDataException("Retained source-claim transcript crossed its operation, prompt, source, or bounded state envelope.");
         }
@@ -378,6 +433,7 @@ public static class SourceClaimTransparencyRenderer
             {
                 scenario.TranscriptId,
                 scenario.TranscriptState,
+                scenario.Disposition,
                 scenario.ReplayState,
                 acquisition_run_id = scenario.Extraction.AcquisitionRunId.Value,
                 operation_id = scenario.Extraction.OperationId.Value,
@@ -391,6 +447,8 @@ public static class SourceClaimTransparencyRenderer
                 contradiction_count = scenario.Extraction.ContradictionEvidenceIds.Count,
                 abstention_count = scenario.Extraction.Abstentions.Count,
                 gap_count = scenario.Extraction.Gaps.Count,
+                scenario.AbstentionKinds,
+                scenario.GapKinds,
                 scenario.CanonicalExtractionSha256,
             }),
             network_used = false,

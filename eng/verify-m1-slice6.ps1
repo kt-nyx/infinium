@@ -961,38 +961,62 @@ function Invoke-OfflineSafetyReplayGate {
 }
 
 function Invoke-SourceClaimSemanticsGate {
-    Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' 'FullyQualifiedName~SourceClaimExtraction|FullyQualifiedName~ProviderContext'
-    Invoke-DotnetTest 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' 'FullyQualifiedName~SourceClaimExtraction|FullyQualifiedName~ProviderProvenance'
+    Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' 'FullyQualifiedName~SourceClaim|FullyQualifiedName~ProviderContext'
+    Invoke-DotnetTest 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' 'FullyQualifiedName~SourceClaim|FullyQualifiedName~ProviderProvenance'
     Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' 'FullyQualifiedName~SourceClaimAdmission|FullyQualifiedName~SourceClaimReplay'
     Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' 'FullyQualifiedName~LlmClaimTransparency|FullyQualifiedName~Slice5ProviderAdmission'
     Assert-Slice5V1Unchanged
     $packages = @('S6-CLAIM-DEV-v1', 'S6-CLAIM-VAL-v1')
     $identities = @()
+    $stateInventory = @()
     foreach ($package in $packages) {
         $root = Join-Path $repoRoot "fixtures/public/provider/source-claims/$package"
         $manifest = Get-Content -Raw -LiteralPath (Join-Path $root 'public-manifest.json') | ConvertFrom-Json
         if ($manifest.status -ne 'oracle-frozen-pre-comparison' -or -not $manifest.answer_free -or $manifest.network_required) {
             throw "SourceClaimSemantics package $package is not frozen, answer-free, and offline."
         }
-        $inputText = Get-Content -Raw -LiteralPath (Join-Path $root 'execution-input.v1.json')
-        foreach ($forbidden in @('expected_', 'ground_truth', 'matched_negative', 'correct_answer')) {
-            if ($inputText.IndexOf($forbidden, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
-                throw "SourceClaimSemantics found expected-answer token '$forbidden' in product input."
+        $executionInput = Get-Content -Raw -LiteralPath (Join-Path $root 'execution-input.v1.json') | ConvertFrom-Json
+        $transcriptDocument = Get-Content -Raw -LiteralPath (Join-Path $root 'retained-transcripts.v1.json') | ConvertFrom-Json
+        foreach ($transcript in @($transcriptDocument.transcripts)) {
+            $classification = if (-not [bool]$transcript.model_used) { 'no-model' }
+                elseif ([string]$transcript.response_state -ne 'completed') { [string]$transcript.response_state }
+                elseif (@($transcript.proposals).Count -eq 0) { 'empty' }
+                elseif (@($transcript.proposals | Where-Object { $_.authority_category -eq 'protected-effect-request' }).Count -ne 0) { 'hostile' }
+                elseif (@($transcript.proposals | Where-Object {
+                    $passageId = [string]$_.passage_id
+                    @($executionInput.passages | Where-Object { $_.passage_id -eq $passageId -and [bool]$_.deleted }).Count -ne 0
+                }).Count -ne 0) { 'deleted' }
+                elseif (@($transcript.contradiction_evidence_ids).Count -ne 0) { 'contradiction' }
+                elseif (@($transcript.proposals | Where-Object { $_.state -eq 'abstained' }).Count -ne 0) { 'abstention' }
+                elseif (@($transcript.proposals | Where-Object { $_.state -eq 'unsupported' }).Count -ne 0) { 'unsupported-negative' }
+                elseif (@($transcript.proposals | Where-Object { $_.condition_scope -eq 'version-scoped' }).Count -ne 0) { 'version-scoped' }
+                elseif (@($transcript.proposals | Where-Object { $_.application_semantics -eq 'applicability-only' }).Count -ne 0) { 'conditional-applicability' }
+                else { 'valid-positive' }
+            $stateInventory += [ordered]@{
+                package_id = $package
+                transcript_id = [string]$transcript.transcript_id
+                classification = $classification
             }
         }
         $identities += [ordered]@{
             package_id = $package
+            partition = [string]$manifest.partition
             manifest_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
             input_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'execution-input.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+            context_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'context-manifest.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
             transcript_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'retained-transcripts.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
             oracle_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'oracle.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+            provenance_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'oracle-provenance.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
         }
+    }
+    if ($stateInventory.Count -ne 14 -or @($stateInventory.classification | Sort-Object -Unique).Count -ne 14) {
+        throw 'SourceClaimSemantics requires exactly fourteen fixture-derived distinct transcript-state classifications.'
     }
     Write-Receipt 'SourceClaimSemantics' ([ordered]@{
         packages = $identities
         prompt_id = 'infinium.m1-s6.source-claim-prompt/v1'
         prompt_sha256 = 'd2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84'
-        provider_transcript_states = @('valid-positive','unsupported-negative','conditional-version','contradiction','abstention','empty','hostile','malformed','refusal','incomplete','deleted','drift','no-model')
+        provider_transcript_states = $stateInventory
         network_operations = 0
         credential_operations = 0
         source_refresh_operations = 0

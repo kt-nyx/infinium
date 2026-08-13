@@ -4,6 +4,7 @@
   "package_id": "S6-CLAIM-DEV-v1",
   "acquisition_run_id": "acquisition-claim-dev-1",
   "operation_id": "operation-claim-dev-1",
+  "host_authorization_id": "authorization-claim-dev-1",
   "owner_kind": "evidence-acquisition-run",
   "owner_id": "acquisition-claim-dev-1",
   "parent_analysis_run_id": "analysis-claim-dev-1",

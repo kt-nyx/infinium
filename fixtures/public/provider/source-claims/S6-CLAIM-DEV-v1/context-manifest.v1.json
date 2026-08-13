@@ -1,9 +1,1 @@
-{
-  "schema_id": "infinium.llm.source-claim-context/v1",
-  "schema_version": "1",
-  "acquisition_run_id": "acquisition-claim-dev-1",
-  "source_revision_id": "guide-revision-r7",
-  "selection_policy": "exact-declared-passages-in-declared-order/v1",
-  "passage_ids": ["passage-alder", "passage-birch", "passage-cedar"],
-  "text_sha256": ["4a5d453a3806f8454dc8ee771f99735466145fdd72ff16b4dd398701cdd3ed9d", "00de2ee54679c131f57cb868a6725b106efb42c00533c096ea4703701e944554", "b67631ccc1d57be79a464c6582c4387c332694690511a934a2b5ce177c7bea27"]
-}
+{"schema_id":"infinium.llm.source-claim-context/v1","schema_version":"1","acquisition_run_id":"acquisition-claim-dev-1","source_revision_id":"guide-revision-r7","selection_policy":"exact-declared-passages-in-declared-order/v1","passage_ids":["passage-alder","passage-birch","passage-cedar"],"text_sha256":["4a5d453a3806f8454dc8ee771f99735466145fdd72ff16b4dd398701cdd3ed9d","00de2ee54679c131f57cb868a6725b106efb42c00533c096ea4703701e944554","b67631ccc1d57be79a464c6582c4387c332694690511a934a2b5ce177c7bea27"]}

@@ -25,6 +25,10 @@ public sealed class SourceClaimAcquisitionCoordinator
         string dispatchFenceId,
         DateTimeOffset occurredAt)
     {
+        if (authorizationId != input.HostAuthorizationId)
+        {
+            throw new InvalidDataException("Source-claim admission requires the exact host authorization bound by the execution input.");
+        }
         SourceClaimAcquisitionResult result = SourceClaimAcquisitionEngine.Execute(input, [transcript]);
         SourceClaimScenarioResult scenario = result.Scenarios.Single();
         SourceClaimPersistenceReceipt persistence = store.PersistSourceClaimExtraction(new(

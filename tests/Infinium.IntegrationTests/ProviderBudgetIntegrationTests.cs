@@ -453,33 +453,78 @@ public sealed class ProviderBudgetIntegrationTests
                   'source-claim-revision','source-claim-doc','fixture','1',NULL,NULL,
                   'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',0,
                   'unavailable','unavailable','unavailable','2026-08-10T00:00:06.0000000+00:00');
-                INSERT INTO evidence_acquisition_application_links VALUES(
-                  'source-claim-application','acquisition-restore','run-restore','application-restore','cost-restore',
-                  'source-claim-artifact','2026-08-10T00:00:06.0000000+00:00');
                 """;
-            Assert.AreEqual(2, seed.ExecuteNonQuery());
+            Assert.AreEqual(1, seed.ExecuteNonQuery());
         }
-        SourceClaimExtractionDocument document = new(
-            ContractConstants.SourceClaimExtractionSchemaId, "1", new("acquisition-restore"), new("operation-restore"),
-            "evidence-acquisition-run", new("acquisition-restore"), new("run-restore"), new("application-restore"),
-            new("cost-restore"), new("source-claim-revision"), [new("source-claim-passage")], "Exact fixture claim",
-            [new(new("source-claim-proposal"), new("source-claim-passage"), "Synthetic cited proposal", [],
-                ProposalAdmissionState.Admitted, "exact-citation-and-identity-admitted")], [], [], [],
-            [new("source-claim-validation")], [new("source-claim-application")],
-            [new(new("source-claim-admission"), new("source-claim-proposal"), new("authorization-settlement"),
-                new("operation-restore"), new("source-claim-persist:response"), "evidence-acquisition-run",
-                new("acquisition-restore"), new("source-claim-revision"), new("source-claim-validation"),
-                new("source-claim-application"), ProposalAdmissionState.Admitted)]);
-        SourceClaimPersistenceReceipt persisted = context.Store.PersistSourceClaimExtraction(new(
-            document, "authorization-settlement", "source-claim-persist:response", "attempt-settlement",
-            "request-settlement", gate.DispatchFenceId, BaseTime.AddSeconds(8)));
+        context.Store.RegisterSourceClaimAcquisition(new(
+            "acquisition-restore", "install-restore", "context-restore", "config-restore", "manifest-restore",
+            "run-restore", "application-restore", "cost-restore", "source-claim-job", "source-claim-command",
+            "source-claim-parent", [new("application-dev-p01", "source-claim-artifact")],
+            "source-claim-revision", BaseTime.AddSeconds(6)));
+        (SourceClaimExecutionInput fixtureInput, SourceClaimRetainedTranscript[] fixtureTranscripts) =
+            SourceClaimAdmissionIntegrationTests.Load("S6-CLAIM-DEV-v1");
+        SourceClaimExecutionInput input = fixtureInput with
+        {
+            AcquisitionRunId = "acquisition-restore",
+            OperationId = "operation-restore",
+            HostAuthorizationId = "authorization-settlement",
+            OwnerId = "acquisition-restore",
+            ParentAnalysisRunId = "run-restore",
+            ApplicationScopeId = "application-restore",
+            CostAttributionScopeId = "cost-restore",
+            SourceRevisionId = "source-claim-revision",
+            Passages = fixtureInput.Passages.Select(x => x with { SourceRevisionId = "source-claim-revision" }).ToArray(),
+        };
+        SourceClaimRetainedTranscript transcript = fixtureTranscripts[0] with
+        {
+            OperationId = "operation-restore",
+            ResponseRecordId = "source-claim-persist:response",
+            SourceRevisionId = "source-claim-revision",
+        };
+        SourceClaimAcquisitionCoordinator coordinator = new(context.Store);
+        Assert.ThrowsExactly<InvalidDataException>(() => coordinator.AdmitRetainedTranscript(
+            input, transcript, "wrong-authorization", "attempt-settlement", "request-settlement",
+            gate.DispatchFenceId, BaseTime.AddSeconds(8)));
+        SourceClaimAdmissionPublication admission = coordinator.AdmitRetainedTranscript(
+            input, transcript, "authorization-settlement", "attempt-settlement", "request-settlement",
+            gate.DispatchFenceId, BaseTime.AddSeconds(8));
+        SourceClaimPersistenceReceipt persisted = admission.Persistence;
         Assert.AreEqual(1, persisted.AdmissionCount);
         Assert.AreEqual("admitted", context.Store.ReadSourceClaimAdmissions("acquisition-restore").Single().State);
+        SourceClaimExtractionDocument document = context.Store.ReadSourceClaimExtraction(
+            "acquisition-restore", "admission-dev-p01");
+        Assert.AreEqual("authorization-settlement", document.AdmissionLinks.Single().AuthorizationId.Value);
+        Assert.ThrowsExactly<InvalidDataException>(() => context.Store.PersistSourceClaimExtraction(new(
+            document, "authorization-settlement", "wrong-response", "attempt-settlement", "request-settlement",
+            gate.DispatchFenceId, BaseTime.AddSeconds(9))));
         ProviderTerminalPublicationArtifacts publication = accounting.PublishTerminalV2(
             new("run-restore"), new("local-run-output-v1"), "local-output-v1"u8.ToArray(),
             "local-cli-v1"u8.ToArray(), new("operation-restore"), BaseTime.AddSeconds(11));
         Assert.AreEqual("acquisition-restore", publication.RunOutputV2.EvidenceAcquisitionRunIds.Single().Value);
-        Assert.AreEqual("source-claim-admission", publication.RunOutputV2.ProviderOperations.Single().AdmissionId?.Value);
+        Assert.AreEqual("admission-dev-p01", publication.RunOutputV2.ProviderOperations.Single().AdmissionId?.Value);
+
+        BackupArtifact backup = context.Store.CreateBackup("Wp6SourceClaim", BaseTime.AddSeconds(12));
+        string restoredRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp6-Restore-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using (StoragePaths targetPaths = new(restoredRoot))
+            {
+                AuthoritativeStore.RestoreBackup(backup, targetPaths);
+            }
+            using StoragePaths restoredPaths = new(restoredRoot);
+            using AuthoritativeStore restored = new(restoredPaths);
+            Assert.AreEqual("admitted", restored.ReadSourceClaimAdmissions("acquisition-restore").Single().State);
+            Assert.AreEqual("dev-p01", restored.ReadSourceClaimExtraction(
+                "acquisition-restore", "admission-dev-p01").ClaimProposals.Single().ProposalId.Value);
+            _ = restored.RebuildProviderBudgetProjections(BaseTime.AddSeconds(13));
+        }
+        finally
+        {
+            if (Directory.Exists(restoredRoot))
+            {
+                DeleteDirectoryWithRetry(restoredRoot);
+            }
+        }
     }
 
     [TestMethod]

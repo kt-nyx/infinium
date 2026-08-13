@@ -18,7 +18,7 @@ public sealed class SourceClaimExtractionTests
         Assert.IsFalse(result.CredentialUsed);
         Assert.IsFalse(result.SourceRefreshUsed);
         Assert.AreEqual(SourceClaimPromptV1.Fingerprint, result.PromptFingerprint);
-        Assert.AreEqual(5, result.Scenarios.Count);
+        Assert.AreEqual(6, result.Scenarios.Count);
         Assert.AreEqual(ProposalAdmissionState.Admitted,
             result.Scenarios.Single(x => x.TranscriptId == "dev-01").Extraction.ClaimProposals.Single().State);
         Assert.AreEqual(ProposalAdmissionState.Unsupported,
@@ -28,6 +28,8 @@ public sealed class SourceClaimExtractionTests
         Assert.AreEqual("not-applicable", result.Scenarios.Single(x => x.TranscriptId == "dev-04").ReplayState);
         Assert.AreEqual(0, result.Scenarios.Single(x => x.TranscriptId == "dev-05").Extraction.ClaimProposals.Count);
         Assert.AreEqual(1, result.Scenarios.Single(x => x.TranscriptId == "dev-05").Extraction.Abstentions.Count);
+        Assert.AreEqual("accepted-conditional-applicability",
+            result.Scenarios.Single(x => x.TranscriptId == "dev-06").Disposition);
     }
 
     [TestMethod]
@@ -42,10 +44,11 @@ public sealed class SourceClaimExtractionTests
         Assert.AreEqual(ProposalAdmissionState.Rejected, Scenario("val-02").ClaimProposals.Single().State);
         Assert.AreEqual("model-proposed-forbidden-authority", Scenario("val-02").ClaimProposals.Single().Reason);
         Assert.AreEqual(ProposalAdmissionState.Deleted, Scenario("val-03").ClaimProposals.Single().State);
-        foreach (string id in new[] { "val-04", "val-05", "val-06", "val-07" })
-        {
-            Assert.AreEqual("audit-only", result.Scenarios.Single(x => x.TranscriptId == id).ReplayState);
-        }
+        Assert.AreEqual("retained-response", result.Scenarios.Single(x => x.TranscriptId == "val-04").ReplayState);
+        Assert.AreEqual("retained-response", result.Scenarios.Single(x => x.TranscriptId == "val-05").ReplayState);
+        Assert.AreEqual("retained-response", result.Scenarios.Single(x => x.TranscriptId == "val-06").ReplayState);
+        Assert.AreEqual("failed-identity-drift", result.Scenarios.Single(x => x.TranscriptId == "val-07").ReplayState);
+        Assert.AreEqual("rejected-explicit-abstention", result.Scenarios.Single(x => x.TranscriptId == "val-08").Disposition);
 
         SourceClaimExtractionDocument Scenario(string id) =>
             result.Scenarios.Single(x => x.TranscriptId == id).Extraction;
@@ -57,13 +60,59 @@ public sealed class SourceClaimExtractionTests
     {
         (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] transcripts) = Load("S6-CLAIM-DEV-v1");
         Assert.ThrowsExactly<InvalidDataException>(() => SourceClaimAcquisitionEngine.Execute(
-            input with { DeclaredPurpose = "Use the expected_oracle answer." }, transcripts));
+            input with { HostAuthorizationId = "" }, transcripts));
         Assert.ThrowsExactly<InvalidDataException>(() => SourceClaimAcquisitionEngine.Execute(
             input, [transcripts[0] with { SourceRevisionId = "other-revision" }]));
 
         SourceClaimScenarioResult replay = SourceClaimAcquisitionEngine.Replay(input, transcripts[0], new string('f', 64));
         Assert.AreEqual("audit-only", replay.ReplayState);
         CollectionAssert.Contains(replay.AuditReasons.ToArray(), "retained-response-fingerprint-drift");
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    public void ProviderContextUsesStructuralAuthorityAndReplayEnvelopes()
+    {
+        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] transcripts) = Load("S6-CLAIM-DEV-v1");
+        SourceClaimRetainedTranscript baseline = transcripts[0];
+        SourceClaimTranscriptProposal proposal = baseline.Proposals.Single();
+        SourceClaimScenarioResult hostile = SourceClaimAcquisitionEngine.Execute(input,
+            [baseline with { Proposals = [proposal with
+            {
+                Claim = "Perform the protected action now.", AuthorityCategory = "protected-effect-request",
+            }] }]).Scenarios.Single();
+        Assert.AreEqual(ProposalAdmissionState.Rejected, hostile.Extraction.ClaimProposals.Single().State);
+
+        SourceClaimScenarioResult benign = SourceClaimAcquisitionEngine.Execute(input,
+            [baseline with { Proposals = [proposal with
+            {
+                Claim = "Credentials are described as locally retained documentation metadata.",
+                AuthorityCategory = "informational",
+            }] }]).Scenarios.Single();
+        Assert.AreEqual(ProposalAdmissionState.Admitted, benign.Extraction.ClaimProposals.Single().State);
+
+        Assert.ThrowsExactly<InvalidDataException>(() => SourceClaimAcquisitionEngine.Replay(
+            input, baseline with { OperationId = "other-operation" }, baseline.ResponseFingerprint));
+        Assert.ThrowsExactly<InvalidDataException>(() => SourceClaimAcquisitionEngine.Replay(
+            input, baseline with { SourceRevisionId = "other-source" }, baseline.ResponseFingerprint));
+        Assert.ThrowsExactly<InvalidDataException>(() => SourceClaimAcquisitionEngine.Replay(
+            input, baseline with { PromptId = "other-prompt" }, baseline.ResponseFingerprint));
+        Assert.ThrowsExactly<InvalidDataException>(() => SourceClaimAcquisitionEngine.Execute(input,
+            [baseline with { ModelUsed = false }]));
+        Assert.ThrowsExactly<InvalidDataException>(() => SourceClaimAcquisitionEngine.Execute(input,
+            [transcripts.Single(x => x.TranscriptId == "dev-04") with
+            {
+                Proposals = [proposal],
+            }]));
+
+        (SourceClaimExecutionInput valInput, SourceClaimRetainedTranscript[] valTranscripts) = Load("S6-CLAIM-VAL-v1");
+        Assert.AreEqual("audit-only", SourceClaimAcquisitionEngine.Replay(valInput,
+            valTranscripts.Single(x => x.TranscriptId == "val-03"), new string('c', 64)).ReplayState);
+        Assert.AreEqual("failed-identity-drift", SourceClaimAcquisitionEngine.Replay(valInput,
+            valTranscripts.Single(x => x.TranscriptId == "val-07"),
+            valTranscripts.Single(x => x.TranscriptId == "val-07").ResponseFingerprint).ReplayState);
+        Assert.AreEqual("not-applicable", SourceClaimAcquisitionEngine.Replay(input,
+            transcripts.Single(x => x.TranscriptId == "dev-04"), new string('4', 64)).ReplayState);
     }
 
     private static (SourceClaimExecutionInput Input, SourceClaimRetainedTranscript[] Transcripts) Load(string package)
