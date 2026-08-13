@@ -200,22 +200,22 @@ public static class SourceClaimAcquisitionEngine
 
         Dictionary<string, SourceClaimPassageInput> passages = input.Passages.ToDictionary(x => x.PassageId, StringComparer.Ordinal);
         List<CitationProposalContract> proposals = [];
-        List<ProviderSemanticAdmissionLinkContract> links = [];
+        List<SourceClaimAdmissionCorrelationContract> correlations = [];
         List<OpaqueId> validations = [];
-        List<OpaqueId> applications = [];
+        List<OpaqueId> correlationIds = [];
         List<string> audit = [];
         foreach (SourceClaimTranscriptProposal candidate in transcript.Proposals)
         {
             ProposalAdmissionState state = ValidateProposal(candidate, passages, out string reason);
             OpaqueId validationId = new("validation-" + candidate.ProposalId);
-            OpaqueId applicationId = new("application-" + candidate.ProposalId);
+            OpaqueId correlationId = new("admission-correlation-" + candidate.ProposalId);
             validations.Add(validationId);
-            applications.Add(applicationId);
+            correlationIds.Add(correlationId);
             proposals.Add(new(new(candidate.ProposalId), new(candidate.PassageId), candidate.Claim,
                 candidate.ConditionIds.Select(x => new OpaqueId(x)).ToArray(), state, reason));
-            links.Add(new(new("admission-" + candidate.ProposalId), new(candidate.ProposalId),
+            correlations.Add(new(new("admission-" + candidate.ProposalId), new(candidate.ProposalId),
                 new(input.HostAuthorizationId), new(input.OperationId), new(transcript.ResponseRecordId),
-                input.OwnerKind, new(input.OwnerId), new(input.SourceRevisionId), validationId, applicationId, state));
+                input.OwnerKind, new(input.OwnerId), new(input.SourceRevisionId), validationId, correlationId, state));
             audit.Add(candidate.ProposalId + ":" + ToWire(state) + ":" + reason);
         }
 
@@ -228,7 +228,7 @@ public static class SourceClaimAcquisitionEngine
             new(input.CostAttributionScopeId), new(input.SourceRevisionId),
             input.Passages.Select(x => new OpaqueId(x.PassageId)).ToArray(), input.DeclaredPurpose, proposals,
             transcript.ContradictionEvidenceIds.Select(x => new OpaqueId(x)).ToArray(), transcript.Abstentions,
-            gaps, validations, applications, links);
+            gaps, validations, correlationIds, correlations);
         ProviderOperationContractInvariants.Validate(document);
         byte[] canonical = ProviderContractJsonCodecs.Serialize(document);
         string disposition = deleted ? "rejected-deleted-audit-only"
@@ -316,17 +316,17 @@ public static class SourceClaimAcquisitionEngine
         ProposalAdmissionState state = ProposalAdmissionState.Rejected;
         OpaqueId proposalId = new("status-" + transcript.TranscriptId);
         OpaqueId validationId = new("validation-" + transcript.TranscriptId);
-        OpaqueId applicationId = new("application-" + transcript.TranscriptId);
+        OpaqueId correlationId = new("admission-correlation-" + transcript.TranscriptId);
         SourceClaimExtractionDocument document = new(
             ContractConstants.SourceClaimExtractionSchemaId, "1", new(input.AcquisitionRunId), new(input.OperationId),
             input.OwnerKind, new(input.OwnerId), new(input.ParentAnalysisRunId), new(input.ApplicationScopeId),
             new(input.CostAttributionScopeId), new(input.SourceRevisionId),
             input.Passages.Select(x => new OpaqueId(x.PassageId)).ToArray(), input.DeclaredPurpose,
             [new(proposalId, new(input.Passages[0].PassageId), reason, [], state, reason)], [],
-            transcript.ResponseState == "refusal" ? [reason] : [], [reason], [validationId], [applicationId],
+            transcript.ResponseState == "refusal" ? [reason] : [], [reason], [validationId], [correlationId],
             [new(new("admission-" + transcript.TranscriptId), proposalId, new(input.HostAuthorizationId),
                 new(input.OperationId), new(transcript.ResponseRecordId), input.OwnerKind, new(input.OwnerId),
-                new(input.SourceRevisionId), validationId, applicationId, state)]);
+                new(input.SourceRevisionId), validationId, correlationId, state)]);
         ProviderOperationContractInvariants.Validate(document);
         byte[] canonical = ProviderContractJsonCodecs.Serialize(document);
         return new(transcript.TranscriptId, transcript.ResponseState, "rejected-identity-drift", "audit-only", document,
@@ -442,8 +442,9 @@ public static class SourceClaimTransparencyRenderer
                     .Where(x => x.State == ProposalAdmissionState.Admitted).Select(x => x.ProposalId.Value).ToArray(),
                 non_admitted_proposal_ids = scenario.Extraction.ClaimProposals
                     .Where(x => x.State != ProposalAdmissionState.Admitted).Select(x => x.ProposalId.Value).ToArray(),
-                applied_application_link_ids = scenario.Extraction.AdmissionLinks
-                    .Where(x => x.State == ProposalAdmissionState.Admitted).Select(x => x.ApplicationLinkId.Value).ToArray(),
+                admitted_correlation_ids = scenario.Extraction.AdmissionCorrelations
+                    .Where(x => x.State == ProposalAdmissionState.Admitted)
+                    .Select(x => x.AdmissionCorrelationId.Value).ToArray(),
                 contradiction_count = scenario.Extraction.ContradictionEvidenceIds.Count,
                 abstention_count = scenario.Extraction.Abstentions.Count,
                 gap_count = scenario.Extraction.Gaps.Count,

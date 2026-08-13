@@ -11,7 +11,7 @@
       "package_path": "fixtures/public/provider/source-claims/S6-CLAIM-DEV-v1",
       "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-DEV-v1/public-manifest.json",
       "authority_bytes": 1321,
-        "authority_sha256": "c3b3b1087b184d8c0c4d8c1afc06289b48cf31b71168952b1100c23a4f0597f1"
+        "authority_sha256": "7a7b3ea24a218ec1ebb811c96f39a3b7f197938960bcbd9ec15eb2f54b1ff61b"
     },
     {
       "package_identity": "S6-CLAIM-VAL-v1",
@@ -20,7 +20,7 @@
       "package_path": "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1",
       "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1/public-manifest.json",
       "authority_bytes": 1320,
-        "authority_sha256": "918edde1b818f73cea9bfbd532b66c976cdd43d6a921636cad8ba32c4813f0bb"
+        "authority_sha256": "0f95265340873dc4abb083c6f857db9e8786c6e1ba36da385f07c876afe1c13f"
     },
     {
       "package_identity": "M1-PLAT-PROVIDER-CAPABILITY-DEV-v1",
@@ -281,8 +281,8 @@
       "partition": "development",
       "package_path": "fixtures/public/contracts/provider-wp1",
       "authority_file": "fixtures/public/contracts/provider-wp1/contract-examples.v1.json",
-      "authority_bytes": 15792,
-      "authority_sha256": "58bece21c77bf6670d7a68a12293f2eebc43e3c83eb0eae55f9b571bd70dcc4e",
+      "authority_bytes": 15804,
+      "authority_sha256": "69082ddeef8889c61817593f7015232e0782ef2807bb2da931823c4d7467cddc",
       "authority_status": "Proposed"
     }
   ]

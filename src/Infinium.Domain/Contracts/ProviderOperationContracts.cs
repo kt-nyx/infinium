@@ -318,6 +318,19 @@ public sealed record ProviderSemanticAdmissionLinkContract(
     OpaqueId ApplicationLinkId,
     ProposalAdmissionState State);
 
+public sealed record SourceClaimAdmissionCorrelationContract(
+    OpaqueId AdmissionId,
+    OpaqueId ProposalId,
+    OpaqueId AuthorizationId,
+    OpaqueId OperationId,
+    OpaqueId ResponseRecordId,
+    string OwnerKind,
+    OpaqueId OwnerId,
+    OpaqueId RootSubjectId,
+    OpaqueId ValidationId,
+    OpaqueId AdmissionCorrelationId,
+    ProposalAdmissionState State);
+
 public sealed record CitationProposalContract(
     OpaqueId ProposalId,
     OpaqueId PassageId,
@@ -344,8 +357,8 @@ public sealed record SourceClaimExtractionDocument(
     IReadOnlyList<string> Abstentions,
     IReadOnlyList<string> Gaps,
     IReadOnlyList<OpaqueId> ValidationIds,
-    IReadOnlyList<OpaqueId> ApplicationLinkIds,
-    IReadOnlyList<ProviderSemanticAdmissionLinkContract> AdmissionLinks);
+    IReadOnlyList<OpaqueId> AdmissionCorrelationIds,
+    IReadOnlyList<SourceClaimAdmissionCorrelationContract> AdmissionCorrelations);
 
 public sealed record HypothesisProposalContract(
     OpaqueId ProposalId,

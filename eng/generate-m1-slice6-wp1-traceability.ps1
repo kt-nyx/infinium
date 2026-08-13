@@ -55,7 +55,7 @@ function Get-Authorities([string] $Schema, [string] $Path) {
             return @('OPS-002','ADR-0023','ADR-0025')
         }
         'source-claim-extraction.v1.schema.json' {
-            if ($leaf -in @('acquisition_run_id','owner_kind','owner_id','parent_analysis_run_id','application_scope_id','cost_attribution_scope_id','application_link_ids')) { return @('EVID-001','EVID-004','EVID-007','ADR-0002','ADR-0016') }
+            if ($leaf -in @('acquisition_run_id','owner_kind','owner_id','parent_analysis_run_id','application_scope_id','cost_attribution_scope_id')) { return @('EVID-001','EVID-004','EVID-007','ADR-0002','ADR-0016') }
             return @('EVID-001','EVID-004','EVID-007','ADR-0001','ADR-0013')
         }
         'candidate-investigation.v1.schema.json' {
@@ -306,10 +306,12 @@ function Get-Persistence([string] $Schema, [string] $Path) {
             }
         }
         'source-claim-extraction.v1.schema.json' {
-            if ($Path -like '`$defs.admissionLink.*') {
+            if ($Path -like '`$defs.admissionCorrelation.*' -or $Path -like '`$defs.admissionLink.*') {
                 $column = switch ($leaf) {
                     'authorization_id' { 'provider_semantic_proposals.authorization_id' }
                     'proposal_id' { @('provider_semantic_proposals.proposal_id','provider_semantic_admissions.proposal_id') }
+                    'application_link_id' { 'provider_semantic_admissions.semantic_link_id' }
+                    'admission_correlation_id' { 'provider_semantic_admissions.semantic_link_id' }
                     default { "provider_semantic_admissions.$leaf" }
                 }
             }
@@ -321,10 +323,10 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                 'parent_analysis_run_id' { 'evidence_acquisition_runs.parent_analysis_run_id' }
                 'application_scope_id' { 'evidence_acquisition_runs.application_scope_id' }
                 'cost_attribution_scope_id' { 'evidence_acquisition_runs.cost_attribution_scope_id' }
-                'application_link_ids' { 'evidence_acquisition_application_links.application_link_id' }
+                'admission_correlation_ids' { 'provider_semantic_admissions.semantic_link_id' }
                 'source_revision_id' { 'provider_semantic_proposals.root_subject_id' }
                 'validation_ids' { 'provider_semantic_validations.validation_id' }
-                'admission_links' { @('provider_semantic_admissions.admission_id','provider_semantic_admissions.proposal_id','provider_semantic_admissions.operation_id','provider_semantic_admissions.response_record_id','provider_semantic_admissions.owner_kind','provider_semantic_admissions.owner_id','provider_semantic_admissions.root_subject_id','provider_semantic_admissions.validation_id','provider_semantic_admissions.application_link_id','provider_semantic_admissions.state') }
+                'admission_correlations' { @('provider_semantic_admissions.admission_id','provider_semantic_admissions.proposal_id','provider_semantic_admissions.operation_id','provider_semantic_admissions.response_record_id','provider_semantic_admissions.owner_kind','provider_semantic_admissions.owner_id','provider_semantic_admissions.root_subject_id','provider_semantic_admissions.validation_id','provider_semantic_admissions.semantic_link_id','provider_semantic_admissions.state') }
                 default { $null }
             } }
         }
@@ -337,7 +339,7 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                 'candidate_id' { 'analysis_candidates.candidate_id' }
                 'admission_link_ids' { 'provider_semantic_admissions.admission_id' }
                 'validation_ids' { 'provider_semantic_validations.validation_id' }
-                'admission_links' { @('provider_semantic_admissions.admission_id','provider_semantic_admissions.proposal_id','provider_semantic_admissions.operation_id','provider_semantic_admissions.response_record_id','provider_semantic_admissions.owner_kind','provider_semantic_admissions.owner_id','provider_semantic_admissions.root_subject_id','provider_semantic_admissions.validation_id','provider_semantic_admissions.application_link_id','provider_semantic_admissions.state') }
+                'admission_links' { @('provider_semantic_admissions.admission_id','provider_semantic_admissions.proposal_id','provider_semantic_admissions.operation_id','provider_semantic_admissions.response_record_id','provider_semantic_admissions.owner_kind','provider_semantic_admissions.owner_id','provider_semantic_admissions.root_subject_id','provider_semantic_admissions.validation_id','provider_semantic_admissions.semantic_link_id','provider_semantic_admissions.state') }
                 default { $null }
             }
         }
@@ -440,8 +442,9 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
             }
         }
         elseif ($Schema -eq 'source-claim-extraction.v1.schema.json') {
-            $map=@{ acquisition_run_id='acquisition_run_id'; operation_id='operation_id'; owner_kind='owner_kind'; owner_id='owner_id'; parent_analysis_run_id='parent_analysis_run_id'; application_scope_id='application_scope_id'; cost_attribution_scope_id='cost_attribution_scope_id'; source_revision_id='source_revision_id'; validation_ids='validation_ids'; application_link_ids='application_link_ids'; admission_links='admission_links' }
-            if ($Path -like '`$defs.admissionLink.*') { $message='ProviderSemanticAdmissionLink'; $field=$leaf }
+            $map=@{ acquisition_run_id='acquisition_run_id'; operation_id='operation_id'; owner_kind='owner_kind'; owner_id='owner_id'; parent_analysis_run_id='parent_analysis_run_id'; application_scope_id='application_scope_id'; cost_attribution_scope_id='cost_attribution_scope_id'; source_revision_id='source_revision_id'; validation_ids='validation_ids'; admission_correlation_ids='admission_correlation_ids'; admission_correlations='admission_correlations' }
+            if ($Path -like '`$defs.admissionCorrelation.*') { $message='SourceClaimAdmissionCorrelation'; $field=$leaf }
+            elseif ($Path -like '`$defs.admissionLink.*') { $message='ProviderSemanticAdmissionLink'; $field=$leaf }
             elseif($map.ContainsKey($Path)){ $message='SourceClaimExtractionPayload'; $field=$map[$Path] }
         }
         elseif ($Schema -eq 'candidate-investigation.v1.schema.json') {

@@ -188,6 +188,9 @@ public sealed partial class AuthoritativeStore
                     INSERT INTO store_metadata(key,value)
                     VALUES ('wp6_schema_correction_id','M1-S6-WP6-0006F')
                     ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+                    INSERT INTO store_metadata(key,value)
+                    VALUES ('wp6_active_contract_correction_id','M1-S6-WP6-0006G')
+                    ON CONFLICT(key) DO UPDATE SET value=excluded.value;
                     INSERT INTO migration_history(
                         migration_id, from_version, to_version, applied_at, sqlite_source_id)
                     VALUES ('M1-S6-0006', 5, 6, $now, $sqlite_source);
@@ -207,6 +210,7 @@ public sealed partial class AuthoritativeStore
                 ApplyWp5Schema6ExtensionIfRequired();
                 ApplyWp5Schema6CorrectionIfRequired();
                 ApplyWp6Schema6CorrectionIfRequired();
+                ApplyWp6ActiveContractCorrectionIfRequired();
             }
         }
     }
@@ -265,6 +269,7 @@ public sealed partial class AuthoritativeStore
             "554129523ac64ce52ee4d24e90644dbaa167c0d98602f1c2d0f25ad271ec0581";
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp5ExtensionSourceSchemaFingerprint)
         {
@@ -382,6 +387,7 @@ public sealed partial class AuthoritativeStore
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp5CorrectionSourceSchemaFingerprint)
         {
@@ -426,6 +432,7 @@ public sealed partial class AuthoritativeStore
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
@@ -484,7 +491,8 @@ public sealed partial class AuthoritativeStore
     private void ApplyWp6Schema6CorrectionIfRequired()
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
-        if (actualFingerprint == ProviderPersistenceDeclarations.SchemaFingerprint)
+        if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
             declared.CommandText =
@@ -521,6 +529,98 @@ public sealed partial class AuthoritativeStore
             """
             UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint';
             INSERT INTO store_metadata(key,value) VALUES('wp6_schema_correction_id','M1-S6-WP6-0006F')
+              ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+            """,
+            transaction,
+            ("$fingerprint", upgradedFingerprint));
+        transaction.Commit();
+    }
+
+    private void ApplyWp6ActiveContractCorrectionIfRequired()
+    {
+        string actualFingerprint = ComputeSchemaFingerprint(connection);
+        if (actualFingerprint == ProviderPersistenceDeclarations.SchemaFingerprint)
+        {
+            using SqliteCommand declared = connection.CreateCommand();
+            declared.CommandText =
+                "SELECT COUNT(*) FROM store_metadata WHERE key='wp6_active_contract_correction_id' AND value='M1-S6-WP6-0006G';";
+            if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException("The current WP6 active contract fingerprint lacks its exact provenance.");
+            }
+            return;
+        }
+        if (actualFingerprint != ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint)
+        {
+            throw new InvalidOperationException("Schema 6 does not match the exact WP6 active contract correction source.");
+        }
+
+        using SqliteCommand ambiguity = connection.CreateCommand();
+        ambiguity.CommandText =
+            """
+            SELECT COUNT(*) FROM evidence_acquisition_application_links link
+            WHERE (SELECT COUNT(*) FROM provider_semantic_admissions admission
+              WHERE admission.owner_kind='evidence-acquisition-run'
+                AND admission.owner_id=link.acquisition_run_id
+                AND admission.state='admitted'
+                AND admission.admitted_artifact_id=link.admitted_artifact_id) <> 1;
+            """;
+        if (Convert.ToInt64(ambiguity.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 0)
+        {
+            throw new InvalidOperationException(
+                "Existing source-claim applications do not map to one exact admitted artifact identity.");
+        }
+
+        using SqliteTransaction transaction = BeginTransaction();
+        Execute(
+            """
+            DROP TRIGGER evidence_acquisition_application_links_append_only_update;
+            DROP TRIGGER evidence_acquisition_application_links_append_only_delete;
+            DROP TRIGGER evidence_acquisition_application_links_created_at_canonical_utc_insert;
+            DROP TRIGGER evidence_acquisition_application_admitted_artifact_guard;
+            DROP TRIGGER provider_semantic_admission_application_guard;
+            ALTER TABLE provider_semantic_proposals RENAME COLUMN application_link_id TO semantic_link_id;
+            ALTER TABLE provider_semantic_admissions RENAME COLUMN application_link_id TO semantic_link_id;
+            CREATE UNIQUE INDEX idx_provider_semantic_admission_artifact_owner
+              ON provider_semantic_admissions(admission_id,owner_id,admitted_artifact_id);
+            ALTER TABLE evidence_acquisition_application_links RENAME TO evidence_acquisition_application_links_old;
+            """,
+            transaction);
+        Execute(ExtractSchemaStatement(SchemaV6, "CREATE TABLE evidence_acquisition_application_links"), transaction);
+        Execute(
+            """
+            INSERT INTO evidence_acquisition_application_links(
+              application_link_id,acquisition_run_id,admission_id,analysis_run_id,application_scope_id,
+              cost_attribution_scope_id,admitted_artifact_id,created_at)
+            SELECT link.application_link_id,link.acquisition_run_id,
+              (SELECT admission.admission_id FROM provider_semantic_admissions admission
+               WHERE admission.owner_kind='evidence-acquisition-run'
+                 AND admission.owner_id=link.acquisition_run_id
+                 AND admission.state='admitted'
+                 AND admission.admitted_artifact_id=link.admitted_artifact_id),
+              link.analysis_run_id,link.application_scope_id,link.cost_attribution_scope_id,
+              link.admitted_artifact_id,link.created_at
+            FROM evidence_acquisition_application_links_old link;
+            DROP TABLE evidence_acquisition_application_links_old;
+            """,
+            transaction);
+        Execute(ExtractSchemaStatement(SchemaV6,
+            "CREATE TRIGGER evidence_acquisition_application_admitted_artifact_guard"), transaction);
+        Execute(ExtractSchemaStatement(SchemaV6,
+            "CREATE TRIGGER provider_semantic_admission_application_guard"), transaction);
+        CreateAppendOnlyTriggers(["evidence_acquisition_application_links"], transaction);
+        CreateCanonicalTimestampTriggers(
+            [("evidence_acquisition_application_links", "created_at", false)], transaction);
+        string upgradedFingerprint = ComputeSchemaFingerprint(connection, transaction);
+        if (upgradedFingerprint != ProviderPersistenceDeclarations.SchemaFingerprint)
+        {
+            throw new InvalidOperationException(
+                $"The bounded WP6 active contract correction did not converge on its declared fingerprint ({upgradedFingerprint}).");
+        }
+        Execute(
+            """
+            UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint';
+            INSERT INTO store_metadata(key,value) VALUES('wp6_active_contract_correction_id','M1-S6-WP6-0006G')
               ON CONFLICT(key) DO UPDATE SET value=excluded.value;
             """,
             transaction,
@@ -889,6 +989,7 @@ public sealed partial class AuthoritativeStore
         "index:idx_provider_request_fingerprint",
         "index:idx_provider_reservation_scope",
         "index:idx_provider_budget_events_scope",
+        "index:idx_provider_semantic_admission_artifact_owner",
         "table:analysis_candidates",
         "table:analysis_coverage",
         "table:analysis_coverage_failure_links",
@@ -2802,13 +2903,16 @@ public sealed partial class AuthoritativeStore
         CREATE TABLE evidence_acquisition_application_links(
             application_link_id TEXT PRIMARY KEY,
             acquisition_run_id TEXT NOT NULL REFERENCES evidence_acquisition_runs(acquisition_run_id) ON DELETE RESTRICT,
+            admission_id TEXT NOT NULL,
             analysis_run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
             application_scope_id TEXT NOT NULL,
             cost_attribution_scope_id TEXT NOT NULL,
             admitted_artifact_id TEXT NOT NULL,
             created_at TEXT NOT NULL,
             FOREIGN KEY(acquisition_run_id,analysis_run_id,application_scope_id,cost_attribution_scope_id)
-              REFERENCES evidence_acquisition_runs(acquisition_run_id,parent_analysis_run_id,application_scope_id,cost_attribution_scope_id) ON DELETE RESTRICT
+              REFERENCES evidence_acquisition_runs(acquisition_run_id,parent_analysis_run_id,application_scope_id,cost_attribution_scope_id) ON DELETE RESTRICT,
+            FOREIGN KEY(admission_id,acquisition_run_id,admitted_artifact_id)
+              REFERENCES provider_semantic_admissions(admission_id,owner_id,admitted_artifact_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TRIGGER evidence_acquisition_application_admitted_artifact_guard
         BEFORE INSERT ON evidence_acquisition_application_links
@@ -2817,6 +2921,7 @@ public sealed partial class AuthoritativeStore
             SELECT 1 FROM provider_semantic_admissions admission
             WHERE admission.owner_kind='evidence-acquisition-run'
               AND admission.owner_id=NEW.acquisition_run_id
+              AND admission.admission_id=NEW.admission_id
               AND admission.state='admitted'
               AND admission.admitted_artifact_id=NEW.admitted_artifact_id
               AND admission.created_at <= NEW.created_at)
@@ -3874,7 +3979,7 @@ public sealed partial class AuthoritativeStore
             owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
             owner_id TEXT NOT NULL CHECK(length(trim(owner_id)) > 0),
             root_subject_id TEXT NOT NULL CHECK(length(trim(root_subject_id)) > 0),
-            application_link_id TEXT NOT NULL CHECK(length(trim(application_link_id)) > 0),
+            semantic_link_id TEXT NOT NULL CHECK(length(trim(semantic_link_id)) > 0),
             proposal_kind TEXT NOT NULL CHECK(proposal_kind IN ('source-claim','candidate-hypothesis','abstention','gap')),
             payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             created_at TEXT NOT NULL,
@@ -3950,7 +4055,7 @@ public sealed partial class AuthoritativeStore
                 WHERE c.candidate_id = NEW.root_subject_id AND c.run_id = NEW.owner_id
                   AND c.created_at <= NEW.created_at)
               OR NOT EXISTS(SELECT 1 FROM evidence_application_links link
-                WHERE link.evidence_application_link_id = NEW.application_link_id AND link.run_id = NEW.owner_id
+                WHERE link.evidence_application_link_id = NEW.semantic_link_id AND link.run_id = NEW.owner_id
                   AND link.created_at <= NEW.created_at))
               THEN RAISE(ABORT, 'candidate, abstention, and gap proposals must bind exact analysis, candidate, and application roots')
           END;
@@ -3972,30 +4077,32 @@ public sealed partial class AuthoritativeStore
             owner_id TEXT NOT NULL,
             root_subject_id TEXT NOT NULL,
             validation_id TEXT NOT NULL,
-            application_link_id TEXT NOT NULL,
+            semantic_link_id TEXT NOT NULL,
             state TEXT NOT NULL CHECK(state IN ('admitted','rejected','abstained','unavailable','unsupported','deleted')),
             host_policy_id TEXT NOT NULL,
             reason TEXT NOT NULL,
             admitted_artifact_id TEXT,
             created_at TEXT NOT NULL,
-            UNIQUE(admission_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,validation_id,application_link_id),
+            UNIQUE(admission_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,validation_id,semantic_link_id),
             FOREIGN KEY(validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,state)
               REFERENCES provider_semantic_validations(validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,state) ON DELETE RESTRICT
         ) STRICT;
+        CREATE UNIQUE INDEX idx_provider_semantic_admission_artifact_owner
+          ON provider_semantic_admissions(admission_id,owner_id,admitted_artifact_id);
         CREATE TRIGGER provider_semantic_admission_application_guard
         BEFORE INSERT ON provider_semantic_admissions
         BEGIN
           SELECT CASE
             WHEN NOT EXISTS(SELECT 1 FROM provider_semantic_proposals proposal
               WHERE proposal.proposal_id = NEW.proposal_id
-                AND proposal.application_link_id = NEW.application_link_id)
-              THEN RAISE(ABORT, 'semantic admission must retain the proposal application edge')
+                AND proposal.semantic_link_id = NEW.semantic_link_id)
+              THEN RAISE(ABORT, 'semantic admission must retain the proposal correlation edge')
             WHEN NEW.owner_kind = 'analysis-run' AND (NOT EXISTS(
               SELECT 1 FROM analysis_candidates candidate
               WHERE candidate.candidate_id = NEW.root_subject_id AND candidate.run_id = NEW.owner_id)
               OR NOT EXISTS(
                 SELECT 1 FROM evidence_application_links link
-                WHERE link.evidence_application_link_id = NEW.application_link_id AND link.run_id = NEW.owner_id))
+                WHERE link.evidence_application_link_id = NEW.semantic_link_id AND link.run_id = NEW.owner_id))
               THEN RAISE(ABORT, 'candidate admission must bind the exact candidate root and application edge')
           END;
         END;

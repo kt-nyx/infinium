@@ -124,8 +124,8 @@
       "abstentions": ["No semantic truth is supplied"],
       "gaps": ["Host validation pending"],
       "validation_ids": [],
-      "application_link_ids": [],
-      "admission_links": []
+      "admission_correlation_ids": [],
+      "admission_correlations": []
     },
     "candidate-investigation.v1.schema.json": {
       "schema_id": "infinium.llm.candidate-investigation/v1",

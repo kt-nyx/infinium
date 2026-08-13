@@ -31,10 +31,10 @@ public sealed record SourceClaimScenarioOracle(
     IReadOnlyList<string> ContradictionEvidenceIds, IReadOnlyList<string> ExpectedAbstentions,
     IReadOnlyList<string> ExpectedGaps, IReadOnlyList<string> ExpectedAbstentionKinds,
     IReadOnlyList<string> ExpectedGapKinds, int ExpectedAbstentionCount, int ExpectedGapCount,
-    int ExpectedApplicationLinkCount, bool ProviderUsed, string ReplayState, bool AuditOnly,
+    int ExpectedAdmittedCorrelationCount, bool ProviderUsed, string ReplayState, bool AuditOnly,
     bool ForbiddenAuthorityDetected);
 public sealed record SourceClaimAggregateOracle(
-    int ScenarioCount, int AcceptedProposalCount, int RejectedProposalCount, int ApplicationLinkCount,
+    int ScenarioCount, int AcceptedProposalCount, int RejectedProposalCount, int AdmittedCorrelationCount,
     int ModelUsedScenarioCount, int DistinctOperationIdCount, int NoModelScenarioCount,
     int ProposalCount, int AbstentionCount, int GapCount, int RetainedResponseScenarioCount,
     int AuditOnlyScenarioCount, int FailedIdentityDriftScenarioCount, int ForbiddenAuthorityScenarioCount,
@@ -339,7 +339,8 @@ public static class SourceClaimOracleVerifier
                 .Select(x => x.ProposalId.Value).ToArray();
             bool forbidden = scenario.Extraction.ClaimProposals.Any(x => x.Reason == "model-proposed-forbidden-authority");
             bool providerUsed = transcript.ModelUsed;
-            int applied = scenario.Extraction.AdmissionLinks.Count(x => x.State == ProposalAdmissionState.Admitted);
+            int admittedCorrelations = scenario.Extraction.AdmissionCorrelations.Count(
+                x => x.State == ProposalAdmissionState.Admitted);
             SourceClaimOracleIdentity identity = expected.ExpectedIdentity;
             if (scenario.Extraction.SchemaId != identity.SourceClaimOutputSchemaId
                 || scenario.Extraction.SchemaVersion != identity.SchemaVersion
@@ -353,7 +354,8 @@ public static class SourceClaimOracleVerifier
                 || scenario.Extraction.DeclaredPurpose != identity.DeclaredPurpose
                 || !scenario.Extraction.PassageIds.Select(x => x.Value)
                     .SequenceEqual(identity.PassageIds, StringComparer.Ordinal)
-                || scenario.Extraction.AdmissionLinks.Any(x => x.AuthorizationId.Value != identity.HostAuthorizationId
+                || scenario.Extraction.AdmissionCorrelations.Any(
+                    x => x.AuthorizationId.Value != identity.HostAuthorizationId
                     || x.ResponseRecordId.Value != transcript.ResponseRecordId)
                 || scenario.Disposition != scenarioOracle.ExpectedResult
                 || transcript.ResponseRecordId != scenarioOracle.ExpectedResponseRecordId
@@ -373,7 +375,8 @@ public static class SourceClaimOracleVerifier
                 || !transcript.Gaps.SequenceEqual(scenarioOracle.ExpectedGaps, StringComparer.Ordinal)
                 || !scenario.AbstentionKinds.SequenceEqual(scenarioOracle.ExpectedAbstentionKinds, StringComparer.Ordinal)
                 || !scenario.GapKinds.SequenceEqual(scenarioOracle.ExpectedGapKinds, StringComparer.Ordinal)
-                || applied != scenarioOracle.ExpectedApplicationLinkCount || providerUsed != scenarioOracle.ProviderUsed
+                || admittedCorrelations != scenarioOracle.ExpectedAdmittedCorrelationCount
+                || providerUsed != scenarioOracle.ProviderUsed
                 || scenario.ReplayState != scenarioOracle.ReplayState
                 || (scenario.ReplayState == "audit-only") != scenarioOracle.AuditOnly
                 || forbidden != scenarioOracle.ForbiddenAuthorityDetected)
@@ -385,7 +388,7 @@ public static class SourceClaimOracleVerifier
             p => p.State == ProposalAdmissionState.Admitted));
         int rejectedCount = actual.Scenarios.Sum(x => x.Extraction.ClaimProposals.Count(
             p => p.State != ProposalAdmissionState.Admitted));
-        int applications = actual.Scenarios.Sum(x => x.Extraction.AdmissionLinks.Count(
+        int totalAdmittedCorrelations = actual.Scenarios.Sum(x => x.Extraction.AdmissionCorrelations.Count(
             p => p.State == ProposalAdmissionState.Admitted));
         int providers = package.Transcripts.Count(x => x.ModelUsed);
         int proposals = actual.Scenarios.Sum(x => x.Extraction.ClaimProposals.Count);
@@ -396,7 +399,8 @@ public static class SourceClaimOracleVerifier
             + SourceClaimTransparencyRenderer.RenderHuman(actual);
         if (actual.Scenarios.Count != aggregate.ScenarioCount
             || accepted != aggregate.AcceptedProposalCount || rejectedCount != aggregate.RejectedProposalCount
-            || applications != aggregate.ApplicationLinkCount || providers != aggregate.ModelUsedScenarioCount
+            || totalAdmittedCorrelations != aggregate.AdmittedCorrelationCount
+            || providers != aggregate.ModelUsedScenarioCount
             || package.Transcripts.Select(x => x.OperationId).Distinct(StringComparer.Ordinal).Count()
                 != aggregate.DistinctOperationIdCount
             || package.Transcripts.Count - providers != aggregate.NoModelScenarioCount

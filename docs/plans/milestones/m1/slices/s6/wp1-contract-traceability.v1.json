@@ -7227,36 +7227,7 @@
           }
         },
         {
-          "path": "application_link_ids",
-          "authorities": [
-            "EVID-001",
-            "EVID-004",
-            "EVID-007",
-            "ADR-0002",
-            "ADR-0016"
-          ],
-          "producer": {
-            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
-            "symbol": "ApplicationLinkIds"
-          },
-          "consumer": {
-            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
-            "symbol": "ApplicationLinkIds"
-          },
-          "persistence": {
-            "table_column": "evidence_acquisition_application_links.application_link_id"
-          },
-          "output": {
-            "file": "contracts/protobuf/infinium/application/v1/application.proto",
-            "message": "SourceClaimExtractionPayload",
-            "field": "application_link_ids"
-          },
-          "replay": {
-            "omission_reason": "application_link_ids has no semantically equivalent network-free replay field in the current closed contract."
-          }
-        },
-        {
-          "path": "admission_links",
+          "path": "admission_correlation_ids",
           "authorities": [
             "EVID-001",
             "EVID-004",
@@ -7266,11 +7237,40 @@
           ],
           "producer": {
             "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
-            "symbol": "AdmissionLinks"
+            "symbol": "AdmissionCorrelationIds"
           },
           "consumer": {
             "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
-            "symbol": "AdmissionLinks"
+            "symbol": "AdmissionCorrelationIds"
+          },
+          "persistence": {
+            "table_column": "provider_semantic_admissions.semantic_link_id"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "SourceClaimExtractionPayload",
+            "field": "admission_correlation_ids"
+          },
+          "replay": {
+            "omission_reason": "admission_correlation_ids has no semantically equivalent network-free replay field in the current closed contract."
+          }
+        },
+        {
+          "path": "admission_correlations",
+          "authorities": [
+            "EVID-001",
+            "EVID-004",
+            "EVID-007",
+            "ADR-0001",
+            "ADR-0013"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "AdmissionCorrelations"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "AdmissionCorrelations"
           },
           "persistence": {
             "table_columns": [
@@ -7282,17 +7282,17 @@
               "provider_semantic_admissions.owner_id",
               "provider_semantic_admissions.root_subject_id",
               "provider_semantic_admissions.validation_id",
-              "provider_semantic_admissions.application_link_id",
+              "provider_semantic_admissions.semantic_link_id",
               "provider_semantic_admissions.state"
             ]
           },
           "output": {
             "file": "contracts/protobuf/infinium/application/v1/application.proto",
             "message": "SourceClaimExtractionPayload",
-            "field": "admission_links"
+            "field": "admission_correlations"
           },
           "replay": {
-            "omission_reason": "admission_links has no semantically equivalent network-free replay field in the current closed contract."
+            "omission_reason": "admission_correlations has no semantically equivalent network-free replay field in the current closed contract."
           }
         },
         {
@@ -7455,6 +7455,328 @@
           },
           "replay": {
             "omission_reason": "$defs.proposal.reason has no semantically equivalent network-free replay field in the current closed contract."
+          }
+        },
+        {
+          "path": "$defs.admissionCorrelation.admission_id",
+          "authorities": [
+            "EVID-001",
+            "EVID-004",
+            "EVID-007",
+            "ADR-0001",
+            "ADR-0013"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "AdmissionId"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "AdmissionId"
+          },
+          "persistence": {
+            "table_column": "provider_semantic_admissions.admission_id"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "SourceClaimAdmissionCorrelation",
+            "field": "admission_id"
+          },
+          "replay": {
+            "omission_reason": "$defs.admissionCorrelation.admission_id has no semantically equivalent network-free replay field in the current closed contract."
+          }
+        },
+        {
+          "path": "$defs.admissionCorrelation.proposal_id",
+          "authorities": [
+            "EVID-001",
+            "EVID-004",
+            "EVID-007",
+            "ADR-0001",
+            "ADR-0013"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "ProposalId"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "ProposalId"
+          },
+          "persistence": {
+            "table_columns": [
+              "provider_semantic_proposals.proposal_id",
+              "provider_semantic_admissions.proposal_id"
+            ]
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "SourceClaimAdmissionCorrelation",
+            "field": "proposal_id"
+          },
+          "replay": {
+            "omission_reason": "$defs.admissionCorrelation.proposal_id has no semantically equivalent network-free replay field in the current closed contract."
+          }
+        },
+        {
+          "path": "$defs.admissionCorrelation.authorization_id",
+          "authorities": [
+            "EVID-001",
+            "EVID-004",
+            "EVID-007",
+            "ADR-0001",
+            "ADR-0013"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "AuthorizationId"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "AuthorizationId"
+          },
+          "persistence": {
+            "table_column": "provider_semantic_proposals.authorization_id"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "SourceClaimAdmissionCorrelation",
+            "field": "authorization_id"
+          },
+          "replay": {
+            "omission_reason": "$defs.admissionCorrelation.authorization_id has no semantically equivalent network-free replay field in the current closed contract."
+          }
+        },
+        {
+          "path": "$defs.admissionCorrelation.operation_id",
+          "authorities": [
+            "EVID-001",
+            "EVID-004",
+            "EVID-007",
+            "ADR-0001",
+            "ADR-0013"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "OperationId"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "OperationId"
+          },
+          "persistence": {
+            "table_column": "provider_semantic_admissions.operation_id"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "SourceClaimAdmissionCorrelation",
+            "field": "operation_id"
+          },
+          "replay": {
+            "omission_reason": "$defs.admissionCorrelation.operation_id has no semantically equivalent network-free replay field in the current closed contract."
+          }
+        },
+        {
+          "path": "$defs.admissionCorrelation.response_record_id",
+          "authorities": [
+            "EVID-001",
+            "EVID-004",
+            "EVID-007",
+            "ADR-0001",
+            "ADR-0013"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "ResponseRecordId"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "ResponseRecordId"
+          },
+          "persistence": {
+            "table_column": "provider_semantic_admissions.response_record_id"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "SourceClaimAdmissionCorrelation",
+            "field": "response_record_id"
+          },
+          "replay": {
+            "omission_reason": "$defs.admissionCorrelation.response_record_id has no semantically equivalent network-free replay field in the current closed contract."
+          }
+        },
+        {
+          "path": "$defs.admissionCorrelation.owner_kind",
+          "authorities": [
+            "EVID-001",
+            "EVID-004",
+            "EVID-007",
+            "ADR-0002",
+            "ADR-0016"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "OwnerKind"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "OwnerKind"
+          },
+          "persistence": {
+            "table_column": "provider_semantic_admissions.owner_kind"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "SourceClaimAdmissionCorrelation",
+            "field": "owner_kind"
+          },
+          "replay": {
+            "omission_reason": "$defs.admissionCorrelation.owner_kind has no semantically equivalent network-free replay field in the current closed contract."
+          }
+        },
+        {
+          "path": "$defs.admissionCorrelation.owner_id",
+          "authorities": [
+            "EVID-001",
+            "EVID-004",
+            "EVID-007",
+            "ADR-0002",
+            "ADR-0016"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "OwnerId"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "OwnerId"
+          },
+          "persistence": {
+            "table_column": "provider_semantic_admissions.owner_id"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "SourceClaimAdmissionCorrelation",
+            "field": "owner_id"
+          },
+          "replay": {
+            "omission_reason": "$defs.admissionCorrelation.owner_id has no semantically equivalent network-free replay field in the current closed contract."
+          }
+        },
+        {
+          "path": "$defs.admissionCorrelation.root_subject_id",
+          "authorities": [
+            "EVID-001",
+            "EVID-004",
+            "EVID-007",
+            "ADR-0001",
+            "ADR-0013"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "RootSubjectId"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "RootSubjectId"
+          },
+          "persistence": {
+            "table_column": "provider_semantic_admissions.root_subject_id"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "SourceClaimAdmissionCorrelation",
+            "field": "root_subject_id"
+          },
+          "replay": {
+            "omission_reason": "$defs.admissionCorrelation.root_subject_id has no semantically equivalent network-free replay field in the current closed contract."
+          }
+        },
+        {
+          "path": "$defs.admissionCorrelation.validation_id",
+          "authorities": [
+            "EVID-001",
+            "EVID-004",
+            "EVID-007",
+            "ADR-0001",
+            "ADR-0013"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "ValidationId"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "ValidationId"
+          },
+          "persistence": {
+            "table_column": "provider_semantic_admissions.validation_id"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "SourceClaimAdmissionCorrelation",
+            "field": "validation_id"
+          },
+          "replay": {
+            "omission_reason": "$defs.admissionCorrelation.validation_id has no semantically equivalent network-free replay field in the current closed contract."
+          }
+        },
+        {
+          "path": "$defs.admissionCorrelation.admission_correlation_id",
+          "authorities": [
+            "EVID-001",
+            "EVID-004",
+            "EVID-007",
+            "ADR-0001",
+            "ADR-0013"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "AdmissionCorrelationId"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "AdmissionCorrelationId"
+          },
+          "persistence": {
+            "table_column": "provider_semantic_admissions.semantic_link_id"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "SourceClaimAdmissionCorrelation",
+            "field": "admission_correlation_id"
+          },
+          "replay": {
+            "omission_reason": "$defs.admissionCorrelation.admission_correlation_id has no semantically equivalent network-free replay field in the current closed contract."
+          }
+        },
+        {
+          "path": "$defs.admissionCorrelation.state",
+          "authorities": [
+            "EVID-001",
+            "EVID-004",
+            "EVID-007",
+            "ADR-0001",
+            "ADR-0013"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "State"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "State"
+          },
+          "persistence": {
+            "table_column": "provider_semantic_admissions.state"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "SourceClaimAdmissionCorrelation",
+            "field": "state"
+          },
+          "replay": {
+            "omission_reason": "$defs.admissionCorrelation.state has no semantically equivalent network-free replay field in the current closed contract."
           }
         },
         {
@@ -7739,7 +8061,7 @@
             "symbol": "ApplicationLinkId"
           },
           "persistence": {
-            "table_column": "provider_semantic_admissions.application_link_id"
+            "table_column": "provider_semantic_admissions.semantic_link_id"
           },
           "output": {
             "file": "contracts/protobuf/infinium/application/v1/application.proto",
@@ -8299,7 +8621,7 @@
               "provider_semantic_admissions.owner_id",
               "provider_semantic_admissions.root_subject_id",
               "provider_semantic_admissions.validation_id",
-              "provider_semantic_admissions.application_link_id",
+              "provider_semantic_admissions.semantic_link_id",
               "provider_semantic_admissions.state"
             ]
           },

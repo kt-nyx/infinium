@@ -489,9 +489,23 @@ message SourceClaimExtractionPayload {
   string application_scope_id = 6;
   string cost_attribution_scope_id = 7;
   repeated string validation_ids = 8;
-  repeated string application_link_ids = 9;
+  repeated string admission_correlation_ids = 9;
   string source_revision_id = 10;
-  repeated ProviderSemanticAdmissionLink admission_links = 11;
+  repeated SourceClaimAdmissionCorrelation admission_correlations = 11;
+}
+
+message SourceClaimAdmissionCorrelation {
+  string admission_id = 1;
+  string proposal_id = 2;
+  infinium.domain.v1.OperationId operation_id = 3;
+  string response_record_id = 4;
+  string owner_kind = 5;
+  string owner_id = 6;
+  string root_subject_id = 7;
+  string validation_id = 8;
+  string admission_correlation_id = 9;
+  string state = 10;
+  string authorization_id = 11;
 }
 
 message CandidateInvestigationPayload {

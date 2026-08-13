@@ -1440,10 +1440,10 @@ public sealed class ProviderContractJsonCodecTests
             CostAttributionScopeId = "cost-1",
             SourceRevisionId = "source-revision-1",
             ValidationIds = { "validation-1" },
-            ApplicationLinkIds = { "application-link-1" },
-            AdmissionLinks =
+            AdmissionCorrelationIds = { "correlation-1" },
+            AdmissionCorrelations =
             {
-                new ProviderSemanticAdmissionLink
+                new SourceClaimAdmissionCorrelation
                 {
                     AdmissionId = "admission-1",
                     AuthorizationId = "authorization-1",
@@ -1454,7 +1454,7 @@ public sealed class ProviderContractJsonCodecTests
                     OwnerId = "acquisition-1",
                     RootSubjectId = "source-revision-1",
                     ValidationId = "validation-1",
-                    ApplicationLinkId = "application-link-1",
+                    AdmissionCorrelationId = "correlation-1",
                     State = "admitted",
                 },
             },
@@ -1463,7 +1463,10 @@ public sealed class ProviderContractJsonCodecTests
         sourceClaim.OwnerId = "acquisition-other";
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim));
         sourceClaim.OwnerId = "acquisition-1";
-        sourceClaim.ApplicationLinkIds.Clear();
+        sourceClaim.AdmissionCorrelationIds.Clear();
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim));
+        sourceClaim.AdmissionCorrelationIds.Add("correlation-1");
+        sourceClaim.AdmissionCorrelations[0].AdmissionCorrelationId = "application-link-1";
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim));
 
         CandidateInvestigationPayload candidate = new()
@@ -1739,28 +1742,28 @@ public sealed class ProviderContractJsonCodecTests
             "evidence_acquisition_runs.cost_attribution_scope_id", "ADR-0002");
         AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "owner_kind",
             "provider_operation_blocks.owner_kind", "ADR-0016");
-        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "application_link_ids",
-            "evidence_acquisition_application_links.application_link_id", "ADR-0016");
+        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "admission_correlation_ids",
+            "provider_semantic_admissions.semantic_link_id", "ADR-0013");
         AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "source_revision_id",
             "provider_semantic_proposals.root_subject_id", "ADR-0013");
-        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "admission_links",
-            "provider_semantic_admissions.operation_id", "provider_semantic_admissions.application_link_id");
-        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "$defs.admissionLink.authorization_id",
+        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "admission_correlations",
+            "provider_semantic_admissions.operation_id", "provider_semantic_admissions.semantic_link_id");
+        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "$defs.admissionCorrelation.authorization_id",
             "provider_semantic_proposals.authorization_id", "ADR-0013");
-        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "$defs.admissionLink.validation_id",
+        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "$defs.admissionCorrelation.validation_id",
             "provider_semantic_admissions.validation_id", "ADR-0013");
-        AssertTraceProjection(contracts, "source-claim-extraction.v1.schema.json", "$defs.admissionLink.authorization_id",
-            "output", "ProviderSemanticAdmissionLink", "authorization_id");
+        AssertTraceProjection(contracts, "source-claim-extraction.v1.schema.json", "$defs.admissionCorrelation.authorization_id",
+            "output", "SourceClaimAdmissionCorrelation", "authorization_id");
         AssertTraceProjection(contracts, "source-claim-extraction.v1.schema.json", "source_revision_id",
             "output", "SourceClaimExtractionPayload", "source_revision_id");
-        AssertTraceProjection(contracts, "source-claim-extraction.v1.schema.json", "admission_links",
-            "output", "SourceClaimExtractionPayload", "admission_links");
+        AssertTraceProjection(contracts, "source-claim-extraction.v1.schema.json", "admission_correlations",
+            "output", "SourceClaimExtractionPayload", "admission_correlations");
         AssertTraceMapping(contracts, "candidate-investigation.v1.schema.json", "owner_kind",
             "provider_operation_blocks.owner_kind", "ADR-0016");
         AssertTraceMapping(contracts, "candidate-investigation.v1.schema.json", "admission_link_ids",
             "provider_semantic_admissions.admission_id", "ADR-0013");
         AssertTraceMapping(contracts, "candidate-investigation.v1.schema.json", "admission_links",
-            "provider_semantic_admissions.validation_id", "provider_semantic_admissions.application_link_id");
+            "provider_semantic_admissions.validation_id", "provider_semantic_admissions.semantic_link_id");
         AssertTraceProjection(contracts, "candidate-investigation.v1.schema.json", "admission_links",
             "output", "CandidateInvestigationPayload", "admission_links");
         AssertTraceProjection(contracts, "source-claim-extraction.v1.schema.json", "owner_kind",

@@ -530,7 +530,8 @@ public sealed class ProviderBudgetIntegrationTests
             "Persistence and admission must not imply later consuming-analysis application.");
         SourceClaimExtractionDocument document = context.Store.ReadSourceClaimExtraction(
             "acquisition-restore", "admission-provider-returned-arbitrary-omega");
-        Assert.IsTrue(document.AdmissionLinks.All(x => x.AuthorizationId.Value == "authorization-settlement"));
+        Assert.IsTrue(document.AdmissionCorrelations.All(
+            x => x.AuthorizationId.Value == "authorization-settlement"));
         Assert.ThrowsExactly<InvalidDataException>(() => context.Store.PersistSourceClaimExtraction(new(
             document, "authorization-settlement", "wrong-response", "attempt-settlement", "request-settlement",
             gate.DispatchFenceId, BaseTime.AddSeconds(9))));
@@ -553,6 +554,7 @@ public sealed class ProviderBudgetIntegrationTests
         SourceClaimApplicationReadModel applied = context.Store
             .ReadSourceClaimApplicationLinks("acquisition-restore").Single();
         Assert.AreEqual(consumed.AdmittedArtifactId, applied.AdmittedArtifactId);
+        Assert.AreEqual("admission-provider-returned-arbitrary-omega", applied.AdmissionId);
         Assert.AreEqual("consumer-analysis-source-claim-link", applied.ApplicationLinkId);
         ProviderTerminalPublicationArtifacts publication = accounting.PublishTerminalV2(
             new("run-restore"), new("local-run-output-v1"), "local-output-v1"u8.ToArray(),
@@ -577,6 +579,8 @@ public sealed class ProviderBudgetIntegrationTests
                 .Any(x => x.ProposalId.Value == "provider-returned-arbitrary-omega"));
             Assert.AreEqual("consumer-analysis-source-claim-link",
                 restored.ReadSourceClaimApplicationLinks("acquisition-restore").Single().ApplicationLinkId);
+            Assert.AreEqual("admission-provider-returned-arbitrary-omega",
+                restored.ReadSourceClaimApplicationLinks("acquisition-restore").Single().AdmissionId);
             _ = restored.RebuildProviderBudgetProjections(BaseTime.AddSeconds(13));
         }
         finally

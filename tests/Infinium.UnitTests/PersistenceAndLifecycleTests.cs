@@ -115,7 +115,7 @@ public sealed class PersistenceAndLifecycleTests
             "FOREIGN KEY(validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,state)");
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name='provider_semantic_admission_application_guard';";
         string admissionGuardSql = (string)command.ExecuteScalar()!;
-        StringAssert.Contains(admissionGuardSql, "link.evidence_application_link_id = NEW.application_link_id");
+        StringAssert.Contains(admissionGuardSql, "link.evidence_application_link_id = NEW.semantic_link_id");
         StringAssert.Contains(admissionGuardSql, "candidate.candidate_id = NEW.root_subject_id AND candidate.run_id = NEW.owner_id");
         Assert.IsFalse(admissionGuardSql.Contains("evidence_acquisition_application_links", StringComparison.Ordinal));
         command.CommandText =
@@ -1202,7 +1202,7 @@ public sealed class PersistenceAndLifecycleTests
             """
             INSERT INTO provider_semantic_proposals(
               proposal_id,authorization_id,operation_id,provider_attempt_id,request_id,response_record_id,
-              dispatch_fence_id,owner_kind,owner_id,root_subject_id,application_link_id,proposal_kind,payload_id,created_at)
+              dispatch_fence_id,owner_kind,owner_id,root_subject_id,semantic_link_id,proposal_kind,payload_id,created_at)
             VALUES('proposal-future-candidate','authorization-1','operation-completed','attempt-1','request-1','response-completed',
               'fence-1','analysis-run','run-1','candidate-future','application-early','candidate-hypothesis','payload-1',
               '2026-08-10T00:01:05.0000000+00:00');
@@ -1287,7 +1287,8 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             INSERT INTO evidence_acquisition_application_links VALUES(
-              'source-application-premature','acquisition-restore','run-restore','application-restore','cost-restore','payload-1',
+              'source-application-premature','acquisition-restore','admission-premature','run-restore',
+              'application-restore','cost-restore','payload-1',
               '2026-08-10T00:01:10.0000000+00:00');
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
@@ -1295,7 +1296,7 @@ public sealed class PersistenceAndLifecycleTests
             """
             INSERT INTO provider_semantic_proposals(
               proposal_id,authorization_id,operation_id,provider_attempt_id,request_id,response_record_id,
-              dispatch_fence_id,owner_kind,owner_id,root_subject_id,application_link_id,proposal_kind,payload_id,created_at)
+              dispatch_fence_id,owner_kind,owner_id,root_subject_id,semantic_link_id,proposal_kind,payload_id,created_at)
             VALUES('proposal-future-source','authorization-source','operation-source','attempt-source','request-source','response-source',
               'fence-source','evidence-acquisition-run','acquisition-restore','source-future','provider-returned-application',
               'source-claim','payload-1','2026-08-10T00:01:14.0000000+00:00');
@@ -1317,7 +1318,8 @@ public sealed class PersistenceAndLifecycleTests
               'provider-returned-application','admitted','policy-1','synthetic','payload-1',
               '2026-08-10T00:01:16.0000000+00:00');
             INSERT INTO evidence_acquisition_application_links VALUES(
-              'consumer-application-valid','acquisition-restore','run-restore','application-restore','cost-restore','payload-1',
+              'consumer-application-valid','acquisition-restore','admission-valid-source','run-restore',
+              'application-restore','cost-restore','payload-1',
               '2026-08-10T00:01:17.0000000+00:00');
             """;
         Assert.AreEqual(3, command.ExecuteNonQuery());
@@ -1327,7 +1329,7 @@ public sealed class PersistenceAndLifecycleTests
             DROP TRIGGER provider_semantic_admission_application_guard;
             INSERT INTO provider_semantic_proposals(
               proposal_id,authorization_id,operation_id,provider_attempt_id,request_id,response_record_id,
-              dispatch_fence_id,owner_kind,owner_id,root_subject_id,application_link_id,proposal_kind,payload_id,created_at)
+              dispatch_fence_id,owner_kind,owner_id,root_subject_id,semantic_link_id,proposal_kind,payload_id,created_at)
             VALUES('proposal-chronology','authorization-1','operation-completed','attempt-1','request-1','response-completed',
               'fence-1','analysis-run','run-1','candidate-1','application-1','candidate-hypothesis','payload-1',
               '2026-08-10T00:01:03.0000000+00:00');
@@ -1337,7 +1339,7 @@ public sealed class PersistenceAndLifecycleTests
             """
             INSERT INTO provider_semantic_proposals(
               proposal_id,authorization_id,operation_id,provider_attempt_id,request_id,response_record_id,
-              dispatch_fence_id,owner_kind,owner_id,root_subject_id,application_link_id,proposal_kind,payload_id,created_at)
+              dispatch_fence_id,owner_kind,owner_id,root_subject_id,semantic_link_id,proposal_kind,payload_id,created_at)
             VALUES('proposal-chronology','authorization-1','operation-completed','attempt-1','request-1','response-completed',
               'fence-1','analysis-run','run-1','candidate-1','application-1','candidate-hypothesis','payload-1',
               '2026-08-10T00:01:05.0000000+00:00');
@@ -1359,7 +1361,7 @@ public sealed class PersistenceAndLifecycleTests
             """
             INSERT INTO provider_semantic_admissions(
               admission_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
-              validation_id,application_link_id,state,host_policy_id,reason,admitted_artifact_id,created_at)
+              validation_id,semantic_link_id,state,host_policy_id,reason,admitted_artifact_id,created_at)
             VALUES('admission-chronology','proposal-chronology','operation-completed','response-completed',
               'analysis-run','run-1','candidate-1','validation-chronology','application-1','admitted',
               'policy-1','synthetic',NULL,'2026-08-10T00:01:05.0000000+00:00');

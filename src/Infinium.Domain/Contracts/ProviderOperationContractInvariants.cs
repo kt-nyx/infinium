@@ -531,15 +531,15 @@ public static class ProviderOperationContractInvariants
                 || string.IsNullOrWhiteSpace(x.Claim) || string.IsNullOrWhiteSpace(x.Reason)
                 || !value.PassageIds.Contains(x.PassageId) || !Unique(x.ConditionIds)
                 || (x.State == ProposalAdmissionState.Admitted
-                    && (value.ValidationIds.Count == 0 || value.ApplicationLinkIds.Count == 0)))
+                    && (value.ValidationIds.Count == 0 || value.AdmissionCorrelationIds.Count == 0)))
             || !BoundedUniqueText(value.Abstentions) || !BoundedUniqueText(value.Gaps)
             || !Unique(value.ContradictionEvidenceIds) || !Unique(value.ValidationIds)
-            || !Unique(value.ApplicationLinkIds)
-            || !AdmissionStatesMatch(value.AdmissionLinks,
+            || !Unique(value.AdmissionCorrelationIds)
+            || !SourceClaimAdmissionStatesMatch(value.AdmissionCorrelations,
                 value.ClaimProposals.Select(x => new KeyValuePair<OpaqueId, ProposalAdmissionState>(x.ProposalId, x.State)))
-            || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId, value.OwnerKind,
+            || !ValidSourceClaimAdmissionCorrelations(value.AdmissionCorrelations, value.OperationId, value.OwnerKind,
                 value.OwnerId, value.SourceRevisionId, value.ClaimProposals.Select(x => x.ProposalId),
-                value.ValidationIds, value.ApplicationLinkIds, declaredIdsAreAdmissions: false))
+                value.ValidationIds, value.AdmissionCorrelationIds))
         {
             throw new InvalidOperationException("Source-claim extraction must retain unique passages and explicit proposal states.");
         }
@@ -1000,6 +1000,45 @@ public static class ProviderOperationContractInvariants
 
     private static bool AdmissionStatesMatch(
         IReadOnlyList<ProviderSemanticAdmissionLinkContract> links,
+        IEnumerable<KeyValuePair<OpaqueId, ProposalAdmissionState>> proposals)
+    {
+        Dictionary<OpaqueId, ProposalAdmissionState> states = proposals.ToDictionary();
+        return links.All(link => states.TryGetValue(link.ProposalId, out ProposalAdmissionState state)
+                && state == link.State)
+            && states.All(proposal => proposal.Value != ProposalAdmissionState.Admitted
+                || links.Count(link => link.ProposalId == proposal.Key && link.State == ProposalAdmissionState.Admitted) == 1);
+    }
+
+    private static bool ValidSourceClaimAdmissionCorrelations(
+        IReadOnlyList<SourceClaimAdmissionCorrelationContract> links,
+        OpaqueId operationId,
+        string ownerKind,
+        OpaqueId ownerId,
+        OpaqueId rootSubjectId,
+        IEnumerable<OpaqueId> proposals,
+        IReadOnlyList<OpaqueId> validationIds,
+        IReadOnlyList<OpaqueId> correlationIds)
+    {
+        HashSet<OpaqueId> proposalIds = proposals.ToHashSet();
+        return links.Count <= 64
+            && Unique(links.Select(x => x.AdmissionId))
+            && Unique(links.Select(x => x.AdmissionCorrelationId))
+            && links.All(link => !string.IsNullOrWhiteSpace(link.AdmissionId.Value)
+                && !string.IsNullOrWhiteSpace(link.ResponseRecordId.Value)
+                && !string.IsNullOrWhiteSpace(link.AuthorizationId.Value)
+                && link.OperationId == operationId
+                && link.OwnerKind == ownerKind && link.OwnerId == ownerId
+                && link.RootSubjectId == rootSubjectId
+                && proposalIds.Contains(link.ProposalId)
+                && validationIds.Contains(link.ValidationId)
+                && correlationIds.Contains(link.AdmissionCorrelationId)
+                && link.State is ProposalAdmissionState.Admitted or ProposalAdmissionState.Rejected
+                    or ProposalAdmissionState.Abstained or ProposalAdmissionState.Unavailable
+                    or ProposalAdmissionState.Unsupported or ProposalAdmissionState.Deleted);
+    }
+
+    private static bool SourceClaimAdmissionStatesMatch(
+        IReadOnlyList<SourceClaimAdmissionCorrelationContract> links,
         IEnumerable<KeyValuePair<OpaqueId, ProposalAdmissionState>> proposals)
     {
         Dictionary<OpaqueId, ProposalAdmissionState> states = proposals.ToDictionary();

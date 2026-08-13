@@ -535,13 +535,13 @@ public static class ApplicationProviderContractValidator
         Require(value.CostAttributionScopeId, "cost_attribution_scope_id");
         Require(value.SourceRevisionId, "source_revision_id");
         if (value.OwnerKind != "evidence-acquisition-run" || value.OwnerId != value.AcquisitionRunId
-            || value.ValidationIds.Count == 0 || value.ApplicationLinkIds.Count == 0
-            || !ValidUniqueIds(value.ValidationIds) || !ValidUniqueIds(value.ApplicationLinkIds)
-            || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId!.Value, value.OwnerKind,
-                value.OwnerId, value.SourceRevisionId, value.ValidationIds, value.ApplicationLinkIds,
-                declaredIdsAreAdmissions: false))
+            || value.ValidationIds.Count == 0 || value.AdmissionCorrelationIds.Count == 0
+            || !ValidUniqueIds(value.ValidationIds) || !ValidUniqueIds(value.AdmissionCorrelationIds)
+            || !ValidSourceClaimAdmissionCorrelations(value.AdmissionCorrelations, value.OperationId!.Value,
+                value.OwnerKind, value.OwnerId, value.SourceRevisionId, value.ValidationIds,
+                value.AdmissionCorrelationIds))
         {
-            throw new InvalidDataException("Source-claim projection must retain exact acquisition ownership and admission links.");
+            throw new InvalidDataException("Source-claim projection must retain exact acquisition ownership and admission correlations.");
         }
     }
 
@@ -854,6 +854,28 @@ public static class ApplicationProviderContractValidator
                 && (declaredIdsAreAdmissions
                     ? declaredLinkIds.Contains(link.AdmissionId)
                     : declaredLinkIds.Contains(link.ApplicationLinkId))
+                && link.State is "admitted" or "rejected" or "abstained" or "unavailable" or "unsupported" or "deleted");
+    }
+
+    private static bool ValidSourceClaimAdmissionCorrelations(
+        IEnumerable<SourceClaimAdmissionCorrelation> links,
+        string operationId,
+        string ownerKind,
+        string ownerId,
+        string rootSubjectId,
+        IEnumerable<string> validationIds,
+        IEnumerable<string> correlationIds)
+    {
+        SourceClaimAdmissionCorrelation[] items = links.ToArray();
+        return items.Length <= 64
+            && items.Select(x => x.AdmissionId).Distinct(StringComparer.Ordinal).Count() == items.Length
+            && items.Select(x => x.AdmissionCorrelationId).Distinct(StringComparer.Ordinal).Count() == items.Length
+            && items.All(link => Has(link.AdmissionId) && Has(link.ProposalId) && Has(link.AuthorizationId)
+                && link.OperationId?.Value == operationId && Has(link.ResponseRecordId)
+                && link.OwnerKind == ownerKind && link.OwnerId == ownerId
+                && link.RootSubjectId == rootSubjectId
+                && validationIds.Contains(link.ValidationId)
+                && correlationIds.Contains(link.AdmissionCorrelationId)
                 && link.State is "admitted" or "rejected" or "abstained" or "unavailable" or "unsupported" or "deleted");
     }
 

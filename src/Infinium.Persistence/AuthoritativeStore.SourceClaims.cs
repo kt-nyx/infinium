@@ -34,7 +34,7 @@ public sealed record SourceClaimPersistenceReceipt(
     string SourceRevisionId,
     int ProposalCount,
     int AdmissionCount,
-    IReadOnlyList<string> ApplicationLinkIds);
+    IReadOnlyList<string> AdmissionCorrelationIds);
 
 public sealed record SourceClaimConsumptionRequest(
     string ApplicationLinkId,
@@ -54,6 +54,7 @@ public sealed record SourceClaimConsumptionReceipt(
 public sealed record SourceClaimApplicationReadModel(
     string ApplicationLinkId,
     string AcquisitionRunId,
+    string AdmissionId,
     string ParentAnalysisRunId,
     string ApplicationScopeId,
     string CostAttributionScopeId,
@@ -155,10 +156,11 @@ public partial class AuthoritativeStore
             Execute(
                 """
                 INSERT INTO evidence_acquisition_application_links VALUES(
-                  $application,$acquisition,$run,$scope,$cost,$artifact,$now);
+                  $application,$acquisition,$admission,$run,$scope,$cost,$artifact,$now);
                 """,
                 transaction,
                 ("$application", request.ApplicationLinkId), ("$acquisition", request.AcquisitionRunId),
+                ("$admission", request.AdmissionId),
                 ("$run", request.ParentAnalysisRunId), ("$scope", request.ApplicationScopeId),
                 ("$cost", request.CostAttributionScopeId), ("$artifact", admittedArtifactId),
                 ("$now", ToText(request.OccurredAt)));
@@ -175,7 +177,7 @@ public partial class AuthoritativeStore
             using SqliteCommand command = connection.CreateCommand();
             command.CommandText =
                 """
-                SELECT application_link_id,acquisition_run_id,analysis_run_id,application_scope_id,
+                SELECT application_link_id,acquisition_run_id,admission_id,analysis_run_id,application_scope_id,
                   cost_attribution_scope_id,admitted_artifact_id
                 FROM evidence_acquisition_application_links
                 WHERE acquisition_run_id=$acquisition
@@ -187,7 +189,7 @@ public partial class AuthoritativeStore
             while (reader.Read())
             {
                 results.Add(new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
-                    reader.GetString(4), reader.GetString(5)));
+                    reader.GetString(4), reader.GetString(5), reader.GetString(6)));
             }
             return results;
         }
@@ -198,7 +200,7 @@ public partial class AuthoritativeStore
         ArgumentNullException.ThrowIfNull(request);
         ProviderOperationContractInvariants.Validate(request.Document);
         SourceClaimExtractionDocument document = request.Document;
-        if (document.AdmissionLinks.Any(link => link.AuthorizationId.Value != request.AuthorizationId
+        if (document.AdmissionCorrelations.Any(link => link.AuthorizationId.Value != request.AuthorizationId
                 || link.ResponseRecordId.Value != request.ResponseRecordId))
         {
             throw new InvalidDataException("Source-claim persistence requires exact authorization and response identities on every admission link.");
@@ -236,7 +238,7 @@ public partial class AuthoritativeStore
                     throw new InvalidDataException("Source-claim persistence requires the exact retained authorization and response authority.");
                 }
             }
-            foreach (ProviderSemanticAdmissionLinkContract link in document.AdmissionLinks)
+            foreach (SourceClaimAdmissionCorrelationContract link in document.AdmissionCorrelations)
             {
                 CitationProposalContract proposal = document.ClaimProposals.Single(x => x.ProposalId == link.ProposalId);
                 byte[] payload = JsonSerializer.SerializeToUtf8Bytes(document);
@@ -249,15 +251,15 @@ public partial class AuthoritativeStore
                     """
                     INSERT INTO provider_semantic_proposals(
                       proposal_id,authorization_id,operation_id,provider_attempt_id,request_id,response_record_id,
-                      dispatch_fence_id,owner_kind,owner_id,root_subject_id,application_link_id,proposal_kind,
+                      dispatch_fence_id,owner_kind,owner_id,root_subject_id,semantic_link_id,proposal_kind,
                       payload_id,created_at)
                     VALUES($proposal,$authorization,$operation,$attempt,$request,$response,$fence,$owner_kind,
-                      $owner,$root,$application,$kind,$payload,$now);
+                      $owner,$root,$correlation,$kind,$payload,$now);
                     INSERT INTO provider_semantic_validations VALUES(
                       $validation,$proposal,$operation,$response,$owner_kind,$owner,$root,$state,
                       'infinium.host.source-claim-admission/v1',$reason,$now);
                     INSERT INTO provider_semantic_admissions VALUES(
-                      $admission,$proposal,$operation,$response,$owner_kind,$owner,$root,$validation,$application,
+                      $admission,$proposal,$operation,$response,$owner_kind,$owner,$root,$validation,$correlation,
                       $state,'infinium.host.source-claim-admission/v1',$reason,$artifact,$now);
                     """,
                     transaction,
@@ -266,7 +268,7 @@ public partial class AuthoritativeStore
                     ("$request", request.RequestId), ("$response", request.ResponseRecordId),
                     ("$fence", request.DispatchFenceId), ("$owner_kind", document.OwnerKind),
                     ("$owner", document.OwnerId.Value), ("$root", document.SourceRevisionId.Value),
-                    ("$application", link.ApplicationLinkId.Value), ("$kind", kind), ("$payload", payloadId),
+                    ("$correlation", link.AdmissionCorrelationId.Value), ("$kind", kind), ("$payload", payloadId),
                     ("$validation", link.ValidationId.Value), ("$state", ToAdmissionState(proposal.State)),
                     ("$reason", proposal.Reason), ("$admission", link.AdmissionId.Value),
                     ("$artifact", proposal.State == ProposalAdmissionState.Admitted ? payloadId : null),
@@ -274,8 +276,8 @@ public partial class AuthoritativeStore
             }
             transaction.Commit();
             return new(document.AcquisitionRunId.Value, document.OperationId.Value, document.SourceRevisionId.Value,
-                document.ClaimProposals.Count, document.AdmissionLinks.Count,
-                document.ApplicationLinkIds.Select(x => x.Value).ToArray());
+                document.ClaimProposals.Count, document.AdmissionCorrelations.Count,
+                document.AdmissionCorrelationIds.Select(x => x.Value).ToArray());
         }
     }
 
@@ -289,7 +291,7 @@ public partial class AuthoritativeStore
                 """
                 SELECT admission.admission_id,admission.proposal_id,admission.operation_id,
                   admission.response_record_id,admission.root_subject_id,admission.validation_id,
-                  admission.application_link_id,admission.state,admission.reason,proposal.payload_id
+                  admission.semantic_link_id,admission.state,admission.reason,proposal.payload_id
                 FROM provider_semantic_admissions admission
                 JOIN provider_semantic_proposals proposal ON proposal.proposal_id=admission.proposal_id
                 WHERE admission.owner_kind='evidence-acquisition-run' AND admission.owner_id=$owner
@@ -354,7 +356,7 @@ public sealed record ProviderSemanticAdmissionReadModel(
     string ResponseRecordId,
     string RootSubjectId,
     string ValidationId,
-    string ApplicationLinkId,
+    string AdmissionCorrelationId,
     string State,
     string Reason,
     string PayloadId);
