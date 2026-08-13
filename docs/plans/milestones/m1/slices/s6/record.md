@@ -4719,3 +4719,12 @@ Mutation-sensitive source-bound regressions cover each failure family. Release
 build again passed with zero warnings/errors and focused authorization tests
 passed 14/14. The prior recovery manifest binding is stale; it will be rebound
 after this corrected oracle is committed.
+
+The superseding recovery identity is
+`infinium.m1-s6.wp4.credential-native-recovery/3850c033-711a-40ee-a3df-4c9d9ac91058`,
+bound to corrected close-ready candidate
+`28f114fb7be3b311f8953e6df2e8fb495bc75281`, expiring at
+`2026-08-14T16:01:13.4608466Z`, and SHA-256
+`7c0587fa880153463f99aec9aea5dc32b8bb43944c70da31b8d56f561585c444`.
+The preceding `d01bfda6` recovery proposal is stale/non-executable and was
+never run. Validation remains effect-free pending fresh review.
