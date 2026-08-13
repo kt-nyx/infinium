@@ -27,6 +27,47 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
 
         internal Process Process { get; }
         internal int ActiveProcessCount => QueryActiveProcessCount(job);
+        internal int TotalProcessCount => QueryProcessCounts(job).Total;
+
+        internal async Task<(int ActiveBeforeTermination, int ActiveAfterTermination)>
+            TerminateRemainingProcessesAndWaitAsync(
+                TimeSpan timeout,
+                CancellationToken cancellationToken)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(timeout, TimeSpan.Zero);
+
+            int activeBeforeTermination = QueryProcessCounts(job).Active;
+            if (activeBeforeTermination == 0)
+            {
+                return (0, 0);
+            }
+
+            if (!TerminateJobObject(job, 1))
+            {
+                int activeAfterRace = QueryProcessCounts(job).Active;
+                if (activeAfterRace != 0)
+                {
+                    throw new Win32Exception(
+                        Marshal.GetLastWin32Error(),
+                        "The helper Job Object could not terminate its remaining contained processes.");
+                }
+                return (activeBeforeTermination, 0);
+            }
+
+            using CancellationTokenSource bounded =
+                CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            bounded.CancelAfter(timeout);
+            while (true)
+            {
+                int activeAfterTermination = QueryProcessCounts(job).Active;
+                if (activeAfterTermination == 0)
+                {
+                    return (activeBeforeTermination, 0);
+                }
+                await Task.Delay(TimeSpan.FromMilliseconds(10), bounded.Token).ConfigureAwait(false);
+            }
+        }
+
         internal void CloseJob()
         {
             CloseIfValid(job);
@@ -674,6 +715,9 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
     }
 
     private static int QueryActiveProcessCount(nint job)
+        => QueryProcessCounts(job).Active;
+
+    private static (int Active, int Total) QueryProcessCounts(nint job)
     {
         JOBOBJECT_BASIC_ACCOUNTING_INFORMATION information = new();
         int size = Marshal.SizeOf<JOBOBJECT_BASIC_ACCOUNTING_INFORMATION>();
@@ -681,7 +725,7 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         {
             throw new Win32Exception(Marshal.GetLastWin32Error(), "The helper Job Object could not be measured.");
         }
-        return checked((int)information.ActiveProcesses);
+        return (checked((int)information.ActiveProcesses), checked((int)information.TotalProcesses));
     }
 
     private const uint DUPLICATE_SAME_ACCESS = 0x00000002;
@@ -879,6 +923,10 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         ref JOBOBJECT_BASIC_ACCOUNTING_INFORMATION information,
         uint informationLength,
         out uint returnLength);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool TerminateJobObject(nint job, uint exitCode);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern uint ResumeThread(nint thread);

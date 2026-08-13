@@ -153,6 +153,90 @@ public sealed class CredentialHelperIntegrationTests
     }
 
     [TestMethod]
+    public async Task ContainmentAcceptsNaturallyExitedProbeAfterSlowHelperResponseWithoutPidReopen()
+    {
+        string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
+        OneShotCredentialHelperLauncher launcher = Launcher(helper);
+        SECURITY_ATTRIBUTES attributes = new()
+        {
+            Length = Marshal.SizeOf<SECURITY_ATTRIBUTES>(),
+            InheritHandle = true,
+        };
+        nint sentinel = CreateEventW(ref attributes, manualReset: true, initialState: false, null);
+        Assert.AreNotEqual(0, sentinel);
+        try
+        {
+            HelperProcessReceipt receipt = await launcher.ExecuteContainmentProbeAsync(
+                HelperTestFrames.Bootstrap(nonceSeed: 45),
+                HelperTestFrames.Assignment(),
+                TimeSpan.FromSeconds(20),
+                BaseTime,
+                sentinel,
+                descendantLifetime: TimeSpan.FromMilliseconds(50),
+                postEngineDelay: TimeSpan.FromMilliseconds(250));
+            Assert.IsTrue(receipt.ContainmentProbeExecuted);
+            Assert.AreEqual(0, receipt.ActiveProcessCountBeforeJobClose);
+            Assert.IsGreaterThanOrEqualTo(2, receipt.TotalContainedProcessCount);
+            Assert.IsTrue(receipt.ProcessTreeTerminated);
+            Assert.AreEqual(0, receipt.ProcessTreeSurvivorCount);
+            Assert.AreEqual(0, receipt.NativeCredentialOperationCount);
+            Assert.AreEqual(0, receipt.NetworkOperationCount);
+        }
+        finally
+        {
+            _ = CloseHandle(sentinel);
+        }
+    }
+
+    [TestMethod]
+    public async Task ContainmentTerminatesLiveProbeThroughJobAndProvesZeroActiveProcesses()
+    {
+        string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
+        OneShotCredentialHelperLauncher launcher = Launcher(helper);
+        SECURITY_ATTRIBUTES attributes = new()
+        {
+            Length = Marshal.SizeOf<SECURITY_ATTRIBUTES>(),
+            InheritHandle = true,
+        };
+        nint sentinel = CreateEventW(ref attributes, manualReset: true, initialState: false, null);
+        Assert.AreNotEqual(0, sentinel);
+        try
+        {
+            HelperProcessReceipt receipt = await launcher.ExecuteContainmentProbeAsync(
+                HelperTestFrames.Bootstrap(nonceSeed: 46),
+                HelperTestFrames.Assignment(),
+                TimeSpan.FromSeconds(20),
+                BaseTime,
+                sentinel,
+                descendantLifetime: TimeSpan.FromSeconds(5));
+            Assert.IsGreaterThanOrEqualTo(1, receipt.ActiveProcessCountBeforeJobClose);
+            Assert.IsGreaterThanOrEqualTo(2, receipt.TotalContainedProcessCount);
+            Assert.IsTrue(receipt.ProcessTreeTerminated);
+            Assert.AreEqual(0, receipt.ProcessTreeSurvivorCount);
+            Assert.AreEqual(0, receipt.NativeCredentialOperationCount);
+            Assert.AreEqual(0, receipt.NetworkOperationCount);
+        }
+        finally
+        {
+            _ = CloseHandle(sentinel);
+        }
+    }
+
+    [TestMethod]
+    public void ContainmentEvidenceRejectsReportedPidWithoutJobMembershipHistory()
+    {
+        Assert.IsFalse(OneShotCredentialHelperLauncher.ValidateContainmentEvidence(
+            probeExecuted: true, reportedDescendantPid: 1234,
+            totalContainedProcessCount: 1, activeProcessCountAfterTermination: 0));
+        Assert.IsTrue(OneShotCredentialHelperLauncher.ValidateContainmentEvidence(
+            probeExecuted: true, reportedDescendantPid: 1234,
+            totalContainedProcessCount: 2, activeProcessCountAfterTermination: 0));
+        Assert.IsFalse(OneShotCredentialHelperLauncher.ValidateContainmentEvidence(
+            probeExecuted: true, reportedDescendantPid: 1234,
+            totalContainedProcessCount: 2, activeProcessCountAfterTermination: 1));
+    }
+
+    [TestMethod]
     public async Task CredentialIntentRecoversWhenHelperStoreCommitPrecedesMetadataCommit()
     {
         string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-HalfCommit-" + Guid.NewGuid().ToString("N"));

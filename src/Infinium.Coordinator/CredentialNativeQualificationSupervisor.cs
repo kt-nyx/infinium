@@ -20,6 +20,7 @@ internal sealed record CredentialNativeProcessEvidence(
     bool ContainmentProbeExecuted,
     bool ExcludedHandleAccessible,
     int ActiveProcessCountBeforeJobClose,
+    int TotalContainedProcessCount,
     string? NativeCallTraceSha256,
     IReadOnlyList<CredentialNativeCallTraceEntry> NativeCallTrace);
 
@@ -29,7 +30,46 @@ internal sealed record CredentialNativeEntryCleanupEvidence(
     bool WindowDestroyed,
     bool BuffersCleared,
     bool ThreadJoined,
-    bool ClipboardMessagesBlocked);
+    bool ClipboardMessagesBlocked,
+    CredentialNativeEntryReadinessEvidence? Readiness,
+    CredentialNativeEntryReadinessEvidence? ActionReadiness,
+    string? ActionSource,
+    string? Action);
+
+internal sealed record CredentialNativeEntryReadinessEvidence(
+    int OwnerProcessId,
+    uint OwnerThreadId,
+    int OwnerSessionId,
+    string DesktopNameSha256,
+    bool InteractiveInputDesktop,
+    bool DesktopObjectMatches,
+    bool OwnerProcessMatches,
+    bool OwnerThreadMatches,
+    bool TopLevelWindow,
+    bool WindowVisible,
+    bool WindowEnabled,
+    bool WindowNotCloaked,
+    bool WindowIntersectsActiveMonitor,
+    bool InstructionOwned,
+    bool InstructionVisible,
+    string InstructionMode,
+    string InstructionFingerprintSha256,
+    bool EditOwned,
+    bool EditVisible,
+    bool EditEnabled,
+    bool EditMasked,
+    bool SubmitOwned,
+    bool SubmitVisible,
+    bool SubmitEnabled,
+    bool SubmitFocused,
+    bool CancelOwned,
+    bool CancelVisible,
+    bool CancelEnabled,
+    bool CancelFocused,
+    bool Foreground,
+    bool EditFocused,
+    long ReadinessDeadlineMilliseconds,
+    long ReadinessElapsedMilliseconds);
 
 internal sealed record CredentialNativeCanarySurfaceEvidence(
     string Name,
@@ -124,7 +164,17 @@ internal sealed record CredentialNativeQualificationEvidence(
     bool CleanupAmbiguous,
     CredentialNativeCallCounts NativeCallCounts,
     CredentialNativeStaleGateEvidence? StaleGate,
+    CredentialNativeFailedManualPhaseEvidence? FailedManualPhase,
     IReadOnlyList<CredentialNativeQualificationScenarioEvidence> Scenarios);
+
+internal sealed record CredentialNativeFailedManualPhaseEvidence(
+    string AssignmentId,
+    HelperOutcomeV2 Outcome,
+    int ProcessId,
+    int CredWriteW,
+    int NativeCallTotal,
+    CredentialNativeEntryCleanupEvidence? EntryCleanup,
+    string Disposition);
 
 internal sealed record CredentialNativeStaleGateEvidence(
     string ProfileId,
@@ -149,6 +199,18 @@ internal sealed class CredentialNativeCleanupAmbiguityException(
 {
     internal string AssignmentId { get; } = assignmentId;
     internal string Reason { get; } = reason;
+}
+
+internal sealed class CredentialNativePrimaryFailureException(
+    string failureType,
+    CredentialNativeQualificationEvidence evidence,
+    Exception innerException)
+    : InvalidOperationException(
+        "The native qualification primary phase failed after bounded exact-target cleanup.",
+        innerException)
+{
+    internal string FailureType { get; } = failureType;
+    internal CredentialNativeQualificationEvidence Evidence { get; } = evidence;
 }
 
 /// <summary>
@@ -212,6 +274,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
     private readonly DateTimeOffset startedAt;
     private bool namespaceBlocked;
     private bool cleanupAmbiguous;
+    private CredentialNativeFailedManualPhaseEvidence? failedManualPhase;
     private bool disposed;
     private CredentialNativeStaleGateEvidence? staleGate;
 
@@ -573,6 +636,17 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         return Snapshot();
     }
 
+    internal CredentialNativeQualificationEvidence CapturePrimaryFailureAfterCertainCleanup()
+    {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        if (cleanupDeadline is null || cleanupAmbiguous || namespaceBlocked)
+        {
+            throw new InvalidOperationException(
+                "Primary-failure evidence requires completed, certain bounded cleanup.");
+        }
+        return Snapshot();
+    }
+
     public void Dispose()
     {
         if (disposed)
@@ -648,11 +722,112 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         CredentialNativeEntryCleanupEvidence? entryCleanup = ParseEntryCleanup(process.NativeEntryCleanupBytes);
         bool manualEntry = expectedInheritedPrivateHandleCount == 2
             && RequiresManualEntryEvidence(assignment.AssignmentId, assignment.AssignmentKind);
-        if (manualEntry
+        bool invalidManualEntry = manualEntry
             && (entryCleanup is null || !entryCleanup.InitialBlank || !entryCleanup.Terminal
                 || !entryCleanup.WindowDestroyed || !entryCleanup.BuffersCleared
-                || !entryCleanup.ThreadJoined || !entryCleanup.ClipboardMessagesBlocked))
+                || !entryCleanup.ThreadJoined || !entryCleanup.ClipboardMessagesBlocked
+                || entryCleanup.Readiness is not
+                {
+                    InteractiveInputDesktop: true,
+                    DesktopObjectMatches: true,
+                    OwnerProcessMatches: true,
+                    OwnerThreadMatches: true,
+                    TopLevelWindow: true,
+                    WindowVisible: true,
+                    WindowEnabled: true,
+                    WindowNotCloaked: true,
+                    WindowIntersectsActiveMonitor: true,
+                    InstructionOwned: true,
+                    InstructionVisible: true,
+                    EditOwned: true,
+                    EditVisible: true,
+                    EditEnabled: true,
+                    EditMasked: true,
+                    SubmitOwned: true,
+                    SubmitVisible: true,
+                    SubmitEnabled: true,
+                    CancelOwned: true,
+                    CancelVisible: true,
+                    CancelEnabled: true,
+                    Foreground: true,
+                    EditFocused: true,
+                } readiness
+                || readiness.OwnerProcessId != process.ProcessId
+                || readiness.OwnerThreadId == 0
+                || readiness.OwnerSessionId != System.Diagnostics.Process.GetCurrentProcess().SessionId
+                || readiness.DesktopNameSha256.Length != 64
+                || !readiness.DesktopNameSha256.All(char.IsAsciiHexDigit)
+                || readiness.InstructionFingerprintSha256.Length != 64
+                || !readiness.InstructionFingerprintSha256.All(char.IsAsciiHexDigit)
+                || readiness.InstructionMode != (assignment.AssignmentId.Contains(
+                    "interactive-entry-cancel", StringComparison.Ordinal) ? "cancel" : "submit")
+                || !string.Equals(readiness.InstructionFingerprintSha256,
+                    Convert.ToHexStringLower(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(
+                        readiness.InstructionMode == "submit"
+                            ? "Enter a disposable test value, then click Submit. Never use a real credential."
+                            : "Leave the field blank, then click Cancel."))),
+                    StringComparison.Ordinal)
+                || readiness.ReadinessDeadlineMilliseconds is < 1 or > 10_000
+                || readiness.ReadinessElapsedMilliseconds < 0
+                || readiness.ReadinessElapsedMilliseconds > readiness.ReadinessDeadlineMilliseconds
+                || entryCleanup.ActionReadiness is not
+                {
+                    InteractiveInputDesktop: true,
+                    DesktopObjectMatches: true,
+                    OwnerProcessMatches: true,
+                    OwnerThreadMatches: true,
+                    TopLevelWindow: true,
+                    WindowVisible: true,
+                    WindowEnabled: true,
+                    WindowNotCloaked: true,
+                    WindowIntersectsActiveMonitor: true,
+                    InstructionOwned: true,
+                    InstructionVisible: true,
+                    EditOwned: true,
+                    EditVisible: true,
+                    EditEnabled: true,
+                    EditMasked: true,
+                    SubmitOwned: true,
+                    SubmitVisible: true,
+                    SubmitEnabled: true,
+                    CancelOwned: true,
+                    CancelVisible: true,
+                    CancelEnabled: true,
+                    Foreground: true,
+                } actionReadiness
+                || actionReadiness.OwnerProcessId != process.ProcessId
+                || actionReadiness.OwnerThreadId != readiness.OwnerThreadId
+                || actionReadiness.OwnerSessionId != readiness.OwnerSessionId
+                || actionReadiness.DesktopNameSha256 != readiness.DesktopNameSha256
+                || actionReadiness.InstructionMode != readiness.InstructionMode
+                || actionReadiness.InstructionFingerprintSha256 != readiness.InstructionFingerprintSha256
+                || actionReadiness.ReadinessDeadlineMilliseconds is < 1 or > 10_000
+                || actionReadiness.ReadinessElapsedMilliseconds < 0
+                || actionReadiness.ReadinessElapsedMilliseconds > actionReadiness.ReadinessDeadlineMilliseconds
+                || entryCleanup.ActionSource == "editkey" && !actionReadiness.EditFocused
+                || entryCleanup.ActionSource == "submitbutton" && !actionReadiness.SubmitFocused
+                || entryCleanup.ActionSource == "cancelbutton" && !actionReadiness.CancelFocused
+                || !IsActionSourceBindingValid(entryCleanup.Action, entryCleanup.ActionSource)
+                || entryCleanup.ActionSource is not ("editkey" or "submitbutton" or "cancelbutton")
+                || process.Receipt.Outcome == HelperOutcomeV2.Cancelled && entryCleanup.Action != "cancel"
+                || process.Receipt.Outcome == HelperOutcomeV2.Completed && entryCleanup.Action != "submit"
+                || entryCleanup.Action is not ("submit" or "cancel"));
+        if (invalidManualEntry)
         {
+            string disposition = ClassifyManualPhaseFailure(
+                process.Receipt.Outcome,
+                entryCleanup?.InitialBlank,
+                entryCleanup?.Readiness is not null,
+                trace.Count(item => item.Operation == "CredWriteW"),
+                trace.Count);
+            failedManualPhase = new(
+                assignment.AssignmentId,
+                process.Receipt.Outcome,
+                process.ProcessId,
+                trace.Count(item => item.Operation == "CredWriteW"),
+                trace.Count,
+                entryCleanup,
+                disposition);
             throw new InvalidDataException("A manual native entry phase lacks exact UI cleanup evidence.");
         }
         CredentialNativeProcessEvidence processEvidence = new(
@@ -670,6 +845,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
             process.ContainmentProbeExecuted,
             process.ExcludedHandleAccessible,
             process.ActiveProcessCountBeforeJobClose,
+            process.TotalContainedProcessCount,
             process.NativeCallTraceBytes is null
                 ? null
                 : Convert.ToHexStringLower(SHA256.HashData(process.NativeCallTraceBytes)),
@@ -725,6 +901,29 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         }
         phases.Add(evidence);
     }
+
+    internal static string ClassifyManualPhaseFailure(
+        HelperOutcomeV2 outcome,
+        bool? initialBlank,
+        bool readinessPresent,
+        int credWriteCount,
+        int nativeCallTotal) =>
+        outcome == HelperOutcomeV2.FailedKnown
+            && initialBlank == false
+            && readinessPresent
+            && credWriteCount == 0
+            && nativeCallTotal == 0
+            ? "failed-prewrite-ui-readiness"
+            : "failed-manual-phase-evidence-validation";
+
+    internal static bool IsActionSourceBindingValid(string? action, string? source) =>
+        source switch
+        {
+            "submitbutton" => action == "submit",
+            "cancelbutton" => action == "cancel",
+            "editkey" => action is "submit" or "cancel",
+            _ => false,
+        };
 
     private void EnsurePrimaryPhaseAllowed(string scenarioId, string phaseId)
     {
@@ -782,6 +981,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         cleanupAmbiguous,
         AggregateCallCounts(),
         staleGate,
+        failedManualPhase,
         scenarios
             .OrderBy(pair => pair.Key, StringComparer.Ordinal)
             .Select(pair => new CredentialNativeQualificationScenarioEvidence(pair.Key, pair.Value.ToArray()))

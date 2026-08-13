@@ -31,6 +31,7 @@ public sealed record HelperProcessReceipt(
     bool ContainmentProbeExecuted = false,
     bool ExcludedHandleAccessible = false,
     int ActiveProcessCountBeforeJobClose = 0,
+    int TotalContainedProcessCount = 0,
     bool NativeNamespaceReuseBlocked = false,
     string? NativeNamespaceReuseBlockReason = null);
 
@@ -195,9 +196,13 @@ public sealed class OneShotCredentialHelperLauncher
         TimeSpan timeout,
         DateTimeOffset authoritativeNow,
         nint inheritanceSentinel,
+        TimeSpan? descendantLifetime = null,
+        TimeSpan? postEngineDelay = null,
         CancellationToken cancellationToken = default) => await ExecuteCoreAsync(
             bootstrap, assignment, null, timeout, authoritativeNow,
-            inheritanceSentinel, containmentProbe: true, cancellationToken).ConfigureAwait(false);
+            inheritanceSentinel, containmentProbe: true, cancellationToken,
+            containmentDescendantLifetime: descendantLifetime,
+            containmentPostEngineDelay: postEngineDelay).ConfigureAwait(false);
 
     internal async Task<HelperProcessReceipt> ExecuteNativeContainmentProbeAsync(
         HelperPrivateFrameV2 bootstrap,
@@ -259,7 +264,9 @@ public sealed class OneShotCredentialHelperLauncher
         CancellationToken cancellationToken,
         string? nativeManifestPath = null,
         string? nativeManifestSha256 = null,
-        string? nativeManifestId = null)
+        string? nativeManifestId = null,
+        TimeSpan? containmentDescendantLifetime = null,
+        TimeSpan? containmentPostEngineDelay = null)
     {
         TimeSpan maximumTimeout = nativeManifestPath is null
             ? TimeSpan.FromMinutes(2)
@@ -311,6 +318,28 @@ public sealed class OneShotCredentialHelperLauncher
                 "--spawn-containment-probe",
                 "1",
             ];
+            if (containmentDescendantLifetime is not null || containmentPostEngineDelay is not null)
+            {
+                int lifetimeMilliseconds = checked((int)(containmentDescendantLifetime
+                    ?? TimeSpan.FromSeconds(30)).TotalMilliseconds);
+                int delayMilliseconds = checked((int)(containmentPostEngineDelay
+                    ?? TimeSpan.Zero).TotalMilliseconds);
+                if (lifetimeMilliseconds is < 1 or > 300_000
+                    || delayMilliseconds is < 0 or > 300_000)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        nameof(containmentDescendantLifetime),
+                        "Containment test timings must remain finite and bounded.");
+                }
+                arguments =
+                [
+                    .. arguments,
+                    "--containment-probe-lifetime-ms",
+                    lifetimeMilliseconds.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    "--post-engine-delay-ms",
+                    delayMilliseconds.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ];
+            }
         }
         if (nativeManifestPath is null)
         {
@@ -365,17 +394,12 @@ public sealed class OneShotCredentialHelperLauncher
             {
                 throw new InvalidOperationException("The one-shot helper failed without an admissible terminal receipt.");
             }
-            int activeBeforeContainmentClose = contained.ActiveProcessCount;
-            Process? descendant = metrics.DescendantPid > 0
-                ? Process.GetProcessById(metrics.DescendantPid)
-                : null;
+            int totalContainedProcessCount = contained.TotalProcessCount;
+            (int activeBeforeContainmentClose, int survivors) =
+                await contained.TerminateRemainingProcessesAndWaitAsync(
+                    TimeSpan.FromSeconds(5),
+                    bounded.Token).ConfigureAwait(false);
             contained.CloseJob();
-            if (descendant is not null)
-            {
-                await descendant.WaitForExitAsync(bounded.Token).ConfigureAwait(false);
-                descendant.Dispose();
-            }
-            int survivors = metrics.DescendantPid > 0 && IsProcessAlive(metrics.DescendantPid) ? 1 : 0;
             return new(
                 processId,
                 contained.ExitCode,
@@ -388,7 +412,9 @@ public sealed class OneShotCredentialHelperLauncher
                 metrics.NetworkOperationCount,
                 metrics.NativeCredentialOperationCount,
                 survivors,
-                survivors == 0 && (!containmentProbe || activeBeforeContainmentClose >= 1)
+                ValidateContainmentEvidence(
+                    containmentProbe, metrics.DescendantPid,
+                    totalContainedProcessCount, survivors)
                     && !metrics.ExcludedHandleAccessible,
                 false,
                 metrics.NativeCallTraceBytes,
@@ -397,6 +423,7 @@ public sealed class OneShotCredentialHelperLauncher
                 containmentProbe,
                 metrics.ExcludedHandleAccessible,
                 activeBeforeContainmentClose,
+                totalContainedProcessCount,
                 metrics.NamespaceReuseBlocked,
                 metrics.NamespaceReuseBlockReason);
         }
@@ -495,6 +522,14 @@ public sealed class OneShotCredentialHelperLauncher
     private static string HashFile(string path) =>
         Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path)));
 
+    internal static bool ValidateContainmentEvidence(
+        bool probeExecuted,
+        int reportedDescendantPid,
+        int totalContainedProcessCount,
+        int activeProcessCountAfterTermination) =>
+        activeProcessCountAfterTermination == 0
+        && (!probeExecuted || reportedDescendantPid > 0 && totalContainedProcessCount >= 2);
+
     private static SafeFileHandle OpenDirectoryCapability(string path)
     {
         SafeFileHandle handle = CreateFileW(
@@ -511,19 +546,6 @@ public sealed class OneShotCredentialHelperLauncher
             throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), "The fake secure-store capability could not be opened.");
         }
         return handle;
-    }
-
-    private static bool IsProcessAlive(int processId)
-    {
-        try
-        {
-            using Process process = Process.GetProcessById(processId);
-            return !process.HasExited;
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
     }
 
     private sealed record HelperRuntimeMetrics(

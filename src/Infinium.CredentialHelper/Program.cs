@@ -74,7 +74,7 @@ if (args is ["--credential-native-request-handle", string nativeRequestHandle,
                 FileName = Environment.ProcessPath!,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                ArgumentList = { "--containment-descendant" },
+                ArgumentList = { "--containment-descendant", "30000" },
             });
         }
         using AnonymousPipeClientStream request = new(PipeDirection.In, nativeRequestHandle);
@@ -141,16 +141,19 @@ if (args is ["--credential-native-request-handle", string nativeRequestHandle,
             : 0;
     }
     catch (Exception exception) when (exception is IOException or InvalidDataException
-        or OperationCanceledException or System.ComponentModel.Win32Exception)
+        or InvalidOperationException or OperationCanceledException or TimeoutException
+        or System.ComponentModel.Win32Exception)
     {
         Console.Error.WriteLine($"Native helper terminated with typed non-secret failure: {exception.GetType().Name}");
         return 68;
     }
 }
 
-if (args is ["--containment-descendant"])
+if (args is ["--containment-descendant", string descendantDelay]
+    && int.TryParse(descendantDelay, out int descendantDelayMilliseconds)
+    && descendantDelayMilliseconds is >= 1 and <= 300_000)
 {
-    await Task.Delay(TimeSpan.FromSeconds(30));
+    await Task.Delay(TimeSpan.FromMilliseconds(descendantDelayMilliseconds));
     return 0;
 }
 
@@ -159,8 +162,11 @@ bool providerTransportSelected = args.Length >= 10 && args[^2] == "--provider-tr
 bool productionProviderTransport = providerTransportSelected && args[^1] == "production";
 bool syntheticQualificationTransport = providerTransportSelected && args[^1] == "synthetic-qualification";
 string[] helperArgs = providerTransportSelected ? args[..^2] : args;
-bool containmentProbe = helperArgs.Length == 12;
-if (!providerTransportSelected || helperArgs.Length is not (8 or 12)
+bool containmentProbe = helperArgs.Length is 12 or 16;
+bool configuredContainmentTiming = helperArgs.Length == 16;
+int containmentLifetimeMilliseconds = 30_000;
+int postEngineDelayMilliseconds = 0;
+if (!providerTransportSelected || helperArgs.Length is not (8 or 12 or 16)
     || helperArgs[0] != "--request-handle" || helperArgs[2] != "--response-handle"
     || helperArgs[4] != "--store-handle" || helperArgs[6] != "--authority-now-unix-ms"
     || string.IsNullOrWhiteSpace(helperArgs[1]) || string.IsNullOrWhiteSpace(helperArgs[3])
@@ -168,7 +174,13 @@ if (!providerTransportSelected || helperArgs.Length is not (8 or 12)
     || !long.TryParse(helperArgs[7], System.Globalization.NumberStyles.None,
         System.Globalization.CultureInfo.InvariantCulture, out long authorityNowUnixMs)
     || containmentProbe && (helperArgs[8] != "--excluded-handle-probe"
-        || !nint.TryParse(helperArgs[9], out _) || helperArgs[10] != "--spawn-containment-probe" || helperArgs[11] != "1"))
+        || !nint.TryParse(helperArgs[9], out _) || helperArgs[10] != "--spawn-containment-probe" || helperArgs[11] != "1")
+    || configuredContainmentTiming && (helperArgs[12] != "--containment-probe-lifetime-ms"
+        || !int.TryParse(helperArgs[13], out containmentLifetimeMilliseconds)
+        || containmentLifetimeMilliseconds is < 1 or > 300_000
+        || helperArgs[14] != "--post-engine-delay-ms"
+        || !int.TryParse(helperArgs[15], out postEngineDelayMilliseconds)
+        || postEngineDelayMilliseconds is < 0 or > 300_000))
 {
     Console.Error.WriteLine("The one-shot helper requires two private pipes, one secure-store capability, and authoritative time.");
     return 64;
@@ -181,7 +193,9 @@ try
     Process? descendant = null;
     if (containmentProbe)
     {
-        ProcessStartInfo descendantStart = new(Environment.ProcessPath!, "--containment-descendant")
+        string lifetime = (configuredContainmentTiming ? containmentLifetimeMilliseconds : 30_000)
+            .ToString(System.Globalization.CultureInfo.InvariantCulture);
+        ProcessStartInfo descendantStart = new(Environment.ProcessPath!, $"--containment-descendant {lifetime}")
         {
             UseShellExecute = false,
             CreateNoWindow = true,
@@ -203,6 +217,10 @@ try
         allowSyntheticProviderDispatch: syntheticQualificationTransport);
     using CancellationTokenSource deadline = new(TimeSpan.FromSeconds(30));
     await engine.RunAsync(request, response, deadline.Token);
+    if (configuredContainmentTiming && postEngineDelayMilliseconds > 0)
+    {
+        await Task.Delay(TimeSpan.FromMilliseconds(postEngineDelayMilliseconds), deadline.Token);
+    }
     (int listenerCount, int networkOperationCount) = NetworkMeasurement.MeasureCurrentProcessTcp();
     byte[] metrics = JsonSerializer.SerializeToUtf8Bytes(new
     {

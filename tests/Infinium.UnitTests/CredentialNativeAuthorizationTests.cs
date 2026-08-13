@@ -5,7 +5,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Infinium.Application.Runtime;
 using Infinium.CredentialHelper;
+using Infinium.Contracts.Protobuf.Helper.V2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infinium.Tests;
@@ -687,12 +689,16 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.ThrowsExactly<InvalidOperationException>(() => state.Activate(1));
 
         state = new();
+        NativeEntryReadinessEvidence readiness = ValidReadiness();
+        state.RecordReadiness(readiness);
         state.Activate(0);
         state.RecordClipboardMessageBlocked();
+        state.RecordActionReadiness(readiness, NativeEntryInteraction.Submit, NativeEntryActionSource.EditKey);
         state.Submit("manually-entered"u8);
         state.CompleteUiThreadCleanup(windowWasDestroyed: true, buffersWereCleared: true);
         state.RecordThreadJoined();
-        Assert.AreEqual(new NativeEntryCleanupEvidence(true, true, true, true, true, true), state.Evidence);
+        Assert.AreEqual(new NativeEntryCleanupEvidence(
+            true, true, true, true, true, true, readiness, readiness, "editkey", "submit"), state.Evidence);
 
         foreach (Action<NativeEntryStateMachine> terminal in new Action<NativeEntryStateMachine>[]
         {
@@ -700,8 +706,10 @@ public sealed class CredentialNativeAuthorizationTests
         })
         {
             NativeEntryStateMachine candidate = new();
+            candidate.RecordReadiness(readiness);
             candidate.Activate(0);
             candidate.RecordClipboardMessageBlocked();
+            candidate.RecordActionReadiness(readiness, NativeEntryInteraction.Cancel, NativeEntryActionSource.EditKey);
             terminal(candidate);
             candidate.CompleteUiThreadCleanup(true, true);
             candidate.RecordThreadJoined();
@@ -712,6 +720,155 @@ public sealed class CredentialNativeAuthorizationTests
             Assert.IsTrue(candidate.Evidence.ThreadJoined);
             Assert.IsTrue(candidate.Evidence.ClipboardMessagesBlocked);
         }
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    public void NativeEntryReadinessOracleRejectsEveryInvisibleOrUnactionableMutation()
+    {
+        NativeEntryReadinessEvidence valid = ValidReadiness();
+        NativeEntryReadinessOracle.Validate(valid);
+        NativeEntryReadinessEvidence[] mutations =
+        [
+            valid with { OwnerProcessId = valid.OwnerProcessId + 1 },
+            valid with { OwnerThreadId = 0 },
+            valid with { OwnerSessionId = valid.OwnerSessionId + 1 },
+            valid with { DesktopNameSha256 = "bad" },
+            valid with { InteractiveInputDesktop = false },
+            valid with { DesktopObjectMatches = false },
+            valid with { OwnerProcessMatches = false },
+            valid with { OwnerThreadMatches = false },
+            valid with { TopLevelWindow = false },
+            valid with { WindowVisible = false },
+            valid with { WindowEnabled = false },
+            valid with { WindowNotCloaked = false },
+            valid with { WindowIntersectsActiveMonitor = false },
+            valid with { InstructionOwned = false },
+            valid with { InstructionVisible = false },
+            valid with { InstructionMode = "wrong" },
+            valid with { InstructionFingerprintSha256 = "bad" },
+            valid with { EditOwned = false },
+            valid with { EditVisible = false },
+            valid with { EditEnabled = false },
+            valid with { EditMasked = false },
+            valid with { SubmitOwned = false },
+            valid with { SubmitVisible = false },
+            valid with { SubmitEnabled = false },
+            valid with { CancelOwned = false },
+            valid with { CancelVisible = false },
+            valid with { CancelEnabled = false },
+            valid with { Foreground = false },
+            valid with { EditFocused = false },
+            valid with { ReadinessDeadlineMilliseconds = 0 },
+            valid with { ReadinessElapsedMilliseconds = valid.ReadinessDeadlineMilliseconds + 1 },
+        ];
+        foreach (NativeEntryReadinessEvidence mutation in mutations)
+        {
+            Assert.ThrowsExactly<InvalidDataException>(() => NativeEntryReadinessOracle.Validate(mutation));
+        }
+
+        NativeEntryStateMachine state = new();
+        Assert.ThrowsExactly<InvalidOperationException>(() => state.Activate(0));
+
+        NativeEntryStateMachine setupFailure = new();
+        setupFailure.RecordSetupFailureIfNeeded(NativeEntryReadinessEvidence.SetupFailure(
+            threadId: 0, NativeEntryInteraction.Submit,
+            windowCreated: false, instructionCreated: false, editCreated: false,
+            submitCreated: false, cancelCreated: false));
+        setupFailure.FailFromAnyState();
+        setupFailure.CompleteUiThreadCleanup(true, true);
+        setupFailure.RecordThreadJoined();
+        Assert.IsNotNull(setupFailure.Evidence.Readiness);
+        Assert.IsFalse(setupFailure.Evidence.Readiness.WindowVisible);
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    public void NativeEntryCommandsRequireExactOwnedButtonAndRegisteredInstance()
+    {
+        nint window = 100;
+        nint submit = 101;
+        nint cancel = 102;
+        nuint submitCommand = 1001;
+        Assert.IsTrue(NativeMaskedEntryDialog.IsOwnedButtonCommand(
+            0x0111, window, submitCommand, submit, window, submit, cancel, out NativeEntryInteraction action));
+        Assert.AreEqual(NativeEntryInteraction.Submit, action);
+        Assert.IsFalse(NativeMaskedEntryDialog.IsOwnedButtonCommand(
+            0x0111, window, submitCommand, cancel, window, submit, cancel, out _));
+        Assert.IsFalse(NativeMaskedEntryDialog.IsOwnedButtonCommand(
+            0x0111, window + 1, submitCommand, submit, window, submit, cancel, out _));
+        Assert.IsFalse(NativeMaskedEntryDialog.IsOwnedButtonCommand(
+            0x0111, window, submitCommand | ((nuint)1 << 16), submit,
+            window, submit, cancel, out _));
+        NativeMaskedEntryDialog.RequireMatchingWindowClassInstance(123, 123);
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            NativeMaskedEntryDialog.RequireMatchingWindowClassInstance(123, 0));
+
+        NativeEntryReadinessEvidence button = ValidReadiness() with
+        {
+            EditFocused = false,
+            SubmitFocused = true,
+        };
+        NativeEntryStateMachine buttonState = new();
+        buttonState.RecordReadiness(ValidReadiness());
+        buttonState.Activate(0);
+        buttonState.RecordActionReadiness(button, NativeEntryInteraction.Submit, NativeEntryActionSource.SubmitButton);
+        Assert.AreEqual("submitbutton", buttonState.Evidence.ActionSource);
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+        {
+            NativeEntryStateMachine wrongFocus = new();
+            wrongFocus.RecordReadiness(ValidReadiness());
+            wrongFocus.Activate(0);
+            wrongFocus.RecordActionReadiness(
+                button with { SubmitFocused = false }, NativeEntryInteraction.Submit,
+                NativeEntryActionSource.SubmitButton);
+        });
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            NativeEntryReadinessOracle.Validate(
+                ValidReadiness() with { ReadinessDeadlineMilliseconds = 0 }));
+
+        NativeEntryInteraction? selectedAction = null;
+        NativeEntryActionSource? selectedSource = null;
+        NativeMaskedEntryDialog.RecordFirstTerminalAction(
+            ref selectedAction, ref selectedSource,
+            NativeEntryInteraction.Cancel, NativeEntryActionSource.CancelButton);
+        NativeMaskedEntryDialog.RecordFirstTerminalAction(
+            ref selectedAction, ref selectedSource,
+            NativeEntryInteraction.Submit, NativeEntryActionSource.SubmitButton);
+        Assert.AreEqual(NativeEntryInteraction.Cancel, selectedAction);
+        Assert.AreEqual(NativeEntryActionSource.CancelButton, selectedSource);
+
+        selectedAction = null;
+        selectedSource = null;
+        NativeMaskedEntryDialog.RecordFirstTerminalAction(
+            ref selectedAction, ref selectedSource,
+            NativeEntryInteraction.Submit, NativeEntryActionSource.EditKey);
+        NativeMaskedEntryDialog.RecordFirstTerminalAction(
+            ref selectedAction, ref selectedSource,
+            NativeEntryInteraction.Cancel, NativeEntryActionSource.EditKey);
+        Assert.AreEqual(NativeEntryInteraction.Submit, selectedAction);
+        Assert.AreEqual(NativeEntryActionSource.EditKey, selectedSource);
+        Assert.IsTrue(NativeMaskedEntryDialog.ShouldStopMessageDrain(selectedAction));
+        int readinessMeasurements = 0;
+        foreach (NativeEntryInteraction queued in new[]
+        {
+            NativeEntryInteraction.Cancel,
+            NativeEntryInteraction.Submit,
+        })
+        {
+            NativeEntryInteraction? first = null;
+            NativeEntryActionSource? firstSource = null;
+            NativeMaskedEntryDialog.RecordFirstTerminalAction(
+                ref first, ref firstSource, queued, NativeEntryActionSource.EditKey);
+            if (NativeMaskedEntryDialog.ShouldStopMessageDrain(first))
+            {
+                readinessMeasurements++;
+                break;
+            }
+        }
+        Assert.AreEqual(1, readinessMeasurements);
     }
 
     [TestMethod]
@@ -757,5 +914,179 @@ public sealed class CredentialNativeAuthorizationTests
         byte[] oversizedBytes = source.Capture(oversized);
         Assert.HasCount(WindowsCredentialManagerStore.MaximumBlobBytes + 1, oversizedBytes);
         CryptographicOperations.ZeroMemory(oversizedBytes);
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    public void NativeQualificationEntryTerminalActionsFailAsReceiptableOutcomesWithoutSecretRetention()
+    {
+        NativeEntryInteraction? observedInteraction = null;
+        NativeEntryCleanupEvidence complete = new(true, true, true, true, true, true, ValidReadiness());
+        NativeQualificationSecretSource cancelledSubmit = new(
+            capture: (_, interaction) =>
+            {
+                observedInteraction = interaction;
+                return new([], NativeEntryTerminalState.Cancelled, complete);
+            });
+        HelperAssignmentV2 submit = QualificationAssignment(
+            "wp4-v2/interactive-entry-submit/submit", HelperAssignmentKindV2.Enroll);
+        Assert.ThrowsExactly<OperationCanceledException>(() => cancelledSubmit.Capture(submit));
+        Assert.AreEqual(NativeEntryInteraction.Submit, observedInteraction);
+        Assert.AreEqual(complete, cancelledSubmit.EntryEvidence);
+
+        observedInteraction = null;
+        NativeQualificationSecretSource expectedCancel = new(
+            capture: (_, interaction) =>
+            {
+                observedInteraction = interaction;
+                return new([], NativeEntryTerminalState.Cancelled, complete);
+            });
+        HelperAssignmentV2 cancel = QualificationAssignment(
+            "wp4-v2/interactive-entry-cancel/cancel", HelperAssignmentKindV2.Enroll);
+        Assert.ThrowsExactly<OperationCanceledException>(() => expectedCancel.Capture(cancel));
+        Assert.AreEqual(NativeEntryInteraction.Cancel, observedInteraction);
+
+        byte[] wrongActionSecret = "must-be-cleared"u8.ToArray();
+        NativeQualificationSecretSource wrongCancelAction = new(
+            capture: (_, _) => new(wrongActionSecret, NativeEntryTerminalState.Submitted, complete));
+        Assert.ThrowsExactly<InvalidDataException>(() => wrongCancelAction.Capture(cancel));
+        Assert.IsTrue(wrongActionSecret.All(value => value == 0));
+
+        NativeQualificationSecretSource timedOut = new(
+            capture: (_, _) => new([], NativeEntryTerminalState.TimedOut, complete));
+        Assert.ThrowsExactly<InvalidDataException>(() => timedOut.Capture(submit));
+
+        NativeQualificationSecretSource cleanupFailed = new(
+            capture: (_, _) => throw new InvalidOperationException("synthetic cleanup failure"));
+        Assert.ThrowsExactly<InvalidDataException>(() => cleanupFailed.Capture(submit));
+
+        byte[] submitted = "disposable-value"u8.ToArray();
+        NativeQualificationSecretSource accepted = new(
+            capture: (_, interaction) =>
+            {
+                Assert.AreEqual(NativeEntryInteraction.Submit, interaction);
+                return new(submitted, NativeEntryTerminalState.Submitted, complete);
+            });
+        byte[] result = accepted.Capture(submit);
+        CollectionAssert.AreEqual("disposable-value"u8.ToArray(), result);
+        CryptographicOperations.ZeroMemory(result);
+
+        string root = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string program = File.ReadAllText(Path.Combine(root, "src", "Infinium.CredentialHelper", "Program.cs"));
+        Assert.IsTrue(program.Contains("or InvalidOperationException", StringComparison.Ordinal));
+        Assert.IsTrue(program.Contains("or OperationCanceledException or TimeoutException", StringComparison.Ordinal));
+        string nativeSource = File.ReadAllText(Path.Combine(root, "src", "Infinium.CredentialHelper",
+            "WindowsCredentialNativeQualification.cs"));
+        Assert.IsTrue(nativeSource.Contains("click Submit", StringComparison.Ordinal));
+        Assert.IsTrue(nativeSource.Contains("click Cancel", StringComparison.Ordinal));
+        Assert.IsTrue(nativeSource.Contains("SubmitButtonId", StringComparison.Ordinal));
+        Assert.IsTrue(nativeSource.Contains("CancelButtonId", StringComparison.Ordinal));
+        Assert.IsFalse(nativeSource.Contains("GetAsyncKeyState", StringComparison.Ordinal));
+        Assert.IsTrue(nativeSource.Contains("message.Window == edit", StringComparison.Ordinal));
+        Assert.IsTrue(nativeSource.Contains("GetForegroundWindow() == window", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    public async Task NativeEntryTerminalActionsProduceCanonicalEngineReceiptsWithoutNativeEffects()
+    {
+        NativeEntryCleanupEvidence complete = new(true, true, true, true, true, true, ValidReadiness());
+        foreach ((string assignmentId, NativeEntryTerminalState terminal, HelperOutcomeV2 expected) in new[]
+        {
+            ("wp4-v2/interactive-entry-cancel/cancel", NativeEntryTerminalState.Cancelled, HelperOutcomeV2.Cancelled),
+            ("wp4-v2/interactive-entry-submit/submit", NativeEntryTerminalState.Failed, HelperOutcomeV2.FailedKnown),
+            ("wp4-v2/interactive-entry-submit/submit", NativeEntryTerminalState.TimedOut, HelperOutcomeV2.FailedKnown),
+        })
+        {
+            using DeterministicFakeSecureStore store = new();
+            using NativeQualificationSecretSource source = new(
+                capture: (_, _) => new([], terminal, complete));
+            OneShotHelperEngine engine = new(store, new FixedTestTimeProvider(), source);
+            HelperPrivateFrameV2 bootstrap = HelperTestFrames.Bootstrap(nonceSeed: (byte)(10 + (int)terminal));
+            HelperPrivateFrameV2 assignment = HelperTestFrames.Assignment();
+            assignment.Assignment.AssignmentId = assignmentId;
+            using MemoryStream request = new();
+            await HelperPrivateProtocolV2.WriteAsync(request, bootstrap, CancellationToken.None);
+            await HelperPrivateProtocolV2.WriteAsync(request, assignment, CancellationToken.None);
+            request.Position = 0;
+            using MemoryStream response = new();
+            await engine.RunAsync(request, response, CancellationToken.None);
+            response.Position = 0;
+            HelperPrivateFrameV2 receipt = await HelperPrivateProtocolV2.ReadAsync(
+                response, 3, CancellationToken.None);
+            Assert.AreEqual(expected, receipt.Receipt.Outcome);
+            Assert.AreEqual(complete, source.EntryEvidence);
+            Assert.AreEqual(0, DeterministicFakeSecureStore.NativeOperationCount);
+            Assert.AreEqual(0, DeterministicFakeSecureStore.EnumerationCount);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    public async Task FailedUiReadinessRetainsLastFactsAndPerformsNoCredentialWrite()
+    {
+        NativeEntryReadinessEvidence failedReadiness = ValidReadiness() with
+        {
+            Foreground = false,
+            EditFocused = false,
+        };
+        NativeEntryCleanupEvidence cleanup = new(
+            InitialBlank: false,
+            Terminal: true,
+            WindowDestroyed: true,
+            BuffersCleared: true,
+            ThreadJoined: true,
+            ClipboardMessagesBlocked: false,
+            Readiness: failedReadiness);
+        using DeterministicFakeSecureStore store = new();
+        using NativeQualificationSecretSource source = new(
+            capture: (_, _) => new([], NativeEntryTerminalState.Failed, cleanup));
+        OneShotHelperEngine engine = new(store, new FixedTestTimeProvider(), source);
+        HelperPrivateFrameV2 bootstrap = HelperTestFrames.Bootstrap(nonceSeed: 27);
+        HelperPrivateFrameV2 assignment = HelperTestFrames.Assignment();
+        assignment.Assignment.AssignmentId = "wp4-v2/interactive-entry-submit/submit";
+        using MemoryStream request = new();
+        await HelperPrivateProtocolV2.WriteAsync(request, bootstrap, CancellationToken.None);
+        await HelperPrivateProtocolV2.WriteAsync(request, assignment, CancellationToken.None);
+        request.Position = 0;
+        using MemoryStream response = new();
+        await engine.RunAsync(request, response, CancellationToken.None);
+        response.Position = 0;
+        HelperPrivateFrameV2 receipt = await HelperPrivateProtocolV2.ReadAsync(response, 3, CancellationToken.None);
+        Assert.AreEqual(HelperOutcomeV2.FailedKnown, receipt.Receipt.Outcome);
+        Assert.AreEqual(failedReadiness, source.EntryEvidence?.Readiness);
+        Assert.AreEqual(0, DeterministicFakeSecureStore.NativeOperationCount);
+        Assert.AreEqual(0, DeterministicFakeSecureStore.EnumerationCount);
+    }
+
+    private static HelperAssignmentV2 QualificationAssignment(string assignmentId, HelperAssignmentKindV2 kind) =>
+        new() { AssignmentId = assignmentId, AssignmentKind = kind };
+
+    private static NativeEntryReadinessEvidence ValidReadiness() => new(
+        OwnerProcessId: Environment.ProcessId, OwnerThreadId: 1,
+        OwnerSessionId: Process.GetCurrentProcess().SessionId,
+        DesktopNameSha256: new string('a', 64), InteractiveInputDesktop: true,
+        DesktopObjectMatches: true, OwnerProcessMatches: true, OwnerThreadMatches: true,
+        TopLevelWindow: true, WindowVisible: true, WindowEnabled: true,
+        WindowNotCloaked: true, WindowIntersectsActiveMonitor: true,
+        InstructionOwned: true, InstructionVisible: true,
+        InstructionMode: "submit",
+        InstructionFingerprintSha256: Convert.ToHexStringLower(SHA256.HashData(
+            Encoding.UTF8.GetBytes(NativeMaskedEntryDialog.SubmitInstruction))),
+        EditOwned: true, EditVisible: true, EditEnabled: true, EditMasked: true,
+        SubmitOwned: true, SubmitVisible: true, SubmitEnabled: true,
+        SubmitFocused: false,
+        CancelOwned: true, CancelVisible: true, CancelEnabled: true,
+        CancelFocused: false,
+        Foreground: true, EditFocused: true,
+        ReadinessDeadlineMilliseconds: 3_000, ReadinessElapsedMilliseconds: 10);
+
+    private sealed class FixedTestTimeProvider : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() =>
+            new(2026, 8, 11, 12, 0, 1, TimeSpan.Zero);
     }
 }

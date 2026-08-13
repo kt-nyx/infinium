@@ -320,6 +320,75 @@ public sealed class CredentialNativeQualificationSupervisorTests
         StringAssert.Contains(canonical, "\"assignment_kind\": \"ProviderDispatch\"");
     }
 
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task PrimaryFailureRetainsTypedCauseAndSuccessfulCleanupEvidence()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-PrimaryFailure-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        Dictionary<string, (string ProfileId, string GenerationId)> targets = new(StringComparer.Ordinal)
+        {
+            ["interactive-primary"] = ("wp4-interactive-primary", "g001"),
+            ["interactive-cancel"] = ("wp4-interactive-cancel", "g001"),
+            ["size-valid"] = ("wp4-size-valid", "g001"),
+            ["size-oversize"] = ("wp4-size-oversize", "g001"),
+            ["unavailable-store"] = ("wp4-unavailable", "g001"),
+            ["replacement-old"] = ("wp4-replacement", "g001"),
+            ["replacement-new"] = ("wp4-replacement", "g002"),
+            ["revoke-delete"] = ("wp4-revoke-delete", "g001"),
+            ["crash-restart"] = ("wp4-crash-restart", "g001"),
+            ["backup-old"] = ("wp4-backup", "g001"),
+            ["backup-new"] = ("wp4-backup", "g002"),
+            ["fake-dispatch"] = ("wp4-fake-dispatch", "g001"),
+        };
+
+        CredentialNativePrimaryFailureException failure =
+            await Assert.ThrowsExactlyAsync<CredentialNativePrimaryFailureException>(() =>
+                CredentialNativeQualificationRunner.RunWithLauncherForTestAsync(
+                    root,
+                    Launcher(Path.Combine(root, "fake-store")),
+                    targets,
+                    BaseTime,
+                    new InvalidDataException("synthetic typed primary failure")));
+
+        Assert.AreEqual(nameof(InvalidDataException), failure.FailureType);
+        Assert.IsFalse(failure.Evidence.CleanupAmbiguous);
+        Assert.IsFalse(failure.Evidence.NamespaceBlocked);
+        CredentialNativeQualificationPhaseEvidence cleanup = failure.Evidence.Scenarios
+            .Single(item => item.ScenarioId == "interactive-entry-submit")
+            .Phases.Single(item => item.PhaseId == "cleanup");
+        Assert.AreEqual(HelperOutcomeV2.Completed, cleanup.Outcome);
+        Assert.AreEqual(0, DeterministicFakeSecureStore.NativeOperationCount);
+    }
+
+    [TestMethod]
+    public void ManualFailureClassificationNeverMislabelsPostWriteOrCompletedEvidenceAsPrewrite()
+    {
+        Assert.AreEqual("failed-prewrite-ui-readiness",
+            CredentialNativeQualificationSupervisor.ClassifyManualPhaseFailure(
+                HelperOutcomeV2.FailedKnown, initialBlank: false,
+                readinessPresent: true, credWriteCount: 0, nativeCallTotal: 0));
+        foreach ((HelperOutcomeV2 outcome, bool? initialBlank, bool readiness, int writes, int total) in new[]
+        {
+            (HelperOutcomeV2.Completed, (bool?)false, true, 0, 0),
+            (HelperOutcomeV2.FailedKnown, (bool?)true, true, 0, 0),
+            (HelperOutcomeV2.FailedKnown, (bool?)false, false, 0, 0),
+            (HelperOutcomeV2.FailedKnown, (bool?)false, true, 1, 1),
+            (HelperOutcomeV2.FailedKnown, (bool?)false, true, 0, 1),
+        })
+        {
+            Assert.AreEqual("failed-manual-phase-evidence-validation",
+                CredentialNativeQualificationSupervisor.ClassifyManualPhaseFailure(
+                    outcome, initialBlank, readiness, writes, total));
+        }
+
+        Assert.IsTrue(CredentialNativeQualificationSupervisor.IsActionSourceBindingValid("submit", "submitbutton"));
+        Assert.IsTrue(CredentialNativeQualificationSupervisor.IsActionSourceBindingValid("cancel", "cancelbutton"));
+        Assert.IsTrue(CredentialNativeQualificationSupervisor.IsActionSourceBindingValid("cancel", "editkey"));
+        Assert.IsFalse(CredentialNativeQualificationSupervisor.IsActionSourceBindingValid("cancel", "submitbutton"));
+        Assert.IsFalse(CredentialNativeQualificationSupervisor.IsActionSourceBindingValid("submit", "cancelbutton"));
+    }
+
     private static OneShotCredentialHelperLauncher Launcher(string fakeStoreRoot)
     {
         string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");

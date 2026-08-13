@@ -4881,3 +4881,39 @@ exists. Reconstructed receipt SHA-256 is
 explicitly labeled `post-effect-reconstruction-from-immutable-evidence-no-native-retry`
 with disposition `cleanup-confirmed-absent-consumed-never-reuse`. Native calls
 remain 12 and later native calls remain zero.
+
+## WP4 original qualification failure diagnosis and bounded non-native correction — 2026-08-13
+
+The owner reports that no masked-entry dialog was visible during the failed
+`cedc4c47` qualification. This supersedes the later narrative inference that
+an operator interaction occurred; the retained artifacts do not identify the
+inner primary exception and do not support classifying the result as operator
+cancel. The only retained primary-failure wrapper is compatible with multiple
+concrete defects that existed together: the original top-level pseudo-window
+had no instructions or explicit Submit/Cancel controls and lacked interactive
+desktop/foreground/actionability proof; global Return/Escape polling could
+accept keystrokes from another foreground application; and the 30-second
+containment descendant could naturally exit during the 5-minute entry window,
+after which PID reopen and the `active >= 1` assertion failed after the helper
+had already completed. The retained cleanup receipt proves only that exact
+cleanup completed; it cannot disambiguate which primary defect fired.
+
+The bounded non-native correction registers an owned top-level window class,
+adds distinct non-secret Submit/Cancel instructions and controls, accepts keys
+only through the owned edit control's message queue while foreground, and
+requires a short finite pre-entry readiness oracle before secret acceptance.
+That oracle binds the helper process/thread/session, exact input-desktop object,
+desktop-name fingerprint, foreground/focus, visible/enabled/non-cloaked
+on-monitor top-level window, exact instruction-mode fingerprint, masked edit,
+and actionable Submit/Cancel controls. Failed readiness retains the last
+non-secret measurement in the failed-known helper receipt before any write.
+
+Containment now uses Job Object accounting without reopening a reported PID.
+It requires historical membership of helper plus descendant, accepts a
+naturally completed probe only with zero active processes, and otherwise
+terminates the job and boundedly proves zero active processes. Primary failures
+after certain cleanup retain their typed cause, cleanup phase receipts, counts,
+and failed manual-phase readiness evidence rather than collapsing all detail
+behind a generic wrapper. All correction verification remains fake-store and
+non-native; no Credential Manager or provider operation is authorized by this
+record entry.

@@ -105,6 +105,23 @@ internal static class CredentialNativeQualificationRunner
             });
             throw;
         }
+        catch (CredentialNativePrimaryFailureException failure)
+        {
+            WriteJson(Path.Combine(outputRoot, "credential-native-primary-failure.v2.json"), new
+            {
+                schema = "infinium.m1-s6.wp4.credential-native-primary-failure/v2",
+                status = "failed-primary-cleanup-confirmed",
+                manifest_id = manifestId,
+                manifest_sha256 = manifestSha256,
+                failure_type = failure.FailureType,
+                cleanup_confirmed = true,
+                namespace_blocked = false,
+                later_native_calls = 0,
+                evidence = failure.Evidence,
+                disposition = "terminal-fresh-owner-authority-required",
+            });
+            throw;
+        }
         WriteOutputs(outputRoot, manifestId, manifestSha256, evidence, state);
         return 0;
     }
@@ -114,13 +131,15 @@ internal static class CredentialNativeQualificationRunner
         OneShotCredentialHelperLauncher launcher,
         IReadOnlyDictionary<string, (string ProfileId, string GenerationId)> targetIdentities,
         DateTimeOffset now,
+        Exception? primaryFailureForTest = null,
         CancellationToken cancellationToken = default)
     {
         Dictionary<string, Target> targets = targetIdentities.ToDictionary(
             item => item.Key,
             item => new Target(item.Key, item.Value.ProfileId, item.Value.GenerationId, new('0', 64)),
             StringComparer.Ordinal);
-        RunnerState state = new(root, launcher, targets, new Dictionary<string, string>(), now);
+        RunnerState state = new(root, launcher, targets, new Dictionary<string, string>(), now,
+            primaryFailureForTest);
         return await state.RunAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -327,7 +346,8 @@ internal static class CredentialNativeQualificationRunner
         OneShotCredentialHelperLauncher launcher,
         Dictionary<string, Target> targets,
         IReadOnlyDictionary<string, string> fingerprints,
-        DateTimeOffset baseTime)
+        DateTimeOffset baseTime,
+        Exception? injectedPrimaryFailure = null)
     {
         private readonly string root = Path.GetFullPath(root);
         private readonly OneShotCredentialHelperLauncher launcher = launcher;
@@ -336,6 +356,7 @@ internal static class CredentialNativeQualificationRunner
         private DateTimeOffset timeline = baseTime;
         private int nonce;
         private int clock;
+        private Exception? injectedPrimaryFailure = injectedPrimaryFailure;
         private readonly List<(string Scenario, ScenarioContext Context, Target CleanupTarget)> cleanup = [];
 
         internal IReadOnlyDictionary<string, Target> Targets => targets;
@@ -430,8 +451,9 @@ internal static class CredentialNativeQualificationRunner
             }
             if (primaryFailure is not null)
             {
-                throw new InvalidOperationException(
-                    "The native qualification primary phase failed after bounded exact-target cleanup.",
+                throw new CredentialNativePrimaryFailureException(
+                    primaryFailure.GetType().Name,
+                    supervisor.CapturePrimaryFailureAfterCertainCleanup(),
                     primaryFailure);
             }
             return supervisor.CompleteSuccessfulRun();
@@ -465,6 +487,12 @@ internal static class CredentialNativeQualificationRunner
             SeedProfile(context.Store, target);
             cleanup.Add((scenario, context, target));
             supervisor.RebindCoordinator(context.Coordinator);
+            if (injectedPrimaryFailure is not null)
+            {
+                Exception failure = injectedPrimaryFailure;
+                injectedPrimaryFailure = null;
+                throw failure;
+            }
             await supervisor.ExecuteCredentialTransitionPhaseAsync(
                 scenario, phase, Attempt(scenario, phase), Bootstrap(target, target, NextNonce()),
                 Assignment(scenario, phase, target, target, 1), NextTime(), token).ConfigureAwait(false);

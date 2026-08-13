@@ -1273,14 +1273,33 @@ internal static class NativeMaskedEntryDialog
     private const int GwlStyle = -16;
     private const int GwlWndProc = -4;
     private const uint WmClose = 0x0010;
+    private const uint WmCommand = 0x0111;
+    private const uint WmKeyDown = 0x0100;
     private const uint WmCut = 0x0300;
     private const uint WmCopy = 0x0301;
     private const uint WmPaste = 0x0302;
     private const uint PmRemove = 0x0001;
     private const int VkReturn = 0x0D;
     private const int VkEscape = 0x1B;
+    private const int SubmitButtonId = 1001;
+    private const int CancelButtonId = 1002;
+    internal const string SubmitInstruction =
+        "Enter a disposable test value, then click Submit. Never use a real credential.";
+    internal const string CancelInstruction = "Leave the field blank, then click Cancel.";
+    private const int SwShow = 5;
+    private const uint SwpNoMove = 0x0002;
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpShowWindow = 0x0040;
+    private const uint DesktopReadObjects = 0x0001;
+    private const uint DesktopSwitchDesktop = 0x0100;
+    private const int UoiName = 2;
+    private const uint DwmwaCloaked = 14;
+    private static readonly nint HwndTopmost = new(-1);
+    private static readonly nint HwndNotTopmost = new(-2);
 
-    internal static NativeEntryCapture Capture(TimeSpan deadline)
+    internal static NativeEntryCapture Capture(
+        TimeSpan deadline,
+        NativeEntryInteraction interaction = NativeEntryInteraction.Submit)
     {
         if (!OperatingSystem.IsWindows())
         {
@@ -1297,25 +1316,64 @@ internal static class NativeMaskedEntryDialog
             char[] captured = new char[WindowsCredentialManagerStore.MaximumBlobBytes + 1];
             nint window = 0;
             nint edit = 0;
+            nint instruction = 0;
+            nint submit = 0;
+            nint cancel = 0;
+            nint inputDesktop = 0;
+            string? windowClass = null;
+            ushort windowClassAtom = 0;
             NativeWindowProcedure? editProcedure = null;
+            NativeWindowProcedure? windowProcedure = null;
             nint originalEditProcedure = 0;
             try
             {
                 nativeThreadId = GetCurrentThreadId();
-                window = CreateWindowExW(0, "STATIC", "Infinium disposable credential qualification",
-                    WsOverlapped | WsCaption | WsSysMenu | WsVisible, 100, 100, 520, 130,
-                    0, 0, 0, 0);
+                nint module = GetModuleHandleW(null);
+                RequireMatchingWindowClassInstance(module, module);
+                windowClass = $"InfiniumWp4Entry-{Environment.ProcessId}-{nativeThreadId}";
+                windowProcedure = static (handle, message, wParam, lParam) =>
+                    DefWindowProcW(handle, message, wParam, lParam);
+                WindowClassEx windowClassDefinition = new()
+                {
+                    Size = checked((uint)Marshal.SizeOf<WindowClassEx>()),
+                    Instance = module,
+                    WindowProcedure = Marshal.GetFunctionPointerForDelegate(windowProcedure),
+                    ClassName = windowClass,
+                };
+                windowClassAtom = RegisterClassExW(ref windowClassDefinition);
+                if (windowClassAtom == 0)
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error(), "Native entry window class registration failed.");
+                }
+                string title = interaction == NativeEntryInteraction.Submit
+                    ? "Infinium disposable credential - submit"
+                    : "Infinium disposable credential - cancel";
+                window = CreateWindowExW(0, windowClass, title,
+                    WsOverlapped | WsCaption | WsSysMenu | WsVisible, 100, 100, 540, 200,
+                    0, 0, module, 0);
                 if (window == 0) { throw new Win32Exception(Marshal.GetLastWin32Error(), "Native entry window creation failed."); }
                 Interlocked.Exchange(ref activeWindow, window);
+                instruction = CreateWindowExW(0, "STATIC",
+                    interaction == NativeEntryInteraction.Submit
+                        ? SubmitInstruction
+                        : CancelInstruction,
+                    WsChild | WsVisible, 20, 15, 490, 20, window, 0, 0, 0);
                 edit = CreateWindowExW(0, "EDIT", null,
-                    WsChild | WsVisible | WsBorder | EsPassword, 20, 30, 470, 28,
+                    WsChild | WsVisible | WsBorder | EsPassword, 20, 45, 490, 28,
                     window, 0, 0, 0);
                 if (edit == 0) { throw new Win32Exception(Marshal.GetLastWin32Error(), "Native masked entry control creation failed."); }
+                submit = CreateWindowExW(0, "BUTTON", "Submit", WsChild | WsVisible,
+                    305, 90, 95, 30, window, SubmitButtonId, 0, 0);
+                cancel = CreateWindowExW(0, "BUTTON", "Cancel", WsChild | WsVisible,
+                    415, 90, 95, 30, window, CancelButtonId, 0, 0);
+                if (instruction == 0 || submit == 0 || cancel == 0)
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error(), "Native entry instruction/button creation failed.");
+                }
                 if ((GetWindowLongPtrW(edit, GwlStyle).ToInt64() & EsPassword) == 0)
                 {
                     throw new InvalidOperationException("Native credential entry control is not masked.");
                 }
-                state.Activate(GetWindowTextLengthW(edit));
                 editProcedure = (handle, message, wParam, lParam) =>
                 {
                     if (message is WmCut or WmCopy or WmPaste)
@@ -1333,13 +1391,100 @@ internal static class NativeMaskedEntryDialog
                 {
                     throw new Win32Exception(Marshal.GetLastWin32Error(), "Native entry clipboard boundary could not be installed.");
                 }
+                _ = ShowWindow(window, SwShow);
+                _ = UpdateWindow(window);
+                inputDesktop = OpenInputDesktop(0, false, DesktopReadObjects | DesktopSwitchDesktop);
+                if (inputDesktop == 0)
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error(), "Native entry cannot open the interactive input desktop.");
+                }
+                nint threadDesktop = GetThreadDesktop(nativeThreadId);
+                string inputDesktopName = DesktopName(inputDesktop);
+                string threadDesktopName = DesktopName(threadDesktop);
+                Stopwatch readinessTimer = Stopwatch.StartNew();
+                NativeEntryReadinessEvidence? readiness = null;
+                NativeEntryReadinessEvidence? lastReadiness = null;
+                while (readinessTimer.Elapsed < TimeSpan.FromSeconds(3))
+                {
+                    _ = SetWindowPos(window, HwndTopmost, 0, 0, 0, 0,
+                        SwpNoMove | SwpNoSize | SwpShowWindow);
+                    _ = SetWindowPos(window, HwndNotTopmost, 0, 0, 0, 0,
+                        SwpNoMove | SwpNoSize | SwpShowWindow);
+                    _ = BringWindowToTop(window);
+                    _ = SetForegroundWindow(window);
+                    _ = SetFocus(edit);
+                    readiness = MeasureReadiness(
+                        window,
+                        instruction,
+                        edit,
+                        submit,
+                        cancel,
+                        nativeThreadId,
+                        interaction,
+                        inputDesktop,
+                        threadDesktop,
+                        inputDesktopName,
+                        threadDesktopName,
+                        readinessTimer.Elapsed);
+                    lastReadiness = readiness;
+                    try
+                    {
+                        NativeEntryReadinessOracle.Validate(readiness);
+                        break;
+                    }
+                    catch (InvalidDataException)
+                    {
+                        readiness = null;
+                        Thread.Sleep(25);
+                    }
+                }
+                if (readiness is null)
+                {
+                    state.RecordFailedReadiness(lastReadiness
+                        ?? throw new InvalidDataException("Native entry readiness could not be measured."));
+                    throw new InvalidDataException(
+                        "Native credential entry could not establish visible interactive readiness before its finite deadline.");
+                }
+                state.RecordReadiness(readiness);
+                state.Activate(GetWindowTextLengthW(edit));
                 state.RecordClipboardMessageBlocked();
-                _ = SetFocus(edit);
                 Stopwatch timer = Stopwatch.StartNew();
                 while (timer.Elapsed < deadline)
                 {
+                    NativeEntryInteraction? requestedAction = null;
+                    NativeEntryActionSource? actionSource = null;
                     while (PeekMessageW(out NativeMessage message, 0, 0, 0, PmRemove))
                     {
+                        if (IsOwnedButtonCommand(
+                            message.Message, message.Window, message.WParam, message.LParam,
+                            window, submit, cancel, out NativeEntryInteraction buttonAction))
+                        {
+                            if (requestedAction is null)
+                            {
+                                RecordFirstTerminalAction(
+                                    ref requestedAction, ref actionSource, buttonAction,
+                                    buttonAction == NativeEntryInteraction.Submit
+                                    ? NativeEntryActionSource.SubmitButton
+                                    : NativeEntryActionSource.CancelButton);
+                            }
+                        }
+                        else if (message.Message == WmKeyDown && message.Window == edit
+                            && GetForegroundWindow() == window && GetFocus() == edit)
+                        {
+                            if (requestedAction is null && message.WParam is VkReturn or VkEscape)
+                            {
+                                RecordFirstTerminalAction(
+                                    ref requestedAction, ref actionSource,
+                                    message.WParam == VkReturn
+                                        ? NativeEntryInteraction.Submit
+                                        : NativeEntryInteraction.Cancel,
+                                    NativeEntryActionSource.EditKey);
+                            }
+                        }
+                        if (ShouldStopMessageDrain(requestedAction))
+                        {
+                            break;
+                        }
                         _ = TranslateMessage(in message);
                         _ = DispatchMessageW(in message);
                     }
@@ -1349,14 +1494,26 @@ internal static class NativeMaskedEntryDialog
                         state.Cancel();
                         break;
                     }
-                    if ((GetAsyncKeyState(VkEscape) & 1) != 0 && GetFocus() == edit)
+                    if (requestedAction == NativeEntryInteraction.Cancel)
                     {
+                        NativeEntryReadinessEvidence actionReadiness = MeasureReadiness(
+                            window, instruction, edit, submit, cancel, nativeThreadId, interaction,
+                            inputDesktop, threadDesktop, inputDesktopName, threadDesktopName,
+                            TimeSpan.Zero);
+                        state.RecordActionReadiness(actionReadiness, NativeEntryInteraction.Cancel, actionSource
+                            ?? throw new InvalidDataException("Native entry action source is absent."));
                         terminal = NativeEntryTerminalState.Cancelled;
                         state.Cancel();
                         break;
                     }
-                    if ((GetAsyncKeyState(VkReturn) & 1) != 0 && GetFocus() == edit)
+                    if (requestedAction == NativeEntryInteraction.Submit)
                     {
+                        NativeEntryReadinessEvidence actionReadiness = MeasureReadiness(
+                            window, instruction, edit, submit, cancel, nativeThreadId, interaction,
+                            inputDesktop, threadDesktop, inputDesktopName, threadDesktopName,
+                            TimeSpan.Zero);
+                        state.RecordActionReadiness(actionReadiness, NativeEntryInteraction.Submit, actionSource
+                            ?? throw new InvalidDataException("Native entry action source is absent."));
                         int length = GetWindowTextW(edit, captured, captured.Length);
                         if (captured.AsSpan(0, length).ContainsAnyExceptInRange((char)0x20, (char)0x7e))
                         {
@@ -1384,6 +1541,14 @@ internal static class NativeMaskedEntryDialog
             {
                 failure = exception;
                 terminal = NativeEntryTerminalState.Failed;
+                state.RecordSetupFailureIfNeeded(NativeEntryReadinessEvidence.SetupFailure(
+                    nativeThreadId,
+                    interaction,
+                    window != 0,
+                    instruction != 0,
+                    edit != 0,
+                    submit != 0,
+                    cancel != 0));
                 state.FailFromAnyState();
             }
             finally
@@ -1395,13 +1560,22 @@ internal static class NativeMaskedEntryDialog
                 {
                     _ = SetWindowLongPtrW(edit, GwlWndProc, originalEditProcedure);
                 }
+                bool instructionDestroyed = instruction == 0 || DestroyWindow(instruction) || !IsWindow(instruction);
+                bool submitDestroyed = submit == 0 || DestroyWindow(submit) || !IsWindow(submit);
+                bool cancelDestroyed = cancel == 0 || DestroyWindow(cancel) || !IsWindow(cancel);
                 bool editDestroyed = edit == 0 || DestroyWindow(edit) || !IsWindow(edit);
                 bool windowDestroyed = window == 0 || DestroyWindow(window) || !IsWindow(window);
+                if (inputDesktop != 0) { _ = CloseDesktop(inputDesktop); }
+                if (windowClassAtom != 0 && windowClass is not null)
+                {
+                    _ = UnregisterClassW(windowClass, GetModuleHandleW(null));
+                }
                 Interlocked.Exchange(ref activeWindow, 0);
                 state.CompleteUiThreadCleanup(
-                    editDestroyed && windowDestroyed,
+                    instructionDestroyed && submitDestroyed && cancelDestroyed && editDestroyed && windowDestroyed,
                     buffersWereCleared: textCleared);
                 GC.KeepAlive(editProcedure);
+                GC.KeepAlive(windowProcedure);
             }
         });
         thread.SetApartmentState(ApartmentState.STA);
@@ -1418,14 +1592,168 @@ internal static class NativeMaskedEntryDialog
             }
         }
         state.RecordThreadJoined();
-        if (failure is not null) { throw failure; }
         return new(result, terminal, state.Evidence);
+    }
+
+    internal static void RequireMatchingWindowClassInstance(
+        nint registeredInstance,
+        nint createInstance)
+    {
+        if (registeredInstance == 0 || createInstance != registeredInstance)
+        {
+            throw new InvalidDataException(
+                "Native entry window creation must use the registered private-class module instance.");
+        }
+    }
+
+    internal static bool IsOwnedButtonCommand(
+        uint message,
+        nint messageWindow,
+        nuint wParam,
+        nint lParam,
+        nint ownerWindow,
+        nint submitButton,
+        nint cancelButton,
+        out NativeEntryInteraction interaction)
+    {
+        interaction = default;
+        if (message != WmCommand || messageWindow != ownerWindow
+            || unchecked((int)((wParam >> 16) & 0xffff)) != 0)
+        {
+            return false;
+        }
+        int controlId = unchecked((int)(wParam & 0xffff));
+        if (controlId == SubmitButtonId && lParam == submitButton)
+        {
+            interaction = NativeEntryInteraction.Submit;
+            return true;
+        }
+        if (controlId == CancelButtonId && lParam == cancelButton)
+        {
+            interaction = NativeEntryInteraction.Cancel;
+            return true;
+        }
+        return false;
+    }
+
+    internal static void RecordFirstTerminalAction(
+        ref NativeEntryInteraction? selectedAction,
+        ref NativeEntryActionSource? selectedSource,
+        NativeEntryInteraction action,
+        NativeEntryActionSource source)
+    {
+        if (selectedAction is null)
+        {
+            selectedAction = action;
+            selectedSource = source;
+        }
+    }
+
+    internal static bool ShouldStopMessageDrain(NativeEntryInteraction? selectedAction) =>
+        selectedAction is not null;
+
+    private static NativeEntryReadinessEvidence MeasureReadiness(
+        nint window,
+        nint instruction,
+        nint edit,
+        nint submit,
+        nint cancel,
+        uint ownerThreadId,
+        NativeEntryInteraction interaction,
+        nint inputDesktop,
+        nint threadDesktop,
+        string inputDesktopName,
+        string threadDesktopName,
+        TimeSpan elapsed)
+    {
+        uint measuredThreadId = GetWindowThreadProcessId(window, out uint ownerProcessId);
+        int cloaked = 1;
+        int cloakedSize = sizeof(int);
+        int dwmResult = DwmGetWindowAttribute(window, DwmwaCloaked, out cloaked, cloakedSize);
+        string desktopFingerprint = Convert.ToHexStringLower(SHA256.HashData(
+            Encoding.UTF8.GetBytes(Process.GetCurrentProcess().SessionId + ":" + threadDesktopName)));
+        return new(
+            checked((int)ownerProcessId),
+            measuredThreadId,
+            Process.GetCurrentProcess().SessionId,
+            desktopFingerprint,
+            string.Equals(inputDesktopName, threadDesktopName, StringComparison.Ordinal),
+            CompareObjectHandles(inputDesktop, threadDesktop),
+            ownerProcessId == Environment.ProcessId,
+            measuredThreadId == ownerThreadId,
+            GetParent(window) == 0,
+            IsWindowVisible(window),
+            IsWindowEnabled(window),
+            dwmResult == 0 && cloaked == 0,
+            MonitorFromWindow(window, 0) != 0 && GetWindowRect(window, out NativeRect rect)
+                && rect.Right > rect.Left && rect.Bottom > rect.Top && !IsIconic(window),
+            GetParent(instruction) == window,
+            IsWindowVisible(instruction),
+            interaction.ToString().ToLowerInvariant(),
+            Convert.ToHexStringLower(SHA256.HashData(
+                Encoding.UTF8.GetBytes(GetWindowText(instruction)))),
+            GetParent(edit) == window,
+            IsWindowVisible(edit),
+            IsWindowEnabled(edit),
+            (GetWindowLongPtrW(edit, GwlStyle).ToInt64() & EsPassword) != 0,
+            GetParent(submit) == window,
+            IsWindowVisible(submit),
+            IsWindowEnabled(submit),
+            GetFocus() == submit,
+            GetParent(cancel) == window,
+            IsWindowVisible(cancel),
+            IsWindowEnabled(cancel),
+            GetFocus() == cancel,
+            GetForegroundWindow() == window,
+            GetFocus() == edit,
+            3_000,
+            checked((long)elapsed.TotalMilliseconds));
+    }
+
+    private static string GetWindowText(nint window)
+    {
+        int length = GetWindowTextLengthW(window);
+        char[] value = new char[checked(length + 1)];
+        int copied = GetWindowTextW(window, value, value.Length);
+        return new string(value, 0, copied);
+    }
+
+    private static string DesktopName(nint desktop)
+    {
+        _ = GetUserObjectInformationW(desktop, UoiName, 0, 0, out uint required);
+        if (required < 2 || required > 1024)
+        {
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "Interactive desktop identity is unavailable.");
+        }
+        nint value = Marshal.AllocHGlobal(checked((int)required));
+        try
+        {
+            if (!GetUserObjectInformationW(desktop, UoiName, value, required, out _))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "Interactive desktop identity could not be measured.");
+            }
+            return Marshal.PtrToStringUni(value)
+                ?? throw new InvalidDataException("Interactive desktop identity is empty.");
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(value);
+        }
     }
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern nint CreateWindowExW(
         uint exStyle, string className, string? windowName, uint style,
         int x, int y, int width, int height, nint parent, nint menu, nint instance, nint parameter);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    private static extern nint GetModuleHandleW(string? moduleName);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern ushort RegisterClassExW(ref WindowClassEx windowClass);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool UnregisterClassW(string className, nint instance);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern nint DefWindowProcW(nint window, uint message, nuint wParam, nint lParam);
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern int GetWindowTextW(nint window, [Out] char[] text, int maximum);
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -1453,7 +1781,57 @@ internal static class NativeMaskedEntryDialog
     [DllImport("user32.dll")]
     private static extern nint GetFocus();
     [DllImport("user32.dll")]
-    private static extern short GetAsyncKeyState(int virtualKey);
+    private static extern nint GetForegroundWindow();
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetForegroundWindow(nint window);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool BringWindowToTop(nint window);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(
+        nint window, nint insertAfter, int x, int y, int width, int height, uint flags);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ShowWindow(nint window, int command);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool UpdateWindow(nint window);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindowVisible(nint window);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindowEnabled(nint window);
+    [DllImport("user32.dll")]
+    private static extern nint GetParent(nint window);
+    [DllImport("user32.dll")]
+    private static extern nint MonitorFromWindow(nint window, uint flags);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetWindowRect(nint window, out NativeRect rect);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsIconic(nint window);
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(nint window, out uint processId);
+    [DllImport("user32.dll")]
+    private static extern nint GetThreadDesktop(uint threadId);
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern nint OpenInputDesktop(uint flags, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint desiredAccess);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CloseDesktop(nint desktop);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetUserObjectInformationW(
+        nint objectHandle, int index, nint information, uint length, out uint needed);
+    [DllImport("kernelbase.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CompareObjectHandles(nint first, nint second);
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmGetWindowAttribute(nint window, uint attribute, out int value, int size);
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool PeekMessageW(out NativeMessage message, nint window, uint minimum, uint maximum, uint remove);
@@ -1482,11 +1860,39 @@ internal static class NativeMaskedEntryDialog
         internal uint Private;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeRect
+    {
+        internal int Left;
+        internal int Top;
+        internal int Right;
+        internal int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct WindowClassEx
+    {
+        internal uint Size;
+        internal uint Style;
+        internal nint WindowProcedure;
+        internal int ClassExtra;
+        internal int WindowExtra;
+        internal nint Instance;
+        internal nint Icon;
+        internal nint Cursor;
+        internal nint Background;
+        internal string? MenuName;
+        internal string ClassName;
+        internal nint SmallIcon;
+    }
+
     private delegate nint NativeWindowProcedure(
         nint window, uint message, nuint wParam, nint lParam);
 }
 
 internal enum NativeEntryTerminalState { Submitted, Cancelled, TimedOut, Failed }
+internal enum NativeEntryInteraction { Submit, Cancel }
+internal enum NativeEntryActionSource { EditKey, SubmitButton, CancelButton }
 
 internal sealed class NativeEntryCapture(
     byte[] secret,
@@ -1520,15 +1926,73 @@ internal sealed class NativeEntryStateMachine
     private bool buffersCleared;
     private bool threadJoined;
     private bool clipboardMessagesBlocked;
+    private NativeEntryReadinessEvidence? readiness;
+    private NativeEntryReadinessEvidence? actionReadiness;
+    private NativeEntryActionSource? actionSource;
+    private NativeEntryInteraction? action;
     public bool InitialBlank { get; private set; }
 
     public NativeEntryCleanupEvidence Evidence => new(
         InitialBlank, terminal, windowDestroyed, buffersCleared, threadJoined,
-        clipboardMessagesBlocked);
+        clipboardMessagesBlocked, readiness, actionReadiness,
+        actionSource?.ToString().ToLowerInvariant(), action?.ToString().ToLowerInvariant());
+
+    public void RecordReadiness(NativeEntryReadinessEvidence value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        if (active || terminal || readiness is not null)
+        {
+            throw new InvalidOperationException("Native entry readiness must be recorded exactly once before activation.");
+        }
+        NativeEntryReadinessOracle.Validate(value);
+        readiness = value;
+    }
+
+    public void RecordFailedReadiness(NativeEntryReadinessEvidence value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        if (active || terminal || readiness is not null)
+        {
+            throw new InvalidOperationException("Failed readiness must be retained once before entry activation.");
+        }
+        readiness = value;
+    }
+
+    public void RecordActionReadiness(
+        NativeEntryReadinessEvidence value,
+        NativeEntryInteraction interaction,
+        NativeEntryActionSource source)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        if (!active || terminal || readiness is null || actionReadiness is not null)
+        {
+            throw new InvalidOperationException("Native entry action readiness must be recorded exactly once while active.");
+        }
+        NativeEntryReadinessOracle.Validate(
+            value,
+            requireEditFocus: source == NativeEntryActionSource.EditKey);
+        if (source == NativeEntryActionSource.SubmitButton && value.SubmitFocused != true
+            || source == NativeEntryActionSource.CancelButton && value.CancelFocused != true)
+        {
+            throw new InvalidDataException("Native entry button action lacks exact owned-control focus.");
+        }
+        actionReadiness = value;
+        action = interaction;
+        actionSource = source;
+    }
+
+    public void RecordSetupFailureIfNeeded(NativeEntryReadinessEvidence value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        if (!active && !terminal && readiness is null)
+        {
+            readiness = value;
+        }
+    }
 
     public void Activate(int initialCharacterCount)
     {
-        if (active || terminal || initialCharacterCount != 0)
+        if (active || terminal || readiness is null || initialCharacterCount != 0)
         {
             throw new InvalidOperationException("Native entry must activate exactly once with a blank control.");
         }
@@ -1597,12 +2061,21 @@ internal sealed class NativeManualSecretSource(TimeSpan? entryDeadline = null) :
     }
 }
 
-internal sealed class NativeQualificationSecretSource(TimeSpan? entryDeadline = null)
-    : IHelperSecretSource, IDisposable
+internal sealed class NativeQualificationSecretSource : IHelperSecretSource, IDisposable
 {
+    private readonly TimeSpan? entryDeadline;
+    private readonly Func<TimeSpan, NativeEntryInteraction, NativeEntryCapture> capture;
     private byte[] privateOracle = [];
     internal NativeEntryCleanupEvidence? EntryEvidence { get; private set; }
     internal CredentialNativeQualificationPhaseV2? LastPhase { get; private set; }
+
+    internal NativeQualificationSecretSource(
+        TimeSpan? entryDeadline = null,
+        Func<TimeSpan, NativeEntryInteraction, NativeEntryCapture>? capture = null)
+    {
+        this.entryDeadline = entryDeadline;
+        this.capture = capture ?? NativeMaskedEntryDialog.Capture;
+    }
 
     public byte[] Capture(Infinium.Contracts.Protobuf.Helper.V2.HelperAssignmentV2 assignment)
     {
@@ -1613,27 +2086,33 @@ internal sealed class NativeQualificationSecretSource(TimeSpan? entryDeadline = 
         LastPhase = phase;
         if (phase.SecretMode == CredentialNativeQualificationSecretModeV2.Manual)
         {
-            using NativeEntryCapture capture = NativeMaskedEntryDialog.Capture(entryDeadline ?? TimeSpan.FromMinutes(5));
-            EntryEvidence = capture.Evidence;
-            if (capture.TerminalState == NativeEntryTerminalState.Cancelled)
+            NativeEntryCapture entered;
+            try
             {
-                if (!phase.ManualEntryMustCancel)
+                entered = capture(
+                    entryDeadline ?? TimeSpan.FromMinutes(5),
+                    phase.ManualEntryMustCancel ? NativeEntryInteraction.Cancel : NativeEntryInteraction.Submit);
+            }
+            catch (Exception exception) when (exception is InvalidOperationException or TimeoutException)
+            {
+                throw new InvalidDataException("Native qualification entry failed closed before secret use.", exception);
+            }
+            using (entered)
+            {
+                EntryEvidence = entered.Evidence;
+                if (entered.TerminalState == NativeEntryTerminalState.Cancelled)
                 {
-                    throw new InvalidOperationException("This native qualification phase requires a submitted value, not cancel.");
+                    throw new OperationCanceledException("Native credential entry was cancelled.");
                 }
-                throw new OperationCanceledException("Native credential entry was cancelled.");
+                if (phase.ManualEntryMustCancel || entered.TerminalState != NativeEntryTerminalState.Submitted
+                    || entered.Secret.Length == 0)
+                {
+                    throw new InvalidDataException("Native qualification entry did not match its required terminal action.");
+                }
+                byte[] value = entered.DetachSecret();
+                ReplaceOracle(value);
+                return value;
             }
-            if (phase.ManualEntryMustCancel)
-            {
-                throw new InvalidOperationException("This native qualification phase requires operator cancellation.");
-            }
-            if (capture.TerminalState != NativeEntryTerminalState.Submitted || capture.Secret.Length == 0)
-            {
-                throw new InvalidOperationException("Native qualification entry did not produce a valid terminal submission.");
-            }
-            byte[] value = capture.DetachSecret();
-            ReplaceOracle(value);
-            return value;
         }
         int length = phase.SecretMode switch
         {
@@ -1767,7 +2246,145 @@ internal sealed record NativeEntryCleanupEvidence(
     bool WindowDestroyed,
     bool BuffersCleared,
     bool ThreadJoined,
-    bool ClipboardMessagesBlocked);
+    bool ClipboardMessagesBlocked,
+    NativeEntryReadinessEvidence? Readiness = null,
+    NativeEntryReadinessEvidence? ActionReadiness = null,
+    string? ActionSource = null,
+    string? Action = null);
+
+internal sealed record NativeEntryReadinessEvidence(
+    int OwnerProcessId,
+    uint OwnerThreadId,
+    int OwnerSessionId,
+    string DesktopNameSha256,
+    bool InteractiveInputDesktop,
+    bool DesktopObjectMatches,
+    bool OwnerProcessMatches,
+    bool OwnerThreadMatches,
+    bool TopLevelWindow,
+    bool WindowVisible,
+    bool WindowEnabled,
+    bool WindowNotCloaked,
+    bool WindowIntersectsActiveMonitor,
+    bool InstructionOwned,
+    bool InstructionVisible,
+    string InstructionMode,
+    string InstructionFingerprintSha256,
+    bool EditOwned,
+    bool EditVisible,
+    bool EditEnabled,
+    bool EditMasked,
+    bool SubmitOwned,
+    bool SubmitVisible,
+    bool SubmitEnabled,
+    bool SubmitFocused,
+    bool CancelOwned,
+    bool CancelVisible,
+    bool CancelEnabled,
+    bool CancelFocused,
+    bool Foreground,
+    bool EditFocused,
+    long ReadinessDeadlineMilliseconds,
+    long ReadinessElapsedMilliseconds)
+{
+    internal static NativeEntryReadinessEvidence SetupFailure(
+        uint threadId,
+        NativeEntryInteraction interaction,
+        bool windowCreated,
+        bool instructionCreated,
+        bool editCreated,
+        bool submitCreated,
+        bool cancelCreated) => new(
+            Environment.ProcessId,
+            threadId,
+            Process.GetCurrentProcess().SessionId,
+            new string('0', 64),
+            false,
+            false,
+            true,
+            threadId != 0,
+            windowCreated,
+            false,
+            false,
+            false,
+            false,
+            instructionCreated,
+            false,
+            interaction.ToString().ToLowerInvariant(),
+            Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(
+                interaction == NativeEntryInteraction.Submit
+                    ? NativeMaskedEntryDialog.SubmitInstruction
+                    : NativeMaskedEntryDialog.CancelInstruction))),
+            editCreated,
+            false,
+            false,
+            false,
+            submitCreated,
+            false,
+            false,
+            false,
+            cancelCreated,
+            false,
+            false,
+            false,
+            false,
+            false,
+            3_000,
+            0);
+}
+
+internal static class NativeEntryReadinessOracle
+{
+    internal static void Validate(
+        NativeEntryReadinessEvidence evidence,
+        bool requireEditFocus = true)
+    {
+        ArgumentNullException.ThrowIfNull(evidence);
+        if (evidence.OwnerProcessId != Environment.ProcessId
+            || evidence.OwnerThreadId == 0
+            || evidence.OwnerSessionId != Process.GetCurrentProcess().SessionId
+            || evidence.DesktopNameSha256.Length != 64
+            || !evidence.DesktopNameSha256.All(char.IsAsciiHexDigit)
+            || evidence.ReadinessDeadlineMilliseconds is < 1 or > 10_000
+            || evidence.ReadinessElapsedMilliseconds < 0
+            || evidence.ReadinessElapsedMilliseconds > evidence.ReadinessDeadlineMilliseconds
+            || !evidence.InteractiveInputDesktop
+            || !evidence.DesktopObjectMatches
+            || !evidence.OwnerProcessMatches
+            || !evidence.OwnerThreadMatches
+            || !evidence.TopLevelWindow
+            || !evidence.WindowVisible
+            || !evidence.WindowEnabled
+            || !evidence.WindowNotCloaked
+            || !evidence.WindowIntersectsActiveMonitor
+            || !evidence.InstructionOwned
+            || !evidence.InstructionVisible
+            || evidence.InstructionMode is not ("submit" or "cancel")
+            || !string.Equals(
+                evidence.InstructionFingerprintSha256,
+                Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(
+                    evidence.InstructionMode == "submit"
+                        ? NativeMaskedEntryDialog.SubmitInstruction
+                        : NativeMaskedEntryDialog.CancelInstruction))),
+                StringComparison.Ordinal)
+            || !evidence.EditOwned
+            || !evidence.EditVisible
+            || !evidence.EditEnabled
+            || !evidence.EditMasked
+            || !evidence.SubmitOwned
+            || !evidence.SubmitVisible
+            || !evidence.SubmitEnabled
+            || !evidence.CancelOwned
+            || !evidence.CancelVisible
+            || !evidence.CancelEnabled
+            || !evidence.Foreground
+            || requireEditFocus && !evidence.EditFocused)
+        {
+            throw new InvalidDataException(
+                "Native credential entry is not proven visible and actionable on the interactive input desktop.");
+        }
+    }
+}
 
 internal sealed record NativeQualificationEvidence(
     string Schema,
