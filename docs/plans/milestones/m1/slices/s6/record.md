@@ -5153,3 +5153,41 @@ regression, accepted the non-native correction for freeze, and confirmed zero
 repository-owned or global .NET/testhost survivors after shutting down build
 servers. No native credential, UI/manual-entry, DNS, network, provider,
 billable, private-fixture, archive, or later-package operation occurred.
+
+## WP4 fresh post-correction authority preparation — 2026-08-13
+
+The accepted typed-failure correction is frozen at commit
+`7f716dd49c65344571afbc4fcc7b5e11e8372ea0`; exact schema, validator, gate,
+helper-parser, and test consumer binding is frozen at close-ready commit
+`5ab82ffb76148691fec5dfa8975ef4ae5b51f419`. The consumed `a1976c78`
+authority is retained exactly by manifest SHA-256
+`484d385a44c7988fd3311ce05014f53e70d2ef012cb20ba7b2eb625b78f91601`,
+terminal evidence SHA-256
+`8be23f88abac3ae68308d105b6c0548c546832350d67e9539e89160b6322cce7`,
+and authority-lock SHA-256
+`0c0a55699a94df116ebd4793bc5dbb310c35c0d57b4864b3b6334f5c52a29ad2`.
+Its truthful disposition is terminal pre-operation with store state unobserved;
+the identity and namespace are never reusable.
+
+Fresh preparation reserves manifest identity
+`infinium.m1-s6.wp4.credential-native-authorization/16df3175-42ef-4a87-83ee-58766a0b15f1`,
+namespace `m1-s6-wp4-native-16df3175-42ef-4a87-83ee-58766a0b15f1`,
+12 new exact target fingerprints, output root
+`artifacts/m1-slice6/wp4-native-16df3175`, and finite expiry
+`2026-08-15T19:45:00.0000000Z`. The manifest remains non-authorizing:
+there is no owner marker, native execution marker, output root, or one-shot lock
+for this identity. Credential Manager and all external effect counts remain
+zero during preparation. Semantic validation reports 20,932 exact manifest
+bytes and SHA-256
+`6e0d5212747405a4f54e0ad18808a5ac8eaab5f147cf7c3204917c41660eee13`.
+
+Owner UX clarification is preserved without expanding WP4 into M2 UI work.
+The direct native dialog is M1 qualification-only. Accepted production design
+remains Settings Add/Replace through a WPF-parented, helper-owned masked modal
+that permits paste; React/WebView supplies only the user gesture and non-secret
+status and never receives the key. The M1 qualification harness is intentionally
+stricter: the operator manually types the dummy text, and WM_PASTE, WM_COPY, and
+WM_CUT remain blocked. The automatic UI readiness proof remains a short finite
+10 seconds; only after that proof succeeds does the separate five-minute human
+response interval begin. Any eventual qualification uses disposable dummy text,
+never a real credential.
