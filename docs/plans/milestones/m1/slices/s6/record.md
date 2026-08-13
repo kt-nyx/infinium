@@ -4698,3 +4698,10 @@ with new output/lock roots and expiry `2026-08-14T15:53:46.6213575Z`.
 The draft is non-executable pending exact close-ready commit binding. Release
 build passed with zero warnings/errors and focused cleanup-only authorization
 tests passed 14/14. No native operation occurred during preparation.
+
+The exact close-ready recovery candidate is
+`665dfde5a270f28f2d9f9495fca1e789d855d737`. The final manifest SHA-256 is
+`88acd227d0b3ea2e057d1e897024f269bcf98d3bb7dd356cb0d94705b3ed02d1`.
+Validation reports ready but `execution_authorized: false` with zero native,
+network, and provider operations. Fresh independent review and the canonical
+standing-owner recovery marker remain required before the one recovery run.
