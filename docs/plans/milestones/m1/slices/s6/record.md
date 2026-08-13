@@ -5083,3 +5083,13 @@ retained outer `EndOfStreamException` does not prove the exact inner failure.
 That evidence-loss seam and safe-test UI visibility are bounded non-native
 correction requirements; this record does not infer a more specific cause.
 WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/a1976c78-a49b-4581-9a8c-9b6172484e0b sha256=484d385a44c7988fd3311ce05014f53e70d2ef012cb20ba7b2eb625b78f91601 execution_head_commit=9d02fd7201270225896dce41ac0f95ca05cc4c49 status=failed-primary-cleanup-confirmed native_calls=0 namespace_blocked=false later_native_calls=0 evidence_sha256=8be23f88abac3ae68308d105b6c0548c546832350d67e9539e89160b6322cce7
+
+Chronology correction: no new owner observation about a visible dialog was
+received for the `a1976c78` attempt. The earlier owner report of a briefly
+visible dialog belongs to the consumed `e0cb0693` attempt. Process timing from
+the `a1976c78` command does not independently prove that any test or native
+window was visible. Accordingly, the preceding paragraph's attribution of a
+visible dialog to the safe-test portion of this command is withdrawn. The
+retained `a1976c78` facts remain: no admitted scenario, no native call, and an
+outer `EndOfStreamException` after the helper response closed without complete
+metrics. Whether a UI was created or shown during that attempt is unknown.
