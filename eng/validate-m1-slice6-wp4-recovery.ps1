@@ -53,6 +53,18 @@ if ($binding.failed_manifest_id -cne 'infinium.m1-s6.wp4.credential-native-autho
     $binding.failure_record_commit -cne 'fd6bd645f041502333d92b5e95c69bf8c69f2c83' -or
     $binding.consumed_lock_sha256 -cne '05bf7fc259bf90d367c20f9ba23af3d1525aa2514ee6e1888304cbaf44b364c4' -or
     $binding.required_branch -cne 'codex/m1-s6') { throw 'Recovery failure binding differs.' }
+$zeroCommit = '0000000000000000000000000000000000000000'
+if (($m.status -ceq 'draft-binding-pending') -ne
+    ($binding.close_ready_recovery_commit -ceq $zeroCommit)) {
+    throw 'Recovery status/close-ready binding differs.'
+}
+if ($m.status -ceq 'ready-for-owner-acceptance') {
+    $head = (& git -C $root rev-parse HEAD).Trim()
+    & git -C $root cat-file -e "$($binding.close_ready_recovery_commit)^{commit}" 2>$null
+    if ($LASTEXITCODE -ne 0) { throw 'Recovery close-ready commit does not exist.' }
+    & git -C $root merge-base --is-ancestor $binding.close_ready_recovery_commit $head
+    if ($LASTEXITCODE -ne 0) { throw 'Recovery close-ready commit is not an ancestor of HEAD.' }
+}
 if ($m.disposable_namespace.namespace_id -cne 'm1-s6-wp4-native-cedc4c47-0c58-490e-8d14-5159362aadf3' -or
     $m.disposable_namespace.reuse -cne 'cleanup-only; never requalification; terminal after this recovery attempt') {
     throw 'Recovery namespace/reuse differs.'

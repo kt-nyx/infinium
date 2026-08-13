@@ -4796,3 +4796,10 @@ formatter. Fresh recovery identity
 supersedes it, with new output root
 `artifacts/m1-slice6/wp4-native-recovery-6a1e3f05`, new derived one-shot lock,
 and expiry `2026-08-14T16:27:12.1021393Z`. This draft has no effect authority.
+
+The validator now requires draft status to carry only the all-zero close-ready
+placeholder and ready status to carry an existing commit that is an ancestor
+of the current candidate. The execution gate separately requires that exact
+ancestor and permits only the final manifest and append-only record to differ
+after it. This avoids any self-referential commit hash while preserving exact
+candidate binding; the post-binding allowlist is not widened.
