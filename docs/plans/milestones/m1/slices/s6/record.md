@@ -4743,3 +4743,14 @@ expiry `2026-08-14T16:03:47.6519894Z`. It retains only the original 12 blocked
 `cedc4c47` exact targets because those are the objects requiring absence proof.
 The draft is non-executable until its exact close-ready commit is bound and
 fresh independent pre-effect review accepts the final bytes.
+
+The fresh recovery close-ready commit is
+`6105d9ac0250f7b1f608f8f2d6ab2bb8e6d5e716`. The exact final manifest
+SHA-256 is
+`f54d1f1cca6a39c02cdc43b9f3fbec9b580eae291dbb221cbe31c5994afccd8f`.
+Effect-free validation reports `ready`, `execution_authorized: false`, and
+zero native, network, and provider operations. Release build passed with zero
+warnings/errors, focused authorization regressions passed 14/14, and the gate
+script parses successfully. Fresh independent pre-effect acceptance and the
+canonical standing-owner recovery marker remain mandatory before the sole
+cleanup attempt.
