@@ -1728,7 +1728,7 @@ function Invoke-CredentialNativeRecoveryGate {
     $path=[IO.Path]::GetFullPath((Join-Path $repoRoot $AuthorizationManifest))
     if(-not[string]::Equals($path,$expected,[StringComparison]::OrdinalIgnoreCase)){throw 'Recovery refuses any other manifest path.'}
     $bytes=[IO.File]::ReadAllBytes($path);$sha=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant();$m=[Text.Encoding]::UTF8.GetString($bytes)|ConvertFrom-Json -Depth 100 -DateKind String
-    if($m.manifest_id-ne'infinium.m1-s6.wp4.credential-native-recovery/d01bfda6-51d3-4c68-baff-a3b25abc6391'-or$m.status-ne'ready-for-owner-acceptance'){throw 'Recovery identity is not executable.'}
+    if($m.manifest_id-ne'infinium.m1-s6.wp4.credential-native-recovery/3850c033-711a-40ee-a3df-4c9d9ac91058'-or$m.status-ne'ready-for-owner-acceptance'){throw 'Recovery identity is not executable.'}
     $close=[string]$m.binding.close_ready_recovery_commit;$head=(&git rev-parse HEAD).Trim()
     if((&git branch --show-current).Trim()-ne'codex/m1-s6'){throw 'Recovery requires branch codex/m1-s6.'}
     if($outputRootExistedBeforeInvocation){throw 'Recovery requires a fresh absent output root.'}
