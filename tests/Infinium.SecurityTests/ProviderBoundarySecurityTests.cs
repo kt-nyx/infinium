@@ -44,8 +44,12 @@ public sealed class ProviderBoundarySecurityTests
     [TestMethod]
     [DataRow("raw")]
     [DataRow("base64")]
+    [DataRow("base64-unpadded")]
     [DataRow("percent")]
     [DataRow("percent-lower")]
+    [DataRow("percent-mixed")]
+    [DataRow("json-escaped")]
+    [DataRow("json-escaped-malformed")]
     public async Task CompleteSecretEchoIsClearedBeforeStagingAndBecomesTypedAmbiguousHold(string representation)
     {
         const string canary = "sk-WP5/echo+92";
@@ -53,13 +57,25 @@ public sealed class ProviderBoundarySecurityTests
         {
             "raw" => canary,
             "base64" => Convert.ToBase64String(Encoding.UTF8.GetBytes(canary)),
+            "base64-unpadded" => Convert.ToBase64String(Encoding.UTF8.GetBytes(canary)).TrimEnd('='),
             "percent" => Uri.EscapeDataString(canary),
             "percent-lower" => Uri.EscapeDataString(canary)
                 .Replace("%2F", "%2f", StringComparison.Ordinal)
                 .Replace("%2B", "%2b", StringComparison.Ordinal),
+            "percent-mixed" => Uri.EscapeDataString(canary)
+                .Replace("%2B", "%2b", StringComparison.Ordinal),
+            "json-escaped" or "json-escaped-malformed" => string.Empty,
             _ => throw new InvalidOperationException("Unsupported test representation."),
         };
-        await using ProviderLoopbackServer server = new(JsonSerializer.SerializeToUtf8Bytes(new { echo = echoed }));
+        byte[] response = representation switch
+        {
+            "json-escaped" => Encoding.UTF8.GetBytes(
+                "{\"echo\":\"\\u0073\\u006B\\u002DWP5\\/echo\\u002B92\"}"),
+            "json-escaped-malformed" => Encoding.UTF8.GetBytes(
+                "{\"echo\":\"\\u0073\\u006B\\u002DWP5\\/echo\\u002B92"),
+            _ => JsonSerializer.SerializeToUtf8Bytes(new { echo = echoed }),
+        };
+        await using ProviderLoopbackServer server = new(response);
         using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
         byte[] secret = Encoding.UTF8.GetBytes(canary);
         OpenAiResponsesResult result;
@@ -87,6 +103,37 @@ public sealed class ProviderBoundarySecurityTests
         Assert.ThrowsExactly<InvalidOperationException>(() => OpenAiStagedResponseEnvelope.Create(result));
         Assert.IsFalse(Encoding.UTF8.GetString(result.ToSecretFreeDiagnosticBytes())
             .Contains(canary, StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task UrlSafeBase64SecretEchoIsNormalizedBeforeStaging(bool padded)
+    {
+        byte[] secret = [0xfb, 0xff, 0x2f, (byte)'s', (byte)'e', (byte)'c', (byte)'r', (byte)'e'];
+        string encoded = Convert.ToBase64String(secret).Replace('+', '-').Replace('/', '_');
+        if (!padded)
+        {
+            encoded = encoded.TrimEnd('=');
+        }
+        await using ProviderLoopbackServer server = new(JsonSerializer.SerializeToUtf8Bytes(new { echo = encoded }));
+        using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
+        OpenAiResponsesResult result;
+        try
+        {
+            result = await adapter.SendOnceAsync(
+                ProviderAdapterTestData.CanonicalRequest(), secret, ProviderAdapterTestData.Limits(),
+                "client-url-base64-echo", CancellationToken.None);
+        }
+        finally
+        {
+            System.Security.Cryptography.CryptographicOperations.ZeroMemory(secret);
+        }
+
+        Assert.AreEqual(ProviderResponseState.Unknown, result.State);
+        Assert.AreEqual("security_secret_echo", result.ErrorCode);
+        Assert.IsNull(result.RawResponseBytes);
+        Assert.IsFalse(result.RetryPermitted);
     }
 
     [TestMethod]

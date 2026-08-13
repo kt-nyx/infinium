@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Buffers.Text;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
@@ -618,16 +619,14 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
         ReadOnlySpan<byte> secret)
     {
         byte[] base64 = [];
-        byte[] percentEncoded = [];
-        byte[] percentEncodedLower = [];
-        byte[] jsonString = [];
+        byte[] base64Url = [];
         try
         {
-            base64 = Encoding.ASCII.GetBytes(Convert.ToBase64String(secret));
-            percentEncoded = PercentEncode(secret, lowerHex: false);
-            percentEncodedLower = PercentEncode(secret, lowerHex: true);
-            jsonString = JsonSerializer.SerializeToUtf8Bytes(Encoding.UTF8.GetString(secret));
-            if (ContainsCompleteRepresentation(raw, secret, base64, percentEncoded, percentEncodedLower, jsonString))
+            base64 = EncodeBase64(secret);
+            base64Url = base64.ToArray();
+            ReplaceBase64UrlAlphabet(base64Url);
+            if (ContainsNormalizedRepresentation(raw, secret, base64, base64Url)
+                || ContainsDecodedJsonRepresentation(raw, secret, base64, base64Url))
             {
                 return true;
             }
@@ -639,8 +638,7 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
                     byte[] headerBytes = Encoding.UTF8.GetBytes(value);
                     try
                     {
-                        if (ContainsCompleteRepresentation(
-                            headerBytes, secret, base64, percentEncoded, percentEncodedLower, jsonString))
+                        if (ContainsNormalizedRepresentation(headerBytes, secret, base64, base64Url))
                         {
                             return true;
                         }
@@ -657,56 +655,195 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
         finally
         {
             CryptographicOperations.ZeroMemory(base64);
-            CryptographicOperations.ZeroMemory(percentEncoded);
-            CryptographicOperations.ZeroMemory(percentEncodedLower);
-            CryptographicOperations.ZeroMemory(jsonString);
+            CryptographicOperations.ZeroMemory(base64Url);
         }
     }
 
-    private static bool ContainsCompleteRepresentation(
+    private static bool ContainsNormalizedRepresentation(
         ReadOnlySpan<byte> value,
         ReadOnlySpan<byte> secret,
         ReadOnlySpan<byte> base64,
-        ReadOnlySpan<byte> percentEncoded,
-        ReadOnlySpan<byte> percentEncodedLower,
-        ReadOnlySpan<byte> jsonString) =>
+        ReadOnlySpan<byte> base64Url) =>
         value.IndexOf(secret) >= 0
-        || value.IndexOf(base64) >= 0
-        || value.IndexOf(percentEncoded) >= 0
-        || value.IndexOf(percentEncodedLower) >= 0
-        || jsonString.Length > 2 && value.IndexOf(jsonString[1..^1]) >= 0;
+        || ContainsBase64(value, base64)
+        || ContainsBase64(value, base64Url)
+        || ContainsPercentDecoded(value, secret)
+        || ContainsJsonEscaped(value, secret);
 
-    private static byte[] PercentEncode(ReadOnlySpan<byte> value, bool lowerHex)
+    private static bool ContainsDecodedJsonRepresentation(
+        ReadOnlySpan<byte> value,
+        ReadOnlySpan<byte> secret,
+        ReadOnlySpan<byte> base64,
+        ReadOnlySpan<byte> base64Url)
     {
-        int encodedLength = 0;
-        foreach (byte current in value)
+        try
         {
-            encodedLength = checked(encodedLength + (IsUrlUnreserved(current) ? 1 : 3));
+            Utf8JsonReader reader = new(value, new JsonReaderOptions
+            {
+                AllowTrailingCommas = false,
+                CommentHandling = JsonCommentHandling.Disallow,
+                MaxDepth = 64,
+            });
+            while (reader.Read())
+            {
+                if (reader.TokenType is not (JsonTokenType.String or JsonTokenType.PropertyName))
+                {
+                    continue;
+                }
+                int maximum = reader.HasValueSequence
+                    ? checked((int)reader.ValueSequence.Length)
+                    : reader.ValueSpan.Length;
+                byte[] decoded = new byte[maximum];
+                try
+                {
+                    int written = reader.CopyString(decoded);
+                    if (ContainsNormalizedRepresentation(decoded.AsSpan(0, written), secret, base64, base64Url))
+                    {
+                        return true;
+                    }
+                }
+                finally
+                {
+                    CryptographicOperations.ZeroMemory(decoded);
+                }
+            }
         }
-        byte[] encoded = new byte[encodedLength];
-        string hex = lowerHex ? "0123456789abcdef" : "0123456789ABCDEF";
-        for (int source = 0, target = 0; source < value.Length; source++)
+        catch (JsonException)
         {
-            byte current = value[source];
-            if (IsUrlUnreserved(current))
-            {
-                encoded[target++] = current;
-            }
-            else
-            {
-                encoded[target++] = (byte)'%';
-                encoded[target++] = (byte)hex[current >> 4];
-                encoded[target++] = (byte)hex[current & 0x0F];
-            }
+            // Malformed JSON is still scanned bytewise by ContainsJsonEscaped.
+        }
+        return false;
+    }
+
+    private static byte[] EncodeBase64(ReadOnlySpan<byte> value)
+    {
+        byte[] encoded = new byte[Base64.GetMaxEncodedToUtf8Length(value.Length)];
+        OperationStatus status = Base64.EncodeToUtf8(value, encoded, out int consumed, out int written);
+        if (status != OperationStatus.Done || consumed != value.Length || written != encoded.Length)
+        {
+            CryptographicOperations.ZeroMemory(encoded);
+            throw new InvalidOperationException("The bounded secret Base64 normalization failed.");
         }
         return encoded;
     }
 
-    private static bool IsUrlUnreserved(byte value) =>
-        value is >= (byte)'A' and <= (byte)'Z'
-            or >= (byte)'a' and <= (byte)'z'
-            or >= (byte)'0' and <= (byte)'9'
-            or (byte)'-' or (byte)'_' or (byte)'.' or (byte)'~';
+    private static void ReplaceBase64UrlAlphabet(Span<byte> value)
+    {
+        value.Replace((byte)'+', (byte)'-');
+        value.Replace((byte)'/', (byte)'_');
+    }
+
+    private static bool ContainsBase64(ReadOnlySpan<byte> value, ReadOnlySpan<byte> encoded)
+    {
+        int unpaddedLength = encoded.Length;
+        while (unpaddedLength > 0 && encoded[unpaddedLength - 1] == '=')
+        {
+            unpaddedLength--;
+        }
+        return value.IndexOf(encoded) >= 0
+            || unpaddedLength != encoded.Length && value.IndexOf(encoded[..unpaddedLength]) >= 0;
+    }
+
+    private static bool ContainsPercentDecoded(ReadOnlySpan<byte> value, ReadOnlySpan<byte> secret)
+    {
+        for (int start = 0; start < value.Length; start++)
+        {
+            int position = start;
+            bool matched = true;
+            foreach (byte expected in secret)
+            {
+                if (position < value.Length && value[position] == expected)
+                {
+                    position++;
+                }
+                else if (position + 2 < value.Length && value[position] == '%'
+                    && TryHex(value[position + 1], out int high)
+                    && TryHex(value[position + 2], out int low)
+                    && (byte)((high << 4) | low) == expected)
+                {
+                    position += 3;
+                }
+                else
+                {
+                    matched = false;
+                    break;
+                }
+            }
+            if (matched)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool ContainsJsonEscaped(ReadOnlySpan<byte> value, ReadOnlySpan<byte> secret)
+    {
+        for (int start = 0; start < value.Length; start++)
+        {
+            int position = start;
+            bool matched = true;
+            foreach (byte expected in secret)
+            {
+                if (position < value.Length && value[position] == expected)
+                {
+                    position++;
+                    continue;
+                }
+                if (position + 1 >= value.Length || value[position++] != '\\')
+                {
+                    matched = false;
+                    break;
+                }
+                byte escape = value[position++];
+                byte? decoded = escape switch
+                {
+                    (byte)'"' => (byte)'"',
+                    (byte)'\\' => (byte)'\\',
+                    (byte)'/' => (byte)'/',
+                    (byte)'b' => (byte)'\b',
+                    (byte)'f' => (byte)'\f',
+                    (byte)'n' => (byte)'\n',
+                    (byte)'r' => (byte)'\r',
+                    (byte)'t' => (byte)'\t',
+                    _ => null,
+                };
+                if (decoded == expected)
+                {
+                    continue;
+                }
+                if (escape == 'u' && position + 3 < value.Length
+                    && TryHex(value[position], out int a)
+                    && TryHex(value[position + 1], out int b)
+                    && TryHex(value[position + 2], out int c)
+                    && TryHex(value[position + 3], out int d)
+                    && a == 0 && b == 0 && (byte)((c << 4) | d) == expected)
+                {
+                    position += 4;
+                    continue;
+                }
+                matched = false;
+                break;
+            }
+            if (matched)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool TryHex(byte value, out int decoded)
+    {
+        decoded = value switch
+        {
+            >= (byte)'0' and <= (byte)'9' => value - '0',
+            >= (byte)'A' and <= (byte)'F' => value - 'A' + 10,
+            >= (byte)'a' and <= (byte)'f' => value - 'a' + 10,
+            _ => -1,
+        };
+        return decoded >= 0;
+    }
 
     private static OpenAiRateHeader[] CaptureHeaders(HttpResponseMessage response)
     {
