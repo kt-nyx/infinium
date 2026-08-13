@@ -4786,3 +4786,13 @@ and expiry `2026-08-14T16:22:37.5981138Z`. Only the original 12 blocked
 `cedc4c47` exact targets remain unchanged. The draft has no effect authority
 and cannot execute until its exact close-ready correction commit is bound,
 safe gates pass, and fresh independent pre-effect review accepts it.
+
+The first final-bound `9bd05d02` proposal is stale/non-executable and was
+never run because the mandatory format gate found whitespace-only violations
+in its new mutation tests. Commit
+`e2b0382052a525c185f1b23d37fc0369abcf6168` applies only the repository
+formatter. Fresh recovery identity
+`infinium.m1-s6.wp4.credential-native-recovery/6a1e3f05-2189-46f8-8dff-48edb40496dc`
+supersedes it, with new output root
+`artifacts/m1-slice6/wp4-native-recovery-6a1e3f05`, new derived one-shot lock,
+and expiry `2026-08-14T16:27:12.1021393Z`. This draft has no effect authority.

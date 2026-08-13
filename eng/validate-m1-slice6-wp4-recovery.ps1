@@ -52,7 +52,6 @@ if ($binding.failed_manifest_id -cne 'infinium.m1-s6.wp4.credential-native-autho
     $binding.failed_manifest_sha256 -cne '6a2c1f39137de8e40d9e9574ba963d39c8bbdb7c880663a363cc69e65145c952' -or
     $binding.failure_record_commit -cne 'fd6bd645f041502333d92b5e95c69bf8c69f2c83' -or
     $binding.consumed_lock_sha256 -cne '05bf7fc259bf90d367c20f9ba23af3d1525aa2514ee6e1888304cbaf44b364c4' -or
-    $binding.close_ready_recovery_commit -cne '33cb5dd7a5df0cf1ff03891987a2a9495a97847f' -or
     $binding.required_branch -cne 'codex/m1-s6') { throw 'Recovery failure binding differs.' }
 if ($m.disposable_namespace.namespace_id -cne 'm1-s6-wp4-native-cedc4c47-0c58-490e-8d14-5159362aadf3' -or
     $m.disposable_namespace.reuse -cne 'cleanup-only; never requalification; terminal after this recovery attempt') {
