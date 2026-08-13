@@ -4643,3 +4643,12 @@ validation reports `validated-ready-for-owner-acceptance` but
 `execution_authorized: false`, with zero credential, network, and provider
 operations. No owner marker exists for this identity and no native operation
 was run.
+
+Fresh read-only reviewer `/root/wp4_manifest_review` returned `ACCEPT` for the
+exact replacement freeze `e11bb7eef09d580c3ae0c48421cf7b6f7c7e921e`.
+The reviewer independently confirmed that the post-binding path set is exactly
+the gate allowlist, and that identity, all target fingerprints, stale manifest/
+namespace/output-root dispositions, safe verification, both Layer 6 receipts,
+and zero-process cleanup conform. No effect occurred. WP4 remains closed until
+the exact replacement manifest receives explicit owner native-effect
+acceptance.
