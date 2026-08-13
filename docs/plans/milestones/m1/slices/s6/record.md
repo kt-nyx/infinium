@@ -5304,3 +5304,20 @@ namespace `m1-s6-wp4-native-ad876b9a-9f45-4eb4-8d12-5970d76dd4ea`,
 The manifest is non-authorizing: there is no owner marker, execution marker,
 output root, or one-shot lock for this identity, and all credential, DNS,
 network, provider, and billable operation counts for preparation are zero.
+
+### Exact predecessor-evidence wording correction and final rebind — 2026-08-13
+
+Independent exact-byte review found that the first required-evidence statement
+still described the directly superseded authority as a v1 terminal identity,
+although consumed manifest `16df3175` is a v2/schema-1.2 authority. The bounded
+non-native correction now names the exact superseded `16df3175` terminal
+manifest, evidence, namespace disposition, and authority-lock identities, and
+the semantic validator and authorization test bind that exact wording. The
+final close-ready consumer-binding commit is
+`b12bbbe3283212778bfd3466e0b871318a217d32`.
+
+The rebound manifest has 21,022 exact bytes and SHA-256
+`7d1e8c35072c6676258c9cbcc47fd8833458878bf289728cc453e5e0942d35ce`.
+It remains non-authorizing: no owner marker, execution marker, output root,
+one-shot lock, Credential Manager call, manual UI, DNS, network, provider,
+billable, private-fixture, archive, later-package, or push operation occurred.
