@@ -24,9 +24,13 @@ independently accepted at exact candidate
 `b32939e8b7491a5c47453f912d25dd98c090f103`. WP5 is independently accepted
 at exact product candidate `fd3c80d91dd247e65b5130309a9b5bb19dd1381f`
 with evidence commit `11e60445b6d5f1d3efc5b607f080dd986afb4ed4`.
-The nine Slice 6 contracts remain `Implementation-active`. The live handoff
-now authorizes WP6 only; WP4 remains closed and its prior native authorization
-is stale/non-authoritative for any new effect.
+WP6 is independently accepted at exact product candidate
+`ee0b6d31f1c1826c2af7634766155397e916c3e1`, with append-only evidence
+`2b277338390f7dac37b5a5436bbe2cd81dedc871` and answer-isolated oracle
+`37aa2b4e2fc084307ba5211f21bbeeb7a93efab0`. The nine Slice 6 contracts
+remain `Implementation-active`. The live handoff now authorizes WP7 only;
+WP4 remains closed and its prior native authorization is stale/non-authoritative
+for any new effect, while WP8 and later packages are not authorized.
 [Current project state](../../../../../current-state.md) authorizes only the
 exact active package and governs automatic non-live progression. Disposable
 native qualification, production-profile enrollment/verification, and each of

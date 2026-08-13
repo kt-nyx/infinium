@@ -4012,3 +4012,37 @@ operation, source/Nexus/search refresh, private/evaluator/archive access,
 protected external effect, WP7 behavior, current-state advancement, or push
 occurred. This corrected candidate remains awaiting independent acceptance; it
 does not self-accept WP6 or authorize WP7.
+
+## WP6 independent acceptance and WP7 handoff — 2026-08-12
+
+Independent semantic reviewer `/root/wp6_semantic_review` returned `ACCEPT`
+against exact evidence HEAD
+`2b277338390f7dac37b5a5436bbe2cd81dedc871`. The reviewer confirmed that the
+source-claim correlation/application mismatch is closed, earlier corrections
+remain intact, focused and migration checks pass, candidate-bound Layer 6
+passes, the repository is clean, and exact-root cleanup leaves zero surviving
+repository-owned `dotnet`/`testhost` processes.
+
+Independent oracle/provenance reviewer
+`/root/wp6_oracle_provenance_review` also returned `ACCEPT` against exact
+evidence HEAD `2b277338390f7dac37b5a5436bbe2cd81dedc871`. Its fresh Release build passed
+with zero warnings/errors. `SourceClaimSemantics` passed Unit 4, Contract 7,
+Integration 4, and Evaluation 2. The exact 2,820-byte receipt SHA-256 was
+`727b7bc45e086813055f195961f52d30f041cdc94420bb3d63a38c28df669fe9`.
+All fourteen distinct cases and the final registry, manifest, oracle, and
+provenance identities matched. Complete comparison, mutation sensitivity,
+answer isolation, package-identity equality, and transitive closure remained
+enforced; the answer-isolated oracle freeze preceded the product correction.
+The reviewer observed no private or external effect, a clean repository, and
+zero surviving repository-owned `dotnet`/`testhost` processes.
+
+WP6 is therefore independently accepted at exact product candidate
+`ee0b6d31f1c1826c2af7634766155397e916c3e1`, append-only evidence commit
+`2b277338390f7dac37b5a5436bbe2cd81dedc871`, and answer-isolated oracle commit
+`37aa2b4e2fc084307ba5211f21bbeeb7a93efab0`. The live handoff now authorizes
+only `M1/S6/WP7` under accepted plan section 18. WP4 remains closed and its
+prior native authorization remains stale/non-authoritative; WP8 and every
+later package remain unauthorized. This acceptance handoff performs no WP7
+product work and authorizes no Credential Manager, API key, DNS, network,
+provider, source-refresh, private-fixture, archive, or other protected external
+effect. No push occurred.
