@@ -159,6 +159,46 @@ public sealed class CredentialNativeAuthorizationTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestCategory("Security")]
+    public void SyntheticProviderDispatchIsEnabledOnlyForExplicitQualificationEntrypoints()
+    {
+        string root = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string program = File.ReadAllText(Path.Combine(root, "src", "Infinium.CredentialHelper", "Program.cs"));
+        int nativeStart = program.IndexOf(
+            "if (args is [\"--credential-native-request-handle\"", StringComparison.Ordinal);
+        int ordinaryStart = program.IndexOf(
+            "bool providerTransportSelected =", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, nativeStart);
+        Assert.IsGreaterThan(nativeStart, ordinaryStart);
+        string nativeBranch = program[nativeStart..ordinaryStart];
+        string ordinaryBranch = program[ordinaryStart..];
+
+        Assert.AreEqual(1, CountOccurrences(
+            nativeBranch, "allowSyntheticProviderDispatch: true"));
+        Assert.IsFalse(nativeBranch.Contains("CreateProduction()", StringComparison.Ordinal));
+        Assert.IsTrue(ordinaryBranch.Contains(
+            "allowSyntheticProviderDispatch: syntheticQualificationTransport",
+            StringComparison.Ordinal));
+        Assert.IsTrue(ordinaryBranch.Contains(
+            "providerTransportSelected && args[^1] == \"synthetic-qualification\"",
+            StringComparison.Ordinal));
+        Assert.IsFalse(ordinaryBranch.Contains(
+            "allowSyntheticProviderDispatch: true", StringComparison.Ordinal));
+    }
+
+    private static int CountOccurrences(string value, string token)
+    {
+        int count = 0;
+        for (int index = 0; (index = value.IndexOf(token, index, StringComparison.Ordinal)) >= 0;
+            index += token.Length)
+        {
+            count++;
+        }
+        return count;
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
     public void ConsumedCredentialNativeV1EntrypointsAreTerminallyDisabledBeforeFileAccess()
     {
         Assert.ThrowsExactly<InvalidOperationException>(() =>

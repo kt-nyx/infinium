@@ -74,7 +74,8 @@ if (args is ["--credential-native-request-handle", string nativeRequestHandle,
         OneShotHelperEngine engine = new(
             store,
             new FixedUtcTimeProvider(DateTimeOffset.FromUnixTimeMilliseconds(nativeAuthorityNowUnixMs)),
-            secretSource);
+            secretSource,
+            allowSyntheticProviderDispatch: true);
         using CancellationTokenSource deadline = new(TimeSpan.FromSeconds(1650));
         await engine.RunAsync(recordedRequest, recordedResponse, deadline.Token);
         (int listeners, int networkOperations) = NetworkMeasurement.MeasureCurrentProcessTcp();

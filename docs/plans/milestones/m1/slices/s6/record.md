@@ -4551,3 +4551,19 @@ and expiring at `2026-08-15T15:07:56.7181237Z`. Structural and semantic
 validation reports `validated-ready-for-owner-acceptance` but
 `execution_authorized: false`; no canonical owner native-effect acceptance
 line exists and `CredentialNative` was not run.
+
+Fresh review then found one non-native WP5 compatibility defect: the native
+qualification request-handle branch constructed `OneShotHelperEngine` with its
+new safe default `allowSyntheticProviderDispatch: false`, so WP4's mandatory
+fake-provider scenario would have failed before dispatch. The owner authorized
+only the bounded non-native correction. The native qualification branch now
+passes `allowSyntheticProviderDispatch: true`; ordinary helper construction
+continues to derive the flag only from the explicit
+`--provider-transport synthetic-qualification` option, and production transport
+selection is unchanged. A source-bound security regression proves no ordinary
+or production branch contains the literal enablement.
+
+The Release build again passed with zero warnings/errors, focused native-
+authorization tests passed 13/13, and helper/supervisor integration tests
+passed 16/16. These checks used fake/non-native seams only. Credential Manager,
+DNS, network, provider, billable, and API-key operation counts remained zero.
