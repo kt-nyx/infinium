@@ -18,28 +18,47 @@ $manifest = Get-Content -LiteralPath $ManifestPath -Raw |
 $evidence = Get-Content -LiteralPath $EvidencePath -Raw |
     ConvertFrom-Json -Depth 100 -DateKind String
 
+$isCurrentRecovery =
+    $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.1.0' -and
+    $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff'
+$isLegacyRecovery =
+    $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.0.0' -and
+    $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/89baee92-14d6-4f2b-a970-0fe6be15c54c'
 if ($evidence.schema -cne 'infinium.m1-s6.wp4.credential-native-recovery-evidence/v1' -or
     $evidence.manifest_id -cne $ManifestId -or
     $evidence.manifest_sha256 -cne $ManifestSha256 -or
     $evidence.status -cne 'passed' -or
-    [bool]$evidence.namespace_blocked -or
+    (-not $isCurrentRecovery -and -not $isLegacyRecovery) -or
     [int]$evidence.network_operations -ne 0 -or
     [int]$evidence.dns_operations -ne 0 -or
     [int]$evidence.provider_operations -ne 0 -or
     [int]$evidence.billable_operations -ne 0) {
     throw 'Recovery evidence identity/effect oracle failed.'
 }
+if ($isCurrentRecovery) {
+    if ($evidence.PSObject.Properties.Name -notcontains 'cleanup_ambiguity' -or
+        $evidence.PSObject.Properties.Name -notcontains 'namespace_reuse_blocked' -or
+        $evidence.PSObject.Properties.Name -notcontains 'namespace_disposition' -or
+        [bool]$evidence.cleanup_ambiguity -or -not [bool]$evidence.namespace_reuse_blocked -or
+        $evidence.namespace_disposition -cne 'cleanup-confirmed-absent-never-reuse') {
+        throw 'Current recovery terminal namespace evidence differs.'
+    }
+} elseif ($evidence.PSObject.Properties.Name -notcontains 'namespace_blocked' -or
+    [bool]$evidence.namespace_blocked) {
+    throw 'Legacy recovery namespace evidence differs.'
+}
 
 $expectedTargets = @{}
 foreach ($target in $manifest.disposable_namespace.targets) {
     $expectedTargets[[string]$target.alias] = [string]$target.target_fingerprint_sha256
 }
-if ($expectedTargets.Count -ne 12) {
+if ($expectedTargets.Count -ne [int]$manifest.limits.targets) {
     throw 'Recovery manifest target inventory is not exact.'
 }
 
 $absence = @($evidence.target_absence)
-if ($absence.Count -ne 12 -or @($absence.alias | Sort-Object -Unique).Count -ne 12) {
+if ($absence.Count -ne $expectedTargets.Count -or
+    @($absence.alias | Sort-Object -Unique).Count -ne $expectedTargets.Count) {
     throw 'Recovery absence inventory is not exact.'
 }
 foreach ($item in $absence) {
@@ -129,7 +148,10 @@ if ([int]$counts.cred_write_w -ne 0 -or
     [int]$counts.cred_delete_w -ne $deleteCount -or
     [int]$counts.cred_free -ne $freeCount -or
     [int]$counts.total -ne $trace.Count -or
-    $readCount -gt 36 -or $deleteCount -gt 12 -or $freeCount -gt 12 -or $trace.Count -gt 60) {
+    $readCount -gt [int]$manifest.limits.CredReadW -or
+    $deleteCount -gt [int]$manifest.limits.CredDeleteW -or
+    $freeCount -gt [int]$manifest.limits.CredFree -or
+    $trace.Count -gt [int]$manifest.limits.total_native_calls) {
     throw 'Recovery trace-derived count oracle failed.'
 }
 

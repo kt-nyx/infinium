@@ -554,7 +554,9 @@ internal static class WindowsCredentialNativeRecovery
         }
         using JsonDocument document = JsonDocument.Parse(manifestBytes);
         JsonElement root = document.RootElement;
-        if (root.GetProperty("schema_identity").GetString() != "infinium.repository.wp4-credential-native-recovery/1.0.0"
+        string? schemaIdentity = root.GetProperty("schema_identity").GetString();
+        if (schemaIdentity is not ("infinium.repository.wp4-credential-native-recovery/1.0.0"
+                or "infinium.repository.wp4-credential-native-recovery/1.1.0")
             || root.GetProperty("manifest_id").GetString() != expectedManifestId
             || root.GetProperty("status").GetString() != "ready-for-owner-acceptance")
         {
@@ -588,7 +590,9 @@ internal static class WindowsCredentialNativeRecovery
                 target_absence = absence,
                 native_call_counts = store.CallCounts,
                 native_call_trace = store.CallTrace,
-                namespace_blocked = false,
+                cleanup_ambiguity = false,
+                namespace_reuse_blocked = true,
+                namespace_disposition = "cleanup-confirmed-absent-never-reuse",
                 network_operations = 0,
                 dns_operations = 0,
                 provider_operations = 0,
@@ -607,7 +611,9 @@ internal static class WindowsCredentialNativeRecovery
                 target_absence = absence,
                 native_call_counts = store.CallCounts,
                 native_call_trace = store.CallTrace,
-                namespace_blocked = true,
+                cleanup_ambiguity = true,
+                namespace_reuse_blocked = true,
+                namespace_disposition = "cleanup-ambiguous-never-reuse",
                 later_native_calls = 0,
             });
             throw;
@@ -743,7 +749,44 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
 
     internal static WindowsCredentialManagerStore FromRecoveryManifest(JsonElement manifestRoot)
     {
+        string schemaIdentity = manifestRoot.GetProperty("schema_identity").GetString()
+            ?? throw new InvalidDataException("Recovery schema identity is absent.");
+        int expectedTargetCount;
+        NativeTarget[]? exactCurrentTargets = null;
+        if (schemaIdentity == "infinium.repository.wp4-credential-native-recovery/1.0.0")
+        {
+            expectedTargetCount = 12;
+        }
+        else if (schemaIdentity == "infinium.repository.wp4-credential-native-recovery/1.1.0"
+            && manifestRoot.GetProperty("manifest_id").GetString()
+                == "infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff")
+        {
+            JsonElement limits = manifestRoot.GetProperty("limits");
+            if (limits.GetProperty("targets").GetInt32() != 2
+                || limits.GetProperty("CredReadW").GetInt32() != 6
+                || limits.GetProperty("CredDeleteW").GetInt32() != 2
+                || limits.GetProperty("CredFree").GetInt32() != 2
+                || limits.GetProperty("total_native_calls").GetInt32() != 10)
+            {
+                throw new InvalidDataException("Current recovery finite limits differ from exact authority.");
+            }
+            expectedTargetCount = 2;
+            exactCurrentTargets =
+            [
+                new("backup-new",
+                    "m1s6-wp4-ad876b9a9f454eb48d125970d76dd4ea-backup-restore", "g002",
+                    "d9221f7aac7ababf9e3efbf6ef69b03d2e9c8b0f51c1c552862958d5f3eff061"),
+                new("fake-dispatch",
+                    "m1s6-wp4-ad876b9a9f454eb48d125970d76dd4ea-fake-dispatch", "g001",
+                    "c27212cc4f0720e9fd20f7a2aff397402257bd53ad6d568048b217ac3e3df963"),
+            ];
+        }
+        else
+        {
+            throw new InvalidDataException("Recovery schema/identity is not an accepted exact authority.");
+        }
         WindowsCredentialManagerStore store = new();
+        int targetIndex = 0;
         foreach (JsonElement item in manifestRoot.GetProperty("disposable_namespace").GetProperty("targets").EnumerateArray())
         {
             NativeTarget target = new(
@@ -752,14 +795,20 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 item.GetProperty("generation_id").GetString()!,
                 item.GetProperty("target_fingerprint_sha256").GetString()!);
             Validate(target);
+            if (exactCurrentTargets is not null
+                && (targetIndex >= exactCurrentTargets.Length || target != exactCurrentTargets[targetIndex]))
+            {
+                throw new InvalidDataException("Current recovery target order or identity differs from exact authority.");
+            }
+            targetIndex++;
             if (!store.manifestTargets.TryAdd(new(target.AccessProfileId, target.GenerationId), target))
             {
                 throw new InvalidDataException("The recovery manifest repeats a native credential slot.");
             }
         }
-        if (store.manifestTargets.Count != 12)
+        if (store.manifestTargets.Count != expectedTargetCount)
         {
-            throw new InvalidDataException("Recovery requires exactly 12 known targets.");
+            throw new InvalidDataException($"Recovery requires exactly {expectedTargetCount} known targets.");
         }
         return store;
     }

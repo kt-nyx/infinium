@@ -5377,3 +5377,32 @@ terminal and may never be retried or reused; any later native attempt requires
 a bounded non-native correction, fresh verification and independent review,
 and a fresh exact manifest and owner authority.
 WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/ad876b9a-9f45-4eb4-8d12-5970d76dd4ea sha256=7d1e8c35072c6676258c9cbcc47fd8833458878bf289728cc453e5e0942d35ce execution_head_commit=50f7ad792af3e464e99670d14d49375d75de5b33 status=failed-primary-cleanup-confirmed native_calls=W7-R61-D7-F20-T95 cleanup_scope=ten-queued-exact-targets whole_namespace_absence=false namespace_blocked=true later_native_calls=0 evidence_sha256=cfaee3940cd780a5bcfbcbcf387124d7f7385b01a07f8f0f6fbe4439593a21e6 authority_lock_sha256=b47e0262937f86174ae1b790f4951fbf6fe6621d1f3a25c938990143514950b8
+
+## WP4 `ad876b9a` two-target cleanup-only recovery preparation — 2026-08-14
+
+Standing owner cleanup authority permits a fresh one-shot recovery only for
+the two exact targets not covered by the terminal ten-target absence proof:
+`backup-new` fingerprint
+`d9221f7aac7ababf9e3efbf6ef69b03d2e9c8b0f51c1c552862958d5f3eff061`
+and `fake-dispatch` fingerprint
+`c27212cc4f0720e9fd20f7a2aff397402257bd53ad6d568048b217ac3e3df963`.
+The draft recovery identity is
+`infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff`.
+It binds the consumed manifest/SHA, execution head, terminal record/evidence,
+and authority-lock identities above. It permits only exact-target `CredReadW`,
+`CredDeleteW`, and paired `CredFree`, with maxima R6/D2/F2/T10 and one 120-second
+attempt. Write, enumeration, arbitrary/prefix targeting, alternate stores, UI,
+provider/fake dispatch, DNS/network, fallback, and requalification are
+prohibited.
+
+The recovery helper and both semantic oracles preserve frozen schema-1.0
+twelve-target compatibility while binding schema 1.1 to exactly these two
+ordered identities and limits. Success remains terminal and non-reusable; it
+must report `cleanup_ambiguity=false`, `namespace_reuse_blocked=true`, exact
+terminal `ERROR_NOT_FOUND` for both fingerprints, trace-derived count/free
+pairing, zero external effects, and a combined 10+2 namespace absence proof.
+Focused authorization/security tests pass 26/26. Preparation performed no
+Credential Manager, UI, DNS, network, provider, billable, private-fixture,
+archive, later-package, or push operation. The manifest remains draft and
+non-executable until an exact close-ready commit is bound and fresh independent
+pre-effect review accepts it.

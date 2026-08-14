@@ -213,6 +213,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'contracts/repository/wp4-credential-native-authorization.v1.schema.json',
         'contracts/repository/wp4-credential-native-authorization.v2.schema.json',
         'contracts/repository/wp4-credential-native-recovery.v1.schema.json',
+        'contracts/repository/wp4-credential-native-recovery.ad876b9a.v1.schema.json',
         'dependencies/README.md',
         'dependencies/dependency-curation.json',
         'dependencies/dependency-manifest.json',
@@ -225,6 +226,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.ad876b9a.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.post-wp7.json',
         'docs/research/investigations/README.md',
         'docs/research/investigations/RESEARCH-0055-slice6-local-input-bound-policy.md',
@@ -235,6 +237,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'eng/validate-m1-slice6-wp4-authorization.ps1',
         'eng/validate-m1-slice6-wp4-authorization-v2.ps1',
         'eng/validate-m1-slice6-wp4-recovery.ps1',
+        'eng/validate-m1-slice6-wp4-recovery-ad876b9a.ps1',
         'eng/validate-m1-slice6-wp4-recovery-evidence.ps1',
         'eng/reconstruct-m1-slice6-wp4-recovery-receipt.ps1',
         'eng/verify-m1-slice6.ps1',
@@ -1733,24 +1736,24 @@ fake-provider-dispatch|cleanup|Completed|Delete|deleted|fake-dispatch|fake-dispa
 
 function Invoke-CredentialNativeRecoveryGate {
     if ([string]::IsNullOrWhiteSpace($AuthorizationManifest)) { throw 'CredentialNativeRecovery requires exact authority.' }
-    $expected=[IO.Path]::GetFullPath((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.v1.json'))
+    $expected=[IO.Path]::GetFullPath((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.ad876b9a.v1.json'))
     $path=[IO.Path]::GetFullPath((Join-Path $repoRoot $AuthorizationManifest))
     if(-not[string]::Equals($path,$expected,[StringComparison]::OrdinalIgnoreCase)){throw 'Recovery refuses any other manifest path.'}
     $bytes=[IO.File]::ReadAllBytes($path);$sha=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant();$m=[Text.Encoding]::UTF8.GetString($bytes)|ConvertFrom-Json -Depth 100 -DateKind String
-    if($m.manifest_id-ne'infinium.m1-s6.wp4.credential-native-recovery/89baee92-14d6-4f2b-a970-0fe6be15c54c'-or$m.status-ne'ready-for-owner-acceptance'){throw 'Recovery identity is not executable.'}
+    if($m.manifest_id-ne'infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff'-or$m.status-ne'ready-for-owner-acceptance'){throw 'Recovery identity is not executable.'}
     $close=[string]$m.binding.close_ready_recovery_commit;$head=(&git rev-parse HEAD).Trim()
     if((&git branch --show-current).Trim()-ne'codex/m1-s6'){throw 'Recovery requires branch codex/m1-s6.'}
     if($outputRootExistedBeforeInvocation){throw 'Recovery requires a fresh absent output root.'}
     if(-not[string]::IsNullOrWhiteSpace((&git status --porcelain))){throw 'Recovery requires clean committed state.'}
-    foreach($ancestor in @('fd6bd645f041502333d92b5e95c69bf8c69f2c83',$close)){&git merge-base --is-ancestor $ancestor $head;if($LASTEXITCODE-ne0){throw 'Recovery ancestry failed.'}}
-    $allowed=@('docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.v1.json','docs/plans/milestones/m1/slices/s6/record.md')
+    foreach($ancestor in @('2efba7c96ce356c5d4687a27e115ff802ec6b42f',$close)){&git merge-base --is-ancestor $ancestor $head;if($LASTEXITCODE-ne0){throw 'Recovery ancestry failed.'}}
+    $allowed=@('docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.ad876b9a.v1.json','docs/plans/milestones/m1/slices/s6/record.md')
     if(@(&git diff --name-only "$close..$head"|?{$_ -notin $allowed}).Count-ne0){throw 'Recovery post-binding drift refused.'}
     $record=Get-Content (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/record.md') -Raw
     $marker="WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=$($m.manifest_id) sha256=$sha close_ready_commit=$close expires_at_utc=$($m.expires_at_utc)"
     if(@($record-split"`r?`n"|?{$_-ceq$marker}).Count-ne1){throw 'Recovery owner marker missing.'}
     if($record.Contains("WP4_RECOVERY_EXECUTED manifest_id=$($m.manifest_id)",[StringComparison]::Ordinal)){throw 'Recovery already consumed.'}
     if([DateTimeOffset]::UtcNow-ge[DateTimeOffset]::Parse([string]$m.expires_at_utc)){throw 'Recovery expired.'}
-    & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp4-recovery.ps1') -ManifestPath $path;if($LASTEXITCODE-ne0){throw 'Recovery validation failed.'}
+    & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp4-recovery-ad876b9a.ps1') -ManifestPath $path;if($LASTEXITCODE-ne0){throw 'Recovery validation failed.'}
     & dotnet build Infinium.sln -c Release --no-restore --nologo;if($LASTEXITCODE-ne0){throw 'Recovery build failed.'}
     $lockRoot=Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-recovery-locks';[IO.Directory]::CreateDirectory($lockRoot)|Out-Null
     $lock=Join-Path $lockRoot (([Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes([string]$m.manifest_id))).ToLowerInvariant())+'.json')
@@ -1761,7 +1764,23 @@ function Invoke-CredentialNativeRecoveryGate {
     & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp4-recovery-evidence.ps1') -ManifestPath $path -ManifestSha256 $sha -ManifestId ([string]$m.manifest_id) -EvidencePath $evidence
     if($LASTEXITCODE-ne0){throw 'Recovery evidence semantic validation failed; namespace remains blocked.'}
     $ev=Get-Content $evidence -Raw|ConvertFrom-Json -Depth 100
-    Write-Receipt 'CredentialNativeRecovery' ([ordered]@{manifest_id=$m.manifest_id;manifest_sha256=$sha;target_absence_count=12;native_call_counts=$ev.native_call_counts;network_operations=0;provider_operations=0;namespace_disposition='cleanup-confirmed-absent-never-reuse'}) 'passed' $true
+    $recoveryFingerprints=@($m.disposable_namespace.targets.target_fingerprint_sha256)
+    $recoveryTrace=@($ev.native_call_trace)
+    $recoveryAbsence=@($ev.target_absence)
+    $recoveryCounts=$ev.native_call_counts
+    if($ev.status-ne'passed'-or[bool]$ev.cleanup_ambiguity-or-not[bool]$ev.namespace_reuse_blocked-or
+        $ev.namespace_disposition-ne'cleanup-confirmed-absent-never-reuse'-or
+        @($recoveryAbsence).Count-ne2-or@($recoveryAbsence|?{$_.result-ne'ERROR_NOT_FOUND'}).Count-ne0-or
+        @($recoveryAbsence.target_fingerprint_sha256 | Sort-Object -Unique).Count-ne2-or
+        @($recoveryAbsence|?{$_.target_fingerprint_sha256 -notin $recoveryFingerprints}).Count-ne0-or
+        [int]$recoveryCounts.cred_write_w-ne0-or[int]$recoveryCounts.cred_read_w-gt6-or
+        [int]$recoveryCounts.cred_delete_w-gt2-or[int]$recoveryCounts.cred_free-gt2-or
+        [int]$recoveryCounts.total-ne$recoveryTrace.Count-or$recoveryTrace.Count-gt10-or
+        [int]$ev.network_operations-ne0-or[int]$ev.dns_operations-ne0-or
+        [int]$ev.provider_operations-ne0-or[int]$ev.billable_operations-ne0){
+        throw 'Recovery gate direct exact-effect/absence/count oracle failed; namespace remains blocked.'
+    }
+    Write-Receipt 'CredentialNativeRecovery' ([ordered]@{manifest_id=$m.manifest_id;manifest_sha256=$sha;recovery_target_absence_count=2;prior_exact_absence_count=10;combined_namespace_target_absence_count=12;prior_terminal_evidence_sha256=$m.binding.terminal_evidence_sha256;native_call_counts=$ev.native_call_counts;network_operations=0;provider_operations=0;namespace_disposition='cleanup-confirmed-absent-never-reuse'}) 'passed' $true
 }
 
 Push-Location $repoRoot
