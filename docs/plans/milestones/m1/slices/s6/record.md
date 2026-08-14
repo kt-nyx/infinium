@@ -6779,3 +6779,5 @@ all prior lineage, target, UI, call, cleanup, canary, containment, and
 provider-isolation checks remain accepted. Owner marker, execution marker,
 fresh output, and fresh authority lock are absent; exact-root process count is
 zero. This is close-ready only and does not authorize native execution.
+
+WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/c6e9226e-3d95-496c-bda6-c9142bb6b980 sha256=e8a3075f4509043d304026705636eac29ba09a1549a403d419b10edebcf378b7 close_ready_commit=31d98a951eddde881d20e4a18946d5e5edcb971b expires_at_utc=2026-08-16T22:19:16.8964908Z
