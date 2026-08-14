@@ -5431,3 +5431,34 @@ superseded before effect; only the final exact marker below is executable.
 The final rebound manifest SHA-256 is
 `0b7e9f9c0b24328c507a804f32720b90ac8c52fd234189be7d9ad501b567fdc2`.
 WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff sha256=0b7e9f9c0b24328c507a804f32720b90ac8c52fd234189be7d9ad501b567fdc2 close_ready_commit=0b4a5436365f5092b4376323884940f8c49bc2a1 expires_at_utc=2026-08-15T05:55:40.1170472Z
+
+### Two-target cleanup recovery terminal evidence
+
+Fresh independent pre-effect review accepted exact candidate
+`5a4c52000f615ced27f62a3127ccf4aa6adcbb58`, close-ready implementation
+`0b4a5436365f5092b4376323884940f8c49bc2a1`, and exact manifest bytes above.
+The sole cleanup-only invocation then completed without UI. `backup-new` and
+`fake-dispatch` each returned exact-target `CredReadW(ERROR_NOT_FOUND)`; no
+delete or free was required. The exact recovery trace is W0/R2/D0/F0/T2, all
+within the accepted limits, with no later call, retry, fallback, write,
+enumeration, arbitrary target, alternate store, UI, DNS, network, provider,
+billable, private-fixture, archive, later-package, or push effect.
+
+Recovery evidence has 2,045 bytes and SHA-256
+`026bb2b1aa5ad2ff50777a5adccda370134317e0b6f6029989e267afb7e068f0`.
+It binds the prior terminal evidence/lock, reports
+`cleanup_ambiguity=false`, `namespace_reuse_blocked=true`, and combines its two
+terminal absence results with the immutable prior ten-target proof. All 12
+targets in namespace `ad876b9a` are therefore proven absent; the namespace and
+both one-shot authorities remain consumed and never reusable. The 223-byte
+recovery lock has SHA-256
+`2ccbcebf1bb887ae1423b61013ff164612dd8907b3323273a2690b2747b432a0`.
+The canonical gate receipt has 827 bytes and SHA-256
+`e16282787c9aaa95991fcb723d506dab98945f398a0908d39c078f31d901c977`.
+Independent semantic validation passed, and repository cleanup proves zero
+remaining `dotnet`, `testhost`, credential-helper, or coordinator processes.
+WP4 remains unaccepted because the original qualification did not reach the
+restore reauthentication or fake-dispatch scenarios. The next work is the
+bounded non-native SQLite-exception classification correction and a fresh
+qualification manifest; no qualification or manual run is authorized here.
+WP4_RECOVERY_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff sha256=0b7e9f9c0b24328c507a804f32720b90ac8c52fd234189be7d9ad501b567fdc2 execution_head_commit=5a4c52000f615ced27f62a3127ccf4aa6adcbb58 status=passed recovery_native_calls=W0-R2-D0-F0-T2 recovery_target_absence=2 prior_target_absence=10 combined_namespace_target_absence=12 namespace_disposition=cleanup-confirmed-absent-never-reuse evidence_sha256=026bb2b1aa5ad2ff50777a5adccda370134317e0b6f6029989e267afb7e068f0 authority_lock_sha256=2ccbcebf1bb887ae1423b61013ff164612dd8907b3323273a2690b2747b432a0 receipt_sha256=e16282787c9aaa95991fcb723d506dab98945f398a0908d39c078f31d901c977
