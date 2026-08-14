@@ -60,6 +60,14 @@ $resolvedOutputRoot = if ([System.IO.Path]::IsPathRooted($OutputRoot)) {
 } else {
     [System.IO.Path]::GetFullPath((Join-Path $repoRoot $OutputRoot))
 }
+if ($Gate -eq 'CredentialNative') {
+    $expectedCredentialNativeOutputRoot = [System.IO.Path]::GetFullPath((Join-Path $repoRoot `
+        'artifacts/m1-slice6/wp4-native-076b981a'))
+    if (-not [string]::Equals($resolvedOutputRoot, $expectedCredentialNativeOutputRoot,
+            [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'CredentialNative requires the exact fresh output root bound by the accepted manifest.'
+    }
+}
 $outputRootExistedBeforeInvocation = Test-Path -LiteralPath $resolvedOutputRoot
 $outputRootHadEntriesBeforeInvocation = $outputRootExistedBeforeInvocation -and
     $null -ne (Get-ChildItem -LiteralPath $resolvedOutputRoot -Force | Select-Object -First 1)

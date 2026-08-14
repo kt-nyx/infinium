@@ -194,7 +194,9 @@ if ([int64]$manifest.operation_limits.entry_dialogs -ne 3) {
 if ([bool]$manifest.entry_boundary.prepopulate -or [bool]$manifest.entry_boundary.echo -or
     [bool]$manifest.entry_boundary.clipboard_return -or
     -not ([string]$manifest.entry_boundary.control).Contains('begins empty', [StringComparison]::Ordinal) -or
-    -not ([string]$manifest.entry_boundary.operator_action).Contains('manually types', [StringComparison]::Ordinal) -or
+    -not ([string]$manifest.entry_boundary.operator_action).Contains(
+        'manually types disposable dummy value #1 and selects Submit in dialog #1; leaves dialog #2 blank and selects Cancel; then manually types a different disposable dummy value #2 and selects Submit in restored-g002 dialog #3',
+        [StringComparison]::Ordinal) -or
     -not ([string]$manifest.entry_boundary.operator_action).Contains(
         'no secret is supplied in arguments, environment, file, stdin, IPC, or programmatic window message',
         [StringComparison]::Ordinal) -or

@@ -108,7 +108,10 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.IsTrue(entry.GetProperty("control").GetString()!.Contains(
             "Settings -> Add/Replace -> WPF-parented helper modal", StringComparison.Ordinal));
         Assert.IsTrue(entry.GetProperty("operator_action").GetString()!.Contains(
-            "manually types", StringComparison.Ordinal));
+            "manually types disposable dummy value #1 and selects Submit in dialog #1; "
+                + "leaves dialog #2 blank and selects Cancel; then manually types a different disposable dummy value #2 "
+                + "and selects Submit in restored-g002 dialog #3",
+            StringComparison.Ordinal));
         Assert.IsTrue(entry.GetProperty("operator_action").GetString()!.Contains(
             "clipboard paste is deliberately blocked only in the qualification harness", StringComparison.Ordinal));
         Assert.IsTrue(entry.GetProperty("operator_action").GetString()!.Contains(
@@ -222,7 +225,7 @@ public sealed class CredentialNativeAuthorizationTests
             rejected["disposable_namespace"]!["targets"]![8]!["access_profile_id"] =
                 "m1s6-wp4-4936dcefa0f4430298990afd99b19799-crash-restart";
             rejected["disposable_namespace"]!["targets"]![8]!["target_fingerprint_sha256"] =
-                "6d8306e88f318fb6e6f51853f963c0fc4e321188745117042f5da40c09018f92";
+                "6d8306b7661f2b3242ad93c2438917fac74cf93b1e52c486e95ff346550d37bb";
             Reject(rejected);
 
             rejected = accepted.DeepClone();
@@ -255,6 +258,16 @@ public sealed class CredentialNativeAuthorizationTests
             StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("--credential-native-qualification-v2", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("FileMode]::CreateNew", StringComparison.Ordinal));
+        int outputRootGuard = gate.IndexOf("$expectedCredentialNativeOutputRoot", StringComparison.Ordinal);
+        int globalOutputCreation = gate.IndexOf("New-Item -ItemType Directory -Force -Path $resolvedOutputRoot",
+            StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, outputRootGuard);
+        Assert.IsGreaterThanOrEqualTo(0, globalOutputCreation);
+        Assert.IsLessThan(globalOutputCreation, outputRootGuard);
+        Assert.IsTrue(gate.Contains("artifacts/m1-slice6/wp4-native-076b981a", StringComparison.Ordinal));
+        Assert.IsTrue(gate.Contains(
+            "CredentialNative requires the exact fresh output root bound by the accepted manifest.",
+            StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("manifestIdentitySha", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains(
             "UTF8.GetBytes([string]$manifest.manifest_id)", StringComparison.Ordinal));
@@ -265,6 +278,16 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.IsFalse(activeGate.Contains("--credential-native-qualification'", StringComparison.Ordinal));
         Assert.IsFalse(activeGate.Contains("wp4-credential-native-authorization.v1.json", StringComparison.Ordinal));
         Assert.IsFalse(activeGate.Contains("evidenceRecoveryOnly", StringComparison.Ordinal));
+
+        string unauthorizedRoot = Path.Combine(root, "artifacts", "test-temp",
+            "wp4-unauthorized-output-" + Guid.NewGuid().ToString("N"));
+        Assert.IsFalse(Directory.Exists(unauthorizedRoot));
+        Assert.AreEqual(1, RunPwsh(root, "eng/verify-m1-slice6.ps1",
+            "-Gate", "CredentialNative",
+            "-OutputRoot", unauthorizedRoot,
+            "-AuthorizationManifest",
+            "docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json"));
+        Assert.IsFalse(Directory.Exists(unauthorizedRoot));
     }
 
     [TestMethod]

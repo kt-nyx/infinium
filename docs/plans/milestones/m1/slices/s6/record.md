@@ -6408,3 +6408,29 @@ zero findings. Its 1,390-byte receipt SHA-256 is
 Fresh terminal review of the corrected exact candidate remains required; no
 owner marker, execution marker, lock, output, dialog, native operation, or
 external effect exists.
+
+Replacement review found that the consumed-tuple regression used a mistyped
+4936 crash fingerprint, so it could reject at generic fingerprint derivation
+instead of proving the exact-tuple guard. The production schema, semantic
+validator, and helper tables were already exact. The test now uses the exact
+consumed and independently derived fingerprint
+`6d8306b7661f2b3242ad93c2438917fac74cf93b1e52c486e95ff346550d37bb`.
+The manifest was returned to draft and its close-ready placeholder cleared
+until the corrected focused test, replacement binding, Layer 6, and terminal
+re-review pass. No effect was performed.
+
+The same replacement review found that the operator instruction still said
+one disposable dummy value even though the three-dialog flow has two Submit
+actions. The manifest, semantic validator, and tests now bind the exact human
+sequence: disposable dummy #1 Submit in dialog #1, blank Cancel in dialog #2,
+and a different disposable dummy #2 Submit in the restored-g002 dialog #3.
+No real key is used. The correction changes authorization wording only and
+performs no UI or native operation.
+
+Review also found that the gate validated the manifest's command text but did
+not compare the caller's actual output root to the accepted root. The gate now
+rejects any CredentialNative output root other than
+`artifacts/m1-slice6/wp4-native-076b981a` immediately after path resolution
+and before any directory is created. A focused source-order assertion binds
+that pre-mutation placement. This closes execution/evidence-root drift without
+creating a directory, lock, or effect.
