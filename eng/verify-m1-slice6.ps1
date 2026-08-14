@@ -86,7 +86,9 @@ if ($Gate -eq 'CredentialNativeRecovery' -and
 $outputRootExistedBeforeInvocation = Test-Path -LiteralPath $resolvedOutputRoot
 $outputRootHadEntriesBeforeInvocation = $outputRootExistedBeforeInvocation -and
     $null -ne (Get-ChildItem -LiteralPath $resolvedOutputRoot -Force | Select-Object -First 1)
-New-Item -ItemType Directory -Force -Path $resolvedOutputRoot | Out-Null
+if ($Gate -ne 'CredentialNativeRecovery') {
+    New-Item -ItemType Directory -Force -Path $resolvedOutputRoot | Out-Null
+}
 
 $schemaNames = @(
     'provider-access-profile.v1.schema.json',
@@ -1997,6 +1999,7 @@ function Invoke-CredentialNativeRecoveryGate {
     $lockRoot=Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-recovery-locks';[IO.Directory]::CreateDirectory($lockRoot)|Out-Null
     $lock=Join-Path $lockRoot (([Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes([string]$m.manifest_id))).ToLowerInvariant())+'.json')
     $stream=[IO.File]::Open($lock,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None);try{$data=[Text.Encoding]::UTF8.GetBytes("{`"manifest_id`":`"$($m.manifest_id)`",`"manifest_sha256`":`"$sha`",`"disposition`":`"consumed-never-reuse`"}`n");$stream.Write($data)}finally{$stream.Dispose()}
+    New-Item -ItemType Directory -Path $resolvedOutputRoot | Out-Null
     $helper=Join-Path $repoRoot 'src/Infinium.CredentialHelper/bin/Release/net10.0/Infinium.CredentialHelper.exe';$evidence=Join-Path $resolvedOutputRoot 'credential-native-recovery-evidence.v1.json'
     $psi=[Diagnostics.ProcessStartInfo]::new($helper);$psi.UseShellExecute=$false;$psi.CreateNoWindow=$true;$psi.Environment.Clear();foreach($a in @('--credential-native-recovery','--manifest',$path,'--manifest-sha256',$sha,'--manifest-id',[string]$m.manifest_id,'--evidence',$evidence)){$psi.ArgumentList.Add($a)}
     $p=[Diagnostics.Process]::Start($psi);if(-not$p.WaitForExit(120000)){$p.Kill($true);throw 'Recovery deadline exceeded; namespace remains blocked.'};if($p.ExitCode-ne0){throw "Recovery helper failed $($p.ExitCode); namespace remains blocked."}

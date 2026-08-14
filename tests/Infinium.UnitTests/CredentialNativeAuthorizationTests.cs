@@ -910,6 +910,19 @@ public sealed class CredentialNativeAuthorizationTests
             "The exact output-root guard must reject before any directory creation.");
         Assert.IsTrue(gate.Contains("failed-evidence-retention", StringComparison.Ordinal));
         Assert.IsTrue(gate.Contains("wp4-credential-native-recovery.076b981a.v1.json", StringComparison.Ordinal));
+        int recoveryGateStart = gate.IndexOf("function Invoke-CredentialNativeRecoveryGate", StringComparison.Ordinal);
+        int recoveryValidator = gate.IndexOf("& $validatorPath -ManifestPath $path", recoveryGateStart,
+            StringComparison.Ordinal);
+        int recoveryLock = gate.IndexOf("[IO.File]::Open($lock,[IO.FileMode]::CreateNew", recoveryGateStart,
+            StringComparison.Ordinal);
+        int recoveryOutputCreation = gate.IndexOf("New-Item -ItemType Directory -Path $resolvedOutputRoot",
+            recoveryGateStart, StringComparison.Ordinal);
+        int recoveryLaunch = gate.IndexOf("[Diagnostics.Process]::Start($psi)", recoveryGateStart,
+            StringComparison.Ordinal);
+        Assert.IsGreaterThan(recoveryGateStart, recoveryValidator);
+        Assert.IsGreaterThan(recoveryValidator, recoveryLock);
+        Assert.IsGreaterThan(recoveryLock, recoveryOutputCreation);
+        Assert.IsGreaterThan(recoveryOutputCreation, recoveryLaunch);
         string wrongOutputRoot = Path.Combine(root, "artifacts", "test-temp", Guid.NewGuid().ToString("N"));
         Assert.AreEqual(1, RunPwsh(root, "eng/verify-m1-slice6.ps1",
             "-Gate", "CredentialNativeRecovery", "-AuthorizationManifest",
@@ -1022,6 +1035,9 @@ public sealed class CredentialNativeAuthorizationTests
         Reject(node => node["prior_terminal_evidence_sha256"] = new string('0', 64));
         Reject(node => node["prior_success_summary_sha256"] = new string('0', 64));
         Reject(node => node["network_operations"] = 1);
+        Reject(node => node.Remove("network_operations"));
+        Reject(node => node.Remove("prior_terminal_evidence_sha256"));
+        Reject(node => node["unexpected"] = true);
         Reject(node =>
         {
             JsonArray mutatedTrace = node["native_call_trace"]!.AsArray();
@@ -1062,21 +1078,36 @@ public sealed class CredentialNativeAuthorizationTests
                 ["disposition"] = "consumed-never-reuse",
             }.ToJsonString());
             string lockSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(lockPath)));
-            string[] Arguments() =>
+            string[] Arguments(string selectedEvidencePath, string selectedEvidenceSha, string selectedReceiptPath) =>
             [
                 "eng/reconstruct-m1-slice6-wp4-recovery-076b981a-receipt.ps1",
                 "-ManifestPath", manifestPath, "-ManifestSha256", sha,
-                "-EvidencePath", evidencePath, "-EvidenceSha256", evidenceSha,
+                "-EvidencePath", selectedEvidencePath, "-EvidenceSha256", selectedEvidenceSha,
                 "-AuthorityLockPath", lockPath, "-AuthorityLockSha256", lockSha,
-                "-ReceiptPath", receiptPath, "-TestOnlyPaths",
+                "-ReceiptPath", selectedReceiptPath, "-TestOnlyPaths",
             ];
-            Assert.AreEqual(0, RunPwsh(root, Arguments().Append("-ReportFailureOutput").ToArray()),
+            Assert.AreEqual(0, RunPwsh(root,
+                Arguments(evidencePath, evidenceSha, receiptPath).Append("-ReportFailureOutput").ToArray()),
                 "Read-only v2 receipt reconstruction must pass.");
             Assert.IsTrue(File.Exists(receiptPath));
             string receipt = File.ReadAllText(receiptPath);
             Assert.IsTrue(receipt.Contains("post-effect-reconstruction-from-immutable-v2-evidence-no-native-retry",
                 StringComparison.Ordinal));
-            Assert.AreEqual(1, RunPwsh(root, Arguments()), "CreateNew must refuse receipt overwrite.");
+            Assert.AreEqual(1, RunPwsh(root, Arguments(evidencePath, evidenceSha, receiptPath)),
+                "CreateNew must refuse receipt overwrite.");
+
+            JsonObject rawTargetEvidence = evidence.DeepClone().AsObject();
+            JsonObject manifest = JsonNode.Parse(File.ReadAllBytes(manifestPath))!.AsObject();
+            JsonNode target = manifest["disposable_namespace"]!["targets"]![0]!;
+            rawTargetEvidence["raw_target"] =
+                $"Infinium:{target["access_profile_id"]!.GetValue<string>()}:{target["generation_id"]!.GetValue<string>()}";
+            string badEvidencePath = Path.Combine(tempRoot, "bad-evidence.json");
+            string badReceiptPath = Path.Combine(tempRoot, "bad-receipt.json");
+            File.WriteAllText(badEvidencePath, rawTargetEvidence.ToJsonString());
+            string badEvidenceSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(badEvidencePath)));
+            Assert.AreEqual(1, RunPwsh(root, Arguments(badEvidencePath, badEvidenceSha, badReceiptPath)));
+            Assert.IsFalse(File.Exists(badReceiptPath),
+                "Raw-target evidence must fail before any passing receipt is created.");
         }
         finally { Directory.Delete(tempRoot, recursive: true); }
     }

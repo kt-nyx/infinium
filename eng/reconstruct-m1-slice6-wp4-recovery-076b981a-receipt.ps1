@@ -91,6 +91,20 @@ if ($lockValue.manifest_id -cne $manifestId -or
     throw '076b981a recovery authority lock differs before reconstruction.'
 }
 
+$rawTargets = @($manifestValue.disposable_namespace.targets | ForEach-Object {
+    "Infinium:$($_.access_profile_id):$($_.generation_id)"
+})
+foreach ($surface in @($evidence, $lock)) {
+    $surfaceBytes = [IO.File]::ReadAllBytes($surface)
+    foreach ($rawTarget in $rawTargets) {
+        foreach ($encoding in @([Text.Encoding]::UTF8, [Text.Encoding]::Unicode)) {
+            if ($encoding.GetString($surfaceBytes).Contains($rawTarget, [StringComparison]::Ordinal)) {
+                throw '076b981a recovery reconstruction input retained a raw target.'
+            }
+        }
+    }
+}
+
 $receiptValue = [ordered]@{
     gate = 'CredentialNativeRecovery'
     status = 'passed'
@@ -123,10 +137,7 @@ $receiptBytes = [Text.UTF8Encoding]::new($false).GetBytes((ConvertTo-CanonicalJs
 $stream = [IO.File]::Open($receipt, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
 try { $stream.Write($receiptBytes); $stream.Flush($true) } finally { $stream.Dispose() }
 
-$rawTargets = @($manifestValue.disposable_namespace.targets | ForEach-Object {
-    "Infinium:$($_.access_profile_id):$($_.generation_id)"
-})
-foreach ($surface in @($evidence, $receipt, $lock)) {
+foreach ($surface in @($receipt)) {
     $surfaceBytes = [IO.File]::ReadAllBytes($surface)
     foreach ($rawTarget in $rawTargets) {
         foreach ($encoding in @([Text.Encoding]::UTF8, [Text.Encoding]::Unicode)) {

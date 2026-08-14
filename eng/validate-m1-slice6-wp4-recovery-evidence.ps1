@@ -64,7 +64,19 @@ if ($isCurrentRecovery) {
         throw 'Current recovery terminal namespace evidence differs.'
     }
     if ($is076bRecovery) {
-        if ($null -ne $evidence.prior_terminal_evidence_sha256 -or
+        $expectedV2Properties = @(
+            'schema','status','manifest_id','manifest_sha256','target_absence','native_call_counts',
+            'native_call_trace','cleanup_ambiguity','namespace_reuse_blocked','namespace_disposition',
+            'prior_terminal_evidence_sha256','prior_terminal_artifact_kind','prior_terminal_artifact_sha256',
+            'prior_success_summary_sha256','prior_backup_metadata_sha256',
+            'prior_helper_receipt_inventory_sha256','prior_output_inventory_sha256',
+            'prior_authority_lock_sha256','prior_exact_absence_count',
+            'combined_namespace_target_absence_count','network_operations','dns_operations',
+            'provider_operations','billable_operations')
+        $actualV2Properties = @($evidence.PSObject.Properties.Name)
+        if ($actualV2Properties.Count -ne $expectedV2Properties.Count -or
+            @(Compare-Object $expectedV2Properties $actualV2Properties -CaseSensitive).Count -ne 0 -or
+            $null -ne $evidence.prior_terminal_evidence_sha256 -or
             $evidence.prior_terminal_artifact_kind -cne [string]$manifest.binding.terminal_artifact_kind -or
             $evidence.prior_terminal_artifact_sha256 -cne [string]$manifest.binding.terminal_artifact_sha256 -or
             $evidence.prior_success_summary_sha256 -cne [string]$manifest.binding.success_summary_sha256 -or
