@@ -6382,3 +6382,13 @@ testhost, helper, and coordinator process count is zero. Owner marker count,
 execution marker count, fresh lock presence, and fresh output presence are all
 zero. Fresh independent exact-candidate review remains required before this
 manifest may be presented for owner acceptance.
+
+Fresh final review found the authoritative Active handoff table still named
+the already completed post-4936 recovery and root-cause correction as current
+and next work, despite the current-state body correctly advancing to fresh
+`076b981a` owner-review preparation. The manifest was returned to draft and
+its close-ready placeholder cleared while the live table was advanced to the
+same exact preparation-only, stop-before-manual/native state. This is a
+documentation-authority correction only; no marker, lock, output, dialog,
+native operation, or external effect was created. Replacement close-ready
+binding, Layer 6, and terminal re-review are required.
