@@ -6766,3 +6766,16 @@ The replacement close-ready commit is
 `31d98a951eddde881d20e4a18946d5e5edcb971b`. The manifest now binds that exact
 ancestor; only the final manifest and append-only record may follow before
 review and owner acceptance. No execution authority exists yet.
+
+Fresh independent replacement review ACCEPTed exact clean candidate
+`a5ee7f3e0aa702820dc2055f8d87f1912f0225ea`, close-ready ancestor
+`31d98a951eddde881d20e4a18946d5e5edcb971b`, and the 22,824-byte manifest at
+SHA-256 `e8a3075f4509043d304026705636eac29ba09a1549a403d419b10edebcf378b7`.
+The candidate-bound Layer 6 receipt is 1,390 bytes at SHA-256
+`e91cca2319fb28df46f29fc8e61a56f7644adc4c7c8a4da133d976b15812499f`,
+with 13 paths and zero findings. The reviewer confirmed the pre-lock rehash,
+clean-state recheck, exact SHA argument, and coordinator pre-launch rejection;
+all prior lineage, target, UI, call, cleanup, canary, containment, and
+provider-isolation checks remain accepted. Owner marker, execution marker,
+fresh output, and fresh authority lock are absent; exact-root process count is
+zero. This is close-ready only and does not authorize native execution.
