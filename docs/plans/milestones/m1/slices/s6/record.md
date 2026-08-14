@@ -5844,3 +5844,33 @@ expiry `2026-08-16T14:43:54.4033492Z`, and close-ready commit
 No owner marker, execution marker, output root, authority lock, manual dialog,
 native credential call, provider, DNS, network, or billable effect exists for
 this identity.
+
+### Fresh independent Windows credential/security review
+
+At `2026-08-14T15:19:01.3890104Z`, a fresh read-only reviewer returned ACCEPT
+with no finding against exact clean HEAD
+`15b26db1b29865a082c4dee2b647ef199a96a5f3`, close-ready consumer commit
+`4adc7faadf982017dce90814ba2788fe64271efb`, and the exact 21,699-byte
+manifest SHA-256
+`c0e6aed84ca8d01a2722ff9970d52f816f47626f3e309cf9081b3c71b1245497`.
+
+The reviewer independently validated the schema, semantic validator, gate,
+coordinator, native-store parser, exact immutable `e3f76cd6` failure lineage,
+accepted `8b7fc811` recovery lineage and byte-exact receipt reconstruction,
+prior 10+2 absence closure, all 12 fresh unique and disjoint derived targets,
+the four-call native allowlist, no-enumeration/no-fallback rules, three exact
+helper-owned manual phases, fake-only dispatch, finite limits, canaries,
+terminal cleanup and absence proof, ambiguity handling, and never-reuse
+rules. The exact candidate-bound Layer 6 receipt remained 1,389 bytes with
+SHA-256
+`8aa0286314bd77a8003eb5a0fea9c5699fad08eb3dfefe580cd0bceb339d0e47`.
+Independent reruns passed authorization/build-policy 36/36, broader
+credential integration 39/39, and the WP4 handoff contract 1/1.
+
+The reviewer confirmed that no `e6e04651` owner marker, execution marker,
+output root, or authority lock exists, the worktree was clean, and exact-root
+repository process count was zero. No Credential Manager, native
+qualification, manual UI, provider, DNS, network, or billable operation was
+invoked. The manifest remains `execution_authorized=false`; the only next
+eligible action is exact-byte owner review and acceptance. No native or manual
+qualification may begin before that acceptance.
