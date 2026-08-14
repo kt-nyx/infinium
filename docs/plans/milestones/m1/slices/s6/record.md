@@ -6840,3 +6840,16 @@ passed 1/1. Candidate-bound Layer 6 then passed from baseline
 allowed-path, JSON, link, private/archive, or gap findings, and no credential
 or network permission. The 1,356-byte `layer6review.json` receipt has SHA-256
 `08d63a724770e124e7ce37c1f3eedde7675433c17c34dacddcf7de9b2ca93076`.
+
+Fresh handoff review found that the preserved legacy branch still matched the
+new document through historical WP1/WP2 rows, so the exact WP4 predicate was
+not necessarily exercised. The correction at
+`db282f1ee96a56dbb552072f5b7fd79d6fd84268` binds the legacy branch to its
+exact WP2 current-work and next-action rows and exposes a pure handoff
+predicate. A mutation-sensitive regression removes each WP4 execution,
+evidence, scope, native prohibition, and provider prohibition fact in turn and
+proves rejection; the focused contract class passed 2/2. Replacement
+candidate-bound Layer 6 passed from `be55eda59752f884fe6e113f40927295da45f2cd`
+through `db282f1ee96a56dbb552072f5b7fd79d6fd84268` with the same four exact
+paths and zero findings. Its 1,356-byte receipt has SHA-256
+`695bf43be961dd3fe412c0aa42e3267dd34b6dfe43e63eaa1eeb779281e83564`.
