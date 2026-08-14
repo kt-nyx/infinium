@@ -6580,3 +6580,20 @@ its expiry is `2026-08-15T16:50:03.0720393Z`. The exact semantic validator
 passes with `execution_authorized=false`; its output root and derived one-shot
 lock remain absent. This binding is ready only for fresh independent
 pre-effect review and grants no effect authority by itself.
+
+Exact-byte verification at binding HEAD
+`736afa3e5298ff07f644ba6f0bb682b4f84f8253` repeated the semantic validator,
+zero-warning Release solution build, and focused authorization/build-policy
+filter at 41/41. Candidate-bound Layer 6 review of close-ready
+`d7788b3c3ca437505affb554fb61236cc9afd835` against baseline
+`43af93e64a1f5d15385b35b77b49c8dec71d4a9d` passed nine changed paths with
+zero allowed-path, JSON, relative-link, private/archive, or gap findings. Its
+1,390-byte receipt SHA-256 is
+`e39b83c70c64b4614b3cac1502191748d72a20aa8b8818f732786e3bba8572d2`.
+A preliminary Layer 6 invocation using the binding HEAD was rejected because
+that commit's `docs/current-state.md` is outside close-ready implementation
+scope; the accepted candidate-bound receipt therefore uses the exact
+close-ready commit.
+No recovery owner/execution marker, output, or lock exists, and no effect was
+performed. The exact candidate is ready for fresh independent pre-effect
+review only.
