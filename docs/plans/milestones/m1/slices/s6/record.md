@@ -5966,3 +5966,5 @@ and exact-root repository process count returned to zero after build-server
 shutdown. The replacement manifest SHA-256 is
 `0fc3ab730fc7474292db69ee20b993505396e9b81c7041169d53380925790086`.
 Fresh independent pre-effect acceptance remains mandatory before recovery.
+
+WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/6232bae5-f735-4db7-a74f-7ede9f67b752 sha256=0fc3ab730fc7474292db69ee20b993505396e9b81c7041169d53380925790086 close_ready_commit=4ad6aea1cd680037d3a832db01174bd469559b8e expires_at_utc=2026-08-15T16:00:31.8331744Z
