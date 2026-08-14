@@ -5826,3 +5826,21 @@ and stop-before-manual/native wording. Ordinary Layer 6 and the historical
 WP1 handoff mode remain unchanged. The manifest is returned to draft status
 until this verifier path and its contract tests pass, a replacement close-ready
 commit is recorded, and the final exact manifest bytes are rebound.
+
+The replacement verifier/consumer close-ready commit is
+`4adc7faadf982017dce90814ba2788fe64271efb`. Candidate-bound
+`Layer6Review -Wp4OwnerReviewHandoff` from exact correction
+`2f95692687b60d97db2710835e9d0966f131c164` passed across nine changed paths
+with zero findings. Its 1,389-byte receipt SHA-256 is
+`8aa0286314bd77a8003eb5a0fea9c5699fad08eb3dfefe580cd0bceb339d0e47`;
+the receipt confirms credential and network access are both forbidden and the
+WP4-specific handoff check was active.
+
+The final rebound manifest is 21,699 bytes with SHA-256
+`c0e6aed84ca8d01a2722ff9970d52f816f47626f3e309cf9081b3c71b1245497`,
+expiry `2026-08-16T14:43:54.4033492Z`, and close-ready commit
+`4adc7faadf982017dce90814ba2788fe64271efb`. Semantic validation reports
+`validated-ready-for-owner-acceptance` while `execution_authorized=false`.
+No owner marker, execution marker, output root, authority lock, manual dialog,
+native credential call, provider, DNS, network, or billable effect exists for
+this identity.
