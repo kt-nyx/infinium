@@ -220,6 +220,21 @@ function Get-CandidateText([string] $Commit, [string] $Path) {
     return [string]::Join("`n", $lines)
 }
 
+function Test-HandoffCloseoutCurrentState([string] $CurrentStateText) {
+    $wp1ToWp2 =
+        $CurrentStateText.Contains('| Current authorized work | `M1/S6/WP2` only:', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('| Next eligible action | Implement and independently accept `M1/S6/WP2` from the exact accepted plan; remain non-live and credential-free |', [System.StringComparison]::Ordinal)
+    $wp4ToWp8 =
+        $CurrentStateText.Contains('`M1/S6/WP8` accumulated non-live verification and pre-live review only', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('Accepted `M1/S6/WP4` qualification', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('no further Credential Manager operation is authorized', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('no provider request is authorized', [System.StringComparison]::Ordinal)
+
+    return $wp1ToWp2 -or $wp4ToWp8
+}
+
 function Assert-NoDuplicateJsonProperties([System.Text.Json.JsonElement] $Element, [string] $Path) {
     if ($Element.ValueKind -eq [System.Text.Json.JsonValueKind]::Object) {
         $names = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
@@ -556,17 +571,7 @@ function Invoke-Layer6ReviewGate {
             $failures.Add('HandoffCloseout requires exactly one changed candidate docs/current-state.md.')
         } else {
             $currentStateText = Get-CandidateText $candidateHash 'docs/current-state.md'
-            $wp1ToWp2 =
-                $currentStateText.Contains('M1/S6/WP2', [System.StringComparison]::Ordinal) -and
-                $currentStateText.Contains('Accepted Slice 6 WP1 candidate', [System.StringComparison]::Ordinal)
-            $wp4ToWp8 =
-                $currentStateText.Contains('`M1/S6/WP8` accumulated non-live verification and pre-live review only', [System.StringComparison]::Ordinal) -and
-                $currentStateText.Contains('Accepted `M1/S6/WP4` qualification', [System.StringComparison]::Ordinal) -and
-                $currentStateText.Contains('1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b', [System.StringComparison]::Ordinal) -and
-                $currentStateText.Contains('3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390', [System.StringComparison]::Ordinal) -and
-                $currentStateText.Contains('no further Credential Manager operation is authorized', [System.StringComparison]::Ordinal) -and
-                $currentStateText.Contains('no provider request is authorized', [System.StringComparison]::Ordinal)
-            if (-not $wp1ToWp2 -and -not $wp4ToWp8) {
+            if (-not (Test-HandoffCloseoutCurrentState $currentStateText)) {
                 $failures.Add('HandoffCloseout current state must record accepted WP1 and authorize M1/S6/WP2, or record accepted WP4 and authorize non-live M1/S6/WP8 only.')
             }
         }

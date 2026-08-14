@@ -60,4 +60,56 @@ public sealed class ProviderLayer6VerifierContractTests
         StringAssert.Contains(script, "JsonDocumentOptions");
         StringAssert.Contains(script, "Assert-NoDuplicateJsonProperties");
     }
+
+    [TestMethod]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
+    public void HandoffCloseoutRequiresEveryWp4ToWp8AuthorityFact()
+    {
+        string script = TestRepository.Read("eng", "verify-m1-slice6.ps1");
+        System.Text.RegularExpressions.Match function = System.Text.RegularExpressions.Regex.Match(
+            script,
+            @"(?ms)^function Test-HandoffCloseoutCurrentState\(.*?^\}");
+        Assert.IsTrue(function.Success, "Pure handoff predicate was not found.");
+
+        string[] required =
+        [
+            "`M1/S6/WP8` accumulated non-live verification and pre-live review only",
+            "Accepted `M1/S6/WP4` qualification",
+            "1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b",
+            "3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390",
+            "no further Credential Manager operation is authorized",
+            "no provider request is authorized",
+        ];
+        string valid = string.Join(Environment.NewLine, required);
+        static string Encode(string value) =>
+            Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(value));
+        string[] encoded = new string[required.Length];
+        for (int index = 0; index < required.Length; index++)
+        {
+            encoded[index] = $"'{Encode(required[index])}'";
+        }
+
+        string command = $$"""
+            {{function.Value}}
+            $valid = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{Encode(valid)}}'))
+            if (-not (Test-HandoffCloseoutCurrentState $valid)) { exit 10 }
+            foreach ($encoded in @({{string.Join(",", encoded)}})) {
+                $token = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encoded))
+                if (Test-HandoffCloseoutCurrentState $valid.Replace($token, '')) { exit 11 }
+            }
+            exit 0
+            """;
+        System.Diagnostics.ProcessStartInfo start = new("pwsh.exe")
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        start.ArgumentList.Add("-NoProfile");
+        start.ArgumentList.Add("-Command");
+        start.ArgumentList.Add(command);
+        using System.Diagnostics.Process process = System.Diagnostics.Process.Start(start)!;
+        Assert.IsTrue(process.WaitForExit(30_000), "Handoff predicate mutation test timed out.");
+        Assert.AreEqual(0, process.ExitCode, "WP4-to-WP8 handoff accepted a missing authority fact.");
+    }
 }
