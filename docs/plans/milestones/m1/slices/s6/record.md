@@ -6136,3 +6136,5 @@ UI, provider, network, private-fixture, or archive effect occurred.
 This is pre-effect acceptance only. It does not create owner authority or
 permit execution without the owner's explicit acceptance of the exact
 manifest ID, SHA-256, close-ready commit, and expiry.
+
+WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/4936dcef-a0f4-4302-9899-0afd99b19799 sha256=910ff1552d178bcfe5ff36fd9b618d187203c38c6b023d9610af5c702bdb3393 close_ready_commit=327bbda616c3e0cb2695f2183df3a0cc66d45249 expires_at_utc=2026-08-16T17:41:10.1460949Z
