@@ -690,6 +690,7 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
     private readonly FiniteNativeDeadline deadline;
     private readonly List<NativeCallTraceEntry> callTrace = [];
     private readonly Dictionary<SyntheticCredentialSlot, NativeTarget> manifestTargets = [];
+    private readonly List<NativeTarget> manifestTargetOrder = [];
     private readonly HashSet<string> consumedNonces = new(StringComparer.Ordinal);
     private readonly HashSet<string> writtenTargetFingerprints = new(StringComparer.Ordinal);
     private string? deleteFailureGenerationId;
@@ -772,6 +773,7 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 {
                     throw new InvalidDataException("The accepted manifest repeats a native credential slot.");
                 }
+                store.manifestTargetOrder.Add(target);
             }
             return store;
         }
@@ -894,6 +896,7 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
             {
                 throw new InvalidDataException("The recovery manifest repeats a native credential slot.");
             }
+            store.manifestTargetOrder.Add(target);
         }
         if (store.manifestTargets.Count != expectedTargetCount)
         {
@@ -902,8 +905,7 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         return store;
     }
 
-    internal IReadOnlyList<NativeTarget> ManifestTargets => manifestTargets.Values
-        .OrderBy(item => item.Alias, StringComparer.Ordinal).ToArray();
+    internal IReadOnlyList<NativeTarget> ManifestTargets => manifestTargetOrder.ToArray();
 
     public NativeCallCounts CallCounts => new(writeCount, readCount, deleteCount, freeCount,
         checked(writeCount + readCount + deleteCount + freeCount));

@@ -889,6 +889,10 @@ public sealed class CredentialNativeAuthorizationTests
         using (WindowsCredentialManagerStore store = WindowsCredentialManagerStore.FromRecoveryManifest(validE6.RootElement))
         {
             Assert.AreEqual(12, store.ManifestTargets.Count);
+            CollectionAssert.AreEqual(
+                e6["disposable_namespace"]!["targets"]!.AsArray()
+                    .Select(item => item!["alias"]!.GetValue<string>()).ToArray(),
+                store.ManifestTargets.Select(item => item.Alias).ToArray());
         }
         JsonObject mutatedE6 = e6.DeepClone().AsObject();
         mutatedE6["disposable_namespace"]!["targets"]![11]!["access_profile_id"] = "mutated";
