@@ -6452,3 +6452,16 @@ zero findings. The final 1,390-byte Layer 6 receipt SHA-256 is
 `d0847a070eb645550c6c8735d7e6897d9009711a698ab35b3e1f279c7d35d4c8`.
 Fresh terminal review remains required. No owner marker, execution marker,
 fresh lock, output root, dialog, native operation, or external effect exists.
+
+Fresh independent Windows credential/security review returned ACCEPT with no
+finding at exact clean HEAD
+`9099b69b85318edfebae2a430c5d5f48ccf558c8` and exact 22,064-byte manifest
+SHA-256
+`36890ec28cf706484730fc9dfbd6dec5bcf3be76ed5c509a373fa61b8c910ee2`.
+The review verified the exact consumed-tuple mutation, three-action owner
+instruction, pre-directory output-root refusal, artifact lineage, 12 ordered
+fresh targets, W/R/D/F-only bounds, fake-only provider boundary, cleanup and
+ambiguity blocking, containment, canaries, ancestry, drift, current state, and
+zero marker/lock/output/process/effect state. The manifest is close-ready for
+owner review, but remains unauthorized until the owner accepts these exact
+bytes.
