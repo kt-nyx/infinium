@@ -6047,3 +6047,24 @@ network, billable, private-fixture, archive, later-package, or push operation
 exists for this identity. Exact consumer verification, close-ready binding,
 fresh independent Windows credential/security review, and explicit owner
 acceptance remain required before any native effect.
+
+### WP4 `4936dcef` close-ready binding — 2026-08-14T17:41:10.1460949Z
+
+Close-ready consumer commit `327bbda616c3e0cb2695f2183df3a0cc66d45249`
+binds schema/validator/gate/native-store/test consumers, the fresh disjoint
+target derivation, exact consumed e6 and `6232bae5` lineage, current-state
+handoff, and the non-native evidence-retention correction. The preceding draft
+validated at 21,806 bytes with SHA-256
+`d13daa55369bd93bb07bd17eb799d44b665a49ab965c02c9ee1df05df634f093`
+and `execution_authorized=false`. The manifest is now rebound to the exact
+close-ready commit. The final 21,799-byte manifest has SHA-256
+`910ff1552d178bcfe5ff36fd9b618d187203c38c6b023d9610af5c702bdb3393`,
+expiry `2026-08-16T17:41:10.1460949Z`, and semantic status
+`validated-ready-for-owner-acceptance` with `execution_authorized=false`. It
+is returned to documentation, candidate-bound Layer 6, and independent
+Windows credential/security review.
+
+No owner marker, execution marker, authority lock, output root, dialog,
+Credential Manager, provider, DNS, network, or billable effect exists. Native
+execution remains prohibited pending exact-byte owner acceptance after the
+final review.
