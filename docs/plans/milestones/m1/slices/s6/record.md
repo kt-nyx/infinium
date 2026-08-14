@@ -717,6 +717,17 @@ native credential, private fixture, sibling repository, legacy/evaluator
 archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
 occurred.
 
+Fresh independent pre-effect review accepted exact clean HEAD
+`8a7b8519a236ff9891b95554b1293cd4d06e7bec`, the 6,821-byte manifest at
+SHA-256 `94cb5c77b906100c6c436ddbb889f7511b2f4c1cea0c60556651c97b7020414d`,
+and close-ready `67f1e6dc02036beccf3d12d4453847351fd93983`. It independently confirmed
+41/41 focused tests, the four-path Layer 6 receipt, exact manifest/record-only
+drift, output/lock/marker absence, clean worktree, process count zero, and no
+remaining finding. The owner's standing bounded cleanup authority is now
+bound to these exact reviewed bytes for one automatic cleanup-only attempt.
+
+WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/040817c8-0a87-480a-915c-71dc2fe54da3 sha256=94cb5c77b906100c6c436ddbb889f7511b2f4c1cea0c60556651c97b7020414d close_ready_commit=67f1e6dc02036beccf3d12d4453847351fd93983 expires_at_utc=2026-08-15T16:50:03.0720393Z
+
 ## Fifth-cycle semantic-closure correction — 2026-08-11
 
 Fresh boundary and contract review rejected candidate
