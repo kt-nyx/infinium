@@ -5573,3 +5573,61 @@ operation without the owner's explicit exact-byte acceptance and later
 readiness.
 
 WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60 sha256=9f43e5d9d7fb8b0cdba9195ba835631fa6073dff1c6ae86eb68a914b04c57db0 close_ready_commit=826c41744501603824e71ff8d739ce67e9089d0c expires_at_utc=2026-08-16T06:42:16.6262208Z
+
+## WP4 `e3f76cd6` native terminal attempt — 2026-08-14
+
+The owner confirmed readiness for the exact accepted manifest, and the sole
+native invocation ran from clean execution HEAD
+`f0ee9814f8bd0100692dfa7b7cab83ed9181457f`. Retained evidence proves that
+the first Submit dialog completed with manually entered disposable dummy text
+through `submitbutton`, with 223-byte staged receipt SHA-256
+`3b1c82c6ea408c4bafb12cf3c827462afdfabb5b3365de2c3d27f31c98cbe577`,
+and the second blank Cancel dialog completed through `cancelbutton`, with
+222-byte staged receipt SHA-256
+`2c568b02fd16355a79812fde6a95129736c3cd1cdb61004dc4122fdde2e61fdc`.
+Both receipts prove the interactive input desktop, exact process/thread
+ownership, visible enabled non-cloaked on-monitor window, foreground and
+source-appropriate focus, masked initially blank edit, correct instruction
+fingerprint, terminal action, buffer clearing, window destruction, and joined
+UI thread. No third restore-reauthentication dialog appeared.
+
+The run failed after the valid Cancel path and before the third dialog with a
+retained `SqliteException`. The third fresh-generation phase and fake-provider
+dispatch were not reached. This terminal result requires bounded non-native
+source diagnosis and correction; it does not invalidate the two completed
+human interactions or imply a cleanup failure for the ten queued targets.
+
+Terminal failure evidence is
+`artifacts/m1-slice6/wp4-native-e3f76cd6/credential-native-primary-failure.v2.json`,
+185,574 bytes, SHA-256
+`18b4bd64d5ae32596330271e415b10a0a6d8516fded9dfc35bf1fee26dc7cd9f`.
+It records 35 admitted phases and exact aggregate native calls W7/R61/D7/F20,
+total 95. Exact cleanup and final absence are confirmed for the ten queued
+targets: interactive primary, interactive cancel, both size targets,
+unavailable-store, both replacement targets, revoke-delete, crash-restart,
+and backup-old. `backup-new` fingerprint
+`b78f660da620c5feee10adff48401ac1b4bc3ec0daec2e35bc39b399d55b41b3`
+and `fake-dispatch` fingerprint
+`08e0f7330185d89fa471d83434e768a3d9d54961d325e5b44b5d84f664cc6b02`
+were not queued because the primary failure occurred before their mutating
+phases; whole-namespace absence is consequently not claimed. The namespace is
+terminally blocked and `consumed-never-reuse`, with zero later native calls.
+
+All retained phase canaries have zero secret and raw-target matches, all
+helper process trees have zero survivors, and every phase reports zero network
+operations. No fake-provider dispatch, DNS, network, provider, billable,
+private-fixture, archive, later-package, or push operation occurred. The
+immutable 443-byte authority lock has SHA-256
+`945d2bbf440af7d5a305ae4cbb4dee73636175ff679ac8582a28e84cd73e0e5d`.
+Post-run process cleanup stopped the 17 exact run-owned reusable MSBuild nodes;
+exact-root command-line and loaded-module checks then proved zero
+repository-owned `dotnet`, `testhost`, credential-helper, coordinator, or
+PowerShell process survivors.
+
+WP4 remains unaccepted. This authority, namespace, targets, and output root
+are terminal and may never be retried or reused. Whole-namespace closure now
+requires a separately reviewed cleanup-only recovery for the two exact
+unproven targets. Any later qualification requires bounded non-native
+correction, fresh verification and independent review, and a fresh exact
+manifest and owner authority.
+WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60 sha256=9f43e5d9d7fb8b0cdba9195ba835631fa6073dff1c6ae86eb68a914b04c57db0 execution_head_commit=f0ee9814f8bd0100692dfa7b7cab83ed9181457f status=failed-primary-cleanup-confirmed native_calls=W7-R61-D7-F20-T95 cleanup_scope=ten-queued-exact-targets whole_namespace_absence=false namespace_blocked=true later_native_calls=0 evidence_sha256=18b4bd64d5ae32596330271e415b10a0a6d8516fded9dfc35bf1fee26dc7cd9f authority_lock_sha256=945d2bbf440af7d5a305ae4cbb4dee73636175ff679ac8582a28e84cd73e0e5d
