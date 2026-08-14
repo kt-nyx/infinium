@@ -6349,3 +6349,13 @@ final exact-byte validation, candidate-bound Layer 6, and fresh independent
 Windows credential/security review remain mandatory. No owner or execution
 marker, fresh authority lock, output root, dialog, native credential operation,
 or provider/network effect exists.
+
+The first candidate-bound `Layer6Review -Wp4OwnerReviewHandoff` correctly
+rejected the current-state handoff because Markdown wrapping split the exact
+required phrase `stop before any fresh manual/native qualification`. The
+meaning was unchanged, but the machine gate could not bind it. The manifest
+was returned to draft and its close-ready placeholder cleared while the exact
+phrase was made contiguous. This was a non-live documentation/gate correction;
+it created no marker, lock, output, dialog, native operation, or external
+effect. A replacement close-ready commit and exact-byte manifest binding are
+required.

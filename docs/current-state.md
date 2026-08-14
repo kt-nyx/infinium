@@ -113,8 +113,7 @@ unadmitted restored-generation successor may use absence-only cleanup, without
 changing the authoritative projection. The next authorized work is
 `M1/S6/WP4` fresh WP4 qualification-manifest consumer binding and owner-review preparation only
 for fresh identity
-`076b981a-9d32-4e6a-af35-1e7017e0f833`; stop before any fresh manual/native
-qualification. WP8 remains
+`076b981a-9d32-4e6a-af35-1e7017e0f833`; stop before any fresh manual/native qualification. WP8 remains
 blocked because its native WP4 prerequisite is not accepted. Plan acceptance permits automatic progression among named
 non-live packages only after each prerequisite package is independently
 accepted and this file is advanced to the exact next package. Production
