@@ -564,12 +564,14 @@ function Invoke-Layer6ReviewGate {
         } else {
             $currentStateText = Get-CandidateText $candidateHash 'docs/current-state.md'
             foreach ($required in @(
-                    '`M1/S6/WP4` fresh WP4 qualification-manifest consumer binding and owner-review preparation only',
+                    '`M1/S6/WP4` fresh qualification-manifest consumer binding and owner-review preparation only',
                     '2f95692687b60d97db2710835e9d0966f131c164',
                     '2dce8acc27eece01b0232dd531a2deb27ef752af',
                     '3456fe02594fd365b1d2627dd08fad44fe0aee92',
+                    '03ae6929bad069c7c9e351b2ed5bd361e31b89e7',
                     '076b981a-9d32-4e6a-af35-1e7017e0f833',
-                    'stop before any fresh manual/native qualification')) {
+                    'c6e9226e-3d95-496c-bda6-c9142bb6b980',
+                    'Do not append an owner marker or execute `CredentialNative` during preparation')) {
                 if (-not $currentStateText.Contains($required, [System.StringComparison]::Ordinal)) {
                     $failures.Add("Wp4OwnerReviewHandoff current state is missing exact authority text: $required")
                 }

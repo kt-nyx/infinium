@@ -44,8 +44,10 @@ public sealed class ProviderLayer6VerifierContractTests
         StringAssert.Contains(script, "isHandoffCurrentState");
         StringAssert.Contains(script, "HandoffCloseout current state must record accepted WP1");
         StringAssert.Contains(script, "Wp4OwnerReviewHandoff requires exactly one changed candidate docs/current-state.md.");
-        StringAssert.Contains(script, "fresh WP4 qualification-manifest consumer binding and owner-review preparation only");
-        StringAssert.Contains(script, "stop before any fresh manual/native qualification");
+        StringAssert.Contains(script, "fresh qualification-manifest consumer binding and owner-review preparation only");
+        StringAssert.Contains(script, "03ae6929bad069c7c9e351b2ed5bd361e31b89e7");
+        StringAssert.Contains(script, "c6e9226e-3d95-496c-bda6-c9142bb6b980");
+        StringAssert.Contains(script, "Do not append an owner marker or execute `CredentialNative` during preparation");
         StringAssert.Contains(script, "OwnerTestProcessCleanup requires exactly one changed candidate docs/execution-policy.md");
         StringAssert.Contains(script, "Never terminate by process name alone");
         StringAssert.Contains(script, "JsonDocumentOptions");

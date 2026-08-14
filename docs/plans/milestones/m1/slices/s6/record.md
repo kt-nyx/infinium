@@ -6736,3 +6736,11 @@ consumer correction, tests, current-state handoff, and draft manifest were
 committed at `05bf47ee3cfa04cca068d0012c6816855aaff6bf`. The final manifest is now
 bound to that exact ancestor and marked ready for owner review. This binding
 does not create owner authority and does not authorize execution.
+
+The candidate-bound Layer 6 owner-review mode initially still expected the
+previous qualification handoff wording. A bounded consumer correction now
+binds the accepted evidence-finalization candidate, the fresh `c6e9226e`
+identity, and the explicit pre-effect stop. Its focused contract regression
+passed 1/1. A replacement close-ready commit is required before final manifest
+freeze; no authority marker, output, lock, native operation, or external
+effect was created.
