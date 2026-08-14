@@ -5554,3 +5554,20 @@ authority lock for this identity. Credential Manager, native qualification,
 manual UI, DNS, network, provider, billable, private-fixture, archive,
 later-package, and push operation counts for preparation are all zero. WP4
 remains unaccepted and no manual/native run is authorized by this record.
+
+Fresh independent pre-effect review accepted exact committed candidate
+`2378bd923a438984c696b35e93d7d0f1756e0609` and the exact 21,706-byte
+manifest with SHA-256
+`9f43e5d9d7fb8b0cdba9195ba835631fa6073dff1c6ae86eb68a914b04c57db0`
+with no finding. The reviewer independently confirmed the exact 12-target
+derivation, predecessor failure/recovery lineage, four-call native allowlist,
+three manual phases, fake-only dispatch, zero external authority, finite
+deadlines, containment, cleanup/absence/never-reuse rules, and absence of any
+owner marker, execution marker, output root, or authority lock. Its non-live
+verification passed validator, authorization 26/26, supervisor 28/28,
+authorization/build-policy 34/34, and native/intent/dispatch integration
+32/32. Exact-root command-line plus loaded-module cleanup proved zero
+repository-owned process survivors. This independent acceptance is pre-effect
+review only; it does not authorize `CredentialNative` or a Credential Manager
+operation without the owner's explicit exact-byte acceptance and later
+readiness.
