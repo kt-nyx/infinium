@@ -5491,3 +5491,66 @@ occurred. Repository-owned process cleanup found zero surviving `dotnet`,
 `testhost`, credential-helper, or coordinator processes. WP4 remains
 unaccepted. Full non-live verification, fresh independent review, and a fresh
 exact owner-review manifest remain required before another manual attempt.
+
+### SQLite correction verification and independent acceptance
+
+The exact bounded correction is commit
+`4720326bb3874d3123909817a379c67fe9e8d83d`. Mandatory Release verification
+passed under SDK 10.0.303: full Integration 121/121; Unit 239 passed with one
+environment-dependent symbolic-link skip; Contract 141/141; Evaluation 86
+passed with eight private-environment skips; Security 160 passed with three
+environment-dependent skips; Fault 108 passed with three private-environment
+skips; and the unfiltered solution 655 passed with nine expected skips. The
+solution build and format verification passed with zero warnings or errors.
+
+Candidate-bound `Layer6Review` passed from recovery terminal commit
+`d94bf66400a2998c88d2c91956334dc5376c9585` through the correction candidate:
+five changed paths and zero allowed-path, strict-JSON, relative-link, or
+private/archive findings. Its 1,357-byte receipt has SHA-256
+`d5a646bcb3826273133873ab2c840628202627ded91a49873d46218b5e34aa77`.
+Fresh independent semantic/security review rebuilt and tested the exact commit
+in a clean detached local clone and returned ACCEPT with no finding. Its exact
+clone verification passed build with zero warnings/errors, integration 38/38,
+unit/persistence/authorization/helper/build-policy 71/71, security 4/4, and
+fault 4/4; repository-owned process survivors were zero.
+
+The common verification floor exposed abandoned test-host processes that did
+not retain the repository path in their command line. Exact-root loaded-module
+validation identified and stopped six repository-owned processes after the
+common floor and one after the final focused run. A second clean Release build
+then passed with zero file-lock retries and zero warnings. Final loaded-module
+and command-line cleanup left zero repository-owned `dotnet`, `testhost`,
+credential-helper, or coordinator processes.
+
+### Fresh post-`ad876b9a` owner-review manifest
+
+Close-ready consumer binding is commit
+`826c41744501603824e71ff8d739ce67e9089d0c`, including schema 1.3, the exact
+validator/gate/helper consumers, mutation tests, and the current owner-review
+handoff. Fresh manifest identity
+`infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60`
+has 21,706 bytes, SHA-256
+`9f43e5d9d7fb8b0cdba9195ba835631fa6073dff1c6ae86eb68a914b04c57db0`,
+and expires at `2026-08-16T06:42:16.6262208Z`. It derives 12 new exact targets
+in namespace `m1-s6-wp4-native-e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60`, binds
+the consumed `ad876b9a` failure evidence and authority lock plus the accepted
+`df29a608` cleanup-recovery manifest/evidence/lock/receipt and combined
+12-target absence proof, and authorizes no effect until the owner accepts
+these exact bytes.
+
+The exact proposed command is
+`powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNative -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp4-native-e3f76cd6`.
+Expected manual behavior remains exactly three finite helper-owned masked
+dialogs: Submit disposable dummy text, Cancel blank, then Submit new disposable
+dummy text for restored generation `g002`. No real API key is permitted.
+Focused final verification passed authorization/build-policy 34/34 and
+credential-native/intent/dispatch integration 32/32. Candidate-bound
+`Layer6Review` over the six close-ready manifest-consumer paths passed with
+zero findings; its 1,354-byte receipt has SHA-256
+`c46190ab6d9da83130cedaaee69532ffef19452241f455b69b0d4a31eb8f2f5c`.
+
+There is no owner-acceptance marker, execution marker, output root, or one-shot
+authority lock for this identity. Credential Manager, native qualification,
+manual UI, DNS, network, provider, billable, private-fixture, archive,
+later-package, and push operation counts for preparation are all zero. WP4
+remains unaccepted and no manual/native run is authorized by this record.
