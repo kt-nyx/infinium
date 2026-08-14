@@ -43,6 +43,13 @@ public sealed class ProviderLayer6VerifierContractTests
         StringAssert.Contains(script, "Test-Wp1ProtectedPath");
         StringAssert.Contains(script, "isHandoffCurrentState");
         StringAssert.Contains(script, "HandoffCloseout current state must record accepted WP1");
+        StringAssert.Contains(script, "or record accepted WP4 and authorize non-live M1/S6/WP8 only");
+        StringAssert.Contains(script, "`M1/S6/WP8` accumulated non-live verification and pre-live review only");
+        StringAssert.Contains(script, "Accepted `M1/S6/WP4` qualification");
+        StringAssert.Contains(script, "1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b");
+        StringAssert.Contains(script, "3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390");
+        StringAssert.Contains(script, "no further Credential Manager operation is authorized");
+        StringAssert.Contains(script, "no provider request is authorized");
         StringAssert.Contains(script, "Wp4OwnerReviewHandoff requires exactly one changed candidate docs/current-state.md.");
         StringAssert.Contains(script, "fresh qualification-manifest consumer binding and owner-review preparation only");
         StringAssert.Contains(script, "03ae6929bad069c7c9e351b2ed5bd361e31b89e7");

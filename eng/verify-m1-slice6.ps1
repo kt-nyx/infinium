@@ -556,9 +556,18 @@ function Invoke-Layer6ReviewGate {
             $failures.Add('HandoffCloseout requires exactly one changed candidate docs/current-state.md.')
         } else {
             $currentStateText = Get-CandidateText $candidateHash 'docs/current-state.md'
-            if (-not $currentStateText.Contains('M1/S6/WP2', [System.StringComparison]::Ordinal) -or
-                -not $currentStateText.Contains('Accepted Slice 6 WP1 candidate', [System.StringComparison]::Ordinal)) {
-                $failures.Add('HandoffCloseout current state must record accepted WP1 and authorize M1/S6/WP2.')
+            $wp1ToWp2 =
+                $currentStateText.Contains('M1/S6/WP2', [System.StringComparison]::Ordinal) -and
+                $currentStateText.Contains('Accepted Slice 6 WP1 candidate', [System.StringComparison]::Ordinal)
+            $wp4ToWp8 =
+                $currentStateText.Contains('`M1/S6/WP8` accumulated non-live verification and pre-live review only', [System.StringComparison]::Ordinal) -and
+                $currentStateText.Contains('Accepted `M1/S6/WP4` qualification', [System.StringComparison]::Ordinal) -and
+                $currentStateText.Contains('1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b', [System.StringComparison]::Ordinal) -and
+                $currentStateText.Contains('3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390', [System.StringComparison]::Ordinal) -and
+                $currentStateText.Contains('no further Credential Manager operation is authorized', [System.StringComparison]::Ordinal) -and
+                $currentStateText.Contains('no provider request is authorized', [System.StringComparison]::Ordinal)
+            if (-not $wp1ToWp2 -and -not $wp4ToWp8) {
+                $failures.Add('HandoffCloseout current state must record accepted WP1 and authorize M1/S6/WP2, or record accepted WP4 and authorize non-live M1/S6/WP8 only.')
             }
         }
     }
