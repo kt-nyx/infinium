@@ -6512,3 +6512,25 @@ is unaccepted, and must never be retried. Cleanup scope remains pending fresh
 independent audit; no recovery or later native call is authorized.
 
 WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/076b981a-9d32-4e6a-af35-1e7017e0f833 sha256=36890ec28cf706484730fc9dfbd6dec5bcf3be76ed5c509a373fa61b8c910ee2 execution_head_commit=31643235c014a93f71096d5c80d2a911758e328f status=failed-evidence-retention coordinator_exit_code=68 cleanup=runner-confirmed-final-proof-not-retained final_evidence=false namespace_blocked=true later_native_calls=0 authority_lock_sha256=80a014c72636221a2cf52008bb9ee0d27cd0c6badbfa5659d324a6ad9be350a7 network_operations=unknown dns_operations=unknown provider_operations=unknown billable_operations=unknown retry_attempted=false
+
+### 2026-08-14 WP4 `076b981a` post-effect audit correction
+
+Fresh independent audit accepted the retained lock, output, receipt, and
+timeline facts above but corrected one overstatement. The typed `IOException`
+is durably bounded to post-success evidence finalization: it occurred after
+the summary and backup evidence were written and before final evidence was
+retained. Source ordering strongly implicates the recursive coordinator
+artifact scan over retained SQLite files, but the fixed typed stderr does not
+distinguish a scan read from the final evidence write. The exact I/O substage
+is therefore unretained and must not be stated as proven.
+
+The accepted source-bound reconstruction is W9/R78/D9/F28/T124 with 28
+canonical immediate read/free pairs, but it is not a substitute for the
+missing durable final trace. Because the required exact ordered trace and
+per-target terminal `ERROR_NOT_FOUND` array are absent for all 12 targets, the
+least conservative contract recovery scope is all 12 targets. Any recovery
+must use a fresh separately reviewed identity and output/lock, W0, exact-target
+read-first/delete-if-found/read-after/free only, no UI, enumeration, fallback,
+provider, or network path, terminal stop on first ambiguity, and permanent
+namespace non-reuse. No recovery or later native call is authorized by this
+audit correction.
