@@ -6068,3 +6068,44 @@ No owner marker, execution marker, authority lock, output root, dialog,
 Credential Manager, provider, DNS, network, or billable effect exists. Native
 execution remains prohibited pending exact-byte owner acceptance after the
 final review.
+
+### WP4 `4936dcef` final non-live verification — 2026-08-14T18:08:46.0783967Z
+
+The exact bound candidate is clean commit
+`c33a41a88016f3f2aba9a1797bb5e2d42386a9fb`, descending from close-ready
+consumer commit `327bbda616c3e0cb2695f2183df3a0cc66d45249` and accepted
+non-native correction `2dce8acc27eece01b0232dd531a2deb27ef752af`.
+Manifest
+`infinium.m1-s6.wp4.credential-native-authorization/4936dcef-a0f4-4302-9899-0afd99b19799`
+remains exactly 21,799 bytes with SHA-256
+`910ff1552d178bcfe5ff36fd9b618d187203c38c6b023d9610af5c702bdb3393`
+and expiry `2026-08-16T17:41:10.1460949Z`.
+
+Under exact SDK 10.0.303, the final locked restore and Release build passed
+with zero warnings/errors. Unit passed 243 with one expected environment
+skip; Contract passed 141/141; Integration passed 122/122; Evaluation passed
+86 with eight expected private-environment skips; Security passed 165 with
+three expected environment skips; Fault passed 108 with three expected
+skips; and the unfiltered solution passed 661 with nine expected skips.
+Formatting, dependency-manifest check, documentation validation, complete
+analysis-pipeline `All`, and `git diff --check` passed. One preliminary
+formatting wrapper was terminated by an intentionally short shell timeout
+before producing a result; it left no repository-owned process and was not
+counted. The properly bounded replacement wrapper passed in full.
+
+Candidate-bound Layer 6 from `2dce8acc27eece01b0232dd531a2deb27ef752af`
+to `c33a41a88016f3f2aba9a1797bb5e2d42386a9fb` passed with exactly eight
+changed paths, zero allowed-path, strict-JSON, relative-link, gap, or
+private/archive findings, and `wp4_owner_review_handoff=true`. Its
+`layer6review.json` SHA-256 is
+`5774ccfbc392307bc5d76e610580e27d25effdac30b53ed3f5558f6f2104afc6`.
+
+Build-server shutdown and exact-root command-line inspection again proved
+zero repository-owned dotnet, testhost, compiler-server, credential-helper,
+or coordinator processes. The fresh output root and exact one-shot authority
+lock `16d19410cd200caee29da362c474805929cc4c65651685173d39838849e27421.json`
+are absent, and canonical owner-acceptance and native-execution marker counts
+are both zero. No dialog, Credential Manager, provider, DNS, network,
+billable, private-fixture, archive, later-package, or push operation occurred.
+Fresh independent Windows credential/security review remains pending; this
+entry does not authorize execution.
