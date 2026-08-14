@@ -5416,3 +5416,18 @@ and provider operations. Standing owner cleanup authority is recorded below;
 the recovery remains pre-effect until fresh independent review accepts these
 exact committed bytes.
 WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff sha256=b52e5931d4f1748ac6f907751947f6442c2e32ae373e785fc4a4b787b35c8cfa close_ready_commit=196c71f5f4afda329d0517a57dc46ef406557ea7 expires_at_utc=2026-08-15T05:55:40.1170472Z
+
+Fresh review identified missing defense-in-depth at the pre-effect/reconstruction
+seams. The correction at `0b4a5436365f5092b4376323884940f8c49bc2a1`
+now hashes and parses the actual local terminal failure artifact and consumed
+lock before creating the fresh recovery lock, proves the exact immutable ten
+fingerprints with exactly the two recovery targets missing, binds the schema
+1.1 helper itself to the two ordered identities and limits, retains the 10+2
+lineage in recovery evidence, and supplies a no-native CreateNew post-effect
+receipt reconstruction path. Frozen schema-1.0 validation and reconstruction
+remain regression-covered. Focused authorization/security tests pass 26/26,
+and no native or external effect occurred. The earlier rebound marker is
+superseded before effect; only the final exact marker below is executable.
+The final rebound manifest SHA-256 is
+`0b7e9f9c0b24328c507a804f32720b90ac8c52fd234189be7d9ad501b567fdc2`.
+WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff sha256=0b7e9f9c0b24328c507a804f32720b90ac8c52fd234189be7d9ad501b567fdc2 close_ready_commit=0b4a5436365f5092b4376323884940f8c49bc2a1 expires_at_utc=2026-08-15T05:55:40.1170472Z
