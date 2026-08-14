@@ -6138,3 +6138,49 @@ permit execution without the owner's explicit acceptance of the exact
 manifest ID, SHA-256, close-ready commit, and expiry.
 
 WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/4936dcef-a0f4-4302-9899-0afd99b19799 sha256=910ff1552d178bcfe5ff36fd9b618d187203c38c6b023d9610af5c702bdb3393 close_ready_commit=327bbda616c3e0cb2695f2183df3a0cc66d45249 expires_at_utc=2026-08-16T17:41:10.1460949Z
+
+### WP4 `4936dcef` one-shot native qualification — 2026-08-14T18:38:26.0090743Z
+
+The exact accepted manifest ran once from clean execution HEAD
+`8f49943d0af53c495b8f288048cbd8d8bd1fe775`. Pre-effect validation,
+Release build, authorization 30/30, helper 5/5 plus 11/11, and supervisor
+29/29 passed before the one-shot authority lock was created. The owner then
+directly observed and completed all three manual interactions: disposable
+dummy Submit, blank Cancel, and a different disposable dummy Submit after the
+expected longer third-dialog delay. No real key was used.
+
+The first retained manual phase completed with action `submit`; its 223-byte
+receipt SHA-256 is
+`a9fd3b52542bb0ffcb242c668685ce1ab2fb37e9e5edff2696f9896343c7af95`.
+The second completed with action `cancel`; its 222-byte receipt SHA-256 is
+`9de17670fcfd8c937c309b5058a79707421f55ae922f13a8208d4fd80e4b41ea`.
+The owner observation proves the third UI action, and the retained containment
+shows its helper exited zero with no process survivor, but no admissible third
+phase or staged receipt was retained. It must not be represented as admitted
+credential evidence.
+
+The coordinator terminated with exit code 68 during exact assignment
+`wp4-v2/backup-restore-reauthentication/cleanup-successor`. The 185,410-byte
+schema-v3 ambiguity artifact has SHA-256
+`0a10a873b7356612cd8ac25934c8fbf85ab0cae76f7aea42b2317421dd251674`.
+It retains a prior primary
+`CredentialNativeHelperEvidenceAmbiguityException`, terminal-cleanup
+`InvalidDataException`, validated W7/R60/D6/F19/T92, no separately admissible
+rejected-phase trace/count, zero later native calls, and terminal namespace
+blocking. Cleanup and whole-namespace absence are false. The consumed
+443-byte authority lock has SHA-256
+`18ffe3e24687543c7c0d538ec98874245ef3fe0c3d2c26945d375b5e23604d02`
+and must never be removed or reused.
+
+Retained validated phase evidence reports zero secret or raw-target canary
+matches, terminated process trees, and zero survivors. The ambiguity artifact
+conservatively marks network and external-effect evidence as unknown even
+though the source-bound fake dispatch has no provider or DNS transport; no
+stronger terminal claim is inferred. After build-server shutdown, exact-root
+repository-owned process count is zero. The 62-file output root, authority
+lock, namespace, targets, and manifest are consumed forever. There is no
+retry. Exact cleanup-only recovery scope and authority require retained-
+evidence audit and fresh independent pre-effect review before any further
+Credential Manager operation.
+
+WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/4936dcef-a0f4-4302-9899-0afd99b19799 sha256=910ff1552d178bcfe5ff36fd9b618d187203c38c6b023d9610af5c702bdb3393 execution_head_commit=8f49943d0af53c495b8f288048cbd8d8bd1fe775 status=failed-cleanup-ambiguous native_calls=92 cred_write_w=7 cred_read_w=60 cred_delete_w=6 cred_free=19 rejected_phase_native_calls=not-admissible cleanup_scope=unproven whole_namespace_absence=false namespace_blocked=true later_native_calls=0 evidence_sha256=0a10a873b7356612cd8ac25934c8fbf85ab0cae76f7aea42b2317421dd251674 authority_lock_sha256=18ffe3e24687543c7c0d538ec98874245ef3fe0c3d2c26945d375b5e23604d02
