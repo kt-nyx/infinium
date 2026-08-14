@@ -26,8 +26,8 @@ review history.
 | Accepted `M1/S6/WP6` candidate | Product `ee0b6d31f1c1826c2af7634766155397e916c3e1`, append-only evidence `2b277338390f7dac37b5a5436bbe2cd81dedc871`, and answer-isolated oracle `37aa2b4e2fc084307ba5211f21bbeeb7a93efab0`; source-claim acquisition, deterministic admission, retained semantic provenance/replay, and later admitted-artifact consumption are independently accepted |
 | Accepted `M1/S6/WP7` candidate | Product `59367a7479a7395b173b974bf720543aab2404d4`, append-only acceptance evidence `51251c0e0eb98d67dbc9b295b9ff084ebca33890`, and answer-isolated VAL-v3 oracle freeze `e9b032366552aa67649636655ed07a3bb50bb3b1`; deterministic candidate investigation, complete provenance, durable retention/readback, and database-owned replay are independently accepted |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure; no separate ADR; eleven packages with distinct native/live authorization gates |
-| Next eligible action | Validate and independently review fresh qualification manifest `e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe`, bind it to its exact close-ready consumer commit, and stop for owner exact-byte acceptance. The `e3f76cd6` namespace has 12/12 terminal absence and is consumed forever; do not reuse or retry it |
-| Later work | WP4 remains unaccepted. A later manual/native qualification requires a new independently reviewed manifest and fresh owner authority. WP8 remains blocked until WP4 is accepted. WP9-WP11 always require their exact fresh owner authorization; no provider request is authorized now |
+| Next eligible action | Independently audit the consumed `e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe` cleanup ambiguity, then prepare and independently review an exact cleanup-only recovery for its 12-target namespace. Do not reuse or retry the qualification identity, targets, lock, namespace, or output root |
+| Later work | WP4 remains unaccepted. A later manual/native qualification requires terminal recovery closure, a bounded non-native correction, a new independently reviewed manifest, and fresh owner authority. WP8 remains blocked until WP4 is accepted. WP9-WP11 always require their exact fresh owner authorization; no provider request is authorized now |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
 | Slice entry | [Slice 6 current summary and navigation](plans/milestones/m1/slices/s6/README.md) |
@@ -65,10 +65,16 @@ stopped the run before the third dialog. Cleanup recovery
 ten-target proof for 12/12 terminal namespace absence. The qualification and
 recovery identities, targets, locks, namespaces, and output roots are consumed
 and may never be reused. The bounded non-native restore-clock correction is
-accepted at `2f95692687b60d97db2710835e9d0966f131c164`; this handoff now permits
-only fresh qualification-manifest consumer binding, validation, independent
-review, and owner-review preparation. It does not authorize a fresh manual or
-native qualification, target reuse, or any provider operation. WP8 remains
+accepted at `2f95692687b60d97db2710835e9d0966f131c164`. Fresh qualification
+`e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe` was then executed exactly once from
+`fdd9d49301e72f6a421e4597ea405bb2ca69da2f`. The owner completed Submit,
+Cancel, and restored-generation Submit, but the run terminated during
+`backup-restore-reauthentication/cleanup-successor` with cleanup ambiguity.
+Its namespace and authority are consumed forever, zero later native calls are
+recorded, and whole-namespace absence is not yet proved. This handoff permits
+only read-only audit, exact cleanup-only recovery preparation and review, and
+bounded non-native correction. It does not authorize retry, target reuse, a
+fresh manual/native qualification, or any provider operation. WP8 remains
 blocked because its native WP4 prerequisite is not accepted. Plan acceptance permits automatic progression among named
 non-live packages only after each prerequisite package is independently
 accepted and this file is advanced to the exact next package. Production

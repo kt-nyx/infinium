@@ -5876,3 +5876,51 @@ eligible action is exact-byte owner review and acceptance. No native or manual
 qualification may begin before that acceptance.
 
 WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe sha256=c0e6aed84ca8d01a2722ff9970d52f816f47626f3e309cf9081b3c71b1245497 close_ready_commit=4adc7faadf982017dce90814ba2788fe64271efb expires_at_utc=2026-08-16T14:43:54.4033492Z
+
+## WP4 `e6e04651` terminal qualification attempt — 2026-08-14
+
+The exact `CredentialNative` command was launched once from clean execution
+HEAD `fdd9d49301e72f6a421e4597ea405bb2ca69da2f` after the canonical owner
+marker above was committed. The close-ready semantic validator passed, the
+Release build succeeded with zero warnings, and the pre-native focused gates
+passed authorization 28/28, credential intent Unit 5/5 and Integration 11/11,
+and coordinator-supervisor Integration 28/28.
+
+The owner directly observed and completed all three helper-owned dialogs:
+disposable dummy Submit, blank Cancel, and different disposable dummy Submit
+for restored generation `g002`. The third dialog appeared after a noticeably
+longer delay. The first retained framed helper receipt is 223 bytes with
+SHA-256 `2a5bd9dbaca9cd65aa2fb20edbb1c706f33edc9c8014c0f65ff307cf4920b143`
+and independently parses as Completed for
+`wp4-v2/interactive-entry-submit/submit`. The second is 222 bytes with
+SHA-256 `515dc1aff16f141395f7120260817cb9a3729a509c1db22a28d971256bda56d8`
+and parses as Cancelled for `wp4-v2/interactive-entry-cancel/cancel`. The
+restored database retains generation `g002` plus a non-secret
+`helper-receipt-admitted` audit event, but its staging receipt was not retained
+after the subsequent failure. The owner's direct observation is therefore
+the authority for the third dialog action.
+
+After that third interaction, the coordinator failed during exact assignment
+`wp4-v2/backup-restore-reauthentication/cleanup-successor` and exited 68. The
+755-byte terminal ambiguity artifact has SHA-256
+`5b565888a412188f7c814c0d923e696e27d4135d7ebb23f5884ef7b2e3f228c7`;
+it records `failed-cleanup-ambiguous`, cleanup and whole-namespace absence
+unconfirmed, namespace blocked and consumed forever, and zero later native
+calls. The 443-byte one-shot authority lock has SHA-256
+`4fc808d221d340eb6b145ceffa35a2472cd621102b0e0dc280a8dbb71f77ddd4`
+and must never be deleted or reused.
+
+The ambiguity artifact does not retain the supervisor's in-memory native call
+trace, counts, per-phase canaries, or exact inner exception. Those facts must
+remain unknown rather than reconstructed from expected code flow. The ordered
+cleanup reached `backup-new` as item eleven and failed there; `fake-dispatch`
+was item twelve and was not cleanup-attempted. Conservatively, no target in
+this consumed 12-target namespace may be treated as absent until an exact
+reviewed cleanup-only recovery proves it. A scan of all 62 retained output
+files found zero concatenated raw-target matches in UTF-8 and UTF-16LE.
+Exact-root repository process count is zero. Source review continues to bind
+the qualification to fake-provider dispatch with no DNS, network, provider,
+or billable transport, but the terminal artifact itself truthfully labels
+external-effect facts as not independently admissible.
+
+WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe sha256=c0e6aed84ca8d01a2722ff9970d52f816f47626f3e309cf9081b3c71b1245497 execution_head_commit=fdd9d49301e72f6a421e4597ea405bb2ca69da2f status=failed-cleanup-ambiguous native_calls=not-retained cleanup_scope=unproven whole_namespace_absence=false namespace_blocked=true later_native_calls=0 evidence_sha256=5b565888a412188f7c814c0d923e696e27d4135d7ebb23f5884ef7b2e3f228c7 authority_lock_sha256=4fc808d221d340eb6b145ceffa35a2472cd621102b0e0dc280a8dbb71f77ddd4
