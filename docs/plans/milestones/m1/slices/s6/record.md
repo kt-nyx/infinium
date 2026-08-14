@@ -6624,3 +6624,10 @@ is `137cff186229610b4953619365a9279b7ed1cf222efc653ffb67b9c72e9db8d2`.
 The semantic validator passes with `execution_authorized=false`; output and
 one-shot lock remain absent. This replacement remains pre-effect pending exact
 verification and terminal independent acceptance.
+
+Review then identified that the updated exact SHA/close-ready prose in
+`docs/current-state.md` itself remained a post-close-ready change. The live
+handoff is corrected to name the unique tracked manifest path and identity,
+while this append-only record carries its exact reviewed bytes and commit.
+This makes the current-state handoff stable before the final close-ready
+freeze and avoids either self-reference or a broader gate drift allowlist.
