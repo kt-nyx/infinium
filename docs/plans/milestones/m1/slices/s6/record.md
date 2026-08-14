@@ -5968,3 +5968,30 @@ shutdown. The replacement manifest SHA-256 is
 Fresh independent pre-effect acceptance remains mandatory before recovery.
 
 WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/6232bae5-f735-4db7-a74f-7ede9f67b752 sha256=0fc3ab730fc7474292db69ee20b993505396e9b81c7041169d53380925790086 close_ready_commit=4ad6aea1cd680037d3a832db01174bd469559b8e expires_at_utc=2026-08-15T16:00:31.8331744Z
+
+### WP4 e6 12-target cleanup-only recovery — 2026-08-14T16:34:34.2754518Z
+
+The exact accepted recovery ran once from execution HEAD
+`2674d671ad19fd7867b1df81aacc459ceeb1d492`. It completed with W0/R13/D1/F1/T15:
+the first ten targets were already absent, `backup-new` was read successfully,
+freed exactly once, deleted, and then read as `ERROR_NOT_FOUND`, and
+`fake-dispatch` was absent. All 12 terminal absence rows and the native trace
+retain exact manifest order. Evidence is 8,067 bytes with SHA-256
+`ac83f37ecb0d262a92a240bb7377d266c70a82367a919e384e4be135333d9864`;
+the 829-byte gate receipt has SHA-256
+`d356b06492ef2472d73e4ebaf6c923e730498108ad65d49e18b74ed22bb2c8a8`;
+and the 223-byte consumed recovery lock has SHA-256
+`1a555e041d0edf9f4242071bc3549adce1bf71ac3e8255a8aa2d72579ec721ce`.
+
+The semantic evidence validator passed independently. Cleanup ambiguity is
+false, namespace reuse remains blocked, the disposition is
+`cleanup-confirmed-absent-never-reuse`, and the zero prior admissible absences
+plus 12 recovery absences close the namespace at 12/12. Network, DNS,
+provider, and billable counts are zero. A retained-surface scan over evidence,
+receipt, and lock found zero exact raw-target matches in UTF-8 or UTF-16LE.
+Repository-owned dotnet, testhost, and helper process count returned to zero
+after build-server shutdown. One earlier read-only scan command used an
+invalid PowerShell span invocation and timed out before validation; it caused
+no mutation or external effect, and the corrected bounded scan then passed.
+
+WP4_RECOVERY_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-recovery/6232bae5-f735-4db7-a74f-7ede9f67b752 sha256=0fc3ab730fc7474292db69ee20b993505396e9b81c7041169d53380925790086 execution_head_commit=2674d671ad19fd7867b1df81aacc459ceeb1d492 status=passed native_calls=15 cred_write_w=0 cred_read_w=13 cred_delete_w=1 cred_free=1 recovery_absence=12 prior_absence=0 combined_absence=12 cleanup_ambiguity=false namespace_reuse_blocked=true evidence_sha256=ac83f37ecb0d262a92a240bb7377d266c70a82367a919e384e4be135333d9864 receipt_sha256=d356b06492ef2472d73e4ebaf6c923e730498108ad65d49e18b74ed22bb2c8a8 lock_sha256=1a555e041d0edf9f4242071bc3549adce1bf71ac3e8255a8aa2d72579ec721ce network_operations=0 dns_operations=0 provider_operations=0 billable_operations=0
