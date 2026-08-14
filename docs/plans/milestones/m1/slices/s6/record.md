@@ -6359,3 +6359,10 @@ phrase was made contiguous. This was a non-live documentation/gate correction;
 it created no marker, lock, output, dialog, native operation, or external
 effect. A replacement close-ready commit and exact-byte manifest binding are
 required.
+
+Replacement close-ready commit
+`94d323a2848a4974675acad550be5e6bee16a8b1` includes the exact handoff phrase
+required by the WP4-specific Layer 6 mode. The manifest is rebound to that
+commit and returned to `ready-for-owner-acceptance`; exact final validation,
+Layer 6, and fresh independent review still remain. This record does not grant
+owner authority or authorize an effect.
