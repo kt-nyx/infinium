@@ -283,7 +283,8 @@ internal sealed class CredentialNativeCleanupAmbiguityException(
     string assignmentId,
     string reason,
     CredentialNativeQualificationEvidence evidence,
-    Exception innerException)
+    Exception innerException,
+    Exception? priorPrimaryFailure = null)
     : InvalidOperationException(
         "A native cleanup outcome is ambiguous; the namespace is terminally blocked.",
         innerException)
@@ -291,6 +292,7 @@ internal sealed class CredentialNativeCleanupAmbiguityException(
     internal string AssignmentId { get; } = assignmentId;
     internal string Reason { get; } = reason;
     internal CredentialNativeQualificationEvidence Evidence { get; } = evidence;
+    internal Exception? PriorPrimaryFailure { get; } = priorPrimaryFailure;
 }
 
 internal sealed class CredentialNativePrimaryFailureException(

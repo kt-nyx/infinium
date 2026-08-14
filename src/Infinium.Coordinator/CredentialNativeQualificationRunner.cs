@@ -182,12 +182,43 @@ internal static class CredentialNativeQualificationRunner
         };
     }
 
+    private static object? BuildTerminalFailureEvidence(Exception? exception)
+    {
+        if (exception is null) { return null; }
+        CredentialNativeHelperFailureException? helperFailure = exception as CredentialNativeHelperFailureException;
+        CredentialNativeHelperEvidenceAmbiguityException? helperEvidenceAmbiguity =
+            exception as CredentialNativeHelperEvidenceAmbiguityException;
+        return new
+        {
+            failure_type = exception.GetType().Name,
+            classification = helperFailure is not null
+                ? "typed-helper-failure"
+                : helperEvidenceAmbiguity is not null
+                    ? "typed-helper-evidence-ambiguity"
+                    : exception is SqliteException
+                        ? "typed-sqlite-failure"
+                        : "typed-redacted-non-sqlite-failure",
+            sqlite_failure = BuildSqliteFailureEvidence(exception),
+            helper_failure = helperFailure?.Evidence,
+            helper_failure_containment = helperFailure?.Containment,
+            helper_evidence_ambiguity_containment = helperEvidenceAmbiguity?.Containment,
+        };
+    }
+
+    private static NativeHelperFailureContainmentEvidence? FailureContainment(Exception? exception) => exception switch
+    {
+        CredentialNativeHelperFailureException helperFailure => helperFailure.Containment,
+        CredentialNativeHelperEvidenceAmbiguityException helperEvidenceAmbiguity => helperEvidenceAmbiguity.Containment,
+        _ => null,
+    };
+
     internal static async Task RunCleanupFailureWithArtifactsForTestAsync(
         string root,
         OneShotCredentialHelperLauncher launcher,
         IReadOnlyDictionary<string, (string ProfileId, string GenerationId)> targetIdentities,
         DateTimeOffset now,
         Exception cleanupFailureForTest,
+        Exception? primaryFailureForTest = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(cleanupFailureForTest);
@@ -195,6 +226,7 @@ internal static class CredentialNativeQualificationRunner
         {
             _ = await RunWithLauncherForTestAsync(
                 root, launcher, targetIdentities, now,
+                primaryFailureForTest: primaryFailureForTest,
                 cleanupFailureForTest: cleanupFailureForTest,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
         }
@@ -368,20 +400,42 @@ internal static class CredentialNativeQualificationRunner
         CredentialNativeHelperFailureException? helperFailure = cause as CredentialNativeHelperFailureException;
         CredentialNativeHelperEvidenceAmbiguityException? helperEvidenceAmbiguity =
             cause as CredentialNativeHelperEvidenceAmbiguityException;
+        CredentialNativeHelperFailureException? primaryHelperFailure =
+            ambiguity.PriorPrimaryFailure as CredentialNativeHelperFailureException;
+        CredentialNativeHelperEvidenceAmbiguityException? primaryHelperEvidenceAmbiguity =
+            ambiguity.PriorPrimaryFailure as CredentialNativeHelperEvidenceAmbiguityException;
+        NativeHelperFailureContainmentEvidence? terminalFailureContainment = FailureContainment(cause);
+        NativeHelperFailureContainmentEvidence? primaryFailureContainment =
+            FailureContainment(ambiguity.PriorPrimaryFailure);
         CredentialNativeQualificationPhaseEvidence[] phases = ambiguity.Evidence.Scenarios
             .SelectMany(item => item.Phases).ToArray();
         CredentialNativeRejectedPhaseEvidence? rejected = ambiguity.Evidence.RejectedPhase;
-        int listenerCount = phases.Sum(item => item.Process.ListenerCount) + (rejected?.ListenerCount ?? 0);
+        int listenerCount = phases.Sum(item => item.Process.ListenerCount)
+            + (rejected?.ListenerCount ?? 0)
+            + (helperFailure?.Evidence.ListenerCount ?? 0)
+            + (primaryHelperFailure?.Evidence.ListenerCount ?? 0);
         int networkOperationCount = phases.Sum(item => item.Process.NetworkOperationCount)
-            + (rejected?.NetworkOperationCount ?? 0);
-        int processTreeSurvivorCount = phases.Sum(item => item.Process.ProcessTreeSurvivorCount)
+            + (rejected?.NetworkOperationCount ?? 0)
+            + (helperFailure?.Evidence.NetworkOperationCount ?? 0)
+            + (primaryHelperFailure?.Evidence.NetworkOperationCount ?? 0);
+        int retainedProcessTreeSurvivorCount = phases.Sum(item => item.Process.ProcessTreeSurvivorCount)
             + (rejected?.ProcessTreeSurvivorCount ?? 0);
+        int processTreeSurvivorCount = retainedProcessTreeSurvivorCount
+            + (terminalFailureContainment?.ProcessTreeSurvivorCount ?? 0)
+            + (primaryFailureContainment?.ProcessTreeSurvivorCount ?? 0);
         int secretCanaryMatches = phases.Sum(item => item.Canaries?.SecretMatches ?? 0)
             + (rejected?.Canaries?.SecretMatches ?? 0);
         int rawTargetCanaryMatches = phases.Sum(item => item.Canaries?.RawTargetMatches ?? 0)
             + (rejected?.Canaries?.RawTargetMatches ?? 0);
-        bool processTreesTerminated = phases.All(item => item.Process.ProcessTreeTerminated)
-            && (rejected is null || rejected.ProcessTreeTerminated);
+        bool processTreeFactsKnown = (helperFailure is null && helperEvidenceAmbiguity is null
+                || terminalFailureContainment is not null)
+            && (primaryHelperFailure is null && primaryHelperEvidenceAmbiguity is null
+                || primaryFailureContainment is not null);
+        bool processTreesTerminated = processTreeFactsKnown
+            && phases.All(item => item.Process.ProcessTreeTerminated)
+            && (rejected is null || rejected.ProcessTreeTerminated)
+            && (terminalFailureContainment?.ProcessTreeTerminated ?? true)
+            && (primaryFailureContainment?.ProcessTreeTerminated ?? true);
         return new
         {
             schema = "infinium.m1-s6.wp4.credential-native-cleanup-ambiguity/v3",
@@ -390,18 +444,8 @@ internal static class CredentialNativeQualificationRunner
             manifest_sha256 = manifestSha256,
             ambiguity.AssignmentId,
             ambiguity.Reason,
-            failure_type = cause.GetType().Name,
-            sqlite_failure = BuildSqliteFailureEvidence(cause),
-            failure_classification = helperFailure is not null
-                ? "typed-helper-failure"
-                : helperEvidenceAmbiguity is not null
-                    ? "typed-helper-evidence-ambiguity"
-                    : cause is SqliteException
-                        ? "typed-sqlite-failure"
-                        : "typed-redacted-non-sqlite-failure",
-            helper_failure = helperFailure?.Evidence,
-            helper_failure_containment = helperFailure?.Containment,
-            helper_evidence_ambiguity_containment = helperEvidenceAmbiguity?.Containment,
+            terminal_failure = BuildTerminalFailureEvidence(cause),
+            prior_primary_failure = BuildTerminalFailureEvidence(ambiguity.PriorPrimaryFailure),
             cleanup_confirmed = false,
             whole_namespace_absence_confirmed = false,
             namespace_blocked = true,
@@ -418,23 +462,31 @@ internal static class CredentialNativeQualificationRunner
             },
             containment_facts = new
             {
+                process_tree_facts_known = processTreeFactsKnown,
                 process_trees_terminated = processTreesTerminated,
-                process_tree_survivor_count = processTreeSurvivorCount,
+                process_tree_survivor_count = processTreeFactsKnown ? processTreeSurvivorCount : (int?)null,
                 rejected_phase_process_id = rejected?.ProcessId,
-                helper_failure = helperFailure?.Containment,
-                helper_evidence_ambiguity = helperEvidenceAmbiguity?.Containment,
+                terminal_failure = terminalFailureContainment,
+                prior_primary_failure = primaryFailureContainment,
             },
             external_effect_facts = new
             {
                 network_facts_known = helperEvidenceAmbiguity is null
-                    && (helperFailure?.Evidence.NetworkFactsKnown ?? true),
+                    && primaryHelperEvidenceAmbiguity is null
+                    && (helperFailure?.Evidence.NetworkFactsKnown ?? true)
+                    && (primaryHelperFailure?.Evidence.NetworkFactsKnown ?? true),
                 listener_count = listenerCount,
                 network_operation_count = networkOperationCount,
                 external_effect_facts_known = helperEvidenceAmbiguity is null
-                    && (helperFailure?.Evidence.ExternalEffectFactsKnown ?? true),
-                dns_operation_count = helperFailure?.Evidence.DnsOperationCount ?? 0,
-                provider_operation_count = helperFailure?.Evidence.ProviderOperationCount ?? 0,
-                billable_operation_count = helperFailure?.Evidence.BillableOperationCount ?? 0,
+                    && primaryHelperEvidenceAmbiguity is null
+                    && (helperFailure?.Evidence.ExternalEffectFactsKnown ?? true)
+                    && (primaryHelperFailure?.Evidence.ExternalEffectFactsKnown ?? true),
+                dns_operation_count = (helperFailure?.Evidence.DnsOperationCount ?? 0)
+                    + (primaryHelperFailure?.Evidence.DnsOperationCount ?? 0),
+                provider_operation_count = (helperFailure?.Evidence.ProviderOperationCount ?? 0)
+                    + (primaryHelperFailure?.Evidence.ProviderOperationCount ?? 0),
+                billable_operation_count = (helperFailure?.Evidence.BillableOperationCount ?? 0)
+                    + (primaryHelperFailure?.Evidence.BillableOperationCount ?? 0),
                 external_zero_basis = "source-proven-helper-and-synthetic-dispatch-have-no-provider-or-dns-transport",
             },
             evidence = ambiguity.Evidence,
@@ -659,7 +711,8 @@ internal static class CredentialNativeQualificationRunner
                     ambiguity.AssignmentId,
                     ambiguity.Reason,
                     supervisor.CaptureTerminalFailure(),
-                    ambiguity.InnerException ?? ambiguity);
+                    ambiguity.InnerException ?? ambiguity,
+                    ambiguity.PriorPrimaryFailure);
             }
 
             supervisor.BeginCleanup();
@@ -717,7 +770,8 @@ internal static class CredentialNativeQualificationRunner
                                 ? "cleanup-helper-failure"
                                 : "cleanup-phase-failed",
                         supervisor.CaptureTerminalFailure(),
-                        exception);
+                        exception,
+                        primaryFailure);
                 }
             }
             if (primaryFailure is CredentialNativeHelperEvidenceAmbiguityException evidenceAmbiguity)

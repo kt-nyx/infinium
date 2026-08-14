@@ -283,6 +283,42 @@ public sealed class CredentialNativeQualificationSupervisorTests
     [TestMethod]
     [TestCategory("Integration")]
     [TestCategory("Security")]
+    public async Task CleanupAmbiguityRetainsPriorPrimaryAndTerminalCleanupCausesSeparately()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(), "Infinium-Wp4-Dual-Failure-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        Microsoft.Data.Sqlite.SqliteException primary = new(
+            "SQLite Error 19: 'provider credential lifecycle time regression'.", 19, 1811);
+        InvalidOperationException cleanup = new("cleanup detail containing disposable secret text");
+
+        await Assert.ThrowsExactlyAsync<CredentialNativeCleanupAmbiguityException>(() =>
+            CredentialNativeQualificationRunner.RunCleanupFailureWithArtifactsForTestAsync(
+                root,
+                Launcher(Path.Combine(root, "fake-store")),
+                AllTargetIdentities(),
+                BaseTime,
+                cleanup,
+                primary));
+
+        using JsonDocument artifact = JsonDocument.Parse(File.ReadAllBytes(
+            Path.Combine(root, "credential-native-cleanup-ambiguity.v3.json")));
+        JsonElement terminalFailure = artifact.RootElement.GetProperty("terminal_failure");
+        JsonElement priorPrimary = artifact.RootElement.GetProperty("prior_primary_failure");
+        Assert.AreEqual("typed-redacted-non-sqlite-failure",
+            terminalFailure.GetProperty("classification").GetString());
+        Assert.AreEqual("SqliteException", priorPrimary.GetProperty("failure_type").GetString());
+        Assert.AreEqual("typed-sqlite-failure", priorPrimary.GetProperty("classification").GetString());
+        Assert.AreEqual("credential-authority-time-regression", priorPrimary.GetProperty("sqlite_failure")
+            .GetProperty("classification").GetString());
+        Assert.IsFalse(artifact.RootElement.GetRawText().Contains(cleanup.Message, StringComparison.Ordinal));
+        Assert.AreEqual(0, artifact.RootElement.GetProperty("later_native_calls").GetInt32());
+        Assert.AreEqual(0, DeterministicFakeSecureStore.NativeOperationCount);
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
     public async Task NativeManifestParserFailureReturnsKnownZeroEnvelopeWithoutThirtySecondPipeHold()
     {
         string repository = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
@@ -393,7 +429,8 @@ public sealed class CredentialNativeQualificationSupervisorTests
             Assert.IsTrue(artifact.RootElement.GetProperty("evidence").GetProperty("cleanup_ambiguous").GetBoolean());
             Assert.IsTrue(artifact.RootElement.GetProperty("evidence").GetProperty("namespace_blocked").GetBoolean());
             Assert.AreEqual("typed-redacted-non-sqlite-failure",
-                artifact.RootElement.GetProperty("failure_classification").GetString());
+                artifact.RootElement.GetProperty("terminal_failure").GetProperty("classification").GetString());
+            Assert.AreEqual(JsonValueKind.Null, artifact.RootElement.GetProperty("prior_primary_failure").ValueKind);
             Assert.IsFalse(artifact.RootElement.GetRawText().Contains(
                 "synthetic cleanup cause must be redacted", StringComparison.Ordinal));
         }
@@ -407,11 +444,13 @@ public sealed class CredentialNativeQualificationSupervisorTests
             "engine-execution", "invalid-operation", true,
             0, 0, 0, 0, 0, true, 0, 0, true, 0, 0, 0,
             "[]", null, null, false, false, 0, false, null);
+        CredentialNativeHelperFailureException boundedFailure = new(
+            boundedEvidence, "wp4-v2/interactive-entry-submit/cleanup");
+        boundedFailure.AttachContainment(new(48201, 68, 2, 1, 1, false));
         (string Name, Exception Failure, string Reason)[] cases =
         [
             ("generic", new InvalidOperationException("synthetic cleanup failure"), "cleanup-phase-failed"),
-            ("helper", new CredentialNativeHelperFailureException(
-                boundedEvidence, "wp4-v2/interactive-entry-submit/cleanup"), "cleanup-helper-failure"),
+            ("helper", boundedFailure, "cleanup-helper-failure"),
             ("ambiguous", new CredentialNativeHelperEvidenceAmbiguityException(
                 "wp4-v2/interactive-entry-submit/cleanup",
                 new InvalidDataException("synthetic malformed envelope")), "cleanup-helper-evidence-invalid"),
@@ -471,13 +510,24 @@ public sealed class CredentialNativeQualificationSupervisorTests
                 .GetProperty("network_facts_known").GetBoolean(), name);
             Assert.AreEqual(name != "ambiguous", artifact.RootElement.GetProperty("external_effect_facts")
                 .GetProperty("external_effect_facts_known").GetBoolean(), name);
-            Assert.IsTrue(artifact.RootElement.GetProperty("containment_facts")
-                .GetProperty("process_trees_terminated").GetBoolean(), name);
-            Assert.AreEqual(0, artifact.RootElement.GetProperty("containment_facts")
-                .GetProperty("process_tree_survivor_count").GetInt32(), name);
+            Assert.AreEqual(name != "ambiguous", artifact.RootElement.GetProperty("containment_facts")
+                .GetProperty("process_tree_facts_known").GetBoolean(), name);
+            Assert.AreEqual(name is not ("helper" or "ambiguous"), artifact.RootElement
+                .GetProperty("containment_facts").GetProperty("process_trees_terminated").GetBoolean(), name);
+            JsonElement survivorCount = artifact.RootElement.GetProperty("containment_facts")
+                .GetProperty("process_tree_survivor_count");
+            if (name == "ambiguous")
+            {
+                Assert.AreEqual(JsonValueKind.Null, survivorCount.ValueKind, name);
+            }
+            else
+            {
+                Assert.AreEqual(name == "helper" ? 1 : 0, survivorCount.GetInt32(), name);
+            }
             if (name == "sqlite")
             {
-                JsonElement sqlite = artifact.RootElement.GetProperty("sqlite_failure");
+                JsonElement sqlite = artifact.RootElement.GetProperty("terminal_failure")
+                    .GetProperty("sqlite_failure");
                 Assert.AreEqual(19, sqlite.GetProperty("primary_code").GetInt32());
                 Assert.AreEqual(1811, sqlite.GetProperty("extended_code").GetInt32());
                 Assert.AreEqual("credential-authority-time-regression",
@@ -492,7 +542,8 @@ public sealed class CredentialNativeQualificationSupervisorTests
             }
             if (name == "sqlite-redacted")
             {
-                JsonElement sqlite = artifact.RootElement.GetProperty("sqlite_failure");
+                JsonElement sqlite = artifact.RootElement.GetProperty("terminal_failure")
+                    .GetProperty("sqlite_failure");
                 Assert.AreEqual(19, sqlite.GetProperty("primary_code").GetInt32());
                 Assert.AreEqual(1811, sqlite.GetProperty("extended_code").GetInt32());
                 Assert.AreEqual("unclassified-redacted", sqlite.GetProperty("classification").GetString());
