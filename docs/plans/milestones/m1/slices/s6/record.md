@@ -6398,3 +6398,13 @@ Replacement close-ready commit
 table. The manifest is rebound to that commit and returned to
 `ready-for-owner-acceptance`; this does not grant effect authority. Exact-byte
 validation, Layer 6, and terminal independent re-review remain required.
+
+Exact semantic validation passed on the rebound bytes with
+`execution_authorized=false`. Candidate-bound
+`Layer6Review -Wp4OwnerReviewHandoff` passed again through exact candidate
+`72aada107633d754a1e00535dfff4240c838d2ff` across the same 13-path scope with
+zero findings. Its 1,390-byte receipt SHA-256 is
+`6f00cf9eec3a5bf1a6e33c51ce01a06203a52586c2fe2b2ad5e57e57582b7e94`.
+Fresh terminal review of the corrected exact candidate remains required; no
+owner marker, execution marker, lock, output, dialog, native operation, or
+external effect exists.
