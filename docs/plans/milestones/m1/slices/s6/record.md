@@ -5896,12 +5896,14 @@ and independently parses as Completed for
 SHA-256 `515dc1aff16f141395f7120260817cb9a3729a509c1db22a28d971256bda56d8`
 and parses as Cancelled for `wp4-v2/interactive-entry-cancel/cancel`. The
 restored database retains generation `g002`, which was inserted before the
-third helper launch. Its sole `helper-receipt-admitted` audit row was copied
-from the earlier `g001` source by backup/restore and is not evidence for the
-third interaction. No third staging receipt was retained. The owner's direct
-observation is therefore the authority only for the third dialog action; the
-machine evidence does not prove subsequent receipt admission or a native
-result for that phase.
+third helper launch, but its projection remains `g001` `recovery-required`
+and it contains no `g002` intent or staged receipt. Its sole
+`helper-receipt-admitted` audit row is byte-for-byte and timestamp-identical
+to the earlier `g001` source row copied by backup/restore, so it is not
+evidence for the third interaction. The owner's direct observation is
+therefore the authority only for the third dialog action; the machine
+evidence does not prove subsequent receipt admission or a native result for
+that phase.
 
 After that third interaction, the coordinator failed during exact assignment
 `wp4-v2/backup-restore-reauthentication/cleanup-successor` and exited 68. The
