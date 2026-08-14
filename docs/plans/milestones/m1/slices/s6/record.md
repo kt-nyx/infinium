@@ -6109,3 +6109,30 @@ are both zero. No dialog, Credential Manager, provider, DNS, network,
 billable, private-fixture, archive, later-package, or push operation occurred.
 Fresh independent Windows credential/security review remains pending; this
 entry does not authorize execution.
+
+### WP4 `4936dcef` fresh independent pre-effect acceptance — 2026-08-14T18:18:08.3673985Z
+
+Fresh independent Windows credential/security review returned ACCEPT with no
+finding, bound to clean terminal documentation commit
+`6f8fecbc60c503115726ae14d360ec079085e888` and the exact 21,799-byte
+manifest SHA-256
+`910ff1552d178bcfe5ff36fd9b618d187203c38c6b023d9610af5c702bdb3393`.
+The reviewer independently confirmed exact consumed e6 and `6232bae5`
+lineage, prior 12/12 absence, 12 unique fresh disjoint fingerprints, exact
+ancestry and permitted record-only post-binding drift, and the final Layer 6
+receipt.
+
+Static semantic and security review accepted exact `CredWriteW`,
+exact-target `CredReadW`, exact-target `CredDeleteW`, and `CredFree` only;
+no enumeration or fallback; exact 41-phase/9-scenario orchestration; all
+three manual interactions; fake-only provider dispatch; finite 1,800-second
+and W9/R78/D9/F28/T124 bounds; and cleanup, no-later-call, absence, canary,
+containment, and schema-v3 ambiguity-evidence requirements. The fresh semantic
+validator passed, focused authorization passed 30/30, and the supervisor class
+passed 29/29. Final owner and execution marker counts were zero, the fresh
+lock and output were absent, exact-root process count was zero, and no native,
+UI, provider, network, private-fixture, or archive effect occurred.
+
+This is pre-effect acceptance only. It does not create owner authority or
+permit execution without the owner's explicit acceptance of the exact
+manifest ID, SHA-256, close-ready commit, and expiry.
