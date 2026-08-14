@@ -5701,3 +5701,70 @@ WP4 remains unaccepted pending bounded non-native correction, full verification,
 fresh qualification authority, successful qualification, and independent
 acceptance.
 WP4_RECOVERY_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5 sha256=6649b694ca235a8d0f4dcce9da6040f5c01a2ec22bdbcad7fcc7f9f6a4610cbb execution_head_commit=08ce73d5149486203e9e63926da19b05ddac2b68 status=passed recovery_native_calls=W0-R2-D0-F0-T2 recovery_target_absence=2 prior_target_absence=10 combined_namespace_target_absence=12 namespace_disposition=cleanup-confirmed-absent-never-reuse evidence_sha256=29fe8a1686564961a87d42018c77fa36260670d7b4d8aa976a5f212bb94f2329 authority_lock_sha256=1ef3d2ecf4bb088eca9c5411cb7537519f64a0f659bd418358b48ea8ffda4e4b receipt_sha256=f71b0668bc7c220d01272fa0a85406ce5ab99e75a59ccfbdf3e097fc352df908
+
+## WP4 post-`e3f76cd6` restore-clock correction — 2026-08-14
+
+The exact failure was reproduced on disposable non-native SQLite data whose
+credential authority timestamps were deliberately later than wall clock. A
+direct restore-style transition retained SQLite primary code 19, extended
+code 1811, and exact message
+`SQLite Error 19: 'provider credential lifecycle time regression'.` The
+failure occurred because restore recovery used current wall-clock time even
+when the restored profile's durable intent, event, and projection authority
+was later.
+
+Correction commit `2f95692687b60d97db2710835e9d0966f131c164`
+derives each restored profile's transition time from the exact durable maximum
+used by the database trigger, chooses the later of caller time and that
+authority floor, and advances by one tick before the terminal event. The
+regression proves restore reaches `recovery-required`, increments revocation,
+and permits only a fresh successor generation to reauthenticate. Primary
+failure evidence now retains a fixed classification and fixed message only
+for the exact primary-19/extended-1811/message tuple; every unexpected SQLite
+message or mismatched code tuple is `unclassified-redacted` with a null
+message.
+
+Mandatory SDK 10.0.303 non-live verification passed: locked restore and
+Release build with zero warnings; Unit 241 passed with one expected
+environment skip; Contract 141/141; Integration 121/121; Evaluation 86 passed
+with eight expected private-environment skips; Security 162 passed with three
+expected environment skips; Fault 108 passed with three expected skips; and
+the unfiltered solution 658 passed with nine expected skips. Format,
+dependency-manifest, documentation, `verify-analysis-pipeline -Gate All`, and
+`git diff --check` passed. Candidate-bound `Layer6Review` from cleanup closure
+`44fbcc0542bef77f93c83f1422406a2b6012f0d5` passed with five changed paths,
+zero findings, and 1,353-byte receipt SHA-256
+`c1395c4ed8a0dbb2796507a0cffdff6956ed89ad52ca51dcee54a4c3e34e88a9`.
+One earlier Layer 6 command supplied a nonexistent transcribed long hash and
+failed before evaluation; the exact Git-verified candidate rerun is the passed
+receipt above. Exact-root command-line and loaded-module cleanup left zero
+repository-owned `dotnet`, `testhost`, helper, or coordinator processes.
+
+Fresh independent semantic/security review returned ACCEPT with no finding
+against the exact clean commit. The reviewer independently reran the real
+SQLite reproduction and future-authority restore, checked the complete
+five-path diff and Layer 6 report chain, verified monotonic durable authority,
+fresh-generation reauthentication, transactional intent/fence/staging
+invariants, and secret-safe typed evidence, and confirmed zero surviving
+repository process and zero native, Credential Manager, provider, DNS,
+network, or billable operation.
+
+## WP4 fresh post-correction authorization draft — 2026-08-14
+
+Fresh draft manifest
+`infinium.m1-s6.wp4.credential-native-authorization/e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe`
+rotates to a new 12-target disposable namespace and supersedes only the
+terminal `e3f76cd6` manifest, its exact failure evidence and consumed authority
+lock, and accepted recovery `8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5` with the
+combined 12-target absence proof. The structural and semantic consumers bind
+the exact predecessor files and hashes, accepted correction, no-enumeration/
+no-fallback rules, helper-owned entry, fake-only dispatch, finite limits,
+canaries, cleanup on every terminal path, absence proof, and never-reuse rule.
+
+The 21,706-byte draft has SHA-256
+`64efbf8438c05c6bd1f71de9d302e760ad8c3ce9a1297e874309bfcfe313f3ca`
+and expires at `2026-08-16T14:43:54.4033492Z`. Its close-ready commit remains
+the all-zero draft placeholder and `execution_authorized=false`; no owner
+acceptance or execution marker exists. Credential Manager, manual UI, DNS,
+network, provider, billable, private-fixture, archive, later-package, and push
+operation counts for this preparation are zero.

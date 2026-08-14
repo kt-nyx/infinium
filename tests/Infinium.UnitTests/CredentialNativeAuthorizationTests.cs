@@ -78,7 +78,7 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.AreEqual("infinium.repository.wp4-credential-native-authorization/1.3.0",
             manifest.GetProperty("schema_identity").GetString());
         Assert.AreEqual(
-            "infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60",
+            "infinium.m1-s6.wp4.credential-native-authorization/e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe",
             manifest.GetProperty("manifest_id").GetString());
         Assert.AreEqual("none-until-owner-accepts-exact-manifest-bytes",
             manifest.GetProperty("effect_authority").GetString());
@@ -87,7 +87,7 @@ public sealed class CredentialNativeAuthorizationTests
             candidate.GetProperty("accepted_wp7_product_candidate_commit").GetString());
         Assert.AreEqual("51251c0e0eb98d67dbc9b295b9ff084ebca33890",
             candidate.GetProperty("accepted_wp7_evidence_commit").GetString());
-        Assert.AreEqual("5df6b621a6ea0031066b2afbfbe204799854910e",
+        Assert.AreEqual("44fbcc0542bef77f93c83f1422406a2b6012f0d5",
             candidate.GetProperty("authorization_handoff_commit").GetString());
         string closeReady = candidate.GetProperty("close_ready_implementation_commit").GetString()!;
         string status = manifest.GetProperty("status").GetString()!;
@@ -118,7 +118,7 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.IsTrue(entry.GetProperty("readiness_oracle").GetString()!.Contains(
             "separate finite five-minute human response interval", StringComparison.Ordinal));
         Assert.AreEqual(
-            "exact manifest bytes and SHA-256 plus the superseded ad876b9a terminal manifest, failure evidence, authority lock, cleanup-recovery manifest/evidence/lock/receipt, and combined 12-target absence disposition",
+            "exact manifest bytes and SHA-256 plus the superseded e3f76cd6 terminal manifest, failure evidence, authority lock, cleanup-recovery manifest/evidence/lock/receipt, and combined 12-target absence disposition",
             manifest.GetProperty("required_evidence")[0].GetString());
 
         JsonElement components = manifest.GetProperty("qualification_components");
@@ -230,7 +230,7 @@ public sealed class CredentialNativeAuthorizationTests
 
         Assert.IsTrue(activeGate.Contains("wp4-credential-native-authorization.v2.json", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains(
-            "infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60",
+            "infinium.m1-s6.wp4.credential-native-authorization/e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe",
             StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("--credential-native-qualification-v2", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("FileMode]::CreateNew", StringComparison.Ordinal));
