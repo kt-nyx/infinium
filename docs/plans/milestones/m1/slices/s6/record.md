@@ -5665,3 +5665,5 @@ network, provider, billable, private-fixture, archive, later-package, or push
 operations. Execution remains forbidden until a fresh independent pre-effect
 review accepts these exact committed bytes and the canonical standing-authority
 marker is appended at true EOF.
+
+WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5 sha256=6649b694ca235a8d0f4dcce9da6040f5c01a2ec22bdbcad7fcc7f9f6a4610cbb close_ready_commit=a7815a3d7c19637659ecd39db013e2a01b645256 expires_at_utc=2026-08-15T13:46:52.0671830Z
