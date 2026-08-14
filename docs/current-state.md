@@ -17,7 +17,7 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S6` - owner-accepted; implementation-active |
-| Current authorized work | `M1/S6/WP4` bounded non-native evidence-retention correction after terminal cleanup recovery `6232bae5-f735-4db7-a74f-7ede9f67b752`: preserve the consumed e6 attempt and 12/12 absence proof, reproduce ambiguity handling without native effects, retain secret-safe typed causes and supervisor evidence, run the full non-live floor and fresh review, then prepare a new qualification manifest and stop pre-effect |
+| Current authorized work | `M1/S6/WP4` fresh WP4 qualification-manifest consumer binding and owner-review preparation only, based on accepted non-native ambiguity-evidence correction `2dce8acc27eece01b0232dd531a2deb27ef752af` and terminal cleanup recovery `6232bae5-f735-4db7-a74f-7ede9f67b752`; prepare and independently review manifest `4936dcef-a0f4-4302-9899-0afd99b19799`, then stop before any fresh manual/native qualification |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
 | Accepted Slice 6 WP1 candidate | `61b90314d8273749849f590b303814008fa2fdfa`; nine Slice 6 contracts are `Implementation-active` and the accepted local input-bound policy is `openai-responses-o200k-byte-envelope/v1` |
 | Accepted `M1/S6/WP2` candidate | `ed27ed04897103d93a60e6200971ca12d04f2e11`; capability, price, atomic reservation/final-gate, settlement, projection, replay, simulator, and public fixture/oracle evidence are independently accepted |
@@ -26,7 +26,7 @@ review history.
 | Accepted `M1/S6/WP6` candidate | Product `ee0b6d31f1c1826c2af7634766155397e916c3e1`, append-only evidence `2b277338390f7dac37b5a5436bbe2cd81dedc871`, and answer-isolated oracle `37aa2b4e2fc084307ba5211f21bbeeb7a93efab0`; source-claim acquisition, deterministic admission, retained semantic provenance/replay, and later admitted-artifact consumption are independently accepted |
 | Accepted `M1/S6/WP7` candidate | Product `59367a7479a7395b173b974bf720543aab2404d4`, append-only acceptance evidence `51251c0e0eb98d67dbc9b295b9ff084ebca33890`, and answer-isolated VAL-v3 oracle freeze `e9b032366552aa67649636655ed07a3bb50bb3b1`; deterministic candidate investigation, complete provenance, durable retention/readback, and database-owned replay are independently accepted |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure; no separate ADR; eleven packages with distinct native/live authorization gates |
-| Next eligible action | Independently audit terminal recovery `6232bae5-f735-4db7-a74f-7ede9f67b752`, then correct the non-native cleanup-ambiguity evidence seam so future failures retain exact secret-safe cause, trace/count/free-pairing, canary, containment, and zero-external-effect facts. No fresh manual/native qualification is authorized |
+| Next eligible action | Complete exact consumer binding, structural/semantic validation, full non-live verification, candidate-bound Layer 6, and fresh independent Windows credential/security review for manifest `4936dcef-a0f4-4302-9899-0afd99b19799`; then stop for owner review. No fresh manual/native qualification is authorized |
 | Later work | WP4 remains unaccepted. A later manual/native qualification requires terminal recovery closure, a bounded non-native correction, a new independently reviewed manifest, and fresh owner authority. WP8 remains blocked until WP4 is accepted. WP9-WP11 always require their exact fresh owner authorization; no provider request is authorized now |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
@@ -74,11 +74,18 @@ Recovery `6232bae5-f735-4db7-a74f-7ede9f67b752` then processed all 12 targets
 in exact manifest order with W0/R13/D1/F1/T15, deleted the remaining
 `backup-new` credential, and proved all 12 targets absent. The qualification
 and recovery namespaces, authorities, locks, targets, and output roots are
-consumed forever. This handoff permits only read-only audit, bounded non-native
-evidence-retention correction, full non-live verification, fresh review, and
-preparation of a new qualification manifest that stops pre-effect. It does
-not authorize retry, target reuse, a fresh manual/native qualification, or
-any provider operation. WP8 remains
+consumed forever. The bounded non-native ambiguity-evidence correction is
+independently accepted at `2dce8acc27eece01b0232dd531a2deb27ef752af`:
+future terminal ambiguity retains separate secret-safe typed primary and
+cleanup causes, validated and rejected native traces/counts/free pairing,
+canaries, helper results and staging, conservative external-effect facts, and
+known or explicitly unknown process containment. Fresh manifest
+`4936dcef-a0f4-4302-9899-0afd99b19799` uses a new disjoint disposable
+namespace and supersedes only the consumed e6 authority plus its terminal
+12/12 recovery proof. This handoff permits only consumer binding, non-live
+verification, fresh review, and owner-review preparation that stops
+pre-effect. It does not authorize retry, target reuse, a fresh manual/native
+qualification, or any provider operation. WP8 remains
 blocked because its native WP4 prerequisite is not accepted. Plan acceptance permits automatic progression among named
 non-live packages only after each prerequisite package is independently
 accepted and this file is advanced to the exact next package. Production

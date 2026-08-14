@@ -5995,3 +5995,55 @@ invalid PowerShell span invocation and timed out before validation; it caused
 no mutation or external effect, and the corrected bounded scan then passed.
 
 WP4_RECOVERY_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-recovery/6232bae5-f735-4db7-a74f-7ede9f67b752 sha256=0fc3ab730fc7474292db69ee20b993505396e9b81c7041169d53380925790086 execution_head_commit=2674d671ad19fd7867b1df81aacc459ceeb1d492 status=passed native_calls=15 cred_write_w=0 cred_read_w=13 cred_delete_w=1 cred_free=1 recovery_absence=12 prior_absence=0 combined_absence=12 cleanup_ambiguity=false namespace_reuse_blocked=true evidence_sha256=ac83f37ecb0d262a92a240bb7377d266c70a82367a919e384e4be135333d9864 receipt_sha256=d356b06492ef2472d73e4ebaf6c923e730498108ad65d49e18b74ed22bb2c8a8 lock_sha256=1a555e041d0edf9f4242071bc3549adce1bf71ac3e8255a8aa2d72579ec721ce network_operations=0 dns_operations=0 provider_operations=0 billable_operations=0
+
+### WP4 post-e6 ambiguity-evidence correction — 2026-08-14T17:41:10.1460949Z
+
+The bounded non-native correction is accepted at exact clean commit
+`2dce8acc27eece01b0232dd531a2deb27ef752af`. Future terminal cleanup
+ambiguity writes schema v3 and retains the complete supervisor snapshot,
+validated counts separately from rejected-phase trace/count/free-pairing,
+canaries, restored-generation helper result/staging/lifecycle, separate typed
+and secret-redacted terminal-cleanup and prior-primary causes, known-only
+SQLite code/message classifications, conservative network/external facts, and
+known or explicitly unknown helper containment. Historical e6 schema-v2
+evidence remains immutable and is not reconstructed.
+
+Fresh independent review first returned CORRECT because the initial candidate
+lost a prior primary failure when the first cleanup operation also failed and
+because top-level containment excluded helper failure containment. Both
+must-fixes were corrected. The replacement review returned ACCEPT with no
+finding against the exact commit. Focused authorization/build-policy passed
+38/38 and the complete supervisor class passed 29/29.
+
+The exact SDK 10.0.303 mandatory floor passed: locked restore; Release build
+with zero warnings/errors; Unit 243 passed with one expected environment skip;
+Contract 141/141; Integration 122/122; Evaluation 86 passed with eight expected
+private-environment skips; Security 165 passed with three expected environment
+skips; Fault 108 passed with three expected skips; and unfiltered 661 passed
+with nine expected skips. Format, dependency manifest, documentation,
+analysis-pipeline All, and `git diff --check` passed. Candidate-bound Layer 6
+from cleanup closure `45275e0538b23192862e2ee64ec49caab5b1f4c6` covered
+exactly three paths with zero findings; its 1,386-byte receipt SHA-256 is
+`a4a2c5226e2d65242aaf2b68e6bd7b1651a2487c0b58883ebd4f25433f446dbb`.
+Exact-root repository process count returned to zero after every long test
+boundary. Native credential, UI, provider, DNS, network, and billable
+operation counts for this correction are zero.
+
+### WP4 fresh post-correction authorization draft — 2026-08-14T17:41:10.1460949Z
+
+Draft manifest
+`infinium.m1-s6.wp4.credential-native-authorization/4936dcef-a0f4-4302-9899-0afd99b19799`
+uses a fresh disjoint 12-target disposable namespace and binds the accepted
+ambiguity-evidence correction, consumed e6 manifest/evidence/lock, and accepted
+`6232bae5` recovery manifest/evidence/lock/receipt with 12/12 absence. Its
+schema/consumer binding is `1.4.0`, expiry is
+`2026-08-16T17:41:10.1460949Z`, close-ready commit is the all-zero draft
+placeholder, and `execution_authorized=false`. The exact proposed command is
+`powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNative -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp4-native-4936dcef`.
+
+This entry records preparation only. No owner marker, execution marker,
+authority lock, output root, dialog, Credential Manager call, provider, DNS,
+network, billable, private-fixture, archive, later-package, or push operation
+exists for this identity. Exact consumer verification, close-ready binding,
+fresh independent Windows credential/security review, and explicit owner
+acceptance remain required before any native effect.

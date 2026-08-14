@@ -534,7 +534,8 @@ function Invoke-Layer6ReviewGate {
             foreach ($required in @(
                     '`M1/S6/WP4` fresh WP4 qualification-manifest consumer binding and owner-review preparation only',
                     '2f95692687b60d97db2710835e9d0966f131c164',
-                    'e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe',
+                    '2dce8acc27eece01b0232dd531a2deb27ef752af',
+                    '4936dcef-a0f4-4302-9899-0afd99b19799',
                     'stop before any fresh manual/native qualification')) {
                 if (-not $currentStateText.Contains($required, [System.StringComparison]::Ordinal)) {
                     $failures.Add("Wp4OwnerReviewHandoff current state is missing exact authority text: $required")
@@ -1331,14 +1332,15 @@ function Invoke-CredentialNativeGate {
     $manifestBytes = [IO.File]::ReadAllBytes($manifestPath)
     $manifestSha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($manifestBytes)).ToLowerInvariant()
     $manifest = [Text.Encoding]::UTF8.GetString($manifestBytes) | ConvertFrom-Json -Depth 100 -DateKind String
-    if ($manifest.manifest_id -ne 'infinium.m1-s6.wp4.credential-native-authorization/e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe' -or
+    if ($manifest.manifest_id -ne 'infinium.m1-s6.wp4.credential-native-authorization/4936dcef-a0f4-4302-9899-0afd99b19799' -or
         $manifest.status -ne 'ready-for-owner-acceptance' -or
         $manifest.effect_authority -ne 'none-until-owner-accepts-exact-manifest-bytes' -or
         $manifest.candidate_binding.accepted_wp3_candidate_commit -ne 'b32939e8b7491a5c47453f912d25dd98c090f103' -or
         $manifest.candidate_binding.accepted_wp7_product_candidate_commit -ne '59367a7479a7395b173b974bf720543aab2404d4' -or
         $manifest.candidate_binding.accepted_wp7_evidence_commit -ne '51251c0e0eb98d67dbc9b295b9ff084ebca33890' -or
         $manifest.candidate_binding.authorization_handoff_commit -ne '44fbcc0542bef77f93c83f1422406a2b6012f0d5' -or
-        $manifest.candidate_binding.sqlite_correction_candidate_commit -ne '2f95692687b60d97db2710835e9d0966f131c164') {
+        $manifest.candidate_binding.sqlite_correction_candidate_commit -ne '2f95692687b60d97db2710835e9d0966f131c164' -or
+        $manifest.candidate_binding.ambiguity_evidence_correction_candidate_commit -ne '2dce8acc27eece01b0232dd531a2deb27ef752af') {
         throw 'CredentialNative v2 identity, status, or candidate binding is not executable.'
     }
     $closeReady = [string]$manifest.candidate_binding.close_ready_implementation_commit
@@ -1354,7 +1356,8 @@ function Invoke-CredentialNativeGate {
             '59367a7479a7395b173b974bf720543aab2404d4',
             '51251c0e0eb98d67dbc9b295b9ff084ebca33890',
             '44fbcc0542bef77f93c83f1422406a2b6012f0d5',
-            '2f95692687b60d97db2710835e9d0966f131c164', $closeReady)) {
+            '2f95692687b60d97db2710835e9d0966f131c164',
+            '2dce8acc27eece01b0232dd531a2deb27ef752af', $closeReady)) {
         & git merge-base --is-ancestor $ancestor $head
         if ($LASTEXITCODE -ne 0) { throw "CredentialNative candidate does not descend from $ancestor." }
     }

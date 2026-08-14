@@ -667,17 +667,17 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
     private const uint CredentialPersistLocalMachine = 2;
     private const int ErrorNotFound = 1168;
     private const string ExpectedSupersededManifestId =
-        "infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60";
+        "infinium.m1-s6.wp4.credential-native-authorization/e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe";
     private const string ExpectedSupersededManifestSha256 =
-        "9f43e5d9d7fb8b0cdba9195ba835631fa6073dff1c6ae86eb68a914b04c57db0";
+        "c0e6aed84ca8d01a2722ff9970d52f816f47626f3e309cf9081b3c71b1245497";
     private const string ExpectedSupersededEvidenceSha256 =
-        "18b4bd64d5ae32596330271e415b10a0a6d8516fded9dfc35bf1fee26dc7cd9f";
+        "5b565888a412188f7c814c0d923e696e27d4135d7ebb23f5884ef7b2e3f228c7";
     private const string ExpectedSupersededAuthorityLockSha256 =
-        "945d2bbf440af7d5a305ae4cbb4dee73636175ff679ac8582a28e84cd73e0e5d";
+        "4fc808d221d340eb6b145ceffa35a2472cd621102b0e0dc280a8dbb71f77ddd4";
     private const string ExpectedCleanupRecoveryManifestSha256 =
-        "6649b694ca235a8d0f4dcce9da6040f5c01a2ec22bdbcad7fcc7f9f6a4610cbb";
+        "0fc3ab730fc7474292db69ee20b993505396e9b81c7041169d53380925790086";
     private const string ExpectedCleanupRecoveryEvidenceSha256 =
-        "29fe8a1686564961a87d42018c77fa36260670d7b4d8aa976a5f212bb94f2329";
+        "ac83f37ecb0d262a92a240bb7377d266c70a82367a919e384e4be135333d9864";
     private WindowsCredentialFault fault;
     private int writeCount;
     private int readCount;
@@ -729,7 +729,7 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 expectedManifestId,
                 StringComparison.Ordinal)
                 || manifestRoot.GetProperty("schema_identity").GetString()
-                    != "infinium.repository.wp4-credential-native-authorization/1.3.0"
+                    != "infinium.repository.wp4-credential-native-authorization/1.4.0"
                 || manifestRoot.GetProperty("status").GetString() != "ready-for-owner-acceptance"
                 || manifestRoot.GetProperty("effect_authority").GetString()
                     != "none-until-owner-accepts-exact-manifest-bytes")
@@ -746,15 +746,15 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 || supersedes.GetProperty("namespace_disposition").GetString()
                     != "terminal-cleanup-confirmed-absent-never-reuse"
                 || cleanupRecovery.GetProperty("manifest_id").GetString()
-                    != "infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5"
+                    != "infinium.m1-s6.wp4.credential-native-recovery/6232bae5-f735-4db7-a74f-7ede9f67b752"
                 || cleanupRecovery.GetProperty("manifest_sha256").GetString()
                     != ExpectedCleanupRecoveryManifestSha256
                 || cleanupRecovery.GetProperty("evidence_sha256").GetString()
                     != ExpectedCleanupRecoveryEvidenceSha256
                 || cleanupRecovery.GetProperty("authority_lock_sha256").GetString()
-                    != "1ef3d2ecf4bb088eca9c5411cb7537519f64a0f659bd418358b48ea8ffda4e4b"
+                    != "1a555e041d0edf9f4242071bc3549adce1bf71ac3e8255a8aa2d72579ec721ce"
                 || cleanupRecovery.GetProperty("receipt_sha256").GetString()
-                    != "f71b0668bc7c220d01272fa0a85406ce5ab99e75a59ccfbdf3e097fc352df908"
+                    != "d356b06492ef2472d73e4ebaf6c923e730498108ad65d49e18b74ed22bb2c8a8"
                 || cleanupRecovery.GetProperty("combined_namespace_target_absence_count").GetInt32() != 12)
             {
                 throw new InvalidDataException("The native store manifest predecessor authority is not exact.");

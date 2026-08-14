@@ -31,19 +31,20 @@ if (-not (Test-Json -LiteralPath $resolvedManifest -SchemaFile $schema -ErrorAct
 $bytes = [IO.File]::ReadAllBytes($resolvedManifest)
 $text = [Text.Encoding]::UTF8.GetString($bytes)
 $manifest = $text | ConvertFrom-Json -Depth 100 -DateKind String
-$expectedManifestId = 'infinium.m1-s6.wp4.credential-native-authorization/e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe'
+$expectedManifestId = 'infinium.m1-s6.wp4.credential-native-authorization/4936dcef-a0f4-4302-9899-0afd99b19799'
 $expectedWp3 = 'b32939e8b7491a5c47453f912d25dd98c090f103'
 $expectedWp7Product = '59367a7479a7395b173b974bf720543aab2404d4'
 $expectedWp7Evidence = '51251c0e0eb98d67dbc9b295b9ff084ebca33890'
 $expectedHandoff = '44fbcc0542bef77f93c83f1422406a2b6012f0d5'
 $expectedCorrection = '2f95692687b60d97db2710835e9d0966f131c164'
-$expectedOldManifest = '9f43e5d9d7fb8b0cdba9195ba835631fa6073dff1c6ae86eb68a914b04c57db0'
-$expectedOldEvidence = '18b4bd64d5ae32596330271e415b10a0a6d8516fded9dfc35bf1fee26dc7cd9f'
-$expectedOldLock = '945d2bbf440af7d5a305ae4cbb4dee73636175ff679ac8582a28e84cd73e0e5d'
+$expectedAmbiguityCorrection = '2dce8acc27eece01b0232dd531a2deb27ef752af'
+$expectedOldManifest = 'c0e6aed84ca8d01a2722ff9970d52f816f47626f3e309cf9081b3c71b1245497'
+$expectedOldEvidence = '5b565888a412188f7c814c0d923e696e27d4135d7ebb23f5884ef7b2e3f228c7'
+$expectedOldLock = '4fc808d221d340eb6b145ceffa35a2472cd621102b0e0dc280a8dbb71f77ddd4'
 $historicalManifestBlob = (& git -C $repoRoot rev-parse `
-    'f0ee9814f8bd0100692dfa7b7cab83ed9181457f:docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json').Trim()
-if ($LASTEXITCODE -ne 0 -or $historicalManifestBlob -ne '2767ad896d2f46d83e988d90a2ccc7319c0ec788') {
-    throw 'The consumed e3f76cd6 manifest history differs from its terminal exact-byte authority.'
+    'fdd9d49301e72f6a421e4597ea405bb2ca69da2f:docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json').Trim()
+if ($LASTEXITCODE -ne 0 -or $historicalManifestBlob -ne 'bfc04527c77aa0bc4466e96d74e606d54ca45796') {
+    throw 'The consumed e6e04651 manifest history differs from its terminal exact-byte authority.'
 }
 function Assert-ExactArtifactHash([string] $RelativePath, [string] $ExpectedSha256) {
     $path = [IO.Path]::GetFullPath((Join-Path $repoRoot $RelativePath))
@@ -58,66 +59,68 @@ function Assert-ExactArtifactHash([string] $RelativePath, [string] $ExpectedSha2
     return $path
 }
 $priorEvidencePath = Assert-ExactArtifactHash `
-    'artifacts/m1-slice6/wp4-native-e3f76cd6/credential-native-primary-failure.v2.json' $expectedOldEvidence
+    'artifacts/m1-slice6/wp4-native-e6e04651/credential-native-cleanup-ambiguity.v2.json' $expectedOldEvidence
 $priorLockPath = Assert-ExactArtifactHash `
-    'artifacts/m1-slice6/wp4-native-authority-locks/cd9dd843fdd8e222a4b2d812ec0378d823d94d3308590ccce8aa280399276acf.json' $expectedOldLock
+    'artifacts/m1-slice6/wp4-native-authority-locks/49073f973272d97446b1d4462af86d2e68fe117ab48119e54a4e5dbfb59ba23c.json' $expectedOldLock
 $recoveryEvidencePath = Assert-ExactArtifactHash `
-    'artifacts/m1-slice6/wp4-native-recovery-8b7fc811/credential-native-recovery-evidence.v1.json' `
-    '29fe8a1686564961a87d42018c77fa36260670d7b4d8aa976a5f212bb94f2329'
+    'artifacts/m1-slice6/wp4-native-recovery-6232bae5/credential-native-recovery-evidence.v1.json' `
+    'ac83f37ecb0d262a92a240bb7377d266c70a82367a919e384e4be135333d9864'
 $recoveryLockPath = Assert-ExactArtifactHash `
-    'artifacts/m1-slice6/wp4-native-recovery-locks/87b696655c2696b8bc5c038ba785da5163f8b88c1f02f723665c3589a5051d5d.json' `
-    '1ef3d2ecf4bb088eca9c5411cb7537519f64a0f659bd418358b48ea8ffda4e4b'
+    'artifacts/m1-slice6/wp4-native-recovery-locks/58a7f448813901441cd5c14a9b78c04e1d32c9ca068037c620f39387417dd63d.json' `
+    '1a555e041d0edf9f4242071bc3549adce1bf71ac3e8255a8aa2d72579ec721ce'
 $recoveryReceiptPath = Assert-ExactArtifactHash `
-    'artifacts/m1-slice6/wp4-native-recovery-8b7fc811/credentialnativerecovery.json' `
-    'f71b0668bc7c220d01272fa0a85406ce5ab99e75a59ccfbdf3e097fc352df908'
+    'artifacts/m1-slice6/wp4-native-recovery-6232bae5/credentialnativerecovery.json' `
+    'd356b06492ef2472d73e4ebaf6c923e730498108ad65d49e18b74ed22bb2c8a8'
 $priorEvidence = Get-Content -LiteralPath $priorEvidencePath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
 $priorLock = Get-Content -LiteralPath $priorLockPath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
 $recoveryEvidence = Get-Content -LiteralPath $recoveryEvidencePath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
 $recoveryLock = Get-Content -LiteralPath $recoveryLockPath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
 $recoveryReceipt = Get-Content -LiteralPath $recoveryReceiptPath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
-if ($priorEvidence.status -ne 'failed-primary-cleanup-confirmed' -or
-    $priorEvidence.manifest_id -ne 'infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60' -or
+if ($priorEvidence.status -ne 'failed-cleanup-ambiguous' -or
+    $priorEvidence.manifest_id -ne 'infinium.m1-s6.wp4.credential-native-authorization/e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe' -or
     $priorEvidence.manifest_sha256 -ne $expectedOldManifest -or
     -not [bool]$priorEvidence.namespace_blocked -or
     [int64]$priorEvidence.later_native_calls -ne 0 -or
-    @($priorEvidence.absence_target_fingerprints).Count -ne 10 -or
+    [bool]$priorEvidence.cleanup_confirmed -or
+    [bool]$priorEvidence.whole_namespace_absence_confirmed -or
     $priorLock.disposition -ne 'consumed-before-native-launch-never-delete-or-reuse' -or
     $priorLock.manifest_id -ne $priorEvidence.manifest_id -or
     $priorLock.manifest_sha256 -ne $expectedOldManifest) {
-    throw 'The consumed e3f76cd6 failure evidence or authority lock is not terminal and exact.'
+    throw 'The consumed e6e04651 ambiguity evidence or authority lock is not terminal and exact.'
 }
 if ($recoveryEvidence.status -ne 'passed' -or
-    $recoveryEvidence.manifest_id -ne 'infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5' -or
+    $recoveryEvidence.manifest_id -ne 'infinium.m1-s6.wp4.credential-native-recovery/6232bae5-f735-4db7-a74f-7ede9f67b752' -or
     [bool]$recoveryEvidence.cleanup_ambiguity -or
     -not [bool]$recoveryEvidence.namespace_reuse_blocked -or
-    @($recoveryEvidence.target_absence).Count -ne 2 -or
-    [int64]$recoveryEvidence.prior_exact_absence_count -ne 10 -or
+    @($recoveryEvidence.target_absence).Count -ne 12 -or
+    [int64]$recoveryEvidence.prior_exact_absence_count -ne 0 -or
     [int64]$recoveryEvidence.combined_namespace_target_absence_count -ne 12 -or
     $recoveryLock.disposition -ne 'consumed-never-reuse' -or
     $recoveryLock.manifest_id -ne $recoveryEvidence.manifest_id -or
     $recoveryReceipt.status -ne 'passed' -or
     [int64]$recoveryReceipt.evidence.combined_namespace_target_absence_count -ne 12) {
-    throw 'The e3f76cd6 cleanup recovery evidence, lock, or receipt is not terminal and exact.'
+    throw 'The e6e04651 cleanup recovery evidence, lock, or receipt is not terminal and exact.'
 }
-if ($manifest.schema_identity -ne 'infinium.repository.wp4-credential-native-authorization/1.3.0' -or
+if ($manifest.schema_identity -ne 'infinium.repository.wp4-credential-native-authorization/1.4.0' -or
     $manifest.manifest_id -ne $expectedManifestId -or
     $manifest.effect_authority -ne 'none-until-owner-accepts-exact-manifest-bytes' -or
     $manifest.candidate_binding.accepted_wp3_candidate_commit -ne $expectedWp3 -or
     $manifest.candidate_binding.accepted_wp7_product_candidate_commit -ne $expectedWp7Product -or
     $manifest.candidate_binding.accepted_wp7_evidence_commit -ne $expectedWp7Evidence -or
     $manifest.candidate_binding.authorization_handoff_commit -ne $expectedHandoff -or
-    $manifest.candidate_binding.sqlite_correction_candidate_commit -ne $expectedCorrection) {
+    $manifest.candidate_binding.sqlite_correction_candidate_commit -ne $expectedCorrection -or
+    $manifest.candidate_binding.ambiguity_evidence_correction_candidate_commit -ne $expectedAmbiguityCorrection) {
     throw 'WP4 v2 manifest is not bound to the exact accepted WP3/WP7/handoff identities.'
 }
 if ($manifest.supersedes.manifest_sha256 -ne $expectedOldManifest -or
     $manifest.supersedes.native_evidence_sha256 -ne $expectedOldEvidence -or
     $manifest.supersedes.authority_lock_sha256 -ne $expectedOldLock -or
     $manifest.supersedes.namespace_disposition -ne 'terminal-cleanup-confirmed-absent-never-reuse' -or
-    $manifest.supersedes.cleanup_recovery.manifest_id -ne 'infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5' -or
-    $manifest.supersedes.cleanup_recovery.manifest_sha256 -ne '6649b694ca235a8d0f4dcce9da6040f5c01a2ec22bdbcad7fcc7f9f6a4610cbb' -or
-    $manifest.supersedes.cleanup_recovery.evidence_sha256 -ne '29fe8a1686564961a87d42018c77fa36260670d7b4d8aa976a5f212bb94f2329' -or
-    $manifest.supersedes.cleanup_recovery.authority_lock_sha256 -ne '1ef3d2ecf4bb088eca9c5411cb7537519f64a0f659bd418358b48ea8ffda4e4b' -or
-    $manifest.supersedes.cleanup_recovery.receipt_sha256 -ne 'f71b0668bc7c220d01272fa0a85406ce5ab99e75a59ccfbdf3e097fc352df908' -or
+    $manifest.supersedes.cleanup_recovery.manifest_id -ne 'infinium.m1-s6.wp4.credential-native-recovery/6232bae5-f735-4db7-a74f-7ede9f67b752' -or
+    $manifest.supersedes.cleanup_recovery.manifest_sha256 -ne '0fc3ab730fc7474292db69ee20b993505396e9b81c7041169d53380925790086' -or
+    $manifest.supersedes.cleanup_recovery.evidence_sha256 -ne 'ac83f37ecb0d262a92a240bb7377d266c70a82367a919e384e4be135333d9864' -or
+    $manifest.supersedes.cleanup_recovery.authority_lock_sha256 -ne '1a555e041d0edf9f4242071bc3549adce1bf71ac3e8255a8aa2d72579ec721ce' -or
+    $manifest.supersedes.cleanup_recovery.receipt_sha256 -ne 'd356b06492ef2472d73e4ebaf6c923e730498108ad65d49e18b74ed22bb2c8a8' -or
     [int64]$manifest.supersedes.cleanup_recovery.combined_namespace_target_absence_count -ne 12) {
     throw 'WP4 v2 manifest does not preserve the exact consumed predecessor terminal evidence.'
 }
@@ -125,7 +128,7 @@ if ($manifest.supersedes.manifest_sha256 -ne $expectedOldManifest -or
 $head = (& git -C $repoRoot rev-parse HEAD).Trim()
 $branch = (& git -C $repoRoot branch --show-current).Trim()
 if ($branch -ne 'codex/m1-s6') { throw 'WP4 v2 manifest requires branch codex/m1-s6.' }
-foreach ($ancestor in @($expectedWp3, $expectedWp7Product, $expectedWp7Evidence, $expectedHandoff, $expectedCorrection)) {
+foreach ($ancestor in @($expectedWp3, $expectedWp7Product, $expectedWp7Evidence, $expectedHandoff, $expectedCorrection, $expectedAmbiguityCorrection)) {
     & git -C $repoRoot merge-base --is-ancestor $ancestor $head
     if ($LASTEXITCODE -ne 0) { throw "Required ancestor $ancestor is not retained." }
 }
@@ -268,7 +271,7 @@ foreach ($scenario in $manifest.required_scenarios) {
     }
 }
 
-$expectedCommand = 'powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNative -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp4-native-e6e04651'
+$expectedCommand = 'powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNative -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp4-native-4936dcef'
 if ($manifest.execution_command -ne $expectedCommand -or
     -not ([string]$manifest.acceptance_binding.recording).Contains(
         'WP4_V2_OWNER_ACCEPTANCE manifest_id=<manifest_id> sha256=<manifest_sha256> close_ready_commit=<close_ready_implementation_commit> expires_at_utc=<expires_at_utc>',
@@ -277,9 +280,9 @@ if ($manifest.execution_command -ne $expectedCommand -or
 }
 
 $requiredEvidenceText = $manifest.required_evidence -join "`n"
-$expectedPredecessorEvidence = 'exact manifest bytes and SHA-256 plus the superseded e3f76cd6 terminal manifest, failure evidence, authority lock, cleanup-recovery manifest/evidence/lock/receipt, and combined 12-target absence disposition'
+$expectedPredecessorEvidence = 'exact manifest bytes and SHA-256 plus the superseded e6e04651 terminal manifest, ambiguity evidence, authority lock, cleanup-recovery manifest/evidence/lock/receipt, and combined 12-target absence disposition'
 if ([string]$manifest.required_evidence[0] -cne $expectedPredecessorEvidence) {
-    throw 'WP4 v2 required evidence does not bind the exact consumed e3f76cd6 terminal and recovery lineage.'
+    throw 'WP4 v2 required evidence does not bind the exact consumed e6e04651 terminal and recovery lineage.'
 }
 foreach ($phrase in @('ordered allowed-call trace', 'real coordinator lifecycle', 'final-gate receipt',
     'initially blank', 'canary', 'Job Object', 'fresh independent Windows credential/security ACCEPT')) {
