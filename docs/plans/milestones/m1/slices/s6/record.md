@@ -6731,3 +6731,8 @@ until semantic/build/test preflight and one-shot lock creation have succeeded.
 The draft validator and focused authorization class passed 33/33. This is
 pre-effect preparation only: there is no owner-acceptance marker, execution
 marker, authority lock, output root, native operation, or provider operation.
+The close-ready implementation, validator, helper, gate, historical-lineage
+consumer correction, tests, current-state handoff, and draft manifest were
+committed at `05bf47ee3cfa04cca068d0012c6816855aaff6bf`. The final manifest is now
+bound to that exact ancestor and marked ready for owner review. This binding
+does not create owner authority and does not authorize execution.
