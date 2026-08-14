@@ -24,7 +24,10 @@ $isAd876Recovery =
 $isE3Recovery =
     $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.2.0' -and
     $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5'
-$isCurrentRecovery = $isAd876Recovery -or $isE3Recovery
+$isE6Recovery =
+    $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.3.0' -and
+    $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/6232bae5-f735-4db7-a74f-7ede9f67b752'
+$isCurrentRecovery = $isAd876Recovery -or $isE3Recovery -or $isE6Recovery
 $isLegacyRecovery =
     $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.0.0' -and
     $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/89baee92-14d6-4f2b-a970-0fe6be15c54c'
@@ -58,8 +61,14 @@ if ($isCurrentRecovery) {
 }
 
 $expectedTargets = @{}
+$expectedAliases = @()
+$expectedFingerprints = @()
 foreach ($target in $manifest.disposable_namespace.targets) {
-    $expectedTargets[[string]$target.alias] = [string]$target.target_fingerprint_sha256
+    $alias = [string]$target.alias
+    $fingerprint = [string]$target.target_fingerprint_sha256
+    $expectedTargets[$alias] = $fingerprint
+    $expectedAliases += $alias
+    $expectedFingerprints += $fingerprint
 }
 if ($expectedTargets.Count -ne [int]$manifest.limits.targets) {
     throw 'Recovery manifest target inventory is not exact.'
@@ -77,6 +86,12 @@ foreach ($item in $absence) {
         throw 'Recovery target absence binding failed.'
     }
 }
+for ($index = 0; $index -lt $absence.Count; $index++) {
+    if ([string]$absence[$index].alias -cne $expectedAliases[$index] -or
+        [string]$absence[$index].target_fingerprint_sha256 -cne $expectedFingerprints[$index]) {
+        throw 'Recovery absence inventory order differs from exact authority.'
+    }
+}
 
 $allowedOperations = @('CredReadW', 'CredDeleteW', 'CredFree')
 $knownFingerprints = @($expectedTargets.Values)
@@ -86,6 +101,11 @@ $deleteCount = 0
 $freeCount = 0
 $allocations = @{}
 $lastByTarget = @{}
+$targetOrder = @{}
+for ($index = 0; $index -lt $expectedFingerprints.Count; $index++) {
+    $targetOrder[$expectedFingerprints[$index]] = $index
+}
+$lastTargetOrdinal = -1
 
 for ($index = 0; $index -lt $trace.Count; $index++) {
     $item = $trace[$index]
@@ -96,6 +116,11 @@ for ($index = 0; $index -lt $trace.Count; $index++) {
         [string]$item.scenario -cne 'cleanup-only-recovery') {
         throw 'Recovery trace order/operation/target failed.'
     }
+    $targetOrdinal = [int]$targetOrder[$fingerprint]
+    if ($targetOrdinal -lt $lastTargetOrdinal -or $targetOrdinal -gt $lastTargetOrdinal + 1) {
+        throw 'Recovery trace target order differs from exact authority.'
+    }
+    $lastTargetOrdinal = $targetOrdinal
     $lastByTarget[$fingerprint] = $item
 
     switch -CaseSensitive ([string]$item.operation) {

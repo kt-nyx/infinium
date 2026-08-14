@@ -547,7 +547,8 @@ internal static class WindowsCredentialNativeRecovery
     internal static bool IsAcceptedSchemaIdentityForTest(string? schemaIdentity) =>
         schemaIdentity is "infinium.repository.wp4-credential-native-recovery/1.0.0"
             or "infinium.repository.wp4-credential-native-recovery/1.1.0"
-            or "infinium.repository.wp4-credential-native-recovery/1.2.0";
+            or "infinium.repository.wp4-credential-native-recovery/1.2.0"
+            or "infinium.repository.wp4-credential-native-recovery/1.3.0";
 
     internal static int Run(string manifestPath, string expectedSha256, string expectedManifestId, string evidencePath)
     {
@@ -837,6 +838,36 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 new("fake-dispatch",
                     "m1s6-wp4-e3f76cd645c14e3aa84bfa3251b3cb60-fake-dispatch", "g001",
                     "08e0f7330185d89fa471d83434e768a3d9d54961d325e5b44b5d84f664cc6b02"),
+            ];
+        }
+        else if (schemaIdentity == "infinium.repository.wp4-credential-native-recovery/1.3.0"
+            && manifestRoot.GetProperty("manifest_id").GetString()
+                == "infinium.m1-s6.wp4.credential-native-recovery/6232bae5-f735-4db7-a74f-7ede9f67b752")
+        {
+            JsonElement limits = manifestRoot.GetProperty("limits");
+            if (limits.GetProperty("targets").GetInt32() != 12
+                || limits.GetProperty("CredReadW").GetInt32() != 36
+                || limits.GetProperty("CredDeleteW").GetInt32() != 12
+                || limits.GetProperty("CredFree").GetInt32() != 12
+                || limits.GetProperty("total_native_calls").GetInt32() != 60)
+            {
+                throw new InvalidDataException("Current recovery finite limits differ from exact authority.");
+            }
+            expectedTargetCount = 12;
+            exactCurrentTargets =
+            [
+                new("interactive-primary", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-interactive-primary", "g001", "821904462accf62dc1d6317199cd76091f7c271a599ac27ca970d5575002f3a4"),
+                new("interactive-cancel", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-interactive-cancel", "g001", "e432bd2911ef3b00088e03bd05c40fc094489e89f4905ae8305e2494d708e9c7"),
+                new("size-valid", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-size-valid", "g001", "53cbe11d187d98e681719a42b2e39373ac14ea8a86a1c8bc5c2f7df819bef7cc"),
+                new("size-oversize", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-size-oversize", "g001", "250b7287feac38456b9e9f4a8dd9ecf846e03e210c588cd52fd654cf6b25c6f8"),
+                new("unavailable-store", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-unavailable", "g001", "8b1da75ab27fb15d10d5703989430dc28386a3238b4f4cb62de7c701350f4bf7"),
+                new("replacement-old", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-replacement", "g001", "545f3a638456276cf35967e02449f4cbb9b8c05196b39005de8d16b5e44d9ad3"),
+                new("replacement-new", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-replacement", "g002", "f166ca075fb6c66e5d2c4782b42f0c5c35f32bd00f9a867b3a63b9dcfac55b0c"),
+                new("revoke-delete", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-revoke-delete", "g001", "2e7ff725c4f2c404b59cebe08e646d71ae9f3112e9369142002a35de0c875619"),
+                new("crash-restart", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-crash-restart", "g001", "c3b90f33f1dfb98b44f1db7b3bdc550175a55333a21832c58a330696d840740a"),
+                new("backup-old", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-backup-restore", "g001", "b1a4d68aaaefd0f62ae7979c994ca6193a34f273e463f5395e87d474cbb9f40a"),
+                new("backup-new", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-backup-restore", "g002", "c3a2805323e54bdc4aba66b5d3e33686ce12a525dfed82c4b2e463deea2c28b1"),
+                new("fake-dispatch", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-fake-dispatch", "g001", "d189000ff046ad5062614e915882796017b97778178875a58a77ebde902ab1c8"),
             ];
         }
         else
