@@ -5929,3 +5929,26 @@ or billable transport, but the terminal artifact itself truthfully labels
 external-effect facts as not independently admissible.
 
 WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe sha256=c0e6aed84ca8d01a2722ff9970d52f816f47626f3e309cf9081b3c71b1245497 execution_head_commit=fdd9d49301e72f6a421e4597ea405bb2ca69da2f status=failed-cleanup-ambiguous native_calls=not-retained cleanup_scope=unproven whole_namespace_absence=false namespace_blocked=true later_native_calls=0 evidence_sha256=5b565888a412188f7c814c0d923e696e27d4135d7ebb23f5884ef7b2e3f228c7 authority_lock_sha256=4fc808d221d340eb6b145ceffa35a2472cd621102b0e0dc280a8dbb71f77ddd4
+
+### WP4 e6 exact cleanup-only recovery close-ready preparation — 2026-08-14T16:16:35.9866168Z
+
+The bounded recovery implementation was committed at
+`6519f28db26a772b25208ea30f103f16725ad154`. Exact recovery manifest
+`infinium.m1-s6.wp4.credential-native-recovery/6232bae5-f735-4db7-a74f-7ede9f67b752`
+is now ready for independent pre-effect review with SHA-256
+`ee38e83a531dc74421255af93eb17e2d9ff4c5dc3a35b2576e229b8349eafd1b`
+and expiry `2026-08-15T16:00:31.8331744Z`. It binds the exact consumed e6
+manifest, terminal ambiguity artifact, authority lock, zero admissible prior
+per-target absences, and all 12 ordered namespace targets. Its only permitted
+native boundary is exact-target `CredReadW`, `CredDeleteW`, and `CredFree`,
+bounded by W0/R36/D12/F12/T60 and one attempt, with no UI, enumeration,
+fallback, provider, DNS, network, or billable operation.
+
+The draft and bound validators passed, the focused authorization and
+build-policy filter passed 38/38, PowerShell parsing and formatting checks
+passed, and `git diff --check` was clean. The output root, fresh one-shot
+recovery lock, owner marker, and execution marker remained absent. No native
+credential, provider, DNS, network, or billable effect occurred, and the
+exact-root repository process count was zero after build-server shutdown.
+This entry records preparation only. Recovery execution remains prohibited
+until a fresh independent review accepts the exact committed manifest bytes.
