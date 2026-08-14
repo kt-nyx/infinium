@@ -1019,8 +1019,11 @@ public sealed class CredentialNativeAuthorizationTests
             ["target_absence"] = absence,
             ["native_call_counts"] = new JsonObject
             {
-                ["cred_write_w"] = 0, ["cred_read_w"] = 12, ["cred_delete_w"] = 0,
-                ["cred_free"] = 0, ["total"] = 12,
+                ["cred_write_w"] = 0,
+                ["cred_read_w"] = 12,
+                ["cred_delete_w"] = 0,
+                ["cred_free"] = 0,
+                ["total"] = 12,
             },
             ["native_call_trace"] = trace,
             ["cleanup_ambiguity"] = false,
@@ -1036,8 +1039,10 @@ public sealed class CredentialNativeAuthorizationTests
             ["prior_authority_lock_sha256"] = binding["consumed_lock_sha256"]!.DeepClone(),
             ["prior_exact_absence_count"] = 0,
             ["combined_namespace_target_absence_count"] = 12,
-            ["network_operations"] = 0, ["dns_operations"] = 0,
-            ["provider_operations"] = 0, ["billable_operations"] = 0,
+            ["network_operations"] = 0,
+            ["dns_operations"] = 0,
+            ["provider_operations"] = 0,
+            ["billable_operations"] = 0,
         };
         AssertEvidenceValidation(root, manifestPath, sha, id, evidence, expectedSuccess: true);
         Assert076bReceiptReconstruction(root, manifestPath, sha, id, evidence);
