@@ -6631,3 +6631,11 @@ handoff is corrected to name the unique tracked manifest path and identity,
 while this append-only record carries its exact reviewed bytes and commit.
 This makes the current-state handoff stable before the final close-ready
 freeze and avoids either self-reference or a broader gate drift allowlist.
+
+Final replacement close-ready is
+`67f1e6dc02036beccf3d12d4453847351fd93983`. Rebinding only the manifest to
+that stable ancestor produces 6,821-byte SHA-256
+`94cb5c77b906100c6c436ddbb889f7511b2f4c1cea0c60556651c97b7020414d`.
+The exact semantic validator passes, and the diff after close-ready is now
+limited to the manifest and this append-only record exactly as the gate
+requires. Effect authority remains absent pending fresh terminal review.
