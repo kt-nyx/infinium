@@ -26,7 +26,7 @@ review history.
 | Accepted `M1/S6/WP6` candidate | Product `ee0b6d31f1c1826c2af7634766155397e916c3e1`, append-only evidence `2b277338390f7dac37b5a5436bbe2cd81dedc871`, and answer-isolated oracle `37aa2b4e2fc084307ba5211f21bbeeb7a93efab0`; source-claim acquisition, deterministic admission, retained semantic provenance/replay, and later admitted-artifact consumption are independently accepted |
 | Accepted `M1/S6/WP7` candidate | Product `59367a7479a7395b173b974bf720543aab2404d4`, append-only acceptance evidence `51251c0e0eb98d67dbc9b295b9ff084ebca33890`, and answer-isolated VAL-v3 oracle freeze `e9b032366552aa67649636655ed07a3bb50bb3b1`; deterministic candidate investigation, complete provenance, durable retention/readback, and database-owned replay are independently accepted |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure; no separate ADR; eleven packages with distinct native/live authorization gates |
-| Next eligible action | Prepare a fresh exact WP4 authorization manifest for owner review only. The prior WP4 manifests/acceptances are stale and authorize no reuse or native effect; stop before `CredentialNative` or any Credential Manager operation |
+| Next eligible action | Owner review and explicit exact-byte acceptance of fresh WP4 manifest `infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60` only. The prior WP4 manifests/acceptances are stale and authorize no reuse or native effect; stop before `CredentialNative` or any Credential Manager operation |
 | Later work | WP8 remains blocked until WP4 is freshly authorized, executed, independently accepted, and this handoff is advanced. WP9-WP11 always require their exact fresh owner authorization; no Credential Manager or provider request is authorized now |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
@@ -56,9 +56,10 @@ with append-only acceptance evidence
 `51251c0e0eb98d67dbc9b295b9ff084ebca33890` and answer-isolated VAL-v3
 oracle freeze `e9b032366552aa67649636655ed07a3bb50bb3b1`. The nine Slice 6
 contracts remain `Implementation-active`, while Slice 5 v1 remains
-`Slice-frozen`. This handoff permits only fresh WP4 authorization-manifest
-preparation and review. It does not authorize `CredentialNative`, target
-derivation/reuse, or any Credential Manager operation. WP8 remains blocked
+`Slice-frozen`. This handoff permits only owner review and explicit exact-byte
+acceptance of the fresh WP4 manifest named above. It does not authorize
+`CredentialNative`, target derivation/reuse, or any Credential Manager
+operation. WP8 remains blocked
 because its native WP4 prerequisite is not accepted. Plan acceptance permits automatic progression among the
 named non-live packages only after each prerequisite package is independently
 accepted and this file is advanced to the exact next package. It does not
