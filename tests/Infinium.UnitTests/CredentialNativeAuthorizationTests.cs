@@ -75,10 +75,10 @@ public sealed class CredentialNativeAuthorizationTests
         using JsonDocument document = JsonDocument.Parse(bytes);
         JsonElement manifest = document.RootElement;
 
-        Assert.AreEqual("infinium.repository.wp4-credential-native-authorization/1.2.0",
+        Assert.AreEqual("infinium.repository.wp4-credential-native-authorization/1.3.0",
             manifest.GetProperty("schema_identity").GetString());
         Assert.AreEqual(
-            "infinium.m1-s6.wp4.credential-native-authorization/ad876b9a-9f45-4eb4-8d12-5970d76dd4ea",
+            "infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60",
             manifest.GetProperty("manifest_id").GetString());
         Assert.AreEqual("none-until-owner-accepts-exact-manifest-bytes",
             manifest.GetProperty("effect_authority").GetString());
@@ -118,7 +118,7 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.IsTrue(entry.GetProperty("readiness_oracle").GetString()!.Contains(
             "separate finite five-minute human response interval", StringComparison.Ordinal));
         Assert.AreEqual(
-            "exact manifest bytes and SHA-256 plus the superseded 16df3175 terminal manifest, evidence, namespace disposition, and authority-lock identities",
+            "exact manifest bytes and SHA-256 plus the superseded ad876b9a terminal manifest, failure evidence, authority lock, cleanup-recovery manifest/evidence/lock/receipt, and combined 12-target absence disposition",
             manifest.GetProperty("required_evidence")[0].GetString());
 
         JsonElement components = manifest.GetProperty("qualification_components");
@@ -163,9 +163,17 @@ public sealed class CredentialNativeAuthorizationTests
         string manifestId = document.RootElement.GetProperty("manifest_id").GetString()!;
         string sha256 = Convert.ToHexStringLower(SHA256.HashData(bytes));
 
-        using (WindowsCredentialManagerStore store = WindowsCredentialManagerStore.FromAcceptedManifest(
-            path, sha256, manifestId))
+        bool bindingPending = document.RootElement.GetProperty("status").GetString()
+            == "draft-close-ready-binding-pending";
+        if (bindingPending)
         {
+            Assert.ThrowsExactly<InvalidDataException>(() => WindowsCredentialManagerStore.FromAcceptedManifest(
+                path, sha256, manifestId));
+        }
+        else
+        {
+            using WindowsCredentialManagerStore store = WindowsCredentialManagerStore.FromAcceptedManifest(
+                path, sha256, manifestId);
             Assert.HasCount(12, store.ManifestTargets);
         }
 
@@ -181,7 +189,7 @@ public sealed class CredentialNativeAuthorizationTests
             }
 
             JsonNode rejected = JsonNode.Parse(bytes) ?? throw new InvalidDataException("The test manifest is malformed.");
-            rejected["schema_identity"] = "infinium.repository.wp4-credential-native-authorization/1.1.0";
+            rejected["schema_identity"] = "infinium.repository.wp4-credential-native-authorization/1.2.0";
             Reject(rejected);
 
             rejected = JsonNode.Parse(bytes)!;
@@ -190,6 +198,10 @@ public sealed class CredentialNativeAuthorizationTests
 
             rejected = JsonNode.Parse(bytes)!;
             rejected["supersedes"]!["authority_lock_sha256"] = new string('0', 64);
+            Reject(rejected);
+
+            rejected = JsonNode.Parse(bytes)!;
+            rejected["supersedes"]!["cleanup_recovery"]!["evidence_sha256"] = new string('0', 64);
             Reject(rejected);
 
             rejected = JsonNode.Parse(bytes)!;
@@ -218,7 +230,7 @@ public sealed class CredentialNativeAuthorizationTests
 
         Assert.IsTrue(activeGate.Contains("wp4-credential-native-authorization.v2.json", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains(
-            "infinium.m1-s6.wp4.credential-native-authorization/ad876b9a-9f45-4eb4-8d12-5970d76dd4ea",
+            "infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60",
             StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("--credential-native-qualification-v2", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("FileMode]::CreateNew", StringComparison.Ordinal));
