@@ -465,9 +465,15 @@ public sealed class CredentialHelperIntegrationTests
         CredentialProfileProjection recoveryRequired = restored.GetCredentialProfile("profile-recover");
         Assert.AreEqual("recovery-required", recoveryRequired.LifecycleState);
         DateTimeOffset restoredNow = recoveryRequired.UpdatedAt.AddSeconds(1);
-        Assert.ThrowsExactly<Microsoft.Data.Sqlite.SqliteException>(() => Transition(
+        Microsoft.Data.Sqlite.SqliteException sameGeneration =
+            Assert.ThrowsExactly<Microsoft.Data.Sqlite.SqliteException>(() => Transition(
             restored, "restore-same-generation-rejected", "profile-recover", "generation-r1",
             "recover", "recovery-required", "active-unverified", restoredNow));
+        Assert.AreEqual(19, sameGeneration.SqliteErrorCode);
+        Assert.AreEqual(1811, sameGeneration.SqliteExtendedErrorCode);
+        Assert.AreEqual(
+            "SQLite Error 19: 'restored credential recovery cannot reactivate the restored generation'.",
+            sameGeneration.Message);
         restored.AddCredentialGeneration(
             "profile-recover", "generation-r2", recoveryRequired.GenerationOrdinal + 1,
             recoveryRequired.RevocationEpoch, restoredNow.AddSeconds(2));

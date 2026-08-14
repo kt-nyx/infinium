@@ -5462,3 +5462,32 @@ restore reauthentication or fake-dispatch scenarios. The next work is the
 bounded non-native SQLite-exception classification correction and a fresh
 qualification manifest; no qualification or manual run is authorized here.
 WP4_RECOVERY_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff sha256=0b7e9f9c0b24328c507a804f32720b90ac8c52fd234189be7d9ad501b567fdc2 execution_head_commit=5a4c52000f615ced27f62a3127ccf4aa6adcbb58 status=passed recovery_native_calls=W0-R2-D0-F0-T2 recovery_target_absence=2 prior_target_absence=10 combined_namespace_target_absence=12 namespace_disposition=cleanup-confirmed-absent-never-reuse evidence_sha256=026bb2b1aa5ad2ff50777a5adccda370134317e0b6f6029989e267afb7e068f0 authority_lock_sha256=2ccbcebf1bb887ae1423b61013ff164612dd8907b3323273a2690b2747b432a0 receipt_sha256=e16282787c9aaa95991fcb723d506dab98945f398a0908d39c078f31d901c977
+
+## WP4 post-recovery SQLite classification correction — 2026-08-14
+
+The bounded non-native correction now probes the authoritative restored-
+generation constraint directly through persistence rather than dispatching a
+helper for a transition already known to be invalid. It accepts only SQLite
+primary code 19, extended code 1811, and the exact
+`restored credential recovery cannot reactivate the restored generation`
+message. Every other SQLite error escapes as a primary failure. Before the
+probe, the runner requires the exact `recovery-required`/`required`, restored
+generation, and `restore-recovery-` intent preconditions. After rejection it
+requires the complete projection, credential-intent count, dispatch-fence
+count, and helper-staging file count to remain unchanged before adding the
+fresh `g002` generation and continuing to the third manual phase.
+
+Deterministic regression proves the exact SQLite shape, altered-code and
+altered-message refusal, unchanged rejection state, reachability of the
+`restored-new-generation` completed `g002` phase, both backup cleanup
+obligations, all closed phase definitions, and zero native operations through
+the fake secure-store seam. Focused Release verification passed: solution
+build with zero warnings; 32 credential-native/intent/dispatch integration
+tests; 45 credential/native-authorization/build-policy/helper unit tests; five
+credential/helper security tests; and four helper/credential fault tests.
+No Credential Manager, native qualification, manual UI, DNS, network,
+provider, billable, private-fixture, archive, later-package, or push operation
+occurred. Repository-owned process cleanup found zero surviving `dotnet`,
+`testhost`, credential-helper, or coordinator processes. WP4 remains
+unaccepted. Full non-live verification, fresh independent review, and a fresh
+exact owner-review manifest remain required before another manual attempt.

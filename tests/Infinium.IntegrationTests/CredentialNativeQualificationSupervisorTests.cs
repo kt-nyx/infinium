@@ -907,9 +907,40 @@ public sealed class CredentialNativeQualificationSupervisorTests
             evidence.Scenarios.SelectMany(item => item.Phases).Select(item => item.AssignmentId).ToArray());
         Assert.IsNotNull(evidence.Scenarios.Single(item => item.ScenarioId == "fake-provider-dispatch")
             .Phases.Single(item => item.PhaseId == "final-gate-dispatch-stage-admit-settle").Dispatch);
+        CredentialNativeQualificationScenarioEvidence backup = evidence.Scenarios
+            .Single(item => item.ScenarioId == "backup-restore-reauthentication");
+        CredentialNativeQualificationPhaseEvidence restoredNewGeneration = backup.Phases
+            .Single(item => item.PhaseId == "restored-new-generation");
+        Assert.AreEqual(HelperOutcomeV2.Completed, restoredNewGeneration.Outcome);
+        Assert.AreEqual("g002", restoredNewGeneration.GenerationId);
+        Assert.AreEqual("active-unverified", restoredNewGeneration.Lifecycle?.LifecycleState);
+        string[] backupCleanupPhases = backup.Phases
+            .Where(item => item.PhaseId.StartsWith("cleanup", StringComparison.Ordinal))
+            .Select(item => item.PhaseId).ToArray();
+        Assert.HasCount(2, backupCleanupPhases);
+        Assert.Contains("cleanup-restored-predecessor", backupCleanupPhases);
+        Assert.Contains("cleanup-successor", backupCleanupPhases);
         string canonical = CredentialNativeQualificationRunner.SerializeEvidenceForTest(evidence);
         StringAssert.Contains(canonical, "\"outcome\": \"Completed\"");
         StringAssert.Contains(canonical, "\"assignment_kind\": \"ProviderDispatch\"");
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public void RestoreConstraintClassifierAcceptsOnlyExactExpectedShapeAndUnexpectedSqliteEscapes()
+    {
+        const string expectedMessage =
+            "SQLite Error 19: 'restored credential recovery cannot reactivate the restored generation'.";
+        Microsoft.Data.Sqlite.SqliteException expected = new(expectedMessage, 19, 1811);
+        Assert.IsTrue(CredentialNativeQualificationRunner.IsExpectedRestoredGenerationRejectionForTest(expected));
+        CredentialNativeQualificationRunner.ApplyRestoredGenerationRejectionFilterForTest(expected);
+        Assert.IsFalse(CredentialNativeQualificationRunner.IsExpectedRestoredGenerationRejectionForTest(
+            new Microsoft.Data.Sqlite.SqliteException(expectedMessage, 19, 787)));
+        Microsoft.Data.Sqlite.SqliteException unexpected = new(
+            "SQLite Error 19: 'different constraint'.", 19, 1811);
+        Assert.IsFalse(CredentialNativeQualificationRunner.IsExpectedRestoredGenerationRejectionForTest(unexpected));
+        Assert.AreSame(unexpected, Assert.ThrowsExactly<Microsoft.Data.Sqlite.SqliteException>(() =>
+            CredentialNativeQualificationRunner.ApplyRestoredGenerationRejectionFilterForTest(unexpected)));
     }
 
     [TestMethod]

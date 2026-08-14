@@ -555,13 +555,18 @@ public sealed class CredentialNativeAuthorizationTests
             ["target_absence"] = absence,
             ["native_call_counts"] = new JsonObject
             {
-                ["cred_write_w"] = 0, ["cred_read_w"] = 13, ["cred_delete_w"] = 1,
-                ["cred_free"] = 1, ["total"] = 15,
+                ["cred_write_w"] = 0,
+                ["cred_read_w"] = 13,
+                ["cred_delete_w"] = 1,
+                ["cred_free"] = 1,
+                ["total"] = 15,
             },
             ["native_call_trace"] = trace,
             ["namespace_blocked"] = false,
-            ["network_operations"] = 0, ["dns_operations"] = 0,
-            ["provider_operations"] = 0, ["billable_operations"] = 0,
+            ["network_operations"] = 0,
+            ["dns_operations"] = 0,
+            ["provider_operations"] = 0,
+            ["billable_operations"] = 0,
         };
         AssertEvidenceValidation(root, manifestPath, sha, id, evidence, expectedSuccess: true);
         AssertReceiptReconstruction(root, manifestPath, sha, id, evidence);
@@ -696,7 +701,9 @@ public sealed class CredentialNativeAuthorizationTests
             File.WriteAllText(evidencePath, evidence.ToJsonString());
             File.WriteAllText(lockPath, JsonSerializer.Serialize(new
             {
-                manifest_id = id, manifest_sha256 = sha, disposition = "consumed-never-reuse",
+                manifest_id = id,
+                manifest_sha256 = sha,
+                disposition = "consumed-never-reuse",
             }) + "\n");
             File.WriteAllText(priorPath, prior.ToJsonString());
             File.WriteAllText(priorLockPath, "{\"disposition\":\"consumed-never-reuse\"}\n");

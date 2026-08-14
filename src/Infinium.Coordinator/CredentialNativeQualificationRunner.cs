@@ -22,6 +22,9 @@ internal sealed record CredentialNativeRetainedSurfaceEvidence(
 
 internal static class CredentialNativeQualificationRunner
 {
+    private const string RestoredGenerationRejectionMessage =
+        "SQLite Error 19: 'restored credential recovery cannot reactivate the restored generation'.";
+
     private static readonly CredentialNativeRetainedSurfaceEvidence[] ExactRetainedSurfaceInventory =
     [
         new("final credential-native evidence JSON", "structurally-absent", "structurally-absent", 0,
@@ -124,6 +127,25 @@ internal static class CredentialNativeQualificationRunner
             primaryFailureForTest, cleanupFailureForTest);
         return await state.RunAsync(cancellationToken).ConfigureAwait(false);
     }
+
+    internal static bool IsExpectedRestoredGenerationRejectionForTest(SqliteException exception) =>
+        IsExpectedRestoredGenerationRejection(exception);
+
+    internal static void ApplyRestoredGenerationRejectionFilterForTest(SqliteException exception)
+    {
+        try
+        {
+            throw exception;
+        }
+        catch (SqliteException expected) when (IsExpectedRestoredGenerationRejection(expected))
+        {
+        }
+    }
+
+    private static bool IsExpectedRestoredGenerationRejection(SqliteException exception) =>
+        exception.SqliteErrorCode == 19
+        && exception.SqliteExtendedErrorCode == 1811
+        && string.Equals(exception.Message, RestoredGenerationRejectionMessage, StringComparison.Ordinal);
 
     internal static async Task RunCleanupFailureWithArtifactsForTestAsync(
         string root,
@@ -794,16 +816,48 @@ internal static class CredentialNativeQualificationRunner
             cleanup.Add(("backup-restore-reauthentication", restored, newTarget));
             CredentialProfileProjection restoredProjection = restored.Store.GetCredentialProfile(oldTarget.ProfileId);
             if (restoredProjection.UpdatedAt > timeline) { timeline = restoredProjection.UpdatedAt; }
+            if (restoredProjection.LifecycleState != "recovery-required"
+                || restoredProjection.RecoveryDisposition != "required"
+                || restoredProjection.GenerationId != oldTarget.GenerationId
+                || restoredProjection.IntentId?.StartsWith("restore-recovery-", StringComparison.Ordinal) != true)
+            {
+                throw new InvalidDataException(
+                    "The restored same-generation rejection preconditions are not exact.");
+            }
+            int intentsBefore = CountRows(restored.Store, "provider_credential_intents");
+            int fencesBefore = CountDispatchFences(restored.Store);
+            int stagingFilesBefore = CountStagingFiles(restored.Store.Paths.Staging);
             bool sameGenerationRejected = false;
             try
             {
-                _ = await restored.Coordinator.ExecuteCredentialTransitionAsync(
+                DateTimeOffset rejectionAt = NextTime();
+                _ = restored.Store.ApplyCredentialTransition(new(
                     "backup-same-generation-rejected",
-                    Bootstrap(oldTarget, oldTarget, NextNonce()),
-                    CredentialAssignmentRaw("not-dispatched", oldTarget, oldTarget, 1, HelperAssignmentKindV2.Recover),
-                    NextTime(), token).ConfigureAwait(false);
+                    oldTarget.ProfileId,
+                    oldTarget.GenerationId,
+                    "recover",
+                    "recovery-required",
+                    "active-unverified",
+                    "active-unverified",
+                    restoredProjection.CapabilitySnapshotId,
+                    restoredProjection.AccountIdentityId,
+                    restoredProjection.BillingScopeIdentityId,
+                    rejectionAt,
+                    rejectionAt.AddTicks(1)));
             }
-            catch (InvalidDataException) { sameGenerationRejected = true; }
+            catch (SqliteException exception) when (IsExpectedRestoredGenerationRejection(exception))
+            {
+                sameGenerationRejected = true;
+            }
+            if (!sameGenerationRejected
+                || restored.Store.GetCredentialProfile(oldTarget.ProfileId) != restoredProjection
+                || CountRows(restored.Store, "provider_credential_intents") != intentsBefore
+                || CountDispatchFences(restored.Store) != fencesBefore
+                || CountStagingFiles(restored.Store.Paths.Staging) != stagingFilesBefore)
+            {
+                throw new InvalidDataException(
+                    "The restored same-generation rejection changed durable state or helper staging.");
+            }
             restored.Store.AddCredentialGeneration(oldTarget.ProfileId, newTarget.GenerationId, 2, restoredProjection.RevocationEpoch, NextTime());
             supervisor.RebindCoordinator(restored.Coordinator);
             await Phase(supervisor, "backup-restore-reauthentication", "restored-new-generation", oldTarget, newTarget, 2, token);
@@ -861,13 +915,20 @@ internal static class CredentialNativeQualificationRunner
         }
 
         private static int CountDispatchFences(AuthoritativeStore store)
+            => CountRows(store, "provider_dispatch_fences");
+
+        private static int CountRows(AuthoritativeStore store, string table)
         {
             using SqliteConnection connection = new($"Data Source={store.Paths.Database};Mode=ReadOnly;Pooling=False");
             connection.Open();
             using SqliteCommand command = connection.CreateCommand();
-            command.CommandText = "SELECT COUNT(*) FROM provider_dispatch_fences;";
+            command.CommandText = $"SELECT COUNT(*) FROM {table};";
             return Convert.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture);
         }
+
+        private static int CountStagingFiles(string stagingRoot) => Directory.Exists(stagingRoot)
+            ? Directory.EnumerateFiles(stagingRoot, "*", SearchOption.AllDirectories).Count()
+            : 0;
 
         private HelperPrivateFrameV2 Bootstrap(Target bootstrapTarget, Target assignmentTarget, byte nonce) => new()
         {
