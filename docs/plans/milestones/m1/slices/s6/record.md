@@ -5952,3 +5952,17 @@ credential, provider, DNS, network, or billable effect occurred, and the
 exact-root repository process count was zero after build-server shutdown.
 This entry records preparation only. Recovery execution remains prohibited
 until a fresh independent review accepts the exact committed manifest bytes.
+
+### WP4 e6 recovery manifest-order review correction — 2026-08-14T16:27:38.6595941Z
+
+Independent pre-effect review rejected the first recovery freeze because the
+store exposed manifest targets in alphabetic alias order rather than the
+manifest's exact declared order. No owner marker, recovery lock, output root,
+or native effect existed. Replacement close-ready commit
+`4ad6aea1cd680037d3a832db01174bd469559b8e` preserves parsed manifest order
+explicitly and adds a full 12-alias order regression. The direct regression
+passed 1/1, the complete authorization class passed 30/30, formatting passed,
+and exact-root repository process count returned to zero after build-server
+shutdown. The replacement manifest SHA-256 is
+`0fc3ab730fc7474292db69ee20b993505396e9b81c7041169d53380925790086`.
+Fresh independent pre-effect acceptance remains mandatory before recovery.
