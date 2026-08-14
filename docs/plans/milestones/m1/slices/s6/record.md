@@ -6392,3 +6392,9 @@ same exact preparation-only, stop-before-manual/native state. This is a
 documentation-authority correction only; no marker, lock, output, dialog,
 native operation, or external effect was created. Replacement close-ready
 binding, Layer 6, and terminal re-review are required.
+
+Replacement close-ready commit
+`43bbd101d282c2b1fd9ed047f4ac75e8d3b47338` binds the corrected live handoff
+table. The manifest is rebound to that commit and returned to
+`ready-for-owner-acceptance`; this does not grant effect authority. Exact-byte
+validation, Layer 6, and terminal independent re-review remain required.
