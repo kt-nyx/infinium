@@ -544,6 +544,11 @@ internal static class WindowsCredentialNativeRecovery
         WriteIndented = true,
     };
 
+    internal static bool IsAcceptedSchemaIdentityForTest(string? schemaIdentity) =>
+        schemaIdentity is "infinium.repository.wp4-credential-native-recovery/1.0.0"
+            or "infinium.repository.wp4-credential-native-recovery/1.1.0"
+            or "infinium.repository.wp4-credential-native-recovery/1.2.0";
+
     internal static int Run(string manifestPath, string expectedSha256, string expectedManifestId, string evidencePath)
     {
         byte[] manifestBytes = File.ReadAllBytes(Path.GetFullPath(manifestPath));
@@ -555,8 +560,7 @@ internal static class WindowsCredentialNativeRecovery
         using JsonDocument document = JsonDocument.Parse(manifestBytes);
         JsonElement root = document.RootElement;
         string? schemaIdentity = root.GetProperty("schema_identity").GetString();
-        if (schemaIdentity is not ("infinium.repository.wp4-credential-native-recovery/1.0.0"
-                or "infinium.repository.wp4-credential-native-recovery/1.1.0")
+        if (!IsAcceptedSchemaIdentityForTest(schemaIdentity)
             || root.GetProperty("manifest_id").GetString() != expectedManifestId
             || root.GetProperty("status").GetString() != "ready-for-owner-acceptance")
         {

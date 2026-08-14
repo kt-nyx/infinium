@@ -725,6 +725,10 @@ public sealed class CredentialNativeAuthorizationTests
         using JsonDocument badE3Target = JsonDocument.Parse(mutatedE3.ToJsonString());
         Assert.ThrowsExactly<InvalidDataException>(() =>
             WindowsCredentialManagerStore.FromRecoveryManifest(badE3Target.RootElement));
+        Assert.IsTrue(WindowsCredentialNativeRecovery.IsAcceptedSchemaIdentityForTest(
+            "infinium.repository.wp4-credential-native-recovery/1.2.0"));
+        Assert.IsFalse(WindowsCredentialNativeRecovery.IsAcceptedSchemaIdentityForTest(
+            "infinium.repository.wp4-credential-native-recovery/1.3.0"));
     }
 
     private static JsonObject Trace(long sequence, string operation, string fingerprint, string result,
