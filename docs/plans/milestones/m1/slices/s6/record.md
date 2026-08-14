@@ -6366,3 +6366,19 @@ required by the WP4-specific Layer 6 mode. The manifest is rebound to that
 commit and returned to `ready-for-owner-acceptance`; exact final validation,
 Layer 6, and fresh independent review still remain. This record does not grant
 owner authority or authorize an effect.
+
+Final semantic validation against the rebound exact bytes passed with
+`execution_authorized=false`. Authorization plus BuildPolicy passed 39/39 and
+the integration supervisor/consumer class passed 33/33 against the committed
+ready manifest. Candidate-bound `Layer6Review -Wp4OwnerReviewHandoff` passed
+from exact cleanup-closure baseline
+`16af8ce275044897c1639d997980ba707c5b6e14` through candidate
+`0da8d5951d7fd192f97bbff004d8644290cacc17` across 13 exact paths with zero
+findings. Its 1,390-byte receipt SHA-256 is
+`299f0e9d235d128425c84994a9a3dc0f30d5c290f2750c36f3f42efcc0735f50`;
+credential and network access are forbidden and the WP4-specific handoff mode
+is active. Build servers were shut down and exact-root repository-owned .NET,
+testhost, helper, and coordinator process count is zero. Owner marker count,
+execution marker count, fresh lock presence, and fresh output presence are all
+zero. Fresh independent exact-candidate review remains required before this
+manifest may be presented for owner acceptance.
