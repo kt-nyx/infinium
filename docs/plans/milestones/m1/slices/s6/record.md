@@ -5874,3 +5874,5 @@ qualification, manual UI, provider, DNS, network, or billable operation was
 invoked. The manifest remains `execution_authorized=false`; the only next
 eligible action is exact-byte owner review and acceptance. No native or manual
 qualification may begin before that acceptance.
+
+WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe sha256=c0e6aed84ca8d01a2722ff9970d52f816f47626f3e309cf9081b3c71b1245497 close_ready_commit=4adc7faadf982017dce90814ba2788fe64271efb expires_at_utc=2026-08-16T14:43:54.4033492Z
