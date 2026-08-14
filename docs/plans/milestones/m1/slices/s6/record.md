@@ -6828,3 +6828,15 @@ handoff does not authorize another Credential Manager operation, production
 profile enrollment, or a provider request.
 
 WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/c6e9226e-3d95-496c-bda6-c9142bb6b980 sha256=e8a3075f4509043d304026705636eac29ba09a1549a403d419b10edebcf378b7 execution_head_commit=1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b status=passed cleanup=confirmed-absent target_absence_count=12 native_calls=W9/R78/D9/F28/T124 evidence_sha256=3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390 authority_lock_sha256=cc132accf1a029eb1286c7e8a6a22ed55706c41eaf8c58776bd9aea4d56e5b90 gate_receipt_sha256=87565206a33be6f2128254d2dfa9ba6006c57472a3038f69b407eb63253f98c9 namespace_reuse_blocked=true later_native_calls=0 network_operations=0 dns_operations=0 provider_operations=0 billable_operations=0 retry_attempted=false
+
+The exact WP4-to-WP8 handoff required `docs/current-state.md`, which the
+generic Layer 6 path policy correctly protects. The bounded handoff consumer
+correction preserves the earlier WP1-to-WP2 closeout rule and additionally
+requires the exact accepted WP4 execution/evidence identities, WP8 non-live
+scope, and explicit native/provider prohibitions. Its focused contract test
+passed 1/1. Candidate-bound Layer 6 then passed from baseline
+`be55eda59752f884fe6e113f40927295da45f2cd` through candidate
+`43d132e7eccd9c64befd1f50501b5098c7fe76c6` with four exact paths, zero
+allowed-path, JSON, link, private/archive, or gap findings, and no credential
+or network permission. The 1,356-byte `layer6review.json` receipt has SHA-256
+`08d63a724770e124e7ce37c1f3eedde7675433c17c34dacddcf7de9b2ca93076`.
