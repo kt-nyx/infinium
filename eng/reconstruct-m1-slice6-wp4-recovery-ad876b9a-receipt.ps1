@@ -46,14 +46,45 @@ function ConvertTo-CanonicalJsonValue([object]$Value) {
 $manifest=Resolve-InputPath $ManifestPath;$evidence=Resolve-InputPath $EvidencePath
 $lock=Resolve-InputPath $AuthorityLockPath;$priorEvidencePath=Resolve-InputPath $PriorEvidencePath
 $priorLock=Resolve-InputPath $PriorAuthorityLockPath;$receipt=Resolve-InputPath $ReceiptPath
+$isAdRecovery=$ManifestId-ceq'infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff'
+$isE3Recovery=$ManifestId-ceq'infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5'
+if(-not$isAdRecovery-and-not$isE3Recovery){throw 'Current recovery reconstruction identity differs.'}
+if($isE3Recovery){
+    $expectedPriorEvidenceSha='18b4bd64d5ae32596330271e415b10a0a6d8516fded9dfc35bf1fee26dc7cd9f'
+    $expectedPriorLockSha='945d2bbf440af7d5a305ae4cbb4dee73636175ff679ac8582a28e84cd73e0e5d'
+    $expectedFailedManifestId='infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60'
+    $expectedPriorFingerprints=@(
+        '15c6a64197a9f08b8aa5fc10eed45fe9563725a2465c4002e693dce69c450810','270e254bff7a1260695442baf6153b33b90b9ed859669876270457c5b8cc1156',
+        '53b86f277ff1c14712f85a3186d459b3acbad7203d90ed1a8f5befde9fa2daa0','587dd7307f3d2bd1b8f33fe046f025c153830345a7d04585f8cc9f5288a37c3d',
+        '6da865def7c09aa0071458f032d0c130bf5df27a220fc31389d7cb8b2c38a4fa','7274e6756febbae814af24bd3bdcd30c35fc400fe1c58a538372a53537428302',
+        'b9b633443a704d639ac8913201513279faf220b2cfec2af1d38edb5662bcf73d','c4ad8d33d6910ba692c8bdbff9b174c59069e238edb1b6c06beb2cfda91b92ae',
+        'd292d66ac2c24cc17eb11cf3e5cc28b5ad7b3646024c933c73c7acd4ba6770d6','e2927d0ea4f59b25b5caaa6b802b85dbecccd978fc320755aaf80d393f8310ce')
+}else{
+    $expectedPriorEvidenceSha='cfaee3940cd780a5bcfbcbcf387124d7f7385b01a07f8f0f6fbe4439593a21e6'
+    $expectedPriorLockSha='b47e0262937f86174ae1b790f4951fbf6fe6621d1f3a25c938990143514950b8'
+    $expectedFailedManifestId='infinium.m1-s6.wp4.credential-native-authorization/ad876b9a-9f45-4eb4-8d12-5970d76dd4ea'
+    $expectedPriorFingerprints=@(
+        'cf749639000f855451374b935af7cc66b3895856d77868a87d12a52bbcaa8fe7','ade2fbfd10c41f22382c11f58e5f23e89c92e43b6eabd686e24e5f3d3aa32096',
+        '76fc18abd12bf7dfcc496602f82fe96e579912cac7875c0ddbeab18828401ac6','befecf6ffdf669836062df69f078f54f94b4bf81ca4dcdcd1d28a4463694a422',
+        '2025f07cf9eff90bd87cb680be019eb11529a05f98a29459bcc7e72f8fc4b44f','43e9a481fec663f10eef5753b41074b201bcc06c3edb07174153525201521078',
+        'd1999c5fca496d9cd417c5f686278564e8028ab8c5db9e91d81790c8aee7ce07','6190a95dc664166e75f57fc39d57ec1eba8643e7865ae73789589ac732f8bc5c',
+        '598ae3c4a89d3ec7e72dfc11b6763120955a3fc946ea7425248f4e445558dea0','0a6d4ba3eed8c60a4048ca388178d2700ede8e1835b0ebca99ecb6ef50b6c051')
+}
 if(-not$TestOnlyPaths){
-    $expected=@(
+    if($isE3Recovery){$expected=@(
+        [IO.Path]::GetFullPath((Join-Path $root 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e3f76cd6.v1.json')),
+        [IO.Path]::GetFullPath((Join-Path $root 'artifacts/m1-slice6/wp4-native-recovery-8b7fc811/credential-native-recovery-evidence.v1.json')),
+        [IO.Path]::GetFullPath((Join-Path $root 'artifacts/m1-slice6/wp4-native-recovery-locks/87b696655c2696b8bc5c038ba785da5163f8b88c1f02f723665c3589a5051d5d.json')),
+        [IO.Path]::GetFullPath((Join-Path $root 'artifacts/m1-slice6/wp4-native-e3f76cd6/credential-native-primary-failure.v2.json')),
+        [IO.Path]::GetFullPath((Join-Path $root 'artifacts/m1-slice6/wp4-native-authority-locks/cd9dd843fdd8e222a4b2d812ec0378d823d94d3308590ccce8aa280399276acf.json')),
+        [IO.Path]::GetFullPath((Join-Path $root 'artifacts/m1-slice6/wp4-native-recovery-8b7fc811/CredentialNativeRecovery.json')))
+    }else{$expected=@(
         [IO.Path]::GetFullPath((Join-Path $root 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.ad876b9a.v1.json')),
         [IO.Path]::GetFullPath((Join-Path $root 'artifacts/m1-slice6/wp4-native-recovery-df29a608/credential-native-recovery-evidence.v1.json')),
         [IO.Path]::GetFullPath((Join-Path $root 'artifacts/m1-slice6/wp4-native-recovery-locks/d7b38deff0756330dad3fd851a913fd8f61697d7ef86cb7ab254eb39b615e609.json')),
         [IO.Path]::GetFullPath((Join-Path $root 'artifacts/m1-slice6/wp4-native-ad876b9a/credential-native-primary-failure.v2.json')),
         [IO.Path]::GetFullPath((Join-Path $root 'artifacts/m1-slice6/wp4-native-authority-locks/19c5362e4a5bff02b1588b1962b36933be8930256aa2938692681f57ec19ba0c.json')),
-        [IO.Path]::GetFullPath((Join-Path $root 'artifacts/m1-slice6/wp4-native-recovery-df29a608/CredentialNativeRecovery.json')))
+        [IO.Path]::GetFullPath((Join-Path $root 'artifacts/m1-slice6/wp4-native-recovery-df29a608/CredentialNativeRecovery.json')))}
     $actual=@($manifest,$evidence,$lock,$priorEvidencePath,$priorLock,$receipt)
     for($i=0;$i-lt$expected.Count;$i++){if(-not[string]::Equals($actual[$i],$expected[$i],[StringComparison]::OrdinalIgnoreCase)){throw 'Current recovery reconstruction path differs.'}}
 }
@@ -68,9 +99,8 @@ $hashes=@(
     (Get-FileHash $priorLock -Algorithm SHA256).Hash.ToLowerInvariant())
 $expectedHashes=@($ManifestSha256,$EvidenceSha256,$AuthorityLockSha256,$PriorEvidenceSha256,$PriorAuthorityLockSha256)
 for($i=0;$i-lt$hashes.Count;$i++){if($hashes[$i]-cne$expectedHashes[$i]){throw 'Immutable reconstruction input hash differs.'}}
-if($ManifestId-cne'infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff'-or
-    (-not$TestOnlyPaths-and($PriorEvidenceSha256-cne'cfaee3940cd780a5bcfbcbcf387124d7f7385b01a07f8f0f6fbe4439593a21e6'-or
-        $PriorAuthorityLockSha256-cne'b47e0262937f86174ae1b790f4951fbf6fe6621d1f3a25c938990143514950b8'))){
+if(-not$TestOnlyPaths-and($PriorEvidenceSha256-cne$expectedPriorEvidenceSha-or
+        $PriorAuthorityLockSha256-cne$expectedPriorLockSha)){
     throw 'Current recovery reconstruction identity differs.'
 }
 & (Join-Path $root 'eng/validate-m1-slice6-wp4-recovery-evidence.ps1') -ManifestPath $manifest `
@@ -80,14 +110,8 @@ if($lockValue.manifest_id-cne$ManifestId-or$lockValue.manifest_sha256-cne$Manife
     throw 'Current recovery authority lock differs.'
 }
 $prior=Get-Content $priorEvidencePath -Raw|ConvertFrom-Json -Depth 100
-$expectedPriorFingerprints=@(
-    'cf749639000f855451374b935af7cc66b3895856d77868a87d12a52bbcaa8fe7','ade2fbfd10c41f22382c11f58e5f23e89c92e43b6eabd686e24e5f3d3aa32096',
-    '76fc18abd12bf7dfcc496602f82fe96e579912cac7875c0ddbeab18828401ac6','befecf6ffdf669836062df69f078f54f94b4bf81ca4dcdcd1d28a4463694a422',
-    '2025f07cf9eff90bd87cb680be019eb11529a05f98a29459bcc7e72f8fc4b44f','43e9a481fec663f10eef5753b41074b201bcc06c3edb07174153525201521078',
-    'd1999c5fca496d9cd417c5f686278564e8028ab8c5db9e91d81790c8aee7ce07','6190a95dc664166e75f57fc39d57ec1eba8643e7865ae73789589ac732f8bc5c',
-    '598ae3c4a89d3ec7e72dfc11b6763120955a3fc946ea7425248f4e445558dea0','0a6d4ba3eed8c60a4048ca388178d2700ede8e1835b0ebca99ecb6ef50b6c051')
 $priorFingerprints=@($prior.absence_target_fingerprints)
-if($prior.status-cne'failed-primary-cleanup-confirmed'-or$prior.manifest_id-cne'infinium.m1-s6.wp4.credential-native-authorization/ad876b9a-9f45-4eb4-8d12-5970d76dd4ea'-or
+if($prior.status-cne'failed-primary-cleanup-confirmed'-or$prior.manifest_id-cne$expectedFailedManifestId-or
     [int]$prior.later_native_calls-ne0-or-not[bool]$prior.cleanup_confirmed-or-not[bool]$prior.absence_confirmed-or
     [bool]$prior.whole_namespace_absence_confirmed-or$prior.namespace_disposition-cne'consumed-never-reuse'-or
     @($priorFingerprints|Sort-Object -Unique).Count-ne10-or

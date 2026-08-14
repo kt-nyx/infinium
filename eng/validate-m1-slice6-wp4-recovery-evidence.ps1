@@ -18,9 +18,13 @@ $manifest = Get-Content -LiteralPath $ManifestPath -Raw |
 $evidence = Get-Content -LiteralPath $EvidencePath -Raw |
     ConvertFrom-Json -Depth 100 -DateKind String
 
-$isCurrentRecovery =
+$isAd876Recovery =
     $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.1.0' -and
     $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff'
+$isE3Recovery =
+    $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.2.0' -and
+    $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5'
+$isCurrentRecovery = $isAd876Recovery -or $isE3Recovery
 $isLegacyRecovery =
     $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.0.0' -and
     $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/89baee92-14d6-4f2b-a970-0fe6be15c54c'

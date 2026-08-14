@@ -811,6 +811,30 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                     "c27212cc4f0720e9fd20f7a2aff397402257bd53ad6d568048b217ac3e3df963"),
             ];
         }
+        else if (schemaIdentity == "infinium.repository.wp4-credential-native-recovery/1.2.0"
+            && manifestRoot.GetProperty("manifest_id").GetString()
+                == "infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5")
+        {
+            JsonElement limits = manifestRoot.GetProperty("limits");
+            if (limits.GetProperty("targets").GetInt32() != 2
+                || limits.GetProperty("CredReadW").GetInt32() != 6
+                || limits.GetProperty("CredDeleteW").GetInt32() != 2
+                || limits.GetProperty("CredFree").GetInt32() != 2
+                || limits.GetProperty("total_native_calls").GetInt32() != 10)
+            {
+                throw new InvalidDataException("Current recovery finite limits differ from exact authority.");
+            }
+            expectedTargetCount = 2;
+            exactCurrentTargets =
+            [
+                new("backup-new",
+                    "m1s6-wp4-e3f76cd645c14e3aa84bfa3251b3cb60-backup-restore", "g002",
+                    "b78f660da620c5feee10adff48401ac1b4bc3ec0daec2e35bc39b399d55b41b3"),
+                new("fake-dispatch",
+                    "m1s6-wp4-e3f76cd645c14e3aa84bfa3251b3cb60-fake-dispatch", "g001",
+                    "08e0f7330185d89fa471d83434e768a3d9d54961d325e5b44b5d84f664cc6b02"),
+            ];
+        }
         else
         {
             throw new InvalidDataException("Recovery schema/identity is not an accepted exact authority.");
