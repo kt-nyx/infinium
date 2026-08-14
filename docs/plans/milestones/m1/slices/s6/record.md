@@ -6184,3 +6184,38 @@ evidence audit and fresh independent pre-effect review before any further
 Credential Manager operation.
 
 WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/4936dcef-a0f4-4302-9899-0afd99b19799 sha256=910ff1552d178bcfe5ff36fd9b618d187203c38c6b023d9610af5c702bdb3393 execution_head_commit=8f49943d0af53c495b8f288048cbd8d8bd1fe775 status=failed-cleanup-ambiguous native_calls=92 cred_write_w=7 cred_read_w=60 cred_delete_w=6 cred_free=19 rejected_phase_native_calls=not-admissible cleanup_scope=unproven whole_namespace_absence=false namespace_blocked=true later_native_calls=0 evidence_sha256=0a10a873b7356612cd8ac25934c8fbf85ab0cae76f7aea42b2317421dd251674 authority_lock_sha256=18ffe3e24687543c7c0d538ec98874245ef3fe0c3d2c26945d375b5e23604d02
+
+### WP4 `4936dcef` one-target recovery preparation — 2026-08-14T18:58:35.7784955Z
+
+Fresh independent post-effect review accepted the terminal failure record and
+derived the least-authority cleanup scope. Ten targets end in validated
+post-cleanup `ERROR_NOT_FOUND`; `fake-dispatch` has exact preflight
+`ERROR_NOT_FOUND`, no later reachable assignment or call, and
+`later_native_calls=0`. The exact prior absence inventory is therefore 11.
+Only `backup-new`, fingerprint
+`01fcbe4a9138bcc10819e04cdadc9f83a592c022b4b436bbd2d29f50b52816c7`,
+is unresolved because both the inadmissible third helper phase and the failed
+cleanup-successor address that slot.
+
+Draft recovery
+`infinium.m1-s6.wp4.credential-native-recovery/dd412ecc-3b2c-4628-8865-bc8574a357c7`
+binds execution HEAD `8f49943d0af53c495b8f288048cbd8d8bd1fe775`, terminal record
+`2eb7ed8b81331698bc2bffe3786b62c682b88598`, terminal evidence SHA-256
+`0a10a873b7356612cd8ac25934c8fbf85ab0cae76f7aea42b2317421dd251674`,
+consumed lock SHA-256
+`18ffe3e24687543c7c0d538ec98874245ef3fe0c3d2c26945d375b5e23604d02`,
+and the exact ordered 11-target reconstruction. It permits one attempt,
+W0/R3/D1/F1/T5 within 120 seconds, exact-target `CredReadW`,
+`CredDeleteW`, and `CredFree` only, with no UI, enumeration, fallback,
+provider, DNS, network, or billable operation. Any ambiguity stops all later
+calls and keeps the namespace permanently blocked.
+
+The draft semantic validator passed with SHA-256
+`04c68584b7fe842c90b2bf855066a993f23f676e22dfffb5fa9b9711090b39f5`
+and `execution_authorized=false`. Exact SDK 10.0.303 Release build passed with
+zero warnings/errors; the freshly rebuilt authorization class passed 31/31,
+authorization plus BuildPolicy passed 39/39, formatting, documentation, and
+`git diff --check` passed, and exact-root process count returned to zero. No
+recovery owner/execution marker, fresh lock, output, or native effect exists.
+This entry is preparation only; exact close-ready binding and fresh
+independent pre-effect review remain required.

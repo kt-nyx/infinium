@@ -17,7 +17,7 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S6` - owner-accepted; implementation-active |
-| Current authorized work | `M1/S6/WP4` consumed qualification `4936dcef-a0f4-4302-9899-0afd99b19799` post-effect evidence audit and exact cleanup-only recovery preparation; the qualification is terminally blocked with whole-namespace absence unproven and may never be retried or reused |
+| Current authorized work | `M1/S6/WP4` exact one-target cleanup-only recovery manifest `dd412ecc-3b2c-4628-8865-bc8574a357c7` preparation and fresh pre-effect review for consumed qualification `4936dcef-a0f4-4302-9899-0afd99b19799`; qualification retry and every other native/provider operation remain prohibited |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
 | Accepted Slice 6 WP1 candidate | `61b90314d8273749849f590b303814008fa2fdfa`; nine Slice 6 contracts are `Implementation-active` and the accepted local input-bound policy is `openai-responses-o200k-byte-envelope/v1` |
 | Accepted `M1/S6/WP2` candidate | `ed27ed04897103d93a60e6200971ca12d04f2e11`; capability, price, atomic reservation/final-gate, settlement, projection, replay, simulator, and public fixture/oracle evidence are independently accepted |
@@ -26,7 +26,7 @@ review history.
 | Accepted `M1/S6/WP6` candidate | Product `ee0b6d31f1c1826c2af7634766155397e916c3e1`, append-only evidence `2b277338390f7dac37b5a5436bbe2cd81dedc871`, and answer-isolated oracle `37aa2b4e2fc084307ba5211f21bbeeb7a93efab0`; source-claim acquisition, deterministic admission, retained semantic provenance/replay, and later admitted-artifact consumption are independently accepted |
 | Accepted `M1/S6/WP7` candidate | Product `59367a7479a7395b173b974bf720543aab2404d4`, append-only acceptance evidence `51251c0e0eb98d67dbc9b295b9ff084ebca33890`, and answer-isolated VAL-v3 oracle freeze `e9b032366552aa67649636655ed07a3bb50bb3b1`; deterministic candidate investigation, complete provenance, durable retention/readback, and database-owned replay are independently accepted |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure; no separate ADR; eleven packages with distinct native/live authorization gates |
-| Next eligible action | Complete fresh independent post-effect audit, determine the conservative exact-target cleanup scope, and prepare and independently review a new cleanup-only recovery manifest. Stop before recovery execution unless that exact authority is accepted; no qualification retry or provider operation is authorized |
+| Next eligible action | Freeze, validate, and independently review exact one-target recovery manifest `dd412ecc-3b2c-4628-8865-bc8574a357c7`. Recovery execution is permitted once only after exact pre-effect ACCEPT under standing bounded cleanup authority; no qualification retry or provider operation is authorized |
 | Later work | WP4 remains unaccepted. A later manual/native qualification requires terminal recovery closure, a bounded non-native correction, a new independently reviewed manifest, and fresh owner authority. WP8 remains blocked until WP4 is accepted. WP9-WP11 always require their exact fresh owner authorization; no provider request is authorized now |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
@@ -93,7 +93,13 @@ forever. The qualification identity, authority, target namespace, output,
 and lock are consumed and may never be retried or reused. Current authority
 is limited to exact post-effect audit and preparation plus fresh independent
 review of a conservative cleanup-only recovery. It does not authorize a
-further Credential Manager operation or any provider operation. WP8 remains
+further Credential Manager operation or any provider operation before exact
+review. Independent post-effect audit accepted an 11-target prior absence
+inventory and identified only `backup-new` as unresolved. Draft cleanup-only
+recovery `dd412ecc-3b2c-4628-8865-bc8574a357c7` is bound to that one target,
+with W0/R3/D1/F1/T5 and no UI, enumeration, fallback, provider, DNS, or
+network path. It remains pre-effect until a fresh exact review accepts its
+committed bytes. WP8 remains
 blocked because its native WP4 prerequisite is not accepted. Plan acceptance permits automatic progression among named
 non-live packages only after each prerequisite package is independently
 accepted and this file is advanced to the exact next package. Production

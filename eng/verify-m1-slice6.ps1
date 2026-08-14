@@ -221,6 +221,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'contracts/repository/wp4-credential-native-recovery.ad876b9a.v1.schema.json',
         'contracts/repository/wp4-credential-native-recovery.e3f76cd6.v1.schema.json',
         'contracts/repository/wp4-credential-native-recovery.e6e04651.v1.schema.json',
+        'contracts/repository/wp4-credential-native-recovery.4936dcef.v1.schema.json',
         'dependencies/README.md',
         'dependencies/dependency-curation.json',
         'dependencies/dependency-manifest.json',
@@ -236,6 +237,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.ad876b9a.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e3f76cd6.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e6e04651.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.4936dcef.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.post-wp7.json',
         'docs/research/investigations/README.md',
         'docs/research/investigations/RESEARCH-0055-slice6-local-input-bound-policy.md',
@@ -249,6 +251,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'eng/validate-m1-slice6-wp4-recovery-ad876b9a.ps1',
         'eng/validate-m1-slice6-wp4-recovery-e3f76cd6.ps1',
         'eng/validate-m1-slice6-wp4-recovery-e6e04651.ps1',
+        'eng/validate-m1-slice6-wp4-recovery-4936dcef.ps1',
         'eng/validate-m1-slice6-wp4-recovery-evidence.ps1',
         'eng/reconstruct-m1-slice6-wp4-recovery-receipt.ps1',
         'eng/reconstruct-m1-slice6-wp4-recovery-ad876b9a-receipt.ps1',
@@ -1776,8 +1779,26 @@ function Invoke-CredentialNativeRecoveryGate {
     $expectedAd=[IO.Path]::GetFullPath((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.ad876b9a.v1.json'))
     $expectedE3=[IO.Path]::GetFullPath((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e3f76cd6.v1.json'))
     $expectedE6=[IO.Path]::GetFullPath((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e6e04651.v1.json'))
+    $expected4936=[IO.Path]::GetFullPath((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.4936dcef.v1.json'))
     $path=[IO.Path]::GetFullPath((Join-Path $repoRoot $AuthorizationManifest))
-    if([string]::Equals($path,$expectedE6,[StringComparison]::OrdinalIgnoreCase)){
+    if([string]::Equals($path,$expected4936,[StringComparison]::OrdinalIgnoreCase)){
+        $expectedManifestId='infinium.m1-s6.wp4.credential-native-recovery/dd412ecc-3b2c-4628-8865-bc8574a357c7'
+        $failureRecordCommit='2eb7ed8b81331698bc2bffe3786b62c682b88598'
+        $manifestRelative='docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.4936dcef.v1.json'
+        $priorEvidencePath=Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-4936dcef/credential-native-cleanup-ambiguity.v3.json'
+        $priorLockPath=Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-authority-locks/16d19410cd200caee29da362c474805929cc4c65651685173d39838849e27421.json'
+        $validatorPath=Join-Path $repoRoot 'eng/validate-m1-slice6-wp4-recovery-4936dcef.ps1'
+        $expectedPriorFingerprints=@(
+            '1280f6eb54fc26043b11c19b40f8d5fff0777aeb3ea6b8ad3d225365b1b41677','1b83b44086e5ef8d7173acc772da1a471924a5e7fd53bfefe9e85f882d282275',
+            'ce92785c4620f0482503a0cfc282feb87e065827735ad4b5d2645c448b5b9f5f','d16fcd6b08b0d3eeb4931b8d440a5e5a245000692343e9e0ce57a415b1e2915e',
+            '5a63263824e2d065203489bbf18615a6324d8493a153e57d98a9021947d19e9c','ebd23333c28423c14099f86ae43b294e9c0911359b8df8051792ed261d86811a',
+            '4b57de8f5cf207ca7fd25a99582a7e9a9c65bd0756570312d2211df9c2de65e8','eb5044984f24f3a4a56a016a24f50245659d270f20bb31ce6c2752b3d75aba2a',
+            '6d8306b7661f2b3242ad93c2438917fac74cf93b1e52c486e95ff346550d37bb','13df4cf0001cd0571f9b05463d0bf9e61016480b1eb637b7c99378bd584fb09e',
+            'e995b83b9d65f4d8d1f07ae59d03d6af31fc90275ed48a90e059106a7d388900')
+        $priorExactAbsenceCount=11
+        $recoveryTargetCount=1
+        $expectedPriorStatus='failed-cleanup-ambiguous-v3'
+    }elseif([string]::Equals($path,$expectedE6,[StringComparison]::OrdinalIgnoreCase)){
         $expectedManifestId='infinium.m1-s6.wp4.credential-native-recovery/6232bae5-f735-4db7-a74f-7ede9f67b752'
         $failureRecordCommit='0d0b230c73ddd5bb11f4b0f8cf3b85a5cee2a82d'
         $manifestRelative='docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e6e04651.v1.json'
@@ -1852,7 +1873,30 @@ function Invoke-CredentialNativeRecoveryGate {
         @()
     }
     $priorLock=Get-Content -LiteralPath $priorLockPath -Raw|ConvertFrom-Json -Depth 20 -DateKind String
-    if($expectedPriorStatus-eq'failed-cleanup-ambiguous'){
+    if($expectedPriorStatus-eq'failed-cleanup-ambiguous-v3'){
+        if($priorLock.manifest_id-ne[string]$m.binding.failed_manifest_id-or
+            $priorLock.manifest_sha256-ne[string]$m.binding.failed_manifest_sha256-or
+            $priorLock.execution_head_commit-ne'8f49943d0af53c495b8f288048cbd8d8bd1fe775'-or
+            $priorLock.disposition-ne'consumed-before-native-launch-never-delete-or-reuse'){
+            throw 'Recovery consumed 4936dcef authority lock content differs; no effect is permitted.'
+        }
+        if($priorEvidence.schema-ne'infinium.m1-s6.wp4.credential-native-cleanup-ambiguity/v3'-or
+            $priorEvidence.status-ne'failed-cleanup-ambiguous'-or
+            $priorEvidence.manifest_id-ne[string]$m.binding.failed_manifest_id-or
+            $priorEvidence.manifest_sha256-ne[string]$m.binding.failed_manifest_sha256-or
+            [int]$priorEvidence.later_native_calls-ne0-or[bool]$priorEvidence.cleanup_confirmed-or
+            [bool]$priorEvidence.whole_namespace_absence_confirmed-or-not[bool]$priorEvidence.namespace_blocked-or
+            $priorEvidence.namespace_disposition-ne'consumed-never-reuse'-or
+            $priorEvidence.assignment_id-ne'wp4-v2/backup-restore-reauthentication/cleanup-successor'-or
+            $priorEvidence.reason-ne'cleanup-phase-failed'-or
+            $priorEvidence.prior_primary_failure.failure_type-ne'CredentialNativeHelperEvidenceAmbiguityException'-or
+            $priorEvidence.terminal_failure.failure_type-ne'InvalidDataException'-or
+            [int]$m.binding.prior_exact_absence_count-ne11-or
+            (($m.binding.prior_exact_absence_fingerprints-join'|')-cne($expectedPriorFingerprints-join'|'))-or
+            @($m.disposable_namespace.targets.target_fingerprint_sha256|?{$_ -in $expectedPriorFingerprints}).Count-ne0){
+            throw 'Recovery prior 4936dcef ambiguity lineage is not exact; no effect is permitted.'
+        }
+    }elseif($expectedPriorStatus-eq'failed-cleanup-ambiguous'){
         if($priorLock.manifest_id-ne[string]$m.binding.failed_manifest_id-or
             $priorLock.manifest_sha256-ne[string]$m.binding.failed_manifest_sha256-or
             $priorLock.execution_head_commit-ne'fdd9d49301e72f6a421e4597ea405bb2ca69da2f'-or

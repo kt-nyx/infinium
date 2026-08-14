@@ -548,7 +548,8 @@ internal static class WindowsCredentialNativeRecovery
         schemaIdentity is "infinium.repository.wp4-credential-native-recovery/1.0.0"
             or "infinium.repository.wp4-credential-native-recovery/1.1.0"
             or "infinium.repository.wp4-credential-native-recovery/1.2.0"
-            or "infinium.repository.wp4-credential-native-recovery/1.3.0";
+            or "infinium.repository.wp4-credential-native-recovery/1.3.0"
+            or "infinium.repository.wp4-credential-native-recovery/1.4.0";
 
     internal static int Run(string manifestPath, string expectedSha256, string expectedManifestId, string evidencePath)
     {
@@ -870,6 +871,28 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 new("backup-old", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-backup-restore", "g001", "b1a4d68aaaefd0f62ae7979c994ca6193a34f273e463f5395e87d474cbb9f40a"),
                 new("backup-new", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-backup-restore", "g002", "c3a2805323e54bdc4aba66b5d3e33686ce12a525dfed82c4b2e463deea2c28b1"),
                 new("fake-dispatch", "m1s6-wp4-e6e046514cd54f5d8b465ec84a81cbbe-fake-dispatch", "g001", "d189000ff046ad5062614e915882796017b97778178875a58a77ebde902ab1c8"),
+            ];
+        }
+        else if (schemaIdentity == "infinium.repository.wp4-credential-native-recovery/1.4.0"
+            && manifestRoot.GetProperty("manifest_id").GetString()
+                == "infinium.m1-s6.wp4.credential-native-recovery/dd412ecc-3b2c-4628-8865-bc8574a357c7")
+        {
+            JsonElement limits = manifestRoot.GetProperty("limits");
+            if (limits.GetProperty("targets").GetInt32() != 1
+                || limits.GetProperty("CredWriteW").GetInt32() != 0
+                || limits.GetProperty("CredReadW").GetInt32() != 3
+                || limits.GetProperty("CredDeleteW").GetInt32() != 1
+                || limits.GetProperty("CredFree").GetInt32() != 1
+                || limits.GetProperty("total_native_calls").GetInt32() != 5)
+            {
+                throw new InvalidDataException("Current recovery finite limits differ from exact authority.");
+            }
+            expectedTargetCount = 1;
+            exactCurrentTargets =
+            [
+                new("backup-new",
+                    "m1s6-wp4-4936dcefa0f4430298990afd99b19799-backup-restore", "g002",
+                    "01fcbe4a9138bcc10819e04cdadc9f83a592c022b4b436bbd2d29f50b52816c7"),
             ];
         }
         else

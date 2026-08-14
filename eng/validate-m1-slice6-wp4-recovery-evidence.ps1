@@ -27,7 +27,10 @@ $isE3Recovery =
 $isE6Recovery =
     $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.3.0' -and
     $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/6232bae5-f735-4db7-a74f-7ede9f67b752'
-$isCurrentRecovery = $isAd876Recovery -or $isE3Recovery -or $isE6Recovery
+$is4936Recovery =
+    $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.4.0' -and
+    $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/dd412ecc-3b2c-4628-8865-bc8574a357c7'
+$isCurrentRecovery = $isAd876Recovery -or $isE3Recovery -or $isE6Recovery -or $is4936Recovery
 $isLegacyRecovery =
     $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.0.0' -and
     $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/89baee92-14d6-4f2b-a970-0fe6be15c54c'
