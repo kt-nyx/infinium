@@ -5646,9 +5646,9 @@ fallback, or perform DNS/network/billable work.
 The exact 3,123-byte recovery manifest is
 `infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5`,
 SHA-256
-`f24c6152b2c6a67ddb5f7c52ecf31ae91f7dc0954cfe22cdf2790f490dd97382`,
+`6649b694ca235a8d0f4dcce9da6040f5c01a2ec22bdbcad7fcc7f9f6a4610cbb`,
 bound to close-ready recovery commit
-`0b431a768fe6cba30b9527347f57128ca9053a13`, terminal record commit
+`a7815a3d7c19637659ecd39db013e2a01b645256`, terminal record commit
 `e2de2ce63a13222784abbdc27d91abcdc0ed4d91`, failure evidence SHA-256
 `18b4bd64d5ae32596330271e415b10a0a6d8516fded9dfc35bf1fee26dc7cd9f`,
 and consumed authority-lock SHA-256
