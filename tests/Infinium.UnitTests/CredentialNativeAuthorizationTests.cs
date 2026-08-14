@@ -411,6 +411,12 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.IsFalse(currentReconstruction.Contains("--credential-native-recovery", StringComparison.Ordinal));
         string recovery076bReconstruction = File.ReadAllText(Path.Combine(root, "eng",
             "reconstruct-m1-slice6-wp4-recovery-076b981a-receipt.ps1"));
+        Assert.IsTrue(recovery076bReconstruction.Contains(
+            "(Resolve-InputPath 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.076b981a.v1.json')",
+            StringComparison.Ordinal));
+        Assert.IsTrue(recovery076bReconstruction.Contains(
+            "(Resolve-InputPath 'artifacts/m1-slice6/wp4-native-recovery-040817c8/credential-native-recovery-evidence.v1.json')",
+            StringComparison.Ordinal));
         Assert.IsFalse(recovery076bReconstruction.Contains("Infinium.CredentialHelper", StringComparison.Ordinal));
         Assert.IsFalse(recovery076bReconstruction.Contains("Process.Start", StringComparison.Ordinal));
         Assert.IsFalse(recovery076bReconstruction.Contains("--credential-native-recovery", StringComparison.Ordinal));
@@ -872,8 +878,11 @@ public sealed class CredentialNativeAuthorizationTests
         string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp4-credential-native-recovery.076b981a.v1.json");
         JsonObject valid = JsonNode.Parse(File.ReadAllBytes(manifestPath))!.AsObject();
-        Assert.AreEqual(0, RunPwsh(root, "eng/validate-m1-slice6-wp4-recovery-076b981a.ps1",
-            "-ManifestPath", manifestPath));
+        string recoveryOutput = Path.Combine(root, "artifacts", "m1-slice6", "wp4-native-recovery-040817c8");
+        string[] validatorArguments = Directory.Exists(recoveryOutput)
+            ? ["eng/validate-m1-slice6-wp4-recovery-076b981a.ps1", "-ManifestPath", manifestPath, "-PostEffect"]
+            : ["eng/validate-m1-slice6-wp4-recovery-076b981a.ps1", "-ManifestPath", manifestPath];
+        Assert.AreEqual(0, RunPwsh(root, validatorArguments));
         Assert.AreEqual("infinium.repository.wp4-credential-native-recovery/1.5.0",
             valid["schema_identity"]!.GetValue<string>());
         Assert.AreEqual(0, valid["binding"]!["prior_exact_absence_count"]!.GetValue<int>());

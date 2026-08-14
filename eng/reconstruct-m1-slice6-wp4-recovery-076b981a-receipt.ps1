@@ -59,10 +59,10 @@ $lock = Resolve-InputPath $AuthorityLockPath
 $receipt = Resolve-InputPath $ReceiptPath
 if (-not $TestOnlyPaths) {
     $expected = @(
-        Resolve-InputPath 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.076b981a.v1.json',
-        Resolve-InputPath 'artifacts/m1-slice6/wp4-native-recovery-040817c8/credential-native-recovery-evidence.v1.json',
-        Resolve-InputPath 'artifacts/m1-slice6/wp4-native-recovery-locks/e6a97b4f667a5487b314e4de2ae029601348455127c5d33732dd9e3ec63a1724.json',
-        Resolve-InputPath 'artifacts/m1-slice6/wp4-native-recovery-040817c8/CredentialNativeRecovery.reconstructed.json')
+        (Resolve-InputPath 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.076b981a.v1.json')
+        (Resolve-InputPath 'artifacts/m1-slice6/wp4-native-recovery-040817c8/credential-native-recovery-evidence.v1.json')
+        (Resolve-InputPath 'artifacts/m1-slice6/wp4-native-recovery-locks/e6a97b4f667a5487b314e4de2ae029601348455127c5d33732dd9e3ec63a1724.json')
+        (Resolve-InputPath 'artifacts/m1-slice6/wp4-native-recovery-040817c8/CredentialNativeRecovery.reconstructed.json'))
     $actual = @($manifest, $evidence, $lock, $receipt)
     for ($index = 0; $index -lt $expected.Count; $index++) {
         if (-not [string]::Equals($actual[$index], $expected[$index], [StringComparison]::OrdinalIgnoreCase)) {

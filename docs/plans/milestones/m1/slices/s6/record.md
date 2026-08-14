@@ -6661,3 +6661,42 @@ Build servers were shut down and repository-owned process count is zero.
 Owner/execution markers, output, and one-shot lock remain absent. The exact
 manifest is awaiting the reviewer's terminal pre-effect verdict; no effect has
 occurred.
+
+### 2026-08-14 WP4 `076b981a` all-target recovery execution
+
+Fresh independent review returned terminal ACCEPT at exact clean HEAD
+`8a7b8519a236ff9891b95554b1293cd4d06e7bec`. The standing bounded cleanup
+authority was bound to manifest
+`infinium.m1-s6.wp4.credential-native-recovery/040817c8-0a87-480a-915c-71dc2fe54da3`,
+SHA-256 `94cb5c77b906100c6c436ddbb889f7511b2f4c1cea0c60556651c97b7020414d`,
+and close-ready `67f1e6dc02036beccf3d12d4453847351fd93983` through its stated expiry.
+The canonical owner marker existed exactly once at execution-authority commit
+`f70904dc3305b3031412116f85cda6fa7cda4786`; the exact output and derived
+lock were absent and the worktree was clean before launch.
+
+The cleanup-only recovery executed once and passed. Its v2 evidence is 7,695
+bytes, SHA-256
+`d65cefe9c2a71231c8fd9a6c4105f26acd742f49af248f38be989b059a93a515`.
+The trace is exactly 12 ordered `CredReadW` calls, each returning
+`ERROR_NOT_FOUND`: W0/R12/D0/F0/T12. All 12 exact target-absence entries are
+terminal `ERROR_NOT_FOUND`; cleanup ambiguity is false, namespace reuse is
+blocked, and combined absence is 12. Recovery evidence records network, DNS,
+provider, and billable operations as zero. The 223-byte consumed recovery lock
+SHA-256 is
+`178711a914651b180d667285c6d4e22c8a820aa6f8450e398626a121afc2c5d0`;
+the 867-byte gate receipt SHA-256 is
+`413789b410eb3718f7185d01d614d90444b2edb6196338dd21b246802cdb00cf`.
+
+The first no-native receipt reconstruction attempt correctly failed before
+receipt creation because its production expected-path array had ambiguous
+PowerShell call syntax. A bounded tooling correction parenthesized each exact
+path expression and added a source regression. The immutable reconstruction
+then passed without any native operation, producing a 1,500-byte receipt at
+SHA-256 `d105f42e7dfcec30590f40fa9b9ce0c65fe0c4a6aca9d1bd09b47ac048e3d853`.
+Independent UTF-8/UTF-16LE scanning of evidence, both receipts, and the lock
+found zero raw-target matches. The recovery is consumed forever and must not
+be retried. The failed qualification remains unaccepted; next work is bounded
+non-native evidence-finalization correction and fresh qualification
+preparation only after post-effect audit.
+
+WP4_RECOVERY_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-recovery/040817c8-0a87-480a-915c-71dc2fe54da3 sha256=94cb5c77b906100c6c436ddbb889f7511b2f4c1cea0c60556651c97b7020414d execution_head_commit=f70904dc3305b3031412116f85cda6fa7cda4786 status=passed cleanup=confirmed-absent target_absence_count=12 native_calls=W0/R12/D0/F0/T12 evidence_sha256=d65cefe9c2a71231c8fd9a6c4105f26acd742f49af248f38be989b059a93a515 authority_lock_sha256=178711a914651b180d667285c6d4e22c8a820aa6f8450e398626a121afc2c5d0 namespace_reuse_blocked=true later_native_calls=0 network_operations=0 dns_operations=0 provider_operations=0 billable_operations=0 retry_attempted=false
