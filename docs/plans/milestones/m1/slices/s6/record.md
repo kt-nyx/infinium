@@ -5667,3 +5667,37 @@ review accepts these exact committed bytes and the canonical standing-authority
 marker is appended at true EOF.
 
 WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5 sha256=6649b694ca235a8d0f4dcce9da6040f5c01a2ec22bdbcad7fcc7f9f6a4610cbb close_ready_commit=a7815a3d7c19637659ecd39db013e2a01b645256 expires_at_utc=2026-08-15T13:46:52.0671830Z
+
+## WP4 `e3f76cd6` cleanup-only recovery execution — 2026-08-14
+
+Fresh independent pre-effect review accepted clean candidate
+`97b37dfc37732ad6ad4738ca625e80bf59bf6f20`, close-ready recovery
+implementation `a7815a3d7c19637659ecd39db013e2a01b645256`, and the exact 3,123-byte
+manifest SHA-256
+`6649b694ca235a8d0f4dcce9da6040f5c01a2ec22bdbcad7fcc7f9f6a4610cbb`
+with no remaining finding. The sole recovery execution ran from clean HEAD
+`08ce73d5149486203e9e63926da19b05ddac2b68`.
+
+Recovery passed. Both exact unresolved targets returned terminal
+`ERROR_NOT_FOUND` on their first exact-target CredReadW, so no deletion or
+allocation/free was required. The canonical trace is W0/R2/D0/F0/T2, within
+the R6/D2/F2/T10 limits, with no ambiguity and no later native call. The
+2,045-byte evidence SHA-256 is
+`29fe8a1686564961a87d42018c77fa36260670d7b4d8aa976a5f212bb94f2329`;
+the 223-byte immutable recovery-lock SHA-256 is
+`1ef3d2ecf4bb088eca9c5411cb7537519f64a0f659bd418358b48ea8ffda4e4b`;
+and the 827-byte canonical receipt SHA-256 is
+`f71b0668bc7c220d01272fa0a85406ce5ab99e75a59ccfbdf3e097fc352df908`.
+
+The two-target proof combines only with the immutable prior ten-target
+absence evidence to prove all 12 targets absent. The namespace disposition is
+`cleanup-confirmed-absent-never-reuse`. CredWriteW, CredDeleteW, CredFree,
+enumeration, UI, fallback, DNS, network, provider, billable, private-fixture,
+archive, later-package, and push counts are zero. Post-run cleanup stopped all
+17 exact run-owned reusable MSBuild nodes; exact-root command-line inspection
+then found zero repository-owned process survivors. This recovery identity,
+lock, namespace, targets, and output root are consumed and may never be reused.
+WP4 remains unaccepted pending bounded non-native correction, full verification,
+fresh qualification authority, successful qualification, and independent
+acceptance.
+WP4_RECOVERY_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5 sha256=6649b694ca235a8d0f4dcce9da6040f5c01a2ec22bdbcad7fcc7f9f6a4610cbb execution_head_commit=08ce73d5149486203e9e63926da19b05ddac2b68 status=passed recovery_native_calls=W0-R2-D0-F0-T2 recovery_target_absence=2 prior_target_absence=10 combined_namespace_target_absence=12 namespace_disposition=cleanup-confirmed-absent-never-reuse evidence_sha256=29fe8a1686564961a87d42018c77fa36260670d7b4d8aa976a5f212bb94f2329 authority_lock_sha256=1ef3d2ecf4bb088eca9c5411cb7537519f64a0f659bd418358b48ea8ffda4e4b receipt_sha256=f71b0668bc7c220d01272fa0a85406ce5ab99e75a59ccfbdf3e097fc352df908
