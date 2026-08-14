@@ -6236,3 +6236,5 @@ This binding records no recovery owner/execution marker, fresh recovery lock,
 output root, or native operation. Fresh independent pre-effect review of the
 exact committed bytes remains mandatory before standing cleanup authority may
 be exercised once.
+
+WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/dd412ecc-3b2c-4628-8865-bc8574a357c7 sha256=09b6858eaf472038499f18654d2a2fc4ca0a32b2ed34cd1a192146f90755e183 close_ready_commit=c77f94288f8caedfdce5689b367b255b191481db expires_at_utc=2026-08-15T14:46:57.6685379Z
