@@ -5321,3 +5321,4 @@ The rebound manifest has 21,022 exact bytes and SHA-256
 It remains non-authorizing: no owner marker, execution marker, output root,
 one-shot lock, Credential Manager call, manual UI, DNS, network, provider,
 billable, private-fixture, archive, later-package, or push operation occurred.
+WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/ad876b9a-9f45-4eb4-8d12-5970d76dd4ea sha256=7d1e8c35072c6676258c9cbcc47fd8833458878bf289728cc453e5e0942d35ce close_ready_commit=b12bbbe3283212778bfd3466e0b871318a217d32 expires_at_utc=2026-08-15T20:55:00.0000000Z
