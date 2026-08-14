@@ -6761,3 +6761,8 @@ the adjacent primary-failure regression passed 1/1; focused authorization
 tests passed 33/33; Release build remained warning/error free. No authority
 was consumed and no native or external effect occurred. A replacement
 close-ready freeze and review are required.
+
+The replacement close-ready commit is
+`31d98a951eddde881d20e4a18946d5e5edcb971b`. The manifest now binds that exact
+ancestor; only the final manifest and append-only record may follow before
+review and owner acceptance. No execution authority exists yet.
