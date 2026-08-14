@@ -6744,3 +6744,8 @@ identity, and the explicit pre-effect stop. Its focused contract regression
 passed 1/1. A replacement close-ready commit is required before final manifest
 freeze; no authority marker, output, lock, native operation, or external
 effect was created.
+
+The replacement close-ready commit is
+`68e99058a39cdcc3d7ace4c605f32d07d1a45813`. The final manifest binding now
+names that exact ancestor. Only the manifest and this append-only record have
+changed after it; owner acceptance and execution remain absent.
