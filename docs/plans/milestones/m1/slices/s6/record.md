@@ -5788,3 +5788,24 @@ replacement close-ready commit and manifest hash are required. No owner
 marker, execution marker, output root, authority lock, manual dialog,
 Credential Manager call, provider, DNS, network, or billable effect occurred;
 the `e6e04651` namespace remains unused.
+
+### Replacement close-ready binding for owner review
+
+Replacement close-ready consumer commit
+`0ab431dddcc662eef08c3e39262f9fd12191cca3` adds the exact native-store
+predecessor binding and a non-native synthetic bound-manifest success oracle;
+its mutation cases now exercise the accepted state instead of trivially
+failing on draft status. The final manifest is 21,699 bytes with SHA-256
+`aa0c7755b05f7382c060151bf73ef8548731df56ebd26a430725c6258cb894e1`
+and expiry `2026-08-16T14:43:54.4033492Z`.
+
+Semantic validation reports `validated-ready-for-owner-acceptance`, 12 exact
+targets, nine scenarios, `execution_authorized=false`, and zero Credential
+Manager, network, and provider operations. The exact proposed command is
+`powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNative -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp4-native-e6e04651`.
+It remains non-executable without exactly one canonical owner-acceptance line,
+a clean descendant with only manifest/record post-binding drift, a fresh empty
+output root, an unexpired manifest, and a one-shot CreateNew authority lock.
+No owner marker, execution marker, output root, authority lock, manual dialog,
+native credential call, provider, DNS, network, or billable effect exists for
+this identity.
