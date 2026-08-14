@@ -5571,3 +5571,5 @@ repository-owned process survivors. This independent acceptance is pre-effect
 review only; it does not authorize `CredentialNative` or a Credential Manager
 operation without the owner's explicit exact-byte acceptance and later
 readiness.
+
+WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60 sha256=9f43e5d9d7fb8b0cdba9195ba835631fa6073dff1c6ae86eb68a914b04c57db0 close_ready_commit=826c41744501603824e71ff8d739ce67e9089d0c expires_at_utc=2026-08-16T06:42:16.6262208Z
