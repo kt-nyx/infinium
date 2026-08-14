@@ -17,7 +17,7 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S6` - owner-accepted; implementation-active |
-| Current authorized work | `M1/S6/WP4` terminal-attempt recovery preparation only: preserve consumed qualification `e3f76cd6`, prepare and independently review an exact cleanup-only recovery manifest for its two unproven targets, and do not execute recovery or any fresh qualification before the exact pre-effect gate accepts it |
+| Current authorized work | `M1/S6/WP4` bounded non-native correction only: preserve consumed qualification `e3f76cd6` and its completed cleanup recovery, reproduce and correct the restore timestamp regression, retain typed evidence, run the full non-live floor and fresh review, and prepare a fresh qualification manifest; stop before any fresh manual/native qualification |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
 | Accepted Slice 6 WP1 candidate | `61b90314d8273749849f590b303814008fa2fdfa`; nine Slice 6 contracts are `Implementation-active` and the accepted local input-bound policy is `openai-responses-o200k-byte-envelope/v1` |
 | Accepted `M1/S6/WP2` candidate | `ed27ed04897103d93a60e6200971ca12d04f2e11`; capability, price, atomic reservation/final-gate, settlement, projection, replay, simulator, and public fixture/oracle evidence are independently accepted |
@@ -26,8 +26,8 @@ review history.
 | Accepted `M1/S6/WP6` candidate | Product `ee0b6d31f1c1826c2af7634766155397e916c3e1`, append-only evidence `2b277338390f7dac37b5a5436bbe2cd81dedc871`, and answer-isolated oracle `37aa2b4e2fc084307ba5211f21bbeeb7a93efab0`; source-claim acquisition, deterministic admission, retained semantic provenance/replay, and later admitted-artifact consumption are independently accepted |
 | Accepted `M1/S6/WP7` candidate | Product `59367a7479a7395b173b974bf720543aab2404d4`, append-only acceptance evidence `51251c0e0eb98d67dbc9b295b9ff084ebca33890`, and answer-isolated VAL-v3 oracle freeze `e9b032366552aa67649636655ed07a3bb50bb3b1`; deterministic candidate investigation, complete provenance, durable retention/readback, and database-owned replay are independently accepted |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure; no separate ADR; eleven packages with distinct native/live authorization gates |
-| Next eligible action | Prepare and independently review a cleanup-only recovery manifest bound to terminal execution HEAD `f0ee9814f8bd0100692dfa7b7cab83ed9181457f`, failure evidence SHA-256 `18b4bd64d5ae32596330271e415b10a0a6d8516fded9dfc35bf1fee26dc7cd9f`, authority-lock SHA-256 `945d2bbf440af7d5a305ae4cbb4dee73636175ff679ac8582a28e84cd73e0e5d`, and only `backup-new` plus `fake-dispatch`; stop before any cleanup effect until that exact pre-effect review accepts it |
-| Later work | WP4 remains unaccepted. After exact cleanup closure, bounded non-native diagnosis/correction, full verification, fresh independent review, a new qualification manifest, and fresh owner authority are required before any later WP4 attempt. WP8 remains blocked until WP4 is accepted. WP9-WP11 always require their exact fresh owner authorization; no provider request is authorized now |
+| Next eligible action | Correct and independently verify the non-native restore clock seam that raised SQLite primary 19 / extended 1811 before the third dialog, retain the exact secret-safe classification, and prepare a fresh exact qualification manifest. The `e3f76cd6` namespace has 12/12 terminal absence and is consumed forever; do not reuse or retry it |
+| Later work | WP4 remains unaccepted. A later manual/native qualification requires a new independently reviewed manifest and fresh owner authority. WP8 remains blocked until WP4 is accepted. WP9-WP11 always require their exact fresh owner authorization; no provider request is authorized now |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
 | Slice entry | [Slice 6 current summary and navigation](plans/milestones/m1/slices/s6/README.md) |
@@ -59,13 +59,16 @@ contracts remain `Implementation-active`, while Slice 5 v1 remains
 `Slice-frozen`. Qualification manifest `e3f76cd6` was executed exactly once
 from `f0ee9814f8bd0100692dfa7b7cab83ed9181457f` and is now terminally consumed.
 Its Submit and Cancel interactions completed, but a retained `SqliteException`
-stopped the run before the third dialog. Cleanup proves ten exact targets
-absent; `backup-new` and `fake-dispatch` remain unproven, so the namespace is
-blocked and may never be reused. This handoff permits only bounded cleanup-only
-recovery preparation and independent review for those two exact targets. It
-does not authorize a cleanup effect, fresh qualification, target reuse, or any
-provider operation. WP8 remains blocked because its native WP4 prerequisite is
-not accepted. Plan acceptance permits automatic progression among named
+stopped the run before the third dialog. Cleanup recovery
+`8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5` then proved `backup-new` and
+`fake-dispatch` absent with W0/R2/D0/F0/T2, combining with the immutable prior
+ten-target proof for 12/12 terminal namespace absence. The qualification and
+recovery identities, targets, locks, namespaces, and output roots are consumed
+and may never be reused. This handoff permits only the bounded non-native
+restore-clock correction, full verification, independent review, and fresh
+qualification-manifest preparation. It does not authorize a fresh manual or
+native qualification, target reuse, or any provider operation. WP8 remains
+blocked because its native WP4 prerequisite is not accepted. Plan acceptance permits automatic progression among named
 non-live packages only after each prerequisite package is independently
 accepted and this file is advanced to the exact next package. Production
 profile enrollment/verification and WP9-WP11 provider requests remain closed
