@@ -666,17 +666,17 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
     private const uint CredentialPersistLocalMachine = 2;
     private const int ErrorNotFound = 1168;
     private const string ExpectedSupersededManifestId =
-        "infinium.m1-s6.wp4.credential-native-authorization/ad876b9a-9f45-4eb4-8d12-5970d76dd4ea";
+        "infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60";
     private const string ExpectedSupersededManifestSha256 =
-        "7d1e8c35072c6676258c9cbcc47fd8833458878bf289728cc453e5e0942d35ce";
+        "9f43e5d9d7fb8b0cdba9195ba835631fa6073dff1c6ae86eb68a914b04c57db0";
     private const string ExpectedSupersededEvidenceSha256 =
-        "cfaee3940cd780a5bcfbcbcf387124d7f7385b01a07f8f0f6fbe4439593a21e6";
+        "18b4bd64d5ae32596330271e415b10a0a6d8516fded9dfc35bf1fee26dc7cd9f";
     private const string ExpectedSupersededAuthorityLockSha256 =
-        "b47e0262937f86174ae1b790f4951fbf6fe6621d1f3a25c938990143514950b8";
+        "945d2bbf440af7d5a305ae4cbb4dee73636175ff679ac8582a28e84cd73e0e5d";
     private const string ExpectedCleanupRecoveryManifestSha256 =
-        "0b7e9f9c0b24328c507a804f32720b90ac8c52fd234189be7d9ad501b567fdc2";
+        "6649b694ca235a8d0f4dcce9da6040f5c01a2ec22bdbcad7fcc7f9f6a4610cbb";
     private const string ExpectedCleanupRecoveryEvidenceSha256 =
-        "026bb2b1aa5ad2ff50777a5adccda370134317e0b6f6029989e267afb7e068f0";
+        "29fe8a1686564961a87d42018c77fa36260670d7b4d8aa976a5f212bb94f2329";
     private WindowsCredentialFault fault;
     private int writeCount;
     private int readCount;
@@ -744,15 +744,15 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 || supersedes.GetProperty("namespace_disposition").GetString()
                     != "terminal-cleanup-confirmed-absent-never-reuse"
                 || cleanupRecovery.GetProperty("manifest_id").GetString()
-                    != "infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff"
+                    != "infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5"
                 || cleanupRecovery.GetProperty("manifest_sha256").GetString()
                     != ExpectedCleanupRecoveryManifestSha256
                 || cleanupRecovery.GetProperty("evidence_sha256").GetString()
                     != ExpectedCleanupRecoveryEvidenceSha256
                 || cleanupRecovery.GetProperty("authority_lock_sha256").GetString()
-                    != "2ccbcebf1bb887ae1423b61013ff164612dd8907b3323273a2690b2747b432a0"
+                    != "1ef3d2ecf4bb088eca9c5411cb7537519f64a0f659bd418358b48ea8ffda4e4b"
                 || cleanupRecovery.GetProperty("receipt_sha256").GetString()
-                    != "e16282787c9aaa95991fcb723d506dab98945f398a0908d39c078f31d901c977"
+                    != "f71b0668bc7c220d01272fa0a85406ce5ab99e75a59ccfbdf3e097fc352df908"
                 || cleanupRecovery.GetProperty("combined_namespace_target_absence_count").GetInt32() != 12)
             {
                 throw new InvalidDataException("The native store manifest predecessor authority is not exact.");

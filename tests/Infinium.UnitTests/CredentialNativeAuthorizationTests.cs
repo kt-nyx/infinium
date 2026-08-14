@@ -180,6 +180,18 @@ public sealed class CredentialNativeAuthorizationTests
         string temporary = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-Schema-" + Guid.NewGuid().ToString("N") + ".json");
         try
         {
+            JsonNode accepted = JsonNode.Parse(bytes)
+                ?? throw new InvalidDataException("The test manifest is malformed.");
+            accepted["status"] = "ready-for-owner-acceptance";
+            accepted["candidate_binding"]!["close_ready_implementation_commit"] = new string('1', 40);
+            File.WriteAllText(temporary, accepted.ToJsonString());
+            string acceptedSha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(temporary)));
+            using (WindowsCredentialManagerStore store = WindowsCredentialManagerStore.FromAcceptedManifest(
+                temporary, acceptedSha256, manifestId))
+            {
+                Assert.HasCount(12, store.ManifestTargets);
+            }
+
             void Reject(JsonNode rejected)
             {
                 File.WriteAllText(temporary, rejected.ToJsonString());
@@ -188,23 +200,23 @@ public sealed class CredentialNativeAuthorizationTests
                     temporary, rejectedSha256, manifestId));
             }
 
-            JsonNode rejected = JsonNode.Parse(bytes) ?? throw new InvalidDataException("The test manifest is malformed.");
+            JsonNode rejected = accepted.DeepClone();
             rejected["schema_identity"] = "infinium.repository.wp4-credential-native-authorization/1.2.0";
             Reject(rejected);
 
-            rejected = JsonNode.Parse(bytes)!;
+            rejected = accepted.DeepClone();
             rejected["supersedes"]!.AsObject().Remove("authority_lock_sha256");
             Reject(rejected);
 
-            rejected = JsonNode.Parse(bytes)!;
+            rejected = accepted.DeepClone();
             rejected["supersedes"]!["authority_lock_sha256"] = new string('0', 64);
             Reject(rejected);
 
-            rejected = JsonNode.Parse(bytes)!;
+            rejected = accepted.DeepClone();
             rejected["supersedes"]!["cleanup_recovery"]!["evidence_sha256"] = new string('0', 64);
             Reject(rejected);
 
-            rejected = JsonNode.Parse(bytes)!;
+            rejected = accepted.DeepClone();
             JsonObject supersedes = rejected["supersedes"]!.AsObject();
             JsonNode authorityLock = supersedes["authority_lock_sha256"]!.DeepClone();
             supersedes.Remove("authority_lock_sha256");

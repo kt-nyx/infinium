@@ -5768,3 +5768,23 @@ the all-zero draft placeholder and `execution_authorized=false`; no owner
 acceptance or execution marker exists. Credential Manager, manual UI, DNS,
 network, provider, billable, private-fixture, archive, later-package, and push
 operation counts for this preparation are zero.
+
+### Initial close-ready binding refused by a stale native-store consumer
+
+The first close-ready draft commit
+`541eee7f698b2343a372dfb318813b8e346bf8a9` bound the schema, semantic
+validator, gate, target derivation, current-state handoff, and accepted
+restore-clock correction. Its 21,699-byte candidate manifest had SHA-256
+`1adf9afe774d29b1aa9de814e8160c72862e8db290a73a0b5dd951733b5701cc`.
+Semantic validation passed, but the focused bound-manifest suite truthfully
+failed 35/36 before any native call: `WindowsCredentialManagerStore` still
+required the older `ad876b9a` predecessor lineage and rejected the new exact
+`e3f76cd6` lineage.
+
+This is a bounded non-native consumer mismatch. The manifest was returned to
+draft status, the native-store parser and mutation test are being updated to
+the same exact predecessor manifest/evidence/lock and recovery hashes, and a
+replacement close-ready commit and manifest hash are required. No owner
+marker, execution marker, output root, authority lock, manual dialog,
+Credential Manager call, provider, DNS, network, or billable effect occurred;
+the `e6e04651` namespace remains unused.
