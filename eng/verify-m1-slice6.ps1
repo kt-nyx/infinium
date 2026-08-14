@@ -1446,6 +1446,13 @@ function Invoke-CredentialNativeGate {
     if ([DateTimeOffset]::UtcNow -ge $expires) {
         throw 'CredentialNative v2 owner authority expired during pre-effect verification; no authority was consumed.'
     }
+    $immediateManifestBytes = [IO.File]::ReadAllBytes($manifestPath)
+    $immediateManifestSha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
+        $immediateManifestBytes)).ToLowerInvariant()
+    if ($immediateManifestSha -ne $manifestSha -or
+        -not [string]::IsNullOrWhiteSpace((& git status --porcelain))) {
+        throw 'CredentialNative exact manifest bytes or clean candidate changed during pre-effect verification; no authority was consumed.'
+    }
     $lockRoot = Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-authority-locks'
     [IO.Directory]::CreateDirectory($lockRoot) | Out-Null
     $manifestIdentitySha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
@@ -1475,6 +1482,7 @@ function Invoke-CredentialNativeGate {
     $startInfo.UseShellExecute = $false; $startInfo.CreateNoWindow = $true
     $startInfo.RedirectStandardOutput = $true; $startInfo.RedirectStandardError = $true
     foreach ($argument in @('--credential-native-qualification-v2', '--manifest', $manifestPath,
+            '--manifest-sha256', $manifestSha,
             '--output-root', $resolvedOutputRoot)) { [void]$startInfo.ArgumentList.Add($argument) }
     $process = [Diagnostics.Process]::new(); $process.StartInfo = $startInfo
     if (-not $process.Start()) { throw 'CredentialNative v2 coordinator supervisor did not start.' }

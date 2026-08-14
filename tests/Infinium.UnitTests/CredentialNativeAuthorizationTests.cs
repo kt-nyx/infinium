@@ -290,6 +290,8 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.IsTrue(activeGate.Contains("WP4_V2_OWNER_ACCEPTANCE manifest_id=", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("WP4_V2_NATIVE_EXECUTED manifest_id=", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("WaitForExit(1800000)", StringComparison.Ordinal));
+        Assert.IsTrue(activeGate.Contains("$immediateManifestSha -ne $manifestSha", StringComparison.Ordinal));
+        Assert.IsTrue(activeGate.Contains("'--manifest-sha256', $manifestSha", StringComparison.Ordinal));
         Assert.IsFalse(activeGate.Contains("--credential-native-qualification'", StringComparison.Ordinal));
         Assert.IsFalse(activeGate.Contains("wp4-credential-native-authorization.v1.json", StringComparison.Ordinal));
         Assert.IsFalse(activeGate.Contains("evidenceRecoveryOnly", StringComparison.Ordinal));

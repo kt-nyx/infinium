@@ -20,11 +20,13 @@ using Microsoft.Extensions.Logging;
 #pragma warning disable CA1416 // The executable rejects non-Windows hosts before setup.
 
 if (args is ["--credential-native-qualification-v2", "--manifest", string nativeManifest,
+    "--manifest-sha256", string nativeManifestSha256,
     "--output-root", string nativeOutputRoot])
 {
     try
     {
-        return await CredentialNativeQualificationRunner.RunAsync(nativeManifest, nativeOutputRoot)
+        return await CredentialNativeQualificationRunner.RunAsync(
+            nativeManifest, nativeManifestSha256, nativeOutputRoot)
             .ConfigureAwait(false);
     }
     catch (Exception exception) when (exception is IOException or InvalidDataException

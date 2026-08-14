@@ -66,6 +66,7 @@ internal static class CredentialNativeQualificationRunner
 
     internal static async Task<int> RunAsync(
         string manifestPath,
+        string expectedManifestSha256,
         string outputRoot,
         CancellationToken cancellationToken = default)
     {
@@ -78,6 +79,13 @@ internal static class CredentialNativeQualificationRunner
         }
         byte[] manifestBytes = File.ReadAllBytes(manifestPath);
         string manifestSha256 = Convert.ToHexStringLower(SHA256.HashData(manifestBytes));
+        if (expectedManifestSha256.Length != 64
+            || !expectedManifestSha256.All(char.IsAsciiHexDigit)
+            || !string.Equals(manifestSha256, expectedManifestSha256, StringComparison.Ordinal))
+        {
+            throw new InvalidDataException(
+                "The v2 manifest bytes do not match the exact gate-accepted SHA-256.");
+        }
         using JsonDocument document = JsonDocument.Parse(manifestBytes);
         string manifestId = document.RootElement.GetProperty("manifest_id").GetString()
             ?? throw new InvalidDataException("The v2 manifest identity is absent.");

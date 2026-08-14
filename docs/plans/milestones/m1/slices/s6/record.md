@@ -6749,3 +6749,15 @@ The replacement close-ready commit is
 `68e99058a39cdcc3d7ace4c605f32d07d1a45813`. The final manifest binding now
 names that exact ancestor. Only the manifest and this append-only record have
 changed after it; owner acceptance and execution remain absent.
+
+Fresh pre-effect review found one exact-manifest time-of-check/time-of-use gap:
+the gate's accepted digest was captured before the long preflight, while the
+coordinator independently re-read the path before helper launch. The bounded
+correction re-hashes the manifest and rechecks clean state immediately before
+one-shot lock creation, passes the exact accepted SHA-256 to the coordinator,
+and makes the coordinator reject any mismatch before creating a launcher or
+performing helper/native work. Deterministic mismatch regression passed 1/1;
+the adjacent primary-failure regression passed 1/1; focused authorization
+tests passed 33/33; Release build remained warning/error free. No authority
+was consumed and no native or external effect occurred. A replacement
+close-ready freeze and review are required.

@@ -419,8 +419,9 @@ public sealed class CredentialNativeQualificationSupervisorTests
         string path = Path.Combine(root, "manifest.json");
         File.WriteAllText(path, manifest.ToJsonString());
 
+        string manifestSha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path)));
         await Assert.ThrowsExactlyAsync<CredentialNativePrimaryFailureException>(() =>
-            CredentialNativeQualificationRunner.RunAsync(path, output));
+            CredentialNativeQualificationRunner.RunAsync(path, manifestSha256, output));
 
         string artifactPath = Path.Combine(output, "credential-native-primary-failure.v2.json");
         Assert.IsTrue(File.Exists(artifactPath));
@@ -442,6 +443,25 @@ public sealed class CredentialNativeQualificationSupervisorTests
             .GetProperty("process_tree_terminated").GetBoolean());
         Assert.AreEqual(0, artifact.RootElement.GetProperty("helper_failure_containment")
             .GetProperty("process_tree_survivor_count").GetInt32());
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    public async Task RunnerRejectsManifestMutationBeforeAnyHelperOrNativeWork()
+    {
+        string repository = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-Manifest-Race-" + Guid.NewGuid().ToString("N"));
+        string output = Path.Combine(root, "output");
+        Directory.CreateDirectory(output);
+        string path = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp4-credential-native-authorization.v2.json");
+
+        InvalidDataException failure = await Assert.ThrowsExactlyAsync<InvalidDataException>(() =>
+            CredentialNativeQualificationRunner.RunAsync(path, new string('0', 64), output));
+
+        Assert.AreEqual("The v2 manifest bytes do not match the exact gate-accepted SHA-256.", failure.Message);
+        Assert.IsFalse(Directory.EnumerateFileSystemEntries(output).Any());
     }
 
     [TestMethod]
