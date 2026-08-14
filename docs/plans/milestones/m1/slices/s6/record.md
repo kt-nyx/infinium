@@ -5406,3 +5406,13 @@ Credential Manager, UI, DNS, network, provider, billable, private-fixture,
 archive, later-package, or push operation. The manifest remains draft and
 non-executable until an exact close-ready commit is bound and fresh independent
 pre-effect review accepts it.
+
+The exact cleanup-only recovery implementation candidate is
+`196c71f5f4afda329d0517a57dc46ef406557ea7`. The rebound manifest has SHA-256
+`b52e5931d4f1748ac6f907751947f6442c2e32ae373e785fc4a4b787b35c8cfa`
+and expires at `2026-08-15T05:55:40.1170472Z`. Semantic validation reports
+ready while retaining `execution_authorized=false` and zero native, network,
+and provider operations. Standing owner cleanup authority is recorded below;
+the recovery remains pre-effect until fresh independent review accepts these
+exact committed bytes.
+WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/df29a608-cc46-4151-bb0b-1a03acb1cdff sha256=b52e5931d4f1748ac6f907751947f6442c2e32ae373e785fc4a4b787b35c8cfa close_ready_commit=196c71f5f4afda329d0517a57dc46ef406557ea7 expires_at_utc=2026-08-15T05:55:40.1170472Z
