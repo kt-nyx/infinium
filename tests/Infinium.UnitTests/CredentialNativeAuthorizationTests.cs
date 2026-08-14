@@ -507,8 +507,11 @@ public sealed class CredentialNativeAuthorizationTests
                 new JsonObject { ["alias"] = "fake-dispatch", ["target_fingerprint_sha256"] = second, ["result"] = "ERROR_NOT_FOUND" }),
             ["native_call_counts"] = new JsonObject
             {
-                ["cred_write_w"] = 0, ["cred_read_w"] = 2, ["cred_delete_w"] = 0,
-                ["cred_free"] = 0, ["total"] = 2,
+                ["cred_write_w"] = 0,
+                ["cred_read_w"] = 2,
+                ["cred_delete_w"] = 0,
+                ["cred_free"] = 0,
+                ["total"] = 2,
             },
             ["native_call_trace"] = new JsonArray(
                 Trace(1, "CredReadW", first, "ERROR_NOT_FOUND", null, null),
@@ -520,8 +523,10 @@ public sealed class CredentialNativeAuthorizationTests
             ["prior_authority_lock_sha256"] = manifest["binding"]!["consumed_lock_sha256"]!.GetValue<string>(),
             ["prior_exact_absence_count"] = 10,
             ["combined_namespace_target_absence_count"] = 12,
-            ["network_operations"] = 0, ["dns_operations"] = 0,
-            ["provider_operations"] = 0, ["billable_operations"] = 0,
+            ["network_operations"] = 0,
+            ["dns_operations"] = 0,
+            ["provider_operations"] = 0,
+            ["billable_operations"] = 0,
         };
         AssertEvidenceValidation(root, manifestPath, sha, id, evidence, expectedSuccess: true);
         AssertCurrentReceiptReconstruction(root, manifestPath, sha, id, evidence);

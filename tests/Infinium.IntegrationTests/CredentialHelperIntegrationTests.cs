@@ -487,6 +487,64 @@ public sealed class CredentialHelperIntegrationTests
         Assert.IsFalse(manifest.Contains("synthetic-canary", StringComparison.Ordinal));
     }
 
+    [TestMethod]
+    public void RestoreAdvancesRecoveryTransitionBeyondFutureCredentialAuthorityTime()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-RestoreClock-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        DateTimeOffset futureAuthority = DateTimeOffset.UtcNow.AddHours(1);
+        BackupArtifact backup;
+        CredentialProfileProjection active;
+        using (AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "credential-state"))))
+        {
+            store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, futureAuthority);
+            _ = store.BeginCredentialEnrollment(
+                "profile-future", "generation-future-1", "Future authority",
+                futureAuthority.AddSeconds(1), "account-future", "billing-future");
+            DateTimeOffset activationAt = futureAuthority.AddSeconds(2);
+            active = store.ApplyCredentialTransition(new(
+                "activate-future", "profile-future", "generation-future-1",
+                "enroll", "pending-enrollment", "active-unverified", "active-unverified",
+                M1ProviderCatalog.Capability.Identity.Value, "account-future", "billing-future",
+                activationAt, activationAt.AddTicks(1)));
+
+            DateTimeOffset regressedWallClock = DateTimeOffset.UtcNow;
+            Microsoft.Data.Sqlite.SqliteException reproduced =
+                Assert.ThrowsExactly<Microsoft.Data.Sqlite.SqliteException>(() => store.ApplyCredentialTransition(new(
+                    "restore-clock-regression", "profile-future", "generation-future-1",
+                    "recover", "active-unverified", "recovery-required", "recovery-required",
+                    M1ProviderCatalog.Capability.Identity.Value, "account-future", "billing-future",
+                    regressedWallClock, regressedWallClock.AddTicks(1), IncrementRevocationEpoch: true)));
+            Assert.AreEqual(19, reproduced.SqliteErrorCode);
+            Assert.AreEqual(1811, reproduced.SqliteExtendedErrorCode);
+            Assert.AreEqual(
+                "SQLite Error 19: 'provider credential lifecycle time regression'.",
+                reproduced.Message);
+
+            backup = store.CreateBackup("CredentialFutureAuthority", futureAuthority.AddSeconds(10));
+        }
+
+        StoragePaths restoredPaths = new(Path.Combine(root, "credential-restored"));
+        AuthoritativeStore.RestoreBackup(backup, restoredPaths);
+        using AuthoritativeStore restored = new(restoredPaths);
+        CredentialProfileProjection recoveryRequired = restored.GetCredentialProfile("profile-future");
+        Assert.AreEqual("recovery-required", recoveryRequired.LifecycleState);
+        Assert.IsGreaterThan(active.UpdatedAt, recoveryRequired.UpdatedAt);
+        Assert.AreEqual(active.RevocationEpoch + 1, recoveryRequired.RevocationEpoch);
+
+        restored.AddCredentialGeneration(
+            "profile-future", "generation-future-2", recoveryRequired.GenerationOrdinal + 1,
+            recoveryRequired.RevocationEpoch, recoveryRequired.UpdatedAt.AddTicks(1));
+        DateTimeOffset reauthenticationAt = recoveryRequired.UpdatedAt.AddTicks(2);
+        CredentialProfileProjection reauthenticated = restored.ApplyCredentialTransition(new(
+            "restore-future-fresh-reentry", "profile-future", "generation-future-2",
+            "recover", "recovery-required", "active-unverified", "active-unverified",
+            M1ProviderCatalog.Capability.Identity.Value, "account-future", "billing-future",
+            reauthenticationAt, reauthenticationAt.AddTicks(1)));
+        Assert.AreEqual("generation-future-2", reauthenticated.GenerationId);
+        Assert.AreEqual("active-unverified", reauthenticated.LifecycleState);
+    }
+
     private static CredentialProfileProjection Transition(
         AuthoritativeStore store, string root, string profile, string generation,
         string kind, string from, string to, DateTimeOffset pendingAt, bool incrementRevocation = false)

@@ -1009,6 +1009,55 @@ public sealed class CredentialNativeQualificationSupervisorTests
             Assert.IsGreaterThan(0,
                 artifact.RootElement.GetProperty("evidence").GetProperty("scenarios").GetArrayLength());
         }
+        CredentialNativePrimaryFailureException timeRegression = new(
+            nameof(Microsoft.Data.Sqlite.SqliteException),
+            "source-proven-pre-store-known-zero",
+            failure.Evidence,
+            new Microsoft.Data.Sqlite.SqliteException(
+                "SQLite Error 19: 'provider credential lifecycle time regression'.", 19, 1811));
+        using (JsonDocument artifact = JsonDocument.Parse(
+            CredentialNativeQualificationRunner.SerializePrimaryFailureArtifactForTest(
+                "manifest/test", new string('a', 64), timeRegression)))
+        {
+            JsonElement sqlite = artifact.RootElement.GetProperty("sqlite_failure");
+            Assert.AreEqual(19, sqlite.GetProperty("primary_code").GetInt32());
+            Assert.AreEqual(1811, sqlite.GetProperty("extended_code").GetInt32());
+            Assert.AreEqual("credential-authority-time-regression",
+                sqlite.GetProperty("classification").GetString());
+            Assert.AreEqual("SQLite Error 19: 'provider credential lifecycle time regression'.",
+                sqlite.GetProperty("message").GetString());
+        }
+        const string unexpectedSqliteMessage = "SQLite Error 19: 'unexpected secret-bearing detail'.";
+        CredentialNativePrimaryFailureException redactedSqlite = new(
+            nameof(Microsoft.Data.Sqlite.SqliteException),
+            "source-proven-pre-store-known-zero",
+            failure.Evidence,
+            new Microsoft.Data.Sqlite.SqliteException(unexpectedSqliteMessage, 19, 1811));
+        string redactedArtifact = CredentialNativeQualificationRunner.SerializePrimaryFailureArtifactForTest(
+            "manifest/test", new string('a', 64), redactedSqlite);
+        Assert.IsFalse(redactedArtifact.Contains(unexpectedSqliteMessage, StringComparison.Ordinal));
+        using (JsonDocument artifact = JsonDocument.Parse(redactedArtifact))
+        {
+            JsonElement sqlite = artifact.RootElement.GetProperty("sqlite_failure");
+            Assert.AreEqual(19, sqlite.GetProperty("primary_code").GetInt32());
+            Assert.AreEqual(1811, sqlite.GetProperty("extended_code").GetInt32());
+            Assert.AreEqual("unclassified-redacted", sqlite.GetProperty("classification").GetString());
+            Assert.AreEqual(JsonValueKind.Null, sqlite.GetProperty("message").ValueKind);
+        }
+        CredentialNativePrimaryFailureException wrongCode = new(
+            nameof(Microsoft.Data.Sqlite.SqliteException),
+            "source-proven-pre-store-known-zero",
+            failure.Evidence,
+            new Microsoft.Data.Sqlite.SqliteException(
+                "SQLite Error 19: 'provider credential lifecycle time regression'.", 19, 787));
+        using (JsonDocument artifact = JsonDocument.Parse(
+            CredentialNativeQualificationRunner.SerializePrimaryFailureArtifactForTest(
+                "manifest/test", new string('a', 64), wrongCode)))
+        {
+            JsonElement sqlite = artifact.RootElement.GetProperty("sqlite_failure");
+            Assert.AreEqual("unclassified-redacted", sqlite.GetProperty("classification").GetString());
+            Assert.AreEqual(JsonValueKind.Null, sqlite.GetProperty("message").ValueKind);
+        }
         CredentialNativePrimaryFailureException unproven = new(
             failure.FailureType,
             "scenario-admission-is-not-cleanup-proof",

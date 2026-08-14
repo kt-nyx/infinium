@@ -24,6 +24,8 @@ internal static class CredentialNativeQualificationRunner
 {
     private const string RestoredGenerationRejectionMessage =
         "SQLite Error 19: 'restored credential recovery cannot reactivate the restored generation'.";
+    private const string RestoreAuthorityTimeRegressionMessage =
+        "SQLite Error 19: 'provider credential lifecycle time regression'.";
 
     private static readonly CredentialNativeRetainedSurfaceEvidence[] ExactRetainedSurfaceInventory =
     [
@@ -146,6 +148,39 @@ internal static class CredentialNativeQualificationRunner
         exception.SqliteErrorCode == 19
         && exception.SqliteExtendedErrorCode == 1811
         && string.Equals(exception.Message, RestoredGenerationRejectionMessage, StringComparison.Ordinal);
+
+    private static object? BuildSqliteFailureEvidence(Exception exception)
+    {
+        if (exception is not SqliteException sqlite) { return null; }
+        string classification;
+        string? retainedMessage;
+        if (sqlite.SqliteErrorCode == 19
+            && sqlite.SqliteExtendedErrorCode == 1811
+            && string.Equals(sqlite.Message, RestoreAuthorityTimeRegressionMessage, StringComparison.Ordinal))
+        {
+            classification = "credential-authority-time-regression";
+            retainedMessage = RestoreAuthorityTimeRegressionMessage;
+        }
+        else if (sqlite.SqliteErrorCode == 19
+            && sqlite.SqliteExtendedErrorCode == 1811
+            && string.Equals(sqlite.Message, RestoredGenerationRejectionMessage, StringComparison.Ordinal))
+        {
+            classification = "restored-generation-reactivation-rejected";
+            retainedMessage = RestoredGenerationRejectionMessage;
+        }
+        else
+        {
+            classification = "unclassified-redacted";
+            retainedMessage = null;
+        }
+        return new
+        {
+            primary_code = sqlite.SqliteErrorCode,
+            extended_code = sqlite.SqliteExtendedErrorCode,
+            classification,
+            message = retainedMessage,
+        };
+    }
 
     internal static async Task RunCleanupFailureWithArtifactsForTestAsync(
         string root,
@@ -385,6 +420,7 @@ internal static class CredentialNativeQualificationRunner
             manifest_id = manifestId,
             manifest_sha256 = manifestSha256,
             failure_type = failure.FailureType,
+            sqlite_failure = BuildSqliteFailureEvidence(failure.InnerException!),
             cleanup_confirmed = cleanupConfirmed,
             absence_confirmed = cleanupConfirmed || singleTargetAbsence,
             whole_namespace_absence_confirmed = false,

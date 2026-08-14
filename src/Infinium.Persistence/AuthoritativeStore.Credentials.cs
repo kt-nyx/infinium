@@ -256,10 +256,10 @@ public sealed partial class AuthoritativeStore
             current = profileIds.Select(GetCredentialProfile).ToList();
         }
         List<CredentialProfileProjection> recovered = [];
-        int sequence = 0;
         foreach (CredentialProfileProjection profile in current)
         {
-            DateTimeOffset transitionAt = now.AddTicks(++sequence);
+            DateTimeOffset authorityFloor = GetCredentialAuthorityTimeFloor(profile.ProfileId);
+            DateTimeOffset transitionAt = (now > authorityFloor ? now : authorityFloor).AddTicks(1);
             recovered.Add(ApplyCredentialTransition(new(
                 $"restore-recovery-{profile.ProfileId}-{profile.GenerationId}-{transitionAt.UtcTicks}",
                 profile.ProfileId,
@@ -276,6 +276,38 @@ public sealed partial class AuthoritativeStore
                 IncrementRevocationEpoch: true)));
         }
         return recovered;
+    }
+
+    private DateTimeOffset GetCredentialAuthorityTimeFloor(string profileId)
+    {
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT max(authority_time) FROM (
+                  SELECT i.created_at AS authority_time
+                  FROM provider_credential_intents i WHERE i.profile_id=$profile
+                  UNION ALL
+                  SELECT e.created_at
+                  FROM provider_credential_intent_events e
+                  JOIN provider_credential_intents i ON i.intent_id=e.intent_id
+                  WHERE i.profile_id=$profile
+                  UNION ALL
+                  SELECT p.updated_at
+                  FROM provider_profile_projection p WHERE p.profile_id=$profile);
+                """;
+            command.Parameters.AddWithValue("$profile", profileId);
+            object? value = command.ExecuteScalar();
+            if (value is not string authorityTime)
+            {
+                throw new InvalidDataException("Credential authority time is absent for a restored profile.");
+            }
+            return DateTimeOffset.Parse(
+                authorityTime,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind);
+        }
     }
 
     private CredentialProfileProjection GetCredentialProfileCore(string profileId, SqliteTransaction? transaction)
