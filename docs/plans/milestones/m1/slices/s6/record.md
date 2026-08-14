@@ -5631,3 +5631,37 @@ unproven targets. Any later qualification requires bounded non-native
 correction, fresh verification and independent review, and a fresh exact
 manifest and owner authority.
 WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/e3f76cd6-45c1-4e3a-a84b-fa3251b3cb60 sha256=9f43e5d9d7fb8b0cdba9195ba835631fa6073dff1c6ae86eb68a914b04c57db0 execution_head_commit=f0ee9814f8bd0100692dfa7b7cab83ed9181457f status=failed-primary-cleanup-confirmed native_calls=W7-R61-D7-F20-T95 cleanup_scope=ten-queued-exact-targets whole_namespace_absence=false namespace_blocked=true later_native_calls=0 evidence_sha256=18b4bd64d5ae32596330271e415b10a0a6d8516fded9dfc35bf1fee26dc7cd9f authority_lock_sha256=945d2bbf440af7d5a305ae4cbb4dee73636175ff679ac8582a28e84cd73e0e5d
+
+## WP4 `e3f76cd6` cleanup-only recovery preparation — 2026-08-14
+
+Standing owner cleanup authority permits a fresh one-shot recovery only for
+the two exact targets not covered by the terminal ten-target absence proof:
+`backup-new` fingerprint
+`b78f660da620c5feee10adff48401ac1b4bc3ec0daec2e35bc39b399d55b41b3`
+and `fake-dispatch` fingerprint
+`08e0f7330185d89fa471d83434e768a3d9d54961d325e5b44b5d84f664cc6b02`.
+The recovery must not write, enumerate, show UI, dispatch a provider, use a
+fallback, or perform DNS/network/billable work.
+
+The exact 3,123-byte recovery manifest is
+`infinium.m1-s6.wp4.credential-native-recovery/8b7fc811-7cd2-4c2a-abe1-506bd7b06bf5`,
+SHA-256
+`f24c6152b2c6a67ddb5f7c52ecf31ae91f7dc0954cfe22cdf2790f490dd97382`,
+bound to close-ready recovery commit
+`0b431a768fe6cba30b9527347f57128ca9053a13`, terminal record commit
+`e2de2ce63a13222784abbdc27d91abcdc0ed4d91`, failure evidence SHA-256
+`18b4bd64d5ae32596330271e415b10a0a6d8516fded9dfc35bf1fee26dc7cd9f`,
+and consumed authority-lock SHA-256
+`945d2bbf440af7d5a305ae4cbb4dee73636175ff679ac8582a28e84cd73e0e5d`.
+Its exact limits are one attempt, two targets, 120 seconds, CredReadW 6,
+CredDeleteW 2, CredFree 2, total native calls 10, and zero CredWriteW.
+
+The manifest validator, helper exact-target/schema branch, semantic evidence
+validator, no-native receipt reconstruction, actual prior artifact/lock and
+ten-target inventory gate, Layer 6 exact-path allowlist, and mutation tests are
+implemented. Focused authorization/security tests pass 28/28 and build-policy
+tests pass 8/8. Preparation performed zero Credential Manager, UI, DNS,
+network, provider, billable, private-fixture, archive, later-package, or push
+operations. Execution remains forbidden until a fresh independent pre-effect
+review accepts these exact committed bytes and the canonical standing-authority
+marker is appended at true EOF.
