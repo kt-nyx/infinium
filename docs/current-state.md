@@ -102,9 +102,19 @@ network path. Fresh pre-effect review accepted the exact bytes, and the
 recovery then completed once with W0/R2/D1/F1/T4: it freed and deleted the
 remaining `backup-new` credential and ended with exact `ERROR_NOT_FOUND`.
 Combined prior 11 plus recovery one proves all 12 targets absent; cleanup
-ambiguity is false and namespace reuse remains blocked. The next authorized
-work is non-native root-cause/evidence correction and fresh qualification
-preparation only. WP8 remains
+ambiguity is false and namespace reuse remains blocked. The bounded non-native
+root-cause correction is independently accepted at
+`3456fe02594fd365b1d2627dd08fad44fe0aee92`. The third helper's valid
+recovery metrics could exceed the coordinator's accidental 4 KiB reader cap;
+writer and reader now share a closed 64 KiB metrics bound, ambiguity retains
+its exact assignment and closed redacted validation stage, and helper
+containment/no-reuse is proven before any later cleanup call. Only the exact
+unadmitted restored-generation successor may use absence-only cleanup, without
+changing the authoritative projection. The next authorized work is
+`M1/S6/WP4` fresh WP4 qualification-manifest consumer binding and owner-review preparation only
+for fresh identity
+`076b981a-9d32-4e6a-af35-1e7017e0f833`; stop before any fresh manual/native
+qualification. WP8 remains
 blocked because its native WP4 prerequisite is not accepted. Plan acceptance permits automatic progression among named
 non-live packages only after each prerequisite package is independently
 accepted and this file is advanced to the exact next package. Production

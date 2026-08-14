@@ -6268,3 +6268,72 @@ zero repository-owned processes. The recovery identity, lock, output,
 namespace, and target are consumed forever and may not be retried or reused.
 
 WP4_RECOVERY_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-recovery/dd412ecc-3b2c-4628-8865-bc8574a357c7 sha256=09b6858eaf472038499f18654d2a2fc4ca0a32b2ed34cd1a192146f90755e183 execution_head_commit=29ef4ce3031b612ffd9fb3c8fca31a9191a4ec85 status=passed native_calls=4 cred_write_w=0 cred_read_w=2 cred_delete_w=1 cred_free=1 recovery_absence=1 prior_absence=11 combined_absence=12 cleanup_ambiguity=false namespace_reuse_blocked=true evidence_sha256=427d78e467fa0f26517d35abcb2c4405bbaf4db5a5845f278d9b584effdc271a receipt_sha256=eb4ec7b518329081830bceb3e3b4f3894dee74ed7d334eacb532ce72009dc429 lock_sha256=5f9420335ce08c482bf747cf43ac409bb3e13204a6910370c480f9caae00720e network_operations=0 dns_operations=0 provider_operations=0 billable_operations=0
+
+### WP4 post-4936 helper-evidence framing correction — 2026-08-14T19:49:17.7790253Z
+
+The bounded non-native correction is accepted at exact clean commit
+`3456fe02594fd365b1d2627dd08fad44fe0aee92`, descending from initial framing
+commit `06aab7b668b6d6525115708cc1e331e68c557f97`. The third manual Recover phase
+combines helper-owned entry cleanup/readiness evidence with a ten-call native
+trace. The helper's valid length-prefixed metrics can therefore exceed the
+coordinator reader's former accidental 4 KiB cap. Writer and reader now share
+an explicit 64 KiB closed metrics-frame bound, with zero and true oversize
+rejected. Future helper-evidence ambiguity retains the exact assignment and a
+closed secret-redacted validation stage without inner exception text.
+
+The exact restored-new-generation ambiguity may route only its unadmitted g002
+`cleanup-successor` through the existing exact-target absence-only helper path;
+the authoritative g001 recovery-required projection is not mutated. Proven
+helper containment and namespace reuse state are checked before any later
+helper or cleanup operation. Missing or failed containment terminates with
+namespace blocking and zero cleanup phases; successful exact cleanup retains
+the primary typed cause rather than falsely reporting cleanup ambiguity.
+
+Focused correction tests passed 4/4 and the complete supervisor class passed
+33/33. The first independent review found the pre-cleanup containment-ordering
+defect; the replacement corrected it and fresh re-review returned ACCEPT with
+no finding. Under exact SDK 10.0.303 the mandatory replacement floor passed:
+locked restore; Release build with zero warnings/errors; Unit 244 with one
+expected environment skip; Contract 141/141; Integration 125/125; Evaluation
+86 with eight expected skips; Security 167 with three expected skips; Fault
+108 with three expected skips; and unfiltered 666 with nine expected skips.
+Format, dependency manifest, documentation, analysis-pipeline `All`, and
+`git diff --check` passed. One concurrent Contract wrapper was mistakenly
+terminated by the read-only reviewer's process cleanup; that result was
+discarded and the clean replacement Contract run passed 141/141. Exact-root
+process count returned to zero. No UI, native credential, provider, DNS,
+network, billable, private-fixture, archive, later-package, or push effect
+occurred.
+
+### WP4 fresh post-correction authorization draft — 2026-08-14T19:49:17.7790253Z
+
+Draft manifest
+`infinium.m1-s6.wp4.credential-native-authorization/076b981a-9d32-4e6a-af35-1e7017e0f833`
+uses schema/consumer identity `1.5.0`, a fresh disjoint 12-target namespace,
+and expiry `2026-08-16T19:49:17.7790253Z`. It binds accepted correction
+`3456fe02594fd365b1d2627dd08fad44fe0aee92`, consumed 4936 manifest/evidence/
+lock, and accepted dd412 one-target recovery manifest/evidence/lock/receipt
+with combined 12/12 absence. The close-ready commit remains the all-zero draft
+placeholder and `execution_authorized=false`.
+
+The proposed command is
+`powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNative -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp4-native-076b981a`.
+This entry is preparation only. No owner marker, execution marker, fresh lock,
+output root, dialog, Credential Manager operation, or provider effect exists.
+Exact close-ready binding, final non-live checks, candidate-bound Layer 6, and
+fresh independent Windows credential/security review remain required before
+the manifest may be presented for owner acceptance.
+
+Preparation audit found that the first draft still admitted arbitrary
+self-consistent target tuples. The bounded correction now hard-binds the fresh
+namespace and every ordered alias/profile/generation/fingerprint tuple in the
+repository schema, semantic validator, and native-helper parser. A mutation
+that replaces the fresh crash tuple with a consumed but internally valid 4936
+tuple is rejected. The replacement draft validator passed; exact SDK 10.0.303
+Release build passed with zero warnings/errors; authorization plus BuildPolicy
+passed 39/39; the integration supervisor/consumer class passed 33/33; format,
+documentation, and diff checks passed. The first focused run exposed only a
+namespace-UUID punctuation mismatch in the new helper guard; the exact
+manifest spelling was then bound consistently and the replacement run passed.
+No fresh marker, lock, output, native operation, dialog, or external effect
+was created.

@@ -668,17 +668,17 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
     private const uint CredentialPersistLocalMachine = 2;
     private const int ErrorNotFound = 1168;
     private const string ExpectedSupersededManifestId =
-        "infinium.m1-s6.wp4.credential-native-authorization/e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe";
+        "infinium.m1-s6.wp4.credential-native-authorization/4936dcef-a0f4-4302-9899-0afd99b19799";
     private const string ExpectedSupersededManifestSha256 =
-        "c0e6aed84ca8d01a2722ff9970d52f816f47626f3e309cf9081b3c71b1245497";
+        "910ff1552d178bcfe5ff36fd9b618d187203c38c6b023d9610af5c702bdb3393";
     private const string ExpectedSupersededEvidenceSha256 =
-        "5b565888a412188f7c814c0d923e696e27d4135d7ebb23f5884ef7b2e3f228c7";
+        "0a10a873b7356612cd8ac25934c8fbf85ab0cae76f7aea42b2317421dd251674";
     private const string ExpectedSupersededAuthorityLockSha256 =
-        "4fc808d221d340eb6b145ceffa35a2472cd621102b0e0dc280a8dbb71f77ddd4";
+        "18ffe3e24687543c7c0d538ec98874245ef3fe0c3d2c26945d375b5e23604d02";
     private const string ExpectedCleanupRecoveryManifestSha256 =
-        "0fc3ab730fc7474292db69ee20b993505396e9b81c7041169d53380925790086";
+        "09b6858eaf472038499f18654d2a2fc4ca0a32b2ed34cd1a192146f90755e183";
     private const string ExpectedCleanupRecoveryEvidenceSha256 =
-        "ac83f37ecb0d262a92a240bb7377d266c70a82367a919e384e4be135333d9864";
+        "427d78e467fa0f26517d35abcb2c4405bbaf4db5a5845f278d9b584effdc271a";
     private WindowsCredentialFault fault;
     private int writeCount;
     private int readCount;
@@ -730,7 +730,7 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 expectedManifestId,
                 StringComparison.Ordinal)
                 || manifestRoot.GetProperty("schema_identity").GetString()
-                    != "infinium.repository.wp4-credential-native-authorization/1.4.0"
+                    != "infinium.repository.wp4-credential-native-authorization/1.5.0"
                 || manifestRoot.GetProperty("status").GetString() != "ready-for-owner-acceptance"
                 || manifestRoot.GetProperty("effect_authority").GetString()
                     != "none-until-owner-accepts-exact-manifest-bytes")
@@ -747,28 +747,58 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 || supersedes.GetProperty("namespace_disposition").GetString()
                     != "terminal-cleanup-confirmed-absent-never-reuse"
                 || cleanupRecovery.GetProperty("manifest_id").GetString()
-                    != "infinium.m1-s6.wp4.credential-native-recovery/6232bae5-f735-4db7-a74f-7ede9f67b752"
+                    != "infinium.m1-s6.wp4.credential-native-recovery/dd412ecc-3b2c-4628-8865-bc8574a357c7"
                 || cleanupRecovery.GetProperty("manifest_sha256").GetString()
                     != ExpectedCleanupRecoveryManifestSha256
                 || cleanupRecovery.GetProperty("evidence_sha256").GetString()
                     != ExpectedCleanupRecoveryEvidenceSha256
                 || cleanupRecovery.GetProperty("authority_lock_sha256").GetString()
-                    != "1a555e041d0edf9f4242071bc3549adce1bf71ac3e8255a8aa2d72579ec721ce"
+                    != "5f9420335ce08c482bf747cf43ac409bb3e13204a6910370c480f9caae00720e"
                 || cleanupRecovery.GetProperty("receipt_sha256").GetString()
-                    != "d356b06492ef2472d73e4ebaf6c923e730498108ad65d49e18b74ed22bb2c8a8"
+                    != "eb4ec7b518329081830bceb3e3b4f3894dee74ed7d334eacb532ce72009dc429"
                 || cleanupRecovery.GetProperty("combined_namespace_target_absence_count").GetInt32() != 12)
             {
                 throw new InvalidDataException("The native store manifest predecessor authority is not exact.");
             }
-            WindowsCredentialManagerStore store = new();
-            foreach (JsonElement item in manifestRoot.GetProperty("disposable_namespace")
-                .GetProperty("targets").EnumerateArray())
+            if (manifestRoot.GetProperty("disposable_namespace").GetProperty("namespace_id").GetString()
+                != "m1-s6-wp4-native-076b981a-9d32-4e6a-af35-1e7017e0f833")
             {
+                throw new InvalidDataException("The native store manifest namespace is not the exact fresh namespace.");
+            }
+            NativeTarget[] expectedTargets =
+            [
+                new("interactive-primary", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-interactive-primary", "g001", "04b35e2718e202cb0a6bfef233dbe033c791aa02b2261e1779813d310bd3baad"),
+                new("interactive-cancel", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-interactive-cancel", "g001", "24f709437c97a67819b06270d0d211aaae426bbfbd56f83774106bd2f7da5277"),
+                new("size-valid", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-size-valid", "g001", "6aa891fe3db76c45c994b7b7a461f5242621226a788c489d0bcecde87b78e2dd"),
+                new("size-oversize", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-size-oversize", "g001", "01338cb4af7abf7d50b49313cce237db80a389ba1ff2c01d23a8a96ff02d66f2"),
+                new("unavailable-store", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-unavailable", "g001", "a7af4cc90f3f3021cf2a7220f92d247165fcaaf1f6b41410ca2d34fd55582895"),
+                new("replacement-old", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-replacement", "g001", "e82ee891429ff57587ea0f7f35f6f5ef98ae96a9d5d75da5ad7ee716a645ae77"),
+                new("replacement-new", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-replacement", "g002", "fea103ab44d0057a2a9cc10de5792ffec891cc6fe17086fe960a979d87eb852a"),
+                new("revoke-delete", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-revoke-delete", "g001", "92cf677dd3dfc6509d75c9d502c12ae3d4b9295b2c25b4327b965f252b10649d"),
+                new("crash-restart", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-crash-restart", "g001", "c36ea4643f97ff6a68d1880445669f213e1ef1e2b71487b3179d6102a1ce0f95"),
+                new("backup-old", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-backup-restore", "g001", "1ce6dceb1deea0485f5c56b9dce06eb3d44cda389ff0805291a9719eb1de865f"),
+                new("backup-new", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-backup-restore", "g002", "11d51fa6e870709f346f61e931a91ab8cf5336b689f8ddcfc427283d71fb1d0a"),
+                new("fake-dispatch", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-fake-dispatch", "g001", "bcb55be3c8d4f1b89103d28cd5fa40d97fcdbc528ffd2f4513f4f3b12770c0b1"),
+            ];
+            JsonElement[] actualTargets = manifestRoot.GetProperty("disposable_namespace")
+                .GetProperty("targets").EnumerateArray().ToArray();
+            if (actualTargets.Length != expectedTargets.Length)
+            {
+                throw new InvalidDataException("The native store manifest target count is not exact.");
+            }
+            WindowsCredentialManagerStore store = new();
+            for (int index = 0; index < actualTargets.Length; index++)
+            {
+                JsonElement item = actualTargets[index];
                 NativeTarget target = new(
                     item.GetProperty("alias").GetString()!,
                     item.GetProperty("access_profile_id").GetString()!,
                     item.GetProperty("generation_id").GetString()!,
                     item.GetProperty("target_fingerprint_sha256").GetString()!);
+                if (target != expectedTargets[index])
+                {
+                    throw new InvalidDataException("The native store manifest target tuple is not exact or ordered.");
+                }
                 Validate(target);
                 if (!store.manifestTargets.TryAdd(new(target.AccessProfileId, target.GenerationId), target))
                 {
