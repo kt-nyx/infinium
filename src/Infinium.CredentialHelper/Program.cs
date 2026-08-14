@@ -189,6 +189,7 @@ if (args is ["--credential-native-request-handle", string nativeRequestHandle,
                 namespace_reuse_block_reason = store.NamespaceReuseBlockReason,
             });
             failureStage = "metrics-write";
+            _ = NativeHelperRuntimeMetricsProtocol.ValidateLength(checked((uint)metrics.Length));
             await response.WriteAsync(BitConverter.GetBytes(checked((uint)metrics.Length)), deadline.Token);
             await response.WriteAsync(metrics, deadline.Token);
             await response.FlushAsync(deadline.Token);

@@ -46,12 +46,25 @@ internal sealed class CredentialNativeHelperFailureException(
     internal void AttachContainment(NativeHelperFailureContainmentEvidence value) => Containment = value;
 }
 
-internal sealed class CredentialNativeHelperEvidenceAmbiguityException(string assignmentId, Exception innerException)
-    : Exception("The native helper failure envelope could not be independently validated.", innerException)
+internal sealed class CredentialNativeHelperEvidenceAmbiguityException(
+    string assignmentId,
+    string validationStage,
+    Exception innerException)
+    : Exception("The native helper evidence could not be independently validated.", innerException)
 {
     internal string AssignmentId { get; } = assignmentId;
+    internal string ValidationStage { get; } = validationStage is
+        "terminal-frame" or "staged-response" or "runtime-metrics"
+        or "native-failure-envelope-validation" or "native-failure-envelope-read"
+        or "test-injected"
+            ? validationStage
+            : throw new ArgumentOutOfRangeException(
+                nameof(validationStage), validationStage, "Unknown native helper evidence validation stage.");
     internal NativeHelperFailureContainmentEvidence? Containment { get; private set; }
     internal void AttachContainment(NativeHelperFailureContainmentEvidence value) => Containment = value;
+
+    internal CredentialNativeHelperEvidenceAmbiguityException(string assignmentId, Exception innerException)
+        : this(assignmentId, "test-injected", innerException) { }
 }
 
 internal sealed record NativeHelperFailureContainmentEvidence(
@@ -405,28 +418,27 @@ public sealed class OneShotCredentialHelperLauncher
             {
                 await HelperPrivateProtocolV2.WriteAsync(request, finalRevalidation, bounded.Token).ConfigureAwait(false);
             }
-            HelperPrivateFrameV2 terminal;
-            byte[] stagedResponse;
-            HelperRuntimeMetrics metrics;
-            try
-            {
-                terminal = await ReadTerminalOrFailureAsync(
+            HelperPrivateFrameV2 terminal = await ReadQualificationEvidenceAsync(
+                assignment.Assignment.AssignmentId,
+                "terminal-frame",
+                nativeManifestPath is not null,
+                () => ReadTerminalOrFailureAsync(
                     response, bootstrap.Bootstrap, assignment.Assignment, nativeManifestPath, processId,
-                    finalRevalidation is null ? 3UL : 4UL, bounded.Token).ConfigureAwait(false);
-                stagedResponse = await ReadStagedResponseAsync(
+                    finalRevalidation is null ? 3UL : 4UL, bounded.Token)).ConfigureAwait(false);
+            byte[] stagedResponse = await ReadQualificationEvidenceAsync(
+                assignment.Assignment.AssignmentId,
+                "staged-response",
+                nativeManifestPath is not null,
+                () => ReadStagedResponseAsync(
                     response, bootstrap.Bootstrap, assignment.Assignment, nativeManifestPath, processId, bounded.Token)
-                    .ConfigureAwait(false);
-                metrics = await ReadMetricsAsync(
+                ).ConfigureAwait(false);
+            HelperRuntimeMetrics metrics = await ReadQualificationEvidenceAsync(
+                assignment.Assignment.AssignmentId,
+                "runtime-metrics",
+                nativeManifestPath is not null,
+                () => ReadMetricsAsync(
                     response, bootstrap.Bootstrap, assignment.Assignment, nativeManifestPath, processId, bounded.Token)
-                    .ConfigureAwait(false);
-            }
-            catch (Exception exception) when (nativeManifestPath is not null
-                && exception is (EndOfStreamException or InvalidDataException or JsonException
-                    or NotSupportedException or FormatException or OverflowException))
-            {
-                throw new CredentialNativeHelperEvidenceAmbiguityException(
-                    assignment.Assignment.AssignmentId, exception);
-            }
+                ).ConfigureAwait(false);
             request.Close();
             await contained.Process.WaitForExitAsync(bounded.Token).ConfigureAwait(false);
             bool expectedContainedCrash = nativeManifestPath is not null
@@ -522,6 +534,25 @@ public sealed class OneShotCredentialHelperLauncher
         }
     }
 
+    internal static async Task<T> ReadQualificationEvidenceAsync<T>(
+        string assignmentId,
+        string validationStage,
+        bool retainAmbiguity,
+        Func<Task<T>> read)
+    {
+        try
+        {
+            return await read().ConfigureAwait(false);
+        }
+        catch (Exception exception) when (retainAmbiguity
+            && exception is (EndOfStreamException or InvalidDataException or JsonException
+                or NotSupportedException or FormatException or OverflowException))
+        {
+            throw new CredentialNativeHelperEvidenceAmbiguityException(
+                assignmentId, validationStage, exception);
+        }
+    }
+
     private static async Task<HelperRuntimeMetrics> ReadMetricsAsync(
         Stream response,
         HelperBootstrapV2 bootstrap,
@@ -538,11 +569,7 @@ public sealed class OneShotCredentialHelperLauncher
                 response, bootstrap, assignment, nativeManifestPath, helperProcessId, cancellationToken).ConfigureAwait(false);
         }
         uint length = BinaryPrimitives.ReadUInt32LittleEndian(prefix);
-        if (length is 0 or > 4096)
-        {
-            throw new InvalidDataException("The helper runtime measurement record is out of bounds.");
-        }
-        byte[] bytes = new byte[length];
+        byte[] bytes = new byte[NativeHelperRuntimeMetricsProtocol.ValidateLength(length)];
         await response.ReadExactlyAsync(bytes, cancellationToken).ConfigureAwait(false);
         using JsonDocument document = JsonDocument.Parse(bytes);
         JsonElement root = document.RootElement;
@@ -635,7 +662,8 @@ public sealed class OneShotCredentialHelperLauncher
         catch (Exception exception) when (exception is InvalidDataException or JsonException
             or KeyNotFoundException or FormatException or OverflowException)
         {
-            return new CredentialNativeHelperEvidenceAmbiguityException(assignment.AssignmentId, exception);
+            return new CredentialNativeHelperEvidenceAmbiguityException(
+                assignment.AssignmentId, "native-failure-envelope-validation", exception);
         }
     }
 
@@ -656,7 +684,8 @@ public sealed class OneShotCredentialHelperLauncher
         catch (Exception exception) when (exception is InvalidDataException or EndOfStreamException
             or JsonException or NotSupportedException or FormatException or OverflowException)
         {
-            return new CredentialNativeHelperEvidenceAmbiguityException(assignment.AssignmentId, exception);
+            return new CredentialNativeHelperEvidenceAmbiguityException(
+                assignment.AssignmentId, "native-failure-envelope-read", exception);
         }
     }
 

@@ -283,6 +283,52 @@ public sealed class CredentialNativeQualificationSupervisorTests
     [TestMethod]
     [TestCategory("Integration")]
     [TestCategory("Security")]
+    public async Task NativeQualificationEvidenceReadsRetainExactClosedStageAndRedactInnerDetail()
+    {
+        const string assignmentId = "wp4-v2/backup-restore-reauthentication/restored-new-generation";
+        const string sensitiveDetail = "synthetic sensitive framing detail";
+        foreach (string stage in new[] { "terminal-frame", "staged-response", "runtime-metrics" })
+        {
+            CredentialNativeHelperEvidenceAmbiguityException ambiguity =
+                await Assert.ThrowsExactlyAsync<CredentialNativeHelperEvidenceAmbiguityException>(() =>
+                    OneShotCredentialHelperLauncher.ReadQualificationEvidenceAsync(
+                        assignmentId,
+                        stage,
+                        retainAmbiguity: true,
+                        () => Task.FromException<byte[]>(new InvalidDataException(sensitiveDetail))));
+            Assert.AreEqual(assignmentId, ambiguity.AssignmentId);
+            Assert.AreEqual(stage, ambiguity.ValidationStage);
+            Assert.IsFalse(ambiguity.Message.Contains(sensitiveDetail, StringComparison.Ordinal));
+        }
+
+        InvalidDataException original = new(sensitiveDetail);
+        Assert.AreSame(original, await Assert.ThrowsExactlyAsync<InvalidDataException>(() =>
+            OneShotCredentialHelperLauncher.ReadQualificationEvidenceAsync(
+                assignmentId,
+                "terminal-frame",
+                retainAmbiguity: false,
+                () => Task.FromException<byte[]>(original))));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            new CredentialNativeHelperEvidenceAmbiguityException(
+                assignmentId, "unknown-stage", new InvalidDataException()));
+    }
+
+    [TestMethod]
+    public void RuntimeMetricsFramingAcceptsRecoveryEvidenceBeyondLegacyFourKiBBoundOnlyWithinClosedMaximum()
+    {
+        Assert.AreEqual(4097, NativeHelperRuntimeMetricsProtocol.ValidateLength(4097));
+        Assert.AreEqual(NativeHelperRuntimeMetricsProtocol.MaximumBytes,
+            NativeHelperRuntimeMetricsProtocol.ValidateLength(NativeHelperRuntimeMetricsProtocol.MaximumBytes));
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            NativeHelperRuntimeMetricsProtocol.ValidateLength(0));
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            NativeHelperRuntimeMetricsProtocol.ValidateLength(
+                checked((uint)NativeHelperRuntimeMetricsProtocol.MaximumBytes + 1U)));
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
     public async Task CleanupAmbiguityRetainsPriorPrimaryAndTerminalCleanupCausesSeparately()
     {
         string root = Path.Combine(
@@ -1073,6 +1119,92 @@ public sealed class CredentialNativeQualificationSupervisorTests
         Assert.IsFalse(CredentialNativeQualificationRunner.IsExpectedRestoredGenerationRejectionForTest(unexpected));
         Assert.AreSame(unexpected, Assert.ThrowsExactly<Microsoft.Data.Sqlite.SqliteException>(() =>
             CredentialNativeQualificationRunner.ApplyRestoredGenerationRejectionFilterForTest(unexpected)));
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task RestoredGenerationEvidenceAmbiguityUsesExactAbsenceCleanupAndRetainsRedactedCause()
+    {
+        const string assignmentId =
+            "wp4-v2/backup-restore-reauthentication/restored-new-generation";
+        const string secretBearingDetail = "synthetic secret-bearing validation detail";
+        CredentialNativeHelperEvidenceAmbiguityException ambiguity = new(
+            assignmentId,
+            "staged-response",
+            new InvalidDataException(secretBearingDetail));
+        ambiguity.AttachContainment(new(48211, 0, 1, 0, 0, true));
+        string root = Path.Combine(
+            Path.GetTempPath(), "Infinium-Wp4-Restored-Ambiguity-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        CredentialNativePrimaryFailureException failure =
+            await Assert.ThrowsExactlyAsync<CredentialNativePrimaryFailureException>(() =>
+                CredentialNativeQualificationRunner.RunWithLauncherForTestAsync(
+                    root,
+                    Launcher(Path.Combine(root, "fake-store")),
+                    AllTargetIdentities(),
+                    BaseTime,
+                    ambiguity));
+
+        Assert.AreSame(ambiguity, failure.InnerException);
+        Assert.AreEqual("exact-target-cleanup-confirmed", failure.CleanupDisposition);
+        Assert.IsFalse(failure.Evidence.CleanupAmbiguous);
+        Assert.IsFalse(failure.Evidence.NamespaceBlocked);
+        CredentialNativeQualificationScenarioEvidence backup = failure.Evidence.Scenarios
+            .Single(item => item.ScenarioId == "backup-restore-reauthentication");
+        Assert.IsFalse(backup.Phases.Any(item => item.PhaseId == "restored-new-generation"));
+        CredentialNativeQualificationPhaseEvidence cleanup = backup.Phases
+            .Single(item => item.PhaseId == "cleanup-successor");
+        Assert.AreEqual(HelperOutcomeV2.Completed, cleanup.Outcome);
+        Assert.AreEqual("g002", cleanup.GenerationId);
+        Assert.IsNull(cleanup.Lifecycle);
+        Assert.AreEqual(0, DeterministicFakeSecureStore.NativeOperationCount);
+
+        CredentialNativePrimaryFailureException serializable = new(
+            failure.FailureType,
+            "source-proven-pre-store-known-zero",
+            failure.Evidence,
+            ambiguity);
+        string serialized = CredentialNativeQualificationRunner.SerializePrimaryFailureArtifactForTest(
+            "manifest/test", new string('a', 64), serializable);
+        Assert.IsFalse(serialized.Contains(secretBearingDetail, StringComparison.Ordinal));
+        using JsonDocument artifact = JsonDocument.Parse(serialized);
+        JsonElement retained = artifact.RootElement.GetProperty("helper_evidence_ambiguity");
+        Assert.AreEqual(assignmentId, retained.GetProperty("assignment_id").GetString());
+        Assert.AreEqual("staged-response", retained.GetProperty("validation_stage").GetString());
+        Assert.AreEqual("typed-helper-evidence-ambiguity",
+            artifact.RootElement.GetProperty("terminal_failure").GetProperty("classification").GetString());
+        Assert.IsTrue(artifact.RootElement.GetProperty("terminal_failure")
+            .GetProperty("helper_evidence_ambiguity_containment")
+            .GetProperty("process_tree_terminated").GetBoolean());
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task RestoredGenerationEvidenceAmbiguityRequiresProvenHelperContainment()
+    {
+        CredentialNativeHelperEvidenceAmbiguityException ambiguity = new(
+            "wp4-v2/backup-restore-reauthentication/restored-new-generation",
+            "runtime-metrics",
+            new EndOfStreamException("synthetic truncated metrics"));
+        string root = Path.Combine(
+            Path.GetTempPath(), "Infinium-Wp4-Restored-Ambiguity-Uncontained-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        CredentialNativeCleanupAmbiguityException failure =
+            await Assert.ThrowsExactlyAsync<CredentialNativeCleanupAmbiguityException>(() =>
+                CredentialNativeQualificationRunner.RunWithLauncherForTestAsync(
+                    root,
+                    Launcher(Path.Combine(root, "fake-store")),
+                    AllTargetIdentities(),
+                    BaseTime,
+                    ambiguity));
+
+        Assert.AreEqual("helper-containment-unproven", failure.Reason);
+        Assert.AreSame(ambiguity, failure.InnerException);
+        Assert.IsTrue(failure.Evidence.CleanupAmbiguous);
+        Assert.IsTrue(failure.Evidence.NamespaceBlocked);
+        Assert.AreEqual(0, DeterministicFakeSecureStore.NativeOperationCount);
     }
 
     [TestMethod]

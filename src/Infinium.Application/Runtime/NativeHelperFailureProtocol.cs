@@ -28,6 +28,21 @@ public sealed record NativeHelperFailureEnvelope(
     bool NamespaceReuseBlocked,
     string? NamespaceReuseBlockReason);
 
+public static class NativeHelperRuntimeMetricsProtocol
+{
+    public const int MaximumBytes = 64 * 1024;
+
+    public static int ValidateLength(uint length)
+    {
+        if (length is 0 or > MaximumBytes)
+        {
+            throw new InvalidDataException(
+                "The native helper runtime measurement record is outside its closed byte bound.");
+        }
+        return checked((int)length);
+    }
+}
+
 public static class NativeHelperFailureProtocol
 {
     public const int MaximumBytes = 64 * 1024;

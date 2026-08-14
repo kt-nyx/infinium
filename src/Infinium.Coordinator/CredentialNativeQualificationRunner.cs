@@ -201,6 +201,11 @@ internal static class CredentialNativeQualificationRunner
             sqlite_failure = BuildSqliteFailureEvidence(exception),
             helper_failure = helperFailure?.Evidence,
             helper_failure_containment = helperFailure?.Containment,
+            helper_evidence_ambiguity = helperEvidenceAmbiguity is null ? null : new
+            {
+                assignment_id = helperEvidenceAmbiguity.AssignmentId,
+                validation_stage = helperEvidenceAmbiguity.ValidationStage,
+            },
             helper_evidence_ambiguity_containment = helperEvidenceAmbiguity?.Containment,
         };
     }
@@ -512,6 +517,8 @@ internal static class CredentialNativeQualificationRunner
         }
         CredentialNativeHelperFailureException? helperFailure =
             failure.InnerException as CredentialNativeHelperFailureException;
+        CredentialNativeHelperEvidenceAmbiguityException? helperEvidenceAmbiguity =
+            failure.InnerException as CredentialNativeHelperEvidenceAmbiguityException;
         bool cleanupConfirmed = failure.CleanupDisposition == "exact-target-cleanup-confirmed";
         bool singleTargetAbsence = failure.CleanupDisposition == "trace-proven-preflight-absence";
         string[] provenTargetFingerprints = cleanupConfirmed
@@ -544,6 +551,7 @@ internal static class CredentialNativeQualificationRunner
             manifest_id = manifestId,
             manifest_sha256 = manifestSha256,
             failure_type = failure.FailureType,
+            terminal_failure = BuildTerminalFailureEvidence(failure.InnerException),
             sqlite_failure = BuildSqliteFailureEvidence(failure.InnerException!),
             cleanup_confirmed = cleanupConfirmed,
             absence_confirmed = cleanupConfirmed || singleTargetAbsence,
@@ -571,6 +579,12 @@ internal static class CredentialNativeQualificationRunner
             later_native_calls = 0,
             helper_failure = helperFailure?.Evidence,
             helper_failure_containment = helperFailure?.Containment,
+            helper_evidence_ambiguity = helperEvidenceAmbiguity is null ? null : new
+            {
+                assignment_id = helperEvidenceAmbiguity.AssignmentId,
+                validation_stage = helperEvidenceAmbiguity.ValidationStage,
+            },
+            helper_evidence_ambiguity_containment = helperEvidenceAmbiguity?.Containment,
             evidence = failure.Evidence,
             disposition = "terminal-fresh-owner-authority-required",
         };
@@ -745,7 +759,14 @@ internal static class CredentialNativeQualificationRunner
                     HelperPrivateFrameV2 cleanupBootstrap = Bootstrap(target, target, NextNonce());
                     HelperPrivateFrameV2 cleanupAssignment = Assignment(
                         scenario, phase, target, target, target.GenerationId is "g002" ? 2UL : 1UL);
-                    if (phase is "cleanup-predecessor" or "cleanup-restored-predecessor")
+                    bool unadmittedRestoredSuccessor =
+                        primaryFailure is CredentialNativeHelperEvidenceAmbiguityException restoredEvidenceAmbiguity
+                        && restoredEvidenceAmbiguity.AssignmentId ==
+                            "wp4-v2/backup-restore-reauthentication/restored-new-generation"
+                        && scenario == "backup-restore-reauthentication"
+                        && phase == "cleanup-successor";
+                    if (phase is "cleanup-predecessor" or "cleanup-restored-predecessor"
+                        || unadmittedRestoredSuccessor)
                     {
                         await supervisor.ExecuteAbsenceOnlyCleanupPhaseAsync(
                             scenario, phase, cleanupBootstrap, cleanupAssignment, NextTime(), CancellationToken.None)
@@ -776,13 +797,19 @@ internal static class CredentialNativeQualificationRunner
             }
             if (primaryFailure is CredentialNativeHelperEvidenceAmbiguityException evidenceAmbiguity)
             {
-                supervisor.RecordTerminalCleanupAmbiguity(
-                    evidenceAmbiguity.AssignmentId, "helper-failure-evidence-invalid");
-                throw new CredentialNativeCleanupAmbiguityException(
-                    evidenceAmbiguity.AssignmentId,
-                    "helper-failure-evidence-invalid",
-                    supervisor.CaptureTerminalFailure(),
-                    evidenceAmbiguity);
+                if (evidenceAmbiguity.Containment is not
+                    { ProcessId: > 0, ProcessTreeTerminated: true, ProcessTreeSurvivorCount: 0 } containment
+                    || containment.TotalContainedProcessCount < 1
+                    || containment.ActiveProcessCountBeforeJobClose < 0)
+                {
+                    supervisor.RecordTerminalCleanupAmbiguity(
+                        evidenceAmbiguity.AssignmentId, "helper-containment-unproven");
+                    throw new CredentialNativeCleanupAmbiguityException(
+                        evidenceAmbiguity.AssignmentId,
+                        "helper-containment-unproven",
+                        supervisor.CaptureTerminalFailure(),
+                        evidenceAmbiguity);
+                }
             }
             if (primaryFailure is CredentialNativeHelperFailureException helperFailure
                 && helperFailure.Evidence.NamespaceReuseBlocked)
@@ -822,6 +849,11 @@ internal static class CredentialNativeQualificationRunner
                             : cleanup.Count > 0
                                 ? "exact-target-cleanup-confirmed"
                                 : null;
+                }
+                else if (primaryFailure is CredentialNativeHelperEvidenceAmbiguityException
+                    && cleanup.Count > 0)
+                {
+                    cleanupDisposition = "exact-target-cleanup-confirmed";
                 }
                 else if (cleanup.Count > 0)
                 {
@@ -874,12 +906,7 @@ internal static class CredentialNativeQualificationRunner
             SeedProfile(context.Store, target);
             cleanup.Add((scenario, context, target));
             supervisor.RebindCoordinator(context.Coordinator);
-            if (injectedPrimaryFailure is not null)
-            {
-                Exception failure = injectedPrimaryFailure;
-                injectedPrimaryFailure = null;
-                throw failure;
-            }
+            ThrowInjectedPrimaryFailureIfCurrent(scenario, phase);
             await supervisor.ExecuteCredentialTransitionPhaseAsync(
                 scenario, phase, Attempt(scenario, phase), Bootstrap(target, target, NextNonce()),
                 Assignment(scenario, phase, target, target, 1), NextTime(), token).ConfigureAwait(false);
@@ -1037,6 +1064,8 @@ internal static class CredentialNativeQualificationRunner
             }
             restored.Store.AddCredentialGeneration(oldTarget.ProfileId, newTarget.GenerationId, 2, restoredProjection.RevocationEpoch, NextTime());
             supervisor.RebindCoordinator(restored.Coordinator);
+            ThrowInjectedPrimaryFailureIfCurrent(
+                "backup-restore-reauthentication", "restored-new-generation");
             await Phase(supervisor, "backup-restore-reauthentication", "restored-new-generation", oldTarget, newTarget, 2, token);
             BackupEvidence = new
             {
@@ -1051,6 +1080,19 @@ internal static class CredentialNativeQualificationRunner
                 raw_target_absent = rawTargetAbsent,
                 raw_target_scan_encodings = new[] { "utf-8", "utf-16le" },
             };
+        }
+
+        private void ThrowInjectedPrimaryFailureIfCurrent(string scenario, string phase)
+        {
+            if (injectedPrimaryFailure is null) { return; }
+            if (injectedPrimaryFailure is CredentialNativeHelperEvidenceAmbiguityException evidenceAmbiguity
+                && evidenceAmbiguity.AssignmentId != $"wp4-v2/{scenario}/{phase}")
+            {
+                return;
+            }
+            Exception failure = injectedPrimaryFailure;
+            injectedPrimaryFailure = null;
+            throw failure;
         }
 
         private async Task FakeDispatch(CredentialNativeQualificationSupervisor supervisor, CancellationToken token)
