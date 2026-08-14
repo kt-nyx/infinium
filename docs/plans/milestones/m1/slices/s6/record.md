@@ -6534,3 +6534,38 @@ read-first/delete-if-found/read-after/free only, no UI, enumeration, fallback,
 provider, or network path, terminal stop on first ambiguity, and permanent
 namespace non-reuse. No recovery or later native call is authorized by this
 audit correction.
+
+### 2026-08-14 WP4 `076b981a` all-target recovery preparation
+
+The independently accepted audit requires conservative cleanup of all 12
+ordered qualification targets because the final canonical trace and
+per-target absence array were not retained. A new cleanup-only recovery draft
+was prepared as
+`infinium.m1-s6.wp4.credential-native-recovery/040817c8-0a87-480a-915c-71dc2fe54da3`.
+Draft SHA-256 `3c20c49b4b21a7d16256f7ecacf520acb36539067bbb021099bfff4a1d07d010`
+binds the exact failed manifest/execution, terminal documentation, consumed
+lock, typed stderr, success summary, backup metadata, all 27 helper receipts,
+the three manual receipt hashes, the complete 75-file retained output
+inventory, and the exact absence of final evidence artifacts. It credits zero
+prior per-target absence.
+
+The native boundary is cleanup-only and exact-target: W0, only
+`CredReadW`/`CredDeleteW`/`CredFree`, no UI, enumeration, fallback, provider,
+or network path, one attempt, 120 seconds, and exact maxima
+R24/D12/F12/T48. Each target admits only one of two closed grammars:
+`Read(ERROR_NOT_FOUND)` or
+`Read(success), Free, Delete(success|ERROR_NOT_FOUND), Read(ERROR_NOT_FOUND)`.
+The helper and v2 evidence validator preserve manifest order, exact free
+pairing, terminal absence, multi-artifact lineage, no ambiguity, permanent
+namespace non-reuse, and zero external operations. The exact output root is
+rejected before directory creation when it differs. A no-native CreateNew
+receipt reconstruction path is bound to immutable post-effect inputs.
+
+Release build passed with zero warnings/errors. The focused authorization,
+security, mutation, receipt reconstruction, and build-policy filter passed
+41/41. The draft semantic validator passes with
+`execution_authorized=false`; output and one-shot lock are absent, the worktree
+had no repository-owned .NET/helper process after build-server shutdown, and
+no native credential, UI, provider, DNS, network, billable, private, or archive
+effect occurred. This draft grants no recovery authority until it is committed,
+bound to its exact close-ready commit, and independently accepted pre-effect.

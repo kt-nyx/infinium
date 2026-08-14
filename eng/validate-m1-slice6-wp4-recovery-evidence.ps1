@@ -30,11 +30,17 @@ $isE6Recovery =
 $is4936Recovery =
     $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.4.0' -and
     $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/dd412ecc-3b2c-4628-8865-bc8574a357c7'
-$isCurrentRecovery = $isAd876Recovery -or $isE3Recovery -or $isE6Recovery -or $is4936Recovery
+$is076bRecovery =
+    $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.5.0' -and
+    $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/040817c8-0a87-480a-915c-71dc2fe54da3'
+$isCurrentRecovery = $isAd876Recovery -or $isE3Recovery -or $isE6Recovery -or $is4936Recovery -or $is076bRecovery
 $isLegacyRecovery =
     $manifest.schema_identity -ceq 'infinium.repository.wp4-credential-native-recovery/1.0.0' -and
     $manifest.manifest_id -ceq 'infinium.m1-s6.wp4.credential-native-recovery/89baee92-14d6-4f2b-a970-0fe6be15c54c'
-if ($evidence.schema -cne 'infinium.m1-s6.wp4.credential-native-recovery-evidence/v1' -or
+$expectedEvidenceSchema = if ($is076bRecovery) {
+    'infinium.m1-s6.wp4.credential-native-recovery-evidence/v2'
+} else { 'infinium.m1-s6.wp4.credential-native-recovery-evidence/v1' }
+if ($evidence.schema -cne $expectedEvidenceSchema -or
     $evidence.manifest_id -cne $ManifestId -or
     $evidence.manifest_sha256 -cne $ManifestSha256 -or
     $evidence.status -cne 'passed' -or
@@ -51,12 +57,25 @@ if ($isCurrentRecovery) {
         $evidence.PSObject.Properties.Name -notcontains 'namespace_disposition' -or
         [bool]$evidence.cleanup_ambiguity -or -not [bool]$evidence.namespace_reuse_blocked -or
         $evidence.namespace_disposition -cne 'cleanup-confirmed-absent-never-reuse' -or
-        $evidence.prior_terminal_evidence_sha256 -cne [string]$manifest.binding.terminal_evidence_sha256 -or
         $evidence.prior_authority_lock_sha256 -cne [string]$manifest.binding.consumed_lock_sha256 -or
         [int]$evidence.prior_exact_absence_count -ne [int]$manifest.binding.prior_exact_absence_count -or
         [int]$evidence.combined_namespace_target_absence_count -ne
             ([int]$manifest.binding.prior_exact_absence_count + [int]$manifest.limits.targets)) {
         throw 'Current recovery terminal namespace evidence differs.'
+    }
+    if ($is076bRecovery) {
+        if ($null -ne $evidence.prior_terminal_evidence_sha256 -or
+            $evidence.prior_terminal_artifact_kind -cne [string]$manifest.binding.terminal_artifact_kind -or
+            $evidence.prior_terminal_artifact_sha256 -cne [string]$manifest.binding.terminal_artifact_sha256 -or
+            $evidence.prior_success_summary_sha256 -cne [string]$manifest.binding.success_summary_sha256 -or
+            $evidence.prior_backup_metadata_sha256 -cne [string]$manifest.binding.backup_metadata_sha256 -or
+            $evidence.prior_helper_receipt_inventory_sha256 -cne [string]$manifest.binding.helper_receipt_inventory_sha256 -or
+            $evidence.prior_output_inventory_sha256 -cne [string]$manifest.binding.output_inventory_sha256) {
+            throw '076b981a recovery multi-artifact lineage differs.'
+        }
+    } elseif ($evidence.prior_terminal_evidence_sha256 -cne
+        [string]$manifest.binding.terminal_evidence_sha256) {
+        throw 'Current recovery prior terminal evidence differs.'
     }
 } elseif ($evidence.PSObject.Properties.Name -notcontains 'namespace_blocked' -or
     [bool]$evidence.namespace_blocked) {
@@ -197,6 +216,23 @@ foreach ($fingerprint in $knownFingerprints) {
         $lastByTarget[[string]$fingerprint].operation -cne 'CredReadW' -or
         $lastByTarget[[string]$fingerprint].result -cne 'ERROR_NOT_FOUND') {
         throw 'Recovery terminal per-target absence trace failed.'
+    }
+}
+
+if ($is076bRecovery) {
+    foreach ($fingerprint in $expectedFingerprints) {
+        $targetTrace = @($trace | Where-Object { $_.target_fingerprint_sha256 -ceq $fingerprint })
+        $operations = @($targetTrace.operation)
+        $results = @($targetTrace.result)
+        $absentGrammar = $targetTrace.Count -eq 1 -and
+            $operations[0] -ceq 'CredReadW' -and $results[0] -ceq 'ERROR_NOT_FOUND'
+        $presentGrammar = $targetTrace.Count -eq 4 -and
+            (($operations -join '|') -ceq 'CredReadW|CredFree|CredDeleteW|CredReadW') -and
+            $results[0] -ceq 'success' -and $results[1] -ceq 'released' -and
+            $results[2] -in @('success', 'ERROR_NOT_FOUND') -and $results[3] -ceq 'ERROR_NOT_FOUND'
+        if (-not $absentGrammar -and -not $presentGrammar) {
+            throw '076b981a recovery per-target call grammar differs from exact authority.'
+        }
     }
 }
 

@@ -68,6 +68,21 @@ if ($Gate -eq 'CredentialNative') {
         throw 'CredentialNative requires the exact fresh output root bound by the accepted manifest.'
     }
 }
+if ($Gate -eq 'CredentialNativeRecovery' -and
+    -not [string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
+    $resolvedRecoveryManifest = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $AuthorizationManifest))
+    $expected076bRecoveryManifest = [System.IO.Path]::GetFullPath((Join-Path $repoRoot `
+        'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.076b981a.v1.json'))
+    if ([string]::Equals($resolvedRecoveryManifest, $expected076bRecoveryManifest,
+            [StringComparison]::OrdinalIgnoreCase)) {
+        $expected076bRecoveryOutputRoot = [System.IO.Path]::GetFullPath((Join-Path $repoRoot `
+            'artifacts/m1-slice6/wp4-native-recovery-040817c8'))
+        if (-not [string]::Equals($resolvedOutputRoot, $expected076bRecoveryOutputRoot,
+                [StringComparison]::OrdinalIgnoreCase)) {
+            throw '076b981a CredentialNativeRecovery requires the exact fresh output root bound by the accepted manifest.'
+        }
+    }
+}
 $outputRootExistedBeforeInvocation = Test-Path -LiteralPath $resolvedOutputRoot
 $outputRootHadEntriesBeforeInvocation = $outputRootExistedBeforeInvocation -and
     $null -ne (Get-ChildItem -LiteralPath $resolvedOutputRoot -Force | Select-Object -First 1)
@@ -230,6 +245,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'contracts/repository/wp4-credential-native-recovery.e3f76cd6.v1.schema.json',
         'contracts/repository/wp4-credential-native-recovery.e6e04651.v1.schema.json',
         'contracts/repository/wp4-credential-native-recovery.4936dcef.v1.schema.json',
+        'contracts/repository/wp4-credential-native-recovery.076b981a.v1.schema.json',
         'dependencies/README.md',
         'dependencies/dependency-curation.json',
         'dependencies/dependency-manifest.json',
@@ -246,6 +262,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e3f76cd6.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e6e04651.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.4936dcef.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.076b981a.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.post-wp7.json',
         'docs/research/investigations/README.md',
         'docs/research/investigations/RESEARCH-0055-slice6-local-input-bound-policy.md',
@@ -260,11 +277,13 @@ function Test-Wp1AllowedPath([string] $Path) {
         'eng/validate-m1-slice6-wp4-recovery-e3f76cd6.ps1',
         'eng/validate-m1-slice6-wp4-recovery-e6e04651.ps1',
         'eng/validate-m1-slice6-wp4-recovery-4936dcef.ps1',
+        'eng/validate-m1-slice6-wp4-recovery-076b981a.ps1',
         'eng/validate-m1-slice6-wp4-recovery-evidence.ps1',
         'eng/reconstruct-m1-slice6-wp4-recovery-receipt.ps1',
         'eng/reconstruct-m1-slice6-wp4-recovery-ad876b9a-receipt.ps1',
         'eng/reconstruct-m1-slice6-wp4-recovery-e3f76cd6-receipt.ps1',
         'eng/reconstruct-m1-slice6-wp4-recovery-e6e04651-receipt.ps1',
+        'eng/reconstruct-m1-slice6-wp4-recovery-076b981a-receipt.ps1',
         'eng/verify-m1-slice6.ps1',
         'eng/verify-m1-slice6-wp3-upgrade.ps1',
         'fixtures/public/public-fixture-registry.v1.json',
@@ -1791,8 +1810,20 @@ function Invoke-CredentialNativeRecoveryGate {
     $expectedE3=[IO.Path]::GetFullPath((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e3f76cd6.v1.json'))
     $expectedE6=[IO.Path]::GetFullPath((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e6e04651.v1.json'))
     $expected4936=[IO.Path]::GetFullPath((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.4936dcef.v1.json'))
+    $expected076b=[IO.Path]::GetFullPath((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.076b981a.v1.json'))
     $path=[IO.Path]::GetFullPath((Join-Path $repoRoot $AuthorizationManifest))
-    if([string]::Equals($path,$expected4936,[StringComparison]::OrdinalIgnoreCase)){
+    if([string]::Equals($path,$expected076b,[StringComparison]::OrdinalIgnoreCase)){
+        $expectedManifestId='infinium.m1-s6.wp4.credential-native-recovery/040817c8-0a87-480a-915c-71dc2fe54da3'
+        $failureRecordCommit='43af93e64a1f5d15385b35b77b49c8dec71d4a9d'
+        $manifestRelative='docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.076b981a.v1.json'
+        $priorEvidencePath=Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-076b981a/coordinator-stderr.txt'
+        $priorLockPath=Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-authority-locks/25c657c7241731d5f91d9df3f49dd2cc0c3241eb5c6a470a3817400552d9d3c8.json'
+        $validatorPath=Join-Path $repoRoot 'eng/validate-m1-slice6-wp4-recovery-076b981a.ps1'
+        $expectedPriorFingerprints=@()
+        $priorExactAbsenceCount=0
+        $recoveryTargetCount=12
+        $expectedPriorStatus='failed-evidence-retention'
+    }elseif([string]::Equals($path,$expected4936,[StringComparison]::OrdinalIgnoreCase)){
         $expectedManifestId='infinium.m1-s6.wp4.credential-native-recovery/dd412ecc-3b2c-4628-8865-bc8574a357c7'
         $failureRecordCommit='2eb7ed8b81331698bc2bffe3786b62c682b88598'
         $manifestRelative='docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.4936dcef.v1.json'
@@ -1873,18 +1904,42 @@ function Invoke-CredentialNativeRecoveryGate {
     $priorEvidenceBytes=[IO.File]::ReadAllBytes($priorEvidencePath)
     $priorEvidenceSha=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($priorEvidenceBytes)).ToLowerInvariant()
     $priorLockSha=(Get-FileHash -LiteralPath $priorLockPath -Algorithm SHA256).Hash.ToLowerInvariant()
-    if($priorEvidenceSha-ne[string]$m.binding.terminal_evidence_sha256-or$priorLockSha-ne[string]$m.binding.consumed_lock_sha256){
+    $boundPriorArtifactSha = if($expectedPriorStatus-eq'failed-evidence-retention'){
+        [string]$m.binding.terminal_artifact_sha256
+    }else{[string]$m.binding.terminal_evidence_sha256}
+    if($priorEvidenceSha-ne$boundPriorArtifactSha-or$priorLockSha-ne[string]$m.binding.consumed_lock_sha256){
         throw 'Recovery local terminal evidence or consumed lock bytes differ from exact authority.'
     }
-    $priorEvidence=[Text.Encoding]::UTF8.GetString($priorEvidenceBytes)|ConvertFrom-Json -Depth 100 -DateKind String
-    $priorFingerprints = if ($priorEvidence.PSObject.Properties.Name -contains 'absence_target_fingerprints') {
+    $priorEvidence = if($expectedPriorStatus-eq'failed-evidence-retention'){$null}else{
+        [Text.Encoding]::UTF8.GetString($priorEvidenceBytes)|ConvertFrom-Json -Depth 100 -DateKind String
+    }
+    $priorFingerprints = if ($null-ne$priorEvidence-and$priorEvidence.PSObject.Properties.Name -contains 'absence_target_fingerprints') {
         @($priorEvidence.absence_target_fingerprints)
     }
     else {
         @()
     }
     $priorLock=Get-Content -LiteralPath $priorLockPath -Raw|ConvertFrom-Json -Depth 20 -DateKind String
-    if($expectedPriorStatus-eq'failed-cleanup-ambiguous-v3'){
+    if($expectedPriorStatus-eq'failed-evidence-retention'){
+        $priorRoot=Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-076b981a'
+        $failedManifest=Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json'
+        $summary=Join-Path $priorRoot 'credential-native-summary.txt'
+        $backup=Join-Path $priorRoot 'native-backup-metadata.v2.json'
+        if((Get-FileHash $failedManifest -Algorithm SHA256).Hash.ToLowerInvariant()-ne[string]$m.binding.failed_manifest_sha256-or
+            (Get-FileHash $summary -Algorithm SHA256).Hash.ToLowerInvariant()-ne[string]$m.binding.success_summary_sha256-or
+            (Get-FileHash $backup -Algorithm SHA256).Hash.ToLowerInvariant()-ne[string]$m.binding.backup_metadata_sha256-or
+            $priorLock.manifest_id-ne[string]$m.binding.failed_manifest_id-or
+            $priorLock.manifest_sha256-ne[string]$m.binding.failed_manifest_sha256-or
+            $priorLock.execution_head_commit-ne'31643235c014a93f71096d5c80d2a911758e328f'-or
+            $priorLock.disposition-ne'consumed-before-native-launch-never-delete-or-reuse'-or
+            [int]$m.binding.prior_exact_absence_count-ne0-or
+            @($m.binding.prior_exact_absence_fingerprints).Count-ne0){
+            throw 'Recovery prior 076b981a evidence-retention lineage is not exact; no effect is permitted.'
+        }
+        foreach($absent in $m.binding.required_absent_artifacts){if(Test-Path -LiteralPath (Join-Path $priorRoot ([string]$absent))){
+            throw 'Recovery prior 076b981a final-evidence absence differs; no effect is permitted.'
+        }}
+    }elseif($expectedPriorStatus-eq'failed-cleanup-ambiguous-v3'){
         if($priorLock.manifest_id-ne[string]$m.binding.failed_manifest_id-or
             $priorLock.manifest_sha256-ne[string]$m.binding.failed_manifest_sha256-or
             $priorLock.execution_head_commit-ne'8f49943d0af53c495b8f288048cbd8d8bd1fe775'-or
@@ -1954,7 +2009,9 @@ function Invoke-CredentialNativeRecoveryGate {
     $recoveryCounts=$ev.native_call_counts
     if($ev.status-ne'passed'-or[bool]$ev.cleanup_ambiguity-or-not[bool]$ev.namespace_reuse_blocked-or
         $ev.namespace_disposition-ne'cleanup-confirmed-absent-never-reuse'-or
-        $ev.prior_terminal_evidence_sha256-ne$priorEvidenceSha-or$ev.prior_authority_lock_sha256-ne$priorLockSha-or
+        (($expectedPriorStatus-ne'failed-evidence-retention'-and$ev.prior_terminal_evidence_sha256-ne$priorEvidenceSha)-or
+         ($expectedPriorStatus-eq'failed-evidence-retention'-and$ev.prior_terminal_artifact_sha256-ne$priorEvidenceSha))-or
+        $ev.prior_authority_lock_sha256-ne$priorLockSha-or
         [int]$ev.prior_exact_absence_count-ne$priorExactAbsenceCount-or[int]$ev.combined_namespace_target_absence_count-ne12-or
         @($recoveryAbsence).Count-ne$recoveryTargetCount-or@($recoveryAbsence|?{$_.result-ne'ERROR_NOT_FOUND'}).Count-ne0-or
         @($recoveryAbsence.target_fingerprint_sha256 | Sort-Object -Unique).Count-ne$recoveryTargetCount-or
@@ -1966,7 +2023,7 @@ function Invoke-CredentialNativeRecoveryGate {
         [int]$ev.provider_operations-ne0-or[int]$ev.billable_operations-ne0){
         throw 'Recovery gate direct exact-effect/absence/count oracle failed; namespace remains blocked.'
     }
-    Write-Receipt 'CredentialNativeRecovery' ([ordered]@{manifest_id=$m.manifest_id;manifest_sha256=$sha;recovery_target_absence_count=$recoveryTargetCount;prior_exact_absence_count=$priorExactAbsenceCount;combined_namespace_target_absence_count=12;prior_terminal_evidence_sha256=$priorEvidenceSha;prior_authority_lock_sha256=$priorLockSha;native_call_counts=$ev.native_call_counts;network_operations=0;provider_operations=0;namespace_disposition='cleanup-confirmed-absent-never-reuse'}) 'passed' $true
+    Write-Receipt 'CredentialNativeRecovery' ([ordered]@{manifest_id=$m.manifest_id;manifest_sha256=$sha;recovery_target_absence_count=$recoveryTargetCount;prior_exact_absence_count=$priorExactAbsenceCount;combined_namespace_target_absence_count=12;prior_terminal_artifact_sha256=$(if($expectedPriorStatus-eq'failed-evidence-retention'){$priorEvidenceSha}else{$null});prior_terminal_evidence_sha256=$(if($expectedPriorStatus-ne'failed-evidence-retention'){$priorEvidenceSha}else{$null});prior_authority_lock_sha256=$priorLockSha;native_call_counts=$ev.native_call_counts;network_operations=0;provider_operations=0;namespace_disposition='cleanup-confirmed-absent-never-reuse'}) 'passed' $true
 }
 
 Push-Location $repoRoot

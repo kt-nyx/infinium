@@ -549,7 +549,8 @@ internal static class WindowsCredentialNativeRecovery
             or "infinium.repository.wp4-credential-native-recovery/1.1.0"
             or "infinium.repository.wp4-credential-native-recovery/1.2.0"
             or "infinium.repository.wp4-credential-native-recovery/1.3.0"
-            or "infinium.repository.wp4-credential-native-recovery/1.4.0";
+            or "infinium.repository.wp4-credential-native-recovery/1.4.0"
+            or "infinium.repository.wp4-credential-native-recovery/1.5.0";
 
     internal static int Run(string manifestPath, string expectedSha256, string expectedManifestId, string evidencePath)
     {
@@ -576,8 +577,22 @@ internal static class WindowsCredentialNativeRecovery
         }
         using WindowsCredentialManagerStore store = WindowsCredentialManagerStore.FromRecoveryManifest(root);
         JsonElement recoveryBinding = root.GetProperty("binding");
+        bool usesTerminalArtifactLineage = schemaIdentity
+            == "infinium.repository.wp4-credential-native-recovery/1.5.0";
         string? priorTerminalEvidenceSha256 = recoveryBinding.TryGetProperty("terminal_evidence_sha256", out JsonElement priorEvidence)
             ? priorEvidence.GetString() : null;
+        string? priorTerminalArtifactKind = recoveryBinding.TryGetProperty("terminal_artifact_kind", out JsonElement priorArtifactKind)
+            ? priorArtifactKind.GetString() : null;
+        string? priorTerminalArtifactSha256 = recoveryBinding.TryGetProperty("terminal_artifact_sha256", out JsonElement priorArtifact)
+            ? priorArtifact.GetString() : null;
+        string? priorSuccessSummarySha256 = recoveryBinding.TryGetProperty("success_summary_sha256", out JsonElement priorSummary)
+            ? priorSummary.GetString() : null;
+        string? priorBackupMetadataSha256 = recoveryBinding.TryGetProperty("backup_metadata_sha256", out JsonElement priorBackup)
+            ? priorBackup.GetString() : null;
+        string? priorHelperReceiptInventorySha256 = recoveryBinding.TryGetProperty("helper_receipt_inventory_sha256", out JsonElement priorReceipts)
+            ? priorReceipts.GetString() : null;
+        string? priorOutputInventorySha256 = recoveryBinding.TryGetProperty("output_inventory_sha256", out JsonElement priorOutput)
+            ? priorOutput.GetString() : null;
         string? priorAuthorityLockSha256 = recoveryBinding.TryGetProperty("consumed_lock_sha256", out JsonElement priorLock)
             ? priorLock.GetString() : null;
         int priorExactAbsenceCount = recoveryBinding.TryGetProperty("prior_exact_absence_count", out JsonElement priorCount)
@@ -596,7 +611,9 @@ internal static class WindowsCredentialNativeRecovery
             }
             WriteEvidence(evidencePath, new
             {
-                schema = "infinium.m1-s6.wp4.credential-native-recovery-evidence/v1",
+                schema = usesTerminalArtifactLineage
+                    ? "infinium.m1-s6.wp4.credential-native-recovery-evidence/v2"
+                    : "infinium.m1-s6.wp4.credential-native-recovery-evidence/v1",
                 status = "passed",
                 manifest_id = expectedManifestId,
                 manifest_sha256 = actualSha,
@@ -607,6 +624,12 @@ internal static class WindowsCredentialNativeRecovery
                 namespace_reuse_blocked = true,
                 namespace_disposition = "cleanup-confirmed-absent-never-reuse",
                 prior_terminal_evidence_sha256 = priorTerminalEvidenceSha256,
+                prior_terminal_artifact_kind = priorTerminalArtifactKind,
+                prior_terminal_artifact_sha256 = priorTerminalArtifactSha256,
+                prior_success_summary_sha256 = priorSuccessSummarySha256,
+                prior_backup_metadata_sha256 = priorBackupMetadataSha256,
+                prior_helper_receipt_inventory_sha256 = priorHelperReceiptInventorySha256,
+                prior_output_inventory_sha256 = priorOutputInventorySha256,
                 prior_authority_lock_sha256 = priorAuthorityLockSha256,
                 prior_exact_absence_count = priorExactAbsenceCount,
                 combined_namespace_target_absence_count = checked(priorExactAbsenceCount + absence.Count),
@@ -621,7 +644,9 @@ internal static class WindowsCredentialNativeRecovery
         {
             WriteEvidence(evidencePath, new
             {
-                schema = "infinium.m1-s6.wp4.credential-native-recovery-evidence/v1",
+                schema = usesTerminalArtifactLineage
+                    ? "infinium.m1-s6.wp4.credential-native-recovery-evidence/v2"
+                    : "infinium.m1-s6.wp4.credential-native-recovery-evidence/v1",
                 status = "failed-cleanup-ambiguous",
                 manifest_id = expectedManifestId,
                 manifest_sha256 = actualSha,
@@ -632,6 +657,12 @@ internal static class WindowsCredentialNativeRecovery
                 namespace_reuse_blocked = true,
                 namespace_disposition = "cleanup-ambiguous-never-reuse",
                 prior_terminal_evidence_sha256 = priorTerminalEvidenceSha256,
+                prior_terminal_artifact_kind = priorTerminalArtifactKind,
+                prior_terminal_artifact_sha256 = priorTerminalArtifactSha256,
+                prior_success_summary_sha256 = priorSuccessSummarySha256,
+                prior_backup_metadata_sha256 = priorBackupMetadataSha256,
+                prior_helper_receipt_inventory_sha256 = priorHelperReceiptInventorySha256,
+                prior_output_inventory_sha256 = priorOutputInventorySha256,
                 prior_authority_lock_sha256 = priorAuthorityLockSha256,
                 prior_exact_absence_count = priorExactAbsenceCount,
                 later_native_calls = 0,
@@ -923,6 +954,37 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 new("backup-new",
                     "m1s6-wp4-4936dcefa0f4430298990afd99b19799-backup-restore", "g002",
                     "01fcbe4a9138bcc10819e04cdadc9f83a592c022b4b436bbd2d29f50b52816c7"),
+            ];
+        }
+        else if (schemaIdentity == "infinium.repository.wp4-credential-native-recovery/1.5.0"
+            && manifestRoot.GetProperty("manifest_id").GetString()
+                == "infinium.m1-s6.wp4.credential-native-recovery/040817c8-0a87-480a-915c-71dc2fe54da3")
+        {
+            JsonElement limits = manifestRoot.GetProperty("limits");
+            if (limits.GetProperty("targets").GetInt32() != 12
+                || limits.GetProperty("CredWriteW").GetInt32() != 0
+                || limits.GetProperty("CredReadW").GetInt32() != 24
+                || limits.GetProperty("CredDeleteW").GetInt32() != 12
+                || limits.GetProperty("CredFree").GetInt32() != 12
+                || limits.GetProperty("total_native_calls").GetInt32() != 48)
+            {
+                throw new InvalidDataException("Current recovery finite limits differ from exact authority.");
+            }
+            expectedTargetCount = 12;
+            exactCurrentTargets =
+            [
+                new("interactive-primary", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-interactive-primary", "g001", "04b35e2718e202cb0a6bfef233dbe033c791aa02b2261e1779813d310bd3baad"),
+                new("interactive-cancel", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-interactive-cancel", "g001", "24f709437c97a67819b06270d0d211aaae426bbfbd56f83774106bd2f7da5277"),
+                new("size-valid", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-size-valid", "g001", "6aa891fe3db76c45c994b7b7a461f5242621226a788c489d0bcecde87b78e2dd"),
+                new("size-oversize", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-size-oversize", "g001", "01338cb4af7abf7d50b49313cce237db80a389ba1ff2c01d23a8a96ff02d66f2"),
+                new("unavailable-store", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-unavailable", "g001", "a7af4cc90f3f3021cf2a7220f92d247165fcaaf1f6b41410ca2d34fd55582895"),
+                new("replacement-old", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-replacement", "g001", "e82ee891429ff57587ea0f7f35f6f5ef98ae96a9d5d75da5ad7ee716a645ae77"),
+                new("replacement-new", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-replacement", "g002", "fea103ab44d0057a2a9cc10de5792ffec891cc6fe17086fe960a979d87eb852a"),
+                new("revoke-delete", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-revoke-delete", "g001", "92cf677dd3dfc6509d75c9d502c12ae3d4b9295b2c25b4327b965f252b10649d"),
+                new("crash-restart", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-crash-restart", "g001", "c36ea4643f97ff6a68d1880445669f213e1ef1e2b71487b3179d6102a1ce0f95"),
+                new("backup-old", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-backup-restore", "g001", "1ce6dceb1deea0485f5c56b9dce06eb3d44cda389ff0805291a9719eb1de865f"),
+                new("backup-new", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-backup-restore", "g002", "11d51fa6e870709f346f61e931a91ab8cf5336b689f8ddcfc427283d71fb1d0a"),
+                new("fake-dispatch", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-fake-dispatch", "g001", "bcb55be3c8d4f1b89103d28cd5fa40d97fcdbc528ffd2f4513f4f3b12770c0b1"),
             ];
         }
         else

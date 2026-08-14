@@ -354,6 +354,16 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.AreEqual(11,
             currentDocument.RootElement.GetProperty("binding").GetProperty("prior_exact_absence_count").GetInt32());
         Assert.AreEqual(0, currentDocument.RootElement.GetProperty("limits").GetProperty("CredWriteW").GetInt32());
+        string recovery076bManifest = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp4-credential-native-recovery.076b981a.v1.json"));
+        using JsonDocument recovery076bDocument = JsonDocument.Parse(recovery076bManifest);
+        CollectionAssert.AreEqual(RecoveryAllowedCalls,
+            recovery076bDocument.RootElement.GetProperty("native_boundary").GetProperty("allowed_calls")
+                .EnumerateArray().Select(item => item.GetString()).ToArray());
+        Assert.AreEqual(12,
+            recovery076bDocument.RootElement.GetProperty("disposable_namespace").GetProperty("targets").GetArrayLength());
+        Assert.AreEqual(0,
+            recovery076bDocument.RootElement.GetProperty("binding").GetProperty("prior_exact_absence_count").GetInt32());
 
         string program = File.ReadAllText(Path.Combine(root, "src", "Infinium.CredentialHelper", "Program.cs"));
         int recovery = program.IndexOf("--credential-native-recovery", StringComparison.Ordinal);
@@ -378,6 +388,8 @@ public sealed class CredentialNativeAuthorizationTests
             StringComparison.Ordinal));
         Assert.IsTrue(recoveryGate.Contains("wp4-credential-native-recovery.4936dcef.v1.json",
             StringComparison.Ordinal));
+        Assert.IsTrue(recoveryGate.Contains("wp4-credential-native-recovery.076b981a.v1.json",
+            StringComparison.Ordinal));
         Assert.IsTrue(recoveryGate.Contains("credential-native-cleanup-ambiguity.v2.json",
             StringComparison.Ordinal));
         Assert.IsTrue(recoveryGate.Contains("credential-native-cleanup-ambiguity.v3.json",
@@ -397,6 +409,11 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.IsFalse(currentReconstruction.Contains("Infinium.CredentialHelper", StringComparison.Ordinal));
         Assert.IsFalse(currentReconstruction.Contains("Process.Start", StringComparison.Ordinal));
         Assert.IsFalse(currentReconstruction.Contains("--credential-native-recovery", StringComparison.Ordinal));
+        string recovery076bReconstruction = File.ReadAllText(Path.Combine(root, "eng",
+            "reconstruct-m1-slice6-wp4-recovery-076b981a-receipt.ps1"));
+        Assert.IsFalse(recovery076bReconstruction.Contains("Infinium.CredentialHelper", StringComparison.Ordinal));
+        Assert.IsFalse(recovery076bReconstruction.Contains("Process.Start", StringComparison.Ordinal));
+        Assert.IsFalse(recovery076bReconstruction.Contains("--credential-native-recovery", StringComparison.Ordinal));
     }
 
     [TestMethod]
@@ -849,6 +866,224 @@ public sealed class CredentialNativeAuthorizationTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestCategory("Security")]
+    public void Recovery076bManifestBindsExactRetainedLineageTargetsAndOutputRoot()
+    {
+        string root = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp4-credential-native-recovery.076b981a.v1.json");
+        JsonObject valid = JsonNode.Parse(File.ReadAllBytes(manifestPath))!.AsObject();
+        Assert.AreEqual(0, RunPwsh(root, "eng/validate-m1-slice6-wp4-recovery-076b981a.ps1",
+            "-ManifestPath", manifestPath));
+        Assert.AreEqual("infinium.repository.wp4-credential-native-recovery/1.5.0",
+            valid["schema_identity"]!.GetValue<string>());
+        Assert.AreEqual(0, valid["binding"]!["prior_exact_absence_count"]!.GetValue<int>());
+        Assert.HasCount(12, valid["disposable_namespace"]!["targets"]!.AsArray());
+        Assert.AreEqual(0, valid["limits"]!["CredWriteW"]!.GetValue<int>());
+        Assert.AreEqual(24, valid["limits"]!["CredReadW"]!.GetValue<int>());
+        Assert.AreEqual(12, valid["limits"]!["CredDeleteW"]!.GetValue<int>());
+        Assert.AreEqual(12, valid["limits"]!["CredFree"]!.GetValue<int>());
+        Assert.AreEqual(48, valid["limits"]!["total_native_calls"]!.GetValue<int>());
+        Assert.AreEqual(27, valid["binding"]!["helper_receipt_count"]!.GetValue<int>());
+        Assert.AreEqual(75, valid["binding"]!["output_file_count"]!.GetValue<int>());
+
+        using (JsonDocument document = JsonDocument.Parse(valid.ToJsonString()))
+        using (WindowsCredentialManagerStore store = WindowsCredentialManagerStore.FromRecoveryManifest(
+            document.RootElement))
+        {
+            CollectionAssert.AreEqual(
+                valid["disposable_namespace"]!["targets"]!.AsArray()
+                    .Select(item => item!["alias"]!.GetValue<string>()).ToArray(),
+                store.ManifestTargets.Select(item => item.Alias).ToArray());
+        }
+        Assert.IsTrue(WindowsCredentialNativeRecovery.IsAcceptedSchemaIdentityForTest(
+            "infinium.repository.wp4-credential-native-recovery/1.5.0"));
+        Assert.IsFalse(WindowsCredentialNativeRecovery.IsAcceptedSchemaIdentityForTest(
+            "infinium.repository.wp4-credential-native-recovery/1.6.0"));
+
+        string gate = File.ReadAllText(Path.Combine(root, "eng", "verify-m1-slice6.ps1"));
+        int rootGuard = gate.IndexOf("076b981a CredentialNativeRecovery requires the exact fresh output root",
+            StringComparison.Ordinal);
+        int firstDirectoryCreation = gate.IndexOf("New-Item -ItemType Directory -Force -Path $resolvedOutputRoot",
+            StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, rootGuard);
+        Assert.IsGreaterThan(rootGuard, firstDirectoryCreation,
+            "The exact output-root guard must reject before any directory creation.");
+        Assert.IsTrue(gate.Contains("failed-evidence-retention", StringComparison.Ordinal));
+        Assert.IsTrue(gate.Contains("wp4-credential-native-recovery.076b981a.v1.json", StringComparison.Ordinal));
+        string wrongOutputRoot = Path.Combine(root, "artifacts", "test-temp", Guid.NewGuid().ToString("N"));
+        Assert.AreEqual(1, RunPwsh(root, "eng/verify-m1-slice6.ps1",
+            "-Gate", "CredentialNativeRecovery", "-AuthorizationManifest",
+            "docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.076b981a.v1.json",
+            "-OutputRoot", wrongOutputRoot));
+        Assert.IsFalse(Directory.Exists(wrongOutputRoot),
+            "A noncanonical recovery output root must be refused before directory creation.");
+
+        Reject(node => node["binding"]!["terminal_artifact_sha256"] = new string('0', 64));
+        Reject(node => node["binding"]!["success_summary_sha256"] = new string('0', 64));
+        Reject(node => node["binding"]!["helper_receipt_inventory_sha256"] = new string('0', 64));
+        Reject(node => node["binding"]!["required_absent_artifacts"]!.AsArray().RemoveAt(0));
+        Reject(node => node["disposable_namespace"]!["targets"]!.AsArray().RemoveAt(11));
+        Reject(node =>
+        {
+            JsonArray targets = node["disposable_namespace"]!["targets"]!.AsArray();
+            JsonNode first = targets[0]!.DeepClone();
+            targets[0] = targets[1]!.DeepClone();
+            targets[1] = first;
+        });
+        Reject(node => node["disposable_namespace"]!["targets"]![8] = new JsonObject
+        {
+            ["alias"] = "crash-restart",
+            ["access_profile_id"] = "m1s6-wp4-4936dcefa0f4430298990afd99b19799-crash-restart",
+            ["generation_id"] = "g001",
+            ["target_fingerprint_sha256"] =
+                "6d8306b7661f2b3242ad93c2438917fac74cf93b1e52c486e95ff346550d37bb",
+        });
+        Reject(node => node["limits"]!["CredReadW"] = 25);
+        Reject(node => node["native_boundary"]!["allowed_calls"]!.AsArray().Insert(0, "CredWriteW"));
+        Reject(node => node["execution_command"] = "mutated");
+
+        void Reject(Action<JsonObject> mutate)
+        {
+            JsonObject mutation = valid.DeepClone().AsObject();
+            mutate(mutation);
+            string tempRoot = Path.Combine(root, "artifacts", "test-temp", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempRoot);
+            string path = Path.Combine(tempRoot, "manifest.json");
+            try
+            {
+                File.WriteAllText(path, mutation.ToJsonString());
+                Assert.AreEqual(1, RunPwsh(root, "eng/validate-m1-slice6-wp4-recovery-076b981a.ps1",
+                    "-ManifestPath", path, "-TestOnlyManifestPath"));
+            }
+            finally { Directory.Delete(tempRoot, recursive: true); }
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    public void Recovery076bEvidenceRequiresExactV2LineageAndPerTargetCallGrammar()
+    {
+        string root = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp4-credential-native-recovery.076b981a.v1.json");
+        byte[] manifestBytes = File.ReadAllBytes(manifestPath);
+        string sha = Convert.ToHexStringLower(SHA256.HashData(manifestBytes));
+        JsonObject manifest = JsonNode.Parse(manifestBytes)!.AsObject();
+        string id = manifest["manifest_id"]!.GetValue<string>();
+        JsonArray targets = manifest["disposable_namespace"]!["targets"]!.AsArray();
+        JsonArray absence = [];
+        JsonArray trace = [];
+        long sequence = 1;
+        foreach (JsonNode? target in targets)
+        {
+            string alias = target!["alias"]!.GetValue<string>();
+            string fingerprint = target["target_fingerprint_sha256"]!.GetValue<string>();
+            absence.Add(new JsonObject
+            {
+                ["alias"] = alias,
+                ["target_fingerprint_sha256"] = fingerprint,
+                ["result"] = "ERROR_NOT_FOUND",
+            });
+            trace.Add(Trace(sequence++, "CredReadW", fingerprint, "ERROR_NOT_FOUND", null, null));
+        }
+        JsonObject binding = manifest["binding"]!.AsObject();
+        JsonObject evidence = new()
+        {
+            ["schema"] = "infinium.m1-s6.wp4.credential-native-recovery-evidence/v2",
+            ["status"] = "passed",
+            ["manifest_id"] = id,
+            ["manifest_sha256"] = sha,
+            ["target_absence"] = absence,
+            ["native_call_counts"] = new JsonObject
+            {
+                ["cred_write_w"] = 0, ["cred_read_w"] = 12, ["cred_delete_w"] = 0,
+                ["cred_free"] = 0, ["total"] = 12,
+            },
+            ["native_call_trace"] = trace,
+            ["cleanup_ambiguity"] = false,
+            ["namespace_reuse_blocked"] = true,
+            ["namespace_disposition"] = "cleanup-confirmed-absent-never-reuse",
+            ["prior_terminal_evidence_sha256"] = null,
+            ["prior_terminal_artifact_kind"] = binding["terminal_artifact_kind"]!.DeepClone(),
+            ["prior_terminal_artifact_sha256"] = binding["terminal_artifact_sha256"]!.DeepClone(),
+            ["prior_success_summary_sha256"] = binding["success_summary_sha256"]!.DeepClone(),
+            ["prior_backup_metadata_sha256"] = binding["backup_metadata_sha256"]!.DeepClone(),
+            ["prior_helper_receipt_inventory_sha256"] = binding["helper_receipt_inventory_sha256"]!.DeepClone(),
+            ["prior_output_inventory_sha256"] = binding["output_inventory_sha256"]!.DeepClone(),
+            ["prior_authority_lock_sha256"] = binding["consumed_lock_sha256"]!.DeepClone(),
+            ["prior_exact_absence_count"] = 0,
+            ["combined_namespace_target_absence_count"] = 12,
+            ["network_operations"] = 0, ["dns_operations"] = 0,
+            ["provider_operations"] = 0, ["billable_operations"] = 0,
+        };
+        AssertEvidenceValidation(root, manifestPath, sha, id, evidence, expectedSuccess: true);
+        Assert076bReceiptReconstruction(root, manifestPath, sha, id, evidence);
+        Reject(node => node["prior_terminal_evidence_sha256"] = new string('0', 64));
+        Reject(node => node["prior_success_summary_sha256"] = new string('0', 64));
+        Reject(node => node["network_operations"] = 1);
+        Reject(node =>
+        {
+            JsonArray mutatedTrace = node["native_call_trace"]!.AsArray();
+            string firstFingerprint = targets[0]!["target_fingerprint_sha256"]!.GetValue<string>();
+            mutatedTrace.Insert(1, Trace(2, "CredReadW", firstFingerprint, "ERROR_NOT_FOUND", null, null));
+            for (int index = 2; index < mutatedTrace.Count; index++)
+            {
+                mutatedTrace[index]!["sequence"] = index + 1;
+            }
+            node["native_call_counts"]!["cred_read_w"] = 13;
+            node["native_call_counts"]!["total"] = 13;
+        });
+
+        void Reject(Action<JsonObject> mutate)
+        {
+            JsonObject mutation = evidence.DeepClone().AsObject();
+            mutate(mutation);
+            AssertEvidenceValidation(root, manifestPath, sha, id, mutation, expectedSuccess: false);
+        }
+    }
+
+    private static void Assert076bReceiptReconstruction(string root, string manifestPath, string sha, string id,
+        JsonObject evidence)
+    {
+        string tempRoot = Path.Combine(root, "artifacts", "test-temp", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        string evidencePath = Path.Combine(tempRoot, "evidence.json");
+        string lockPath = Path.Combine(tempRoot, "lock.json");
+        string receiptPath = Path.Combine(tempRoot, "receipt.json");
+        try
+        {
+            File.WriteAllText(evidencePath, evidence.ToJsonString());
+            string evidenceSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(evidencePath)));
+            File.WriteAllText(lockPath, new JsonObject
+            {
+                ["manifest_id"] = id,
+                ["manifest_sha256"] = sha,
+                ["disposition"] = "consumed-never-reuse",
+            }.ToJsonString());
+            string lockSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(lockPath)));
+            string[] Arguments() =>
+            [
+                "eng/reconstruct-m1-slice6-wp4-recovery-076b981a-receipt.ps1",
+                "-ManifestPath", manifestPath, "-ManifestSha256", sha,
+                "-EvidencePath", evidencePath, "-EvidenceSha256", evidenceSha,
+                "-AuthorityLockPath", lockPath, "-AuthorityLockSha256", lockSha,
+                "-ReceiptPath", receiptPath, "-TestOnlyPaths",
+            ];
+            Assert.AreEqual(0, RunPwsh(root, Arguments().Append("-ReportFailureOutput").ToArray()),
+                "Read-only v2 receipt reconstruction must pass.");
+            Assert.IsTrue(File.Exists(receiptPath));
+            string receipt = File.ReadAllText(receiptPath);
+            Assert.IsTrue(receipt.Contains("post-effect-reconstruction-from-immutable-v2-evidence-no-native-retry",
+                StringComparison.Ordinal));
+            Assert.AreEqual(1, RunPwsh(root, Arguments()), "CreateNew must refuse receipt overwrite.");
+        }
+        finally { Directory.Delete(tempRoot, recursive: true); }
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
     public void LegacyRecoveryEvidenceRemainsValidUnderItsFrozenSchema()
     {
         string root = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
@@ -1008,8 +1243,10 @@ public sealed class CredentialNativeAuthorizationTests
             WindowsCredentialManagerStore.FromRecoveryManifest(bad4936Count.RootElement));
         Assert.IsTrue(WindowsCredentialNativeRecovery.IsAcceptedSchemaIdentityForTest(
             "infinium.repository.wp4-credential-native-recovery/1.4.0"));
-        Assert.IsFalse(WindowsCredentialNativeRecovery.IsAcceptedSchemaIdentityForTest(
+        Assert.IsTrue(WindowsCredentialNativeRecovery.IsAcceptedSchemaIdentityForTest(
             "infinium.repository.wp4-credential-native-recovery/1.5.0"));
+        Assert.IsFalse(WindowsCredentialNativeRecovery.IsAcceptedSchemaIdentityForTest(
+            "infinium.repository.wp4-credential-native-recovery/1.6.0"));
     }
 
     private static JsonObject Trace(long sequence, string operation, string fingerprint, string result,
