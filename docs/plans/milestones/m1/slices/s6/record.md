@@ -6639,3 +6639,14 @@ that stable ancestor produces 6,821-byte SHA-256
 The exact semantic validator passes, and the diff after close-ready is now
 limited to the manifest and this append-only record exactly as the gate
 requires. Effect authority remains absent pending fresh terminal review.
+
+Final exact-byte verification repeated the semantic validator and focused
+authorization/build-policy suite at 41/41. Candidate-bound Layer 6 review of
+the four hardening paths from `b9f4d910698fa2af8f9a97272f930c9631c2bab7`
+through `448a67c4939a02f1e297f27a2ff47bd00a0d503d` passed with zero findings;
+its 1,386-byte receipt SHA-256 is
+`24d08f661beb925f4df3f2378635e78ed02a1400bde58c226b7fed1ba76009d6`.
+Build servers were shut down and repository-owned process count is zero.
+Owner/execution markers, output, and one-shot lock remain absent. The exact
+manifest is awaiting the reviewer's terminal pre-effect verdict; no effect has
+occurred.
