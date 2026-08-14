@@ -97,7 +97,7 @@ internal static class CredentialNativeQualificationRunner
         catch (CredentialNativeCleanupAmbiguityException ambiguity)
         {
             WriteJson(
-                Path.Combine(outputRoot, "credential-native-cleanup-ambiguity.v2.json"),
+                Path.Combine(outputRoot, "credential-native-cleanup-ambiguity.v3.json"),
                 BuildCleanupAmbiguityArtifact(manifestId, manifestSha256, ambiguity));
             throw;
         }
@@ -201,7 +201,7 @@ internal static class CredentialNativeQualificationRunner
         catch (CredentialNativeCleanupAmbiguityException ambiguity)
         {
             WriteJson(
-                Path.Combine(root, "credential-native-cleanup-ambiguity.v2.json"),
+                Path.Combine(root, "credential-native-cleanup-ambiguity.v3.json"),
                 BuildCleanupAmbiguityArtifact("manifest/test", new string('a', 64), ambiguity));
             throw;
         }
@@ -354,22 +354,94 @@ internal static class CredentialNativeQualificationRunner
     private static object BuildCleanupAmbiguityArtifact(
         string manifestId,
         string manifestSha256,
-        CredentialNativeCleanupAmbiguityException ambiguity) => new
+        CredentialNativeCleanupAmbiguityException ambiguity)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(manifestId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(manifestSha256);
+        ArgumentNullException.ThrowIfNull(ambiguity);
+        if (!ambiguity.Evidence.CleanupAmbiguous || !ambiguity.Evidence.NamespaceBlocked)
         {
-            schema = "infinium.m1-s6.wp4.credential-native-cleanup-ambiguity/v2",
+            throw new InvalidDataException("Cleanup-ambiguity evidence must retain the terminal supervisor snapshot.");
+        }
+        Exception cause = ambiguity.InnerException
+            ?? throw new InvalidDataException("Cleanup-ambiguity evidence must retain a typed cause.");
+        CredentialNativeHelperFailureException? helperFailure = cause as CredentialNativeHelperFailureException;
+        CredentialNativeHelperEvidenceAmbiguityException? helperEvidenceAmbiguity =
+            cause as CredentialNativeHelperEvidenceAmbiguityException;
+        CredentialNativeQualificationPhaseEvidence[] phases = ambiguity.Evidence.Scenarios
+            .SelectMany(item => item.Phases).ToArray();
+        CredentialNativeRejectedPhaseEvidence? rejected = ambiguity.Evidence.RejectedPhase;
+        int listenerCount = phases.Sum(item => item.Process.ListenerCount) + (rejected?.ListenerCount ?? 0);
+        int networkOperationCount = phases.Sum(item => item.Process.NetworkOperationCount)
+            + (rejected?.NetworkOperationCount ?? 0);
+        int processTreeSurvivorCount = phases.Sum(item => item.Process.ProcessTreeSurvivorCount)
+            + (rejected?.ProcessTreeSurvivorCount ?? 0);
+        int secretCanaryMatches = phases.Sum(item => item.Canaries?.SecretMatches ?? 0)
+            + (rejected?.Canaries?.SecretMatches ?? 0);
+        int rawTargetCanaryMatches = phases.Sum(item => item.Canaries?.RawTargetMatches ?? 0)
+            + (rejected?.Canaries?.RawTargetMatches ?? 0);
+        bool processTreesTerminated = phases.All(item => item.Process.ProcessTreeTerminated)
+            && (rejected is null || rejected.ProcessTreeTerminated);
+        return new
+        {
+            schema = "infinium.m1-s6.wp4.credential-native-cleanup-ambiguity/v3",
             status = "failed-cleanup-ambiguous",
             manifest_id = manifestId,
             manifest_sha256 = manifestSha256,
             ambiguity.AssignmentId,
             ambiguity.Reason,
+            failure_type = cause.GetType().Name,
+            sqlite_failure = BuildSqliteFailureEvidence(cause),
+            failure_classification = helperFailure is not null
+                ? "typed-helper-failure"
+                : helperEvidenceAmbiguity is not null
+                    ? "typed-helper-evidence-ambiguity"
+                    : cause is SqliteException
+                        ? "typed-sqlite-failure"
+                        : "typed-redacted-non-sqlite-failure",
+            helper_failure = helperFailure?.Evidence,
+            helper_failure_containment = helperFailure?.Containment,
+            helper_evidence_ambiguity_containment = helperEvidenceAmbiguity?.Containment,
             cleanup_confirmed = false,
             whole_namespace_absence_confirmed = false,
             namespace_blocked = true,
             namespace_disposition = "consumed-never-reuse",
-            external_effect_facts = "unknown-or-not-independently-admissible",
+            validated_native_call_counts = ambiguity.Evidence.NativeCallCounts,
+            rejected_phase_native_call_counts = rejected?.CanonicalCallCounts,
+            native_call_count_scope =
+                "validated phases plus separately retained rejected phase; rejected evidence is never merged into validated totals",
+            canary_facts = new
+            {
+                secret_matches = secretCanaryMatches,
+                raw_target_matches = rawTargetCanaryMatches,
+                retained_in = "terminal-supervisor-snapshot-including-rejected-phase",
+            },
+            containment_facts = new
+            {
+                process_trees_terminated = processTreesTerminated,
+                process_tree_survivor_count = processTreeSurvivorCount,
+                rejected_phase_process_id = rejected?.ProcessId,
+                helper_failure = helperFailure?.Containment,
+                helper_evidence_ambiguity = helperEvidenceAmbiguity?.Containment,
+            },
+            external_effect_facts = new
+            {
+                network_facts_known = helperEvidenceAmbiguity is null
+                    && (helperFailure?.Evidence.NetworkFactsKnown ?? true),
+                listener_count = listenerCount,
+                network_operation_count = networkOperationCount,
+                external_effect_facts_known = helperEvidenceAmbiguity is null
+                    && (helperFailure?.Evidence.ExternalEffectFactsKnown ?? true),
+                dns_operation_count = helperFailure?.Evidence.DnsOperationCount ?? 0,
+                provider_operation_count = helperFailure?.Evidence.ProviderOperationCount ?? 0,
+                billable_operation_count = helperFailure?.Evidence.BillableOperationCount ?? 0,
+                external_zero_basis = "source-proven-helper-and-synthetic-dispatch-have-no-provider-or-dns-transport",
+            },
+            evidence = ambiguity.Evidence,
             later_native_calls = 0,
             disposition = "terminal-fresh-owner-authority-required",
         };
+    }
 
     private static object BuildPrimaryFailureArtifact(
         string manifestId,
@@ -582,7 +654,12 @@ internal static class CredentialNativeQualificationRunner
             }
             if (primaryFailure is CredentialNativeCleanupAmbiguityException ambiguity)
             {
-                throw ambiguity;
+                supervisor.RecordTerminalCleanupAmbiguity(ambiguity.AssignmentId, ambiguity.Reason);
+                throw new CredentialNativeCleanupAmbiguityException(
+                    ambiguity.AssignmentId,
+                    ambiguity.Reason,
+                    supervisor.CaptureTerminalFailure(),
+                    ambiguity.InnerException ?? ambiguity);
             }
 
             supervisor.BeginCleanup();
@@ -638,7 +715,9 @@ internal static class CredentialNativeQualificationRunner
                             ? "cleanup-helper-evidence-invalid"
                             : exception is CredentialNativeHelperFailureException
                                 ? "cleanup-helper-failure"
-                                : "cleanup-phase-failed");
+                                : "cleanup-phase-failed",
+                        supervisor.CaptureTerminalFailure(),
+                        exception);
                 }
             }
             if (primaryFailure is CredentialNativeHelperEvidenceAmbiguityException evidenceAmbiguity)
@@ -647,7 +726,9 @@ internal static class CredentialNativeQualificationRunner
                     evidenceAmbiguity.AssignmentId, "helper-failure-evidence-invalid");
                 throw new CredentialNativeCleanupAmbiguityException(
                     evidenceAmbiguity.AssignmentId,
-                    "helper-failure-evidence-invalid");
+                    "helper-failure-evidence-invalid",
+                    supervisor.CaptureTerminalFailure(),
+                    evidenceAmbiguity);
             }
             if (primaryFailure is CredentialNativeHelperFailureException helperFailure
                 && helperFailure.Evidence.NamespaceReuseBlocked)
@@ -656,7 +737,9 @@ internal static class CredentialNativeQualificationRunner
                     helperFailure.AssignmentId, "helper-namespace-reuse-blocked");
                 throw new CredentialNativeCleanupAmbiguityException(
                     helperFailure.AssignmentId,
-                    "helper-namespace-reuse-blocked");
+                    "helper-namespace-reuse-blocked",
+                    supervisor.CaptureTerminalFailure(),
+                    helperFailure);
             }
             if (primaryFailure is not null)
             {
@@ -673,7 +756,9 @@ internal static class CredentialNativeQualificationRunner
                             boundedFailure.AssignmentId, "helper-containment-unproven");
                         throw new CredentialNativeCleanupAmbiguityException(
                             boundedFailure.AssignmentId,
-                            "helper-containment-unproven");
+                            "helper-containment-unproven",
+                            supervisor.CaptureTerminalFailure(),
+                            boundedFailure);
                     }
                     cleanupDisposition = boundedFailure.Evidence.Stage is
                         "handle-inheritance" or "launch-boundary" or "manifest-validation"
@@ -694,7 +779,9 @@ internal static class CredentialNativeQualificationRunner
                         "qualification-primary-failure", "primary-failure-cleanup-unproven");
                     throw new CredentialNativeCleanupAmbiguityException(
                         "unknown",
-                        "primary-failure-cleanup-unproven");
+                        "primary-failure-cleanup-unproven",
+                        supervisor.CaptureTerminalFailure(),
+                        primaryFailure);
                 }
                 throw new CredentialNativePrimaryFailureException(
                     primaryFailure.GetType().Name,

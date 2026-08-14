@@ -371,10 +371,15 @@ public sealed class CredentialNativeQualificationSupervisorTests
             ("qualification-primary-failure", "primary-failure-cleanup-unproven"),
         })
         {
-            CredentialNativeCleanupAmbiguityException ambiguity = new(context, reason);
+            CredentialNativeCleanupAmbiguityException ambiguity = TerminalAmbiguity(
+                context,
+                reason,
+                new InvalidOperationException("synthetic cleanup cause must be redacted"));
             using JsonDocument artifact = JsonDocument.Parse(
                 CredentialNativeQualificationRunner.SerializeCleanupAmbiguityArtifactForTest(
                     "manifest/test", new string('a', 64), ambiguity));
+            Assert.AreEqual("infinium.m1-s6.wp4.credential-native-cleanup-ambiguity/v3",
+                artifact.RootElement.GetProperty("schema").GetString(), context);
             Assert.AreEqual("failed-cleanup-ambiguous",
                 artifact.RootElement.GetProperty("status").GetString(), context);
             Assert.AreEqual(context,
@@ -385,6 +390,12 @@ public sealed class CredentialNativeQualificationSupervisorTests
             Assert.AreEqual("consumed-never-reuse",
                 artifact.RootElement.GetProperty("namespace_disposition").GetString(), context);
             Assert.AreEqual(0, artifact.RootElement.GetProperty("later_native_calls").GetInt32(), context);
+            Assert.IsTrue(artifact.RootElement.GetProperty("evidence").GetProperty("cleanup_ambiguous").GetBoolean());
+            Assert.IsTrue(artifact.RootElement.GetProperty("evidence").GetProperty("namespace_blocked").GetBoolean());
+            Assert.AreEqual("typed-redacted-non-sqlite-failure",
+                artifact.RootElement.GetProperty("failure_classification").GetString());
+            Assert.IsFalse(artifact.RootElement.GetRawText().Contains(
+                "synthetic cleanup cause must be redacted", StringComparison.Ordinal));
         }
     }
 
@@ -404,6 +415,12 @@ public sealed class CredentialNativeQualificationSupervisorTests
             ("ambiguous", new CredentialNativeHelperEvidenceAmbiguityException(
                 "wp4-v2/interactive-entry-submit/cleanup",
                 new InvalidDataException("synthetic malformed envelope")), "cleanup-helper-evidence-invalid"),
+            ("sqlite", new Microsoft.Data.Sqlite.SqliteException(
+                "SQLite Error 19: 'provider credential lifecycle time regression'.", 19, 1811),
+                "cleanup-phase-failed"),
+            ("sqlite-redacted", new Microsoft.Data.Sqlite.SqliteException(
+                "SQLite Error 19: 'unexpected secret-bearing cleanup detail'.", 19, 1811),
+                "cleanup-phase-failed"),
         ];
 
         foreach ((string name, Exception injected, string expectedReason) in cases)
@@ -419,7 +436,7 @@ public sealed class CredentialNativeQualificationSupervisorTests
                     BaseTime,
                     injected));
 
-            string artifactPath = Path.Combine(root, "credential-native-cleanup-ambiguity.v2.json");
+            string artifactPath = Path.Combine(root, "credential-native-cleanup-ambiguity.v3.json");
             Assert.IsTrue(File.Exists(artifactPath), name);
             using JsonDocument artifact = JsonDocument.Parse(File.ReadAllBytes(artifactPath));
             Assert.AreEqual("failed-cleanup-ambiguous",
@@ -434,6 +451,70 @@ public sealed class CredentialNativeQualificationSupervisorTests
             Assert.AreEqual("consumed-never-reuse",
                 artifact.RootElement.GetProperty("namespace_disposition").GetString(), name);
             Assert.AreEqual(0, artifact.RootElement.GetProperty("later_native_calls").GetInt32(), name);
+            Assert.IsTrue(artifact.RootElement.GetProperty("evidence")
+                .GetProperty("cleanup_ambiguous").GetBoolean(), name);
+            Assert.IsTrue(artifact.RootElement.GetProperty("evidence")
+                .GetProperty("namespace_blocked").GetBoolean(), name);
+            Assert.AreEqual(0, artifact.RootElement.GetProperty("canary_facts")
+                .GetProperty("secret_matches").GetInt32(), name);
+            Assert.AreEqual(0, artifact.RootElement.GetProperty("canary_facts")
+                .GetProperty("raw_target_matches").GetInt32(), name);
+            Assert.AreEqual(0, artifact.RootElement.GetProperty("external_effect_facts")
+                .GetProperty("network_operation_count").GetInt32(), name);
+            Assert.AreEqual(0, artifact.RootElement.GetProperty("external_effect_facts")
+                .GetProperty("dns_operation_count").GetInt32(), name);
+            Assert.AreEqual(0, artifact.RootElement.GetProperty("external_effect_facts")
+                .GetProperty("provider_operation_count").GetInt32(), name);
+            Assert.AreEqual(0, artifact.RootElement.GetProperty("external_effect_facts")
+                .GetProperty("billable_operation_count").GetInt32(), name);
+            Assert.AreEqual(name != "ambiguous", artifact.RootElement.GetProperty("external_effect_facts")
+                .GetProperty("network_facts_known").GetBoolean(), name);
+            Assert.AreEqual(name != "ambiguous", artifact.RootElement.GetProperty("external_effect_facts")
+                .GetProperty("external_effect_facts_known").GetBoolean(), name);
+            Assert.IsTrue(artifact.RootElement.GetProperty("containment_facts")
+                .GetProperty("process_trees_terminated").GetBoolean(), name);
+            Assert.AreEqual(0, artifact.RootElement.GetProperty("containment_facts")
+                .GetProperty("process_tree_survivor_count").GetInt32(), name);
+            if (name == "sqlite")
+            {
+                JsonElement sqlite = artifact.RootElement.GetProperty("sqlite_failure");
+                Assert.AreEqual(19, sqlite.GetProperty("primary_code").GetInt32());
+                Assert.AreEqual(1811, sqlite.GetProperty("extended_code").GetInt32());
+                Assert.AreEqual("credential-authority-time-regression",
+                    sqlite.GetProperty("classification").GetString());
+                Assert.AreEqual("SQLite Error 19: 'provider credential lifecycle time regression'.",
+                    sqlite.GetProperty("message").GetString());
+            }
+            else
+            {
+                Assert.IsFalse(artifact.RootElement.GetRawText().Contains(
+                    injected.Message, StringComparison.Ordinal), name);
+            }
+            if (name == "sqlite-redacted")
+            {
+                JsonElement sqlite = artifact.RootElement.GetProperty("sqlite_failure");
+                Assert.AreEqual(19, sqlite.GetProperty("primary_code").GetInt32());
+                Assert.AreEqual(1811, sqlite.GetProperty("extended_code").GetInt32());
+                Assert.AreEqual("unclassified-redacted", sqlite.GetProperty("classification").GetString());
+                Assert.AreEqual(JsonValueKind.Null, sqlite.GetProperty("message").ValueKind);
+            }
+            JsonElement retainedBackup = artifact.RootElement.GetProperty("evidence")
+                .GetProperty("scenarios").EnumerateArray()
+                .Single(item => item.GetProperty("scenario_id").GetString()
+                    == "backup-restore-reauthentication");
+            JsonElement restoredGeneration = retainedBackup.GetProperty("phases").EnumerateArray()
+                .Single(item => item.GetProperty("phase_id").GetString() == "restored-new-generation");
+            Assert.AreEqual("Completed", restoredGeneration.GetProperty("outcome").GetString(), name);
+            Assert.IsGreaterThan(0, restoredGeneration.GetProperty("process")
+                .GetProperty("process_id").GetInt32(), name);
+            Assert.IsGreaterThan(0, restoredGeneration.GetProperty("staging")
+                .GetProperty("receipt_byte_length").GetInt64(), name);
+            Assert.IsTrue(restoredGeneration.GetProperty("staging")
+                .GetProperty("staged_before_admission").GetBoolean(), name);
+            Assert.IsTrue(restoredGeneration.GetProperty("staging")
+                .GetProperty("coordinator_only_admission").GetBoolean(), name);
+            Assert.AreEqual("g002", restoredGeneration.GetProperty("lifecycle")
+                .GetProperty("generation_id").GetString(), name);
             Assert.AreEqual(0, DeterministicFakeSecureStore.NativeOperationCount, name);
         }
     }
@@ -1700,6 +1781,46 @@ public sealed class CredentialNativeQualificationSupervisorTests
         Assert.AreEqual(0, snapshot.NativeCallCounts.Total);
         Assert.AreEqual(1, snapshot.RejectedPhase?.CanonicalCallCounts?.CredDeleteW);
         Assert.AreEqual("cleanup-absence-oracle-rejected", snapshot.RejectedPhase?.ValidationReason);
+        CredentialNativeCleanupAmbiguityException ambiguity = new(
+            assignmentId,
+            "cleanup-helper-evidence-invalid",
+            snapshot,
+            failure);
+        using JsonDocument artifact = JsonDocument.Parse(
+            CredentialNativeQualificationRunner.SerializeCleanupAmbiguityArtifactForTest(
+                "manifest/test", new string('a', 64), ambiguity));
+        JsonElement retainedRejected = artifact.RootElement.GetProperty("evidence").GetProperty("rejected_phase");
+        Assert.AreEqual("cleanup", retainedRejected.GetProperty("phase_id").GetString());
+        Assert.AreEqual(1, retainedRejected.GetProperty("canonical_call_counts")
+            .GetProperty("cred_delete_w").GetInt32());
+        Assert.AreEqual(1, retainedRejected.GetProperty("canonical_call_trace").GetArrayLength());
+        Assert.AreEqual(0, artifact.RootElement.GetProperty("validated_native_call_counts")
+            .GetProperty("total").GetInt32());
+        Assert.AreEqual(1, artifact.RootElement.GetProperty("rejected_phase_native_call_counts")
+            .GetProperty("cred_delete_w").GetInt32());
+        StringAssert.Contains(artifact.RootElement.GetProperty("native_call_count_scope").GetString(),
+            "never merged into validated totals");
+        Assert.AreEqual(0, retainedRejected.GetProperty("canaries").GetProperty("secret_matches").GetInt32());
+        Assert.AreEqual(0, retainedRejected.GetProperty("canaries").GetProperty("raw_target_matches").GetInt32());
+        Assert.IsTrue(artifact.RootElement.GetProperty("containment_facts")
+            .GetProperty("process_trees_terminated").GetBoolean());
+        Assert.AreEqual(0, artifact.RootElement.GetProperty("containment_facts")
+            .GetProperty("process_tree_survivor_count").GetInt32());
+    }
+
+    private static CredentialNativeCleanupAmbiguityException TerminalAmbiguity(
+        string assignmentId,
+        string reason,
+        Exception cause)
+    {
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-Terminal-Evidence-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
+        using CredentialNativeQualificationSupervisor supervisor = new(
+            new CredentialHelperCoordinator(store, Launcher(Path.Combine(root, "fake-store"))),
+            expectedInheritedPrivateHandleCount: 3);
+        supervisor.RecordTerminalCleanupAmbiguity(assignmentId, reason);
+        return new(assignmentId, reason, supervisor.CaptureTerminalFailure(), cause);
     }
 
     private static OneShotCredentialHelperLauncher Launcher(string fakeStoreRoot)

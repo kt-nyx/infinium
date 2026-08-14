@@ -281,11 +281,16 @@ internal sealed class CredentialNativePreflightCollisionException(
 
 internal sealed class CredentialNativeCleanupAmbiguityException(
     string assignmentId,
-    string reason)
-    : InvalidOperationException("A native cleanup outcome is ambiguous; the namespace is terminally blocked.")
+    string reason,
+    CredentialNativeQualificationEvidence evidence,
+    Exception innerException)
+    : InvalidOperationException(
+        "A native cleanup outcome is ambiguous; the namespace is terminally blocked.",
+        innerException)
 {
     internal string AssignmentId { get; } = assignmentId;
     internal string Reason { get; } = reason;
+    internal CredentialNativeQualificationEvidence Evidence { get; } = evidence;
 }
 
 internal sealed class CredentialNativePrimaryFailureException(
@@ -781,7 +786,9 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         cleanupAmbiguous = true;
         throw new CredentialNativeCleanupAmbiguityException(
             assignmentId,
-            process.NativeNamespaceReuseBlockReason ?? "native-cleanup-ambiguity");
+            process.NativeNamespaceReuseBlockReason ?? "native-cleanup-ambiguity",
+            CaptureTerminalFailure(),
+            new InvalidDataException("The helper reported a terminal native namespace block."));
     }
 
     internal void RecordStaleGateRejection(
@@ -898,7 +905,9 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
             cleanupAmbiguous = true;
             throw new CredentialNativeCleanupAmbiguityException(
                 assignment.AssignmentId,
-                process.NativeNamespaceReuseBlockReason ?? "native-cleanup-ambiguity");
+                process.NativeNamespaceReuseBlockReason ?? "native-cleanup-ambiguity",
+                CaptureTerminalFailure(),
+                new InvalidDataException("The helper reported a terminal native namespace block."));
         }
         if (process.InheritedPrivateHandleCount != expectedInheritedPrivateHandleCount
             || process.StandardProtocolHandleCount != 0
