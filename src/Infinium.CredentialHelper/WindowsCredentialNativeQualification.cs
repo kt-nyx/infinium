@@ -569,6 +569,13 @@ internal static class WindowsCredentialNativeRecovery
             throw new InvalidDataException("Recovery native boundary is not exact.");
         }
         using WindowsCredentialManagerStore store = WindowsCredentialManagerStore.FromRecoveryManifest(root);
+        JsonElement recoveryBinding = root.GetProperty("binding");
+        string? priorTerminalEvidenceSha256 = recoveryBinding.TryGetProperty("terminal_evidence_sha256", out JsonElement priorEvidence)
+            ? priorEvidence.GetString() : null;
+        string? priorAuthorityLockSha256 = recoveryBinding.TryGetProperty("consumed_lock_sha256", out JsonElement priorLock)
+            ? priorLock.GetString() : null;
+        int priorExactAbsenceCount = recoveryBinding.TryGetProperty("prior_exact_absence_count", out JsonElement priorCount)
+            ? priorCount.GetInt32() : 0;
         List<object> absence = [];
         try
         {
@@ -593,6 +600,10 @@ internal static class WindowsCredentialNativeRecovery
                 cleanup_ambiguity = false,
                 namespace_reuse_blocked = true,
                 namespace_disposition = "cleanup-confirmed-absent-never-reuse",
+                prior_terminal_evidence_sha256 = priorTerminalEvidenceSha256,
+                prior_authority_lock_sha256 = priorAuthorityLockSha256,
+                prior_exact_absence_count = priorExactAbsenceCount,
+                combined_namespace_target_absence_count = checked(priorExactAbsenceCount + absence.Count),
                 network_operations = 0,
                 dns_operations = 0,
                 provider_operations = 0,
@@ -614,6 +625,9 @@ internal static class WindowsCredentialNativeRecovery
                 cleanup_ambiguity = true,
                 namespace_reuse_blocked = true,
                 namespace_disposition = "cleanup-ambiguous-never-reuse",
+                prior_terminal_evidence_sha256 = priorTerminalEvidenceSha256,
+                prior_authority_lock_sha256 = priorAuthorityLockSha256,
+                prior_exact_absence_count = priorExactAbsenceCount,
                 later_native_calls = 0,
             });
             throw;

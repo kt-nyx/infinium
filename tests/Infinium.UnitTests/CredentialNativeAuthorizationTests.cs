@@ -309,6 +309,11 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.IsFalse(reconstruction.Contains("Process.Start", StringComparison.Ordinal));
         Assert.IsFalse(reconstruction.Contains("Infinium.CredentialHelper.exe", StringComparison.Ordinal));
         Assert.IsFalse(reconstruction.Contains("--credential-native-recovery", StringComparison.Ordinal));
+        string currentReconstruction = File.ReadAllText(Path.Combine(root, "eng",
+            "reconstruct-m1-slice6-wp4-recovery-ad876b9a-receipt.ps1"));
+        Assert.IsFalse(currentReconstruction.Contains("Infinium.CredentialHelper", StringComparison.Ordinal));
+        Assert.IsFalse(currentReconstruction.Contains("Process.Start", StringComparison.Ordinal));
+        Assert.IsFalse(currentReconstruction.Contains("--credential-native-recovery", StringComparison.Ordinal));
     }
 
     [TestMethod]
@@ -367,6 +372,10 @@ public sealed class CredentialNativeAuthorizationTests
             ["cleanup_ambiguity"] = false,
             ["namespace_reuse_blocked"] = true,
             ["namespace_disposition"] = "cleanup-confirmed-absent-never-reuse",
+            ["prior_terminal_evidence_sha256"] = manifest["binding"]!["terminal_evidence_sha256"]!.GetValue<string>(),
+            ["prior_authority_lock_sha256"] = manifest["binding"]!["consumed_lock_sha256"]!.GetValue<string>(),
+            ["prior_exact_absence_count"] = 10,
+            ["combined_namespace_target_absence_count"] = 12,
             ["network_operations"] = 0,
             ["dns_operations"] = 0,
             ["provider_operations"] = 0,
@@ -374,7 +383,7 @@ public sealed class CredentialNativeAuthorizationTests
         };
 
         AssertEvidenceValidation(root, manifestPath, sha, id, valid, expectedSuccess: true);
-        AssertReceiptReconstruction(root, manifestPath, sha, id, valid);
+        AssertCurrentReceiptReconstruction(root, manifestPath, sha, id, valid);
         Reject(node => node["schema"] = "mutated");
         Reject(node => node["manifest_id"] = "mutated");
         Reject(node => node["manifest_sha256"] = new string('0', 64));
@@ -438,6 +447,10 @@ public sealed class CredentialNativeAuthorizationTests
         Reject(node => node["cleanup_ambiguity"] = true);
         Reject(node => node["namespace_reuse_blocked"] = false);
         Reject(node => node["namespace_disposition"] = "reusable");
+        Reject(node => node["prior_terminal_evidence_sha256"] = new string('0', 64));
+        Reject(node => node["prior_authority_lock_sha256"] = new string('0', 64));
+        Reject(node => node["prior_exact_absence_count"] = 9);
+        Reject(node => node["combined_namespace_target_absence_count"] = 11);
         Reject(node => node["network_operations"] = 1);
         Reject(node => node["dns_operations"] = 1);
         Reject(node => node["provider_operations"] = 1);
@@ -512,7 +525,12 @@ public sealed class CredentialNativeAuthorizationTests
         JsonArray targets = manifest["disposable_namespace"]!["targets"]!.AsArray();
         JsonArray absence = [];
         JsonArray trace = [];
-        long sequence = 1;
+        string first = targets[0]!["target_fingerprint_sha256"]!.GetValue<string>();
+        trace.Add(Trace(1, "CredReadW", first, "success", 17, null));
+        trace.Add(Trace(2, "CredFree", first, "released", null, 17));
+        trace.Add(Trace(3, "CredDeleteW", first, "success", null, null));
+        trace.Add(Trace(4, "CredReadW", first, "ERROR_NOT_FOUND", null, null));
+        long sequence = 5;
         foreach (JsonNode? target in targets)
         {
             string alias = target!["alias"]!.GetValue<string>();
@@ -523,7 +541,10 @@ public sealed class CredentialNativeAuthorizationTests
                 ["target_fingerprint_sha256"] = fingerprint,
                 ["result"] = "ERROR_NOT_FOUND",
             });
-            trace.Add(Trace(sequence++, "CredReadW", fingerprint, "ERROR_NOT_FOUND", null, null));
+            if (fingerprint != first)
+            {
+                trace.Add(Trace(sequence++, "CredReadW", fingerprint, "ERROR_NOT_FOUND", null, null));
+            }
         }
         JsonObject evidence = new()
         {
@@ -534,8 +555,8 @@ public sealed class CredentialNativeAuthorizationTests
             ["target_absence"] = absence,
             ["native_call_counts"] = new JsonObject
             {
-                ["cred_write_w"] = 0, ["cred_read_w"] = 12, ["cred_delete_w"] = 0,
-                ["cred_free"] = 0, ["total"] = 12,
+                ["cred_write_w"] = 0, ["cred_read_w"] = 13, ["cred_delete_w"] = 1,
+                ["cred_free"] = 1, ["total"] = 15,
             },
             ["native_call_trace"] = trace,
             ["namespace_blocked"] = false,
@@ -543,6 +564,7 @@ public sealed class CredentialNativeAuthorizationTests
             ["provider_operations"] = 0, ["billable_operations"] = 0,
         };
         AssertEvidenceValidation(root, manifestPath, sha, id, evidence, expectedSuccess: true);
+        AssertReceiptReconstruction(root, manifestPath, sha, id, evidence);
     }
 
     [TestMethod]
@@ -634,6 +656,83 @@ public sealed class CredentialNativeAuthorizationTests
         finally { Directory.Delete(tempRoot, recursive: true); }
     }
 
+    private static void AssertCurrentReceiptReconstruction(string root, string manifestPath, string sha, string id,
+        JsonObject evidence)
+    {
+        string tempRoot = Path.Combine(root, "artifacts", "test-temp", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        string evidencePath = Path.Combine(tempRoot, "evidence.json");
+        string lockPath = Path.Combine(tempRoot, "lock.json");
+        string priorPath = Path.Combine(tempRoot, "prior.json");
+        string priorLockPath = Path.Combine(tempRoot, "prior-lock.json");
+        string receiptPath = Path.Combine(tempRoot, "receipt.json");
+        string[] priorFingerprints =
+        [
+            "cf749639000f855451374b935af7cc66b3895856d77868a87d12a52bbcaa8fe7",
+            "ade2fbfd10c41f22382c11f58e5f23e89c92e43b6eabd686e24e5f3d3aa32096",
+            "76fc18abd12bf7dfcc496602f82fe96e579912cac7875c0ddbeab18828401ac6",
+            "befecf6ffdf669836062df69f078f54f94b4bf81ca4dcdcd1d28a4463694a422",
+            "2025f07cf9eff90bd87cb680be019eb11529a05f98a29459bcc7e72f8fc4b44f",
+            "43e9a481fec663f10eef5753b41074b201bcc06c3edb07174153525201521078",
+            "d1999c5fca496d9cd417c5f686278564e8028ab8c5db9e91d81790c8aee7ce07",
+            "6190a95dc664166e75f57fc39d57ec1eba8643e7865ae73789589ac732f8bc5c",
+            "598ae3c4a89d3ec7e72dfc11b6763120955a3fc946ea7425248f4e445558dea0",
+            "0a6d4ba3eed8c60a4048ca388178d2700ede8e1835b0ebca99ecb6ef50b6c051",
+        ];
+        JsonObject prior = new()
+        {
+            ["status"] = "failed-primary-cleanup-confirmed",
+            ["manifest_id"] = "infinium.m1-s6.wp4.credential-native-authorization/ad876b9a-9f45-4eb4-8d12-5970d76dd4ea",
+            ["cleanup_confirmed"] = true,
+            ["absence_confirmed"] = true,
+            ["whole_namespace_absence_confirmed"] = false,
+            ["namespace_disposition"] = "consumed-never-reuse",
+            ["later_native_calls"] = 0,
+            ["absence_target_fingerprints"] = new JsonArray(
+                priorFingerprints.Select(item => (JsonNode?)JsonValue.Create(item)).ToArray()),
+        };
+        try
+        {
+            File.WriteAllText(evidencePath, evidence.ToJsonString());
+            File.WriteAllText(lockPath, JsonSerializer.Serialize(new
+            {
+                manifest_id = id, manifest_sha256 = sha, disposition = "consumed-never-reuse",
+            }) + "\n");
+            File.WriteAllText(priorPath, prior.ToJsonString());
+            File.WriteAllText(priorLockPath, "{\"disposition\":\"consumed-never-reuse\"}\n");
+            string evidenceSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(evidencePath)));
+            string lockSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(lockPath)));
+            string priorSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(priorPath)));
+            string priorLockSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(priorLockPath)));
+            string[] Arguments(string targetReceipt, string targetPrior = "") =>
+            [
+                "eng/reconstruct-m1-slice6-wp4-recovery-ad876b9a-receipt.ps1",
+                "-ManifestPath", manifestPath, "-ManifestSha256", sha, "-ManifestId", id,
+                "-EvidencePath", evidencePath, "-EvidenceSha256", evidenceSha,
+                "-AuthorityLockPath", lockPath, "-AuthorityLockSha256", lockSha,
+                "-PriorEvidencePath", targetPrior.Length == 0 ? priorPath : targetPrior,
+                "-PriorEvidenceSha256", priorSha, "-PriorAuthorityLockPath", priorLockPath,
+                "-PriorAuthorityLockSha256", priorLockSha, "-ReceiptPath", targetReceipt, "-TestOnlyPaths",
+            ];
+            Assert.AreEqual(0, RunPwsh(root, Arguments(receiptPath)));
+            using JsonDocument receipt = JsonDocument.Parse(File.ReadAllBytes(receiptPath));
+            JsonElement receiptEvidence = receipt.RootElement.GetProperty("evidence");
+            Assert.AreEqual(2, receiptEvidence.GetProperty("recovery_target_absence_count").GetInt32());
+            Assert.AreEqual(10, receiptEvidence.GetProperty("prior_exact_absence_count").GetInt32());
+            Assert.AreEqual(12, receiptEvidence.GetProperty("combined_namespace_target_absence_count").GetInt32());
+            Assert.AreEqual("cleanup-confirmed-absent-consumed-never-reuse",
+                receiptEvidence.GetProperty("namespace_disposition").GetString());
+            Assert.AreEqual(1, RunPwsh(root, Arguments(receiptPath)), "CreateNew must refuse overwrite.");
+            Assert.AreEqual(1, RunPwsh(root, Arguments(Path.Combine(tempRoot, "missing-receipt.json"),
+                Path.Combine(tempRoot, "missing-prior.json"))));
+            prior["absence_target_fingerprints"]!.AsArray().RemoveAt(0);
+            File.WriteAllText(priorPath, prior.ToJsonString());
+            priorSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(priorPath)));
+            Assert.AreEqual(1, RunPwsh(root, Arguments(Path.Combine(tempRoot, "bad-prior-receipt.json"))));
+        }
+        finally { Directory.Delete(tempRoot, recursive: true); }
+    }
+
     private static void AssertReceiptReconstruction(string root, string manifestPath, string sha, string id,
         JsonObject evidence)
     {
@@ -664,11 +763,11 @@ public sealed class CredentialNativeAuthorizationTests
                 + $"\"dns_operations\":0,\"evidence_sha256\":\"{evidenceSha}\","
                 + $"\"manifest_id\":\"{id}\",\"manifest_sha256\":\"{sha}\","
                 + "\"namespace_disposition\":\"cleanup-confirmed-absent-consumed-never-reuse\","
-                + "\"native_call_counts\":{\"cred_delete_w\":1,\"cred_free\":1,\"cred_read_w\":3,"
-                + "\"cred_write_w\":0,\"total\":5},"
+                + "\"native_call_counts\":{\"cred_delete_w\":1,\"cred_free\":1,\"cred_read_w\":13,"
+                + "\"cred_write_w\":0,\"total\":15},"
                 + "\"network_operations\":0,\"provider_operations\":0,"
                 + "\"receipt_origin\":\"post-effect-reconstruction-from-immutable-evidence-no-native-retry\","
-                + "\"target_absence_count\":2},\"gate\":\"CredentialNativeRecovery\","
+                + "\"target_absence_count\":12},\"gate\":\"CredentialNativeRecovery\","
                 + "\"network_permitted\":false,\"status\":\"passed\"}\n";
             Assert.AreEqual(expected, File.ReadAllText(receiptPath));
             Assert.AreEqual(Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(expected))),

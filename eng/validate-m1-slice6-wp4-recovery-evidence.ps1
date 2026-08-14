@@ -40,7 +40,12 @@ if ($isCurrentRecovery) {
         $evidence.PSObject.Properties.Name -notcontains 'namespace_reuse_blocked' -or
         $evidence.PSObject.Properties.Name -notcontains 'namespace_disposition' -or
         [bool]$evidence.cleanup_ambiguity -or -not [bool]$evidence.namespace_reuse_blocked -or
-        $evidence.namespace_disposition -cne 'cleanup-confirmed-absent-never-reuse') {
+        $evidence.namespace_disposition -cne 'cleanup-confirmed-absent-never-reuse' -or
+        $evidence.prior_terminal_evidence_sha256 -cne [string]$manifest.binding.terminal_evidence_sha256 -or
+        $evidence.prior_authority_lock_sha256 -cne [string]$manifest.binding.consumed_lock_sha256 -or
+        [int]$evidence.prior_exact_absence_count -ne [int]$manifest.binding.prior_exact_absence_count -or
+        [int]$evidence.combined_namespace_target_absence_count -ne
+            ([int]$manifest.binding.prior_exact_absence_count + [int]$manifest.limits.targets)) {
         throw 'Current recovery terminal namespace evidence differs.'
     }
 } elseif ($evidence.PSObject.Properties.Name -notcontains 'namespace_blocked' -or

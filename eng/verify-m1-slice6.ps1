@@ -240,6 +240,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'eng/validate-m1-slice6-wp4-recovery-ad876b9a.ps1',
         'eng/validate-m1-slice6-wp4-recovery-evidence.ps1',
         'eng/reconstruct-m1-slice6-wp4-recovery-receipt.ps1',
+        'eng/reconstruct-m1-slice6-wp4-recovery-ad876b9a-receipt.ps1',
         'eng/verify-m1-slice6.ps1',
         'eng/verify-m1-slice6-wp3-upgrade.ps1',
         'fixtures/public/public-fixture-registry.v1.json',
@@ -1753,6 +1754,36 @@ function Invoke-CredentialNativeRecoveryGate {
     if(@($record-split"`r?`n"|?{$_-ceq$marker}).Count-ne1){throw 'Recovery owner marker missing.'}
     if($record.Contains("WP4_RECOVERY_EXECUTED manifest_id=$($m.manifest_id)",[StringComparison]::Ordinal)){throw 'Recovery already consumed.'}
     if([DateTimeOffset]::UtcNow-ge[DateTimeOffset]::Parse([string]$m.expires_at_utc)){throw 'Recovery expired.'}
+    $priorEvidencePath=Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-ad876b9a/credential-native-primary-failure.v2.json'
+    $priorLockPath=Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-authority-locks/19c5362e4a5bff02b1588b1962b36933be8930256aa2938692681f57ec19ba0c.json'
+    if(-not(Test-Path -LiteralPath $priorEvidencePath -PathType Leaf)-or-not(Test-Path -LiteralPath $priorLockPath -PathType Leaf)){
+        throw 'Recovery requires the exact local terminal evidence and consumed authority lock before any effect.'
+    }
+    $priorEvidenceBytes=[IO.File]::ReadAllBytes($priorEvidencePath)
+    $priorEvidenceSha=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($priorEvidenceBytes)).ToLowerInvariant()
+    $priorLockSha=(Get-FileHash -LiteralPath $priorLockPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if($priorEvidenceSha-ne[string]$m.binding.terminal_evidence_sha256-or$priorLockSha-ne[string]$m.binding.consumed_lock_sha256){
+        throw 'Recovery local terminal evidence or consumed lock bytes differ from exact authority.'
+    }
+    $priorEvidence=[Text.Encoding]::UTF8.GetString($priorEvidenceBytes)|ConvertFrom-Json -Depth 100 -DateKind String
+    $expectedPriorFingerprints=@(
+        'cf749639000f855451374b935af7cc66b3895856d77868a87d12a52bbcaa8fe7','ade2fbfd10c41f22382c11f58e5f23e89c92e43b6eabd686e24e5f3d3aa32096',
+        '76fc18abd12bf7dfcc496602f82fe96e579912cac7875c0ddbeab18828401ac6','befecf6ffdf669836062df69f078f54f94b4bf81ca4dcdcd1d28a4463694a422',
+        '2025f07cf9eff90bd87cb680be019eb11529a05f98a29459bcc7e72f8fc4b44f','43e9a481fec663f10eef5753b41074b201bcc06c3edb07174153525201521078',
+        'd1999c5fca496d9cd417c5f686278564e8028ab8c5db9e91d81790c8aee7ce07','6190a95dc664166e75f57fc39d57ec1eba8643e7865ae73789589ac732f8bc5c',
+        '598ae3c4a89d3ec7e72dfc11b6763120955a3fc946ea7425248f4e445558dea0','0a6d4ba3eed8c60a4048ca388178d2700ede8e1835b0ebca99ecb6ef50b6c051')
+    $priorFingerprints=@($priorEvidence.absence_target_fingerprints)
+    if($priorEvidence.status-ne'failed-primary-cleanup-confirmed'-or
+        $priorEvidence.manifest_id-ne[string]$m.binding.failed_manifest_id-or
+        $priorEvidence.manifest_sha256-ne[string]$m.binding.failed_manifest_sha256-or
+        [int]$priorEvidence.later_native_calls-ne0-or-not[bool]$priorEvidence.cleanup_confirmed-or
+        -not[bool]$priorEvidence.absence_confirmed-or[bool]$priorEvidence.whole_namespace_absence_confirmed-or
+        $priorEvidence.namespace_disposition-ne'consumed-never-reuse'-or
+        @($priorFingerprints|Sort-Object -Unique).Count-ne10-or
+        (($priorFingerprints|Sort-Object)-join'|')-ne(($expectedPriorFingerprints|Sort-Object)-join'|')-or
+        @($m.disposable_namespace.targets.target_fingerprint_sha256|?{$_ -in $priorFingerprints}).Count-ne0){
+        throw 'Recovery prior ten-target absence lineage is not exact; no effect is permitted.'
+    }
     & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp4-recovery-ad876b9a.ps1') -ManifestPath $path;if($LASTEXITCODE-ne0){throw 'Recovery validation failed.'}
     & dotnet build Infinium.sln -c Release --no-restore --nologo;if($LASTEXITCODE-ne0){throw 'Recovery build failed.'}
     $lockRoot=Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-recovery-locks';[IO.Directory]::CreateDirectory($lockRoot)|Out-Null
@@ -1770,6 +1801,8 @@ function Invoke-CredentialNativeRecoveryGate {
     $recoveryCounts=$ev.native_call_counts
     if($ev.status-ne'passed'-or[bool]$ev.cleanup_ambiguity-or-not[bool]$ev.namespace_reuse_blocked-or
         $ev.namespace_disposition-ne'cleanup-confirmed-absent-never-reuse'-or
+        $ev.prior_terminal_evidence_sha256-ne$priorEvidenceSha-or$ev.prior_authority_lock_sha256-ne$priorLockSha-or
+        [int]$ev.prior_exact_absence_count-ne10-or[int]$ev.combined_namespace_target_absence_count-ne12-or
         @($recoveryAbsence).Count-ne2-or@($recoveryAbsence|?{$_.result-ne'ERROR_NOT_FOUND'}).Count-ne0-or
         @($recoveryAbsence.target_fingerprint_sha256 | Sort-Object -Unique).Count-ne2-or
         @($recoveryAbsence|?{$_.target_fingerprint_sha256 -notin $recoveryFingerprints}).Count-ne0-or
@@ -1780,7 +1813,7 @@ function Invoke-CredentialNativeRecoveryGate {
         [int]$ev.provider_operations-ne0-or[int]$ev.billable_operations-ne0){
         throw 'Recovery gate direct exact-effect/absence/count oracle failed; namespace remains blocked.'
     }
-    Write-Receipt 'CredentialNativeRecovery' ([ordered]@{manifest_id=$m.manifest_id;manifest_sha256=$sha;recovery_target_absence_count=2;prior_exact_absence_count=10;combined_namespace_target_absence_count=12;prior_terminal_evidence_sha256=$m.binding.terminal_evidence_sha256;native_call_counts=$ev.native_call_counts;network_operations=0;provider_operations=0;namespace_disposition='cleanup-confirmed-absent-never-reuse'}) 'passed' $true
+    Write-Receipt 'CredentialNativeRecovery' ([ordered]@{manifest_id=$m.manifest_id;manifest_sha256=$sha;recovery_target_absence_count=2;prior_exact_absence_count=10;combined_namespace_target_absence_count=12;prior_terminal_evidence_sha256=$priorEvidenceSha;prior_authority_lock_sha256=$priorLockSha;native_call_counts=$ev.native_call_counts;network_operations=0;provider_operations=0;namespace_disposition='cleanup-confirmed-absent-never-reuse'}) 'passed' $true
 }
 
 Push-Location $repoRoot
