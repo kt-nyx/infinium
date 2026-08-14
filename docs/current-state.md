@@ -17,7 +17,7 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S6` - owner-accepted; implementation-active |
-| Current authorized work | `M1/S6/WP4` exact post-effect audit of completed all-12 cleanup-only recovery `040817c8-0a87-480a-915c-71dc2fe54da3` and bounded non-native evidence-finalization correction for consumed qualification `076b981a-9d32-4e6a-af35-1e7017e0f833`; no retry or further Credential Manager operation is authorized |
+| Current authorized work | `M1/S6/WP4` fresh qualification-manifest consumer binding and owner-review preparation only, based on accepted evidence-finalization correction `03ae6929bad069c7c9e351b2ed5bd361e31b89e7`; no Credential Manager operation is authorized |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
 | Accepted Slice 6 WP1 candidate | `61b90314d8273749849f590b303814008fa2fdfa`; nine Slice 6 contracts are `Implementation-active` and the accepted local input-bound policy is `openai-responses-o200k-byte-envelope/v1` |
 | Accepted `M1/S6/WP2` candidate | `ed27ed04897103d93a60e6200971ca12d04f2e11`; capability, price, atomic reservation/final-gate, settlement, projection, replay, simulator, and public fixture/oracle evidence are independently accepted |
@@ -26,8 +26,8 @@ review history.
 | Accepted `M1/S6/WP6` candidate | Product `ee0b6d31f1c1826c2af7634766155397e916c3e1`, append-only evidence `2b277338390f7dac37b5a5436bbe2cd81dedc871`, and answer-isolated oracle `37aa2b4e2fc084307ba5211f21bbeeb7a93efab0`; source-claim acquisition, deterministic admission, retained semantic provenance/replay, and later admitted-artifact consumption are independently accepted |
 | Accepted `M1/S6/WP7` candidate | Product `59367a7479a7395b173b974bf720543aab2404d4`, append-only acceptance evidence `51251c0e0eb98d67dbc9b295b9ff084ebca33890`, and answer-isolated VAL-v3 oracle freeze `e9b032366552aa67649636655ed07a3bb50bb3b1`; deterministic candidate investigation, complete provenance, durable retention/readback, and database-owned replay are independently accepted |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure; no separate ADR; eleven packages with distinct native/live authorization gates |
-| Next eligible action | Complete fresh post-effect audit of recovery `040817c8-0a87-480a-915c-71dc2fe54da3`, then correct the qualification's post-success evidence-finalization seam non-natively with deterministic scan/write failure tests and full verification. The recovery and qualification identities are consumed and may never be retried |
-| Later work | WP4 remains unaccepted. Recovery `040817c8` proves all 12 `076b981a` targets absent, but the failed qualification still lacks its required final evidence. Both identities, locks, outputs, namespace, and targets are consumed forever. Any later qualification requires a fresh independently reviewed identity and owner acceptance. WP8 remains blocked until WP4 is accepted. WP9-WP11 require their own exact authorization; no provider request is authorized now |
+| Next eligible action | Complete non-native validation and fresh independent review of manifest `c6e9226e-3d95-496c-bda6-c9142bb6b980`, then stop for exact-byte owner acceptance. Do not append an owner marker or execute `CredentialNative` during preparation |
+| Later work | WP4 remains unaccepted. Recovery `040817c8` proves all 12 consumed `076b981a` targets absent, and correction `03ae6929` closes the evidence-finalization race with deterministic failure evidence. The fresh `c6e9226e` identity has no effect authority before exact owner acceptance. WP8 remains blocked until WP4 is accepted. WP9-WP11 require their own exact authorization; no provider request is authorized now |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
 | Slice entry | [Slice 6 current summary and navigation](plans/milestones/m1/slices/s6/README.md) |
@@ -119,13 +119,19 @@ finalization before it could retain the required final evidence JSON. Source
 ordering strongly implicates the recursive artifact scan over retained SQLite
 files, but the durable error does not distinguish that scan from the final
 evidence write, so the exact I/O substage is unproven. The identity is consumed
-and may not be retried. Current authority is limited to bounded non-native
-evidence-retention correction and preparation/review of an exact all-12-target
-cleanup-only recovery. The required ordered final trace and per-target
-terminal-absence array were not retained, so every target remains in the
-conservative recovery scope despite the strong runner and receipt evidence
-that internal cleanup completed. No further Credential Manager operation is
-authorized. WP8 remains
+and may not be retried. Cleanup-only recovery
+`040817c8-0a87-480a-915c-71dc2fe54da3` subsequently proved all 12 exact
+targets absent with W0/R12/D0/F0/T12 and was independently accepted. The
+bounded evidence-finalization correction is independently accepted at
+`03ae6929bad069c7c9e351b2ed5bd361e31b89e7`: every store is disposed before
+artifact scanning, summary bytes receive an in-memory raw-target canary scan,
+failure stages retain a closed redacted evidence envelope, and final evidence
+is atomically sealed before the human-readable summary. The only current work
+is fresh WP4 qualification-manifest consumer binding and owner-review
+preparation only for disjoint identity
+`c6e9226e-3d95-496c-bda6-c9142bb6b980`. No owner marker, native credential
+operation, provider operation, or network operation is authorized by this
+preparation. WP8 remains
 blocked because its native WP4 prerequisite is not accepted. Plan acceptance permits automatic progression among named
 non-live packages only after each prerequisite package is independently
 accepted and this file is advanced to the exact next package. Production

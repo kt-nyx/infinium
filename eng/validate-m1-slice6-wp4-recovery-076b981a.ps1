@@ -72,18 +72,20 @@ if ($expires -le $prepared -or ($expires - $prepared) -gt [TimeSpan]::FromHours(
 }
 
 $priorRoot = Join-Path $root 'artifacts/m1-slice6/wp4-native-076b981a'
-$failedManifestPath = Join-Path $root 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json'
 $priorLockPath = Join-Path $root 'artifacts/m1-slice6/wp4-native-authority-locks/25c657c7241731d5f91d9df3f49dd2cc0c3241eb5c6a470a3817400552d9d3c8.json'
 $stderrPath = Join-Path $priorRoot 'coordinator-stderr.txt'
 $summaryPath = Join-Path $priorRoot 'credential-native-summary.txt'
 $backupPath = Join-Path $priorRoot 'native-backup-metadata.v2.json'
-foreach ($required in @($failedManifestPath, $priorLockPath, $stderrPath, $summaryPath, $backupPath)) {
+foreach ($required in @($priorLockPath, $stderrPath, $summaryPath, $backupPath)) {
     if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
         throw '076b981a recovery requires all exact prior immutable artifacts.'
     }
 }
-if ((Get-FileHash $failedManifestPath -Algorithm SHA256).Hash.ToLowerInvariant() -cne
-        [string]$binding.failed_manifest_sha256 -or
+$historicalManifestBlob = (& git -C $root rev-parse `
+    "$($binding.failed_execution_head_commit):docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json").Trim()
+if ($LASTEXITCODE -ne 0 -or
+    $historicalManifestBlob -cne '2de2215bb1dc531baa41778381b1cf89ab56618b' -or
+    [string]$binding.failed_manifest_sha256 -cne '36890ec28cf706484730fc9dfbd6dec5bcf3be76ed5c509a373fa61b8c910ee2' -or
     (Get-FileHash $priorLockPath -Algorithm SHA256).Hash.ToLowerInvariant() -cne
         [string]$binding.consumed_lock_sha256 -or
     (Get-FileHash $stderrPath -Algorithm SHA256).Hash.ToLowerInvariant() -cne

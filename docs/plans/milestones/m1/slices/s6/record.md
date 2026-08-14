@@ -6700,3 +6700,34 @@ non-native evidence-finalization correction and fresh qualification
 preparation only after post-effect audit.
 
 WP4_RECOVERY_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-recovery/040817c8-0a87-480a-915c-71dc2fe54da3 sha256=94cb5c77b906100c6c436ddbb889f7511b2f4c1cea0c60556651c97b7020414d execution_head_commit=f70904dc3305b3031412116f85cda6fa7cda4786 status=passed cleanup=confirmed-absent target_absence_count=12 native_calls=W0/R12/D0/F0/T12 evidence_sha256=d65cefe9c2a71231c8fd9a6c4105f26acd742f49af248f38be989b059a93a515 authority_lock_sha256=178711a914651b180d667285c6d4e22c8a820aa6f8450e398626a121afc2c5d0 namespace_reuse_blocked=true later_native_calls=0 network_operations=0 dns_operations=0 provider_operations=0 billable_operations=0 retry_attempted=false
+
+### 2026-08-14 - WP4 evidence-finalization correction acceptance and fresh qualification preparation
+
+The bounded non-native evidence-finalization correction is accepted at exact
+candidate `03ae6929bad069c7c9e351b2ed5bd361e31b89e7`. Its exact full floor passed:
+Release build with zero warnings/errors; focused finalization 8/8; Unit 259
+passed plus one expected skip; Contract 169/169; Integration 156/156;
+Evaluation 66 passed plus eight expected skips; Security 19/19; Fault 7/7;
+unfiltered solution 676 passed plus nine expected skips; formatting,
+dependency, documentation, `All`, diff, and Layer 6 checks. Layer 6 receipt
+SHA-256 is
+`80fae034b48b7ee29873a61cc5b266e9c2b8184c596d8cefd0d04ee790694ea7`.
+Fresh independent semantic/security review accepted the exact candidate with
+no finding. Repository-owned .NET/testhost/helper processes were zero after
+verification. No native credential, UI, provider, DNS, network, private,
+archive, or billable effect occurred.
+
+Fresh qualification preparation uses schema
+`infinium.repository.wp4-credential-native-authorization/1.6.0` and identity
+`infinium.m1-s6.wp4.credential-native-authorization/c6e9226e-3d95-496c-bda6-c9142bb6b980`.
+The fresh namespace contains 12 exact ordered tuples disjoint from the
+consumed `076b981a` namespace. Consumers bind the consumed qualification's
+historical Git blob and typed post-success evidence-finalization artifact,
+the exact success summary/backup/output inventory/authority lock, and the
+accepted `040817c8` all-12 cleanup evidence, lock, gate receipt, and
+reconstructed receipt. The gate binds only the fresh execution marker,
+requires the canonical output root to be absent, and defers output creation
+until semantic/build/test preflight and one-shot lock creation have succeeded.
+The draft validator and focused authorization class passed 33/33. This is
+pre-effect preparation only: there is no owner-acceptance marker, execution
+marker, authority lock, output root, native operation, or provider operation.

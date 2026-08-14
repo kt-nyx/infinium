@@ -62,7 +62,7 @@ $resolvedOutputRoot = if ([System.IO.Path]::IsPathRooted($OutputRoot)) {
 }
 if ($Gate -eq 'CredentialNative') {
     $expectedCredentialNativeOutputRoot = [System.IO.Path]::GetFullPath((Join-Path $repoRoot `
-        'artifacts/m1-slice6/wp4-native-076b981a'))
+        'artifacts/m1-slice6/wp4-native-c6e9226e'))
     if (-not [string]::Equals($resolvedOutputRoot, $expectedCredentialNativeOutputRoot,
             [StringComparison]::OrdinalIgnoreCase)) {
         throw 'CredentialNative requires the exact fresh output root bound by the accepted manifest.'
@@ -86,7 +86,7 @@ if ($Gate -eq 'CredentialNativeRecovery' -and
 $outputRootExistedBeforeInvocation = Test-Path -LiteralPath $resolvedOutputRoot
 $outputRootHadEntriesBeforeInvocation = $outputRootExistedBeforeInvocation -and
     $null -ne (Get-ChildItem -LiteralPath $resolvedOutputRoot -Force | Select-Object -First 1)
-if ($Gate -ne 'CredentialNativeRecovery') {
+if ($Gate -notin @('CredentialNative', 'CredentialNativeRecovery')) {
     New-Item -ItemType Directory -Force -Path $resolvedOutputRoot | Out-Null
 }
 
@@ -1365,7 +1365,8 @@ function Invoke-CredentialNativeGate {
     $manifestBytes = [IO.File]::ReadAllBytes($manifestPath)
     $manifestSha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($manifestBytes)).ToLowerInvariant()
     $manifest = [Text.Encoding]::UTF8.GetString($manifestBytes) | ConvertFrom-Json -Depth 100 -DateKind String
-    if ($manifest.manifest_id -ne 'infinium.m1-s6.wp4.credential-native-authorization/076b981a-9d32-4e6a-af35-1e7017e0f833' -or
+    if ($manifest.manifest_id -ne 'infinium.m1-s6.wp4.credential-native-authorization/c6e9226e-3d95-496c-bda6-c9142bb6b980' -or
+        $manifest.schema_identity -ne 'infinium.repository.wp4-credential-native-authorization/1.6.0' -or
         $manifest.status -ne 'ready-for-owner-acceptance' -or
         $manifest.effect_authority -ne 'none-until-owner-accepts-exact-manifest-bytes' -or
         $manifest.candidate_binding.accepted_wp3_candidate_commit -ne 'b32939e8b7491a5c47453f912d25dd98c090f103' -or
@@ -1374,7 +1375,8 @@ function Invoke-CredentialNativeGate {
         $manifest.candidate_binding.authorization_handoff_commit -ne '44fbcc0542bef77f93c83f1422406a2b6012f0d5' -or
         $manifest.candidate_binding.sqlite_correction_candidate_commit -ne '2f95692687b60d97db2710835e9d0966f131c164' -or
         $manifest.candidate_binding.ambiguity_evidence_correction_candidate_commit -ne '2dce8acc27eece01b0232dd531a2deb27ef752af' -or
-        $manifest.candidate_binding.native_failure_evidence_and_containment_correction_candidate_commit -ne '3456fe02594fd365b1d2627dd08fad44fe0aee92') {
+        $manifest.candidate_binding.native_failure_evidence_and_containment_correction_candidate_commit -ne '3456fe02594fd365b1d2627dd08fad44fe0aee92' -or
+        $manifest.candidate_binding.evidence_finalization_correction_candidate_commit -ne '03ae6929bad069c7c9e351b2ed5bd361e31b89e7') {
         throw 'CredentialNative v2 identity, status, or candidate binding is not executable.'
     }
     $closeReady = [string]$manifest.candidate_binding.close_ready_implementation_commit
@@ -1392,7 +1394,8 @@ function Invoke-CredentialNativeGate {
             '44fbcc0542bef77f93c83f1422406a2b6012f0d5',
             '2f95692687b60d97db2710835e9d0966f131c164',
             '2dce8acc27eece01b0232dd531a2deb27ef752af',
-            '3456fe02594fd365b1d2627dd08fad44fe0aee92', $closeReady)) {
+            '3456fe02594fd365b1d2627dd08fad44fe0aee92',
+            '03ae6929bad069c7c9e351b2ed5bd361e31b89e7', $closeReady)) {
         & git merge-base --is-ancestor $ancestor $head
         if ($LASTEXITCODE -ne 0) { throw "CredentialNative candidate does not descend from $ancestor." }
     }
@@ -1417,12 +1420,11 @@ function Invoke-CredentialNativeGate {
     if ($acceptanceLineCount -ne 1) {
         throw 'CredentialNative requires exactly one canonical exact-byte v2 owner-acceptance line in the append-only record.'
     }
-    if ($record.Contains("WP4_V2_NATIVE_EXECUTED manifest_id=$($manifest.manifest_id)", [StringComparison]::Ordinal) -or
-        $record.Contains('infinium.m1-s6.wp4.credential-native-evidence/v2', [StringComparison]::Ordinal)) {
+    if ($record.Contains("WP4_V2_NATIVE_EXECUTED manifest_id=$($manifest.manifest_id)", [StringComparison]::Ordinal)) {
         throw 'CredentialNative v2 is terminal because the append-only record already identifies a native execution.'
     }
-    if ($outputRootHadEntriesBeforeInvocation) {
-        throw 'CredentialNative v2 requires a fresh empty output root and never recovers or reuses evidence.'
+    if ($outputRootExistedBeforeInvocation) {
+        throw 'CredentialNative v2 requires a fresh absent output root and never recovers or reuses evidence.'
     }
 
     & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp4-authorization-v2.ps1') -ManifestPath $manifestPath
@@ -1461,6 +1463,8 @@ function Invoke-CredentialNativeGate {
     } catch [IO.IOException] {
         throw 'CredentialNative v2 one-shot authority was already consumed; no second invocation is allowed.'
     }
+
+    [IO.Directory]::CreateDirectory($resolvedOutputRoot) | Out-Null
 
     $stdoutPath = Join-Path $resolvedOutputRoot 'coordinator-stdout.txt'
     $stderrPath = Join-Path $resolvedOutputRoot 'coordinator-stderr.txt'

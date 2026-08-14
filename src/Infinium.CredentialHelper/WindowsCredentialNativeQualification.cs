@@ -699,17 +699,17 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
     private const uint CredentialPersistLocalMachine = 2;
     private const int ErrorNotFound = 1168;
     private const string ExpectedSupersededManifestId =
-        "infinium.m1-s6.wp4.credential-native-authorization/4936dcef-a0f4-4302-9899-0afd99b19799";
+        "infinium.m1-s6.wp4.credential-native-authorization/076b981a-9d32-4e6a-af35-1e7017e0f833";
     private const string ExpectedSupersededManifestSha256 =
-        "910ff1552d178bcfe5ff36fd9b618d187203c38c6b023d9610af5c702bdb3393";
-    private const string ExpectedSupersededEvidenceSha256 =
-        "0a10a873b7356612cd8ac25934c8fbf85ab0cae76f7aea42b2317421dd251674";
+        "36890ec28cf706484730fc9dfbd6dec5bcf3be76ed5c509a373fa61b8c910ee2";
+    private const string ExpectedSupersededArtifactSha256 =
+        "1c624078f51c8d4eab9563384dd5f67cecde81b16995f0819d29bf2457165f6e";
     private const string ExpectedSupersededAuthorityLockSha256 =
-        "18ffe3e24687543c7c0d538ec98874245ef3fe0c3d2c26945d375b5e23604d02";
+        "80a014c72636221a2cf52008bb9ee0d27cd0c6badbfa5659d324a6ad9be350a7";
     private const string ExpectedCleanupRecoveryManifestSha256 =
-        "09b6858eaf472038499f18654d2a2fc4ca0a32b2ed34cd1a192146f90755e183";
+        "94cb5c77b906100c6c436ddbb889f7511b2f4c1cea0c60556651c97b7020414d";
     private const string ExpectedCleanupRecoveryEvidenceSha256 =
-        "427d78e467fa0f26517d35abcb2c4405bbaf4db5a5845f278d9b584effdc271a";
+        "d65cefe9c2a71231c8fd9a6c4105f26acd742f49af248f38be989b059a93a515";
     private WindowsCredentialFault fault;
     private int writeCount;
     private int readCount;
@@ -761,10 +761,13 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 expectedManifestId,
                 StringComparison.Ordinal)
                 || manifestRoot.GetProperty("schema_identity").GetString()
-                    != "infinium.repository.wp4-credential-native-authorization/1.5.0"
+                    != "infinium.repository.wp4-credential-native-authorization/1.6.0"
                 || manifestRoot.GetProperty("status").GetString() != "ready-for-owner-acceptance"
                 || manifestRoot.GetProperty("effect_authority").GetString()
-                    != "none-until-owner-accepts-exact-manifest-bytes")
+                    != "none-until-owner-accepts-exact-manifest-bytes"
+                || manifestRoot.GetProperty("candidate_binding")
+                    .GetProperty("evidence_finalization_correction_candidate_commit").GetString()
+                    != "03ae6929bad069c7c9e351b2ed5bd361e31b89e7")
             {
                 throw new InvalidDataException("The native store manifest identity or prepared state does not match its accepted v2 binding.");
             }
@@ -772,44 +775,54 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
             if (supersedes.TryGetProperty("gate_receipt_sha256", out _)
                 || supersedes.GetProperty("manifest_id").GetString() != ExpectedSupersededManifestId
                 || supersedes.GetProperty("manifest_sha256").GetString() != ExpectedSupersededManifestSha256
-                || supersedes.GetProperty("native_evidence_sha256").GetString() != ExpectedSupersededEvidenceSha256
+                || supersedes.GetProperty("terminal_artifact_kind").GetString()
+                    != "typed-coordinator-stderr-post-success-evidence-finalization"
+                || supersedes.GetProperty("terminal_artifact_sha256").GetString() != ExpectedSupersededArtifactSha256
+                || supersedes.GetProperty("success_summary_sha256").GetString()
+                    != "e05a4db0c0f7f2422ce88565b81ea8bf342e96bcf1a06feaa09a8c7a94e03299"
+                || supersedes.GetProperty("backup_metadata_sha256").GetString()
+                    != "04f44827955b7a6d72ba9808b317edb85de70be0759a654a3b15433ac0fefa6c"
+                || supersedes.GetProperty("output_inventory_sha256").GetString()
+                    != "9e3f55968721c55ce1637dfc00673acd757c6ea04b3f640bb2acb19354b4427f"
                 || supersedes.GetProperty("authority_lock_sha256").GetString()
                     != ExpectedSupersededAuthorityLockSha256
                 || supersedes.GetProperty("namespace_disposition").GetString()
                     != "terminal-cleanup-confirmed-absent-never-reuse"
                 || cleanupRecovery.GetProperty("manifest_id").GetString()
-                    != "infinium.m1-s6.wp4.credential-native-recovery/dd412ecc-3b2c-4628-8865-bc8574a357c7"
+                    != "infinium.m1-s6.wp4.credential-native-recovery/040817c8-0a87-480a-915c-71dc2fe54da3"
                 || cleanupRecovery.GetProperty("manifest_sha256").GetString()
                     != ExpectedCleanupRecoveryManifestSha256
                 || cleanupRecovery.GetProperty("evidence_sha256").GetString()
                     != ExpectedCleanupRecoveryEvidenceSha256
                 || cleanupRecovery.GetProperty("authority_lock_sha256").GetString()
-                    != "5f9420335ce08c482bf747cf43ac409bb3e13204a6910370c480f9caae00720e"
+                    != "178711a914651b180d667285c6d4e22c8a820aa6f8450e398626a121afc2c5d0"
                 || cleanupRecovery.GetProperty("receipt_sha256").GetString()
-                    != "eb4ec7b518329081830bceb3e3b4f3894dee74ed7d334eacb532ce72009dc429"
+                    != "413789b410eb3718f7185d01d614d90444b2edb6196338dd21b246802cdb00cf"
+                || cleanupRecovery.GetProperty("reconstructed_receipt_sha256").GetString()
+                    != "d105f42e7dfcec30590f40fa9b9ce0c65fe0c4a6aca9d1bd09b47ac048e3d853"
                 || cleanupRecovery.GetProperty("combined_namespace_target_absence_count").GetInt32() != 12)
             {
                 throw new InvalidDataException("The native store manifest predecessor authority is not exact.");
             }
             if (manifestRoot.GetProperty("disposable_namespace").GetProperty("namespace_id").GetString()
-                != "m1-s6-wp4-native-076b981a-9d32-4e6a-af35-1e7017e0f833")
+                != "m1-s6-wp4-native-c6e9226e-3d95-496c-bda6-c9142bb6b980")
             {
                 throw new InvalidDataException("The native store manifest namespace is not the exact fresh namespace.");
             }
             NativeTarget[] expectedTargets =
             [
-                new("interactive-primary", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-interactive-primary", "g001", "04b35e2718e202cb0a6bfef233dbe033c791aa02b2261e1779813d310bd3baad"),
-                new("interactive-cancel", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-interactive-cancel", "g001", "24f709437c97a67819b06270d0d211aaae426bbfbd56f83774106bd2f7da5277"),
-                new("size-valid", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-size-valid", "g001", "6aa891fe3db76c45c994b7b7a461f5242621226a788c489d0bcecde87b78e2dd"),
-                new("size-oversize", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-size-oversize", "g001", "01338cb4af7abf7d50b49313cce237db80a389ba1ff2c01d23a8a96ff02d66f2"),
-                new("unavailable-store", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-unavailable", "g001", "a7af4cc90f3f3021cf2a7220f92d247165fcaaf1f6b41410ca2d34fd55582895"),
-                new("replacement-old", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-replacement", "g001", "e82ee891429ff57587ea0f7f35f6f5ef98ae96a9d5d75da5ad7ee716a645ae77"),
-                new("replacement-new", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-replacement", "g002", "fea103ab44d0057a2a9cc10de5792ffec891cc6fe17086fe960a979d87eb852a"),
-                new("revoke-delete", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-revoke-delete", "g001", "92cf677dd3dfc6509d75c9d502c12ae3d4b9295b2c25b4327b965f252b10649d"),
-                new("crash-restart", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-crash-restart", "g001", "c36ea4643f97ff6a68d1880445669f213e1ef1e2b71487b3179d6102a1ce0f95"),
-                new("backup-old", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-backup-restore", "g001", "1ce6dceb1deea0485f5c56b9dce06eb3d44cda389ff0805291a9719eb1de865f"),
-                new("backup-new", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-backup-restore", "g002", "11d51fa6e870709f346f61e931a91ab8cf5336b689f8ddcfc427283d71fb1d0a"),
-                new("fake-dispatch", "m1s6-wp4-076b981a9d324e6aaf351e7017e0f833-fake-dispatch", "g001", "bcb55be3c8d4f1b89103d28cd5fa40d97fcdbc528ffd2f4513f4f3b12770c0b1"),
+                new("interactive-primary", "m1s6-wp4-c6e9226e3d95496cbda6c9142bb6b980-interactive-primary", "g001", "735a2bb140500c961b6dd1a043328e10ea403fd718a37e8fc1d20278429e2902"),
+                new("interactive-cancel", "m1s6-wp4-c6e9226e3d95496cbda6c9142bb6b980-interactive-cancel", "g001", "70ac9332bcde2d808cce41410f75ffc65db1cc19ea00a94d088949f6d359d05b"),
+                new("size-valid", "m1s6-wp4-c6e9226e3d95496cbda6c9142bb6b980-size-valid", "g001", "ee50987dfacfe66e26648307d5163919c7a44289eef69764ac610442d9e1141a"),
+                new("size-oversize", "m1s6-wp4-c6e9226e3d95496cbda6c9142bb6b980-size-oversize", "g001", "55ff9c3afb4f6e3766fd58adf26e8ae2e70589dc915bb857ba74547d36d6b54f"),
+                new("unavailable-store", "m1s6-wp4-c6e9226e3d95496cbda6c9142bb6b980-unavailable", "g001", "dd488672949a8bd26896171648b6dcf0a500e133c5c894555cfa04967712f5cd"),
+                new("replacement-old", "m1s6-wp4-c6e9226e3d95496cbda6c9142bb6b980-replacement", "g001", "adc83ec9f53a0c15e04f4fb61adb0d265a3ba9bee4cf40755e1d0bf19e86122f"),
+                new("replacement-new", "m1s6-wp4-c6e9226e3d95496cbda6c9142bb6b980-replacement", "g002", "335870b602b5b897dcf199f6ce7b619db5057df98863bcf1fae6022866b45393"),
+                new("revoke-delete", "m1s6-wp4-c6e9226e3d95496cbda6c9142bb6b980-revoke-delete", "g001", "e5de9a8f2d96dbb73111607c42ee2c3d38f9089d9df72c7ab5997e7cba5e7112"),
+                new("crash-restart", "m1s6-wp4-c6e9226e3d95496cbda6c9142bb6b980-crash-restart", "g001", "4def6a88eb6e61b7fbbac4965a90f963aeef96b1144c000cda53f58951275670"),
+                new("backup-old", "m1s6-wp4-c6e9226e3d95496cbda6c9142bb6b980-backup-restore", "g001", "94c87d9b953118112df5e0fc319fa6c8079e8c62be2ca50abaa176fe972dacd5"),
+                new("backup-new", "m1s6-wp4-c6e9226e3d95496cbda6c9142bb6b980-backup-restore", "g002", "82975530d1612c1984c1a9befb8f89f20d1e413858e1a48e6ef405ab225deda7"),
+                new("fake-dispatch", "m1s6-wp4-c6e9226e3d95496cbda6c9142bb6b980-fake-dispatch", "g001", "57097d7dcfc1702fc8d7c39195605cfc137f888229c78372ec7cccdc4ddc9750"),
             ];
             JsonElement[] actualTargets = manifestRoot.GetProperty("disposable_namespace")
                 .GetProperty("targets").EnumerateArray().ToArray();
