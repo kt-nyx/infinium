@@ -5322,3 +5322,58 @@ It remains non-authorizing: no owner marker, execution marker, output root,
 one-shot lock, Credential Manager call, manual UI, DNS, network, provider,
 billable, private-fixture, archive, later-package, or push operation occurred.
 WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/ad876b9a-9f45-4eb4-8d12-5970d76dd4ea sha256=7d1e8c35072c6676258c9cbcc47fd8833458878bf289728cc453e5e0942d35ce close_ready_commit=b12bbbe3283212778bfd3466e0b871318a217d32 expires_at_utc=2026-08-15T20:55:00.0000000Z
+
+## WP4 `ad876b9a` native terminal attempt — 2026-08-14
+
+The owner confirmed readiness for the exact accepted manifest, and the sole
+native invocation ran from clean execution HEAD
+`50f7ad792af3e464e99670d14d49375d75de5b33`. The owner directly observed and
+completed two dialogs: first Submit with manually typed disposable dummy text,
+then Cancel with no value. No third restore-reauthentication dialog appeared.
+Retained evidence agrees: Submit completed through `submitbutton` with staged
+receipt SHA-256
+`58d2c73692dcc2046560edcc598c3f644df61aeee1e19499b6c2a8ea84a38f7e`,
+and Cancel completed through `cancelbutton` with staged receipt SHA-256
+`142783688fd607037a80bfa8ac71fbc39c5a47df5951db4450bdc18e9786ce8a`.
+Both entry receipts prove the interactive input desktop, exact process/thread
+ownership, visible enabled non-cloaked on-monitor window, foreground and focus,
+masked initially blank edit, correct instruction fingerprint, terminal action,
+buffer clearing, window destruction, joined UI thread, and zero pre-readiness
+terminal or ignored messages.
+
+The run failed after the valid Cancel path and before the third dialog with a
+retained `SqliteException`. Source inspection binds the deterministic failure
+to the backup/restore same-generation rejection: the authoritative persistence
+contract correctly rejects that transition with `SqliteException` (as its
+integration test requires), while the qualification runner caught only
+`InvalidDataException`. The exception therefore escaped before the fresh
+generation was added or the restore-reauthentication dialog was launched. This
+is a bounded non-native qualification-harness defect; it does not invalidate
+the two completed human interactions or imply a Credential Manager cleanup
+failure.
+
+Terminal failure evidence is
+`artifacts/m1-slice6/wp4-native-ad876b9a/credential-native-primary-failure.v2.json`,
+185,569 bytes, SHA-256
+`cfaee3940cd780a5bcfbcbcf387124d7f7385b01a07f8f0f6fbe4439593a21e6`.
+It records 35 admitted phases and exact aggregate native calls W7/R61/D7/F20,
+total 95. Exact cleanup and final absence are confirmed for the ten queued
+targets: interactive primary, interactive cancel, both size targets,
+unavailable-store, both replacement targets, revoke-delete, crash-restart,
+and backup-old. `backup-new` and `fake-dispatch` were not queued because the
+primary failure occurred before their mutating phases; whole-namespace absence
+is consequently not claimed. The namespace is terminally blocked and
+`consumed-never-reuse`, with zero later native calls.
+
+All retained phase canaries have zero secret and raw-target matches; all helper
+process trees have zero survivors; and the completed process cleanup found zero
+repository-owned `dotnet`, `testhost`, credential-helper, or coordinator
+processes. No fake-provider dispatch, DNS, network, provider, billable,
+private-fixture, archive, later-package, or push operation occurred. The
+immutable 443-byte authority lock has SHA-256
+`b47e0262937f86174ae1b790f4951fbf6fe6621d1f3a25c938990143514950b8`.
+WP4 remains unaccepted. This authority, namespace, targets, and output root are
+terminal and may never be retried or reused; any later native attempt requires
+a bounded non-native correction, fresh verification and independent review,
+and a fresh exact manifest and owner authority.
+WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/ad876b9a-9f45-4eb4-8d12-5970d76dd4ea sha256=7d1e8c35072c6676258c9cbcc47fd8833458878bf289728cc453e5e0942d35ce execution_head_commit=50f7ad792af3e464e99670d14d49375d75de5b33 status=failed-primary-cleanup-confirmed native_calls=W7-R61-D7-F20-T95 cleanup_scope=ten-queued-exact-targets whole_namespace_absence=false namespace_blocked=true later_native_calls=0 evidence_sha256=cfaee3940cd780a5bcfbcbcf387124d7f7385b01a07f8f0f6fbe4439593a21e6 authority_lock_sha256=b47e0262937f86174ae1b790f4951fbf6fe6621d1f3a25c938990143514950b8
