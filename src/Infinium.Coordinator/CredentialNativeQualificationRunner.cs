@@ -26,6 +26,7 @@ internal enum CredentialNativeEvidenceFinalizationFault
     CoordinatorArtifactScan,
     BackupMetadataWrite,
     FinalEvidenceWrite,
+    SuccessSummaryCanaryScan,
     SuccessSummaryWrite,
 }
 
@@ -161,6 +162,7 @@ internal static class CredentialNativeQualificationRunner
         DateTimeOffset now,
         CredentialNativeEvidenceFinalizationFault fault = CredentialNativeEvidenceFinalizationFault.None,
         Action<string>? beforeFinalizationForTest = null,
+        string? summaryForTest = null,
         CancellationToken cancellationToken = default)
     {
         Dictionary<string, Target> targets = targetIdentities.ToDictionary(
@@ -178,7 +180,7 @@ internal static class CredentialNativeQualificationRunner
             state.Dispose();
         }
         beforeFinalizationForTest?.Invoke(root);
-        WriteOutputs(root, "manifest/test", new string('a', 64), evidence, state, fault);
+        WriteOutputs(root, "manifest/test", new string('a', 64), evidence, state, fault, summaryForTest);
         return evidence;
     }
 
@@ -327,9 +329,11 @@ internal static class CredentialNativeQualificationRunner
         string manifestSha256,
         CredentialNativeQualificationEvidence evidence,
         RunnerState state,
-        CredentialNativeEvidenceFinalizationFault fault = CredentialNativeEvidenceFinalizationFault.None)
+        CredentialNativeEvidenceFinalizationFault fault = CredentialNativeEvidenceFinalizationFault.None,
+        string? summaryForTest = null)
     {
-        string summary = $"WP4 v2 passed. manifest_id={manifestId} manifest_sha256={manifestSha256} scenarios=9 targets=12 cleanup=confirmed-absent\n";
+        string summary = summaryForTest
+            ?? $"WP4 v2 passed. manifest_id={manifestId} manifest_sha256={manifestSha256} scenarios=9 targets=12 cleanup=confirmed-absent\n";
         List<CanonicalCallTraceEntry> trace = [];
         long globalSequence = 0;
         long globalAllocation = 0;
@@ -376,6 +380,7 @@ internal static class CredentialNativeQualificationRunner
         bool finalEvidenceRetained = false;
         bool summaryRetained = false;
         CredentialNativeCanarySurfaceEvidence[]? coordinatorSurfaces = null;
+        CredentialNativeCanarySurfaceEvidence? summarySurface = null;
         string stage = "backup-metadata-write";
         try
         {
@@ -387,7 +392,18 @@ internal static class CredentialNativeQualificationRunner
             stage = "coordinator-artifact-scan";
             ThrowFinalizationFault(fault, CredentialNativeEvidenceFinalizationFault.CoordinatorArtifactScan);
             coordinatorSurfaces = ScanCoordinatorArtifacts(outputRoot, state.Targets.Values).ToArray();
-            CredentialNativeCanarySurfaceEvidence[] surfaces = phaseSurfaces.Concat(coordinatorSurfaces).ToArray();
+
+            stage = "success-summary-canary-scan";
+            ThrowFinalizationFault(fault, CredentialNativeEvidenceFinalizationFault.SuccessSummaryCanaryScan);
+            summarySurface = ScanSummaryCanary(summary, state.Targets.Values);
+            if (summarySurface.RawTargetMatches != 0)
+            {
+                throw new IOException("The success summary failed its raw-target canary scan.");
+            }
+            CredentialNativeCanarySurfaceEvidence[] surfaces = phaseSurfaces
+                .Concat(coordinatorSurfaces)
+                .Append(summarySurface)
+                .ToArray();
             object output = new
             {
                 schema = "infinium.m1-s6.wp4.credential-native-evidence/v2",
@@ -461,11 +477,17 @@ internal static class CredentialNativeQualificationRunner
                 target_absence = absence,
                 canaries = new
                 {
-                    known = coordinatorSurfaces is not null,
-                    secret_matches = phaseSurfaces.Concat(coordinatorSurfaces ?? []).Sum(item => item.SecretMatches),
-                    raw_target_matches = phaseSurfaces.Concat(coordinatorSurfaces ?? []).Sum(item => item.RawTargetMatches),
+                    known = coordinatorSurfaces is not null && summarySurface is not null,
+                    secret_matches = phaseSurfaces.Concat(coordinatorSurfaces ?? [])
+                        .Concat(summarySurface is null ? [] : [summarySurface])
+                        .Sum(item => item.SecretMatches),
+                    raw_target_matches = phaseSurfaces.Concat(coordinatorSurfaces ?? [])
+                        .Concat(summarySurface is null ? [] : [summarySurface])
+                        .Sum(item => item.RawTargetMatches),
                     raw_target_encodings = new[] { "utf-8", "utf-16le" },
-                    scanned_surfaces = phaseSurfaces.Concat(coordinatorSurfaces ?? []).ToArray(),
+                    scanned_surfaces = phaseSurfaces.Concat(coordinatorSurfaces ?? [])
+                        .Concat(summarySurface is null ? [] : [summarySurface])
+                        .ToArray(),
                 },
                 containment = new
                 {
@@ -496,6 +518,29 @@ internal static class CredentialNativeQualificationRunner
         if (actual == expected)
         {
             throw new IOException("Injected closed evidence-finalization failure.");
+        }
+    }
+
+    private static CredentialNativeCanarySurfaceEvidence ScanSummaryCanary(
+        string summary,
+        IEnumerable<Target> targets)
+    {
+        byte[] summaryBytes = Encoding.UTF8.GetBytes(summary);
+        try
+        {
+            string[] rawTargets = targets
+                .Select(target => $"Infinium:{target.ProfileId}:{target.GenerationId}")
+                .ToArray();
+            return new(
+                "credential-native-summary.txt",
+                "coordinator-in-memory-summary-byte-scan",
+                summaryBytes.LongLength,
+                SecretMatches: 0,
+                RawTargetMatches: CountRawTargetMatches(summaryBytes, rawTargets));
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(summaryBytes);
         }
     }
 

@@ -43,6 +43,7 @@ public sealed class CredentialNativeQualificationSupervisorTests
         "CredentialNative gate stdout",
         "CredentialNative gate stderr",
     ];
+    private static readonly string[] ExpectedRawTargetEncodings = ["utf-8", "utf-16le"];
 
     [TestMethod]
     [TestCategory("Integration")]
@@ -1133,6 +1134,12 @@ public sealed class CredentialNativeQualificationSupervisorTests
                     item.GetProperty("name").GetString(),
                     "native-backup-metadata.v2.json",
                     StringComparison.Ordinal)));
+            JsonElement summarySurface = retained.RootElement.GetProperty("canaries")
+                .GetProperty("scanned_surfaces").EnumerateArray().Single(item =>
+                    item.GetProperty("name").GetString() == "credential-native-summary.txt");
+            Assert.AreEqual("coordinator-in-memory-summary-byte-scan",
+                summarySurface.GetProperty("kind").GetString());
+            Assert.AreEqual(0, summarySurface.GetProperty("raw_target_matches").GetInt32());
         }
         foreach (string database in Directory.EnumerateFiles(root, "*.sqlite3", SearchOption.AllDirectories))
         {
@@ -1145,6 +1152,7 @@ public sealed class CredentialNativeQualificationSupervisorTests
     [TestCategory("Integration")]
     [DataRow("CoordinatorArtifactScan", "coordinator-artifact-scan", false, true)]
     [DataRow("BackupMetadataWrite", "backup-metadata-write", false, false)]
+    [DataRow("SuccessSummaryCanaryScan", "success-summary-canary-scan", false, true)]
     [DataRow("FinalEvidenceWrite", "final-evidence-write", false, true)]
     [DataRow("SuccessSummaryWrite", "success-summary-write", true, true)]
     public async Task FinalizationFailureRetainsClosedRedactedStageAndNeverPublishesSuccessSummary(
@@ -1187,6 +1195,14 @@ public sealed class CredentialNativeQualificationSupervisorTests
         Assert.AreEqual(expectedFinalEvidence,
             artifact.RootElement.GetProperty("final_evidence_retained").GetBoolean());
         Assert.IsFalse(artifact.RootElement.GetProperty("success_summary_retained").GetBoolean());
+        AssertFinalizationFailureEnvelope(
+            artifact.RootElement,
+            canariesKnown: expectedStage is not "backup-metadata-write"
+                and not "coordinator-artifact-scan"
+                and not "success-summary-canary-scan",
+            expectedBackupMetadata,
+            coordinatorScanCompleted: expectedStage is not "backup-metadata-write"
+                and not "coordinator-artifact-scan");
         Assert.IsFalse(Directory.EnumerateFiles(root, "*.tmp", SearchOption.AllDirectories).Any());
         Assert.IsFalse(File.ReadAllText(failurePath)
             .Contains("Injected closed evidence-finalization failure", StringComparison.Ordinal));
@@ -1225,11 +1241,48 @@ public sealed class CredentialNativeQualificationSupervisorTests
             using JsonDocument artifact = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(
                 root, "credential-native-evidence-finalization-failure.v1.json")));
             Assert.IsFalse(artifact.RootElement.GetProperty("canaries").GetProperty("known").GetBoolean());
+            AssertFinalizationFailureEnvelope(
+                artifact.RootElement,
+                canariesKnown: false,
+                expectedBackupMetadata: true,
+                coordinatorScanCompleted: false);
         }
         finally
         {
             blocker?.Dispose();
         }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task SuccessSummaryRawTargetCanaryFailsBeforeEvidenceOrSummaryIsPublished()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(), "Infinium-Wp4-Finalization-SummaryCanary-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        const string rawTarget = "Infinium:wp4-interactive-primary:g001";
+
+        CredentialNativeEvidenceFinalizationException failure =
+            await Assert.ThrowsExactlyAsync<CredentialNativeEvidenceFinalizationException>(() =>
+                CredentialNativeQualificationRunner.RunWithLauncherAndWriteOutputsForTestAsync(
+                    root,
+                    Launcher(Path.Combine(root, "fake-store")),
+                    AllTargetIdentities(),
+                    BaseTime,
+                    summaryForTest: rawTarget));
+
+        Assert.AreEqual("success-summary-canary-scan", failure.Stage);
+        Assert.IsFalse(File.Exists(Path.Combine(root, "credential-native-evidence.v2.json")));
+        Assert.IsFalse(File.Exists(Path.Combine(root, "credential-native-summary.txt")));
+        string failurePath = Path.Combine(root, "credential-native-evidence-finalization-failure.v1.json");
+        using JsonDocument artifact = JsonDocument.Parse(File.ReadAllBytes(failurePath));
+        AssertFinalizationFailureEnvelope(
+            artifact.RootElement,
+            canariesKnown: true,
+            expectedBackupMetadata: true,
+            coordinatorScanCompleted: true,
+            expectedRawTargetMatches: 1);
+        Assert.IsFalse(File.ReadAllText(failurePath).Contains(rawTarget, StringComparison.Ordinal));
     }
 
     [TestMethod]
@@ -2129,6 +2182,54 @@ public sealed class CredentialNativeQualificationSupervisorTests
             .GetProperty("process_trees_terminated").GetBoolean());
         Assert.AreEqual(0, artifact.RootElement.GetProperty("containment_facts")
             .GetProperty("process_tree_survivor_count").GetInt32());
+    }
+
+    private static void AssertFinalizationFailureEnvelope(
+        JsonElement artifact,
+        bool canariesKnown,
+        bool expectedBackupMetadata,
+        bool coordinatorScanCompleted,
+        int expectedRawTargetMatches = 0)
+    {
+        JsonElement counts = artifact.GetProperty("native_call_counts");
+        Assert.AreEqual(0, counts.GetProperty("cred_write_w").GetInt32());
+        Assert.AreEqual(0, counts.GetProperty("cred_read_w").GetInt32());
+        Assert.AreEqual(0, counts.GetProperty("cred_delete_w").GetInt32());
+        Assert.AreEqual(0, counts.GetProperty("cred_free").GetInt32());
+        Assert.AreEqual(0, counts.GetProperty("total").GetInt32());
+        Assert.AreEqual(0, artifact.GetProperty("native_call_trace").GetArrayLength());
+        JsonElement.ArrayEnumerator absence = artifact.GetProperty("target_absence").EnumerateArray();
+        string[] aliases = absence.Select(item => item.GetProperty("alias").GetString()!).ToArray();
+        CollectionAssert.AreEqual(AllTargetIdentities().Keys.ToArray(), aliases);
+        Assert.IsTrue(artifact.GetProperty("target_absence").EnumerateArray().All(item =>
+            item.GetProperty("target_fingerprint_sha256").GetString() == new string('0', 64)
+            && item.GetProperty("result").GetString() == "missing"));
+
+        JsonElement canaries = artifact.GetProperty("canaries");
+        Assert.AreEqual(canariesKnown, canaries.GetProperty("known").GetBoolean());
+        Assert.AreEqual(0, canaries.GetProperty("secret_matches").GetInt32());
+        Assert.AreEqual(expectedRawTargetMatches, canaries.GetProperty("raw_target_matches").GetInt32());
+        CollectionAssert.AreEqual(
+            ExpectedRawTargetEncodings,
+            canaries.GetProperty("raw_target_encodings").EnumerateArray()
+                .Select(item => item.GetString()).ToArray());
+        JsonElement[] surfaces = canaries.GetProperty("scanned_surfaces").EnumerateArray().ToArray();
+        if (coordinatorScanCompleted) { Assert.IsNotEmpty(surfaces); }
+        else { Assert.HasCount(0, surfaces); }
+        Assert.AreEqual(coordinatorScanCompleted, surfaces.Any(item =>
+            item.GetProperty("name").GetString() == "native-backup-metadata.v2.json"));
+        Assert.AreEqual(canariesKnown, surfaces.Any(item =>
+            item.GetProperty("name").GetString() == "credential-native-summary.txt"));
+        Assert.AreEqual(expectedBackupMetadata, artifact.GetProperty("backup_metadata_retained").GetBoolean());
+
+        Assert.IsTrue(artifact.GetProperty("containment")
+            .GetProperty("process_trees_terminated").GetBoolean());
+        Assert.AreEqual(0, artifact.GetProperty("containment").GetProperty("survivor_count").GetInt32());
+        Assert.AreEqual(0, artifact.GetProperty("network_operations").GetInt32());
+        Assert.AreEqual(0, artifact.GetProperty("dns_operations").GetInt32());
+        Assert.AreEqual(0, artifact.GetProperty("provider_operations").GetInt32());
+        Assert.AreEqual(0, artifact.GetProperty("billable_operations").GetInt32());
+        Assert.IsFalse(artifact.GetProperty("retry_attempted").GetBoolean());
     }
 
     private static CredentialNativeCleanupAmbiguityException TerminalAmbiguity(
