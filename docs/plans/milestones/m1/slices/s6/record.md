@@ -6465,3 +6465,5 @@ ambiguity blocking, containment, canaries, ancestry, drift, current state, and
 zero marker/lock/output/process/effect state. The manifest is close-ready for
 owner review, but remains unauthorized until the owner accepts these exact
 bytes.
+
+WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/076b981a-9d32-4e6a-af35-1e7017e0f833 sha256=36890ec28cf706484730fc9dfbd6dec5bcf3be76ed5c509a373fa61b8c910ee2 close_ready_commit=349e01b620de3bdc58684aece8d6e433d5280c27 expires_at_utc=2026-08-16T19:49:17.7790253Z
