@@ -6467,3 +6467,48 @@ owner review, but remains unauthorized until the owner accepts these exact
 bytes.
 
 WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/076b981a-9d32-4e6a-af35-1e7017e0f833 sha256=36890ec28cf706484730fc9dfbd6dec5bcf3be76ed5c509a373fa61b8c910ee2 close_ready_commit=349e01b620de3bdc58684aece8d6e433d5280c27 expires_at_utc=2026-08-16T19:49:17.7790253Z
+
+### WP4 `076b981a` terminal qualification attempt — 2026-08-14T20:36:21Z
+
+The exact owner-authorized gate ran once from execution HEAD
+`31643235c014a93f71096d5c80d2a911758e328f`. The one-shot 443-byte authority
+lock has SHA-256
+`80a014c72636221a2cf52008bb9ee0d27cd0c6badbfa5659d324a6ad9be350a7`
+and must never be deleted or reused. The owner directly observed and completed
+all three qualification dialogs using dummy text only. Retained canonical
+receipts independently bind #1 Completed Enroll at 223 bytes/SHA-256
+`2abf74dba8393a607440db3f3cb4fbe44e31f48e63b69d321431035b702d4381`,
+#2 Cancelled Enroll at 222 bytes/SHA-256
+`529d953687915ac49d129e2139c6dbabcf6d5c7e304799de0ac4ab78a58d5e6f`,
+and #3 Completed Recover for restored g002 at 242 bytes/SHA-256
+`7c9c6a20713b2783b294d89c930d7357857f1abfe5099138919d56a1da303583`.
+
+The coordinator wrote its fixed success summary only after
+`CompleteSuccessfulRun` accepted all nine scenarios, required phases,
+containment, and cleanup state. The 244-byte summary SHA-256 is
+`e05a4db0c0f7f2422ce88565b81ea8bf342e96bcf1a06feaa09a8c7a94e03299`
+and states 12 targets with cleanup confirmed absent. The 546-byte backup
+evidence SHA-256 is
+`04f44827955b7a6d72ba9808b317edb85de70be0759a654a3b15433ac0fefa6c`
+and reports the required recovery state and secret/raw-target structural
+absence. Twenty-seven admitted helper receipts remain: 23 Completed, one
+Cancelled, two expected Unavailable, and one expected FailedKnown oversize.
+
+The gate nevertheless terminated with exit code 68 because a post-success
+typed `IOException` occurred after summary and backup evidence were written
+but before `credential-native-evidence.v2.json` could be retained. The exact
+79-byte typed stderr SHA-256 is
+`1c624078f51c8d4eab9563384dd5f67cecde81b16995f0819d29bf2457165f6e`.
+Source ordering narrows the failure to the recursive coordinator-artifact byte
+scan, which reads retained SQLite files while scenario stores are still live.
+The final ordered trace, call totals, canary aggregate, and exact target-absence
+array were therefore not durably retained and must not be inferred as accepted
+WP4 evidence. The output contains 75 files totaling 34,229,756 bytes; all are
+readable after process exit, and a post-exit UTF-8/UTF-16LE scan found zero raw
+target matches. External-effect counts are not durably retained; only the
+source-bound fake-only/no-provider architecture remains known. Build servers
+were shut down and exact-root process count is zero. The qualification failed,
+is unaccepted, and must never be retried. Cleanup scope remains pending fresh
+independent audit; no recovery or later native call is authorized.
+
+WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/076b981a-9d32-4e6a-af35-1e7017e0f833 sha256=36890ec28cf706484730fc9dfbd6dec5bcf3be76ed5c509a373fa61b8c910ee2 execution_head_commit=31643235c014a93f71096d5c80d2a911758e328f status=failed-evidence-retention coordinator_exit_code=68 cleanup=runner-confirmed-final-proof-not-retained final_evidence=false namespace_blocked=true later_native_calls=0 authority_lock_sha256=80a014c72636221a2cf52008bb9ee0d27cd0c6badbfa5659d324a6ad9be350a7 network_operations=unknown dns_operations=unknown provider_operations=unknown billable_operations=unknown retry_attempted=false
