@@ -729,6 +729,43 @@ internal static class CredentialNativeQualificationRunner
                     ambiguity.PriorPrimaryFailure);
             }
 
+            if (primaryFailure is CredentialNativeHelperEvidenceAmbiguityException evidenceAmbiguity
+                && !HasProvenContainment(evidenceAmbiguity.Containment, descendantExpected: false))
+            {
+                supervisor.RecordTerminalCleanupAmbiguity(
+                    evidenceAmbiguity.AssignmentId, "helper-containment-unproven");
+                throw new CredentialNativeCleanupAmbiguityException(
+                    evidenceAmbiguity.AssignmentId,
+                    "helper-containment-unproven",
+                    supervisor.CaptureTerminalFailure(),
+                    evidenceAmbiguity);
+            }
+            if (primaryFailure is CredentialNativeHelperFailureException preCleanupHelperFailure)
+            {
+                if (preCleanupHelperFailure.Evidence.NamespaceReuseBlocked)
+                {
+                    supervisor.RecordTerminalCleanupAmbiguity(
+                        preCleanupHelperFailure.AssignmentId, "helper-namespace-reuse-blocked");
+                    throw new CredentialNativeCleanupAmbiguityException(
+                        preCleanupHelperFailure.AssignmentId,
+                        "helper-namespace-reuse-blocked",
+                        supervisor.CaptureTerminalFailure(),
+                        preCleanupHelperFailure);
+                }
+                if (!HasProvenContainment(
+                    preCleanupHelperFailure.Containment,
+                    preCleanupHelperFailure.Evidence.ContainmentDescendantStarted))
+                {
+                    supervisor.RecordTerminalCleanupAmbiguity(
+                        preCleanupHelperFailure.AssignmentId, "helper-containment-unproven");
+                    throw new CredentialNativeCleanupAmbiguityException(
+                        preCleanupHelperFailure.AssignmentId,
+                        "helper-containment-unproven",
+                        supervisor.CaptureTerminalFailure(),
+                        preCleanupHelperFailure);
+                }
+            }
+
             supervisor.BeginCleanup();
             foreach ((string scenario, ScenarioContext context, Target target) in cleanup)
             {
@@ -795,33 +832,6 @@ internal static class CredentialNativeQualificationRunner
                         primaryFailure);
                 }
             }
-            if (primaryFailure is CredentialNativeHelperEvidenceAmbiguityException evidenceAmbiguity)
-            {
-                if (evidenceAmbiguity.Containment is not
-                    { ProcessId: > 0, ProcessTreeTerminated: true, ProcessTreeSurvivorCount: 0 } containment
-                    || containment.TotalContainedProcessCount < 1
-                    || containment.ActiveProcessCountBeforeJobClose < 0)
-                {
-                    supervisor.RecordTerminalCleanupAmbiguity(
-                        evidenceAmbiguity.AssignmentId, "helper-containment-unproven");
-                    throw new CredentialNativeCleanupAmbiguityException(
-                        evidenceAmbiguity.AssignmentId,
-                        "helper-containment-unproven",
-                        supervisor.CaptureTerminalFailure(),
-                        evidenceAmbiguity);
-                }
-            }
-            if (primaryFailure is CredentialNativeHelperFailureException helperFailure
-                && helperFailure.Evidence.NamespaceReuseBlocked)
-            {
-                supervisor.RecordTerminalCleanupAmbiguity(
-                    helperFailure.AssignmentId, "helper-namespace-reuse-blocked");
-                throw new CredentialNativeCleanupAmbiguityException(
-                    helperFailure.AssignmentId,
-                    "helper-namespace-reuse-blocked",
-                    supervisor.CaptureTerminalFailure(),
-                    helperFailure);
-            }
             if (primaryFailure is not null)
             {
                 string? cleanupDisposition = null;
@@ -877,6 +887,13 @@ internal static class CredentialNativeQualificationRunner
             }
             return supervisor.CompleteSuccessfulRun();
         }
+
+        private static bool HasProvenContainment(
+            NativeHelperFailureContainmentEvidence? containment,
+            bool descendantExpected) => containment is
+            { ProcessId: > 0, ProcessTreeTerminated: true, ProcessTreeSurvivorCount: 0 }
+            && containment.TotalContainedProcessCount >= (descendantExpected ? 2 : 1)
+            && containment.ActiveProcessCountBeforeJobClose >= 0;
 
         private IEnumerable<(string Scenario, string Phase, Target Target)> PreflightTargets()
         {

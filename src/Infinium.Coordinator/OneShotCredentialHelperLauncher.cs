@@ -486,33 +486,55 @@ public sealed class OneShotCredentialHelperLauncher
         catch (Exception failure) when (failure is CredentialNativeHelperFailureException
             or CredentialNativeHelperEvidenceAmbiguityException)
         {
-            if (!contained.Process.HasExited)
+            NativeHelperFailureContainmentEvidence containment;
+            try
             {
-                using CancellationTokenSource helperExit = new(TimeSpan.FromSeconds(5));
-                try
+                if (!contained.Process.HasExited)
                 {
-                    await contained.Process.WaitForExitAsync(helperExit.Token).ConfigureAwait(false);
+                    using CancellationTokenSource helperExit = new(TimeSpan.FromSeconds(5));
+                    try
+                    {
+                        await contained.Process.WaitForExitAsync(helperExit.Token).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Job termination below remains the bounded terminal authority.
+                    }
                 }
-                catch (OperationCanceledException)
-                {
-                    // Job termination below remains the bounded terminal authority.
-                }
+                int measuredExitCode = contained.ExitCode;
+                int exitCode = measuredExitCode == 259 ? -1 : measuredExitCode;
+                int totalContained = contained.TotalProcessCount;
+                (int activeBeforeClose, int survivors) = await contained.TerminateRemainingProcessesAndWaitAsync(
+                    TimeSpan.FromSeconds(5), CancellationToken.None).ConfigureAwait(false);
+                contained.CloseJob();
+                bool descendantExpected = failure is CredentialNativeHelperFailureException typed
+                    && typed.Evidence.ContainmentDescendantStarted;
+                containment = new(
+                    processId,
+                    exitCode,
+                    totalContained,
+                    activeBeforeClose,
+                    survivors,
+                    survivors == 0 && totalContained >= (descendantExpected ? 2 : 1));
             }
-            int measuredExitCode = contained.ExitCode;
-            int exitCode = measuredExitCode == 259 ? -1 : measuredExitCode;
-            int totalContained = contained.TotalProcessCount;
-            (int activeBeforeClose, int survivors) = await contained.TerminateRemainingProcessesAndWaitAsync(
-                TimeSpan.FromSeconds(5), CancellationToken.None).ConfigureAwait(false);
-            contained.CloseJob();
-            bool descendantExpected = failure is CredentialNativeHelperFailureException typed
-                && typed.Evidence.ContainmentDescendantStarted;
-            NativeHelperFailureContainmentEvidence containment = new(
-                processId,
-                exitCode,
-                totalContained,
-                activeBeforeClose,
-                survivors,
-                survivors == 0 && totalContained >= (descendantExpected ? 2 : 1));
+            catch (Exception containmentFailure) when (containmentFailure is
+                IOException or InvalidOperationException or OperationCanceledException
+                or TimeoutException or System.ComponentModel.Win32Exception)
+            {
+                try { contained.CloseJob(); }
+                catch (Exception closeFailure) when (closeFailure is
+                    InvalidOperationException or System.ComponentModel.Win32Exception)
+                {
+                    // The conservative retained evidence below is terminal authority.
+                }
+                containment = new(
+                    processId,
+                    -1,
+                    0,
+                    0,
+                    1,
+                    ProcessTreeTerminated: false);
+            }
             if (failure is CredentialNativeHelperFailureException helperFailure)
             {
                 helperFailure.AttachContainment(containment);

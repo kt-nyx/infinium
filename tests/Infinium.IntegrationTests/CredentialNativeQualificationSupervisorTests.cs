@@ -1183,28 +1183,39 @@ public sealed class CredentialNativeQualificationSupervisorTests
     [TestCategory("Integration")]
     public async Task RestoredGenerationEvidenceAmbiguityRequiresProvenHelperContainment()
     {
-        CredentialNativeHelperEvidenceAmbiguityException ambiguity = new(
-            "wp4-v2/backup-restore-reauthentication/restored-new-generation",
-            "runtime-metrics",
-            new EndOfStreamException("synthetic truncated metrics"));
-        string root = Path.Combine(
-            Path.GetTempPath(), "Infinium-Wp4-Restored-Ambiguity-Uncontained-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(root);
+        foreach (bool retainFailedTermination in new[] { false, true })
+        {
+            CredentialNativeHelperEvidenceAmbiguityException ambiguity = new(
+                "wp4-v2/backup-restore-reauthentication/restored-new-generation",
+                "runtime-metrics",
+                new EndOfStreamException("synthetic truncated metrics"));
+            if (retainFailedTermination)
+            {
+                ambiguity.AttachContainment(new(48212, -1, 0, 0, 1, false));
+            }
+            string root = Path.Combine(
+                Path.GetTempPath(), "Infinium-Wp4-Restored-Ambiguity-Uncontained-" +
+                    retainFailedTermination + "-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
 
-        CredentialNativeCleanupAmbiguityException failure =
-            await Assert.ThrowsExactlyAsync<CredentialNativeCleanupAmbiguityException>(() =>
-                CredentialNativeQualificationRunner.RunWithLauncherForTestAsync(
-                    root,
-                    Launcher(Path.Combine(root, "fake-store")),
-                    AllTargetIdentities(),
-                    BaseTime,
-                    ambiguity));
+            CredentialNativeCleanupAmbiguityException failure =
+                await Assert.ThrowsExactlyAsync<CredentialNativeCleanupAmbiguityException>(() =>
+                    CredentialNativeQualificationRunner.RunWithLauncherForTestAsync(
+                        root,
+                        Launcher(Path.Combine(root, "fake-store")),
+                        AllTargetIdentities(),
+                        BaseTime,
+                        ambiguity));
 
-        Assert.AreEqual("helper-containment-unproven", failure.Reason);
-        Assert.AreSame(ambiguity, failure.InnerException);
-        Assert.IsTrue(failure.Evidence.CleanupAmbiguous);
-        Assert.IsTrue(failure.Evidence.NamespaceBlocked);
-        Assert.AreEqual(0, DeterministicFakeSecureStore.NativeOperationCount);
+            Assert.AreEqual("helper-containment-unproven", failure.Reason);
+            Assert.AreSame(ambiguity, failure.InnerException);
+            Assert.IsTrue(failure.Evidence.CleanupAmbiguous);
+            Assert.IsTrue(failure.Evidence.NamespaceBlocked);
+            Assert.IsFalse(failure.Evidence.Scenarios.SelectMany(item => item.Phases)
+                .Any(item => item.PhaseId.StartsWith("cleanup", StringComparison.Ordinal)
+                    || item.PhaseId == "deleted-after-revocation"));
+            Assert.AreEqual(0, DeterministicFakeSecureStore.NativeOperationCount);
+        }
     }
 
     [TestMethod]
