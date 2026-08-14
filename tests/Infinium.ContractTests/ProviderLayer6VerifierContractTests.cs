@@ -18,6 +18,7 @@ public sealed class ProviderLayer6VerifierContractTests
             "[string] $BaselineCommit",
             "[string] $CandidateCommit",
             "[switch] $HandoffCloseout",
+            "[switch] $Wp4OwnerReviewHandoff",
             "[switch] $OwnerTestProcessCleanup",
             "merge-base --is-ancestor",
             "layer6-changed-paths.json",
@@ -42,6 +43,9 @@ public sealed class ProviderLayer6VerifierContractTests
         StringAssert.Contains(script, "Test-Wp1ProtectedPath");
         StringAssert.Contains(script, "isHandoffCurrentState");
         StringAssert.Contains(script, "HandoffCloseout current state must record accepted WP1");
+        StringAssert.Contains(script, "Wp4OwnerReviewHandoff requires exactly one changed candidate docs/current-state.md.");
+        StringAssert.Contains(script, "fresh WP4 qualification-manifest consumer binding and owner-review preparation only");
+        StringAssert.Contains(script, "stop before any fresh manual/native qualification");
         StringAssert.Contains(script, "OwnerTestProcessCleanup requires exactly one changed candidate docs/execution-policy.md");
         StringAssert.Contains(script, "Never terminate by process name alone");
         StringAssert.Contains(script, "JsonDocumentOptions");

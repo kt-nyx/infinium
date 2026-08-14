@@ -15,6 +15,8 @@ param(
 
     [switch] $HandoffCloseout,
 
+    [switch] $Wp4OwnerReviewHandoff,
+
     [switch] $OwnerTestProcessCleanup
 )
 
@@ -35,6 +37,9 @@ if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 
     }
     if ($HandoffCloseout) {
         $arguments += '-HandoffCloseout'
+    }
+    if ($Wp4OwnerReviewHandoff) {
+        $arguments += '-Wp4OwnerReviewHandoff'
     }
     if ($OwnerTestProcessCleanup) {
         $arguments += '-OwnerTestProcessCleanup'
@@ -339,7 +344,7 @@ function Invoke-Layer6ReviewGate {
         $status = $parts[0]
         $paths = if ($status.StartsWith('R', [System.StringComparison]::Ordinal)) { @($parts[1], $parts[2]) } else { @($parts[1]) }
         foreach ($path in $paths) {
-            $isHandoffCurrentState = $HandoffCloseout -and
+            $isHandoffCurrentState = ($HandoffCloseout -or $Wp4OwnerReviewHandoff) -and
                 $path -ceq 'docs/current-state.md'
             $isOwnerTestProcessCleanupPolicy = $OwnerTestProcessCleanup -and
                 $path -ceq 'docs/execution-policy.md'
@@ -516,6 +521,23 @@ function Invoke-Layer6ReviewGate {
             }
         }
     }
+    if ($Wp4OwnerReviewHandoff) {
+        $currentState = @($changedPaths | Where-Object { $_.path -ceq 'docs/current-state.md' })
+        if ($currentState.Count -ne 1 -or -not $currentState[0].candidate_blob) {
+            $failures.Add('Wp4OwnerReviewHandoff requires exactly one changed candidate docs/current-state.md.')
+        } else {
+            $currentStateText = Get-CandidateText $candidateHash 'docs/current-state.md'
+            foreach ($required in @(
+                    '`M1/S6/WP4` fresh WP4 qualification-manifest consumer binding and owner-review preparation only',
+                    '2f95692687b60d97db2710835e9d0966f131c164',
+                    'e6e04651-4cd5-4f5d-8b46-5ec84a81cbbe',
+                    'stop before any fresh manual/native qualification')) {
+                if (-not $currentStateText.Contains($required, [System.StringComparison]::Ordinal)) {
+                    $failures.Add("Wp4OwnerReviewHandoff current state is missing exact authority text: $required")
+                }
+            }
+        }
+    }
     if ($OwnerTestProcessCleanup) {
         $executionPolicy = @($changedPaths | Where-Object { $_.path -ceq 'docs/execution-policy.md' })
         if ($executionPolicy.Count -ne 1 -or -not $executionPolicy[0].candidate_blob) {
@@ -544,6 +566,7 @@ function Invoke-Layer6ReviewGate {
         candidate_commit = $candidateHash
         candidate_bound = $true
         handoff_closeout = [bool]$HandoffCloseout
+        wp4_owner_review_handoff = [bool]$Wp4OwnerReviewHandoff
         owner_test_process_cleanup = [bool]$OwnerTestProcessCleanup
         changed_path_count = $changedPaths.Count
         allowed_path_failure_count = $pathFailures.Count

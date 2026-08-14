@@ -5809,3 +5809,20 @@ output root, an unexpired manifest, and a one-shot CreateNew authority lock.
 No owner marker, execution marker, output root, authority lock, manual dialog,
 native credential call, provider, DNS, network, or billable effect exists for
 this identity.
+
+### Candidate-bound Layer 6 handoff-mode correction
+
+The first final-range `Layer6Review` correctly refused the changed
+`docs/current-state.md` under ordinary path policy. The only existing
+`HandoffCloseout` exception is deliberately bound to the historical WP1-to-WP2
+handoff and cannot truthfully validate WP4 owner-review preparation. This was a
+pre-effect verification finding; it created no owner marker, lock, output,
+native call, or external effect.
+
+The bounded correction adds a distinct `Wp4OwnerReviewHandoff` switch. It
+permits only the same single `docs/current-state.md` protected-path exception
+and then requires the exact WP4 package, correction commit, fresh manifest ID,
+and stop-before-manual/native wording. Ordinary Layer 6 and the historical
+WP1 handoff mode remain unchanged. The manifest is returned to draft status
+until this verifier path and its contract tests pass, a replacement close-ready
+commit is recorded, and the final exact manifest bytes are rebound.
