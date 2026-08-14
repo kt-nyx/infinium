@@ -6337,3 +6337,15 @@ namespace-UUID punctuation mismatch in the new helper guard; the exact
 manifest spelling was then bound consistently and the replacement run passed.
 No fresh marker, lock, output, native operation, dialog, or external effect
 was created.
+
+### WP4 `076b981a` close-ready binding — 2026-08-14T19:49:17.7790253Z
+
+Close-ready implementation commit
+`96706ab172286cd0a422a72d9f38127808875ee2` binds the fresh manifest schema,
+exact ordered target namespace, semantic validator, native-helper parser,
+one-shot gate, tests, and current handoff. The manifest status is now
+`ready-for-owner-acceptance`. This binding itself grants no effect authority;
+final exact-byte validation, candidate-bound Layer 6, and fresh independent
+Windows credential/security review remain mandatory. No owner or execution
+marker, fresh authority lock, output root, dialog, native credential operation,
+or provider/network effect exists.
