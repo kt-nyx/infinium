@@ -6795,3 +6795,36 @@ continuation positions and adds an exact post-effect-audit mode that requires
 the consumed lock/output, never creates a lock, never launches a coordinator
 or helper, and only validates retained evidence plus writes the missing gate
 receipt. Post-effect acceptance remains pending that audit and fresh review.
+
+The bounded post-effect audit correction was committed at
+`be55eda59752f884fe6e113f40927295da45f2cd`. Its exact audit-only path required
+the consumed authority lock and existing output, skipped semantic preflight,
+build, tests, lock creation, coordinator launch, helper launch, and native
+operations, and exited successfully. It retained `credentialnative.json` at
+1,795 bytes and SHA-256
+`87565206a33be6f2128254d2dfa9ba6006c57472a3038f69b407eb63253f98c9`,
+binding the original execution commit rather than the later audit commit.
+Retained final evidence is 330,957 bytes at SHA-256
+`3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390`;
+backup metadata is 546 bytes at SHA-256
+`94938d40d8a8fd969fe4cce92b769cb82a29500f27d106124d8a978b50272ac1`;
+the human summary is 244 bytes at SHA-256
+`af010b2b1ac5643a0e056cfefe969cb83b6450ca51ff82003825913e1812ef75`;
+and the consumed authority lock is 443 bytes at SHA-256
+`cc132accf1a029eb1286c7e8a6a22ed55706c41eaf8c58776bd9aea4d56e5b90`.
+
+Fresh independent post-effect Windows credential/security review ACCEPTed the
+exact retained result. The reviewer revalidated all nine scenarios, 41 phase
+oracles, three owner interactions, 12 cleanup phases and exact absences,
+W9/R78/D9/F28/T124 call trace, 28 exact read/free pairs, lifecycle, staging,
+backup, 278 canary surfaces, process containment, and all 77 retained files.
+Raw-target UTF-8/UTF-16LE matches, DNS operations, network operations,
+provider operations, billable operations, retries, and repository-owned
+process survivors are all zero. No cleanup recovery or native retry is
+required or permitted. WP4 is accepted and its authority, namespace, targets,
+lock, and output root are consumed forever. WP4 and accepted WP7 now satisfy
+the prerequisites for WP8 non-live verification and pre-live review; this
+handoff does not authorize another Credential Manager operation, production
+profile enrollment, or a provider request.
+
+WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/c6e9226e-3d95-496c-bda6-c9142bb6b980 sha256=e8a3075f4509043d304026705636eac29ba09a1549a403d419b10edebcf378b7 execution_head_commit=1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b status=passed cleanup=confirmed-absent target_absence_count=12 native_calls=W9/R78/D9/F28/T124 evidence_sha256=3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390 authority_lock_sha256=cc132accf1a029eb1286c7e8a6a22ed55706c41eaf8c58776bd9aea4d56e5b90 gate_receipt_sha256=87565206a33be6f2128254d2dfa9ba6006c57472a3038f69b407eb63253f98c9 namespace_reuse_blocked=true later_native_calls=0 network_operations=0 dns_operations=0 provider_operations=0 billable_operations=0 retry_attempted=false

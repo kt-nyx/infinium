@@ -17,17 +17,18 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S6` - owner-accepted; implementation-active |
-| Current authorized work | `M1/S6/WP4` fresh qualification-manifest consumer binding and owner-review preparation only, based on accepted evidence-finalization correction `03ae6929bad069c7c9e351b2ed5bd361e31b89e7`; no Credential Manager operation is authorized |
+| Current authorized work | `M1/S6/WP8` accumulated non-live verification and pre-live review only; WP4 is accepted, no further Credential Manager operation is authorized, and no provider request is authorized |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
 | Accepted Slice 6 WP1 candidate | `61b90314d8273749849f590b303814008fa2fdfa`; nine Slice 6 contracts are `Implementation-active` and the accepted local input-bound policy is `openai-responses-o200k-byte-envelope/v1` |
 | Accepted `M1/S6/WP2` candidate | `ed27ed04897103d93a60e6200971ca12d04f2e11`; capability, price, atomic reservation/final-gate, settlement, projection, replay, simulator, and public fixture/oracle evidence are independently accepted |
 | Accepted `M1/S6/WP3` candidate | `b32939e8b7491a5c47453f912d25dd98c090f103`; one-shot helper process isolation, strict protocol, synthetic credential lifecycle, recovery, staging/admission, exact SDK `10.0.303`, and the integration synchronization barrier are independently accepted |
+| Accepted `M1/S6/WP4` qualification | Owner-authorized execution `1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b`, retained evidence SHA-256 `3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390`, and bounded post-effect audit correction `be55eda59752f884fe6e113f40927295da45f2cd`; 12/12 targets are absent and the consumed namespace may never be reused |
 | Accepted `M1/S6/WP5` candidate | `fd3c80d91dd247e65b5130309a9b5bb19dd1381f`, with append-only evidence `11e60445b6d5f1d3efc5b607f080dd986afb4ed4`; exact Responses serialization/codec/transport, deterministic loopback/offline replay, bounded secret-safe receipts, persistence/output/replay, and public WP5 evidence are independently accepted |
 | Accepted `M1/S6/WP6` candidate | Product `ee0b6d31f1c1826c2af7634766155397e916c3e1`, append-only evidence `2b277338390f7dac37b5a5436bbe2cd81dedc871`, and answer-isolated oracle `37aa2b4e2fc084307ba5211f21bbeeb7a93efab0`; source-claim acquisition, deterministic admission, retained semantic provenance/replay, and later admitted-artifact consumption are independently accepted |
 | Accepted `M1/S6/WP7` candidate | Product `59367a7479a7395b173b974bf720543aab2404d4`, append-only acceptance evidence `51251c0e0eb98d67dbc9b295b9ff084ebca33890`, and answer-isolated VAL-v3 oracle freeze `e9b032366552aa67649636655ed07a3bb50bb3b1`; deterministic candidate investigation, complete provenance, durable retention/readback, and database-owned replay are independently accepted |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure; no separate ADR; eleven packages with distinct native/live authorization gates |
-| Next eligible action | Complete non-native validation and fresh independent review of manifest `c6e9226e-3d95-496c-bda6-c9142bb6b980`, then stop for exact-byte owner acceptance. Do not append an owner marker or execute `CredentialNative` during preparation |
-| Later work | WP4 remains unaccepted. Recovery `040817c8` proves all 12 consumed `076b981a` targets absent, and correction `03ae6929` closes the evidence-finalization race with deterministic failure evidence. The fresh `c6e9226e` identity has no effect authority before exact owner acceptance. WP8 remains blocked until WP4 is accepted. WP9-WP11 require their own exact authorization; no provider request is authorized now |
+| Next eligible action | Begin `M1/S6/WP8` accumulated non-live verification and pre-live review under accepted plan section 19; do not execute any native credential or live provider operation |
+| Later work | WP4 and WP7 now satisfy WP8's prerequisites. WP8 may prepare but may not execute live authorization packets. WP9-WP11 require their own exact owner authorization; no provider request is authorized now |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
 | Slice entry | [Slice 6 current summary and navigation](plans/milestones/m1/slices/s6/README.md) |
@@ -126,17 +127,26 @@ bounded evidence-finalization correction is independently accepted at
 `03ae6929bad069c7c9e351b2ed5bd361e31b89e7`: every store is disposed before
 artifact scanning, summary bytes receive an in-memory raw-target canary scan,
 failure stages retain a closed redacted evidence envelope, and final evidence
-is atomically sealed before the human-readable summary. The only current work
-is fresh WP4 qualification-manifest consumer binding and owner-review
-preparation only for disjoint identity
-`c6e9226e-3d95-496c-bda6-c9142bb6b980`. No owner marker, native credential
-operation, provider operation, or network operation is authorized by this
-preparation. WP8 remains
-blocked because its native WP4 prerequisite is not accepted. Plan acceptance permits automatic progression among named
-non-live packages only after each prerequisite package is independently
-accepted and this file is advanced to the exact next package. Production
-profile enrollment/verification and WP9-WP11 provider requests remain closed
-pending their own exact owner-approved manifests.
+is atomically sealed before the human-readable summary. Fresh qualification
+`c6e9226e-3d95-496c-bda6-c9142bb6b980` was then owner-authorized and executed
+exactly once from `1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b`. The owner
+completed disposable dummy Submit, blank Cancel, and a different-disposable
+restored-generation Submit. All nine scenarios and 41 phases passed. Retained
+evidence SHA-256
+`3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390`
+proves the exact W9/R78/D9/F28/T124 call trace, 28 read/free pairs, 12/12
+post-cleanup absences, zero secret/raw-target canary matches, complete process
+containment, and zero DNS, network, provider, billable, or retry operations.
+The outer gate's post-effect parser defect was corrected without another
+native run; exact audit-only receipt SHA-256
+`87565206a33be6f2128254d2dfa9ba6006c57472a3038f69b407eb63253f98c9`
+binds the retained evidence and consumed authority lock. Fresh independent
+Windows credential/security review accepted the qualification. WP4 is
+accepted, and its identity, authority, namespace, targets, lock, and output
+root are consumed forever. WP4 and WP7 now unblock WP8. Current work is WP8
+non-live verification and pre-live review only; it does not authorize a new
+Credential Manager operation, production profile enrollment, or any WP9-WP11
+provider request.
 
 ## Completed Slice 5 boundary
 
