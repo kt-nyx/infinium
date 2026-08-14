@@ -1462,7 +1462,9 @@ function Invoke-CredentialNativeGate {
             $auditLock.disposition -ne 'consumed-before-native-launch-never-delete-or-reuse') {
             throw 'CredentialNative post-effect audit lock binding differs from the one executed attempt.'
         }
+        $receiptExecutionHead = [string]$auditLock.execution_head_commit
     } else {
+    $receiptExecutionHead = $head
     & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp4-authorization-v2.ps1') -ManifestPath $manifestPath
     if ($LASTEXITCODE -ne 0) { throw 'CredentialNative v2 semantic authorization validation failed.' }
     & dotnet build Infinium.sln -c Release --no-restore --nologo
@@ -1831,7 +1833,7 @@ fake-provider-dispatch|cleanup|Completed|Delete|deleted|fake-dispatch|fake-dispa
     Write-Receipt 'CredentialNative' ([ordered]@{
         execution_mode = 'owner-authorized-disposable-windows-credential-manager-v2'
         manifest_id = $manifest.manifest_id; manifest_bytes = $manifestBytes.Length; manifest_sha256 = $manifestSha
-        close_ready_implementation_commit = $closeReady; execution_head_commit = $head
+        close_ready_implementation_commit = $closeReady; execution_head_commit = $receiptExecutionHead
         accepted_wp3_candidate_commit = $manifest.candidate_binding.accepted_wp3_candidate_commit
         coordinator_binary_sha256 = (Get-FileHash -LiteralPath $coordinatorPath -Algorithm SHA256).Hash.ToLowerInvariant()
         evidence_file = [IO.Path]::GetFileName($evidencePath); evidence_bytes = $evidenceBytes.Length

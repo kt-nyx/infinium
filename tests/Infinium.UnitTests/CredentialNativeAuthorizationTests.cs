@@ -300,6 +300,9 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.IsTrue(activeGate.Contains(
             "CredentialNative post-effect audit lock binding differs from the one executed attempt.",
             StringComparison.Ordinal));
+        Assert.IsTrue(activeGate.Contains(
+            "$receiptExecutionHead = [string]$auditLock.execution_head_commit",
+            StringComparison.Ordinal));
         Assert.IsFalse(activeGate.Contains("--credential-native-qualification'", StringComparison.Ordinal));
         Assert.IsFalse(activeGate.Contains("wp4-credential-native-authorization.v1.json", StringComparison.Ordinal));
         Assert.IsFalse(activeGate.Contains("evidenceRecoveryOnly", StringComparison.Ordinal));
