@@ -6219,3 +6219,20 @@ authorization plus BuildPolicy passed 39/39, formatting, documentation, and
 recovery owner/execution marker, fresh lock, output, or native effect exists.
 This entry is preparation only; exact close-ready binding and fresh
 independent pre-effect review remain required.
+
+### WP4 `4936dcef` recovery close-ready binding — 2026-08-14T18:59:38.8376028Z
+
+Close-ready implementation commit
+`c77f94288f8caedfdce5689b367b255b191481db` binds the schema, exact
+one-target native helper, prior-evidence reconstruction validator, recovery
+gate, evidence validator, Layer 6 allowlist, tests, and current-state handoff.
+The manifest is now `ready-for-owner-acceptance`, 3,970 bytes, with SHA-256
+`09b6858eaf472038499f18654d2a2fc4ca0a32b2ed34cd1a192146f90755e183`
+and expiry `2026-08-15T14:46:57.6685379Z`. Its semantic validator passes with
+`execution_authorized=false`, one recovery target, 11 prior exact absences,
+and 12 combined namespace targets.
+
+This binding records no recovery owner/execution marker, fresh recovery lock,
+output root, or native operation. Fresh independent pre-effect review of the
+exact committed bytes remains mandatory before standing cleanup authority may
+be exercised once.
