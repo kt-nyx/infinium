@@ -6434,3 +6434,13 @@ rejects any CredentialNative output root other than
 and before any directory is created. A focused source-order assertion binds
 that pre-mutation placement. This closes execution/evidence-root drift without
 creating a directory, lock, or effect.
+
+Replacement close-ready commit
+`349e01b620de3bdc58684aece8d6e433d5280c27` binds the exact consumed-tuple
+regression, three-action owner instruction, and pre-mutation output-root gate.
+The corrected draft passed exact SDK 10.0.303 Release build with zero warnings
+or errors, authorization plus BuildPolicy 39/39, semantic validation,
+formatting, documentation, and diff checks. The manifest is rebound to this
+commit and returned to `ready-for-owner-acceptance`; no effect authority is
+granted. Final exact-byte validation, Layer 6, and terminal independent review
+remain required.
