@@ -17,7 +17,9 @@ param(
 
     [switch] $Wp4OwnerReviewHandoff,
 
-    [switch] $OwnerTestProcessCleanup
+    [switch] $OwnerTestProcessCleanup,
+
+    [switch] $CredentialNativePostEffectAudit
 )
 
 if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProvenanceReplay') -and $PSVersionTable.PSEdition -ne 'Core') {
@@ -43,6 +45,9 @@ if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 
     }
     if ($OwnerTestProcessCleanup) {
         $arguments += '-OwnerTestProcessCleanup'
+    }
+    if ($CredentialNativePostEffectAudit) {
+        $arguments += '-CredentialNativePostEffectAudit'
     }
     if (-not [string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
         $arguments += @('-AuthorizationManifest', $AuthorizationManifest)
@@ -1408,6 +1413,12 @@ function Invoke-CredentialNativeGate {
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json',
         'docs/plans/milestones/m1/slices/s6/record.md'
     )
+    if ($CredentialNativePostEffectAudit) {
+        $allowedPostBindingPaths += @(
+            'eng/verify-m1-slice6.ps1',
+            'tests/Infinium.UnitTests/CredentialNativeAuthorizationTests.cs'
+        )
+    }
     $postBindingPaths = @(& git diff --name-only --diff-filter=ACMRTUXB "$closeReady..$head")
     if ($LASTEXITCODE -ne 0 -or @($postBindingPaths | Where-Object {
             ([string]$_).Replace('\','/') -notin $allowedPostBindingPaths
@@ -1422,13 +1433,36 @@ function Invoke-CredentialNativeGate {
     if ($acceptanceLineCount -ne 1) {
         throw 'CredentialNative requires exactly one canonical exact-byte v2 owner-acceptance line in the append-only record.'
     }
-    if ($record.Contains("WP4_V2_NATIVE_EXECUTED manifest_id=$($manifest.manifest_id)", [StringComparison]::Ordinal)) {
+    if (-not $CredentialNativePostEffectAudit -and
+        $record.Contains("WP4_V2_NATIVE_EXECUTED manifest_id=$($manifest.manifest_id)", [StringComparison]::Ordinal)) {
         throw 'CredentialNative v2 is terminal because the append-only record already identifies a native execution.'
     }
-    if ($outputRootExistedBeforeInvocation) {
+    if (-not $CredentialNativePostEffectAudit -and $outputRootExistedBeforeInvocation) {
         throw 'CredentialNative v2 requires a fresh absent output root and never recovers or reuses evidence.'
     }
 
+    $coordinatorPath = Join-Path $repoRoot 'src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe'
+    $lockRoot = Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-authority-locks'
+    $manifestIdentitySha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
+        [Text.Encoding]::UTF8.GetBytes([string]$manifest.manifest_id))).ToLowerInvariant()
+    $authorityLockPath = Join-Path $lockRoot ($manifestIdentitySha + '.json')
+    $stdoutPath = Join-Path $resolvedOutputRoot 'coordinator-stdout.txt'
+    $stderrPath = Join-Path $resolvedOutputRoot 'coordinator-stderr.txt'
+    if ($CredentialNativePostEffectAudit) {
+        if (-not $outputRootExistedBeforeInvocation -or
+            -not (Test-Path -LiteralPath $authorityLockPath -PathType Leaf) -or
+            -not (Test-Path -LiteralPath $coordinatorPath -PathType Leaf)) {
+            throw 'CredentialNative post-effect audit requires the exact consumed lock, retained output, and release coordinator.'
+        }
+        $auditLock = Get-Content -LiteralPath $authorityLockPath -Raw | ConvertFrom-Json -Depth 20 -DateKind String
+        if ($auditLock.manifest_id -ne $manifest.manifest_id -or
+            $auditLock.manifest_sha256 -ne $manifestSha -or
+            $auditLock.close_ready_commit -ne $closeReady -or
+            $auditLock.execution_head_commit -ne '1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b' -or
+            $auditLock.disposition -ne 'consumed-before-native-launch-never-delete-or-reuse') {
+            throw 'CredentialNative post-effect audit lock binding differs from the one executed attempt.'
+        }
+    } else {
     & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp4-authorization-v2.ps1') -ManifestPath $manifestPath
     if ($LASTEXITCODE -ne 0) { throw 'CredentialNative v2 semantic authorization validation failed.' }
     & dotnet build Infinium.sln -c Release --no-restore --nologo
@@ -1439,7 +1473,6 @@ function Invoke-CredentialNativeGate {
         Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' $filter
     }
 
-    $coordinatorPath = Join-Path $repoRoot 'src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe'
     if (-not (Test-Path -LiteralPath $coordinatorPath -PathType Leaf)) {
         throw 'CredentialNative exact Release coordinator binary is absent.'
     }
@@ -1453,11 +1486,7 @@ function Invoke-CredentialNativeGate {
         -not [string]::IsNullOrWhiteSpace((& git status --porcelain))) {
         throw 'CredentialNative exact manifest bytes or clean candidate changed during pre-effect verification; no authority was consumed.'
     }
-    $lockRoot = Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-authority-locks'
     [IO.Directory]::CreateDirectory($lockRoot) | Out-Null
-    $manifestIdentitySha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
-        [Text.Encoding]::UTF8.GetBytes([string]$manifest.manifest_id))).ToLowerInvariant()
-    $authorityLockPath = Join-Path $lockRoot ($manifestIdentitySha + '.json')
     $lockBytes = [Text.UTF8Encoding]::new($false).GetBytes((ConvertTo-CanonicalJsonValue ([ordered]@{
         manifest_id = $manifest.manifest_id; manifest_sha256 = $manifestSha
         close_ready_commit = $closeReady; execution_head_commit = $head
@@ -1475,8 +1504,6 @@ function Invoke-CredentialNativeGate {
 
     [IO.Directory]::CreateDirectory($resolvedOutputRoot) | Out-Null
 
-    $stdoutPath = Join-Path $resolvedOutputRoot 'coordinator-stdout.txt'
-    $stderrPath = Join-Path $resolvedOutputRoot 'coordinator-stderr.txt'
     $startInfo = [Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $coordinatorPath
     $startInfo.UseShellExecute = $false; $startInfo.CreateNoWindow = $true
@@ -1497,6 +1524,7 @@ function Invoke-CredentialNativeGate {
     $process.Dispose()
     if ($processExitCode -ne 0) {
         throw "CredentialNative v2 coordinator supervisor failed with exit code $processExitCode; authority is consumed."
+    }
     }
 
     $evidencePath = Join-Path $resolvedOutputRoot 'credential-native-evidence.v2.json'
@@ -1692,10 +1720,10 @@ fake-provider-dispatch|cleanup|Completed|Delete|deleted|fake-dispatch|fake-dispa
             [int64]$_.process.standard_protocol_handle_count -ne 0 -or
             [int64]$_.process.listener_count -ne 0 -or [int64]$_.process.network_operation_count -ne 0 -or
             [int64]$_.process.process_tree_survivor_count -ne 0 -or
-            -not [bool]$_.process.process_tree_terminated -or [bool]$_.process.retry_attempted
-            -or -not [bool]$_.process.containment_probe_executed
-            -or [bool]$_.process.excluded_handle_accessible
-            -or [int64]$_.process.active_process_count_before_job_close -lt 1
+            -not [bool]$_.process.process_tree_terminated -or [bool]$_.process.retry_attempted -or
+            -not [bool]$_.process.containment_probe_executed -or
+            [bool]$_.process.excluded_handle_accessible -or
+            [int64]$_.process.active_process_count_before_job_close -lt 1
         }).Count -eq 0 -and
         $manualPhases.Count -eq 3 -and
         @($manualPhases | Where-Object {

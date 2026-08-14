@@ -6781,3 +6781,17 @@ fresh output, and fresh authority lock are absent; exact-root process count is
 zero. This is close-ready only and does not authorize native execution.
 
 WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/c6e9226e-3d95-496c-bda6-c9142bb6b980 sha256=e8a3075f4509043d304026705636eac29ba09a1549a403d419b10edebcf378b7 close_ready_commit=31d98a951eddde881d20e4a18946d5e5edcb971b expires_at_utc=2026-08-16T22:19:16.8964908Z
+
+The exact owner-authorized `c6e9226e` qualification executed once from
+`1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b`. The owner observed and completed
+all three dialogs: disposable dummy Submit, blank Cancel, then a different
+disposable dummy Submit. The coordinator completed the nine scenarios and
+atomically retained final evidence, backup metadata, and the human summary;
+stdout and stderr are empty. The outer gate then failed in its post-effect
+evidence oracle because three continuation operators began new PowerShell
+lines and `-or` was parsed as a command. The attempt is consumed and must not
+be retried. A bounded non-native correction moves those operators to valid
+continuation positions and adds an exact post-effect-audit mode that requires
+the consumed lock/output, never creates a lock, never launches a coordinator
+or helper, and only validates retained evidence plus writes the missing gate
+receipt. Post-effect acceptance remains pending that audit and fresh review.

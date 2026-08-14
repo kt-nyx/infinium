@@ -284,7 +284,9 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.IsTrue(activeGate.Contains(
             "UTF8.GetBytes([string]$manifest.manifest_id)", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("never recovers or reuses evidence", StringComparison.Ordinal));
-        Assert.IsTrue(activeGate.Contains("if ($outputRootExistedBeforeInvocation)", StringComparison.Ordinal));
+        Assert.IsTrue(activeGate.Contains(
+            "if (-not $CredentialNativePostEffectAudit -and $outputRootExistedBeforeInvocation)",
+            StringComparison.Ordinal));
         Assert.IsFalse(activeGate.Contains("infinium.m1-s6.wp4.credential-native-evidence/v2', [StringComparison]::Ordinal",
             StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("WP4_V2_OWNER_ACCEPTANCE manifest_id=", StringComparison.Ordinal));
@@ -292,6 +294,12 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.IsTrue(activeGate.Contains("WaitForExit(1800000)", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("$immediateManifestSha -ne $manifestSha", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("'--manifest-sha256', $manifestSha", StringComparison.Ordinal));
+        Assert.IsFalse(activeGate.Split('\n').Any(line => line.TrimStart().StartsWith("-or ", StringComparison.Ordinal)));
+        Assert.IsTrue(gate.Contains("[switch] $CredentialNativePostEffectAudit", StringComparison.Ordinal));
+        Assert.IsTrue(activeGate.Contains("if ($CredentialNativePostEffectAudit)", StringComparison.Ordinal));
+        Assert.IsTrue(activeGate.Contains(
+            "CredentialNative post-effect audit lock binding differs from the one executed attempt.",
+            StringComparison.Ordinal));
         Assert.IsFalse(activeGate.Contains("--credential-native-qualification'", StringComparison.Ordinal));
         Assert.IsFalse(activeGate.Contains("wp4-credential-native-authorization.v1.json", StringComparison.Ordinal));
         Assert.IsFalse(activeGate.Contains("evidenceRecoveryOnly", StringComparison.Ordinal));
