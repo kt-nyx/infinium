@@ -6597,3 +6597,30 @@ close-ready commit.
 No recovery owner/execution marker, output, or lock exists, and no effect was
 performed. The exact candidate is ready for fresh independent pre-effect
 review only.
+
+Fresh pre-effect review returned four recoverable findings before any effect.
+First, the shared gate created the canonical recovery output before invoking
+the validator, causing the validator's required pre-effect absence check to
+reject. Second, the original close-ready boundary preceded the authoritative
+current-state handoff, so exact post-binding drift would reject that file.
+Third, the receipt reconstructor wrote its passing receipt before scanning
+inputs for raw targets. Fourth, the v2 evidence validator did not require its
+complete closed top-level property set.
+
+Replacement close-ready `448a67c4939a02f1e297f27a2ff47bd00a0d503d`
+resolves all four findings. Recovery validation now precedes any output
+creation; after validation and build, the gate consumes the one-shot
+CreateNew lock, creates only the canonical output, and launches the helper.
+The replacement close-ready descends from the exact current-state handoff, so
+post-binding drift returns to manifest/record only. Reconstruction scans
+evidence and lock before creating a receipt, while the v2 validator requires
+the exact 24-property success envelope, including explicit null prior final
+evidence, every lineage field, and all four zero external counters. Mutation
+tests prove missing/extra fields and raw-target input fail with no receipt.
+
+The manifest was rebound to that replacement close-ready without changing its
+targets, cleanup grammar, limits, or expiry. The resulting 6,821-byte SHA-256
+is `137cff186229610b4953619365a9279b7ed1cf222efc653ffb67b9c72e9db8d2`.
+The semantic validator passes with `execution_authorized=false`; output and
+one-shot lock remain absent. This replacement remains pre-effect pending exact
+verification and terminal independent acceptance.
