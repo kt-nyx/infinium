@@ -6569,3 +6569,14 @@ had no repository-owned .NET/helper process after build-server shutdown, and
 no native credential, UI, provider, DNS, network, billable, private, or archive
 effect occurred. This draft grants no recovery authority until it is committed,
 bound to its exact close-ready commit, and independently accepted pre-effect.
+
+The recovery implementation and authority consumers were committed as exact
+close-ready candidate `d7788b3c3ca437505affb554fb61236cc9afd835`.
+The manifest was then advanced without changing its recovery scope to
+`ready-for-owner-acceptance`, bound to that exact ancestor. The resulting
+6,821-byte manifest SHA-256 is
+`73deacea5d9ec6b6de7b793d588f1e540c2a5de27f256aa5617dc73404a10d2b`;
+its expiry is `2026-08-15T16:50:03.0720393Z`. The exact semantic validator
+passes with `execution_authorized=false`; its output root and derived one-shot
+lock remain absent. This binding is ready only for fresh independent
+pre-effect review and grants no effect authority by itself.
