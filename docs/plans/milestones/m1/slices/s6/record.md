@@ -6238,3 +6238,33 @@ exact committed bytes remains mandatory before standing cleanup authority may
 be exercised once.
 
 WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/dd412ecc-3b2c-4628-8865-bc8574a357c7 sha256=09b6858eaf472038499f18654d2a2fc4ca0a32b2ed34cd1a192146f90755e183 close_ready_commit=c77f94288f8caedfdce5689b367b255b191481db expires_at_utc=2026-08-15T14:46:57.6685379Z
+
+### WP4 `4936dcef` one-target cleanup recovery — 2026-08-14T19:07:18.2779621Z
+
+Fresh independent pre-effect review returned ACCEPT with no finding against
+clean committed manifest HEAD `a44e44b40c29de6353d1a2409e7b68848d662430`.
+The semantic validator and focused authorization 31/31 passed; exact local
+terminal evidence and lock bytes, prior ordered 11-target reconstruction,
+one-target helper binding, finite limits, evidence oracle, ancestry, drift,
+and absent marker/lock/output preconditions were independently confirmed.
+
+Standing bounded cleanup authority was recorded once and the recovery ran
+once from clean execution HEAD `29ef4ce3031b612ffd9fb3c8fca31a9191a4ec85`.
+The exact `backup-new` target was present, read successfully, freed once,
+deleted successfully, and read again as `ERROR_NOT_FOUND`. The trace is
+W0/R2/D1/F1/T4 with canonical sequence and allocation/free pairing. Recovery
+evidence is 2,470 bytes with SHA-256
+`427d78e467fa0f26517d35abcb2c4405bbaf4db5a5845f278d9b584effdc271a`;
+the 827-byte gate receipt SHA-256 is
+`eb4ec7b518329081830bceb3e3b4f3894dee74ed7d334eacb532ce72009dc429`;
+and the 223-byte consumed recovery-lock SHA-256 is
+`5f9420335ce08c482bf747cf43ac409bb3e13204a6910370c480f9caae00720e`.
+
+The independent evidence validator passed. Cleanup ambiguity is false,
+namespace reuse remains blocked, and exact prior 11 plus recovery one closes
+the namespace at 12/12 absence. Network, DNS, provider, and billable counts
+are zero. Build-server shutdown and exact-root process inspection returned
+zero repository-owned processes. The recovery identity, lock, output,
+namespace, and target are consumed forever and may not be retried or reused.
+
+WP4_RECOVERY_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-recovery/dd412ecc-3b2c-4628-8865-bc8574a357c7 sha256=09b6858eaf472038499f18654d2a2fc4ca0a32b2ed34cd1a192146f90755e183 execution_head_commit=29ef4ce3031b612ffd9fb3c8fca31a9191a4ec85 status=passed native_calls=4 cred_write_w=0 cred_read_w=2 cred_delete_w=1 cred_free=1 recovery_absence=1 prior_absence=11 combined_absence=12 cleanup_ambiguity=false namespace_reuse_blocked=true evidence_sha256=427d78e467fa0f26517d35abcb2c4405bbaf4db5a5845f278d9b584effdc271a receipt_sha256=eb4ec7b518329081830bceb3e3b4f3894dee74ed7d334eacb532ce72009dc429 lock_sha256=5f9420335ce08c482bf747cf43ac409bb3e13204a6910370c480f9caae00720e network_operations=0 dns_operations=0 provider_operations=0 billable_operations=0
