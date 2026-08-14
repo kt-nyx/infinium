@@ -1105,6 +1105,135 @@ public sealed class CredentialNativeQualificationSupervisorTests
 
     [TestMethod]
     [TestCategory("Integration")]
+    public async Task CompletedRunnerDisposesStoresBeforeSealedEvidenceAndPublishesSummaryLast()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(), "Infinium-Wp4-Finalization-Success-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        CredentialNativeQualificationEvidence evidence =
+            await CredentialNativeQualificationRunner.RunWithLauncherAndWriteOutputsForTestAsync(
+                root,
+                Launcher(Path.Combine(root, "fake-store")),
+                AllTargetIdentities(),
+                BaseTime);
+
+        Assert.IsFalse(evidence.CleanupAmbiguous);
+        Assert.IsTrue(File.Exists(Path.Combine(root, "native-backup-metadata.v2.json")));
+        Assert.IsTrue(File.Exists(Path.Combine(root, "credential-native-evidence.v2.json")));
+        Assert.IsTrue(File.Exists(Path.Combine(root, "credential-native-summary.txt")));
+        Assert.IsFalse(File.Exists(Path.Combine(
+            root, "credential-native-evidence-finalization-failure.v1.json")));
+        Assert.IsFalse(Directory.EnumerateFiles(root, "*.tmp", SearchOption.AllDirectories).Any());
+        using (JsonDocument retained = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(
+            root, "credential-native-evidence.v2.json"))))
+        {
+            Assert.IsTrue(retained.RootElement.GetProperty("canaries").GetProperty("scanned_surfaces")
+                .EnumerateArray().Any(item => string.Equals(
+                    item.GetProperty("name").GetString(),
+                    "native-backup-metadata.v2.json",
+                    StringComparison.Ordinal)));
+        }
+        foreach (string database in Directory.EnumerateFiles(root, "*.sqlite3", SearchOption.AllDirectories))
+        {
+            using FileStream exclusive = new(database, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            Assert.IsGreaterThan(0, exclusive.Length);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [DataRow("CoordinatorArtifactScan", "coordinator-artifact-scan", false, true)]
+    [DataRow("BackupMetadataWrite", "backup-metadata-write", false, false)]
+    [DataRow("FinalEvidenceWrite", "final-evidence-write", false, true)]
+    [DataRow("SuccessSummaryWrite", "success-summary-write", true, true)]
+    public async Task FinalizationFailureRetainsClosedRedactedStageAndNeverPublishesSuccessSummary(
+        string faultName,
+        string expectedStage,
+        bool expectedFinalEvidence,
+        bool expectedBackupMetadata)
+    {
+        CredentialNativeEvidenceFinalizationFault fault =
+            Enum.Parse<CredentialNativeEvidenceFinalizationFault>(faultName);
+        string root = Path.Combine(
+            Path.GetTempPath(), "Infinium-Wp4-Finalization-Failure-" + fault + "-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        CredentialNativeEvidenceFinalizationException failure =
+            await Assert.ThrowsExactlyAsync<CredentialNativeEvidenceFinalizationException>(() =>
+                CredentialNativeQualificationRunner.RunWithLauncherAndWriteOutputsForTestAsync(
+                    root,
+                    Launcher(Path.Combine(root, "fake-store")),
+                    AllTargetIdentities(),
+                    BaseTime,
+                    fault));
+
+        Assert.AreEqual(expectedStage, failure.Stage);
+        Assert.IsFalse(File.Exists(Path.Combine(root, "credential-native-summary.txt")));
+        Assert.AreEqual(expectedFinalEvidence,
+            File.Exists(Path.Combine(root, "credential-native-evidence.v2.json")));
+        Assert.AreEqual(expectedBackupMetadata,
+            File.Exists(Path.Combine(root, "native-backup-metadata.v2.json")));
+        string failurePath = Path.Combine(root, "credential-native-evidence-finalization-failure.v1.json");
+        using JsonDocument artifact = JsonDocument.Parse(File.ReadAllBytes(failurePath));
+        Assert.AreEqual("failed-post-success-evidence-finalization",
+            artifact.RootElement.GetProperty("status").GetString());
+        Assert.AreEqual(expectedStage, artifact.RootElement.GetProperty("finalization_stage").GetString());
+        Assert.AreEqual(nameof(IOException), artifact.RootElement.GetProperty("failure_type").GetString());
+        Assert.IsFalse(artifact.RootElement.GetProperty("failure_detail_retained").GetBoolean());
+        Assert.IsTrue(artifact.RootElement.GetProperty("namespace_blocked").GetBoolean());
+        Assert.IsTrue(artifact.RootElement.GetProperty("namespace_reuse_blocked").GetBoolean());
+        Assert.AreEqual(0, artifact.RootElement.GetProperty("later_native_calls").GetInt32());
+        Assert.AreEqual(expectedFinalEvidence,
+            artifact.RootElement.GetProperty("final_evidence_retained").GetBoolean());
+        Assert.IsFalse(artifact.RootElement.GetProperty("success_summary_retained").GetBoolean());
+        Assert.IsFalse(Directory.EnumerateFiles(root, "*.tmp", SearchOption.AllDirectories).Any());
+        Assert.IsFalse(File.ReadAllText(failurePath)
+            .Contains("Injected closed evidence-finalization failure", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task OpenCoordinatorArtifactFailsAtClosedScanStageAfterStoresWereDisposed()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            Assert.Inconclusive("Exclusive open-file scan behavior is qualified on Windows.");
+        }
+        string root = Path.Combine(
+            Path.GetTempPath(), "Infinium-Wp4-Finalization-OpenFile-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        FileStream? blocker = null;
+        try
+        {
+            CredentialNativeEvidenceFinalizationException failure =
+                await Assert.ThrowsExactlyAsync<CredentialNativeEvidenceFinalizationException>(() =>
+                    CredentialNativeQualificationRunner.RunWithLauncherAndWriteOutputsForTestAsync(
+                        root,
+                        Launcher(Path.Combine(root, "fake-store")),
+                        AllTargetIdentities(),
+                        BaseTime,
+                        beforeFinalizationForTest: completedRoot =>
+                        {
+                            string database = Directory.EnumerateFiles(
+                                completedRoot, "*.sqlite3", SearchOption.AllDirectories).First();
+                            blocker = new(database, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                        }));
+            Assert.AreEqual("coordinator-artifact-scan", failure.Stage);
+            Assert.IsFalse(File.Exists(Path.Combine(root, "credential-native-evidence.v2.json")));
+            Assert.IsFalse(File.Exists(Path.Combine(root, "credential-native-summary.txt")));
+            using JsonDocument artifact = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(
+                root, "credential-native-evidence-finalization-failure.v1.json")));
+            Assert.IsFalse(artifact.RootElement.GetProperty("canaries").GetProperty("known").GetBoolean());
+        }
+        finally
+        {
+            blocker?.Dispose();
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
     public void RestoreConstraintClassifierAcceptsOnlyExactExpectedShapeAndUnexpectedSqliteEscapes()
     {
         const string expectedMessage =

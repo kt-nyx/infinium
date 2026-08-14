@@ -20,6 +20,23 @@ internal sealed record CredentialNativeRetainedSurfaceEvidence(
     long ByteCount,
     string Basis);
 
+internal enum CredentialNativeEvidenceFinalizationFault
+{
+    None,
+    CoordinatorArtifactScan,
+    BackupMetadataWrite,
+    FinalEvidenceWrite,
+    SuccessSummaryWrite,
+}
+
+internal sealed class CredentialNativeEvidenceFinalizationException(
+    string stage,
+    IOException innerException)
+    : IOException("Credential-native evidence finalization failed at a closed stage.", innerException)
+{
+    internal string Stage { get; } = stage;
+}
+
 internal static class CredentialNativeQualificationRunner
 {
     private const string RestoredGenerationRejectionMessage =
@@ -76,37 +93,44 @@ internal static class CredentialNativeQualificationRunner
         CredentialNativeQualificationEvidence evidence;
         try
         {
-            evidence = await state.RunAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (CredentialNativePreflightCollisionException collision)
-        {
-            WriteJson(Path.Combine(outputRoot, "credential-native-collision.v2.json"), new
+            try
             {
-                schema = "infinium.m1-s6.wp4.credential-native-collision/v2",
-                status = "failed-preflight-collision",
-                manifest_id = manifestId,
-                manifest_sha256 = manifestSha256,
-                collision.AssignmentId,
-                collision.TargetFingerprintSha256,
-                namespace_blocked = true,
-                later_native_calls = 0,
-                disposition = "terminal-fresh-owner-authority-required",
-            });
-            throw;
+                evidence = await state.RunAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (CredentialNativePreflightCollisionException collision)
+            {
+                WriteJson(Path.Combine(outputRoot, "credential-native-collision.v2.json"), new
+                {
+                    schema = "infinium.m1-s6.wp4.credential-native-collision/v2",
+                    status = "failed-preflight-collision",
+                    manifest_id = manifestId,
+                    manifest_sha256 = manifestSha256,
+                    collision.AssignmentId,
+                    collision.TargetFingerprintSha256,
+                    namespace_blocked = true,
+                    later_native_calls = 0,
+                    disposition = "terminal-fresh-owner-authority-required",
+                });
+                throw;
+            }
+            catch (CredentialNativeCleanupAmbiguityException ambiguity)
+            {
+                WriteJson(
+                    Path.Combine(outputRoot, "credential-native-cleanup-ambiguity.v3.json"),
+                    BuildCleanupAmbiguityArtifact(manifestId, manifestSha256, ambiguity));
+                throw;
+            }
+            catch (CredentialNativePrimaryFailureException failure)
+            {
+                WriteJson(
+                    Path.Combine(outputRoot, "credential-native-primary-failure.v2.json"),
+                    BuildPrimaryFailureArtifact(manifestId, manifestSha256, failure));
+                throw;
+            }
         }
-        catch (CredentialNativeCleanupAmbiguityException ambiguity)
+        finally
         {
-            WriteJson(
-                Path.Combine(outputRoot, "credential-native-cleanup-ambiguity.v3.json"),
-                BuildCleanupAmbiguityArtifact(manifestId, manifestSha256, ambiguity));
-            throw;
-        }
-        catch (CredentialNativePrimaryFailureException failure)
-        {
-            WriteJson(
-                Path.Combine(outputRoot, "credential-native-primary-failure.v2.json"),
-                BuildPrimaryFailureArtifact(manifestId, manifestSha256, failure));
-            throw;
+            state.Dispose();
         }
         WriteOutputs(outputRoot, manifestId, manifestSha256, evidence, state);
         return 0;
@@ -125,9 +149,37 @@ internal static class CredentialNativeQualificationRunner
             item => item.Key,
             item => new Target(item.Key, item.Value.ProfileId, item.Value.GenerationId, new('0', 64)),
             StringComparer.Ordinal);
-        RunnerState state = new(root, launcher, targets, new Dictionary<string, string>(), now,
+        using RunnerState state = new(root, launcher, targets, new Dictionary<string, string>(), now,
             primaryFailureForTest, cleanupFailureForTest);
         return await state.RunAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    internal static async Task<CredentialNativeQualificationEvidence> RunWithLauncherAndWriteOutputsForTestAsync(
+        string root,
+        OneShotCredentialHelperLauncher launcher,
+        IReadOnlyDictionary<string, (string ProfileId, string GenerationId)> targetIdentities,
+        DateTimeOffset now,
+        CredentialNativeEvidenceFinalizationFault fault = CredentialNativeEvidenceFinalizationFault.None,
+        Action<string>? beforeFinalizationForTest = null,
+        CancellationToken cancellationToken = default)
+    {
+        Dictionary<string, Target> targets = targetIdentities.ToDictionary(
+            item => item.Key,
+            item => new Target(item.Key, item.Value.ProfileId, item.Value.GenerationId, new('0', 64)),
+            StringComparer.Ordinal);
+        RunnerState state = new(root, launcher, targets, new Dictionary<string, string>(), now);
+        CredentialNativeQualificationEvidence evidence;
+        try
+        {
+            evidence = await state.RunAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            state.Dispose();
+        }
+        beforeFinalizationForTest?.Invoke(root);
+        WriteOutputs(root, "manifest/test", new string('a', 64), evidence, state, fault);
+        return evidence;
     }
 
     internal static bool IsExpectedRestoredGenerationRejectionForTest(SqliteException exception) =>
@@ -274,16 +326,10 @@ internal static class CredentialNativeQualificationRunner
         string manifestId,
         string manifestSha256,
         CredentialNativeQualificationEvidence evidence,
-        RunnerState state)
+        RunnerState state,
+        CredentialNativeEvidenceFinalizationFault fault = CredentialNativeEvidenceFinalizationFault.None)
     {
         string summary = $"WP4 v2 passed. manifest_id={manifestId} manifest_sha256={manifestSha256} scenarios=9 targets=12 cleanup=confirmed-absent\n";
-        File.WriteAllText(
-            Path.Combine(outputRoot, "credential-native-summary.txt"),
-            summary,
-            new UTF8Encoding(false));
-        WriteJson(Path.Combine(outputRoot, "native-backup-metadata.v2.json"), state.BackupEvidence
-            ?? throw new InvalidOperationException("Backup/restore evidence was not produced."));
-
         List<CanonicalCallTraceEntry> trace = [];
         long globalSequence = 0;
         long globalAllocation = 0;
@@ -323,49 +369,166 @@ internal static class CredentialNativeQualificationRunner
             target.Fingerprint,
             trace.LastOrDefault(item => item.TargetFingerprintSha256 == target.Fingerprint)?.Result
                 ?? "missing")).ToArray();
-        CredentialNativeCanarySurfaceEvidence[] surfaces = evidence.Scenarios.SelectMany(item => item.Phases)
+        CredentialNativeCanarySurfaceEvidence[] phaseSurfaces = evidence.Scenarios.SelectMany(item => item.Phases)
             .Where(item => item.Canaries is not null)
             .SelectMany(item => item.Canaries!.ScannedSurfaces)
-            .Concat(ScanCoordinatorArtifacts(outputRoot, state.Targets.Values))
             .ToArray();
-        object output = new
+        bool finalEvidenceRetained = false;
+        bool summaryRetained = false;
+        CredentialNativeCanarySurfaceEvidence[]? coordinatorSurfaces = null;
+        string stage = "backup-metadata-write";
+        try
         {
-            schema = "infinium.m1-s6.wp4.credential-native-evidence/v2",
-            status = "passed",
-            manifest_id = manifestId,
-            manifest_sha256 = manifestSha256,
-            evidence.StartedAt,
-            evidence.CompletedAt,
-            deadline = new
+            ThrowFinalizationFault(fault, CredentialNativeEvidenceFinalizationFault.BackupMetadataWrite);
+            WriteJsonAtomically(
+                Path.Combine(outputRoot, "native-backup-metadata.v2.json"),
+                state.BackupEvidence ?? throw new InvalidOperationException("Backup/restore evidence was not produced."));
+
+            stage = "coordinator-artifact-scan";
+            ThrowFinalizationFault(fault, CredentialNativeEvidenceFinalizationFault.CoordinatorArtifactScan);
+            coordinatorSurfaces = ScanCoordinatorArtifacts(outputRoot, state.Targets.Values).ToArray();
+            CredentialNativeCanarySurfaceEvidence[] surfaces = phaseSurfaces.Concat(coordinatorSurfaces).ToArray();
+            object output = new
             {
-                evidence.PrimaryPhaseSeconds,
-                evidence.CleanupReserveSeconds,
-                evidence.EvidenceReserveSeconds,
-                evidence.OuterWallClockSeconds,
-            },
-            evidence.CleanupAmbiguous,
-            evidence.NamespaceBlocked,
-            native_call_counts = evidence.NativeCallCounts,
-            native_call_trace = trace,
-            stale_gate = evidence.StaleGate,
-            evidence.Scenarios,
-            target_absence = absence,
-            canaries = new
+                schema = "infinium.m1-s6.wp4.credential-native-evidence/v2",
+                status = "passed",
+                manifest_id = manifestId,
+                manifest_sha256 = manifestSha256,
+                evidence.StartedAt,
+                evidence.CompletedAt,
+                deadline = new
+                {
+                    evidence.PrimaryPhaseSeconds,
+                    evidence.CleanupReserveSeconds,
+                    evidence.EvidenceReserveSeconds,
+                    evidence.OuterWallClockSeconds,
+                },
+                evidence.CleanupAmbiguous,
+                evidence.NamespaceBlocked,
+                native_call_counts = evidence.NativeCallCounts,
+                native_call_trace = trace,
+                stale_gate = evidence.StaleGate,
+                evidence.Scenarios,
+                target_absence = absence,
+                canaries = new
+                {
+                    secret_matches = surfaces.Sum(item => item.SecretMatches),
+                    raw_target_matches = surfaces.Sum(item => item.RawTargetMatches),
+                    raw_target_encodings = new[] { "utf-8", "utf-16le" },
+                    scanned_surfaces = surfaces,
+                    retained_surface_inventory = RetainedSurfaceInventory(Encoding.UTF8.GetByteCount(summary)),
+                },
+                network_operations = evidence.Scenarios.SelectMany(item => item.Phases).Sum(item => item.Process.NetworkOperationCount),
+                dns_operations = 0,
+                provider_operations = 0,
+                billable_operations = 0,
+                process_tree_survivors = evidence.Scenarios.SelectMany(item => item.Phases).Sum(item => item.Process.ProcessTreeSurvivorCount),
+                retry_attempted = evidence.Scenarios.SelectMany(item => item.Phases).Any(item => item.Process.RetryAttempted),
+            };
+
+            stage = "final-evidence-write";
+            ThrowFinalizationFault(fault, CredentialNativeEvidenceFinalizationFault.FinalEvidenceWrite);
+            WriteJsonAtomically(Path.Combine(outputRoot, "credential-native-evidence.v2.json"), output);
+            finalEvidenceRetained = true;
+
+            stage = "success-summary-write";
+            ThrowFinalizationFault(fault, CredentialNativeEvidenceFinalizationFault.SuccessSummaryWrite);
+            WriteTextAtomically(Path.Combine(outputRoot, "credential-native-summary.txt"), summary);
+            summaryRetained = true;
+        }
+        catch (IOException exception)
+        {
+            object failure = new
             {
-                secret_matches = surfaces.Sum(item => item.SecretMatches),
-                raw_target_matches = surfaces.Sum(item => item.RawTargetMatches),
-                raw_target_encodings = new[] { "utf-8", "utf-16le" },
-                scanned_surfaces = surfaces,
-                retained_surface_inventory = RetainedSurfaceInventory(Encoding.UTF8.GetByteCount(summary)),
-            },
-            network_operations = evidence.Scenarios.SelectMany(item => item.Phases).Sum(item => item.Process.NetworkOperationCount),
-            dns_operations = 0,
-            provider_operations = 0,
-            billable_operations = 0,
-            process_tree_survivors = evidence.Scenarios.SelectMany(item => item.Phases).Sum(item => item.Process.ProcessTreeSurvivorCount),
-            retry_attempted = evidence.Scenarios.SelectMany(item => item.Phases).Any(item => item.Process.RetryAttempted),
-        };
-        WriteJson(Path.Combine(outputRoot, "credential-native-evidence.v2.json"), output);
+                schema = "infinium.m1-s6.wp4.credential-native-evidence-finalization-failure/v1",
+                status = "failed-post-success-evidence-finalization",
+                manifest_id = manifestId,
+                manifest_sha256 = manifestSha256,
+                finalization_stage = stage,
+                failure_type = nameof(IOException),
+                failure_detail_retained = false,
+                runner_completed = true,
+                cleanup_confirmed = !evidence.CleanupAmbiguous,
+                namespace_blocked = true,
+                namespace_reuse_blocked = true,
+                later_native_calls = 0,
+                disposition = "terminal-cleanup-recovery-authority-required-never-reuse",
+                final_evidence_retained = finalEvidenceRetained,
+                success_summary_retained = summaryRetained,
+                backup_metadata_retained = File.Exists(Path.Combine(outputRoot, "native-backup-metadata.v2.json")),
+                native_call_counts = evidence.NativeCallCounts,
+                native_call_trace = trace,
+                target_absence = absence,
+                canaries = new
+                {
+                    known = coordinatorSurfaces is not null,
+                    secret_matches = phaseSurfaces.Concat(coordinatorSurfaces ?? []).Sum(item => item.SecretMatches),
+                    raw_target_matches = phaseSurfaces.Concat(coordinatorSurfaces ?? []).Sum(item => item.RawTargetMatches),
+                    raw_target_encodings = new[] { "utf-8", "utf-16le" },
+                    scanned_surfaces = phaseSurfaces.Concat(coordinatorSurfaces ?? []).ToArray(),
+                },
+                containment = new
+                {
+                    process_trees_terminated = evidence.Scenarios.SelectMany(item => item.Phases)
+                        .All(item => item.Process.ProcessTreeTerminated),
+                    survivor_count = evidence.Scenarios.SelectMany(item => item.Phases)
+                        .Sum(item => item.Process.ProcessTreeSurvivorCount),
+                },
+                network_operations = evidence.Scenarios.SelectMany(item => item.Phases)
+                    .Sum(item => item.Process.NetworkOperationCount),
+                dns_operations = 0,
+                provider_operations = 0,
+                billable_operations = 0,
+                retry_attempted = evidence.Scenarios.SelectMany(item => item.Phases)
+                    .Any(item => item.Process.RetryAttempted),
+            };
+            WriteJsonAtomically(
+                Path.Combine(outputRoot, "credential-native-evidence-finalization-failure.v1.json"),
+                failure);
+            throw new CredentialNativeEvidenceFinalizationException(stage, exception);
+        }
+    }
+
+    private static void ThrowFinalizationFault(
+        CredentialNativeEvidenceFinalizationFault actual,
+        CredentialNativeEvidenceFinalizationFault expected)
+    {
+        if (actual == expected)
+        {
+            throw new IOException("Injected closed evidence-finalization failure.");
+        }
+    }
+
+    private static void WriteJsonAtomically(string path, object value) => WriteBytesAtomically(
+        path,
+        Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value, EvidenceJson) + "\n"));
+
+    private static void WriteTextAtomically(string path, string value) =>
+        WriteBytesAtomically(path, new UTF8Encoding(false).GetBytes(value));
+
+    private static void WriteBytesAtomically(string path, byte[] bytes)
+    {
+        string fullPath = Path.GetFullPath(path);
+        string temporaryPath = fullPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            using (FileStream stream = new(
+                temporaryPath,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 16_384,
+                FileOptions.WriteThrough))
+            {
+                stream.Write(bytes);
+                stream.Flush(flushToDisk: true);
+            }
+            File.Move(temporaryPath, fullPath, overwrite: false);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath)) { File.Delete(temporaryPath); }
+        }
     }
 
     private static void WriteJson(string path, object value) => File.WriteAllText(
@@ -663,7 +826,7 @@ internal static class CredentialNativeQualificationRunner
         IReadOnlyDictionary<string, string> fingerprints,
         DateTimeOffset baseTime,
         Exception? injectedPrimaryFailure = null,
-        Exception? injectedCleanupFailure = null)
+        Exception? injectedCleanupFailure = null) : IDisposable
     {
         private readonly string root = Path.GetFullPath(root);
         private readonly OneShotCredentialHelperLauncher launcher = launcher;
@@ -675,6 +838,8 @@ internal static class CredentialNativeQualificationRunner
         private Exception? injectedPrimaryFailure = injectedPrimaryFailure;
         private Exception? injectedCleanupFailure = injectedCleanupFailure;
         private readonly List<(string Scenario, ScenarioContext Context, Target CleanupTarget)> cleanup = [];
+        private readonly List<ScenarioContext> contexts = [];
+        private bool disposed;
 
         internal IReadOnlyDictionary<string, Target> Targets => targets;
         internal object? BackupEvidence { get; private set; }
@@ -1033,7 +1198,7 @@ internal static class CredentialNativeQualificationRunner
             string restoredRoot = Path.Combine(root, "backup-restored");
             Directory.CreateDirectory(Path.GetDirectoryName(restoredRoot)!);
             AuthoritativeStore.RestoreBackup(backup, new StoragePaths(restoredRoot));
-            ScenarioContext restored = new(restoredRoot, launcher);
+            ScenarioContext restored = RegisterContext(new(restoredRoot, launcher));
             cleanup.Add(("backup-restore-reauthentication", restored, newTarget));
             CredentialProfileProjection restoredProjection = restored.Store.GetCredentialProfile(oldTarget.ProfileId);
             if (restoredProjection.UpdatedAt > timeline) { timeline = restoredProjection.UpdatedAt; }
@@ -1134,7 +1299,26 @@ internal static class CredentialNativeQualificationRunner
                 scenario, phase, Attempt(scenario, phase), Bootstrap(bootstrapTarget, assignmentTarget, NextNonce()),
                 Assignment(scenario, phase, bootstrapTarget, assignmentTarget, ordinal), NextTime(), token);
 
-        private ScenarioContext CreateContext(string name) => new(Path.Combine(root, "state-" + name), launcher);
+        private ScenarioContext CreateContext(string name) =>
+            RegisterContext(new(Path.Combine(root, "state-" + name), launcher));
+
+        private ScenarioContext RegisterContext(ScenarioContext context)
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            contexts.Add(context);
+            return context;
+        }
+
+        public void Dispose()
+        {
+            if (disposed) { return; }
+            disposed = true;
+            for (int index = contexts.Count - 1; index >= 0; index--)
+            {
+                contexts[index].Dispose();
+            }
+            contexts.Clear();
+        }
         private DateTimeOffset NextTime()
         {
             clock++;
@@ -1207,6 +1391,7 @@ internal static class CredentialNativeQualificationRunner
     private sealed class ScenarioContext : IDisposable
     {
         private readonly string productRoot;
+        private bool disposed;
         internal ScenarioContext(string productRoot, OneShotCredentialHelperLauncher launcher)
         {
             this.productRoot = productRoot;
@@ -1218,11 +1403,17 @@ internal static class CredentialNativeQualificationRunner
         internal CredentialHelperCoordinator Coordinator { get; private set; }
         internal void Reopen(OneShotCredentialHelperLauncher launcher)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             Store.Dispose();
             Store = new(new StoragePaths(productRoot));
             Coordinator = new(Store, launcher);
         }
-        public void Dispose() => Store.Dispose();
+        public void Dispose()
+        {
+            if (disposed) { return; }
+            disposed = true;
+            Store.Dispose();
+        }
     }
 
     private sealed record Target(string Alias, string ProfileId, string GenerationId, string Fingerprint);
