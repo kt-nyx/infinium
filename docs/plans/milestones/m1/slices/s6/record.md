@@ -7891,3 +7891,5 @@ public-network, provider, billable, profile, private-fixture, archive, or
 later-packet effect occurred.
 
 WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=3f56b5d80d7c384d59e86783b03ab660ada13321 manifest_id=infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f sha256=bbf010ce443e3f4cb3c34c15592d96652f5cfba8ab6199ed37a86810d58ce12a verdicts=security,semantics,diff
+
+WP9_PROFILE_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f sha256=bbf010ce443e3f4cb3c34c15592d96652f5cfba8ab6199ed37a86810d58ce12a close_ready_commit=3017fe1bbebbd904b57ca562a91148884f665d5a expires_at_utc=2026-08-17T15:25:00.0000000Z
