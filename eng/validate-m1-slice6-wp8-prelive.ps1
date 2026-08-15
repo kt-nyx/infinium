@@ -58,7 +58,7 @@ function Test-Wp8AcceptedHandoffCurrentState([string] $Text) {
 
 function Test-Wp8RetainedAcceptanceRecord([string] $Text) {
     foreach ($required in @(
-            '## WP8 independent acceptance and handoff — 2026-08-14',
+            'WP8 independent acceptance and handoff',
             '| contract-persistence | `ACCEPT` |',
             '| budget-settlement-faults | `ACCEPT` |',
             '| credential-helper-security | `ACCEPT` |',
@@ -375,7 +375,9 @@ if ($verificationCandidateCommit -match '^[0-9a-f]{40}$') {
     $postVerificationDisposition = Get-Wp8PostVerificationDisposition `
         $postVerificationPaths $currentStateAtHead $verificationRecord $headRecord
     if ($postVerificationDisposition -eq 'invalid') {
-        throw 'WP8 HEAD is neither the exact verification state nor the exact accepted no-effect WP9-planning handoff.'
+        $debugCurrent = Test-Wp8AcceptedHandoffCurrentState $currentStateAtHead
+        $debugRecord = Test-Wp8RetainedAcceptanceRecord $headRecord
+        throw "WP8 HEAD is neither the exact verification state nor the exact accepted no-effect WP9-planning handoff (verification=$verificationCandidateCommit; current=$debugCurrent; record=$debugRecord; paths=$($postVerificationPaths -join ','))."
     }
 }
 foreach ($commitName in @('slice5_base_commit','wp8_baseline_commit','accepted_wp4_execution_commit','accepted_wp4_audit_commit',

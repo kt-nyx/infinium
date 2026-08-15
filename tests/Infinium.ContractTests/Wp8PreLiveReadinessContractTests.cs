@@ -327,7 +327,14 @@ public sealed class Wp8PreLiveReadinessContractTests
             start.ArgumentList.Add("-CandidateTemplatePath");
             start.ArgumentList.Add(Path.Combine(temp, "candidate.json"));
             using Process process = Process.Start(start)!;
+            string standardOutput = process.StandardOutput.ReadToEnd();
+            string standardError = process.StandardError.ReadToEnd();
             Assert.IsTrue(process.WaitForExit(30_000), "WP8 validator mutation process timed out.");
+            if (process.ExitCode != 0 && mutation is null)
+            {
+                Console.WriteLine(standardOutput);
+                Console.WriteLine(standardError);
+            }
             return process.ExitCode;
         }
         finally
