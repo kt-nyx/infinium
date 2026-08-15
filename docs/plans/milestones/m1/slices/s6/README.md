@@ -49,7 +49,7 @@ direct Layer 6 SHA-256
 `4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`.
 WP9 non-effectful production-profile preparation is in bounded correction and
 reverification. The corrected close-ready implementation is
-`12e0f38535b406b01125035c353403a5cfd13e7e`, and its exact Release execution
+`1862051cdaac665ac52500ae7c727cf9ad6ce0ec`, and its exact Release execution
 closure is materialized in the replacement manifest for complete non-live
 verification and fresh independent review. Candidate-bound review invalidated the prior close-ready
 binding at `1c3b64a651361c147cba018b8054cb2f0ac4f036`; it is historical and
