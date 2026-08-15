@@ -261,7 +261,8 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         Assert.IsTrue(
             errorText.Contains("still draft binding-pending", StringComparison.Ordinal)
             || errorText.Contains("exact clean codex/m1-s6 candidate", StringComparison.Ordinal)
-            || errorText.Contains("exactly one canonical owner-acceptance line", StringComparison.Ordinal),
+            || errorText.Contains("exactly one canonical owner-acceptance line", StringComparison.Ordinal)
+            || errorText.Contains("one exact independent-review acceptance for the current manifest bytes", StringComparison.Ordinal),
             errorText);
         Assert.IsFalse(Directory.Exists(output));
         Assert.IsFalse(Directory.Exists(Path.Combine(root, "artifacts", "m1-slice6", "wp9-production-profile-state")));

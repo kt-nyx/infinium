@@ -829,7 +829,7 @@ public sealed class CredentialNativeAuthorizationTests
             "wp4-credential-native-recovery.e6e04651.v1.json");
         JsonObject valid = JsonNode.Parse(File.ReadAllBytes(manifestPath))!.AsObject();
         Assert.AreEqual(0, RunPwsh(root, "eng/validate-m1-slice6-wp4-recovery-e6e04651.ps1",
-            "-ManifestPath", manifestPath));
+            "-ManifestPath", manifestPath, "-HistoricalEvidence"));
         Reject(node => node["schema_identity"] = "infinium.repository.wp4-credential-native-recovery/1.4.0");
         Reject(node => node["binding"]!["failed_manifest_id"] = "mutated");
         Reject(node => node["binding"]!["terminal_evidence_sha256"] = new string('0', 64));
