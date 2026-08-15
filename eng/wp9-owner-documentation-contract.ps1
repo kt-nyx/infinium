@@ -89,8 +89,9 @@ function Test-Wp9ReviewedOwnerPendingRecord {
     if ($current -cne ($reviewed + "`n`n" + $marker)) { return $false }
     $currentLines = @($current -split "`n")
     if (@($currentLines | Where-Object { $_ -ceq $marker }).Count -ne 1) { return $false }
+    $currentOwnerPrefix = "WP9_PROFILE_OWNER_ACCEPTANCE manifest_id=$ManifestId sha256=$ManifestSha256 "
     if (@($currentLines | Where-Object {
-                $_.StartsWith('WP9_PROFILE_OWNER_ACCEPTANCE ', [StringComparison]::Ordinal)
+                $_.StartsWith($currentOwnerPrefix, [StringComparison]::Ordinal)
             }).Count -ne 0) { return $false }
     return $true
 }
@@ -116,8 +117,9 @@ function Test-Wp9OwnerAcceptedRecord {
     $currentLines = @($current -split "`n")
     if (@($currentLines | Where-Object { $_ -ceq $reviewMarker }).Count -ne 1) { return $false }
     if (@($currentLines | Where-Object { $_ -ceq $ownerMarker }).Count -ne 1) { return $false }
+    $currentOwnerPrefix = "WP9_PROFILE_OWNER_ACCEPTANCE manifest_id=$ManifestId sha256=$ManifestSha256 "
     if (@($currentLines | Where-Object {
-                $_.StartsWith('WP9_PROFILE_OWNER_ACCEPTANCE ', [StringComparison]::Ordinal)
+                $_.StartsWith($currentOwnerPrefix, [StringComparison]::Ordinal)
             }).Count -ne 1) { return $false }
     return $true
 }

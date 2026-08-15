@@ -95,8 +95,9 @@ $allReviewLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object {
     $_.StartsWith('WP9_PROFILE_REVIEW_ACCEPTANCE ', [StringComparison]::Ordinal)
 })
 $reviewLines = @($allReviewLines | Where-Object { [Regex]::IsMatch($_, $reviewPattern) })
+$currentOwnerPrefix = "WP9_PROFILE_OWNER_ACCEPTANCE manifest_id=$($m.manifest_id) sha256=$manifestSha "
 $acceptanceLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object {
-    $_.StartsWith('WP9_PROFILE_OWNER_ACCEPTANCE ', [StringComparison]::Ordinal)
+    $_.StartsWith($currentOwnerPrefix, [StringComparison]::Ordinal)
 })
 if ($reviewLines.Count -ne 1) {
     throw 'WP9 profile execution requires one exact independent-review acceptance for the current manifest bytes.'

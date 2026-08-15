@@ -7852,3 +7852,19 @@ and 126-file inventory SHA-256
 The historical B17 review and owner markers grant no authority for these new
 bytes. No UI, API-key, Credential Manager, DNS, public-network, provider,
 billable, profile, private-fixture, archive, or later-packet effect occurred.
+
+## WP9 historical owner-marker isolation correction — 2026-08-15
+
+The B18 Release focused contracts passed 11/13 and stopped before NonLiveAll.
+Both real closeout fixtures retained the historical B17 owner marker, and the
+shared record contract rejected every owner marker globally instead of only a
+marker for the current manifest ID and SHA-256. The production runner carried
+the same global count and would therefore have rejected a later valid fresh
+owner marker. B18 is excluded from evidence.
+
+The bounded correction scopes owner-marker absence and uniqueness to the exact
+current manifest ID and SHA-256 while preserving every historical marker in
+the append-only record. Same-manifest malformed or duplicate markers remain
+rejected. No helper launch, UI, API-key, Credential Manager, DNS,
+public-network, provider, billable, profile, private-fixture, archive, or
+later-packet effect occurred.

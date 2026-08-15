@@ -248,7 +248,7 @@ public sealed class Wp8PreLiveReadinessContractTests
             "Ordinary Layer6 unexpectedly unprotected the WP8 current-state path.");
         Assert.AreNotEqual(0, RunLayer6Mode(root, "wp8"),
             "Explicit WP8 pre-live closeout mode incorrectly accepted the later WP9 state.");
-        string currentState = TestRepository.Read("docs", "current-state.md");
+        string currentState = RunGitOutput(root, "show", "HEAD:docs/current-state.md");
         int ownerStop = RunLayer6Mode(root, "wp9");
         int reviewCloseout = RunLayer6Mode(root, "wp9-review");
         if (currentState.Contains("non-effectful production-profile preparation verification and independent review only", StringComparison.Ordinal))
@@ -319,8 +319,14 @@ public sealed class Wp8PreLiveReadinessContractTests
 
             string recordPath = Path.Combine(cloneRoot, "docs", "plans", "milestones", "m1", "slices", "s6", "record.md");
             string exactRecord = File.ReadAllText(recordPath);
+            string manifestPath = Path.Combine(cloneRoot, "docs", "plans", "milestones", "m1", "slices", "s6",
+                "wp9-production-profile-authorization.v1.json");
+            using JsonDocument currentManifest = JsonDocument.Parse(File.ReadAllText(manifestPath));
+            string currentManifestId = currentManifest.RootElement.GetProperty("manifest_id").GetString()!;
+            string currentManifestSha = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(manifestPath))).ToLowerInvariant();
+            string ownerPrefix = $"WP9_PROFILE_OWNER_ACCEPTANCE manifest_id={currentManifestId} sha256={currentManifestSha} ";
             string owner = exactRecord.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n')
-                .Single(line => line.StartsWith("WP9_PROFILE_OWNER_ACCEPTANCE ", StringComparison.Ordinal));
+                .Single(line => line.StartsWith(ownerPrefix, StringComparison.Ordinal));
             File.AppendAllText(recordPath, "\n" + owner + "\n", new UTF8Encoding(false));
             Assert.AreEqual(0, RunGit(cloneRoot, "add", "docs/plans/milestones/m1/slices/s6/record.md"));
             Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "--amend", "--no-edit"));
@@ -359,7 +365,10 @@ public sealed class Wp8PreLiveReadinessContractTests
             string sourceVerifier = Path.Combine(sourceRoot, "eng", "verify-m1-slice6.ps1");
             string cloneVerifier = Path.Combine(cloneRoot, "eng", "verify-m1-slice6.ps1");
             File.Copy(sourceVerifier, cloneVerifier, true);
-            Assert.AreEqual(0, RunGit(cloneRoot, "add", "eng/verify-m1-slice6.ps1"));
+            File.Copy(Path.Combine(sourceRoot, "eng", "wp9-owner-documentation-contract.ps1"),
+                Path.Combine(cloneRoot, "eng", "wp9-owner-documentation-contract.ps1"), true);
+            Assert.AreEqual(0, RunGit(cloneRoot, "add", "eng/verify-m1-slice6.ps1",
+                "eng/wp9-owner-documentation-contract.ps1"));
             if (!string.IsNullOrWhiteSpace(RunGitOutput(cloneRoot, "diff", "--cached", "--name-only")))
             {
                 Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "-m", "Test current verifier baseline"));

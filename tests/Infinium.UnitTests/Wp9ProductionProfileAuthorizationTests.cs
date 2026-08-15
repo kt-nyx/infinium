@@ -273,6 +273,7 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         StringAssert.Contains(runner, "$allReviewLines");
         StringAssert.Contains(runner, "$reviewLines = @($allReviewLines | Where-Object { [Regex]::IsMatch($_, $reviewPattern) })");
         StringAssert.Contains(runner, "WP9_PROFILE_OWNER_ACCEPTANCE");
+        StringAssert.Contains(runner, "$currentOwnerPrefix");
         StringAssert.Contains(runner, "status --porcelain=v1");
         StringAssert.Contains(runner, "merge-base --is-ancestor");
         StringAssert.Contains(runner, "output must be the exact fresh absent manifest-bound root");
@@ -308,7 +309,7 @@ public sealed class Wp9ProductionProfileAuthorizationTests
                 if(Test-Wp9DocumentationRequirements -CurrentStateText $state -ReadmeText ($readme.Replace($line,'')) -Requirements $set){throw 'missing README fact admitted'}
               }
             }
-            $reviewedRecord="historical marker retained`nreviewed candidate record"
+            $reviewedRecord="historical marker retained`nWP9_PROFILE_OWNER_ACCEPTANCE manifest_id=old-manifest sha256=$('f'*64) close_ready_commit=$('e'*40) expires_at_utc=2026-08-01T00:00:00.0000000Z`nreviewed candidate record"
             $marker=Get-Wp9ReviewAcceptanceMarker -ManifestId 'manifest' -ManifestSha256 ('a'*64) -ReviewedCandidate ('c'*40)
             $currentRecord=$reviewedRecord+"`n`n"+$marker
             if(-not (Test-Wp9ReviewedOwnerPendingRecord -ReviewedRecordText $reviewedRecord -CurrentRecordText $currentRecord -ManifestId 'manifest' -ManifestSha256 ('a'*64) -ReviewedCandidate ('c'*40))){throw 'exact review record rejected'}
@@ -318,7 +319,7 @@ public sealed class Wp9ProductionProfileAuthorizationTests
               ($currentRecord.Replace(('a'*64),('d'*64))),
               ($currentRecord.Replace(('c'*40),('e'*40))),
               ($currentRecord+"`nextra"),
-              ($currentRecord+"`nWP9_PROFILE_OWNER_ACCEPTANCE invalid"))) {
+              ($currentRecord+"`nWP9_PROFILE_OWNER_ACCEPTANCE manifest_id=manifest sha256=$('a'*64) close_ready_commit=$('e'*40) expires_at_utc=2026-08-17T15:25:00.0000000Z"))) {
               if(Test-Wp9ReviewedOwnerPendingRecord -ReviewedRecordText $reviewedRecord -CurrentRecordText $mutated -ManifestId 'manifest' -ManifestSha256 ('a'*64) -ReviewedCandidate ('c'*40)){throw 'mutated review record admitted'}
             }
             $ownerMarker=Get-Wp9OwnerAcceptanceMarker -ManifestId 'manifest' -ManifestSha256 ('a'*64) -CloseReadyCommit ('b'*40) -ExpiresAtUtc '2026-08-17T15:25:00.0000000Z'
