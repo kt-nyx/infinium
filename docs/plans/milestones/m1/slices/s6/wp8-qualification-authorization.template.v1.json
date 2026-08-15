@@ -11,12 +11,12 @@
     "accepted_wp7_product_commit": "59367a7479a7395b173b974bf720543aab2404d4",
     "accepted_wp7_evidence_commit": "51251c0e0eb98d67dbc9b295b9ff084ebca33890",
     "wp8_product_template_commit": "260a09ecfafea103227f113faf7625a5bf0ce759",
-    "wp8_verification_candidate_commit": "41f57cafa4286b06df499b692b950423ae11aef2",
+    "wp8_verification_candidate_commit": "7e5b29affe06261507b6a63b7ef75a642dae2c9a",
     "required_predecessor_live_acceptance": "accepted-production-profile-sub-gate-receipt-pending"
   },
   "acceptance_binding": {
     "state": "correction-verification-pending",
-    "verification_candidate_commit": "41f57cafa4286b06df499b692b950423ae11aef2",
+    "verification_candidate_commit": "7e5b29affe06261507b6a63b7ef75a642dae2c9a",
     "post_run_evidence_candidate_commit": "pending-until-post-run-evidence-freeze",
     "non_live_all_receipt_sha256": "pending-until-post-run-evidence-freeze",
     "pre_live_receipt_sha256": "pending-until-post-run-evidence-freeze",
