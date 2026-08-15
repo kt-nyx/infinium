@@ -391,6 +391,7 @@ public sealed class Wp8PreLiveReadinessContractTests
         Assert.IsTrue(function.Success, "NonLiveAll current-state predicate was not found.");
         StringAssert.Contains(script, "one closeout commit changing exactly the four reviewed binding documents");
         StringAssert.Contains(script, "validate-m1-slice6-wp9-profile-authorization.ps1");
+        StringAssert.Contains(script, "profileManifest.candidate_binding.close_ready_implementation_commit");
         string currentState = """
             | Current authorized work | `M1/S6/WP8` closeout correction and complete non-live reverification only; WP9 is not eligible. |
             | Next eligible action | Freeze the corrected WP8 verification candidate, bind its non-executable templates, then run the complete non-live floor and fresh independent review; do not begin WP9 |

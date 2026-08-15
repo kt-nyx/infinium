@@ -1468,7 +1468,7 @@ function Invoke-NonLiveAllGate {
             throw 'NonLiveAll exact WP9 owner-stop state failed its ready manifest validator.'
         }
         $profileValidation = $profileValidationJson | ConvertFrom-Json -Depth 20
-        $closeReady = [string]$profileManifest.binding.close_ready_implementation_commit
+        $closeReady = [string]$profileManifest.candidate_binding.close_ready_implementation_commit
         if ($profileValidation.status -cne 'validated-ready-for-owner-acceptance' -or
             $profileValidation.manifest_id -cne 'infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f' -or
             $profileManifest.release_build.source_commit -cne $closeReady -or
