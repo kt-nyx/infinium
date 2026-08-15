@@ -62,6 +62,22 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             ready with { Focused = false }, "submit", "edit-enter", 32, 2560));
         Assert.IsFalse(Wp9ProductionEntryReadinessOracle.AdmitAction(
             ready, "submit", "submit-button", 0, 2560));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.IsExpectedActionFocus(
+            "submit-button", false, true, false, true));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.IsExpectedActionFocus(
+            "cancel-button", false, false, true, true));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.IsExpectedActionFocus(
+            "edit-enter", true, false, false, true));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.IsExpectedActionFocus(
+            "edit-escape", true, false, false, true));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.IsExpectedActionFocus(
+            "window-close", false, false, false, true));
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.IsExpectedActionFocus(
+            "submit-button", true, false, false, true));
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.IsExpectedActionFocus(
+            "cancel-button", true, false, false, true));
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.IsExpectedActionFocus(
+            "window-close", false, false, false, false));
         Assert.IsTrue(Wp9ProductionEntryReadinessOracle.IsAdmissibleCharacterLength(2560, 2560));
         Assert.IsFalse(Wp9ProductionEntryReadinessOracle.IsAdmissibleCharacterLength(2561, 2560));
         Assert.IsTrue(Wp9ProductionEntryReadinessOracle.ShouldClearPreReadinessContent(false, 1));
@@ -91,6 +107,8 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         Assert.IsTrue(probe.PreReadySubmitRejected);
         Assert.IsTrue(probe.ReadySubmitAdmitted);
         Assert.IsTrue(probe.ReadyCancelAdmitted);
+        Assert.IsTrue(probe.SubmitButtonClickAdmitted);
+        Assert.IsTrue(probe.CancelButtonClickAdmitted);
         Assert.IsTrue(probe.PreReadyContentCleared);
         Assert.IsTrue(probe.NativeBufferEmpty);
         Assert.IsTrue(probe.HelperProcessOwned);

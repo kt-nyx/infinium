@@ -101,6 +101,20 @@ internal static class Wp9ProductionEntryReadinessOracle
                 && source is "cancel-button" or "edit-escape" or "window-close"
                 && currentCharacterLength >= 0));
 
+    internal static bool IsExpectedActionFocus(
+        string source,
+        bool editFocused,
+        bool submitFocused,
+        bool cancelFocused,
+        bool ownedWindowFocused) => source switch
+        {
+            "submit-button" => submitFocused,
+            "cancel-button" => cancelFocused,
+            "edit-enter" or "edit-escape" => editFocused,
+            "window-close" => ownedWindowFocused,
+            _ => false,
+        };
+
     internal static bool IsAdmissibleCharacterLength(int length, int maximum) =>
         length is > 0 && length <= maximum;
 
@@ -115,6 +129,8 @@ internal sealed record Wp9ProductionHiddenPumpProbe(
     bool PreReadySubmitRejected,
     bool ReadySubmitAdmitted,
     bool ReadyCancelAdmitted,
+    bool SubmitButtonClickAdmitted,
+    bool CancelButtonClickAdmitted,
     bool PreReadyContentCleared,
     bool NativeBufferEmpty,
     bool HelperProcessOwned,
@@ -246,6 +262,7 @@ internal static class Wp9ProductionMaskedEntryDialog
     private const uint WmKeyDown = 0x0100;
     private const uint WmCut = 0x0300;
     private const uint WmCopy = 0x0301;
+    private const uint BmClick = 0x00F5;
     private const uint PmRemove = 0x0001;
     private const int VkReturn = 0x0D;
     private const int VkEscape = 0x1B;
@@ -264,6 +281,8 @@ internal static class Wp9ProductionMaskedEntryDialog
         bool preReadyRejected = false;
         bool submitAdmitted = false;
         bool cancelAdmitted = false;
+        bool submitButtonClickAdmitted = false;
+        bool cancelButtonClickAdmitted = false;
         bool contentCleared = false;
         bool nativeEmpty = false;
         bool processOwned = false;
@@ -273,6 +292,13 @@ internal static class Wp9ProductionMaskedEntryDialog
         Thread thread = new(() =>
         {
             nint edit = 0;
+            nint buttonWindow = 0;
+            nint buttonEdit = 0;
+            nint submitButton = 0;
+            nint cancelButton = 0;
+            string className = $"InfiniumWp9HiddenButtonProbe-{Environment.ProcessId}-{Environment.CurrentManagedThreadId}";
+            ushort atom = 0;
+            NativeWindowProcedure? windowProcedure = null;
             try
             {
                 edit = CreateWindowExW(0, "EDIT", null, 0, 0, 0, 0, 0,
@@ -308,15 +334,85 @@ internal static class Wp9ProductionMaskedEntryDialog
                 desktopMatched = input != 0 && current != 0
                     && string.Equals(GetDesktopName(input), GetDesktopName(current), StringComparison.Ordinal);
                 if (input != 0) { _ = CloseDesktop(input); }
+
+                windowProcedure = (handle, message, wParam, lParam) =>
+                {
+                    if (message == WmCommand && handle == buttonWindow)
+                    {
+                        int command = unchecked((int)(wParam & 0xffff));
+                        string? source = command == SubmitButtonId && lParam == submitButton
+                            ? "submit-button"
+                            : command == CancelButtonId && lParam == cancelButton
+                                ? "cancel-button"
+                                : null;
+                        if (source is not null)
+                        {
+                            nint actionFocus = GetFocus();
+                            bool focusMatched = Wp9ProductionEntryReadinessOracle.IsExpectedActionFocus(
+                                source,
+                                actionFocus == buttonEdit,
+                                actionFocus == submitButton,
+                                actionFocus == cancelButton,
+                                actionFocus == buttonWindow || (actionFocus != 0 && IsChild(buttonWindow, actionFocus)));
+                            Wp9ProductionReadinessSnapshot actionReadiness = new(
+                                true, true, true, true, true, true, true, true, true,
+                                focusMatched, true, true);
+                            bool admitted = Wp9ProductionEntryReadinessOracle.AdmitAction(
+                                actionReadiness,
+                                source == "submit-button" ? "submit" : "cancel",
+                                source,
+                                source == "submit-button" ? 32 : 0,
+                                WindowsCredentialManagerStore.MaximumBlobBytes);
+                            if (source == "submit-button") { submitButtonClickAdmitted = admitted; }
+                            else { cancelButtonClickAdmitted = admitted; }
+                            return 0;
+                        }
+                    }
+                    return DefWindowProcW(handle, message, wParam, lParam);
+                };
+                WindowClassEx definition = new()
+                {
+                    Size = checked((uint)Marshal.SizeOf<WindowClassEx>()),
+                    Instance = GetModuleHandleW(null),
+                    WindowProcedure = Marshal.GetFunctionPointerForDelegate(windowProcedure),
+                    ClassName = className,
+                };
+                atom = RegisterClassExW(ref definition);
+                if (atom == 0) { throw new Win32Exception(Marshal.GetLastWin32Error()); }
+                buttonWindow = CreateWindowExW(0, className, null, 0, 0, 0, 0, 0,
+                    new nint(-3), 0, GetModuleHandleW(null), 0);
+                buttonEdit = CreateWindowExW(0, "EDIT", null, WsChild | WsVisible,
+                    0, 0, 10, 10, buttonWindow, 0, 0, 0);
+                submitButton = CreateWindowExW(0, "BUTTON", "Submit", WsChild | WsVisible,
+                    0, 0, 10, 10, buttonWindow, SubmitButtonId, 0, 0);
+                cancelButton = CreateWindowExW(0, "BUTTON", "Cancel", WsChild | WsVisible,
+                    0, 0, 10, 10, buttonWindow, CancelButtonId, 0, 0);
+                if (buttonWindow == 0 || buttonEdit == 0 || submitButton == 0 || cancelButton == 0)
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                }
+                _ = SetFocus(submitButton);
+                _ = SendMessageW(submitButton, BmClick, 0, 0);
+                PumpMessages(buttonEdit, true, ref submit, ref cancel, ref actionSource, ref ignored);
+                _ = SetFocus(cancelButton);
+                _ = SendMessageW(cancelButton, BmClick, 0, 0);
+                PumpMessages(buttonEdit, true, ref submit, ref cancel, ref actionSource, ref ignored);
             }
             catch (Exception exception) { failure = exception; }
-            finally { if (edit != 0) { destroyed = DestroyWindow(edit) || !IsWindow(edit); } }
+            finally
+            {
+                if (buttonWindow != 0) { _ = DestroyWindow(buttonWindow); }
+                if (atom != 0) { _ = UnregisterClassW(className, GetModuleHandleW(null)); }
+                if (edit != 0) { destroyed = DestroyWindow(edit) || !IsWindow(edit); }
+                GC.KeepAlive(windowProcedure);
+            }
         });
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
         bool joined = thread.Join(TimeSpan.FromSeconds(5));
         if (failure is not null) { throw new InvalidOperationException("Hidden WP9 pump probe failed.", failure); }
-        return new(preReadyRejected, submitAdmitted, cancelAdmitted, contentCleared,
+        return new(preReadyRejected, submitAdmitted, cancelAdmitted,
+            submitButtonClickAdmitted, cancelButtonClickAdmitted, contentCleared,
             nativeEmpty, processOwned, desktopMatched, destroyed, joined);
     }
 
@@ -515,13 +611,13 @@ internal static class Wp9ProductionMaskedEntryDialog
                     if (cancelRequested || submitRequested)
                     {
                         int liveLength = GetWindowTextLengthW(edit);
+                        string action = cancelRequested ? "cancel" : "submit";
+                        string source = actionSource ?? "missing";
                         Wp9ProductionReadinessSnapshot current = MeasureReadiness(
-                            window, edit, submit, cancel, initiallyBlank, currentSession,
+                            window, edit, submit, cancel, source, initiallyBlank, currentSession,
                             out helperProcessOwned, out sameSession, out inputDesktopAvailable,
                             out notCloaked, out onMonitor, out enabled, out focused,
                             out foreground, out active);
-                        string action = cancelRequested ? "cancel" : "submit";
-                        string source = actionSource ?? "missing";
                         bool admitted = Wp9ProductionEntryReadinessOracle.AdmitAction(
                             current, action, source, liveLength, WindowsCredentialManagerStore.MaximumBlobBytes);
                         actionSnapshot = new(action, source, current.WindowVisible, current.EditVisible,
@@ -611,6 +707,7 @@ internal static class Wp9ProductionMaskedEntryDialog
         nint edit,
         nint submit,
         nint cancel,
+        string actionSource,
         bool initiallyBlank,
         uint currentSession,
         out bool helperProcessOwned,
@@ -638,7 +735,13 @@ internal static class Wp9ProductionMaskedEntryDialog
         onMonitor = IsActuallyOnMonitor(window);
         enabled = IsWindowEnabled(window) && IsWindowEnabled(edit)
             && IsWindowEnabled(submit) && IsWindowEnabled(cancel);
-        focused = GetFocus() == edit;
+        nint actionFocus = GetFocus();
+        focused = Wp9ProductionEntryReadinessOracle.IsExpectedActionFocus(
+            actionSource,
+            actionFocus == edit,
+            actionFocus == submit,
+            actionFocus == cancel,
+            actionFocus == window || (actionFocus != 0 && IsChild(window, actionFocus)));
         foreground = GetForegroundWindow() == window;
         active = GetActiveWindow() == window;
         return new(IsWindowVisible(window), IsWindowVisible(edit), initiallyBlank,
@@ -749,6 +852,7 @@ internal static class Wp9ProductionMaskedEntryDialog
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern bool GetMonitorInfoW(nint monitor, ref MonitorInfo info);
     [DllImport("user32.dll")] private static extern nint SetFocus(nint window);
     [DllImport("user32.dll")] private static extern nint GetFocus();
+    [DllImport("user32.dll")] private static extern bool IsChild(nint parent, nint child);
     [DllImport("user32.dll")] private static extern nint GetForegroundWindow();
     [DllImport("user32.dll")] private static extern nint GetActiveWindow();
     [DllImport("user32.dll")] private static extern bool SetForegroundWindow(nint window);
@@ -762,4 +866,5 @@ internal static class Wp9ProductionMaskedEntryDialog
     [DllImport("user32.dll")] private static extern bool TranslateMessage(in NativeMessage message);
     [DllImport("user32.dll")] private static extern nint DispatchMessageW(in NativeMessage message);
     [DllImport("user32.dll")] private static extern bool PostMessageW(nint window, uint message, nuint wParam, nint lParam);
+    [DllImport("user32.dll")] private static extern nint SendMessageW(nint window, uint message, nuint wParam, nint lParam);
 }
