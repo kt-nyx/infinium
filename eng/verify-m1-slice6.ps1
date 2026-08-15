@@ -910,12 +910,12 @@ function Invoke-CredentialSyntheticGate {
     $upgradeEvidencePath = Join-Path $resolvedOutputRoot 'accepted-wp2-upgrade.json'
     & (Join-Path $repoRoot 'eng/verify-m1-slice6-wp3-upgrade.ps1') -OutputPath $upgradeEvidencePath
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $upgradeEvidencePath -PathType Leaf)) {
-        throw 'CredentialSynthetic exact accepted-WP2 same-version upgrade regression failed.'
+        throw 'CredentialSynthetic exact accepted-WP2 to accepted-WP3 same-version upgrade regression failed.'
     }
     $registry = Get-Content -LiteralPath (Join-Path $repoRoot 'fixtures/public/public-fixture-registry.v1.json') -Raw | ConvertFrom-Json
     $packages = @($registry.packages | Where-Object { $_.package_identity -like 'M1-PLAT-CREDENTIAL-HELPER-*' })
     if ($packages.Count -ne 2) { throw 'CredentialSynthetic requires exactly two registered WP3 DEV/VAL packages.' }
-    $helperPath = Join-Path $repoRoot 'src/Infinium.CredentialHelper/bin/Release/net10.0/Infinium.CredentialHelper.exe'
+    $helperPath = Join-Path $repoRoot 'tests/Infinium.IntegrationTests/bin/Release/net10.0/CredentialHelper/Infinium.CredentialHelper.exe'
     if (-not (Test-Path -LiteralPath $helperPath -PathType Leaf)) { throw 'CredentialSynthetic exact helper binary is absent.' }
     $dynamicPath = Join-Path $repoRoot 'artifacts/m1-slice6/wp3/credential-synthetic-dynamic.json'
     if (-not (Test-Path -LiteralPath $dynamicPath -PathType Leaf)) { throw 'CredentialSynthetic dynamic process evidence is absent.' }
@@ -941,7 +941,7 @@ function Invoke-CredentialSyntheticGate {
         registry_package_count = $registry.package_count
         helper_binary_sha256 = $actualHelperSha
         helper_protocol_sha256 = '2eac265ef75cc827bd5a8596120f5ba4c1912dde2219ad98eb11e2984cb043c0'
-        accepted_wp2_upgrade_sha256 = (Get-FileHash -LiteralPath $upgradeEvidencePath -Algorithm SHA256).Hash.ToLowerInvariant()
+        accepted_wp2_to_wp3_upgrade_sha256 = (Get-FileHash -LiteralPath $upgradeEvidencePath -Algorithm SHA256).Hash.ToLowerInvariant()
         dynamic_evidence_bytes = $dynamicBytes.Length
         dynamic_evidence_sha256 = (Get-FileHash -LiteralPath $dynamicPath -Algorithm SHA256).Hash.ToLowerInvariant()
         inherited_private_handle_count = [int64]$dynamic.inherited_private_handle_count

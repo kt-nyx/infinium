@@ -5,6 +5,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $acceptedCommit = 'ed27ed04897103d93a60e6200971ca12d04f2e11'
+$acceptedWp3Commit = 'b32939e8b7491a5c47453f912d25dd98c090f103'
 $acceptedFingerprint = '240a06fe2a9fa3d79db63985fbda329c8e83822534b93cbfb539062a109cad9e'
 $rejectedWp3Commit = '7130ddc1d5b163adc05d9b0d06d5066341cfcfa9'
 $rejectedWp3Fingerprint = '554129523ac64ce52ee4d24e90644dbaa167c0d98602f1c2d0f25ad271ec0581'
@@ -37,7 +38,7 @@ function New-PrivateDirectory([string] $Path) {
         $inheritance,
         [Security.AccessControl.PropagationFlags]::None,
         [Security.AccessControl.AccessControlType]::Allow))
-    [IO.Directory]::SetAccessControl($Path, $security)
+    Set-Acl -LiteralPath $Path -AclObject $security
 }
 
 try {
@@ -98,9 +99,15 @@ using AuthoritativeStore store = new(new StoragePaths(args[0]));
     & dotnet run --project (Join-Path $rejectedRunner 'Runner.csproj') -c Release --no-restore -- $rejectedSourceStore
     if ($LASTEXITCODE -ne 0) { throw 'The exact rejected WP3 binary did not create its schema-6 store.' }
 
+    $acceptedWp3Archive = Join-Path $resolvedTemp 'accepted-wp3.zip'
+    $acceptedWp3Source = Join-Path $resolvedTemp 'accepted-wp3'
+    & git -C $repoRoot archive --format=zip --output=$acceptedWp3Archive $acceptedWp3Commit
+    if ($LASTEXITCODE -ne 0) { throw 'The exact accepted WP3 source archive could not be materialized.' }
+    Expand-Archive -LiteralPath $acceptedWp3Archive -DestinationPath $acceptedWp3Source
+
     $currentRunner = Join-Path $resolvedTemp 'current-runner'
     New-Item -ItemType Directory -Path $currentRunner | Out-Null
-    $persistenceProject = Join-Path $repoRoot 'src/Infinium.Persistence/Infinium.Persistence.csproj'
+    $persistenceProject = Join-Path $acceptedWp3Source 'src/Infinium.Persistence/Infinium.Persistence.csproj'
     [IO.File]::WriteAllText((Join-Path $currentRunner 'Runner.csproj'), @"
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><RestorePackagesPath>$packages</RestorePackagesPath></PropertyGroup>
@@ -175,6 +182,7 @@ byte[] json = JsonSerializer.SerializeToUtf8Bytes(new
 {
     schema = "infinium.wp3.accepted-wp2-upgrade-evidence/v1",
     accepted_wp2_commit = "ed27ed04897103d93a60e6200971ca12d04f2e11",
+    accepted_wp3_commit = "b32939e8b7491a5c47453f912d25dd98c090f103",
     source_schema_fingerprint = sourceFingerprint,
     extension_id = extension,
     correction_id = correction,
@@ -204,6 +212,7 @@ File.WriteAllBytes(output, [.. json, (byte)10]);
     if ($LASTEXITCODE -ne 0) { throw 'The current WP3 accepted-WP2 upgrade regression failed.' }
     $evidence = Get-Content -LiteralPath $output -Raw | ConvertFrom-Json
     $invalidEvidence = $evidence.accepted_wp2_commit -ne $acceptedCommit
+    $invalidEvidence = $invalidEvidence -or $evidence.accepted_wp3_commit -ne $acceptedWp3Commit
     $invalidEvidence = $invalidEvidence -or $evidence.source_schema_fingerprint -ne $acceptedFingerprint
     $invalidEvidence = $invalidEvidence -or $evidence.final_schema_fingerprint -ne $currentFingerprint
     $invalidEvidence = $invalidEvidence -or $evidence.correction_source_commit -ne $rejectedWp3Commit
