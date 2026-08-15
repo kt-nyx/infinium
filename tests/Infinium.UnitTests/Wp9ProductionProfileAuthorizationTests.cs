@@ -40,6 +40,28 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         Assert.IsTrue(Wp9ProductionEntryReadinessOracle.AdmitAction(true, "submit"));
         Assert.IsTrue(Wp9ProductionEntryReadinessOracle.AdmitAction(true, "cancel"));
         Assert.IsFalse(Wp9ProductionEntryReadinessOracle.AdmitAction(true, "paste"));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.AdmitAction(
+            ready, "submit", "submit-button", 32, 2560));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.AdmitAction(
+            ready, "cancel", "edit-escape", 0, 2560));
+        foreach (Wp9ProductionReadinessSnapshot mutation in new[]
+        {
+            ready with { HelperProcessOwned = false }, ready with { SameSession = false },
+            ready with { InputDesktopAvailable = false }, ready with { NotCloaked = false },
+            ready with { OnMonitor = false }, ready with { Enabled = false },
+            ready with { Focused = false }, ready with { Foreground = false },
+            ready with { Active = false },
+        })
+        {
+            Assert.IsFalse(Wp9ProductionEntryReadinessOracle.AdmitAction(
+                mutation, "submit", "submit-button", 32, 2560));
+        }
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.AdmitAction(
+            ready, "submit", "injected-command", 32, 2560));
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.AdmitAction(
+            ready with { Focused = false }, "submit", "edit-enter", 32, 2560));
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.AdmitAction(
+            ready, "submit", "submit-button", 0, 2560));
         Assert.IsTrue(Wp9ProductionEntryReadinessOracle.IsAdmissibleCharacterLength(2560, 2560));
         Assert.IsFalse(Wp9ProductionEntryReadinessOracle.IsAdmissibleCharacterLength(2561, 2560));
         Assert.IsTrue(Wp9ProductionEntryReadinessOracle.ShouldClearPreReadinessContent(false, 1));
@@ -114,6 +136,7 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         StringAssert.Contains(runner, "Get-Wp9BinaryInventory");
         StringAssert.Contains(runner, "binary_inventory_file_count");
         StringAssert.Contains(runner, "binary_inventory_sha256");
+        StringAssert.Contains(runner, "SourceRevisionId=$closeReady");
         string manifest = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp9-production-profile-authorization.v1.json"));
         StringAssert.Contains(manifest, "bin/Release/net10.0/Infinium.Coordinator.exe");
@@ -187,6 +210,8 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             node => node["owner_authorization"]!["inheritance"] = "allowed",
             node => node["owner_authorization"]!["independent_review_record"] = "missing",
             node => node["release_build"]!["source_commit"] = new string('f', 40),
+            node => node["release_build"]!["build_command"] = "dotnet build Infinium.sln -c Release --no-restore --nologo",
+            node => node["release_build"]!["build_command"] = "dotnet build Infinium.sln -c Release --no-restore --nologo -p:SourceRevisionId=" + new string('f', 40),
             node => node["release_build"]!["binary_inventory_file_count"] = 501,
             node => MakePartiallyReady(node, "source_commit"),
             node => MakePartiallyReady(node, "coordinator_sha256"),
@@ -228,6 +253,55 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         StringAssert.Contains(runner, "--wp9-production-profile-enrollment");
         Assert.IsFalse(verifier.Contains("run-m1-slice6-credential.ps1", StringComparison.Ordinal));
         Assert.IsFalse(verifier.Contains("--wp9-production-profile-enrollment", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    public void ReviewedAndOwnerAcceptedDocumentationTransitionsRejectEveryMissingFact()
+    {
+        string root = RepositoryRoot();
+        string contract = Path.Combine(root, "eng", "wp9-owner-documentation-contract.ps1");
+        string harness = Path.Combine(Path.GetTempPath(), "infinium-wp9-doc-contract-" + Guid.NewGuid().ToString("N") + ".ps1");
+        string escapedContract = contract.Replace("'", "''", StringComparison.Ordinal);
+        File.WriteAllText(harness, $$"""
+            $ErrorActionPreference='Stop'
+            . '{{escapedContract}}'
+            $sets=@(
+              (Get-Wp9ReviewedOwnerPendingDocumentationRequirements -ManifestId 'manifest' -ManifestSha256 ('a'*64) -CloseReadyCommit ('b'*40) -ReviewedCandidate ('c'*40)),
+              (Get-Wp9OwnerAcceptedDocumentationRequirements -ManifestId 'manifest' -ManifestSha256 ('a'*64) -CloseReadyCommit ('b'*40) -ReviewedCandidate ('c'*40))
+            )
+            foreach($set in $sets){
+              $state=[string]::Join("`n",@($set.current_state))
+              $readme=[string]::Join("`n",@($set.readme))
+              if(-not (Test-Wp9DocumentationRequirements -CurrentStateText $state -ReadmeText $readme -Requirements $set)){throw 'exact state rejected'}
+              foreach($line in @($set.current_state)){
+                if(Test-Wp9DocumentationRequirements -CurrentStateText ($state.Replace($line,'')) -ReadmeText $readme -Requirements $set){throw 'missing current-state fact admitted'}
+              }
+              foreach($line in @($set.readme)){
+                if(Test-Wp9DocumentationRequirements -CurrentStateText $state -ReadmeText ($readme.Replace($line,'')) -Requirements $set){throw 'missing README fact admitted'}
+              }
+            }
+            "validated"
+            """);
+        try
+        {
+            ProcessStartInfo start = new("powershell.exe")
+            {
+                WorkingDirectory = root,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+            };
+            foreach (string argument in new[] { "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", harness })
+            { start.ArgumentList.Add(argument); }
+            using Process process = Process.Start(start)!;
+            string output = process.StandardOutput.ReadToEnd();
+            string error = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+            Assert.AreEqual(0, process.ExitCode, error);
+            StringAssert.Contains(output, "validated");
+        }
+        finally { File.Delete(harness); }
     }
 
     [TestMethod]

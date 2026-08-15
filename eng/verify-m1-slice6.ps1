@@ -323,7 +323,6 @@ function Get-Wp8NonLiveCurrentStateDisposition([string] $CurrentStateText, [obje
         $normalized.Contains('| Current authorized work | `M1/S6/WP9` non-effectful production-profile preparation verification and independent review only. Corrected close-ready implementation `', [StringComparison]::Ordinal) -and
         $normalized.Contains('infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f', [StringComparison]::Ordinal) -and
         $normalized.Contains('but no exact replacement independent-review or owner-acceptance record exists yet.', [StringComparison]::Ordinal) -and
-        $normalized.Contains('The prior binding at `1c3b64a651361c147cba018b8054cb2f0ac4f036` is historical and non-executable.', [StringComparison]::Ordinal) -and
         $normalized.Contains('Accepted corrected `M1/S6/WP8` candidate', [StringComparison]::Ordinal) -and
         $normalized.Contains([string]$AcceptanceBinding.verification_candidate_commit, [StringComparison]::Ordinal) -and
         $normalized.Contains([string]$AcceptanceBinding.post_run_evidence_candidate_commit, [StringComparison]::Ordinal) -and
@@ -333,10 +332,18 @@ function Get-Wp8NonLiveCurrentStateDisposition([string] $CurrentStateText, [obje
         $normalized.Contains('| Next eligible action | Run the complete non-live floor and fresh independent security/semantic/diff review against the exact corrected manifest binding. Only an accepted exact reviewed candidate may then reach the owner accept-or-decline stop.', [StringComparison]::Ordinal) -and
         $normalized.Contains('The transport-qualification request manifest remains unmaterialized and blocked pending separate `safety_identifier` authority resolution plus successful profile enrollment.', [StringComparison]::Ordinal) -and
         $wp9NoEffect -and $noInheritance
+    $wp9OwnerStopCorrection =
+        $AcceptanceBinding.state -eq 'accepted-closeout' -and
+        $normalized.Contains('| Current authorized work | `M1/S6/WP9` bounded non-effectful owner-stop correction and reverification only.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('Terminal review invalidated binding `4dffe0ba2ad799ba68a67a6dd091a0a4c728d5b0`:', [StringComparison]::Ordinal) -and
+        $normalized.Contains('The manifest is binding-pending; no independent-review or owner-acceptance record exists for corrected bytes.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('| Next eligible action | Freeze and bind the corrected commit-stable Release closure, action-time readiness evidence, and exact post-review/owner authority-document transitions; then rerun the complete non-live floor and fresh independent security/semantic/diff review. WP9 execution remains ineligible. |', [StringComparison]::Ordinal) -and
+        $wp9NoEffect -and $noInheritance
     if ($verificationState) { return 'exact-wp8-correction-reverification-state' }
     if ($acceptedNoEffectHandoff) { return 'exact-corrected-wp8-accepted-handoff' }
     if ($wp9ProfilePreparation) { return 'exact-wp9-profile-preparation-no-effect-state' }
     if ($wp9ProfileOwnerStop) { return 'exact-wp9-profile-owner-stop-no-effect-state' }
+    if ($wp9OwnerStopCorrection) { return 'exact-wp9-owner-stop-correction-no-effect-state' }
     return 'invalid'
 }
 
@@ -556,6 +563,7 @@ function Invoke-Layer6ReviewGate(
         'docs/plans/milestones/m1/slices/s6/wp8-source-claim-authorization.template.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json',
         ('eng/' + 'run-m1-slice6-' + 'credential.ps1'),
+        'eng/wp9-owner-documentation-contract.ps1',
         'eng/validate-m1-slice6-wp4-recovery-4936dcef.ps1',
         'eng/validate-m1-slice6-wp4-recovery-e3f76cd6.ps1',
         'eng/validate-m1-slice6-wp4-recovery-e6e04651.ps1',
@@ -825,7 +833,7 @@ function Invoke-Layer6ReviewGate(
         [Array]::Sort($actualWp9Paths, [StringComparer]::Ordinal)
         [Array]::Sort($wp9ExpectedPaths, [StringComparer]::Ordinal)
         if ([string]::Join("`n", $actualWp9Paths) -cne [string]::Join("`n", $wp9ExpectedPaths)) {
-            $failures.Add('Wp9OwnerStopReview requires the exact finite 37-path WP8-to-WP9 candidate set.')
+            $failures.Add('Wp9OwnerStopReview requires the exact finite 38-path WP8-to-WP9 candidate set.')
         }
     }
     if ($Wp4OwnerReviewHandoff) {

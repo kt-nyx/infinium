@@ -503,6 +503,21 @@ public sealed class Wp8PreLiveReadinessContractTests
                 $ownerStop.Replace('No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.',''))) {
                 if ((Get-Wp8NonLiveCurrentStateDisposition $weakened $accepted) -ne 'invalid') { exit 20 }
             }
+            $ownerStopCorrection = @"
+            | Current authorized work | ``M1/S6/WP9`` bounded non-effectful owner-stop correction and reverification only. Terminal review invalidated binding ``4dffe0ba2ad799ba68a67a6dd091a0a4c728d5b0``: build drift. The manifest is binding-pending; no independent-review or owner-acceptance record exists for corrected bytes. No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. |
+            | Next eligible action | Freeze and bind the corrected commit-stable Release closure, action-time readiness evidence, and exact post-review/owner authority-document transitions; then rerun the complete non-live floor and fresh independent security/semantic/diff review. WP9 execution remains ineligible. |
+            {{noInheritance}}.
+            "@
+            if ((Get-Wp8NonLiveCurrentStateDisposition $ownerStopCorrection $accepted) -ne 'exact-wp9-owner-stop-correction-no-effect-state') { exit 21 }
+            foreach ($weakened in @(
+                $ownerStopCorrection.Replace('bounded non-effectful owner-stop correction and reverification only.','production execution.'),
+                $ownerStopCorrection.Replace('Terminal review invalidated binding','Review retained binding'),
+                $ownerStopCorrection.Replace('The manifest is binding-pending; no independent-review or owner-acceptance record exists for corrected bytes.',''),
+                $ownerStopCorrection.Replace('WP9 execution remains ineligible.','WP9 execution is eligible.'),
+                $ownerStopCorrection.Replace('{{noInheritance}}',''),
+                $ownerStopCorrection.Replace('No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.',''))) {
+                if ((Get-Wp8NonLiveCurrentStateDisposition $weakened $accepted) -ne 'invalid') { exit 22 }
+            }
             exit 0
             """;
         Assert.AreEqual(0, RunPowerShellScript(command),

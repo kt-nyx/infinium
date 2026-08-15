@@ -13,6 +13,7 @@ if ($PSVersionTable.PSEdition -ne 'Core') {
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'wp9-owner-documentation-contract.ps1')
 
 function Get-Wp9Sha256([string] $Path) {
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -72,6 +73,10 @@ if ($LASTEXITCODE -ne 0 -or $branch -cne 'codex/m1-s6' -or $status.Count -ne 0) 
     throw 'WP9 profile execution requires the exact clean codex/m1-s6 candidate.'
 }
 $closeReady = [string]$m.candidate_binding.close_ready_implementation_commit
+$expectedBuildCommand = "dotnet build Infinium.sln -c Release --no-restore --nologo -p:SourceRevisionId=$closeReady"
+if ([string]$m.release_build.build_command -cne $expectedBuildCommand) {
+    throw 'WP9 execution requires the canonical Release build command pinned to the close-ready source revision.'
+}
 & git -C $repoRoot merge-base --is-ancestor $closeReady $head
 if ($LASTEXITCODE -ne 0) { throw 'The WP9 close-ready implementation is not an ancestor of the exact execution candidate.' }
 $allowedPostClose = @(
@@ -105,8 +110,14 @@ if (@($postClose | Where-Object { $_ -notin $allowedPostClose }).Count -ne 0) {
 & git -C $repoRoot diff --quiet $reviewedCandidate -- 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
 if ($LASTEXITCODE -ne 0) { throw 'The owner-accepted WP9 manifest differs from the exact independently reviewed bytes.' }
 $postReview = @(& git -C $repoRoot diff --name-only "$reviewedCandidate..$head")
-if (($postReview -join '|') -cne 'docs/plans/milestones/m1/slices/s6/record.md') {
-    throw 'Only the append-only review and owner markers may follow the exact independently reviewed candidate.'
+$expectedPostReview = @(
+    'docs/current-state.md',
+    'docs/plans/milestones/m1/slices/s6/README.md',
+    'docs/plans/milestones/m1/slices/s6/record.md'
+)
+if ([string]::Join("`n", @($postReview | Sort-Object -CaseSensitive)) -cne
+    [string]::Join("`n", $expectedPostReview)) {
+    throw 'Only the exact owner-stop authority-document transition and append-only markers may follow the independently reviewed candidate.'
 }
 $reviewedRecord = [string]::Join("`n", @(& git -C $repoRoot show "$reviewedCandidate`:docs/plans/milestones/m1/slices/s6/record.md"))
 if ($LASTEXITCODE -ne 0) { throw 'The exact independently reviewed WP9 record is unavailable.' }
@@ -114,6 +125,15 @@ $currentRecord = ([IO.File]::ReadAllText($recordPath) -replace "`r`n", "`n").Tri
 $expectedRecord = $reviewedRecord.TrimEnd("`n") + "`n`n" + $reviewLines[0] + "`n" + $canonical
 if ($currentRecord -cne $expectedRecord -or $acceptanceLines.Count -ne 1 -or $acceptanceLines[0] -cne $canonical) {
     throw 'WP9 profile execution requires exactly one canonical owner-acceptance line for these exact manifest bytes.'
+}
+$currentStateText = [IO.File]::ReadAllText((Join-Path $repoRoot 'docs/current-state.md')) -replace "`r`n", "`n"
+$sliceReadmeText = [IO.File]::ReadAllText((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/README.md')) -replace "`r`n", "`n"
+$ownerAcceptedRequirements = Get-Wp9OwnerAcceptedDocumentationRequirements `
+    -ManifestId ([string]$m.manifest_id) -ManifestSha256 $manifestSha `
+    -CloseReadyCommit $closeReady -ReviewedCandidate $reviewedCandidate
+if (-not (Test-Wp9DocumentationRequirements -CurrentStateText $currentStateText `
+    -ReadmeText $sliceReadmeText -Requirements $ownerAcceptedRequirements)) {
+    throw 'WP9 execution requires the exact owner-accepted current-state and Slice 6 README transition.'
 }
 
 $expectedOutput = Join-Path $repoRoot ([string]$m.output.output_root_relative -replace '/', [IO.Path]::DirectorySeparatorChar)

@@ -1978,7 +1978,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         }
     }
 
-    private static void ValidateWp9ProductionEntryEvidence(string json)
+    internal static void ValidateWp9ProductionEntryEvidence(string json, string? exactTerminal = null)
     {
         using System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(json);
         System.Text.Json.JsonElement value = document.RootElement;
@@ -1987,7 +1987,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
             "Surface", "Masked", "PastePermitted", "HelperOwned", "RendererReceivedSecret",
             "InitiallyBlank", "Ready", "HelperProcessOwned", "SameSession", "InputDesktopAvailable",
             "NotCloaked", "OnMonitor", "Enabled", "Focused", "Foreground", "Active",
-            "ReadinessChecks", "PreReadinessIgnoredActions", "MessagePumpIterations", "TerminalState",
+            "ReadinessChecks", "PreReadinessIgnoredActions", "MessagePumpIterations", "ActionSnapshot", "TerminalState",
             "WindowDestroyed", "BufferCleared", "NativeEditEmptyVerified", "ThreadJoined",
         ];
         if (!value.EnumerateObject().Select(item => item.Name).SequenceEqual(expectedProperties, StringComparer.Ordinal)
@@ -2007,6 +2007,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         }
         bool ready = value.GetProperty("Ready").GetBoolean();
         string terminal = value.GetProperty("TerminalState").GetString()!;
+        System.Text.Json.JsonElement action = value.GetProperty("ActionSnapshot");
         if (ready && (!value.GetProperty("InitiallyBlank").GetBoolean()
                 || !value.GetProperty("HelperProcessOwned").GetBoolean()
                 || !value.GetProperty("SameSession").GetBoolean()
@@ -2019,10 +2020,55 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
                 || !value.GetProperty("Active").GetBoolean()
                 || value.GetProperty("ReadinessChecks").GetInt32() < 1
                 || value.GetProperty("MessagePumpIterations").GetInt32() < 1)
-            || !ready && terminal is ("submitted" or "cancelled"))
+            || !ready && terminal is ("submitted" or "cancelled")
+            || exactTerminal is not null && terminal != exactTerminal
+            || terminal is ("submitted" or "cancelled") && !ValidateWp9ActionSnapshot(action, terminal)
+            || terminal is not ("submitted" or "cancelled")
+                && action.ValueKind is not System.Text.Json.JsonValueKind.Null)
         {
             throw new InvalidDataException("The WP9 helper failure readiness and terminal facts disagree.");
         }
+    }
+
+    private static bool ValidateWp9ActionSnapshot(System.Text.Json.JsonElement value, string terminal)
+    {
+        string[] expectedProperties =
+        [
+            "Action", "Source", "WindowVisible", "EditVisible", "InitiallyBlank",
+            "HelperProcessOwned", "SameSession", "InputDesktopAvailable", "NotCloaked",
+            "OnMonitor", "Enabled", "Focused", "Foreground", "Active", "CurrentBlank",
+            "CurrentCharacterLength", "Admitted",
+        ];
+        if (value.ValueKind is not System.Text.Json.JsonValueKind.Object
+            || !value.EnumerateObject().Select(item => item.Name).SequenceEqual(expectedProperties, StringComparer.Ordinal)
+            || !value.GetProperty("WindowVisible").GetBoolean()
+            || !value.GetProperty("EditVisible").GetBoolean()
+            || !value.GetProperty("InitiallyBlank").GetBoolean()
+            || !value.GetProperty("HelperProcessOwned").GetBoolean()
+            || !value.GetProperty("SameSession").GetBoolean()
+            || !value.GetProperty("InputDesktopAvailable").GetBoolean()
+            || !value.GetProperty("NotCloaked").GetBoolean()
+            || !value.GetProperty("OnMonitor").GetBoolean()
+            || !value.GetProperty("Enabled").GetBoolean()
+            || !value.GetProperty("Focused").GetBoolean()
+            || !value.GetProperty("Foreground").GetBoolean()
+            || !value.GetProperty("Active").GetBoolean()
+            || !value.GetProperty("Admitted").GetBoolean())
+        {
+            return false;
+        }
+        string action = value.GetProperty("Action").GetString() ?? string.Empty;
+        string source = value.GetProperty("Source").GetString() ?? string.Empty;
+        int length = value.GetProperty("CurrentCharacterLength").GetInt32();
+        bool currentBlank = value.GetProperty("CurrentBlank").GetBoolean();
+        return terminal switch
+        {
+            "submitted" => action == "submit" && source is "submit-button" or "edit-enter"
+                && length is > 0 and <= 2560 && !currentBlank,
+            "cancelled" => action == "cancel" && source is "cancel-button" or "edit-escape" or "window-close"
+                && length >= 0 && currentBlank == (length == 0),
+            _ => false,
+        };
     }
 
     private static void ValidateFailureTraceForPhase(

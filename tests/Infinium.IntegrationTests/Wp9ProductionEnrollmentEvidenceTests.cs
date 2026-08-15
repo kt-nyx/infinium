@@ -122,6 +122,26 @@ public sealed class Wp9ProductionEnrollmentEvidenceTests
             ReadinessChecks = 1,
             PreReadinessIgnoredActions = 0,
             MessagePumpIterations = 1,
+            ActionSnapshot = new
+            {
+                Action = "submit",
+                Source = "submit-button",
+                WindowVisible = true,
+                EditVisible = true,
+                InitiallyBlank = true,
+                HelperProcessOwned = true,
+                SameSession = true,
+                InputDesktopAvailable = true,
+                NotCloaked = true,
+                OnMonitor = true,
+                Enabled = true,
+                Focused = true,
+                Foreground = true,
+                Active = true,
+                CurrentBlank = false,
+                CurrentCharacterLength = 32,
+                Admitted = true,
+            },
             TerminalState = "submitted",
             WindowDestroyed = true,
             BufferCleared = true,
@@ -186,6 +206,34 @@ public sealed class Wp9ProductionEnrollmentEvidenceTests
                 OneShotCredentialHelperLauncher.ValidateWp9FailureForTest(
                     postEngine with { EntryCleanupJson = entryMutation.ToJsonString() },
                     bootstrap, assignment, manifest), uiProperty);
+        }
+        foreach (string actionProperty in new[]
+        {
+            "WindowVisible", "EditVisible", "InitiallyBlank", "HelperProcessOwned", "SameSession",
+            "InputDesktopAvailable", "NotCloaked", "OnMonitor", "Enabled", "Focused",
+            "Foreground", "Active", "Admitted",
+        })
+        {
+            JsonObject entryMutation = JsonNode.Parse(JsonSerializer.Serialize(exactEntry))!.AsObject();
+            entryMutation["ActionSnapshot"]![actionProperty] = false;
+            Assert.IsInstanceOfType<CredentialNativeHelperEvidenceAmbiguityException>(
+                OneShotCredentialHelperLauncher.ValidateWp9FailureForTest(
+                    postEngine with { EntryCleanupJson = entryMutation.ToJsonString() },
+                    bootstrap, assignment, manifest), actionProperty);
+        }
+        foreach ((string property, JsonNode value) in new (string, JsonNode)[]
+        {
+            ("Source", JsonValue.Create("injected-command")!),
+            ("CurrentBlank", JsonValue.Create(true)!),
+            ("CurrentCharacterLength", JsonValue.Create(0)!),
+        })
+        {
+            JsonObject entryMutation = JsonNode.Parse(JsonSerializer.Serialize(exactEntry))!.AsObject();
+            entryMutation["ActionSnapshot"]![property] = value;
+            Assert.IsInstanceOfType<CredentialNativeHelperEvidenceAmbiguityException>(
+                OneShotCredentialHelperLauncher.ValidateWp9FailureForTest(
+                    postEngine with { EntryCleanupJson = entryMutation.ToJsonString() },
+                    bootstrap, assignment, manifest), property);
         }
         JsonObject canaryMutation = JsonNode.Parse(JsonSerializer.Serialize(canaries))!.AsObject();
         canaryMutation["ScannedSurfaces"]!.AsArray().Add(
@@ -387,6 +435,26 @@ public sealed class Wp9ProductionEnrollmentEvidenceTests
             ReadinessChecks = 1,
             PreReadinessIgnoredActions = 0,
             MessagePumpIterations = 1,
+            ActionSnapshot = new
+            {
+                Action = terminal == "cancelled" ? "cancel" : "submit",
+                Source = terminal == "cancelled" ? "cancel-button" : "submit-button",
+                WindowVisible = true,
+                EditVisible = true,
+                InitiallyBlank = true,
+                HelperProcessOwned = true,
+                SameSession = true,
+                InputDesktopAvailable = true,
+                NotCloaked = true,
+                OnMonitor = true,
+                Enabled = true,
+                Focused = true,
+                Foreground = true,
+                Active = true,
+                CurrentBlank = terminal == "cancelled",
+                CurrentCharacterLength = terminal == "cancelled" ? 0 : 32,
+                Admitted = true,
+            },
             TerminalState = terminal,
             WindowDestroyed = true,
             BufferCleared = true,

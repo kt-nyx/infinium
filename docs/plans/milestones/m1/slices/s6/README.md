@@ -47,15 +47,14 @@ pre-live validation SHA-256
 `e5f0ca42e44e6a4ea4f98bf4aab0c1bf6769c436c51aecc32a01e22a3db5f567`, and
 direct Layer 6 SHA-256
 `4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`.
-WP9 non-effectful production-profile preparation is in bounded correction and
-reverification. The corrected close-ready implementation is
-`82e803241db3942dfb31cca9cceae80a63239899`, and its exact Release execution
-closure is materialized in the replacement manifest for complete non-live
-verification and fresh independent review. Candidate-bound review invalidated the prior close-ready
-binding at `1c3b64a651361c147cba018b8054cb2f0ac4f036`; it is historical and
-grants no execution authority. The new-only authorization manifest has no
-replacement independent-review or owner-acceptance record, and WP9 has not
-reached a new owner accept-or-decline stop.
+WP9 non-effectful production-profile preparation is again in bounded correction
+and reverification. Terminal review invalidated binding
+`4dffe0ba2ad799ba68a67a6dd091a0a4c728d5b0`: ordinary full-floor builds changed
+SourceRevisionId-bearing Release bytes away from the manifest, Submit/Cancel
+did not remeasure every readiness fact at action time, and post-review authority
+documents could remain stale. The manifest is binding-pending. No corrected
+independent-review or owner-acceptance record exists, and WP9 execution is
+ineligible.
 The transport-qualification request manifest is not materialized. Current
 official guidance concerning `safety_identifier` requires a separate authority
 resolution before any such request packet can be prepared. The earlier WP8

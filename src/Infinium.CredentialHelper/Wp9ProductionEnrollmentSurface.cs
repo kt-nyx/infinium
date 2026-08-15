@@ -27,6 +27,7 @@ internal sealed record Wp9ProductionEntryEvidence(
     int ReadinessChecks,
     int PreReadinessIgnoredActions,
     int MessagePumpIterations,
+    Wp9ProductionActionSnapshot? ActionSnapshot,
     string TerminalState,
     bool WindowDestroyed,
     bool BufferCleared,
@@ -55,6 +56,25 @@ internal sealed record Wp9ProductionReadinessSnapshot(
     bool Foreground,
     bool Active);
 
+internal sealed record Wp9ProductionActionSnapshot(
+    string Action,
+    string Source,
+    bool WindowVisible,
+    bool EditVisible,
+    bool InitiallyBlank,
+    bool HelperProcessOwned,
+    bool SameSession,
+    bool InputDesktopAvailable,
+    bool NotCloaked,
+    bool OnMonitor,
+    bool Enabled,
+    bool Focused,
+    bool Foreground,
+    bool Active,
+    bool CurrentBlank,
+    int CurrentCharacterLength,
+    bool Admitted);
+
 internal static class Wp9ProductionEntryReadinessOracle
 {
     internal static bool IsReady(Wp9ProductionReadinessSnapshot value) =>
@@ -65,6 +85,21 @@ internal static class Wp9ProductionEntryReadinessOracle
 
     internal static bool AdmitAction(bool ready, string action) =>
         ready && action is "submit" or "cancel";
+
+    internal static bool AdmitAction(
+        Wp9ProductionReadinessSnapshot current,
+        string action,
+        string source,
+        int currentCharacterLength,
+        int maximumCharacterLength) =>
+        IsReady(current)
+        && source is "submit-button" or "cancel-button" or "edit-enter" or "edit-escape" or "window-close"
+        && ((action == "submit"
+                && source is "submit-button" or "edit-enter"
+                && IsAdmissibleCharacterLength(currentCharacterLength, maximumCharacterLength))
+            || (action == "cancel"
+                && source is "cancel-button" or "edit-escape" or "window-close"
+                && currentCharacterLength >= 0));
 
     internal static bool IsAdmissibleCharacterLength(int length, int maximum) =>
         length is > 0 && length <= maximum;
@@ -245,17 +280,19 @@ internal static class Wp9ProductionMaskedEntryDialog
                 if (edit == 0) { throw new Win32Exception(Marshal.GetLastWin32Error()); }
                 bool submit = false;
                 bool cancel = false;
+                string? actionSource = null;
                 int ignored = 0;
                 _ = PostMessageW(edit, WmKeyDown, VkReturn, 0);
-                PumpMessages(edit, false, ref submit, ref cancel, ref ignored);
+                PumpMessages(edit, false, ref submit, ref cancel, ref actionSource, ref ignored);
                 preReadyRejected = !submit && ignored == 1;
                 _ = PostMessageW(edit, WmKeyDown, VkReturn, 0);
-                PumpMessages(edit, true, ref submit, ref cancel, ref ignored);
-                submitAdmitted = submit;
+                PumpMessages(edit, true, ref submit, ref cancel, ref actionSource, ref ignored);
+                submitAdmitted = submit && actionSource == "edit-enter";
                 submit = false;
+                actionSource = null;
                 _ = PostMessageW(edit, WmKeyDown, VkEscape, 0);
-                PumpMessages(edit, true, ref submit, ref cancel, ref ignored);
-                cancelAdmitted = cancel;
+                PumpMessages(edit, true, ref submit, ref cancel, ref actionSource, ref ignored);
+                cancelAdmitted = cancel && actionSource == "edit-escape";
                 _ = SetWindowTextW(edit, "disposable-dummy-text");
                 if (Wp9ProductionEntryReadinessOracle.ShouldClearPreReadinessContent(
                     ready: false, GetWindowTextLengthW(edit)))
@@ -315,6 +352,7 @@ internal static class Wp9ProductionMaskedEntryDialog
         int readinessChecks = 0;
         int preReadinessIgnoredActions = 0;
         int messagePumpIterations = 0;
+        Wp9ProductionActionSnapshot? actionSnapshot = null;
         Thread thread = new(() =>
         {
             char[] captured = new char[WindowsCredentialManagerStore.MaximumBlobBytes + 1];
@@ -329,6 +367,7 @@ internal static class Wp9ProductionMaskedEntryDialog
             nint originalEditProcedure = 0;
             bool submitRequested = false;
             bool cancelRequested = false;
+            string? actionSource = null;
             bool readyForActions = false;
             try
             {
@@ -337,7 +376,11 @@ internal static class Wp9ProductionMaskedEntryDialog
                 {
                     if (message == WmClose)
                     {
-                        if (Wp9ProductionEntryReadinessOracle.AdmitAction(readyForActions, "cancel")) { cancelRequested = true; }
+                        if (Wp9ProductionEntryReadinessOracle.AdmitAction(readyForActions, "cancel"))
+                        {
+                            cancelRequested = true;
+                            actionSource = "window-close";
+                        }
                         else { preReadinessIgnoredActions++; }
                         return 0;
                     }
@@ -346,13 +389,21 @@ internal static class Wp9ProductionMaskedEntryDialog
                         int command = unchecked((int)(wParam & 0xffff));
                         if (command == SubmitButtonId && lParam == submit)
                         {
-                            if (Wp9ProductionEntryReadinessOracle.AdmitAction(readyForActions, "submit")) { submitRequested = true; }
+                            if (Wp9ProductionEntryReadinessOracle.AdmitAction(readyForActions, "submit"))
+                            {
+                                submitRequested = true;
+                                actionSource = "submit-button";
+                            }
                             else { preReadinessIgnoredActions++; }
                             return 0;
                         }
                         if (command == CancelButtonId && lParam == cancel)
                         {
-                            if (Wp9ProductionEntryReadinessOracle.AdmitAction(readyForActions, "cancel")) { cancelRequested = true; }
+                            if (Wp9ProductionEntryReadinessOracle.AdmitAction(readyForActions, "cancel"))
+                            {
+                                cancelRequested = true;
+                                actionSource = "cancel-button";
+                            }
                             else { preReadinessIgnoredActions++; }
                             return 0;
                         }
@@ -401,7 +452,7 @@ internal static class Wp9ProductionMaskedEntryDialog
                 while (readiness.Elapsed < readinessDeadline)
                 {
                     messagePumpIterations++;
-                    PumpMessages(edit, readyForActions, ref submitRequested, ref cancelRequested,
+                    PumpMessages(edit, readyForActions, ref submitRequested, ref cancelRequested, ref actionSource,
                         ref preReadinessIgnoredActions);
                     readinessChecks++;
                     int preReadinessLength = GetWindowTextLengthW(edit);
@@ -437,7 +488,7 @@ internal static class Wp9ProductionMaskedEntryDialog
                         onMonitor, enabled, focused, foreground, active);
                     if (Wp9ProductionEntryReadinessOracle.IsReady(snapshot))
                     {
-                        PumpMessages(edit, ready: false, ref submitRequested, ref cancelRequested,
+                        PumpMessages(edit, ready: false, ref submitRequested, ref cancelRequested, ref actionSource,
                             ref preReadinessIgnoredActions);
                         if (GetWindowTextLengthW(edit) != 0)
                         {
@@ -449,6 +500,7 @@ internal static class Wp9ProductionMaskedEntryDialog
                         readyForActions = true;
                         submitRequested = false;
                         cancelRequested = false;
+                        actionSource = null;
                         break;
                     }
                     Thread.Sleep(25);
@@ -458,26 +510,48 @@ internal static class Wp9ProductionMaskedEntryDialog
                 while (response.Elapsed < responseDeadline)
                 {
                     messagePumpIterations++;
-                    PumpMessages(edit, readyForActions, ref submitRequested, ref cancelRequested,
+                    PumpMessages(edit, readyForActions, ref submitRequested, ref cancelRequested, ref actionSource,
                         ref preReadinessIgnoredActions);
-                    if (cancelRequested) { terminal = "cancelled"; return; }
-                    if (submitRequested)
+                    if (cancelRequested || submitRequested)
                     {
                         int liveLength = GetWindowTextLengthW(edit);
-                        if (!Wp9ProductionEntryReadinessOracle.IsAdmissibleCharacterLength(
-                            liveLength, WindowsCredentialManagerStore.MaximumBlobBytes))
+                        Wp9ProductionReadinessSnapshot current = MeasureReadiness(
+                            window, edit, submit, cancel, initiallyBlank, currentSession,
+                            out helperProcessOwned, out sameSession, out inputDesktopAvailable,
+                            out notCloaked, out onMonitor, out enabled, out focused,
+                            out foreground, out active);
+                        string action = cancelRequested ? "cancel" : "submit";
+                        string source = actionSource ?? "missing";
+                        bool admitted = Wp9ProductionEntryReadinessOracle.AdmitAction(
+                            current, action, source, liveLength, WindowsCredentialManagerStore.MaximumBlobBytes);
+                        actionSnapshot = new(action, source, current.WindowVisible, current.EditVisible,
+                            current.InitiallyBlank, current.HelperProcessOwned, current.SameSession,
+                            current.InputDesktopAvailable, current.NotCloaked, current.OnMonitor,
+                            current.Enabled, current.Focused, current.Foreground, current.Active,
+                            liveLength == 0, liveLength, admitted);
+                        if (!admitted)
                         {
                             submitRequested = false;
+                            cancelRequested = false;
+                            actionSource = null;
+                            preReadinessIgnoredActions++;
                             continue;
                         }
+                        if (cancelRequested) { terminal = "cancelled"; return; }
                         int length = GetWindowTextW(edit, captured, captured.Length);
-                        if (length <= 0) { submitRequested = false; continue; }
+                        if (length <= 0)
+                        {
+                            submitRequested = false;
+                            actionSource = null;
+                            continue;
+                        }
                         result = Encoding.UTF8.GetBytes(captured, 0, length);
                         if (result.Length == 0 || result.Length > WindowsCredentialManagerStore.MaximumBlobBytes)
                         {
                             CryptographicOperations.ZeroMemory(result);
                             result = [];
                             submitRequested = false;
+                            actionSource = null;
                             continue;
                         }
                         terminal = "submitted";
@@ -516,7 +590,7 @@ internal static class Wp9ProductionMaskedEntryDialog
             "wp9-distinct-helper-owned-native-masked-paste-surface", true, true, true, false,
             initiallyBlank, ready, helperProcessOwned, sameSession, inputDesktopAvailable,
             notCloaked, onMonitor, enabled, focused, foreground, active, readinessChecks,
-            preReadinessIgnoredActions, messagePumpIterations, terminal, destroyed, cleared,
+            preReadinessIgnoredActions, messagePumpIterations, actionSnapshot, terminal, destroyed, cleared,
             nativeEditEmptyVerified, joined);
         if (failure is not null)
         {
@@ -532,11 +606,52 @@ internal static class Wp9ProductionMaskedEntryDialog
         return new(result, terminal, evidence);
     }
 
+    private static Wp9ProductionReadinessSnapshot MeasureReadiness(
+        nint window,
+        nint edit,
+        nint submit,
+        nint cancel,
+        bool initiallyBlank,
+        uint currentSession,
+        out bool helperProcessOwned,
+        out bool sameSession,
+        out bool inputDesktopAvailable,
+        out bool notCloaked,
+        out bool onMonitor,
+        out bool enabled,
+        out bool focused,
+        out bool foreground,
+        out bool active)
+    {
+        _ = GetWindowThreadProcessId(window, out uint ownerProcessId);
+        helperProcessOwned = ownerProcessId == (uint)Environment.ProcessId && GetWindow(window, GwOwner) == 0;
+        sameSession = ProcessIdToSessionId(ownerProcessId, out uint ownerSession)
+            && ownerSession == currentSession;
+        nint inputDesktop = OpenInputDesktop(0, false, DesktopReadObjects | DesktopSwitchDesktop);
+        nint threadDesktop = GetThreadDesktop(GetCurrentThreadId());
+        inputDesktopAvailable = inputDesktop != 0 && threadDesktop != 0
+            && string.Equals(GetDesktopName(inputDesktop), GetDesktopName(threadDesktop), StringComparison.Ordinal);
+        if (inputDesktop != 0) { _ = CloseDesktop(inputDesktop); }
+        int cloaked = 1;
+        notCloaked = DwmGetWindowAttribute(window, DwmwaCloaked, out cloaked, sizeof(int)) == 0
+            && cloaked == 0;
+        onMonitor = IsActuallyOnMonitor(window);
+        enabled = IsWindowEnabled(window) && IsWindowEnabled(edit)
+            && IsWindowEnabled(submit) && IsWindowEnabled(cancel);
+        focused = GetFocus() == edit;
+        foreground = GetForegroundWindow() == window;
+        active = GetActiveWindow() == window;
+        return new(IsWindowVisible(window), IsWindowVisible(edit), initiallyBlank,
+            helperProcessOwned, sameSession, inputDesktopAvailable, notCloaked,
+            onMonitor, enabled, focused, foreground, active);
+    }
+
     private static void PumpMessages(
         nint edit,
         bool ready,
         ref bool submit,
         ref bool cancel,
+        ref string? actionSource,
         ref int preReadinessIgnoredActions)
     {
         while (PeekMessageW(out NativeMessage message, 0, 0, 0, PmRemove))
@@ -545,13 +660,21 @@ internal static class Wp9ProductionMaskedEntryDialog
             {
                 if (message.WParam == VkReturn)
                 {
-                    if (Wp9ProductionEntryReadinessOracle.AdmitAction(ready, "submit")) { submit = true; }
+                    if (Wp9ProductionEntryReadinessOracle.AdmitAction(ready, "submit"))
+                    {
+                        submit = true;
+                        actionSource = "edit-enter";
+                    }
                     else { preReadinessIgnoredActions++; }
                     continue;
                 }
                 if (message.WParam == VkEscape)
                 {
-                    if (Wp9ProductionEntryReadinessOracle.AdmitAction(ready, "cancel")) { cancel = true; }
+                    if (Wp9ProductionEntryReadinessOracle.AdmitAction(ready, "cancel"))
+                    {
+                        cancel = true;
+                        actionSource = "edit-escape";
+                    }
                     else { preReadinessIgnoredActions++; }
                     continue;
                 }

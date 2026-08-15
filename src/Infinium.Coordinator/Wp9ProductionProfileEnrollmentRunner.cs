@@ -333,8 +333,11 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         {
             throw new InvalidDataException("WP9 production enrollment canary surface inventory is incomplete or nonzero.");
         }
-        using JsonDocument entry = JsonDocument.Parse(receipt.NativeEntryCleanupBytes
-            ?? throw new InvalidDataException("WP9 production enrollment omitted entry cleanup evidence."));
+        byte[] entryBytes = receipt.NativeEntryCleanupBytes
+            ?? throw new InvalidDataException("WP9 production enrollment omitted entry cleanup evidence.");
+        string entryJson = System.Text.Encoding.UTF8.GetString(entryBytes);
+        CredentialNativeQualificationSupervisor.ValidateWp9ProductionEntryEvidence(entryJson, terminalState);
+        using JsonDocument entry = JsonDocument.Parse(entryBytes);
         JsonElement value = entry.RootElement;
         if (value.GetProperty("Surface").GetString() != "wp9-distinct-helper-owned-native-masked-paste-surface"
             || value.GetProperty("TerminalState").GetString() != terminalState

@@ -7538,3 +7538,30 @@ not launch the helper or UI, touch Credential Manager, materialize the profile,
 use an API key, perform DNS/public-network/provider/billable work, or create a
 transport-qualification request packet. Authority inheritance remains
 prohibited.
+
+## WP9 terminal owner-stop correction — 2026-08-15
+
+Terminal review invalidated bound candidate
+`4dffe0ba2ad799ba68a67a6dd091a0a4c728d5b0`. Its complete non-live floor was
+green, but that floor's ordinary Release build changed SourceRevisionId-bearing
+coordinator/helper/dependency bytes away from the manifest-bound A9 closure, so
+the exact execution runner would correctly reject the resulting bytes. Review
+also found that the production entry surface retained initial readiness but did
+not remeasure every ownership/session/desktop/cloak/monitor/enabled/focus/
+foreground/active fact at Submit or Cancel, and that an append-only review or
+owner marker could leave current-state and Slice 6 navigation prose stale.
+
+The bounded correction makes the Release command explicitly pin
+`SourceRevisionId` to the exact close-ready source commit and validates that
+binding in the closed schema, validator, runner, and mutations. Submit/Cancel
+now retain and validate a fresh action-time snapshot including the exact action
+source and current blank/length state; injected commands or focus/readiness
+loss are rejected. A pure exact documentation contract defines separate
+independent-review-pending-owner and owner-accepted states, and the runner
+permits only the exact current-state/README/append-only-record transition after
+the independently reviewed candidate.
+
+The authorization manifest is reset to binding-pending. No credential helper,
+visible UI, API key, Credential Manager operation, DNS/public network/provider
+request, billable operation, production-profile state, private fixture, or
+archive was used. All prior B9 receipts are superseded for the replacement.
