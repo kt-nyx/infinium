@@ -7434,3 +7434,22 @@ ending `active-verified` with zero native, network, provider, staged-response,
 or retry effect. No API key, UI, live manifest, Credential Manager, DNS,
 public network, provider, billable operation, private fixture, archive, or
 qualification-request packet was used or created.
+
+## WP9 close-ready binding and owner stop — 2026-08-15
+
+The non-effectful implementation and no-effect handoff predicate are frozen at
+`1c3b64a651361c147cba018b8054cb2f0ac4f036`. The exact new-only manifest is
+now `ready-for-owner-acceptance` and binds that commit. It is not executable
+without exactly one canonical owner-acceptance line matching its manifest ID,
+SHA-256, close-ready commit, and expiry. No such line is present at this
+checkpoint.
+
+This binding-only closeout changes the manifest plus current-state, Slice 6
+entry, and this append-only record. It does not change product, helper,
+coordinator, validator, runner, schema, or test code. No API key, UI, live
+manifest, Credential Manager, DNS, public network, provider, billable
+operation, production-profile state, private fixture, archive, or request
+packet was used, created, or executed. WP9 stops for exact owner acceptance or
+decline; successful enrollment and separate `safety_identifier` authority
+resolution are prerequisites to materializing any transport-qualification
+request manifest.

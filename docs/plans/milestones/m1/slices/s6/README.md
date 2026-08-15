@@ -47,10 +47,11 @@ pre-live validation SHA-256
 `e5f0ca42e44e6a4ea4f98bf4aab0c1bf6769c436c51aecc32a01e22a3db5f567`, and
 direct Layer 6 SHA-256
 `4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`.
-WP9 non-effectful production-profile preparation is active. The exact
-new-only authorization manifest is binding-pending and grants no effect;
-after close-ready binding and fresh review, work stops for the owner's exact
-byte acceptance decision. The transport-qualification request manifest is not
+WP9 non-effectful production-profile preparation is complete at close-ready
+implementation `1c3b64a651361c147cba018b8054cb2f0ac4f036`. The exact
+new-only authorization manifest is ready for owner acceptance but grants no
+effect until its exact bytes are accepted. Work is stopped for the owner's
+accept-or-decline decision. The transport-qualification request manifest is not
 materialized. Current official guidance concerning `safety_identifier`
 requires a separate authority resolution before any such request packet can
 be prepared. The earlier WP8 acceptance identities and receipts remain
