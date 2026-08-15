@@ -1,7 +1,12 @@
 [CmdletBinding()]
-param([string]$ManifestPath = 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e3f76cd6.v1.json')
+param(
+    [string]$ManifestPath = 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e3f76cd6.v1.json',
+    [switch]$HistoricalEvidence
+)
 if ($PSVersionTable.PSEdition -ne 'Core') {
-    & (Get-Command pwsh.exe).Source -NoProfile -File $PSCommandPath -ManifestPath $ManifestPath
+    $forward = @('-NoProfile', '-File', $PSCommandPath, '-ManifestPath', $ManifestPath)
+    if ($HistoricalEvidence) { $forward += '-HistoricalEvidence' }
+    & (Get-Command pwsh.exe).Source @forward
     exit $LASTEXITCODE
 }
 Set-StrictMode -Version Latest
@@ -10,6 +15,12 @@ $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $path = if ([IO.Path]::IsPathFullyQualified($ManifestPath)) {
     [IO.Path]::GetFullPath($ManifestPath)
 } else { [IO.Path]::GetFullPath((Join-Path $root $ManifestPath)) }
+$expectedPath = [IO.Path]::GetFullPath((Join-Path $root `
+    'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e3f76cd6.v1.json'))
+if ($HistoricalEvidence -and
+    -not [string]::Equals($path, $expectedPath, [StringComparison]::OrdinalIgnoreCase)) {
+    throw 'E3 historical recovery validation accepts only the exact tracked path.'
+}
 $schema = Join-Path $root 'contracts/repository/wp4-credential-native-recovery.e3f76cd6.v1.schema.json'
 if (-not (Test-Json -LiteralPath $path -SchemaFile $schema)) { throw 'E3 recovery manifest schema failed.' }
 $bytes = [IO.File]::ReadAllBytes($path)
@@ -58,13 +69,14 @@ if ([int]$m.limits.wall_clock_seconds -ne 120 -or [int]$m.limits.targets -ne 2 -
     [int]$m.limits.attempts -ne 1) { throw 'E3 recovery finite limits differ.' }
 $prepared = [DateTimeOffset]::Parse([string]$m.prepared_at_utc)
 $expires = [DateTimeOffset]::Parse([string]$m.expires_at_utc)
-if ($expires -le $prepared -or ($expires - $prepared) -gt [TimeSpan]::FromHours(24) -or $expires -le [DateTimeOffset]::UtcNow) {
+if ($expires -le $prepared -or ($expires - $prepared) -gt [TimeSpan]::FromHours(24) -or
+    (-not $HistoricalEvidence -and $expires -le [DateTimeOffset]::UtcNow)) {
     throw 'E3 recovery expiry is invalid.'
 }
 $expectedCommand = 'powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNativeRecovery -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.e3f76cd6.v1.json -OutputRoot artifacts/m1-slice6/wp4-native-recovery-8b7fc811'
 if ($m.execution_command -cne $expectedCommand) { throw 'E3 recovery command differs.' }
 [pscustomobject]@{
-    status = if ($m.status -eq 'draft-binding-pending') { 'draft' } else { 'ready' }
+    status = if ($HistoricalEvidence) { 'historical-evidence' } elseif ($m.status -eq 'draft-binding-pending') { 'draft' } else { 'ready' }
     manifest_id = $m.manifest_id
     manifest_sha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
     recovery_target_count = 2

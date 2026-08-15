@@ -7,7 +7,7 @@
     "schema_identity", "manifest_id", "packet_kind", "status", "effect_authority",
     "prepared_at_utc", "expires_at_utc", "candidate_binding", "predecessor_binding",
     "owner_authorization", "provider_intent", "official_document_refresh", "profile",
-    "native_boundary", "m1_entry_surface", "future_product_ux", "durable_state",
+    "native_boundary", "m1_entry_surface", "future_product_ux", "durable_state", "release_build",
     "output", "stop_conditions", "execution"
   ],
   "properties": {
@@ -16,8 +16,8 @@
     "packet_kind": { "const": "EnrollOrVerifyProfile" },
     "status": { "enum": ["draft-close-ready-binding-pending", "ready-for-owner-acceptance"] },
     "effect_authority": { "const": "none-until-owner-accepts-exact-manifest-bytes" },
-    "prepared_at_utc": { "const": "2026-08-15T14:42:10.0786864Z" },
-    "expires_at_utc": { "const": "2026-08-17T14:42:10.0786864Z" },
+    "prepared_at_utc": { "const": "2026-08-15T15:25:00.0000000Z" },
+    "expires_at_utc": { "const": "2026-08-17T15:25:00.0000000Z" },
     "candidate_binding": { "$ref": "#/$defs/candidateBinding" },
     "predecessor_binding": { "$ref": "#/$defs/predecessorBinding" },
     "owner_authorization": { "$ref": "#/$defs/ownerAuthorization" },
@@ -28,6 +28,7 @@
     "m1_entry_surface": { "$ref": "#/$defs/m1EntrySurface" },
     "future_product_ux": { "$ref": "#/$defs/futureProductUx" },
     "durable_state": { "$ref": "#/$defs/durableState" },
+    "release_build": { "$ref": "#/$defs/releaseBuild" },
     "output": { "$ref": "#/$defs/output" },
     "stop_conditions": { "$ref": "#/$defs/stopConditions" },
     "execution": { "$ref": "#/$defs/execution" }
@@ -59,10 +60,11 @@
     },
     "ownerAuthorization": {
       "type": "object", "additionalProperties": false,
-      "required": ["required", "canonical_record", "scope", "inheritance", "qualification_request_authority"],
+      "required": ["required", "canonical_record", "independent_review_record", "scope", "inheritance", "qualification_request_authority"],
       "properties": {
         "required": { "const": true },
         "canonical_record": { "const": "WP9_PROFILE_OWNER_ACCEPTANCE manifest_id=<manifest_id> sha256=<manifest_sha256> close_ready_commit=<close_ready_implementation_commit> expires_at_utc=<expires_at_utc>" },
+        "independent_review_record": { "const": "WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=<exact-reviewed-candidate> manifest_id=<manifest_id> sha256=<manifest_sha256> verdicts=security,semantics,diff" },
         "scope": { "const": "exactly-one-new-production-profile-enrollment-and-verification-effect" },
         "inheritance": { "const": "prohibited" },
         "qualification_request_authority": { "const": "none-separate-fresh-manifest-and-owner-acceptance-required-after-profile-success" }
@@ -85,7 +87,7 @@
       "type": "object", "additionalProperties": false,
       "required": ["retrieved_at_utc", "documents", "confirmed_profile", "catalog_binding", "drift_follow_up"],
       "properties": {
-        "retrieved_at_utc": { "const": "2026-08-15T14:30:00.0000000Z" },
+        "retrieved_at_utc": { "const": "2026-08-15T15:20:32.8054571Z" },
         "documents": { "type": "array", "minItems": 6, "maxItems": 6, "items": { "$ref": "#/$defs/documentIdentity" } },
         "confirmed_profile": { "$ref": "#/$defs/confirmedProfile" },
         "catalog_binding": { "$ref": "#/$defs/catalogBinding" },
@@ -99,7 +101,7 @@
         "name": { "enum": ["model", "latest-model", "prompt-caching", "reasoning", "structured-outputs", "safety-best-practices"] },
         "url": { "type": "string", "pattern": "^https://developers\\.openai\\.com/" },
         "final_url": { "type": "string", "pattern": "^https://developers\\.openai\\.com/" },
-        "retrieved_at_utc": { "const": "2026-08-15T14:30:00.0000000Z" },
+        "retrieved_at_utc": { "type": "string", "pattern": "^2026-08-15T15:20:32\\.[0-9]{7}Z$" },
         "bytes": { "type": "integer", "minimum": 1, "maximum": 1000000 },
         "sha256": { "$ref": "#/$defs/sha256" },
         "content_type": { "const": "text/markdown; charset=utf-8" },
@@ -148,7 +150,7 @@
     },
     "profile": {
       "type": "object", "additionalProperties": false,
-      "required": ["mode", "access_profile_id", "generation_id", "generation_ordinal", "revocation_epoch", "display_label", "credential_target", "target_derivation", "target_fingerprint_sha256", "target_encoding", "preflight_requirement"],
+      "required": ["mode", "access_profile_id", "generation_id", "generation_ordinal", "revocation_epoch", "display_label", "target_derivation", "target_fingerprint_sha256", "target_encoding", "preflight_requirement"],
       "properties": {
         "mode": { "const": "new-only" },
         "access_profile_id": { "const": "openai-platform-492800995cf046c7815f974e865f9e1d" },
@@ -156,7 +158,6 @@
         "generation_ordinal": { "const": 1 },
         "revocation_epoch": { "const": 0 },
         "display_label": { "const": "OpenAI Platform API (M1 Slice 6)" },
-        "credential_target": { "const": "Infinium:openai-platform-492800995cf046c7815f974e865f9e1d:g-9c663cb01fb649cba7eff4e26e14274c" },
         "target_derivation": { "const": "Infinium:<access_profile_id>:<generation_id>" },
         "target_fingerprint_sha256": { "const": "55ade50556f396dd0ba579632a21581887eeb1e4e44411a0ee8e37f460f09fca" },
         "target_encoding": { "const": "utf-8" },
@@ -165,10 +166,12 @@
     },
     "nativeBoundary": {
       "type": "object", "additionalProperties": false,
-      "required": ["exact_call_order", "exact_results", "maximum_calls", "enumeration", "fallback", "overwrite", "delete"],
+      "required": ["exact_call_order", "exact_results", "exact_collision_order", "exact_collision_results", "maximum_calls", "enumeration", "fallback", "overwrite", "delete"],
       "properties": {
         "exact_call_order": { "const": ["CredReadW", "CredWriteW", "CredReadW", "CredFree"] },
-        "exact_results": { "const": ["ERROR_NOT_FOUND", "success", "success", "success"] },
+        "exact_results": { "const": ["ERROR_NOT_FOUND", "success", "success", "released"] },
+        "exact_collision_order": { "const": ["CredReadW", "CredFree"] },
+        "exact_collision_results": { "const": ["success", "released"] },
         "maximum_calls": { "const": { "CredWriteW": 1, "CredReadW": 2, "CredDeleteW": 0, "CredFree": 1, "total": 4 } },
         "enumeration": { "const": "prohibited" },
         "fallback": { "const": "none" },
@@ -178,7 +181,7 @@
     },
     "m1EntrySurface": {
       "type": "object", "additionalProperties": false,
-      "required": ["purpose", "owner", "presentation", "masked", "paste_permitted", "renderer_receives_or_retains_secret", "manual_value", "readiness_deadline_seconds", "response_deadline_seconds", "cancel_result"],
+      "required": ["purpose", "owner", "presentation", "masked", "paste_permitted", "renderer_receives_or_retains_secret", "manual_value", "readiness_deadline_seconds", "response_deadline_seconds", "readiness_requirements", "pre_readiness_input", "input_bound", "cleanup_requirements", "cancel_result"],
       "properties": {
         "purpose": { "const": "m1-native-boundary-production-enrollment-only-not-final-product-settings-ui" },
         "owner": { "const": "one-shot-credential-helper" },
@@ -189,6 +192,10 @@
         "manual_value": { "const": "owner-owned-real-openai-api-key-only-after-exact-authorization-never-test-or-dummy-value" },
         "readiness_deadline_seconds": { "const": 10 },
         "response_deadline_seconds": { "const": 600 },
+        "readiness_requirements": { "const": ["visible", "helper-process-owned", "same-session", "input-desktop", "not-cloaked", "on-monitor", "enabled", "edit-focused", "foreground", "active", "initially-and-currently-blank", "message-pump-active"] },
+        "pre_readiness_input": { "const": "ignore-action-drain-and-clear-edit-content-before-readiness" },
+        "input_bound": { "const": "live-character-length-1-through-2560-and-utf8-byte-length-1-through-2560-no-truncation" },
+        "cleanup_requirements": { "const": ["set-native-edit-empty", "verify-native-edit-empty", "clear-managed-char-buffer", "clear-secret-bytes", "destroy-window-and-verify", "join-sta-thread", "terminate-contained-process-tree"] },
         "cancel_result": { "const": "typed-cancel-no-write-no-profile-activation-no-dispatch" }
       }
     },
@@ -219,15 +226,34 @@
         "retention": { "const": "retain-exact-generation-through-wp11-no-delete-authority" }
       }
     },
+    "releaseBuild": {
+      "type": "object", "additionalProperties": false,
+      "required": ["configuration", "target_framework", "source_commit", "build_command", "coordinator_relative_path", "coordinator_sha256", "helper_relative_path", "helper_sha256", "binary_inventory_pattern", "binary_inventory_file_count", "binary_inventory_sha256"],
+      "properties": {
+        "configuration": { "const": "Release" },
+        "target_framework": { "const": "net10.0" },
+        "source_commit": { "$ref": "#/$defs/gitSha" },
+        "build_command": { "const": "dotnet build Infinium.sln -c Release --no-restore --nologo" },
+        "coordinator_relative_path": { "const": "src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe" },
+        "coordinator_sha256": { "$ref": "#/$defs/sha256" },
+        "helper_relative_path": { "const": "src/Infinium.Coordinator/bin/Release/net10.0/CredentialHelper/Infinium.CredentialHelper.exe" },
+        "helper_sha256": { "$ref": "#/$defs/sha256" },
+        "binary_inventory_pattern": { "const": "sorted-relative-path-lf-sha256-for-all-exe-dll-deps-json-and-runtimeconfig-json-under-coordinator-release-root" },
+        "binary_inventory_file_count": { "type": "integer", "minimum": 0, "maximum": 500 },
+        "binary_inventory_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
     "output": {
       "type": "object", "additionalProperties": false,
-      "required": ["output_root_relative", "must_be_absent", "secret_permitted", "raw_target_permitted", "required_receipts"],
+      "required": ["output_root_relative", "must_be_absent", "secret_permitted", "raw_target_permitted", "required_receipts", "typed_failure_receipt", "terminal_receipt_rule"],
       "properties": {
         "output_root_relative": { "const": "artifacts/m1-slice6/wp9-profile" },
         "must_be_absent": { "const": true },
         "secret_permitted": { "const": false },
         "raw_target_permitted": { "const": false },
-        "required_receipts": { "const": ["profile-enrollment-evidence.json", "profile-enrollment-summary.txt", "authority-lock.json"] }
+        "required_receipts": { "const": ["profile-enrollment-evidence.json", "profile-enrollment-summary.txt", "authority-lock.json"] },
+        "typed_failure_receipt": { "const": "profile-enrollment-failure.json" },
+        "terminal_receipt_rule": { "const": "success-retains-three-required-receipts; every cancel-collision-timeout-native-or-evidence-failure-also-retains-typed-failure-receipt" }
       }
     },
     "stopConditions": {
@@ -237,7 +263,7 @@
         "missing_or_stale_acceptance": { "const": "stop-before-helper-launch" },
         "expired": { "const": "stop-before-helper-launch" },
         "dirty_or_wrong_candidate": { "const": "stop-before-helper-launch" },
-        "existing_target": { "const": "stop-after-one-read-no-write" },
+        "existing_target": { "const": "stop-after-read-success-and-paired-free-no-write" },
         "cancel": { "const": "stop-no-write-no-dispatch" },
         "native_failure": { "const": "stop-no-retry" },
         "partial_or_ambiguous_effect": { "const": "stop-block-provider-request-require-fresh-recovery-authority" },

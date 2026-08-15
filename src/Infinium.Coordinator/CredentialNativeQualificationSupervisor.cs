@@ -1806,6 +1806,12 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         }
         using System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(
             File.ReadAllBytes(nativeManifestPath));
+        if (document.RootElement.TryGetProperty("packet_kind", out System.Text.Json.JsonElement packetKind)
+            && packetKind.GetString() == "EnrollOrVerifyProfile")
+        {
+            ValidateWp9ProductionFailureEnvelope(evidence, assignment, trace, document.RootElement);
+            return;
+        }
         System.Text.Json.JsonElement maxima = document.RootElement.GetProperty("operation_limits")
             .GetProperty("native_call_maxima");
         if (evidence.CredWriteW > maxima.GetProperty("CredWriteW").GetInt32()
@@ -1851,7 +1857,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         Dictionary<string, string> expectedSurfaces = new(StringComparer.Ordinal)
         {
             ["private protocol request"] = "private-pipe-bytes",
-            ["private protocol partial response"] = "private-pipe-bytes",
+            [evidence.Stage == "metrics-write" ? "private protocol response" : "private protocol partial response"] = "private-pipe-bytes",
             ["native call trace"] = "canonical-trace-bytes",
             ["process command line"] = "captured-text",
             ["process environment names"] = "captured-text",
@@ -1882,6 +1888,140 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         else if (evidence.ManualUiAttempted || evidence.EntryCleanupJson is not null)
         {
             throw new InvalidDataException("A non-manual helper failure contains UI evidence.");
+        }
+    }
+
+    private static void ValidateWp9ProductionFailureEnvelope(
+        NativeHelperFailureEnvelope evidence,
+        HelperAssignmentV2 assignment,
+        IReadOnlyList<CredentialNativeCallTraceEntry> trace,
+        System.Text.Json.JsonElement manifest)
+    {
+        System.Text.Json.JsonElement maxima = manifest.GetProperty("native_boundary").GetProperty("maximum_calls");
+        string expectedFingerprint = manifest.GetProperty("profile")
+            .GetProperty("target_fingerprint_sha256").GetString()!;
+        if (assignment.AssignmentKind != HelperAssignmentKindV2.Enroll
+            || !assignment.AssignmentId.StartsWith("wp9-production-profile/", StringComparison.Ordinal)
+            || evidence.CredWriteW > maxima.GetProperty("CredWriteW").GetInt32()
+            || evidence.CredReadW > maxima.GetProperty("CredReadW").GetInt32()
+            || evidence.CredDeleteW != 0
+            || evidence.CredFree > maxima.GetProperty("CredFree").GetInt32()
+            || evidence.Total > maxima.GetProperty("total").GetInt32()
+            || trace.Any(item => item.Scenario != assignment.AssignmentId
+                || item.TargetFingerprintSha256 != expectedFingerprint))
+        {
+            throw new InvalidDataException("The WP9 helper failure exceeds its exact assignment, target, or native bounds.");
+        }
+        string[] actualOperations = trace.Select(item => item.Operation).ToArray();
+        string[] successfulPrefix = ["CredReadW", "CredWriteW", "CredReadW", "CredFree"];
+        string[] successfulResults = ["ERROR_NOT_FOUND", "success", "success", "released"];
+        bool isPrefix = actualOperations.Length <= successfulPrefix.Length
+            && actualOperations.SequenceEqual(successfulPrefix.Take(actualOperations.Length))
+            && trace.Select((item, index) => item.Result == successfulResults[index]
+                || index == trace.Count - 1 && System.Text.RegularExpressions.Regex.IsMatch(
+                    item.Result, "^win32-error:[0-9]+$", System.Text.RegularExpressions.RegexOptions.CultureInvariant))
+                .All(value => value);
+        bool collision = actualOperations.SequenceEqual(["CredReadW", "CredFree"])
+            && trace[0].Result == "success" && trace[1].Result == "released"
+            && evidence.NamespaceReuseBlocked
+            && evidence.NamespaceReuseBlockReason == "preflight-collision";
+        if ((!isPrefix && !collision) || evidence.NamespaceReuseBlocked != collision)
+        {
+            throw new InvalidDataException("The WP9 helper failure trace is not an exact safe prefix or collision trace.");
+        }
+        if ((evidence.CredWriteW > 0 && evidence.EntryCleanupJson is null)
+            || evidence.ManualUiAttempted != (evidence.EntryCleanupJson is not null))
+        {
+            throw new InvalidDataException("The WP9 helper failure UI evidence is incomplete.");
+        }
+        if (evidence.EntryCleanupJson is not null)
+        {
+            ValidateWp9ProductionEntryEvidence(evidence.EntryCleanupJson);
+        }
+        using System.Text.Json.JsonDocument canaryDocument = System.Text.Json.JsonDocument.Parse(
+            evidence.CanaryEvidenceJson ?? throw new InvalidDataException("WP9 failure canary evidence is absent."));
+        System.Text.Json.JsonElement canaries = canaryDocument.RootElement;
+        Dictionary<string, string> expectedSurfaces = new(StringComparer.Ordinal)
+        {
+            ["private protocol request"] = "private-pipe-bytes",
+            [evidence.Stage == "metrics-write" ? "private protocol response" : "private protocol partial response"] = "private-pipe-bytes",
+            ["native call trace"] = "canonical-trace-bytes",
+            ["process command line"] = "captured-text",
+            ["process environment names"] = "captured-text",
+        };
+        string[] encodings = canaries.GetProperty("RawTargetEncodings").EnumerateArray()
+            .Select(item => item.GetString()!).ToArray();
+        System.Text.Json.JsonElement[] surfaces = canaries.GetProperty("ScannedSurfaces").EnumerateArray().ToArray();
+        if (!encodings.SequenceEqual(["utf-8", "utf-16le"], StringComparer.Ordinal)
+            || surfaces.Select(item => item.GetProperty("Name").GetString())
+                .Distinct(StringComparer.Ordinal).Count() != surfaces.Length)
+        {
+            throw new InvalidDataException("The WP9 failure raw-target encodings or surface identities are not exact.");
+        }
+        Dictionary<string, string> actualSurfaces = surfaces.ToDictionary(
+            item => item.GetProperty("Name").GetString()!,
+            item => item.GetProperty("Kind").GetString()!, StringComparer.Ordinal);
+        if (canaries.GetProperty("SecretMatches").GetInt32() != 0
+            || canaries.GetProperty("RawTargetMatches").GetInt32() != 0
+            || actualSurfaces.Count != expectedSurfaces.Count
+            || expectedSurfaces.Any(item => !actualSurfaces.TryGetValue(item.Key, out string? kind)
+                || kind != item.Value)
+            || surfaces.Any(item =>
+                ((item.GetProperty("Name").GetString() != "private protocol partial response"
+                    && item.GetProperty("Name").GetString() != "private protocol response")
+                    && item.GetProperty("ByteCount").GetInt32() <= 0)
+                || item.GetProperty("ByteCount").GetInt32() < 0
+                || item.GetProperty("SecretMatches").GetInt32() != 0
+                || item.GetProperty("RawTargetMatches").GetInt32() != 0))
+        {
+            throw new InvalidDataException("The WP9 helper failure canary evidence is not exact and zero-match.");
+        }
+    }
+
+    private static void ValidateWp9ProductionEntryEvidence(string json)
+    {
+        using System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(json);
+        System.Text.Json.JsonElement value = document.RootElement;
+        string[] expectedProperties =
+        [
+            "Surface", "Masked", "PastePermitted", "HelperOwned", "RendererReceivedSecret",
+            "InitiallyBlank", "Ready", "HelperProcessOwned", "SameSession", "InputDesktopAvailable",
+            "NotCloaked", "OnMonitor", "Enabled", "Focused", "Foreground", "Active",
+            "ReadinessChecks", "PreReadinessIgnoredActions", "MessagePumpIterations", "TerminalState",
+            "WindowDestroyed", "BufferCleared", "NativeEditEmptyVerified", "ThreadJoined",
+        ];
+        if (!value.EnumerateObject().Select(item => item.Name).SequenceEqual(expectedProperties, StringComparer.Ordinal)
+            || value.GetProperty("Surface").GetString() != "wp9-distinct-helper-owned-native-masked-paste-surface"
+            || !value.GetProperty("Masked").GetBoolean() || !value.GetProperty("PastePermitted").GetBoolean()
+            || !value.GetProperty("HelperOwned").GetBoolean() || value.GetProperty("RendererReceivedSecret").GetBoolean()
+            || value.GetProperty("ReadinessChecks").GetInt32() < 0
+            || value.GetProperty("PreReadinessIgnoredActions").GetInt32() < 0
+            || value.GetProperty("MessagePumpIterations").GetInt32() < 0
+            || value.GetProperty("TerminalState").GetString() is not ("submitted" or "cancelled" or "failed" or "timed-out")
+            || !value.GetProperty("WindowDestroyed").GetBoolean()
+            || !value.GetProperty("BufferCleared").GetBoolean()
+            || !value.GetProperty("NativeEditEmptyVerified").GetBoolean()
+            || !value.GetProperty("ThreadJoined").GetBoolean())
+        {
+            throw new InvalidDataException("The WP9 helper failure entry cleanup shape or terminal cleanup is invalid.");
+        }
+        bool ready = value.GetProperty("Ready").GetBoolean();
+        string terminal = value.GetProperty("TerminalState").GetString()!;
+        if (ready && (!value.GetProperty("InitiallyBlank").GetBoolean()
+                || !value.GetProperty("HelperProcessOwned").GetBoolean()
+                || !value.GetProperty("SameSession").GetBoolean()
+                || !value.GetProperty("InputDesktopAvailable").GetBoolean()
+                || !value.GetProperty("NotCloaked").GetBoolean()
+                || !value.GetProperty("OnMonitor").GetBoolean()
+                || !value.GetProperty("Enabled").GetBoolean()
+                || !value.GetProperty("Focused").GetBoolean()
+                || !value.GetProperty("Foreground").GetBoolean()
+                || !value.GetProperty("Active").GetBoolean()
+                || value.GetProperty("ReadinessChecks").GetInt32() < 1
+                || value.GetProperty("MessagePumpIterations").GetInt32() < 1)
+            || !ready && terminal is ("submitted" or "cancelled"))
+        {
+            throw new InvalidDataException("The WP9 helper failure readiness and terminal facts disagree.");
         }
     }
 

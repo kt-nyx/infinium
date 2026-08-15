@@ -887,12 +887,15 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 profile.GetProperty("access_profile_id").GetString()!,
                 profile.GetProperty("generation_id").GetString()!,
                 profile.GetProperty("target_fingerprint_sha256").GetString()!);
-            string actualTarget = profile.GetProperty("credential_target").GetString()!;
             string actualFingerprint = Convert.ToHexStringLower(
                 SHA256.HashData(Encoding.UTF8.GetBytes(target.RawTarget)));
             string[] callOrder = boundary.GetProperty("exact_call_order").EnumerateArray()
                 .Select(item => item.GetString()!).ToArray();
             string[] results = boundary.GetProperty("exact_results").EnumerateArray()
+                .Select(item => item.GetString()!).ToArray();
+            string[] collisionOrder = boundary.GetProperty("exact_collision_order").EnumerateArray()
+                .Select(item => item.GetString()!).ToArray();
+            string[] collisionResults = boundary.GetProperty("exact_collision_results").EnumerateArray()
                 .Select(item => item.GetString()!).ToArray();
             JsonElement maxima = boundary.GetProperty("maximum_calls");
             if (root.GetProperty("schema_identity").GetString()
@@ -903,10 +906,11 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 || root.GetProperty("effect_authority").GetString()
                     != "none-until-owner-accepts-exact-manifest-bytes"
                 || profile.GetProperty("mode").GetString() != "new-only"
-                || actualTarget != target.RawTarget
                 || target.TargetFingerprintSha256 != actualFingerprint
                 || !callOrder.SequenceEqual(["CredReadW", "CredWriteW", "CredReadW", "CredFree"])
-                || !results.SequenceEqual(["ERROR_NOT_FOUND", "success", "success", "success"])
+                || !results.SequenceEqual(["ERROR_NOT_FOUND", "success", "success", "released"])
+                || !collisionOrder.SequenceEqual(["CredReadW", "CredFree"])
+                || !collisionResults.SequenceEqual(["success", "released"])
                 || maxima.GetProperty("CredWriteW").GetInt32() != 1
                 || maxima.GetProperty("CredReadW").GetInt32() != 2
                 || maxima.GetProperty("CredDeleteW").GetInt32() != 0

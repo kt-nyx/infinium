@@ -789,7 +789,10 @@ public sealed class CredentialNativeAuthorizationTests
             "wp4-credential-native-recovery.e3f76cd6.v1.json");
         JsonObject valid = JsonNode.Parse(File.ReadAllBytes(manifestPath))!.AsObject();
         Assert.AreEqual(0, RunPwsh(root, "eng/validate-m1-slice6-wp4-recovery-e3f76cd6.ps1",
-            "-ManifestPath", manifestPath));
+            "-ManifestPath", manifestPath, "-HistoricalEvidence"));
+        DateTimeOffset prepared = DateTimeOffset.UtcNow.AddMinutes(-1);
+        valid["prepared_at_utc"] = prepared.ToString("O");
+        valid["expires_at_utc"] = prepared.AddHours(1).ToString("O");
         Reject(node => node["binding"]!["failed_manifest_id"] = "mutated");
         Reject(node => node["binding"]!["terminal_evidence_sha256"] = new string('0', 64));
         Reject(node => node["binding"]!["consumed_lock_sha256"] = new string('0', 64));
@@ -874,7 +877,7 @@ public sealed class CredentialNativeAuthorizationTests
             "wp4-credential-native-recovery.4936dcef.v1.json");
         JsonObject manifest = JsonNode.Parse(File.ReadAllBytes(manifestPath))!.AsObject();
         Assert.AreEqual(0, RunPwsh(root, "eng/validate-m1-slice6-wp4-recovery-4936dcef.ps1",
-            "-ManifestPath", manifestPath));
+            "-ManifestPath", manifestPath, "-HistoricalEvidence"));
         Assert.AreEqual("infinium.repository.wp4-credential-native-recovery/1.4.0",
             manifest["schema_identity"]!.GetValue<string>());
         Assert.AreEqual(11, manifest["binding"]!["prior_exact_absence_count"]!.GetValue<int>());

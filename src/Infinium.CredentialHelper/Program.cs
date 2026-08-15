@@ -80,35 +80,98 @@ if (args is ["--native-failure-envelope-test-probe", "--request-handle", string 
     return 71;
 }
 
+if (args is ["--wp9-production-nonlive-probe", "--response-handle", string wp9ProbeHandle,
+    "--mode", string wp9ProbeMode]
+    && wp9ProbeMode is "typed" or "eof" or "crash" or "timeout")
+{
+    using AnonymousPipeClientStream response = new(PipeDirection.Out, wp9ProbeHandle);
+    ClearHandleInheritance(response.SafePipeHandle.DangerousGetHandle());
+    if (wp9ProbeMode == "eof") { return 75; }
+    if (wp9ProbeMode == "timeout")
+    {
+        await Task.Delay(TimeSpan.FromSeconds(30));
+        return 77;
+    }
+    if (wp9ProbeMode == "crash")
+    {
+        await response.WriteAsync("NHF2\u007f\u007f\u007f\u007f"u8.ToArray());
+        await response.FlushAsync();
+        return 76;
+    }
+    NativeCanaryEvidence wp9ProbeCanaries = new(0, 0, ["utf-8", "utf-16le"],
+    [
+        new("private protocol request", "private-pipe-bytes", 1, 0, 0),
+        new("private protocol partial response", "private-pipe-bytes", 1, 0, 0),
+        new("native call trace", "canonical-trace-bytes", 2, 0, 0),
+        new("process command line", "captured-text", 1, 0, 0),
+        new("process environment names", "captured-text", 1, 0, 0),
+    ]);
+    NativeHelperFailureEnvelope wp9ProbeEnvelope = new(
+        "evidence-collection", "controlled-failure", true,
+        0, 0, 0, 0, 0, true, 0, 0, true, 0, 0, 0,
+        "[]", null, JsonSerializer.Serialize(wp9ProbeCanaries), false, false, 0, false, null);
+    await NativeHelperFailureProtocol.WriteAsync(response, wp9ProbeEnvelope, CancellationToken.None);
+    return 72;
+}
+
 if (args is ["--wp9-production-enrollment-request-handle", string productionRequestHandle,
     "--response-handle", string productionResponseHandle,
     "--manifest", string productionManifestPath,
     "--manifest-sha256", string productionManifestSha256,
     "--manifest-id", string productionManifestId,
-    "--authority-now-unix-ms", string productionAuthorityNow]
+    "--authority-now-unix-ms", string productionAuthorityNow, .. string[] productionOptions]
     && long.TryParse(productionAuthorityNow, System.Globalization.NumberStyles.None,
         System.Globalization.CultureInfo.InvariantCulture, out long productionAuthorityNowUnixMs))
 {
     WindowsCredentialManagerStore? productionStore = null;
     Wp9ProductionSecretSource? productionSecretSource = null;
+    Process? productionDescendant = null;
+    AnonymousPipeClientStream? productionResponse = null;
+    RecordingReadStream? productionRecordedRequest = null;
+    RecordingWriteStream? productionRecordedResponse = null;
+    string productionFailureStage = "handle-inheritance";
+    string? productionFailureReasonOverride = null;
+    string? productionCanaryEvidenceJson = null;
     try
     {
         using AnonymousPipeClientStream request = new(PipeDirection.In, productionRequestHandle);
-        using AnonymousPipeClientStream response = new(PipeDirection.Out, productionResponseHandle);
+        productionResponse = new(PipeDirection.Out, productionResponseHandle);
         ClearHandleInheritance(request.SafePipeHandle.DangerousGetHandle());
-        ClearHandleInheritance(response.SafePipeHandle.DangerousGetHandle());
+        ClearHandleInheritance(productionResponse.SafePipeHandle.DangerousGetHandle());
+        productionFailureStage = "launch-boundary";
+        if (!Wp9ProductionLaunchContract.TryParse(productionOptions, out Wp9ProductionLaunchOptions? launchOptions))
+        {
+            throw new InvalidDataException("WP9 production enrollment containment options are invalid.");
+        }
+        nint excludedHandle = launchOptions!.ExcludedHandle;
+        bool excludedHandleAccessible = excludedHandle != 0 && GetHandleInformation(excludedHandle, out _);
+        productionFailureStage = "manifest-validation";
         productionStore = WindowsCredentialManagerStore.FromProductionEnrollmentManifest(
             productionManifestPath, productionManifestSha256, productionManifestId);
+        Wp9ProductionFailureClassification containmentLaunch =
+            Wp9ProductionFailureClassifier.ContainmentLaunch();
+        productionFailureStage = containmentLaunch.Stage;
+        productionFailureReasonOverride = containmentLaunch.Reason;
+        productionDescendant = Process.Start(new ProcessStartInfo
+        {
+            FileName = Environment.ProcessPath!,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            ArgumentList = { "--containment-descendant", "30000" },
+        }) ?? throw new InvalidOperationException("WP9 containment descendant could not start.");
+        productionFailureReasonOverride = null;
         productionSecretSource = new();
-        RecordingReadStream recordedRequest = new(request);
-        RecordingWriteStream recordedResponse = new(response);
+        productionRecordedRequest = new(request);
+        productionRecordedResponse = new(productionResponse);
         OneShotHelperEngine engine = new(
             productionStore,
             new FixedUtcTimeProvider(DateTimeOffset.FromUnixTimeMilliseconds(productionAuthorityNowUnixMs)),
             productionSecretSource,
             allowSyntheticProviderDispatch: false);
         using CancellationTokenSource deadline = new(TimeSpan.FromMinutes(11));
-        await engine.RunAsync(recordedRequest, recordedResponse, deadline.Token);
+        productionFailureStage = "engine-execution";
+        await engine.RunAsync(productionRecordedRequest, productionRecordedResponse, deadline.Token);
+        productionFailureStage = "evidence-collection";
         (int listeners, int networkOperations) = NetworkMeasurement.MeasureCurrentProcessTcp();
         NativeRawTargetCanary[] targets = productionStore.RawTargetCanaries.ToArray();
         NativeCanaryEvidence canaries;
@@ -117,14 +180,15 @@ if (args is ["--wp9-production-enrollment-request-handle", string productionRequ
             byte[] traceBytes = JsonSerializer.SerializeToUtf8Bytes(productionStore.CallTrace);
             canaries = productionSecretSource.ScanAndClear(
             [
-                new("private protocol request", "private-pipe-bytes", recordedRequest.CapturedBytes),
-                new("private protocol response", "private-pipe-bytes", recordedResponse.CapturedBytes),
+                new("private protocol request", "private-pipe-bytes", productionRecordedRequest.CapturedBytes),
+                new("private protocol response", "private-pipe-bytes", productionRecordedResponse.CapturedBytes),
                 new("native call trace", "canonical-trace-bytes", traceBytes),
                 NativeCanarySurface.FromText("process command line", Environment.CommandLine),
                 NativeCanarySurface.FromText("process environment names",
                     string.Join('\n', Environment.GetEnvironmentVariables().Keys.Cast<object>()
                         .Select(value => value.ToString()).Order(StringComparer.Ordinal))),
             ], targets);
+            productionCanaryEvidenceJson = JsonSerializer.Serialize(canaries);
         }
         finally
         {
@@ -135,8 +199,8 @@ if (args is ["--wp9-production-enrollment-request-handle", string productionRequ
         }
         byte[] metrics = JsonSerializer.SerializeToUtf8Bytes(new
         {
-            excluded_handle_accessible = false,
-            descendant_pid = 0,
+            excluded_handle_accessible = excludedHandleAccessible,
+            descendant_pid = productionDescendant.Id,
             listener_count = listeners,
             network_operation_count = networkOperations,
             native_credential_operation_count = productionStore.CallCounts.Total,
@@ -147,15 +211,77 @@ if (args is ["--wp9-production-enrollment-request-handle", string productionRequ
             namespace_reuse_block_reason = productionStore.NamespaceReuseBlockReason,
         });
         _ = NativeHelperRuntimeMetricsProtocol.ValidateLength(checked((uint)metrics.Length));
-        await response.WriteAsync(BitConverter.GetBytes(checked((uint)metrics.Length)), deadline.Token);
-        await response.WriteAsync(metrics, deadline.Token);
-        await response.FlushAsync(deadline.Token);
+        productionFailureStage = "metrics-write";
+        await productionResponse.WriteAsync(BitConverter.GetBytes(checked((uint)metrics.Length)), deadline.Token);
+        await productionResponse.WriteAsync(metrics, deadline.Token);
+        await productionResponse.FlushAsync(deadline.Token);
         return listeners == 0 && networkOperations == 0 ? 0 : 72;
     }
     catch (Exception exception) when (exception is IOException or InvalidDataException
         or InvalidOperationException or OperationCanceledException or TimeoutException
-        or System.ComponentModel.Win32Exception)
+        or System.ComponentModel.Win32Exception or Wp9ProductionEntryFailureException)
     {
+        if (productionCanaryEvidenceJson is null && productionStore is not null
+            && productionSecretSource is not null && productionRecordedRequest is not null
+            && productionRecordedResponse is not null)
+        {
+            NativeRawTargetCanary[] failureTargets = productionStore.RawTargetCanaries.ToArray();
+            try
+            {
+                byte[] failureTrace = JsonSerializer.SerializeToUtf8Bytes(productionStore.CallTrace);
+                productionCanaryEvidenceJson = JsonSerializer.Serialize(productionSecretSource.ScanAndClear(
+                [
+                    new("private protocol request", "private-pipe-bytes", productionRecordedRequest.CapturedBytes),
+                    new(productionFailureStage == "metrics-write"
+                            ? "private protocol response" : "private protocol partial response",
+                        "private-pipe-bytes", productionRecordedResponse.CapturedBytes),
+                    new("native call trace", "canonical-trace-bytes", failureTrace),
+                    NativeCanarySurface.FromText("process command line", Environment.CommandLine),
+                    NativeCanarySurface.FromText("process environment names",
+                        string.Join('\n', Environment.GetEnvironmentVariables().Keys.Cast<object>()
+                            .Select(value => value.ToString()).Order(StringComparer.Ordinal))),
+                ], failureTargets));
+            }
+            catch (Exception) { productionCanaryEvidenceJson = null; }
+            finally
+            {
+                foreach (NativeRawTargetCanary target in failureTargets)
+                {
+                    System.Security.Cryptography.CryptographicOperations.ZeroMemory(target.Bytes);
+                }
+            }
+        }
+        NativeCallCounts counts = productionStore?.CallCounts ?? new(0, 0, 0, 0, 0);
+        bool networkKnown = false;
+        int listeners = 0;
+        int networkOperations = 0;
+        try
+        {
+            (listeners, networkOperations) = NetworkMeasurement.MeasureCurrentProcessTcp();
+            networkKnown = true;
+        }
+        catch (Exception) { networkKnown = false; }
+        NativeHelperFailureEnvelope failure = new(
+            productionFailureStage,
+            productionFailureReasonOverride ?? NativeFailureReason(productionFailureStage, exception),
+            true,
+            counts.CredWriteW, counts.CredReadW, counts.CredDeleteW, counts.CredFree, counts.Total,
+            networkKnown, networkKnown ? listeners : 0, networkKnown ? networkOperations : 0,
+            true, 0, 0, 0,
+            JsonSerializer.Serialize(productionStore?.CallTrace ?? []),
+            productionSecretSource?.EntryEvidence is null
+                ? null : JsonSerializer.Serialize(productionSecretSource.EntryEvidence),
+            productionCanaryEvidenceJson,
+            productionSecretSource?.EntryEvidence is not null,
+            productionDescendant is not null,
+            productionDescendant?.Id ?? 0,
+            productionStore?.NamespaceReuseBlocked ?? false,
+            productionStore?.NamespaceReuseBlockReason);
+        if (productionResponse is not null)
+        {
+            try { await NativeHelperFailureProtocol.WriteAsync(productionResponse, failure, CancellationToken.None); }
+            catch (Exception) { }
+        }
         Console.Error.WriteLine($"WP9 production enrollment helper stopped with typed non-secret error: {exception.GetType().Name}");
         return 72;
     }
@@ -163,6 +289,8 @@ if (args is ["--wp9-production-enrollment-request-handle", string productionRequ
     {
         productionSecretSource?.Dispose();
         productionStore?.Dispose();
+        productionDescendant?.Dispose();
+        productionResponse?.Dispose();
     }
 }
 

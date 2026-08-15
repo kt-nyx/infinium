@@ -2,12 +2,12 @@
   "schema_identity": "infinium.repository.wp9-production-profile-authorization/1.0.0",
   "manifest_id": "infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f",
   "packet_kind": "EnrollOrVerifyProfile",
-  "status": "ready-for-owner-acceptance",
+  "status": "draft-close-ready-binding-pending",
   "effect_authority": "none-until-owner-accepts-exact-manifest-bytes",
-  "prepared_at_utc": "2026-08-15T14:42:10.0786864Z",
-  "expires_at_utc": "2026-08-17T14:42:10.0786864Z",
+  "prepared_at_utc": "2026-08-15T15:25:00.0000000Z",
+  "expires_at_utc": "2026-08-17T15:25:00.0000000Z",
   "candidate_binding": {
-    "close_ready_implementation_commit": "1c3b64a651361c147cba018b8054cb2f0ac4f036",
+    "close_ready_implementation_commit": "0000000000000000000000000000000000000000",
     "accepted_wp8_verification_commit": "cc14bf60f78c80280cb6eafe60fddaf2bc764d06",
     "accepted_wp8_evidence_commit": "baef115cdd43fa38d0a352c15f8ba44cbfa35312",
     "accepted_wp8_non_live_all_sha256": "52aa77325a2226505c35b1fba6d9d0fe2b6354022a6c85f6652211d609c529ad",
@@ -23,6 +23,7 @@
   "owner_authorization": {
     "required": true,
     "canonical_record": "WP9_PROFILE_OWNER_ACCEPTANCE manifest_id=<manifest_id> sha256=<manifest_sha256> close_ready_commit=<close_ready_implementation_commit> expires_at_utc=<expires_at_utc>",
+    "independent_review_record": "WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=<exact-reviewed-candidate> manifest_id=<manifest_id> sha256=<manifest_sha256> verdicts=security,semantics,diff",
     "scope": "exactly-one-new-production-profile-enrollment-and-verification-effect",
     "inheritance": "prohibited",
     "qualification_request_authority": "none-separate-fresh-manifest-and-owner-acceptance-required-after-profile-success"
@@ -37,14 +38,14 @@
     "provider_request_permitted": false
   },
   "official_document_refresh": {
-    "retrieved_at_utc": "2026-08-15T14:30:00.0000000Z",
+    "retrieved_at_utc": "2026-08-15T15:20:32.8054571Z",
     "documents": [
-      { "name": "model", "url": "https://developers.openai.com/api/docs/models/gpt-5.6-sol", "final_url": "https://developers.openai.com/api/docs/models/gpt-5.6-sol", "retrieved_at_utc": "2026-08-15T14:30:00.0000000Z", "bytes": 3707, "sha256": "124cce0f52e97d87bca8d5c383dc9912bdfbcd8b5c3b54a7f209dc8383f9a4ad", "content_type": "text/markdown; charset=utf-8", "etag": null, "last_modified": null },
-      { "name": "latest-model", "url": "https://developers.openai.com/api/docs/guides/latest-model", "final_url": "https://developers.openai.com/api/docs/guides/latest-model", "retrieved_at_utc": "2026-08-15T14:30:00.0000000Z", "bytes": 18668, "sha256": "7591e641abc3cb124b2173843a03d40ea05ee421c8a036f04dda44c79188953e", "content_type": "text/markdown; charset=utf-8", "etag": null, "last_modified": null },
-      { "name": "prompt-caching", "url": "https://developers.openai.com/api/docs/guides/prompt-caching", "final_url": "https://developers.openai.com/api/docs/guides/prompt-caching", "retrieved_at_utc": "2026-08-15T14:30:00.0000000Z", "bytes": 27997, "sha256": "2402d5a0bc2643daa28100121fa0397f1893d3e30552e9d0317ebf18288e8348", "content_type": "text/markdown; charset=utf-8", "etag": null, "last_modified": null },
-      { "name": "reasoning", "url": "https://developers.openai.com/api/docs/guides/reasoning", "final_url": "https://developers.openai.com/api/docs/guides/reasoning", "retrieved_at_utc": "2026-08-15T14:30:00.0000000Z", "bytes": 45218, "sha256": "237067018b227133a45f5465b545fd06596631c6a96bd6adec5835450354d7b1", "content_type": "text/markdown; charset=utf-8", "etag": null, "last_modified": null },
-      { "name": "structured-outputs", "url": "https://developers.openai.com/api/docs/guides/structured-outputs", "final_url": "https://developers.openai.com/api/docs/guides/structured-outputs", "retrieved_at_utc": "2026-08-15T14:30:00.0000000Z", "bytes": 86127, "sha256": "e894b773b2aa124f07baf3d3e232abf4cd8bed2e3d80f789078f98fed06b55db", "content_type": "text/markdown; charset=utf-8", "etag": null, "last_modified": null },
-      { "name": "safety-best-practices", "url": "https://developers.openai.com/api/docs/guides/safety-best-practices", "final_url": "https://developers.openai.com/api/docs/guides/safety-best-practices", "retrieved_at_utc": "2026-08-15T14:30:00.0000000Z", "bytes": 7626, "sha256": "109a4729274e9a27435f8f1f0dc9f70fdd0f83eec7766c49ea661af94879f403", "content_type": "text/markdown; charset=utf-8", "etag": null, "last_modified": null }
+      { "name": "model", "url": "https://developers.openai.com/api/docs/models/gpt-5.6-sol.md", "final_url": "https://developers.openai.com/api/docs/models/gpt-5.6-sol.md", "retrieved_at_utc": "2026-08-15T15:20:32.6761100Z", "bytes": 3707, "sha256": "124cce0f52e97d87bca8d5c383dc9912bdfbcd8b5c3b54a7f209dc8383f9a4ad", "content_type": "text/markdown; charset=utf-8", "etag": null, "last_modified": null },
+      { "name": "latest-model", "url": "https://developers.openai.com/api/docs/guides/latest-model.md", "final_url": "https://developers.openai.com/api/docs/guides/latest-model.md", "retrieved_at_utc": "2026-08-15T15:20:32.7119604Z", "bytes": 18668, "sha256": "7591e641abc3cb124b2173843a03d40ea05ee421c8a036f04dda44c79188953e", "content_type": "text/markdown; charset=utf-8", "etag": "\"2044a7bfb4dcefefffc5eafb03dafbb2\"", "last_modified": "Sat, 15 Aug 2026 02:04:31 GMT" },
+      { "name": "prompt-caching", "url": "https://developers.openai.com/api/docs/guides/prompt-caching.md", "final_url": "https://developers.openai.com/api/docs/guides/prompt-caching.md", "retrieved_at_utc": "2026-08-15T15:20:32.7278778Z", "bytes": 27997, "sha256": "2402d5a0bc2643daa28100121fa0397f1893d3e30552e9d0317ebf18288e8348", "content_type": "text/markdown; charset=utf-8", "etag": "\"bf8434ddbf443bfedc8e3e267927c41f\"", "last_modified": "Sat, 15 Aug 2026 03:24:41 GMT" },
+      { "name": "reasoning", "url": "https://developers.openai.com/api/docs/guides/reasoning.md", "final_url": "https://developers.openai.com/api/docs/guides/reasoning.md", "retrieved_at_utc": "2026-08-15T15:20:32.7568001Z", "bytes": 45218, "sha256": "237067018b227133a45f5465b545fd06596631c6a96bd6adec5835450354d7b1", "content_type": "text/markdown; charset=utf-8", "etag": "\"be2d91e665fa23a8b183698ef3311ce6\"", "last_modified": "Sat, 15 Aug 2026 02:14:02 GMT" },
+      { "name": "structured-outputs", "url": "https://developers.openai.com/api/docs/guides/structured-outputs.md", "final_url": "https://developers.openai.com/api/docs/guides/structured-outputs.md", "retrieved_at_utc": "2026-08-15T15:20:32.7878847Z", "bytes": 86127, "sha256": "e894b773b2aa124f07baf3d3e232abf4cd8bed2e3d80f789078f98fed06b55db", "content_type": "text/markdown; charset=utf-8", "etag": "\"67add6991bc06417b289d2f5112b646a\"", "last_modified": "Sat, 15 Aug 2026 01:45:48 GMT" },
+      { "name": "safety-best-practices", "url": "https://developers.openai.com/api/docs/guides/safety-best-practices.md", "final_url": "https://developers.openai.com/api/docs/guides/safety-best-practices.md", "retrieved_at_utc": "2026-08-15T15:20:32.8054571Z", "bytes": 7626, "sha256": "109a4729274e9a27435f8f1f0dc9f70fdd0f83eec7766c49ea661af94879f403", "content_type": "text/markdown; charset=utf-8", "etag": "\"e3f5e02800ceb6962daaff2c93a6eb7f\"", "last_modified": "Sat, 15 Aug 2026 06:16:21 GMT" }
     ],
     "confirmed_profile": {
       "model": "gpt-5.6-sol", "api": "responses", "structured_outputs": true, "prompt_caching": true,
@@ -74,7 +75,6 @@
     "generation_ordinal": 1,
     "revocation_epoch": 0,
     "display_label": "OpenAI Platform API (M1 Slice 6)",
-    "credential_target": "Infinium:openai-platform-492800995cf046c7815f974e865f9e1d:g-9c663cb01fb649cba7eff4e26e14274c",
     "target_derivation": "Infinium:<access_profile_id>:<generation_id>",
     "target_fingerprint_sha256": "55ade50556f396dd0ba579632a21581887eeb1e4e44411a0ee8e37f460f09fca",
     "target_encoding": "utf-8",
@@ -82,7 +82,9 @@
   },
   "native_boundary": {
     "exact_call_order": ["CredReadW", "CredWriteW", "CredReadW", "CredFree"],
-    "exact_results": ["ERROR_NOT_FOUND", "success", "success", "success"],
+    "exact_results": ["ERROR_NOT_FOUND", "success", "success", "released"],
+    "exact_collision_order": ["CredReadW", "CredFree"],
+    "exact_collision_results": ["success", "released"],
     "maximum_calls": { "CredWriteW": 1, "CredReadW": 2, "CredDeleteW": 0, "CredFree": 1, "total": 4 },
     "enumeration": "prohibited", "fallback": "none", "overwrite": "prohibited", "delete": "not-authorized"
   },
@@ -92,6 +94,10 @@
     "paste_permitted": true, "renderer_receives_or_retains_secret": false,
     "manual_value": "owner-owned-real-openai-api-key-only-after-exact-authorization-never-test-or-dummy-value",
     "readiness_deadline_seconds": 10, "response_deadline_seconds": 600,
+    "readiness_requirements": ["visible", "helper-process-owned", "same-session", "input-desktop", "not-cloaked", "on-monitor", "enabled", "edit-focused", "foreground", "active", "initially-and-currently-blank", "message-pump-active"],
+    "pre_readiness_input": "ignore-action-drain-and-clear-edit-content-before-readiness",
+    "input_bound": "live-character-length-1-through-2560-and-utf8-byte-length-1-through-2560-no-truncation",
+    "cleanup_requirements": ["set-native-edit-empty", "verify-native-edit-empty", "clear-managed-char-buffer", "clear-secret-bytes", "destroy-window-and-verify", "join-sta-thread", "terminate-contained-process-tree"],
     "cancel_result": "typed-cancel-no-write-no-profile-activation-no-dispatch"
   },
   "future_product_ux": {
@@ -107,14 +113,29 @@
     "unavailable_or_ambiguous_state": "block-all-provider-requests-until-fresh-authorized-recovery",
     "retention": "retain-exact-generation-through-wp11-no-delete-authority"
   },
+  "release_build": {
+    "configuration": "Release",
+    "target_framework": "net10.0",
+    "source_commit": "0000000000000000000000000000000000000000",
+    "build_command": "dotnet build Infinium.sln -c Release --no-restore --nologo",
+    "coordinator_relative_path": "src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe",
+    "coordinator_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "helper_relative_path": "src/Infinium.Coordinator/bin/Release/net10.0/CredentialHelper/Infinium.CredentialHelper.exe",
+    "helper_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "binary_inventory_pattern": "sorted-relative-path-lf-sha256-for-all-exe-dll-deps-json-and-runtimeconfig-json-under-coordinator-release-root",
+    "binary_inventory_file_count": 0,
+    "binary_inventory_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
   "output": {
     "output_root_relative": "artifacts/m1-slice6/wp9-profile", "must_be_absent": true,
     "secret_permitted": false, "raw_target_permitted": false,
-    "required_receipts": ["profile-enrollment-evidence.json", "profile-enrollment-summary.txt", "authority-lock.json"]
+    "required_receipts": ["profile-enrollment-evidence.json", "profile-enrollment-summary.txt", "authority-lock.json"],
+    "typed_failure_receipt": "profile-enrollment-failure.json",
+    "terminal_receipt_rule": "success-retains-three-required-receipts; every cancel-collision-timeout-native-or-evidence-failure-also-retains-typed-failure-receipt"
   },
   "stop_conditions": {
     "missing_or_stale_acceptance": "stop-before-helper-launch", "expired": "stop-before-helper-launch",
-    "dirty_or_wrong_candidate": "stop-before-helper-launch", "existing_target": "stop-after-one-read-no-write",
+    "dirty_or_wrong_candidate": "stop-before-helper-launch", "existing_target": "stop-after-read-success-and-paired-free-no-write",
     "cancel": "stop-no-write-no-dispatch", "native_failure": "stop-no-retry",
     "partial_or_ambiguous_effect": "stop-block-provider-request-require-fresh-recovery-authority",
     "network_or_provider_activity": "stop-fail", "unexpected_call": "stop-fail-no-retry"

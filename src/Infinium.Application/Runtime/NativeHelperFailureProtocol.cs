@@ -59,6 +59,7 @@ public static class NativeHelperFailureProtocol
     private static readonly HashSet<string> Reasons = new(StringComparer.Ordinal)
     {
         "handle-inheritance-failure", "launch-options-invalid", "manifest-rejected",
+        "containment-launch-failure",
         "io-failure", "invalid-data", "invalid-operation",
         "cancelled", "timeout", "win32-failure", "controlled-failure",
     };

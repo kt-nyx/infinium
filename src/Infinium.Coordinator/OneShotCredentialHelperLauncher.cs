@@ -49,10 +49,12 @@ internal sealed class CredentialNativeHelperFailureException(
 internal sealed class CredentialNativeHelperEvidenceAmbiguityException(
     string assignmentId,
     string validationStage,
-    Exception innerException)
+    Exception innerException,
+    NativeHelperFailureEnvelopeSummary? envelopeSummary = null)
     : Exception("The native helper evidence could not be independently validated.", innerException)
 {
     internal string AssignmentId { get; } = assignmentId;
+    internal NativeHelperFailureEnvelopeSummary? EnvelopeSummary { get; } = envelopeSummary;
     internal string ValidationStage { get; } = validationStage is
         "terminal-frame" or "staged-response" or "runtime-metrics"
         or "native-failure-envelope-validation" or "native-failure-envelope-read"
@@ -75,6 +77,23 @@ internal sealed record NativeHelperFailureContainmentEvidence(
     int ProcessTreeSurvivorCount,
     bool ProcessTreeTerminated);
 
+internal sealed record NativeHelperFailureEnvelopeSummary(
+    string Stage,
+    string Reason,
+    int NativeCallTraceUtf8Bytes,
+    string? NativeCallTraceSha256,
+    int EntryCleanupUtf8Bytes,
+    string? EntryCleanupSha256,
+    int CanaryEvidenceUtf8Bytes,
+    string? CanaryEvidenceSha256);
+
+internal sealed record Wp9NonLiveProbeResult(
+    string Mode,
+    NativeHelperFailureEnvelope? Envelope,
+    string Terminal,
+    int ExitCode,
+    int Survivors);
+
 public sealed class OneShotCredentialHelperLauncher
 {
     private readonly string helperBinary;
@@ -91,6 +110,73 @@ public sealed class OneShotCredentialHelperLauncher
         : nativeQualificationManifestPath is null
             ? TimeSpan.FromSeconds(30)
             : CredentialNativeQualificationSupervisor.PrimaryPhaseTimeout;
+
+    internal async Task<Wp9NonLiveProbeResult> ExecuteWp9NonLiveProbeAsync(
+        string mode,
+        TimeSpan timeout)
+    {
+        if (mode is not ("typed" or "eof" or "crash" or "timeout")
+            || timeout <= TimeSpan.Zero || timeout > TimeSpan.FromSeconds(5))
+        {
+            throw new ArgumentOutOfRangeException(nameof(mode));
+        }
+        using AnonymousPipeServerStream response = new(
+            PipeDirection.In, HandleInheritability.Inheritable, 64 * 1024);
+        nint responseHandle = response.ClientSafePipeHandle.DangerousGetHandle();
+        string[] arguments = [
+            "--wp9-production-nonlive-probe", "--response-handle",
+            responseHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            "--mode", mode,
+        ];
+        using WindowsContainedWorkerProcess.PrivateHelperProcess contained =
+            WindowsContainedWorkerProcess.CreatePrivateHelper(
+                helperBinary, arguments, Path.GetDirectoryName(helperBinary)!,
+                new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["DOTNET_EnableDiagnostics"] = "0",
+                }, [responseHandle]);
+        response.DisposeLocalCopyOfClientHandle();
+        contained.Resume();
+        using CancellationTokenSource bounded = new(timeout);
+        NativeHelperFailureEnvelope? envelope = null;
+        string terminal;
+        try
+        {
+            byte[] prefix = new byte[4];
+            await response.ReadExactlyAsync(prefix, bounded.Token).ConfigureAwait(false);
+            if (!NativeHelperFailureProtocol.IsMagic(prefix))
+            {
+                throw new InvalidDataException("The WP9 non-live helper probe did not emit the typed failure magic.");
+            }
+            envelope = await NativeHelperFailureProtocol.ReadAfterMagicAsync(response, bounded.Token)
+                .ConfigureAwait(false);
+            terminal = "typed-envelope";
+        }
+        catch (OperationCanceledException)
+        {
+            terminal = "timeout";
+        }
+        catch (EndOfStreamException)
+        {
+            terminal = "eof";
+        }
+        catch (InvalidDataException)
+        {
+            terminal = "invalid-frame";
+        }
+        if (!contained.Process.HasExited)
+        {
+            contained.Process.Kill(entireProcessTree: true);
+            await contained.Process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
+        }
+        int exitCode;
+        try { exitCode = contained.ExitCode; }
+        catch (OverflowException) { exitCode = -1; }
+        (int _, int survivors) = await contained.TerminateRemainingProcessesAndWaitAsync(
+            TimeSpan.FromSeconds(2), CancellationToken.None).ConfigureAwait(false);
+        contained.CloseJob();
+        return new(mode, envelope, terminal, exitCode, survivors);
+    }
 
     public OneShotCredentialHelperLauncher(
         string helperBinary,
@@ -537,8 +623,15 @@ public sealed class OneShotCredentialHelperLauncher
                 metrics.NamespaceReuseBlockReason);
         }
         catch (Exception failure) when (failure is CredentialNativeHelperFailureException
-            or CredentialNativeHelperEvidenceAmbiguityException)
+            or CredentialNativeHelperEvidenceAmbiguityException
+            || wp9ProductionEnrollment && (failure is OperationCanceledException or TimeoutException))
         {
+            Exception retainedFailure = failure;
+            if (wp9ProductionEnrollment && (failure is OperationCanceledException or TimeoutException))
+            {
+                retainedFailure = NormalizeWp9ProductionTimeout(
+                    assignment.Assignment.AssignmentId, failure);
+            }
             NativeHelperFailureContainmentEvidence containment;
             try
             {
@@ -560,7 +653,7 @@ public sealed class OneShotCredentialHelperLauncher
                 (int activeBeforeClose, int survivors) = await contained.TerminateRemainingProcessesAndWaitAsync(
                     TimeSpan.FromSeconds(5), CancellationToken.None).ConfigureAwait(false);
                 contained.CloseJob();
-                bool descendantExpected = failure is CredentialNativeHelperFailureException typed
+                bool descendantExpected = retainedFailure is CredentialNativeHelperFailureException typed
                     && typed.Evidence.ContainmentDescendantStarted;
                 containment = new(
                     processId,
@@ -588,15 +681,15 @@ public sealed class OneShotCredentialHelperLauncher
                     1,
                     ProcessTreeTerminated: false);
             }
-            if (failure is CredentialNativeHelperFailureException helperFailure)
+            if (retainedFailure is CredentialNativeHelperFailureException helperFailure)
             {
                 helperFailure.AttachContainment(containment);
             }
             else
             {
-                ((CredentialNativeHelperEvidenceAmbiguityException)failure).AttachContainment(containment);
+                ((CredentialNativeHelperEvidenceAmbiguityException)retainedFailure).AttachContainment(containment);
             }
-            throw;
+            throw retainedFailure;
         }
         catch
         {
@@ -608,6 +701,17 @@ public sealed class OneShotCredentialHelperLauncher
             throw;
         }
     }
+
+    private static CredentialNativeHelperEvidenceAmbiguityException NormalizeWp9ProductionTimeout(
+        string assignmentId,
+        Exception failure) => failure is OperationCanceledException or TimeoutException
+            ? new CredentialNativeHelperEvidenceAmbiguityException(
+                assignmentId, "runtime-metrics", failure)
+            : throw new ArgumentOutOfRangeException(nameof(failure));
+
+    internal static CredentialNativeHelperEvidenceAmbiguityException NormalizeWp9ProductionTimeoutForTest(
+        string assignmentId,
+        Exception failure) => NormalizeWp9ProductionTimeout(assignmentId, failure);
 
     internal static async Task<T> ReadQualificationEvidenceAsync<T>(
         string assignmentId,
@@ -735,11 +839,36 @@ public sealed class OneShotCredentialHelperLauncher
             return new CredentialNativeHelperFailureException(evidence, assignment.AssignmentId);
         }
         catch (Exception exception) when (exception is InvalidDataException or JsonException
-            or KeyNotFoundException or FormatException or OverflowException)
+            or KeyNotFoundException or FormatException or OverflowException or ArgumentException
+            or InvalidOperationException)
         {
             return new CredentialNativeHelperEvidenceAmbiguityException(
-                assignment.AssignmentId, "native-failure-envelope-validation", exception);
+                assignment.AssignmentId, "native-failure-envelope-validation", exception,
+                SummarizeFailureEnvelope(evidence));
         }
+    }
+
+    internal static Exception ValidateWp9FailureForTest(
+        NativeHelperFailureEnvelope evidence,
+        HelperBootstrapV2 bootstrap,
+        HelperAssignmentV2 assignment,
+        string manifestPath) => ValidateNativeFailure(
+            evidence, bootstrap, assignment, manifestPath, helperProcessId: 1);
+
+    private static NativeHelperFailureEnvelopeSummary SummarizeFailureEnvelope(
+        NativeHelperFailureEnvelope evidence)
+    {
+        static (int Length, string? Sha256) Summary(string? value)
+        {
+            if (value is null) { return (0, null); }
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(value);
+            return (bytes.Length, Convert.ToHexStringLower(SHA256.HashData(bytes)));
+        }
+        (int traceLength, string? traceHash) = Summary(evidence.NativeCallTraceJson);
+        (int entryLength, string? entryHash) = Summary(evidence.EntryCleanupJson);
+        (int canaryLength, string? canaryHash) = Summary(evidence.CanaryEvidenceJson);
+        return new(evidence.Stage, evidence.Reason, traceLength, traceHash,
+            entryLength, entryHash, canaryLength, canaryHash);
     }
 
     private static async Task<Exception> ReadValidatedNativeFailureAsync(

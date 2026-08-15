@@ -7400,13 +7400,12 @@ it blocks any WP9 transport-qualification request manifest until resolved.
 
 The fresh manifest is NEW-only and binds exact profile
 `openai-platform-492800995cf046c7815f974e865f9e1d`, generation
-`g-9c663cb01fb649cba7eff4e26e14274c`, raw target
-`Infinium:openai-platform-492800995cf046c7815f974e865f9e1d:g-9c663cb01fb649cba7eff4e26e14274c`,
+`g-9c663cb01fb649cba7eff4e26e14274c`, the helper-local target derivation rule,
 and target SHA-256
 `55ade50556f396dd0ba579632a21581887eeb1e4e44411a0ee8e37f460f09fca`.
 The finite native grammar is W1/R2/F1/D0/T4 in exact order preflight
 `CredReadW` -> `ERROR_NOT_FOUND`, `CredWriteW` -> success, verification
-`CredReadW` -> success, and paired `CredFree` -> success. Collision stops
+`CredReadW` -> success, and paired `CredFree` -> released. Collision stops
 before write; delete, enumeration, overwrite, fallback, retry, provider,
 network, and billable effects are prohibited.
 
@@ -7453,3 +7452,69 @@ packet was used, created, or executed. WP9 stops for exact owner acceptance or
 decline; successful enrollment and separate `safety_identifier` authority
 resolution are prerequisites to materializing any transport-qualification
 request manifest.
+
+## WP9 candidate-bound review correction reopened — 2026-08-15
+
+The bound candidate `e9a75b19b37fabed634b3a82fdcd7b5d2fbf52b9` was not
+accepted for owner execution. Fresh candidate-bound review found mandatory
+runtime and retention gaps: the raw credential target was retained in
+authority documents; `CredFree` had the wrong canonical result; the helper
+launch tail was unreachable; failure/ambiguity evidence was incomplete; the
+authority lock was not atomic; ignored Debug binaries and broad post-close
+drift were admissible; the Windows PowerShell command path was unproved; and
+the production entry surface lacked complete readiness, focus, desktop,
+containment, input-bound, native-buffer, and cleanup proof. The first
+NonLiveAll attempt terminated at shell timeout and its partial output is not
+evidence. Fresh run2 passed its earlier tranches but exposed two expired
+historical recovery-validator tests; it then stopped and is also excluded.
+
+The correction removes the raw target from every retained authority surface
+and derives it only inside the helper from the exact profile/generation tuple.
+It binds `CredFree` to `released`; admits only the exact success, owner-cancel,
+existing-target collision, and finite safe failure-prefix grammars; retains
+typed non-secret success/failure/ambiguity evidence and a durable request block;
+uses an atomic `CreateNew`/exclusive authority lock; binds an exact independently
+reviewed candidate plus Release coordinator/helper/dependency inventory; and
+preserves the accepted `powershell` command through an explicit PowerShell 7
+relay. The distinct WP9 helper surface now drains pre-readiness actions and
+content, verifies process/session/input-desktop/cloak/monitor/enabled/focus
+readiness, checks the full character and UTF-8 byte bounds, clears and verifies
+the native EDIT buffer before destruction, and retains containment facts.
+
+The six official `.md` snapshots were freshly retrieved from the exact
+`developers.openai.com` URLs with their byte/hash identities unchanged. The
+model response exposed no ETag or Last-Modified value; the other five exact
+strong ETags and Last-Modified values are retained in the draft manifest. The
+`safety_identifier` finding remains a separate provider-request authority block
+and does not expand this credential-profile correction.
+
+The replacement manifest is currently
+`draft-close-ready-binding-pending`. No `WP9_PROFILE_REVIEW_ACCEPTANCE` or
+`WP9_PROFILE_OWNER_ACCEPTANCE` line exists for replacement bytes. No API key,
+UI, live manifest, Credential Manager operation, DNS/public network/provider
+request, billable operation, production-profile state, private fixture, archive,
+or WP9 qualification-request packet was used or created by this correction.
+
+The final pre-freeze runtime correction also closes the exact ready-build
+partial-binding mutations, includes `.deps.json` and `.runtimeconfig.json` in
+the reviewed Release execution closure, and makes the helper emit a bounded
+typed failure envelope for engine, UI, native, evidence, and metrics failures.
+Only semantically validated trace/UI/canary payloads may be retained; malformed
+or ambiguous payloads are reduced to stage, reason, byte length, SHA-256, and
+measured containment facts. Exact failure grammar now covers numeric terminal
+Win32 results, collision R-success/F-released, stage-specific full/partial pipe
+surfaces, exact UTF-8/UTF-16LE raw-target canaries, and the closed production UI
+readiness/terminal/cleanup record. Production readiness additionally requires
+the actual window-thread desktop to equal the input desktop, actual monitor
+intersection, helper ownership, foreground, active-window, and edit-focus
+proof. Bounded production timeout is normalized into retained recovery-required
+ambiguity after process-tree containment measurement.
+
+Current non-live focused evidence is 9/9 WP9 unit tests and 6/6 WP9 integration
+tests, with zero build warnings/errors. It includes a hidden message-only Win32
+EDIT/message-pump harness and contained helper Program/launcher probes for typed
+framing, clean EOF, malformed/crash framing, bounded timeout, canary propagation,
+result/UI/canary mutations, atomic lock collision, and Release metadata drift.
+No visible dialog was opened. The exact published Windows PowerShell command
+fails before launch while the manifest remains draft and owner/review markers
+are absent. WP9 profile output and product-state roots remain absent.

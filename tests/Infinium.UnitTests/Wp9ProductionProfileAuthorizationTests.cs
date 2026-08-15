@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Infinium.CredentialHelper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infinium.Tests;
@@ -8,6 +9,136 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class Wp9ProductionProfileAuthorizationTests
 {
+    [TestMethod]
+    public void ProductionLaunchTailReadinessActionsAndInputBoundsAreDeterministic()
+    {
+        Assert.IsTrue(Wp9ProductionLaunchContract.TryParse(
+            ["--excluded-handle-probe", "123", "--spawn-containment-probe", "1"],
+            out Wp9ProductionLaunchOptions? launch));
+        Assert.AreEqual((nint)123, launch!.ExcludedHandle);
+        Assert.IsFalse(Wp9ProductionLaunchContract.TryParse([], out _));
+        Assert.IsFalse(Wp9ProductionLaunchContract.TryParse(
+            ["--excluded-handle-probe", "123", "--spawn-containment-probe", "0"], out _));
+        Assert.IsFalse(Wp9ProductionLaunchContract.TryParse(
+            ["--spawn-containment-probe", "1", "--excluded-handle-probe", "123"], out _));
+        Assert.AreEqual(new Wp9ProductionFailureClassification("launch-boundary", "containment-launch-failure"),
+            Wp9ProductionFailureClassifier.ContainmentLaunch());
+
+        Wp9ProductionReadinessSnapshot ready = new(true, true, true, true, true, true, true, true, true, true, true, true);
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.IsReady(ready));
+        foreach (Wp9ProductionReadinessSnapshot mutation in new[]
+        {
+            ready with { WindowVisible = false }, ready with { EditVisible = false },
+            ready with { InitiallyBlank = false }, ready with { HelperProcessOwned = false },
+            ready with { SameSession = false }, ready with { InputDesktopAvailable = false },
+            ready with { NotCloaked = false }, ready with { OnMonitor = false },
+            ready with { Enabled = false }, ready with { Focused = false },
+            ready with { Foreground = false }, ready with { Active = false },
+        }) { Assert.IsFalse(Wp9ProductionEntryReadinessOracle.IsReady(mutation)); }
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.AdmitAction(false, "submit"));
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.AdmitAction(false, "cancel"));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.AdmitAction(true, "submit"));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.AdmitAction(true, "cancel"));
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.AdmitAction(true, "paste"));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.IsAdmissibleCharacterLength(2560, 2560));
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.IsAdmissibleCharacterLength(2561, 2560));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.ShouldClearPreReadinessContent(false, 1));
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.ShouldClearPreReadinessContent(true, 1));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.BufferCleanupComplete(true, true));
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.BufferCleanupComplete(true, false));
+    }
+
+    [TestMethod]
+    public void ProductionCollisionClassifierIsExactAndCannotReinterpretOtherFailures()
+    {
+        Assert.IsTrue(Wp9ProductionCollisionClassifier.IsKnownCollision(
+            new InvalidOperationException(), productionEnrollment: true, namespaceReuseBlocked: true));
+        Assert.IsFalse(Wp9ProductionCollisionClassifier.IsKnownCollision(
+            new IOException(), productionEnrollment: true, namespaceReuseBlocked: true));
+        Assert.IsFalse(Wp9ProductionCollisionClassifier.IsKnownCollision(
+            new InvalidOperationException(), productionEnrollment: false, namespaceReuseBlocked: true));
+        Assert.IsFalse(Wp9ProductionCollisionClassifier.IsKnownCollision(
+            new InvalidOperationException(), productionEnrollment: true, namespaceReuseBlocked: false));
+    }
+
+    [TestMethod]
+    public void HiddenNativeMessagePumpExercisesActionDrainDesktopOwnershipBufferAndDestroyCleanup()
+    {
+        if (!OperatingSystem.IsWindows()) { Assert.Inconclusive("Windows message-pump evidence is required."); }
+        Wp9ProductionHiddenPumpProbe probe = Wp9ProductionMaskedEntryDialog.RunNonLiveHiddenPumpProbe();
+        Assert.IsTrue(probe.PreReadySubmitRejected);
+        Assert.IsTrue(probe.ReadySubmitAdmitted);
+        Assert.IsTrue(probe.ReadyCancelAdmitted);
+        Assert.IsTrue(probe.PreReadyContentCleared);
+        Assert.IsTrue(probe.NativeBufferEmpty);
+        Assert.IsTrue(probe.HelperProcessOwned);
+        Assert.IsTrue(probe.InputDesktopMatched);
+        Assert.IsTrue(probe.WindowDestroyed);
+        Assert.IsTrue(probe.ThreadJoined);
+    }
+
+    [TestMethod]
+    public async Task AuthorityLockCreateNewAllowsExactlyOneConcurrentWinner()
+    {
+        string root = RepositoryRoot();
+        string runner = File.ReadAllText(Path.Combine(root, "eng", "run-m1-slice6-credential.ps1"));
+        StringAssert.Contains(runner, "[IO.FileMode]::CreateNew");
+        StringAssert.Contains(runner, "[IO.FileShare]::None");
+        string directory = Path.Combine(Path.GetTempPath(), "infinium-wp9-lock-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        string path = Path.Combine(directory, "authority-lock.json");
+        try
+        {
+            Task<bool>[] attempts = Enumerable.Range(0, 2).Select(_ => Task.Run(() =>
+            {
+                try
+                {
+                    using FileStream stream = new(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+                    stream.WriteByte(1);
+                    stream.Flush(flushToDisk: true);
+                    return true;
+                }
+                catch (IOException) { return false; }
+            })).ToArray();
+            bool[] winners = await Task.WhenAll(attempts);
+            Assert.AreEqual(1, winners.Count(value => value));
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
+    [TestMethod]
+    public void ReleaseBinaryInventoryIsExactAndDetectsDependencyDrift()
+    {
+        string root = RepositoryRoot();
+        string runner = File.ReadAllText(Path.Combine(root, "eng", "run-m1-slice6-credential.ps1"));
+        StringAssert.Contains(runner, "Get-Wp9BinaryInventory");
+        StringAssert.Contains(runner, "binary_inventory_file_count");
+        StringAssert.Contains(runner, "binary_inventory_sha256");
+        string manifest = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp9-production-profile-authorization.v1.json"));
+        StringAssert.Contains(manifest, "bin/Release/net10.0/Infinium.Coordinator.exe");
+        string directory = Path.Combine(Path.GetTempPath(), "infinium-wp9-binaries-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(directory, "CredentialHelper"));
+        try
+        {
+            File.WriteAllBytes(Path.Combine(directory, "Infinium.Coordinator.exe"), [1, 2, 3]);
+            string dependency = Path.Combine(directory, "CredentialHelper", "dependency.dll");
+            File.WriteAllBytes(dependency, [4, 5, 6]);
+            string runtimeConfig = Path.Combine(directory, "Infinium.Coordinator.runtimeconfig.json");
+            File.WriteAllText(runtimeConfig, "{\"runtimeOptions\":{}}");
+            (int count, string hash) = BinaryInventory(directory);
+            Assert.AreEqual(3, count);
+            File.WriteAllBytes(dependency, [4, 5, 7]);
+            (int changedCount, string changedHash) = BinaryInventory(directory);
+            Assert.AreEqual(count, changedCount);
+            Assert.AreNotEqual(hash, changedHash);
+            File.WriteAllText(Path.Combine(directory, "ignored.pdb"), "not a binary authority input");
+            Assert.AreEqual(changedHash, BinaryInventory(directory).Hash);
+            File.WriteAllText(runtimeConfig, "{\"runtimeOptions\":{\"tfm\":\"changed\"}}");
+            Assert.AreNotEqual(changedHash, BinaryInventory(directory).Hash);
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
     [TestMethod]
     public void ExactPreparedManifestValidatesAndRecursiveSchemaIsClosed()
     {
@@ -38,12 +169,15 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             node => node["extra"] = true,
             node => node["manifest_id"] = "mutated",
             node => node["profile"]!["mode"] = "existing",
-            node => node["profile"]!["credential_target"] = "Infinium:wrong:target",
+            node => node["profile"]!["target_derivation"] = "literal-retained-target",
             node => node["profile"]!["target_fingerprint_sha256"] = new string('0', 64),
             node => node["native_boundary"]!["exact_call_order"] = new JsonArray("CredWriteW", "CredReadW", "CredFree"),
+            node => node["native_boundary"]!["exact_collision_order"] = new JsonArray("CredReadW"),
             node => node["native_boundary"]!["maximum_calls"]!["CredDeleteW"] = 1,
             node => node["m1_entry_surface"]!["paste_permitted"] = false,
             node => node["m1_entry_surface"]!["renderer_receives_or_retains_secret"] = true,
+            node => node["m1_entry_surface"]!["readiness_requirements"]![5] = "nearest-monitor-is-enough",
+            node => node["m1_entry_surface"]!["cleanup_requirements"]![1] = "claim-native-edit-empty",
             node => node["future_product_ux"]!["implemented_by_wp9"] = true,
             node => node["durable_state"]!["success_state"] = "active-unverified",
             node => node["durable_state"]!["active_unverified_request_gate"] = "admit",
@@ -51,6 +185,15 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             node => node["official_document_refresh"]!["documents"]![0]!["sha256"] = new string('0', 64),
             node => node["official_document_refresh"]!["drift_follow_up"]!["provider_request_packet_blocked"] = false,
             node => node["owner_authorization"]!["inheritance"] = "allowed",
+            node => node["owner_authorization"]!["independent_review_record"] = "missing",
+            node => node["release_build"]!["source_commit"] = new string('f', 40),
+            node => node["release_build"]!["binary_inventory_file_count"] = 1,
+            node => MakePartiallyReady(node, "source_commit"),
+            node => MakePartiallyReady(node, "coordinator_sha256"),
+            node => MakePartiallyReady(node, "helper_sha256"),
+            node => MakePartiallyReady(node, "binary_inventory_sha256"),
+            node => MakePartiallyReady(node, "binary_inventory_file_count"),
+            node => node["official_document_refresh"]!["documents"]![1]!["etag"] = null,
             node => node["execution"]!["qualification_request_manifest"] = "ready",
         ];
         string temporary = Path.Combine(Path.GetTempPath(), "infinium-wp9-manifest-mutations-" + Guid.NewGuid().ToString("N"));
@@ -95,7 +238,7 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             "wp9-production-profile-authorization.v1.json");
         string output = Path.Combine(root, "artifacts", "m1-slice6", "wp9-profile");
         Assert.IsFalse(Directory.Exists(output));
-        ProcessStartInfo start = new("pwsh.exe")
+        ProcessStartInfo start = new("powershell.exe")
         {
             WorkingDirectory = root,
             UseShellExecute = false,
@@ -191,6 +334,35 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             current = current.Parent;
         }
         return current?.FullName ?? throw new DirectoryNotFoundException("Repository root not found.");
+    }
+
+    private static (int Count, string Hash) BinaryInventory(string root)
+    {
+        string[] files = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
+            .Where(path => Path.GetExtension(path) is ".exe" or ".dll"
+                || path.EndsWith(".deps.json", StringComparison.Ordinal)
+                || path.EndsWith(".runtimeconfig.json", StringComparison.Ordinal))
+            .Order(StringComparer.Ordinal).ToArray();
+        string canonical = string.Join('\n', files.Select(path =>
+            $"{Path.GetRelativePath(root, path).Replace('\\', '/')}|"
+            + Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path))))) + "\n";
+        return (files.Length, Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(canonical))));
+    }
+
+    private static void MakePartiallyReady(JsonObject node, string pendingField)
+    {
+        node["status"] = "ready-for-owner-acceptance";
+        node["candidate_binding"]!["close_ready_implementation_commit"] = new string('a', 40);
+        JsonNode release = node["release_build"]!;
+        release["source_commit"] = new string('a', 40);
+        release["coordinator_sha256"] = new string('b', 64);
+        release["helper_sha256"] = new string('c', 64);
+        release["binary_inventory_sha256"] = new string('d', 64);
+        release["binary_inventory_file_count"] = 5;
+        if (pendingField == "source_commit") { release[pendingField] = new string('0', 40); }
+        else if (pendingField == "binary_inventory_file_count") { release[pendingField] = 0; }
+        else { release[pendingField] = new string('0', 64); }
     }
 
     private sealed record ProcessResult(int ExitCode, string Output, string Error);

@@ -252,6 +252,16 @@ public sealed class OneShotHelperEngine
         {
             outcome = HelperOutcomeV2.Unavailable;
         }
+        catch (InvalidOperationException exception) when (
+            store is WindowsCredentialManagerStore productionStore
+            && Wp9ProductionCollisionClassifier.IsKnownCollision(
+                exception, productionStore.IsProductionEnrollment, productionStore.NamespaceReuseBlocked))
+        {
+            // A production new-only collision is a typed, bounded stop after
+            // the exact preflight read/allocation release. It must still emit
+            // a terminal receipt so the coordinator can retain the R/F trace.
+            outcome = HelperOutcomeV2.FailedKnown;
+        }
         catch (InvalidDataException)
         {
             // Oversized is a provider-response receipt state. Credential
@@ -452,6 +462,15 @@ public sealed class OneShotHelperEngine
         UsageReceiptState.Ambiguous => UsageReceiptStateV2.Ambiguous,
         _ => UsageReceiptStateV2.Unavailable,
     };
+}
+
+internal static class Wp9ProductionCollisionClassifier
+{
+    internal static bool IsKnownCollision(
+        Exception exception,
+        bool productionEnrollment,
+        bool namespaceReuseBlocked) => exception is InvalidOperationException
+            && productionEnrollment && namespaceReuseBlocked;
 }
 
 public static class HelperFrameFactory
