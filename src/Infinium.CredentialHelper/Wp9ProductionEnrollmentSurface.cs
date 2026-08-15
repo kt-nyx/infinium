@@ -140,14 +140,14 @@ internal sealed class Wp9ProductionSecretSource : IHelperSecretSource, IDisposab
         }
         using (capture)
         {
-        EntryEvidence = capture.Evidence;
-        if (capture.TerminalState == "cancelled")
-        {
-            throw new OperationCanceledException("The owner cancelled production credential enrollment.");
-        }
-        byte[] secret = capture.DetachSecret();
-        canarySecret = secret.ToArray();
-        return secret;
+            EntryEvidence = capture.Evidence;
+            if (capture.TerminalState == "cancelled")
+            {
+                throw new OperationCanceledException("The owner cancelled production credential enrollment.");
+            }
+            byte[] secret = capture.DetachSecret();
+            canarySecret = secret.ToArray();
+            return secret;
         }
     }
 

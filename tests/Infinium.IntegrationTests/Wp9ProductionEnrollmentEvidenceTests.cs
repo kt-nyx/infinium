@@ -56,7 +56,9 @@ public sealed class Wp9ProductionEnrollmentEvidenceTests
             "wp9-production-profile-authorization.v1.json");
         object canaries = new
         {
-            SecretMatches = 0, RawTargetMatches = 0, RawTargetEncodings,
+            SecretMatches = 0,
+            RawTargetMatches = 0,
+            RawTargetEncodings,
             ScannedSurfaces = new[]
             {
                 new { Name = "private protocol request", Kind = "private-pipe-bytes", ByteCount = 1, SecretMatches = 0, RawTargetMatches = 0 },
@@ -80,11 +82,16 @@ public sealed class Wp9ProductionEnrollmentEvidenceTests
             exact, bootstrap, assignment, manifest, helperProcessId: 1);
         Assert.ThrowsExactly<InvalidDataException>(() =>
             CredentialNativeQualificationSupervisor.ValidateNativeHelperFailureEnvelope(
-                exact with { CanaryEvidenceJson = JsonSerializer.Serialize(new
+                exact with
                 {
-                    SecretMatches = 1, RawTargetMatches = 0, RawTargetEncodings,
-                    ScannedSurfaces = Array.Empty<object>(),
-                }) },
+                    CanaryEvidenceJson = JsonSerializer.Serialize(new
+                    {
+                        SecretMatches = 1,
+                        RawTargetMatches = 0,
+                        RawTargetEncodings,
+                        ScannedSurfaces = Array.Empty<object>(),
+                    })
+                },
                 bootstrap, assignment, manifest, helperProcessId: 1));
 
         CredentialNativeCallTraceEntry[] fullTrace =
@@ -97,12 +104,29 @@ public sealed class Wp9ProductionEnrollmentEvidenceTests
         object exactEntry = new
         {
             Surface = "wp9-distinct-helper-owned-native-masked-paste-surface",
-            Masked = true, PastePermitted = true, HelperOwned = true, RendererReceivedSecret = false,
-            InitiallyBlank = true, Ready = true, HelperProcessOwned = true, SameSession = true,
-            InputDesktopAvailable = true, NotCloaked = true, OnMonitor = true, Enabled = true,
-            Focused = true, Foreground = true, Active = true, ReadinessChecks = 1,
-            PreReadinessIgnoredActions = 0, MessagePumpIterations = 1, TerminalState = "submitted",
-            WindowDestroyed = true, BufferCleared = true, NativeEditEmptyVerified = true, ThreadJoined = true,
+            Masked = true,
+            PastePermitted = true,
+            HelperOwned = true,
+            RendererReceivedSecret = false,
+            InitiallyBlank = true,
+            Ready = true,
+            HelperProcessOwned = true,
+            SameSession = true,
+            InputDesktopAvailable = true,
+            NotCloaked = true,
+            OnMonitor = true,
+            Enabled = true,
+            Focused = true,
+            Foreground = true,
+            Active = true,
+            ReadinessChecks = 1,
+            PreReadinessIgnoredActions = 0,
+            MessagePumpIterations = 1,
+            TerminalState = "submitted",
+            WindowDestroyed = true,
+            BufferCleared = true,
+            NativeEditEmptyVerified = true,
+            ThreadJoined = true,
         };
         NativeHelperFailureEnvelope postEngine = new(
             "evidence-collection", "controlled-failure", true, 1, 2, 0, 1, 4,
@@ -134,7 +158,10 @@ public sealed class Wp9ProductionEnrollmentEvidenceTests
         ];
         NativeHelperFailureEnvelope collisionEnvelope = postEngine with
         {
-            CredWriteW = 0, CredReadW = 1, CredFree = 1, Total = 2,
+            CredWriteW = 0,
+            CredReadW = 1,
+            CredFree = 1,
+            Total = 2,
             NativeCallTraceJson = JsonSerializer.Serialize(collisionTrace),
             NamespaceReuseBlocked = true,
             NamespaceReuseBlockReason = "preflight-collision",
