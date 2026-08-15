@@ -7832,3 +7832,23 @@ grants no current authority. Correction adds an exact owner-accepted document
 and record predicate, an exact three-document Layer 6 closeout mode, and
 mutation coverage before a new close-ready freeze, manifest binding, complete
 non-live floor, fresh independent review, and separate exact owner transition.
+
+## WP9 owner-acceptance closeout binding — 2026-08-15
+
+The bounded correction is frozen at exact close-ready commit
+`f7dcd799e272d403b93089da0e550de219e5b0af`. It adds the exact
+owner-accepted retained disposition, strict canonical review-plus-owner record
+validation, and a mutually exclusive three-document owner-acceptance Layer 6
+mode with positive and mutation coverage. WP9 unit tests passed 10/10 and the
+combined retained-WP8/Layer6 contracts passed 13/13 before freeze.
+
+The canonical non-incremental Release closure pinned to the close-ready source
+has coordinator SHA-256
+`2973332929dcf2fbcbc592711bda4c6691ecb8fdf3f0f5a4541f18da688096d3`,
+helper SHA-256
+`2b8a85fb69a5d5a1db74b5b893620816d7cd12eb6300ed75ea39f54536659e54`,
+and 126-file inventory SHA-256
+`0857290532b8b5bf1f2bfaf1a00fe220ee342670e2f4057037da7b7e82495688`.
+The historical B17 review and owner markers grant no authority for these new
+bytes. No UI, API-key, Credential Manager, DNS, public-network, provider,
+billable, profile, private-fixture, archive, or later-packet effect occurred.
