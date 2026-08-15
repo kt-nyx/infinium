@@ -1386,6 +1386,11 @@ function Invoke-NonLiveAllGate {
     if ($focusedGateResults.Count -ne $expectedFocusedReceiptNames.Count) {
         throw "NonLiveAll retained $($focusedGateResults.Count) focused gate results; expected $($expectedFocusedReceiptNames.Count)."
     }
+    $focusedCommandCount = [int64](($focusedGateResults | ForEach-Object { $_['commands'].Count } | Measure-Object -Sum).Sum)
+    $focusedPassed = [int64](($focusedGateResults | ForEach-Object { $_['passed'] } | Measure-Object -Sum).Sum)
+    $focusedFailed = [int64](($focusedGateResults | ForEach-Object { $_['failed'] } | Measure-Object -Sum).Sum)
+    $focusedSkipped = [int64](($focusedGateResults | ForEach-Object { $_['skipped'] } | Measure-Object -Sum).Sum)
+    $focusedTotal = [int64](($focusedGateResults | ForEach-Object { $_['total'] } | Measure-Object -Sum).Sum)
     $packetPaths = @(
         'docs/plans/milestones/m1/slices/s6/wp8-production-profile-authorization.template.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp8-qualification-authorization.template.v1.json',
@@ -1404,11 +1409,11 @@ function Invoke-NonLiveAllGate {
         child_receipts = $childReceipts
         focused_gate_results = $focusedGateResults
         focused_gate_count = $focusedGateResults.Count
-        focused_command_count = [int64](($focusedGateResults.commands | Measure-Object).Count)
-        focused_test_passed = [int64](($focusedGateResults | Measure-Object -Property passed -Sum).Sum)
-        focused_test_failed = [int64](($focusedGateResults | Measure-Object -Property failed -Sum).Sum)
-        focused_test_skipped = [int64](($focusedGateResults | Measure-Object -Property skipped -Sum).Sum)
-        focused_test_total = [int64](($focusedGateResults | Measure-Object -Property total -Sum).Sum)
+        focused_command_count = $focusedCommandCount
+        focused_test_passed = $focusedPassed
+        focused_test_failed = $focusedFailed
+        focused_test_skipped = $focusedSkipped
+        focused_test_total = $focusedTotal
         external_effect_scope = 'zero-public-external-effects; one canonical-operation send plus one redirect safety-probe send are deterministic literal-loopback-only evidence'
         execution_authorized = $false
         authorization_manifest_accepted = $false
