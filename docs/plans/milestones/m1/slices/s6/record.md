@@ -7790,3 +7790,24 @@ current HEAD. It must pass from both reviewed and pre-review states, reject a
 duplicate current-manifest marker, and reject any protected fourth path. No UI,
 API key, Credential Manager, DNS, public network, provider, billable, profile,
 private-fixture, or archive effect occurred.
+
+## WP9 state-aware review-closeout binding — 2026-08-15
+
+The final corrected implementation is frozen at
+`af1bfd6345c5a29f6535771fbbc86b33ec1826b9`. The positive closeout contract
+passed from the prior reviewed current HEAD by resolving its unique exact
+current-manifest marker to the recorded B16 baseline. The same contract will
+run from this pre-review binding with no matching current-manifest marker and
+therefore select current HEAD. Duplicate-marker and protected fourth-path
+mutations remain rejected.
+
+Two consecutive canonical non-incremental Release builds pinned to the exact
+close-ready commit reproduced coordinator SHA-256
+`cda602354a67cf473ef0cd02abd99437f56a2e6f4c8bb3d85aae90ff80994108`,
+helper SHA-256
+`fd64d57f11c07ec1f281ddc8288213a46ae27ffcd40f060a59c7762f9e70b470`,
+and 126-file execution-closure SHA-256
+`a193bd4bd50c617bbb7be58ac6533b83b8c8f394a016bec5105f25ae9e53a671`.
+This replacement binding grants no review, owner acceptance, inherited
+authority, UI, API-key, Credential Manager, DNS, public-network, provider,
+billable, profile, private-fixture, archive, or later-packet effect.

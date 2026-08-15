@@ -53,11 +53,17 @@ The canonical non-incremental Release build pins both informational-version and
 SourceLink revision identities to that exact commit. Two consecutive clean
 builds reproduced the coordinator, helper, and complete 126-file execution
 closure exactly.
-WP9 review-closeout fixture correction and complete non-live reverification are active; owner acceptance and execution are ineligible.
-The exact B16 review marker remains append-only superseded historical evidence and grants no authority.
-The replacement fixture resolves the unique current matching review marker to its recorded baseline, uses current HEAD when no matching marker exists, and rejects duplicate markers and any protected fourth path.
-No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. No authority is inherited.
-WP10 and WP11 remain blocked.
+WP9 non-effectful production-profile preparation is frozen at corrected
+close-ready implementation `af1bfd6345c5a29f6535771fbbc86b33ec1826b9`.
+The canonical non-incremental Release build pins both informational-version and
+SourceLink revision identities to that exact commit. Two consecutive clean
+builds reproduced the coordinator, helper, and complete 126-file execution
+closure exactly.
+No corrected independent-review or owner-acceptance record exists, and WP9 execution remains ineligible.
+The exact B16 review marker remains append-only superseded historical evidence
+and cannot satisfy the corrected manifest. The replacement fixture resolves
+reviewed and pre-review current HEAD without weakening duplicate-marker or
+protected-path rejection.
 The transport-qualification request manifest is not materialized. Current
 official guidance concerning `safety_identifier` requires a separate authority
 resolution before any such request packet can be prepared. The earlier WP8
