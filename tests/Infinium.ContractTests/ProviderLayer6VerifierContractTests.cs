@@ -21,6 +21,7 @@ public sealed class ProviderLayer6VerifierContractTests
         StringAssert.Contains(script, "Wp9ReviewCloseout requires exactly current-state, Slice 6 README, and append-only record in the exact reviewed-pending-owner state.");
         StringAssert.Contains(script, "wp9_review_closeout = [bool]$Wp9ReviewCloseoutMode");
         StringAssert.Contains(script, "-not $isWp9ReviewCloseoutPath");
+        StringAssert.Contains(script, "$isWp9ReviewCloseoutPath -or");
     }
 
     [TestMethod]

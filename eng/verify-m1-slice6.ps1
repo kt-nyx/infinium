@@ -795,6 +795,7 @@ function Invoke-Layer6ReviewGate(
                 $isHandoffCurrentState -or
                 $isWp8StructuredCurrentState -or
                 $isWp9OwnerStopPath -or
+                $isWp9ReviewCloseoutPath -or
                 $isOwnerTestProcessCleanupPolicy
             $privateOrArchive = $path -match '(?i)(^|/)(private|legacy|archive)(/|$)' -or
                 $path -match '(?i)independent-slice3-evaluator' -or

@@ -271,6 +271,61 @@ public sealed class Wp8PreLiveReadinessContractTests
 
     [TestMethod]
     [TestCategory("Contract")]
+    public void Wp9ReviewCloseoutLayer6ModeAdmitsOnlyExactThreeDocumentTransitionAndWritesReceipt()
+    {
+        string sourceRoot = RepositoryRoot();
+        string cloneRoot = Path.Combine(Path.GetTempPath(), "infinium-wp9-review-closeout-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Assert.AreEqual(0, RunGit(sourceRoot, "clone", "--quiet", "--shared", sourceRoot, cloneRoot));
+            Assert.AreEqual(0, RunGit(cloneRoot, "config", "user.name", "Infinium Contract Test"));
+            Assert.AreEqual(0, RunGit(cloneRoot, "config", "user.email", "contract-test@invalid.example"));
+            string sourceVerifier = Path.Combine(sourceRoot, "eng", "verify-m1-slice6.ps1");
+            string cloneVerifier = Path.Combine(cloneRoot, "eng", "verify-m1-slice6.ps1");
+            File.Copy(sourceVerifier, cloneVerifier, true);
+            Assert.AreEqual(0, RunGit(cloneRoot, "add", "eng/verify-m1-slice6.ps1"));
+            if (!string.IsNullOrWhiteSpace(RunGitOutput(cloneRoot, "diff", "--cached", "--name-only")))
+            {
+                Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "-m", "Test current verifier baseline"));
+            }
+            string reviewedCandidate = RunGitOutput(cloneRoot, "rev-parse", "HEAD").Trim();
+            MaterializeWp9ReviewedOwnerPendingTransition(cloneRoot, reviewedCandidate);
+            Assert.AreEqual(0, RunGit(cloneRoot, "add",
+                "docs/current-state.md",
+                "docs/plans/milestones/m1/slices/s6/README.md",
+                "docs/plans/milestones/m1/slices/s6/record.md"));
+            Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "-m", "Test exact WP9 review closeout"));
+
+            Assert.AreEqual(0, RunLayer6Mode(cloneRoot, "wp9-review", output =>
+            {
+                using JsonDocument receipt = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "layer6review.json")));
+                JsonElement evidence = receipt.RootElement.GetProperty("evidence");
+                Assert.AreEqual("passed", receipt.RootElement.GetProperty("status").GetString());
+                Assert.IsTrue(evidence.GetProperty("wp9_review_closeout").GetBoolean());
+                Assert.AreEqual(3, evidence.GetProperty("changed_path_count").GetInt32());
+                Assert.AreEqual(0, evidence.GetProperty("allowed_path_failure_count").GetInt32());
+                Assert.AreEqual("exact-wp9-reviewed-owner-pending-no-effect-state",
+                    evidence.GetProperty("wp9_current_state_disposition").GetString());
+            }), "Exact WP9 reviewed-pending-owner closeout did not produce a passing receipt.");
+
+            File.AppendAllText(Path.Combine(cloneRoot, "docs", "execution-policy.md"),
+                "\nunauthorized-review-closeout-mutation\n", new UTF8Encoding(false));
+            Assert.AreEqual(0, RunGit(cloneRoot, "add", "docs/execution-policy.md"));
+            Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "--amend", "--no-edit"));
+            Assert.AreNotEqual(0, RunLayer6Mode(cloneRoot, "wp9-review"),
+                "WP9 review closeout admitted an additional protected document mutation.");
+        }
+        finally
+        {
+            if (Directory.Exists(cloneRoot))
+            {
+                DeleteReadOnlyTree(cloneRoot);
+            }
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
     public void FreezeModelAcceptsOnlyCorrectionBindingOrStructuredAppendOnlyAcceptedHandoff()
     {
         string root = RepositoryRoot();
@@ -726,7 +781,7 @@ public sealed class Wp8PreLiveReadinessContractTests
         }
     }
 
-    private static int RunLayer6Mode(string root, string? mode)
+    private static int RunLayer6Mode(string root, string? mode, Action<string>? inspectOutput = null)
     {
         string output = Path.Combine(Path.GetTempPath(), "infinium-wp8-layer6-" + Guid.NewGuid().ToString("N"));
         try
@@ -776,9 +831,18 @@ public sealed class Wp8PreLiveReadinessContractTests
                 start.ArgumentList.Add("-Wp9ReviewCloseout");
             }
             using Process process = Process.Start(start)!;
-            _ = process.StandardOutput.ReadToEnd();
-            _ = process.StandardError.ReadToEnd();
+            string standardOutput = process.StandardOutput.ReadToEnd();
+            string standardError = process.StandardError.ReadToEnd();
             Assert.IsTrue(process.WaitForExit(30_000), "Layer6 mode contract process timed out.");
+            if (process.ExitCode == 0)
+            {
+                inspectOutput?.Invoke(output);
+            }
+            else
+            {
+                Console.WriteLine(standardOutput);
+                Console.WriteLine(standardError);
+            }
             return process.ExitCode;
         }
         finally
@@ -788,6 +852,102 @@ public sealed class Wp8PreLiveReadinessContractTests
                 Directory.Delete(output, true);
             }
         }
+    }
+
+    private static void MaterializeWp9ReviewedOwnerPendingTransition(string root, string reviewedCandidate)
+    {
+        string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp9-production-profile-authorization.v1.json");
+        using JsonDocument manifest = JsonDocument.Parse(File.ReadAllText(manifestPath));
+        string manifestId = manifest.RootElement.GetProperty("manifest_id").GetString()!;
+        string closeReady = manifest.RootElement.GetProperty("candidate_binding")
+            .GetProperty("close_ready_implementation_commit").GetString()!;
+        string sha = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(manifestPath)))
+            .ToLowerInvariant();
+
+        string currentStatePath = Path.Combine(root, "docs", "current-state.md");
+        string currentState = File.ReadAllText(currentStatePath);
+        currentState = ReplaceMarkdownTableRow(currentState, "| Current authorized work |",
+            $"| Current authorized work | `M1/S6/WP9` exact production-profile enrollment manifest `{manifestId}` at SHA-256 `{sha}` is independently accepted at candidate `{reviewedCandidate}` and remains pending exact owner acceptance. Close-ready source is `{closeReady}`. No execution or effect is authorized. |");
+        currentState = ReplaceMarkdownTableRow(currentState, "| Next eligible action |",
+            "| Next eligible action | Owner decision on the exact independently reviewed WP9 production-profile manifest only; do not execute unless the exact canonical owner record is added. |");
+        currentState = ReplaceMarkdownTableRow(currentState, "| WP9 owner-stop effect boundary |",
+            "| WP9 owner-stop effect boundary | No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. No packet, review, or prior owner statement grants inherited authority. |");
+        File.WriteAllText(currentStatePath, currentState, new UTF8Encoding(false));
+
+        string readmePath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6", "README.md");
+        string readme = File.ReadAllText(readmePath).TrimEnd('\r', '\n');
+        readme += $"\n\nWP9 production-profile manifest `{manifestId}` at SHA-256 `{sha}` is independently accepted at exact candidate `{reviewedCandidate}` and remains pending exact owner acceptance.\n\n";
+        readme += "No execution or effect is authorized: no API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use. No authority is inherited.\n";
+        File.WriteAllText(readmePath, readme, new UTF8Encoding(false));
+
+        string recordPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6", "record.md");
+        string record = File.ReadAllText(recordPath).TrimEnd('\r', '\n');
+        record += $"\n\nWP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit={reviewedCandidate} manifest_id={manifestId} sha256={sha} verdicts=security,semantics,diff\n";
+        File.WriteAllText(recordPath, record, new UTF8Encoding(false));
+    }
+
+    private static string ReplaceMarkdownTableRow(string text, string prefix, string replacement)
+    {
+        string normalized = text.Replace("\r\n", "\n", StringComparison.Ordinal);
+        string[] lines = normalized.Split('\n');
+        int match = Array.FindIndex(lines, line => line.StartsWith(prefix, StringComparison.Ordinal));
+        Assert.IsTrue(match >= 0, $"Expected table row '{prefix}' was absent.");
+        Assert.AreEqual(match, Array.FindLastIndex(lines, line => line.StartsWith(prefix, StringComparison.Ordinal)),
+            $"Expected exactly one table row '{prefix}'.");
+        lines[match] = replacement;
+        return string.Join("\n", lines);
+    }
+
+    private static int RunGit(string root, params string[] arguments)
+    {
+        ProcessStartInfo start = new("git")
+        {
+            WorkingDirectory = root,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+        foreach (string argument in arguments) { start.ArgumentList.Add(argument); }
+        using Process process = Process.Start(start)!;
+        _ = process.StandardOutput.ReadToEnd();
+        _ = process.StandardError.ReadToEnd();
+        Assert.IsTrue(process.WaitForExit(30_000), "Git contract process timed out.");
+        return process.ExitCode;
+    }
+
+    private static string RunGitOutput(string root, params string[] arguments)
+    {
+        ProcessStartInfo start = new("git")
+        {
+            WorkingDirectory = root,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+        foreach (string argument in arguments) { start.ArgumentList.Add(argument); }
+        using Process process = Process.Start(start)!;
+        string output = process.StandardOutput.ReadToEnd();
+        string error = process.StandardError.ReadToEnd();
+        Assert.IsTrue(process.WaitForExit(30_000), "Git contract process timed out.");
+        Assert.AreEqual(0, process.ExitCode, error);
+        return output;
+    }
+
+    private static void DeleteReadOnlyTree(string root)
+    {
+        foreach (string file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+        {
+            File.SetAttributes(file, FileAttributes.Normal);
+        }
+        foreach (string directory in Directory.EnumerateDirectories(root, "*", SearchOption.AllDirectories)
+                     .OrderByDescending(path => path.Length))
+        {
+            File.SetAttributes(directory, FileAttributes.Directory);
+        }
+        Directory.Delete(root, true);
     }
 
     private static string RepositoryRoot() => Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
