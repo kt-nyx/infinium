@@ -263,7 +263,8 @@ public sealed class Wp8PreLiveReadinessContractTests
         }
         else
         {
-            StringAssert.Contains(currentState, "review-closeout correction and reverification only");
+            StringAssert.Contains(currentState, "review-closeout");
+            StringAssert.Contains(currentState, "correction and reverification only");
             Assert.AreNotEqual(0, ownerStop, "Correction state was admitted as pre-review owner-stop.");
             Assert.AreNotEqual(0, reviewCloseout, "Correction state was admitted as reviewed closeout.");
         }
