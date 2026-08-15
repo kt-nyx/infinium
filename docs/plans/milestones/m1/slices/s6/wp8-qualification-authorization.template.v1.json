@@ -11,16 +11,16 @@
     "accepted_wp7_product_commit": "59367a7479a7395b173b974bf720543aab2404d4",
     "accepted_wp7_evidence_commit": "51251c0e0eb98d67dbc9b295b9ff084ebca33890",
     "wp8_product_template_commit": "260a09ecfafea103227f113faf7625a5bf0ce759",
-    "wp8_verification_candidate_commit": "f7d3385e87b666fc2ddd7f6eb4ce8822b8559697",
+    "wp8_verification_candidate_commit": "aa98fcf418994ab724e182cb4eb385b647810ef0",
     "required_predecessor_live_acceptance": "accepted-production-profile-sub-gate-receipt-pending"
   },
   "acceptance_binding": {
-    "state": "accepted-closeout",
-    "verification_candidate_commit": "f7d3385e87b666fc2ddd7f6eb4ce8822b8559697",
-    "post_run_evidence_candidate_commit": "ce882954a8e3348351f88623309bbfd3277e7e61",
-    "non_live_all_receipt_sha256": "469329c0068f3ce8363fd7ce2f80c6c07aa2a513b32efbcad9a520f5d582bf79",
-    "pre_live_receipt_sha256": "f8b3efe014c474a7cfd7edd6dce4af6790d7569dfbd8aa77d277d97b5c056818",
-    "direct_layer6_receipt_sha256": "f21a536f22d3afc0a4e6579da6516f45206b4052b10dfafdaa0f4593818ba586"
+    "state": "correction-verification-pending",
+    "verification_candidate_commit": "aa98fcf418994ab724e182cb4eb385b647810ef0",
+    "post_run_evidence_candidate_commit": "pending-until-post-run-evidence-freeze",
+    "non_live_all_receipt_sha256": "pending-until-post-run-evidence-freeze",
+    "pre_live_receipt_sha256": "pending-until-post-run-evidence-freeze",
+    "direct_layer6_receipt_sha256": "pending-until-post-run-evidence-freeze"
   },
   "materialization": {
     "required": true,
