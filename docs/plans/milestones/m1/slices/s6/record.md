@@ -7172,3 +7172,40 @@ fresh independent review, and exact append-only accepted closeout all pass.
 No API-key, Credential Manager, DNS, public-network, provider, billable,
 private-fixture, archive, live-manifest, production-profile, or WP9 effect was
 performed.
+
+## Corrected WP8 dual-state acceptance and handoff — 2026-08-15
+
+The phase-independent verification candidate is
+`aa98fcf418994ab724e182cb4eb385b647810ef0`; the exact five-document pending
+binding and post-run evidence candidate is
+`9ec4af57449ceb283f46bb136892c77a63fc2b97`. The standalone validator passed
+with receipt SHA-256
+`569816a7f8e192d97039f2f1c271de92af6f930e18f6ffa0e7e512625b630812`.
+The focused WP8 and Provider Layer 6 filter passed 8/8 with zero failures and
+zero skips.
+
+Fresh-root NonLiveAll passed 36 focused commands with 355 tests passed, zero
+failed, and zero skipped; its receipt SHA-256 is
+`6c1b5cf79f0f719e28f73ed94dc4984bc4b192be880967ca7309eca036e8fa6f`.
+Direct candidate-bound Layer 6 passed over 16 paths with zero findings; its
+receipt SHA-256 is
+`bd207ab563246494b547d5124478d77a87ad3617b78c03d72507c944aaef1e40`.
+The earlier short-timeout partial NonLiveAll root is invalid and excluded; it
+was interrupted before a terminal aggregate receipt and cannot be acceptance
+evidence.
+
+Fresh independent pre-floor review returned `ACCEPT` with no must-fix for the
+exact A5/B5 binding, dual-state tests, correction-only authority, receipt
+bindings, and zero-effect boundary. Final exact-HEAD verification and fresh
+closeout review remain required before this handoff is relied upon.
+
+Corrected WP8 accepts only non-live readiness evidence and four non-secret,
+non-executable templates. The next eligible action after final exact-HEAD
+acceptance is the owner's decision whether to begin WP9 packet-materialization
+planning. No WP8 template, prior owner statement, packet identity, expiry,
+profile identity, predecessor acceptance, official-doc result, or request
+fingerprint grants inherited authority. No API-key use, live-manifest
+execution, native Credential Manager operation, DNS operation, public-network
+operation, provider request, billable operation, production-profile
+materialization/use, private-fixture access, archive access, or WP9 execution
+is authorized or occurred.
