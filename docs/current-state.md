@@ -17,7 +17,7 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S6` - owner-accepted; implementation-active |
-| Current authorized work | `M1/S6/WP9` exactly one owner-accepted production-profile enrollment-or-cancel operation for manifest `infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f` at SHA-256 `bbf010ce443e3f4cb3c34c15592d96652f5cfba8ab6199ed37a86810d58ce12a`, independently reviewed at candidate `3f56b5d80d7c384d59e86783b03ab660ada13321` with close-ready source `3017fe1bbebbd904b57ca562a91148884f665d5a`. |
+| Current authorized work | `M1/S6/WP9` bounded non-effectful post-owner contract correction and complete reverification only. The exact current-manifest owner marker committed at `cba787882b854bbe0e471431e51024781a041fbd` is retained as superseded historical non-executed evidence and grants no current owner or execution authority. Owner acceptance and WP9 execution are ineligible. |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
 | Accepted Slice 6 WP1 candidate | `61b90314d8273749849f590b303814008fa2fdfa`; nine Slice 6 contracts are `Implementation-active` and the accepted local input-bound policy is `openai-responses-o200k-byte-envelope/v1` |
 | Accepted `M1/S6/WP2` candidate | `ed27ed04897103d93a60e6200971ca12d04f2e11`; capability, price, atomic reservation/final-gate, settlement, projection, replay, simulator, and public fixture/oracle evidence are independently accepted |
@@ -29,25 +29,26 @@ review history.
 | Superseded `M1/S6/WP8` acceptance evidence | Product/template `260a09ecfafea103227f113faf7625a5bf0ce759`, verification `fbdb1f03e006a85723b0533d44b2ed06e02cc724`, evidence/review HEAD `36b980d226e9f9a0e91281a530fc959a211fb696`, and their receipt hashes remain historical evidence only; they do not certify the corrected closeout candidate or make WP9 eligible |
 | Accepted corrected `M1/S6/WP8` candidate | Verification `cc14bf60f78c80280cb6eafe60fddaf2bc764d06`, post-run evidence candidate `baef115cdd43fa38d0a352c15f8ba44cbfa35312`, NonLiveAll SHA-256 `52aa77325a2226505c35b1fba6d9d0fe2b6354022a6c85f6652211d609c529ad`, pre-live validation SHA-256 `e5f0ca42e44e6a4ea4f98bf4aab0c1bf6769c436c51aecc32a01e22a3db5f567`, and direct Layer 6 SHA-256 `4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`; accepted without provider qualification, dispatch authority, or production-profile authority |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure; no separate ADR; eleven packages with distinct native/live authorization gates |
-| Next eligible action | Execute the exact owner-accepted EnrollOrVerifyProfile command once, or cancel; stop after its retained terminal evidence. No retry or other WP9/WP10/WP11 action is authorized. |
-| WP9 owner-accepted effect boundary | Only the exact bounded helper-owned production-profile credential operation is authorized. No DNS operation, public-network operation, provider request, billable operation, transport qualification, inherited packet authority, or additional credential operation is authorized. |
+| Next eligible action | Correct and mutation-test the state-aware NonLiveAll owner-accepted branch, then refreeze, rebind, rerun the complete non-live floor, obtain fresh independent review, and stop for new exact owner acceptance. |
+| WP9 owner-stop effect boundary | No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. No packet, review, or prior owner statement grants inherited authority. |
 | Later work | WP9-WP11 each require their own exact fresh owner authorization. No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority; no provider request is authorized now |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
 | Slice entry | [Slice 6 current summary and navigation](plans/milestones/m1/slices/s6/README.md) |
 | Public verification profile | [M1 continuation verification profile](evaluation/m1-continuation-verification-profile.md) |
 
-The corrected WP9 production-profile manifest is independently reviewed and
-owner accepted for exactly one enrollment-or-cancel operation. No retry or
-additional credential operation is authorized. The B17 review and attached SHA-256
-`7123ee85fec6d238ef8965b8449e7729cd2fb204e525a30558d1ebac53209476`
-owner markers remain superseded historical evidence and are non-authoritative
-for the current manifest SHA-256. Only the exact current canonical owner marker
-grants the bounded one-shot credential operation; no WP8 template, prior owner
-statement, packet identity, expiry, profile identity, predecessor acceptance,
-official-doc result, or request fingerprint grants inherited authority. No DNS
-operation, public-network operation, provider request, billable operation, or
-transport qualification is authorized. WP10 and WP11 remain blocked.
+The current-manifest owner transition at
+`cba787882b854bbe0e471431e51024781a041fbd` stopped before Layer 6 and helper
+launch because the state-aware NonLiveAll contract omitted the valid exact
+owner-accepted branch. Its owner marker remains append-only historical,
+non-executed evidence and grants no current authority. Correction and complete
+non-live reverification are active; owner acceptance and execution are
+ineligible. No WP8 template, prior owner statement, packet identity, expiry,
+profile identity, predecessor acceptance, official-doc result, or request
+fingerprint grants inherited authority. No API-key use, live-manifest
+execution, native Credential Manager operation, DNS operation, public-network
+operation, provider request, billable operation, or production-profile
+materialization/use is authorized. WP10 and WP11 remain blocked.
 
 The fresh 2026-08-15 official-document review confirms the accepted
 `gpt-5.6-sol` Responses/structured-output profile and unchanged conservative

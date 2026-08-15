@@ -289,10 +289,10 @@ function Test-Wp9OwnerAcceptedState(
 function Test-Wp9OwnerAcceptanceCloseoutCorrectionCurrentState([string] $Text) {
     $normalized = [regex]::Replace($Text, '\s+', ' ')
     foreach ($required in @(
-            '| Current authorized work | `M1/S6/WP9` bounded non-effectful owner-acceptance closeout correction and reverification only.',
-            'The exact owner marker at `b64353f0f5a843fce7c1c395a606c47e62d274ee` is retained as superseded historical evidence and grants no current owner or execution authority.',
+            '| Current authorized work | `M1/S6/WP9` bounded non-effectful post-owner contract correction and complete reverification only.',
+            'The exact current-manifest owner marker committed at `cba787882b854bbe0e471431e51024781a041fbd` is retained as superseded historical non-executed evidence and grants no current owner or execution authority.',
             'Owner acceptance and WP9 execution are ineligible.',
-            '| Next eligible action | Add an exact owner-accepted state predicate and dedicated three-document owner-acceptance Layer 6 closeout, mutation-test both, then refreeze, rebind, rerun the complete non-live floor, and obtain fresh independent review. |',
+            '| Next eligible action | Correct and mutation-test the state-aware NonLiveAll owner-accepted branch, then refreeze, rebind, rerun the complete non-live floor, obtain fresh independent review, and stop for new exact owner acceptance. |',
             'No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.',
             'No packet, review, or prior owner statement grants inherited authority.')) {
         if (-not $normalized.Contains($required, [StringComparison]::Ordinal)) { return $false }
@@ -303,9 +303,9 @@ function Test-Wp9OwnerAcceptanceCloseoutCorrectionCurrentState([string] $Text) {
 function Test-Wp9OwnerAcceptanceCloseoutCorrectionReadme([string] $Text) {
     $normalized = [regex]::Replace($Text, '\s+', ' ')
     foreach ($required in @(
-            'WP9 owner-acceptance closeout correction and complete non-live reverification are active; owner acceptance and execution are ineligible.',
-            'The exact owner marker at `b64353f0f5a843fce7c1c395a606c47e62d274ee` remains append-only superseded historical evidence and grants no authority.',
-            'The replacement must recognize only the exact owner-accepted documents and canonical review-plus-owner record, plus a dedicated exact three-document Layer 6 closeout.',
+            'WP9 post-owner contract correction and complete non-live reverification are active; owner acceptance and execution are ineligible.',
+            'The exact current-manifest owner marker committed at `cba787882b854bbe0e471431e51024781a041fbd` remains append-only superseded historical non-executed evidence and grants no authority.',
+            'The replacement must make the state-aware NonLiveAll contract admit only the exact owner-accepted Layer 6 mode while every ordinary, WP8, owner-stop, and review-closeout mode rejects.',
             'No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. No authority is inherited.')) {
         if (-not $normalized.Contains($required, [StringComparison]::Ordinal)) { return $false }
     }

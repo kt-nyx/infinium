@@ -7893,3 +7893,20 @@ later-packet effect occurred.
 WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=3f56b5d80d7c384d59e86783b03ab660ada13321 manifest_id=infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f sha256=bbf010ce443e3f4cb3c34c15592d96652f5cfba8ab6199ed37a86810d58ce12a verdicts=security,semantics,diff
 
 WP9_PROFILE_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f sha256=bbf010ce443e3f4cb3c34c15592d96652f5cfba8ab6199ed37a86810d58ce12a close_ready_commit=3017fe1bbebbd904b57ca562a91148884f665d5a expires_at_utc=2026-08-17T15:25:00.0000000Z
+
+## WP9 state-aware owner-accepted branch correction — 2026-08-15
+
+The exact owner transition at `cba787882b854bbe0e471431e51024781a041fbd`
+passed ready-manifest, owner-document, and documentation checks. The combined
+retained-WP8 and Layer 6 contracts then stopped 12/13 because the state-aware
+NonLiveAll test had no exact owner-accepted branch and misclassified the valid
+state as a correction state. The dedicated owner-closeout Layer 6 gate was not
+run and the helper was not launched.
+
+The canonical owner marker above remains append-only superseded historical,
+non-executed evidence and grants no current authority. The bounded correction
+adds the missing mutually exclusive exact owner-accepted mode assertion and
+retains mutation coverage for duplicate markers, extra protected paths, stale
+state, and wrong mode. No UI, API-key, Credential Manager, DNS, public-network,
+provider, billable, profile, private-fixture, archive, or later-packet effect
+occurred.

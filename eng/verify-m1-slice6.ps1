@@ -426,10 +426,10 @@ function Get-Wp8NonLiveCurrentStateDisposition(
     }
     $wp9OwnerAcceptanceCorrection =
         $AcceptanceBinding.state -eq 'accepted-closeout' -and
-        $normalized.Contains('| Current authorized work | `M1/S6/WP9` bounded non-effectful owner-acceptance closeout correction and reverification only.', [StringComparison]::Ordinal) -and
-        $normalized.Contains('The exact owner marker at `b64353f0f5a843fce7c1c395a606c47e62d274ee` is retained as superseded historical evidence and grants no current owner or execution authority.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('| Current authorized work | `M1/S6/WP9` bounded non-effectful post-owner contract correction and complete reverification only.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('The exact current-manifest owner marker committed at `cba787882b854bbe0e471431e51024781a041fbd` is retained as superseded historical non-executed evidence and grants no current owner or execution authority.', [StringComparison]::Ordinal) -and
         $normalized.Contains('Owner acceptance and WP9 execution are ineligible.', [StringComparison]::Ordinal) -and
-        $normalized.Contains('| Next eligible action | Add an exact owner-accepted state predicate and dedicated three-document owner-acceptance Layer 6 closeout, mutation-test both, then refreeze, rebind, rerun the complete non-live floor, and obtain fresh independent review. |', [StringComparison]::Ordinal) -and
+        $normalized.Contains('| Next eligible action | Correct and mutation-test the state-aware NonLiveAll owner-accepted branch, then refreeze, rebind, rerun the complete non-live floor, obtain fresh independent review, and stop for new exact owner acceptance. |', [StringComparison]::Ordinal) -and
         $wp9NoEffect -and
         $normalized.Contains('No packet, review, or prior owner statement grants inherited authority.', [StringComparison]::Ordinal)
     if ($verificationState) { return 'exact-wp8-correction-reverification-state' }

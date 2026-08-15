@@ -251,23 +251,33 @@ public sealed class Wp8PreLiveReadinessContractTests
         string currentState = RunGitOutput(root, "show", "HEAD:docs/current-state.md");
         int ownerStop = RunLayer6Mode(root, "wp9");
         int reviewCloseout = RunLayer6Mode(root, "wp9-review");
+        int ownerAcceptanceCloseout = RunLayer6Mode(root, "wp9-owner-acceptance");
         if (currentState.Contains("non-effectful production-profile preparation verification and independent review only", StringComparison.Ordinal))
         {
             Assert.AreEqual(0, ownerStop, "Exact WP9 pre-review owner-stop state was rejected.");
             Assert.AreNotEqual(0, reviewCloseout, "Pre-review owner-stop state was admitted as reviewed closeout.");
+            Assert.AreNotEqual(0, ownerAcceptanceCloseout, "Pre-review owner-stop state was admitted as owner acceptance.");
         }
         else if (currentState.Contains("remains pending exact owner acceptance", StringComparison.Ordinal))
         {
             Assert.AreNotEqual(0, ownerStop, "Reviewed state was admitted as pre-review owner-stop.");
             Assert.AreEqual(0, reviewCloseout, "Exact reviewed-pending-owner closeout was rejected.");
+            Assert.AreNotEqual(0, ownerAcceptanceCloseout, "Reviewed-pending state was admitted as owner acceptance.");
+        }
+        else if (currentState.Contains("exactly one owner-accepted production-profile enrollment-or-cancel operation", StringComparison.Ordinal))
+        {
+            Assert.AreNotEqual(0, ownerStop, "Owner-accepted state was admitted as pre-review owner-stop.");
+            Assert.AreNotEqual(0, reviewCloseout, "Owner-accepted state was admitted as reviewed closeout.");
+            Assert.AreEqual(0, ownerAcceptanceCloseout, "Exact owner-accepted closeout was rejected.");
         }
         else
         {
             Assert.IsTrue(currentState.Contains("review-closeout", StringComparison.Ordinal) ||
-                currentState.Contains("owner-acceptance closeout", StringComparison.Ordinal));
-            StringAssert.Contains(currentState, "correction and reverification only");
+                currentState.Contains("post-owner contract correction", StringComparison.Ordinal));
+            StringAssert.Contains(currentState, "correction and complete reverification only");
             Assert.AreNotEqual(0, ownerStop, "Correction state was admitted as pre-review owner-stop.");
             Assert.AreNotEqual(0, reviewCloseout, "Correction state was admitted as reviewed closeout.");
+            Assert.AreNotEqual(0, ownerAcceptanceCloseout, "Correction state was admitted as owner acceptance.");
         }
     }
 

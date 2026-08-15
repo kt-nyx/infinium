@@ -65,8 +65,10 @@ The canonical non-incremental Release build pins both informational-version and
 SourceLink revision identities to that exact commit. Two consecutive clean
 builds reproduced the coordinator, helper, and complete 126-file execution
 closure exactly.
-WP9 production-profile manifest `infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f` at SHA-256 `bbf010ce443e3f4cb3c34c15592d96652f5cfba8ab6199ed37a86810d58ce12a` is owner accepted for exactly one enrollment-or-cancel operation after independent review at `3f56b5d80d7c384d59e86783b03ab660ada13321`.
-Only the exact bounded helper-owned credential operation is authorized. No DNS or public-network operation, provider request, billable operation, transport qualification, inherited authority, retry, or additional credential operation is authorized.
+WP9 post-owner contract correction and complete non-live reverification are active; owner acceptance and execution are ineligible.
+The exact current-manifest owner marker committed at `cba787882b854bbe0e471431e51024781a041fbd` remains append-only superseded historical non-executed evidence and grants no authority.
+The replacement must make the state-aware NonLiveAll contract admit only the exact owner-accepted Layer 6 mode while every ordinary, WP8, owner-stop, and review-closeout mode rejects.
+No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. No authority is inherited.
 The exact B17 review and attached SHA-256
 `7123ee85fec6d238ef8965b8449e7729cd2fb204e525a30558d1ebac53209476`
 owner markers remain append-only superseded historical evidence and are
