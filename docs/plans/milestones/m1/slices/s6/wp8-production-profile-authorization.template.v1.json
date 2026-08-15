@@ -10,7 +10,8 @@
     "accepted_wp4_audit_commit": "be55eda59752f884fe6e113f40927295da45f2cd",
     "accepted_wp7_product_commit": "59367a7479a7395b173b974bf720543aab2404d4",
     "accepted_wp7_evidence_commit": "51251c0e0eb98d67dbc9b295b9ff084ebca33890",
-    "wp8_candidate_commit": "pending-after-independent-wp8-acceptance"
+    "wp8_product_template_commit": "pending-until-product-template-freeze",
+    "wp8_verification_candidate_commit": "pending-until-verification-freeze"
   },
   "materialization": {
     "required": true,
@@ -43,7 +44,7 @@
   "native_boundary": {
     "new_profile_calls": ["CredWriteW", "CredReadW", "CredFree"],
     "existing_profile_calls": ["CredReadW", "CredFree"],
-    "forbidden_calls": ["CredEnumerateW", "arbitrary-target access", "alternate credential or secret-storage mechanism"],
+    "forbidden_calls": ["CredDeleteW", "CredEnumerateW", "arbitrary-target access", "alternate credential or secret-storage mechanism"],
     "enumeration": "prohibited",
     "fallback": "none"
   },
@@ -56,8 +57,10 @@
     "cancel_result": "typed-cancel-with-no-write-and-no-dispatch"
   },
   "persistence_delete": {
-    "credential_persistence": "pending-owner-choice",
-    "post_qualification_intent": "pending-retain-or-delete-exact-generation",
+    "credential_persistence": "retain-exact-generation-for-wp9-through-wp11",
+    "post_qualification_intent": "retain-no-delete-authorized-by-this-packet",
+    "deletion_permitted": false,
+    "deletion_authority": "separate-fresh-exact-owner-authorization-required",
     "partial_or_ambiguous_effect": "block-provider-request-until-fresh-authorized-recovery"
   },
   "deadline": {

@@ -60,6 +60,148 @@ function Assert-ExactPropertySet([object] $Value, [string[]] $Expected, [string]
     if (($actual -join '|') -cne ($expectedSorted -join '|')) { throw "$Name has missing or unknown properties." }
 }
 
+function Resolve-LocalSchemaReference(
+    [Text.Json.JsonElement] $SchemaRoot,
+    [string] $Reference) {
+    if (-not $Reference.StartsWith('#/', [StringComparison]::Ordinal)) {
+        throw "Only local repository-schema references are supported: $Reference."
+    }
+    $resolved = $SchemaRoot
+    foreach ($segment in $Reference.Substring(2).Split('/')) {
+        $name = $segment.Replace('~1', '/').Replace('~0', '~')
+        $next = [Text.Json.JsonElement]::new()
+        if (-not $resolved.TryGetProperty($name, [ref]$next)) {
+            throw "Repository schema reference '$Reference' is unresolved at '$name'."
+        }
+        $resolved = $next
+    }
+    return $resolved
+}
+
+function Assert-JsonSchemaNode(
+    [Text.Json.JsonElement] $Instance,
+    [Text.Json.JsonElement] $Schema,
+    [Text.Json.JsonElement] $SchemaRoot,
+    [string] $Location) {
+    $referenceElement = [Text.Json.JsonElement]::new()
+    $typeElement = [Text.Json.JsonElement]::new()
+    $constElement = [Text.Json.JsonElement]::new()
+    $enumElement = [Text.Json.JsonElement]::new()
+    $requiredElement = [Text.Json.JsonElement]::new()
+    $propertiesElement = [Text.Json.JsonElement]::new()
+    $additionalElement = [Text.Json.JsonElement]::new()
+    $propertySchema = [Text.Json.JsonElement]::new()
+    $minItems = [Text.Json.JsonElement]::new()
+    $maxItems = [Text.Json.JsonElement]::new()
+    $uniqueItems = [Text.Json.JsonElement]::new()
+    $itemSchema = [Text.Json.JsonElement]::new()
+    $minLength = [Text.Json.JsonElement]::new()
+    $pattern = [Text.Json.JsonElement]::new()
+    $minimum = [Text.Json.JsonElement]::new()
+    $maximum = [Text.Json.JsonElement]::new()
+    if ($Schema.TryGetProperty('$ref', [ref]$referenceElement)) {
+        $resolved = Resolve-LocalSchemaReference $SchemaRoot $referenceElement.GetString()
+        Assert-JsonSchemaNode $Instance $resolved $SchemaRoot $Location
+        return
+    }
+    if ($Schema.TryGetProperty('type', [ref]$typeElement)) {
+        $expectedType = $typeElement.GetString()
+        $matchesType = switch ($expectedType) {
+            'object' { $Instance.ValueKind -eq [Text.Json.JsonValueKind]::Object }
+            'array' { $Instance.ValueKind -eq [Text.Json.JsonValueKind]::Array }
+            'string' { $Instance.ValueKind -eq [Text.Json.JsonValueKind]::String }
+            'integer' {
+                $integerValue = [int64]0
+                $Instance.ValueKind -eq [Text.Json.JsonValueKind]::Number -and $Instance.TryGetInt64([ref]$integerValue)
+            }
+            'boolean' { $Instance.ValueKind -in @([Text.Json.JsonValueKind]::True, [Text.Json.JsonValueKind]::False) }
+            'null' { $Instance.ValueKind -eq [Text.Json.JsonValueKind]::Null }
+            default { throw "Unsupported repository schema type '$expectedType' at $Location." }
+        }
+        if (-not $matchesType) { throw "$Location does not match repository schema type '$expectedType'." }
+    }
+    if ($Schema.TryGetProperty('const', [ref]$constElement) -and
+        -not [Text.Json.JsonElement]::DeepEquals($Instance, $constElement)) {
+        throw "$Location differs from its exact repository-schema constant."
+    }
+    if ($Schema.TryGetProperty('enum', [ref]$enumElement)) {
+        $enumMatch = $false
+        foreach ($allowed in $enumElement.EnumerateArray()) {
+            if ([Text.Json.JsonElement]::DeepEquals($Instance, $allowed)) { $enumMatch = $true; break }
+        }
+        if (-not $enumMatch) { throw "$Location is outside its repository-schema enumeration." }
+    }
+    if ($Instance.ValueKind -eq [Text.Json.JsonValueKind]::Object) {
+        if ($Schema.TryGetProperty('required', [ref]$requiredElement)) {
+            foreach ($required in $requiredElement.EnumerateArray()) {
+                $requiredValue = [Text.Json.JsonElement]::new()
+                if (-not $Instance.TryGetProperty($required.GetString(), [ref]$requiredValue)) {
+                    throw "$Location is missing required property '$($required.GetString())'."
+                }
+            }
+        }
+        $hasProperties = $Schema.TryGetProperty('properties', [ref]$propertiesElement)
+        $additionalForbidden = $Schema.TryGetProperty('additionalProperties', [ref]$additionalElement) -and
+            $additionalElement.ValueKind -eq [Text.Json.JsonValueKind]::False
+        foreach ($property in $Instance.EnumerateObject()) {
+            if ($hasProperties -and $propertiesElement.TryGetProperty($property.Name, [ref]$propertySchema)) {
+                Assert-JsonSchemaNode $property.Value $propertySchema $SchemaRoot "$Location.$($property.Name)"
+            } elseif ($additionalForbidden) {
+                throw "$Location has unknown nested property '$($property.Name)'."
+            }
+        }
+    } elseif ($Instance.ValueKind -eq [Text.Json.JsonValueKind]::Array) {
+        $items = @($Instance.EnumerateArray())
+        if ($Schema.TryGetProperty('minItems', [ref]$minItems) -and $items.Count -lt $minItems.GetInt32()) {
+            throw "$Location has fewer items than the repository schema permits."
+        }
+        if ($Schema.TryGetProperty('maxItems', [ref]$maxItems) -and $items.Count -gt $maxItems.GetInt32()) {
+            throw "$Location has more items than the repository schema permits."
+        }
+        if ($Schema.TryGetProperty('uniqueItems', [ref]$uniqueItems) -and $uniqueItems.GetBoolean()) {
+            for ($left = 0; $left -lt $items.Count; $left++) {
+                for ($right = $left + 1; $right -lt $items.Count; $right++) {
+                    if ([Text.Json.JsonElement]::DeepEquals($items[$left], $items[$right])) {
+                        throw "$Location contains duplicate array items."
+                    }
+                }
+            }
+        }
+        if ($Schema.TryGetProperty('items', [ref]$itemSchema)) {
+            for ($index = 0; $index -lt $items.Count; $index++) {
+                Assert-JsonSchemaNode $items[$index] $itemSchema $SchemaRoot "$Location[$index]"
+            }
+        }
+    } elseif ($Instance.ValueKind -eq [Text.Json.JsonValueKind]::String) {
+        $value = $Instance.GetString()
+        if ($Schema.TryGetProperty('minLength', [ref]$minLength) -and $value.Length -lt $minLength.GetInt32()) {
+            throw "$Location is shorter than its repository-schema minimum."
+        }
+        if ($Schema.TryGetProperty('pattern', [ref]$pattern) -and $value -cnotmatch $pattern.GetString()) {
+            throw "$Location does not match its repository-schema pattern."
+        }
+    } elseif ($Instance.ValueKind -eq [Text.Json.JsonValueKind]::Number) {
+        $value = $Instance.GetInt64()
+        if ($Schema.TryGetProperty('minimum', [ref]$minimum) -and $value -lt $minimum.GetInt64()) {
+            throw "$Location is below its repository-schema minimum."
+        }
+        if ($Schema.TryGetProperty('maximum', [ref]$maximum) -and $value -gt $maximum.GetInt64()) {
+            throw "$Location exceeds its repository-schema maximum."
+        }
+    }
+}
+
+function Assert-AgainstRepositorySchema([string] $DocumentPath, [string] $SchemaPath) {
+    $document = [Text.Json.JsonDocument]::Parse([IO.File]::ReadAllText($DocumentPath))
+    $schema = [Text.Json.JsonDocument]::Parse([IO.File]::ReadAllText($SchemaPath))
+    try {
+        Assert-JsonSchemaNode $document.RootElement $schema.RootElement $schema.RootElement $DocumentPath
+    } finally {
+        $schema.Dispose()
+        $document.Dispose()
+    }
+}
+
 $matrixInput = Read-StrictJson (Resolve-InputPath $MatrixPath)
 $profileInput = Read-StrictJson (Resolve-InputPath $ProfileTemplatePath)
 $requestInputs = @($QualificationTemplatePath, $SourceClaimTemplatePath, $CandidateTemplatePath |
@@ -68,8 +210,17 @@ $matrix = $matrixInput.value
 $profile = $profileInput.value
 $requests = @($requestInputs.value)
 
+$matrixSchemaPath = Resolve-InputPath 'contracts/repository/wp8-case-requirement-matrix.v1.schema.json'
+$profileSchemaPath = Resolve-InputPath 'contracts/repository/wp8-production-profile-authorization-template.v1.schema.json'
+$requestSchemaPath = Resolve-InputPath 'contracts/repository/wp8-provider-request-authorization-template.v1.schema.json'
+Assert-AgainstRepositorySchema (Resolve-InputPath $MatrixPath) $matrixSchemaPath
+Assert-AgainstRepositorySchema (Resolve-InputPath $ProfileTemplatePath) $profileSchemaPath
+Assert-AgainstRepositorySchema (Resolve-InputPath $QualificationTemplatePath) $requestSchemaPath
+Assert-AgainstRepositorySchema (Resolve-InputPath $SourceClaimTemplatePath) $requestSchemaPath
+Assert-AgainstRepositorySchema (Resolve-InputPath $CandidateTemplatePath) $requestSchemaPath
+
 Assert-ExactPropertySet $matrix @('schema_identity','matrix_id','status','claim_boundary','candidate_binding',
-    'registry_binding','evidence_groups','cases','external_effects','review') 'WP8 matrix root'
+    'registry_binding','evidence_groups','cases','supplemental_requirement_mappings','external_effects','review') 'WP8 matrix root'
 Assert-ExactPropertySet $profile @('schema_identity','packet_id','packet_kind','status','effect_authority',
     'candidate_binding','materialization','owner_authorization','provider_intent','profile_binding',
     'native_boundary','entry_cancel','persistence_delete','deadline','canaries','execution') 'WP8 profile root'
@@ -102,14 +253,34 @@ foreach ($entry in $expectedCommits.GetEnumerator()) {
         throw "WP8 case matrix candidate binding '$($entry.Key)' is stale."
     }
 }
-$wp8Candidate = [string]$matrix.candidate_binding.wp8_candidate_commit
-if ($RequireFrozenCandidate -and $wp8Candidate -eq 'pending-until-candidate-freeze') {
-    throw 'WP8 final pre-live validation requires an exact frozen candidate commit.'
+$productTemplateCommit = [string]$matrix.candidate_binding.wp8_product_template_commit
+$verificationCandidateCommit = [string]$matrix.candidate_binding.wp8_verification_candidate_commit
+if ($RequireFrozenCandidate -and
+    ($productTemplateCommit -eq 'pending-until-product-template-freeze' -or
+     $verificationCandidateCommit -eq 'pending-until-verification-freeze')) {
+    throw 'WP8 final pre-live validation requires exact product/template and verification candidate commits.'
 }
-if ($wp8Candidate -ne 'pending-until-candidate-freeze') {
-    if ($wp8Candidate -notmatch '^[0-9a-f]{40}$') { throw 'WP8 candidate binding is malformed.' }
-    & git -C $repoRoot merge-base --is-ancestor $wp8Candidate HEAD
-    if ($LASTEXITCODE -ne 0) { throw 'WP8 frozen candidate binding is not an ancestor of HEAD.' }
+foreach ($binding in @(
+        @('product/template', $productTemplateCommit, 'pending-until-product-template-freeze'),
+        @('verification', $verificationCandidateCommit, 'pending-until-verification-freeze'))) {
+    if ($binding[1] -ne $binding[2]) {
+        if ($binding[1] -notmatch '^[0-9a-f]{40}$') { throw "WP8 $($binding[0]) binding is malformed." }
+        & git -C $repoRoot merge-base --is-ancestor $binding[1] HEAD
+        if ($LASTEXITCODE -ne 0) { throw "WP8 $($binding[0]) binding is not an ancestor of HEAD." }
+    }
+}
+if ($verificationCandidateCommit -match '^[0-9a-f]{40}$') {
+    $allowedPostVerificationPaths = @(
+        'docs/plans/milestones/m1/slices/s6/record.md',
+        'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-production-profile-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-qualification-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-source-claim-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-candidate-investigation-authorization.template.v1.json')
+    $postVerificationPaths = @(& git -C $repoRoot -c core.quotePath=false diff --name-only $verificationCandidateCommit HEAD --)
+    if ($LASTEXITCODE -ne 0 -or @($postVerificationPaths | Where-Object { $allowedPostVerificationPaths -cnotcontains $_ }).Count -ne 0) {
+        throw 'WP8 HEAD contains post-verification non-evidence drift.'
+    }
 }
 foreach ($commitName in @('slice5_base_commit','wp8_baseline_commit','accepted_wp4_execution_commit','accepted_wp4_audit_commit',
         'accepted_wp5_commit','accepted_wp6_product_commit','accepted_wp6_evidence_commit',
@@ -141,17 +312,17 @@ foreach ($package in @($registry.packages)) {
     }
 }
 
-$expectedCases = @('EVAL-0033','EVAL-0034','EVAL-0035','EVAL-0064','EVAL-0067','EVAL-0076','EVAL-0077',
-    'EVAL-0081','EVAL-0083','EVAL-0089','EVAL-0026','EVAL-0037','EVAL-0038','EVAL-0039','EVAL-0040',
-    'EVAL-0045','EVAL-0046','EVAL-0080','EVAL-0082','EVAL-0087','EVAL-0088','EVAL-0084','EVAL-0085')
+$expectedCases = @('EVAL-0026','EVAL-0033','EVAL-0034','EVAL-0035','EVAL-0037','EVAL-0038','EVAL-0039',
+    'EVAL-0040','EVAL-0045','EVAL-0046','EVAL-0064','EVAL-0067','EVAL-0076','EVAL-0077','EVAL-0080',
+    'EVAL-0081','EVAL-0082','EVAL-0083','EVAL-0084','EVAL-0085','EVAL-0087','EVAL-0088','EVAL-0089')
 Assert-ExactSequence @($matrix.cases.case_id) $expectedCases 'WP8 23-case inventory'
 if (@($matrix.cases.case_id | Sort-Object -Unique).Count -ne 23) { throw 'WP8 case IDs are not unique.' }
 foreach ($case in @($matrix.cases)) {
     if (@($case.covered_assertions).Count -eq 0 -or @($case.requirements).Count -eq 0 -or @($case.evidence_gates).Count -eq 0) {
         throw "WP8 case '$($case.case_id)' lacks requirements, gates, or covered assertions."
     }
-    if ($case.classification -eq 'primary' -and (@($case.n_a_assertions).Count -ne 0 -or $case.disposition -ne 'covered-non-live')) {
-        throw "Primary case '$($case.case_id)' cannot be N/A or partially dispositioned."
+    if ($case.classification -eq 'primary' -and $case.disposition -notin @('covered-non-live','covered-with-assertion-level-na')) {
+        throw "Primary case '$($case.case_id)' cannot receive a whole-case N/A disposition."
     }
     if ($case.classification -eq 'review-only-regression' -and (@($case.n_a_assertions).Count -ne 0 -or
             $case.disposition -ne 'mandatory-review-regression')) {
@@ -164,16 +335,74 @@ foreach ($case in @($matrix.cases)) {
         if (-not [bool]$na.no_activation) { throw "Case '$($case.case_id)' N/A would activate excluded work." }
     }
 }
+$expectedCatalogRequirements = [ordered]@{
+    'EVAL-0026' = @('SNAP-002','SCAN-009','INTENT-004'); 'EVAL-0033' = @('SEC-001')
+    'EVAL-0034' = @('SEC-002','SEC-004','AI-003','AI-004'); 'EVAL-0035' = @('AUTH-002','SEC-003')
+    'EVAL-0037' = @('SCAN-007','DOC-011'); 'EVAL-0038' = @('SCAN-005','SCAN-006','AI-004')
+    'EVAL-0039' = @('DOC-002','DOC-011'); 'EVAL-0040' = @('SEC-004','OPS-003')
+    'EVAL-0045' = @('SCOPE-004'); 'EVAL-0046' = @('AUTH-001','AUTH-003')
+    'EVAL-0064' = @('AI-001','AI-002','OPS-001'); 'EVAL-0067' = @('EVID-001','EVID-004','EVID-007','OPS-002')
+    'EVAL-0076' = @('SCAN-003','AI-005'); 'EVAL-0077' = @('AI-004','AI-007')
+    'EVAL-0080' = @('AUTH-001','AUTH-002','SEC-003'); 'EVAL-0081' = @('SCAN-004','SCAN-005','AI-004')
+    'EVAL-0082' = @('SCAN-002','SCAN-009','EVID-007'); 'EVAL-0083' = @('EVID-002','SNAP-006','AI-006')
+    'EVAL-0084' = @('FIND-002'); 'EVAL-0085' = @('PROD-004','COVER-001','COVER-002','COVER-003')
+    'EVAL-0087' = @('SNAP-004','SNAP-006','OPS-002','OPS-004'); 'EVAL-0088' = @('SCAN-004','SCAN-005','AUTH-002','SEC-003')
+    'EVAL-0089' = @('SEC-002','SEC-004','AI-004','AI-007')
+}
+foreach ($case in @($matrix.cases)) {
+    Assert-ExactSequence @($case.requirements) @($expectedCatalogRequirements[[string]$case.case_id]) "Catalog requirements for $($case.case_id)"
+}
+$caseSemanticJson = $matrix.cases | ConvertTo-Json -Depth 100 -Compress
+$caseSemanticSha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
+    [Text.Encoding]::UTF8.GetBytes($caseSemanticJson))).ToLowerInvariant()
+$expectedCaseSemanticSha256 = '46685998f2947a35dae4944d293e2836c2e056b7a4db74025d68dc6e1e776ab4'
+if ($caseSemanticSha256 -ne $expectedCaseSemanticSha256) {
+    throw 'WP8 per-case classification disposition gates assertions or assertion-level N/A tuples drifted.'
+}
+$expectedSupplementalRequirements = @('EVID-003','EVID-006','ANALYSIS-003','ANALYSIS-004','ANALYSIS-005',
+    'ANALYSIS-016','ANALYSIS-019','SNAP-001','SNAP-003','SNAP-005','PROD-002')
+Assert-ExactSequence @($matrix.supplemental_requirement_mappings.requirement_id) $expectedSupplementalRequirements 'WP8 supplemental requirement mappings'
+foreach ($mapping in @($matrix.supplemental_requirement_mappings)) {
+    if (@($mapping.covered_assertions).Count -eq 0 -or @($mapping.evidence_gates).Count -eq 0) {
+        throw "WP8 supplemental requirement '$($mapping.requirement_id)' lacks exact evidence."
+    }
+}
+$supplementalSemanticJson = $matrix.supplemental_requirement_mappings | ConvertTo-Json -Depth 100 -Compress
+$supplementalSemanticSha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
+    [Text.Encoding]::UTF8.GetBytes($supplementalSemanticJson))).ToLowerInvariant()
+$expectedSupplementalSemanticSha256 = 'a1e255ecf3b497ebecf73637aed51dd7ab5a87b5c4f310c79045d6362d02fcd7'
+if ($supplementalSemanticSha256 -ne $expectedSupplementalSemanticSha256) {
+    throw 'WP8 supplemental requirement evidence mappings drifted.'
+}
 $requiredRequirements = @('EVID-003','EVID-006','ANALYSIS-003','ANALYSIS-004','ANALYSIS-005','ANALYSIS-016','ANALYSIS-019',
     'SNAP-001','SNAP-003','SNAP-005','COVER-001','COVER-002','COVER-003','SCAN-006','SCAN-009',
     'OPS-001','OPS-002','OPS-003','SEC-001','SEC-002','SEC-003','SEC-004','AUTH-001','AUTH-002','AUTH-003',
     'AI-003','AI-004','AI-006','AI-007','PROD-002','PROD-004')
-$matrixRequirements = @($matrix.cases.requirements | Sort-Object -Unique)
+$matrixRequirements = @(@($matrix.cases.requirements) + @($matrix.supplemental_requirement_mappings.requirement_id) | Sort-Object -Unique)
 foreach ($requirement in $requiredRequirements) {
     if ($matrixRequirements -cnotcontains $requirement) { throw "WP8 finite matrix omits required mapping '$requirement'." }
 }
 $expectedGroups = @('contract-persistence','budget','credential-helper','provider-adapter','semantic-provenance','overall')
 Assert-ExactSequence @($matrix.evidence_groups.group_id) $expectedGroups 'WP8 evidence groups'
+
+$commonCandidateBindings = [ordered]@{
+    accepted_wp4_execution_commit = '1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b'
+    accepted_wp4_evidence_sha256 = '3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390'
+    accepted_wp4_audit_commit = 'be55eda59752f884fe6e113f40927295da45f2cd'
+    accepted_wp7_product_commit = '59367a7479a7395b173b974bf720543aab2404d4'
+    accepted_wp7_evidence_commit = '51251c0e0eb98d67dbc9b295b9ff084ebca33890'
+}
+foreach ($document in @($profile) + $requests) {
+    foreach ($entry in $commonCandidateBindings.GetEnumerator()) {
+        if ([string]$document.candidate_binding.($entry.Key) -cne [string]$entry.Value) {
+            throw "WP8 packet '$($document.packet_kind)' has stale common candidate binding '$($entry.Key)'."
+        }
+    }
+    if ([string]$document.candidate_binding.wp8_product_template_commit -cne $productTemplateCommit -or
+        [string]$document.candidate_binding.wp8_verification_candidate_commit -cne $verificationCandidateCommit) {
+        throw "WP8 packet '$($document.packet_kind)' does not share the exact product/template and verification identities."
+    }
+}
 
 if ($profile.schema_identity -ne 'infinium.repository.wp8-production-profile-authorization-template/1.0.0' -or
     $profile.packet_id -ne 'infinium.m1-s6.wp8.pre-live-profile-authorization-template/v1' -or
@@ -183,9 +412,14 @@ if ($profile.schema_identity -ne 'infinium.repository.wp8-production-profile-aut
 }
 Assert-ExactSequence @($profile.native_boundary.new_profile_calls) @('CredWriteW','CredReadW','CredFree') 'New-profile native calls'
 Assert-ExactSequence @($profile.native_boundary.existing_profile_calls) @('CredReadW','CredFree') 'Existing-profile native calls'
+Assert-ExactSequence @($profile.native_boundary.forbidden_calls) @('CredDeleteW','CredEnumerateW','arbitrary-target access','alternate credential or secret-storage mechanism') 'Profile forbidden native calls'
 if ($profile.native_boundary.enumeration -ne 'prohibited' -or $profile.native_boundary.fallback -ne 'none' -or
     -not [bool]$profile.entry_cancel.masked -or -not [bool]$profile.entry_cancel.paste_permitted -or
-    [bool]$profile.entry_cancel.renderer_receives_value -or -not [bool]$profile.materialization.no_inheritance) {
+    [bool]$profile.entry_cancel.renderer_receives_value -or -not [bool]$profile.materialization.no_inheritance -or
+    [bool]$profile.persistence_delete.deletion_permitted -or
+    $profile.persistence_delete.credential_persistence -ne 'retain-exact-generation-for-wp9-through-wp11' -or
+    $profile.persistence_delete.post_qualification_intent -ne 'retain-no-delete-authorized-by-this-packet' -or
+    $profile.persistence_delete.deletion_authority -ne 'separate-fresh-exact-owner-authorization-required') {
     throw 'WP8 production profile native, UI, or no-inheritance boundary is invalid.'
 }
 
@@ -195,6 +429,18 @@ $expectedRequestTuples = @(
     @('SourceClaimExtraction','infinium.m1-s6.wp8.pre-live-source-claim-authorization-template/v1','source-claim-extraction',65536,73728,4096,1048576,600000000,120000),
     @('CandidateInvestigation','infinium.m1-s6.wp8.pre-live-candidate-investigation-authorization-template/v1','candidate-investigation',65536,73728,4096,1048576,600000000,120000)
 )
+$expectedRequestPredecessors = @(
+    'accepted-production-profile-sub-gate-receipt-pending',
+    'accepted-WP9-qualification-operation-receipt-pending',
+    'accepted-WP10-source-claim-operation-receipt-pending')
+$expectedRequestPrerequisites = @(
+    @('WP8 independently accepted at an exact clean commit','production profile sub-gate independently accepted with an exact verified generation','fresh official-document, capability, and price drift check'),
+    @('WP9 independently accepted','LLM-CLAIM-LIVE-VAL inputs and harness-only oracle frozen and independently reviewed','fresh exact candidate, document, profile, capability, and price check'),
+    @('WP10 independently accepted','LLM-INVESTIGATE-LIVE-VAL and PROV-LIVE-COMPOSED-VAL frozen and independently reviewed','fresh exact candidate, document, profile, capability, and price check'))
+$expectedFixtureOracleTuples = @(
+    @('pending-WP9-qualification-live-extension','pending-WP9-qualification-live-oracle'),
+    @('LLM-CLAIM-LIVE-VAL-pending-freeze','LLM-CLAIM-LIVE-VAL-oracle-pending-freeze'),
+    @('LLM-INVESTIGATE-LIVE-VAL-pending-freeze','LLM-INVESTIGATE-LIVE-VAL-and-PROV-LIVE-COMPOSED-VAL-oracles-pending-freeze'))
 for ($index = 0; $index -lt 3; $index++) {
     $request = $requests[$index]
     $expected = $expectedRequestTuples[$index]
@@ -215,6 +461,14 @@ for ($index = 0; $index -lt 3; $index++) {
         [int64]$request.limits.deadline_milliseconds -ne $expected[8]) {
         throw "WP8 request template at index $index is swapped, executable, retrying, or outside exact limits."
     }
+    if ($request.candidate_binding.required_predecessor_live_acceptance -cne $expectedRequestPredecessors[$index]) {
+        throw "WP8 request '$($request.packet_kind)' has a stale or swapped predecessor."
+    }
+    Assert-ExactSequence @($request.prerequisites) @($expectedRequestPrerequisites[$index]) "Prerequisites for $($request.packet_kind)"
+    if ($request.fixture_oracle_binding.fixture_identity -cne $expectedFixtureOracleTuples[$index][0] -or
+        $request.fixture_oracle_binding.oracle_identity -cne $expectedFixtureOracleTuples[$index][1]) {
+        throw "WP8 request '$($request.packet_kind)' has a stale or swapped fixture/oracle pending identity."
+    }
     $p = $request.provider_profile
     if ($p.provider -ne 'openai' -or $p.endpoint -ne 'https://api.openai.com/v1/responses' -or
         $p.model -ne 'gpt-5.6-sol' -or $p.reasoning_effort -ne 'medium' -or
@@ -226,13 +480,17 @@ for ($index = 0; $index -lt 3; $index++) {
         throw "WP8 request '$($request.packet_kind)' differs from the exact M1 provider profile."
     }
 }
-if ($requests[1].request_binding.prompt_id -ne 'infinium.m1-s6.source-claim-prompt/v1' -or
+if ($requests[0].request_binding.prompt_id -ne 'pending-qualification-prompt-identity' -or
+    $requests[0].request_binding.prompt_fingerprint_sha256 -ne 'pending' -or
+    $requests[0].request_binding.output_schema_path -ne 'pending-qualification-output-schema' -or
+    $requests[0].request_binding.output_schema_sha256 -ne 'pending' -or
+    $requests[1].request_binding.prompt_id -ne 'infinium.m1-s6.source-claim-prompt/v1' -or
     $requests[1].request_binding.prompt_fingerprint_sha256 -ne 'd2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84' -or
     $requests[1].request_binding.output_schema_sha256 -ne (Get-FileHash -LiteralPath (Resolve-InputPath $requests[1].request_binding.output_schema_path) -Algorithm SHA256).Hash.ToLowerInvariant() -or
     $requests[2].request_binding.prompt_id -ne 'infinium.m1-s6.candidate-investigation-prompt/v1' -or
     $requests[2].request_binding.prompt_fingerprint_sha256 -ne '026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e' -or
     $requests[2].request_binding.output_schema_sha256 -ne (Get-FileHash -LiteralPath (Resolve-InputPath $requests[2].request_binding.output_schema_path) -Algorithm SHA256).Hash.ToLowerInvariant()) {
-    throw 'WP8 semantic request prompt or output-schema binding is stale.'
+    throw 'WP8 qualification or semantic request prompt/output-schema binding is stale.'
 }
 $allTemplateText = $profileInput.text + "`n" + ($requestInputs.text -join "`n")
 if ($allTemplateText -match '(?i)bearer\s+[A-Za-z0-9._-]+' -or
@@ -276,7 +534,9 @@ $receipt = [ordered]@{
     profile_template_sha256 = $profileInput.sha256
     request_templates = @($requestInputs | ForEach-Object { [ordered]@{ sha256 = $_.sha256 } })
     packet_count = 4
-    wp8_candidate_commit = $wp8Candidate
+    wp8_product_template_commit = $productTemplateCommit
+    wp8_verification_candidate_commit = $verificationCandidateCommit
+    wp8_review_evidence_head = (& git -C $repoRoot rev-parse HEAD).Trim()
     execution_authorized = $false
     credential_manager_operations = 0
     dns_operations = 0

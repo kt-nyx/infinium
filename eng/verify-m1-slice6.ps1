@@ -111,11 +111,30 @@ $schemaNames = @(
     'cli-summary.v2.schema.json'
 )
 
+$script:FocusedTestResults = [System.Collections.Generic.List[object]]::new()
+
 function Invoke-DotnetTest([string] $Project, [string] $Filter) {
-    & dotnet test $Project -c Release --no-build --nologo --filter $Filter
+    $output = @(& dotnet test $Project -c Release --no-build --nologo --filter $Filter 2>&1)
+    foreach ($line in $output) { Write-Host $line }
     if ($LASTEXITCODE -ne 0) {
         throw "Focused test command failed for $Project."
     }
+    $summaryPattern = 'Failed:\s+(?<failed>\d+),\s+Passed:\s+(?<passed>\d+),\s+Skipped:\s+(?<skipped>\d+),\s+Total:\s+(?<total>\d+)'
+    $matches = @($output | ForEach-Object { [regex]::Match([string]$_, $summaryPattern) } | Where-Object Success)
+    if ($matches.Count -ne 1) {
+        throw "Focused test command for $Project did not emit exactly one parseable result summary."
+    }
+    $match = $matches[0]
+    $script:FocusedTestResults.Add([ordered]@{
+        command = "dotnet test $Project -c Release --no-build --nologo --filter `"$Filter`""
+        project = $Project
+        filter = $Filter
+        passed = [int64]$match.Groups['passed'].Value
+        failed = [int64]$match.Groups['failed'].Value
+        skipped = [int64]$match.Groups['skipped'].Value
+        total = [int64]$match.Groups['total'].Value
+        result = 'passed'
+    })
 }
 
 function Assert-Slice5V1Unchanged {
@@ -137,6 +156,9 @@ function Write-Receipt(
     [System.Collections.IDictionary] $Evidence,
     [string] $Status = 'passed',
     [bool] $CredentialAccessPermitted = $false) {
+    if ($script:FocusedTestResults.Count -gt 0) {
+        $Evidence['focused_test_commands'] = @($script:FocusedTestResults)
+    }
     $receipt = [ordered]@{
         gate = $Name
         status = $Status
@@ -152,6 +174,7 @@ function Write-Receipt(
         (Join-Path $resolvedOutputRoot ($Name.ToLowerInvariant() + '.json')),
         $json + "`n",
         [System.Text.UTF8Encoding]::new($false))
+    $script:FocusedTestResults.Clear()
 }
 
 function ConvertTo-CanonicalJsonValue([object] $Value) {
@@ -1013,9 +1036,15 @@ function Invoke-AdapterGate {
     }
     $matrix = Get-Content -LiteralPath $matrixPath -Raw | ConvertFrom-Json
     $networkSpy = Get-Content -LiteralPath $networkSpyPath -Raw | ConvertFrom-Json
+    $canonicalOperationSendCount = [int64]$matrix.loopback_send_count
+    $totalLiteralLoopbackSendCount = [int64]$networkSpy.literal_loopback_requests
+    $redirectSafetyProbeSendCount = $totalLiteralLoopbackSendCount - $canonicalOperationSendCount
     if ($matrix.redirect_count -ne 0 -or $matrix.retry_count -ne 0 -or $matrix.proxy_fallback_count -ne 0 -or
-        $matrix.dns_count -ne 0 -or $matrix.provider_count -ne 0 -or $matrix.loopback_send_count -ne 1 -or
-        $matrix.replay_send_count -ne 0) {
+        $matrix.dns_count -ne 0 -or $matrix.provider_count -ne 0 -or $canonicalOperationSendCount -ne 1 -or
+        $redirectSafetyProbeSendCount -ne 1 -or $totalLiteralLoopbackSendCount -ne 2 -or
+        $matrix.replay_send_count -ne 0 -or [int64]$networkSpy.redirect_follow_count -ne 0 -or
+        [int64]$networkSpy.public_dns_operations -ne 0 -or [int64]$networkSpy.provider_operations -ne 0 -or
+        [int64]$networkSpy.retry_count -ne 0 -or [int64]$networkSpy.replay_send_count -ne 0) {
         throw 'Adapter retained evidence violates the one-shot offline transport boundary.'
     }
     Write-Receipt 'Adapter' ([ordered]@{
@@ -1029,10 +1058,12 @@ function Invoke-AdapterGate {
         diagnostic_sha256 = (Get-FileHash -LiteralPath $diagnosticPath -Algorithm SHA256).Hash.ToLowerInvariant()
         response_state_matrix_sha256 = (Get-FileHash -LiteralPath $matrixPath -Algorithm SHA256).Hash.ToLowerInvariant()
         network_spy_sha256 = (Get-FileHash -LiteralPath $networkSpyPath -Algorithm SHA256).Hash.ToLowerInvariant()
-        loopback_send_count = [int64]$matrix.loopback_send_count
-        replay_send_count = [int64]$matrix.replay_send_count
-        redirect_count = [int64]$matrix.redirect_count
-        retry_count = [int64]$matrix.retry_count
+        canonical_operation_send_count = $canonicalOperationSendCount
+        redirect_safety_probe_send_count = $redirectSafetyProbeSendCount
+        total_literal_loopback_send_count = $totalLiteralLoopbackSendCount
+        replay_send_count = [int64]$networkSpy.replay_send_count
+        redirect_follow_count = [int64]$networkSpy.redirect_follow_count
+        retry_count = [int64]$networkSpy.retry_count
         proxy_fallback_count = [int64]$matrix.proxy_fallback_count
         public_dns_operations = [int64]$networkSpy.public_dns_operations
         provider_operations = [int64]$networkSpy.provider_operations
@@ -1315,16 +1346,45 @@ function Invoke-NonLiveAllGate {
         'offlinesafetyreplay.json', 'sourceclaimsemantics.json', 'candidatesemantics.json',
         'provenancereplay.json', 'wp8-prelive-validation.json', 'layer6review.json')
     $childReceipts = @()
+    $focusedGateResults = @()
+    $expectedFocusedReceiptNames = @(
+        'contracts.json', 'statesurfaces.json', 'statetotality.json', 'budget.json',
+        'budgetfaults.json', 'credentialsynthetic.json', 'adapter.json',
+        'offlinesafetyreplay.json', 'sourceclaimsemantics.json', 'candidatesemantics.json',
+        'provenancereplay.json')
     foreach ($name in $childReceiptNames) {
         $path = Join-Path $resolvedOutputRoot $name
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
             throw "NonLiveAll is missing child receipt '$name'."
         }
+        $parsedChildReceipt = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json -Depth 100
         $childReceipts += [ordered]@{
             file = $name
             bytes = (Get-Item -LiteralPath $path).Length
             sha256 = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
         }
+        if ($name -in $expectedFocusedReceiptNames) {
+            $commands = @($parsedChildReceipt.evidence.focused_test_commands)
+            if ($commands.Count -eq 0) {
+                throw "NonLiveAll child receipt '$name' did not retain a focused test command result."
+            }
+            foreach ($commandResult in $commands) {
+                if ([int64]$commandResult.failed -ne 0 -or $commandResult.result -ne 'passed') {
+                    throw "NonLiveAll child receipt '$name' retained a failing focused test command."
+                }
+            }
+            $focusedGateResults += [ordered]@{
+                receipt = $name
+                commands = $commands
+                passed = [int64](($commands | Measure-Object -Property passed -Sum).Sum)
+                failed = [int64](($commands | Measure-Object -Property failed -Sum).Sum)
+                skipped = [int64](($commands | Measure-Object -Property skipped -Sum).Sum)
+                total = [int64](($commands | Measure-Object -Property total -Sum).Sum)
+            }
+        }
+    }
+    if ($focusedGateResults.Count -ne $expectedFocusedReceiptNames.Count) {
+        throw "NonLiveAll retained $($focusedGateResults.Count) focused gate results; expected $($expectedFocusedReceiptNames.Count)."
     }
     $packetPaths = @(
         'docs/plans/milestones/m1/slices/s6/wp8-production-profile-authorization.template.v1.json',
@@ -1342,7 +1402,14 @@ function Invoke-NonLiveAllGate {
         case_matrix_sha256 = (Get-FileHash -LiteralPath (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
         packet_templates = $packetHashes
         child_receipts = $childReceipts
-        external_effect_scope = 'zero-public-external-effects; one deterministic literal-loopback adapter send is local-only evidence'
+        focused_gate_results = $focusedGateResults
+        focused_gate_count = $focusedGateResults.Count
+        focused_command_count = [int64](($focusedGateResults.commands | Measure-Object).Count)
+        focused_test_passed = [int64](($focusedGateResults | Measure-Object -Property passed -Sum).Sum)
+        focused_test_failed = [int64](($focusedGateResults | Measure-Object -Property failed -Sum).Sum)
+        focused_test_skipped = [int64](($focusedGateResults | Measure-Object -Property skipped -Sum).Sum)
+        focused_test_total = [int64](($focusedGateResults | Measure-Object -Property total -Sum).Sum)
+        external_effect_scope = 'zero-public-external-effects; one canonical-operation send plus one redirect safety-probe send are deterministic literal-loopback-only evidence'
         execution_authorized = $false
         authorization_manifest_accepted = $false
         credential_manager_operations = 0

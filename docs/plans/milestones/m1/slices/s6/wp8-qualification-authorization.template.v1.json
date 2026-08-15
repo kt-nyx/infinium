@@ -10,7 +10,8 @@
     "accepted_wp4_audit_commit": "be55eda59752f884fe6e113f40927295da45f2cd",
     "accepted_wp7_product_commit": "59367a7479a7395b173b974bf720543aab2404d4",
     "accepted_wp7_evidence_commit": "51251c0e0eb98d67dbc9b295b9ff084ebca33890",
-    "wp8_candidate_commit": "pending-after-independent-wp8-acceptance",
+    "wp8_product_template_commit": "pending-until-product-template-freeze",
+    "wp8_verification_candidate_commit": "pending-until-verification-freeze",
     "required_predecessor_live_acceptance": "accepted-production-profile-sub-gate-receipt-pending"
   },
   "materialization": {
@@ -18,7 +19,7 @@
     "fresh_packet_identity": "pending",
     "fresh_expiry": "pending",
     "fresh_exact_byte_review": "required",
-    "fresh_doc_drift_check": "required",
+    "fresh_official_doc_review": "pending-separate-research-or-planning-authority-before-live-materialization",
     "request_fingerprint": "pending-after-exact-canonical-request-materialization",
     "no_inheritance": true
   },
@@ -84,7 +85,8 @@
   "capability_price_binding": {
     "official_doc_snapshot": "docs/research/investigations/RESEARCH-0054-slice6-openai-profile-and-implementation-readiness-refresh.md",
     "official_doc_snapshot_sha256": "bf585dee726ab386ca27570829e29ce51c3060a001e4a4749797357fd301c68a",
-    "fresh_drift_snapshot": "pending-before-each-live-materialization",
+    "official_doc_refresh_authority": "separate-accepted-research-or-planning-action-not-inherited-from-live-packet",
+    "fresh_drift_snapshot": "pending-separate-authorized-research-or-planning-result",
     "capability_snapshot_sha256": "pending",
     "price_snapshot_sha256": "pending"
   },

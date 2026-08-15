@@ -32,14 +32,15 @@
     "gitSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
     "candidateBinding": {
       "type": "object", "additionalProperties": false,
-      "required": ["accepted_wp4_execution_commit", "accepted_wp4_evidence_sha256", "accepted_wp4_audit_commit", "accepted_wp7_product_commit", "accepted_wp7_evidence_commit", "wp8_candidate_commit"],
+      "required": ["accepted_wp4_execution_commit", "accepted_wp4_evidence_sha256", "accepted_wp4_audit_commit", "accepted_wp7_product_commit", "accepted_wp7_evidence_commit", "wp8_product_template_commit", "wp8_verification_candidate_commit"],
       "properties": {
         "accepted_wp4_execution_commit": { "$ref": "#/$defs/gitSha" },
         "accepted_wp4_evidence_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
         "accepted_wp4_audit_commit": { "$ref": "#/$defs/gitSha" },
         "accepted_wp7_product_commit": { "$ref": "#/$defs/gitSha" },
         "accepted_wp7_evidence_commit": { "$ref": "#/$defs/gitSha" },
-        "wp8_candidate_commit": { "const": "pending-after-independent-wp8-acceptance" }
+        "wp8_product_template_commit": { "type": "string", "pattern": "^(pending-until-product-template-freeze|[0-9a-f]{40})$" },
+        "wp8_verification_candidate_commit": { "type": "string", "pattern": "^(pending-until-verification-freeze|[0-9a-f]{40})$" }
       }
     },
     "materialization": {
@@ -92,7 +93,7 @@
       "properties": {
         "new_profile_calls": { "const": ["CredWriteW", "CredReadW", "CredFree"] },
         "existing_profile_calls": { "const": ["CredReadW", "CredFree"] },
-        "forbidden_calls": { "type": "array", "minItems": 3, "uniqueItems": true, "items": { "$ref": "#/$defs/nonEmpty" } },
+        "forbidden_calls": { "const": ["CredDeleteW", "CredEnumerateW", "arbitrary-target access", "alternate credential or secret-storage mechanism"] },
         "enumeration": { "const": "prohibited" },
         "fallback": { "const": "none" }
       }
@@ -111,10 +112,12 @@
     },
     "persistenceDelete": {
       "type": "object", "additionalProperties": false,
-      "required": ["credential_persistence", "post_qualification_intent", "partial_or_ambiguous_effect"],
+      "required": ["credential_persistence", "post_qualification_intent", "deletion_permitted", "deletion_authority", "partial_or_ambiguous_effect"],
       "properties": {
-        "credential_persistence": { "const": "pending-owner-choice" },
-        "post_qualification_intent": { "const": "pending-retain-or-delete-exact-generation" },
+        "credential_persistence": { "const": "retain-exact-generation-for-wp9-through-wp11" },
+        "post_qualification_intent": { "const": "retain-no-delete-authorized-by-this-packet" },
+        "deletion_permitted": { "const": false },
+        "deletion_authority": { "const": "separate-fresh-exact-owner-authorization-required" },
         "partial_or_ambiguous_effect": { "const": "block-provider-request-until-fresh-authorized-recovery" }
       }
     },

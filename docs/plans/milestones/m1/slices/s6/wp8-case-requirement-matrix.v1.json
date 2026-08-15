@@ -14,7 +14,8 @@
     "accepted_wp6_evidence_commit": "2b277338390f7dac37b5a5436bbe2cd81dedc871",
     "accepted_wp7_product_commit": "59367a7479a7395b173b974bf720543aab2404d4",
     "accepted_wp7_evidence_commit": "51251c0e0eb98d67dbc9b295b9ff084ebca33890",
-    "wp8_candidate_commit": "47c95f60b0cdcf2e3894f9ded89ee19d2f40e324"
+    "wp8_product_template_commit": "pending-until-product-template-freeze",
+    "wp8_verification_candidate_commit": "pending-until-verification-freeze"
   },
   "registry_binding": {
     "path": "fixtures/public/public-fixture-registry.v1.json",
@@ -58,7 +59,7 @@
     {
       "group_id": "provider-adapter",
       "gates": ["Adapter", "OfflineSafetyReplay"],
-      "assertions": ["canonical exact profile serialization", "closed response-state totality", "one deterministic literal-loopback send and zero public provider sends", "redirect retry proxy fallback and public DNS zero", "retained response replay with zero sends", "secret target and hostile-content canaries"]
+      "assertions": ["canonical exact profile serialization", "closed response-state totality", "canonical operation sends one literal-loopback request", "redirect safety probe sends one literal-loopback request and follows zero redirects", "total literal-loopback sends are two while public DNS provider retry and replay sends are zero", "secret target and hostile-content canaries"]
     },
     {
       "group_id": "semantic-provenance",
@@ -72,167 +73,42 @@
     }
   ],
   "cases": [
-    {
-      "case_id": "EVAL-0033", "classification": "primary", "disposition": "covered-non-live",
-      "requirements": ["SEC-001", "SEC-003", "EVID-003", "EVID-006"],
-      "evidence_gates": ["CredentialSynthetic", "OfflineSafetyReplay", "SourceClaimSemantics", "CandidateSemantics"],
-      "covered_assertions": ["hostile instructions cannot gain local fact operation source or finding authority", "untrusted model proposals remain typed and host validated"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0034", "classification": "primary", "disposition": "covered-non-live",
-      "requirements": ["SEC-002", "AI-003", "AI-007"],
-      "evidence_gates": ["CredentialSynthetic", "OfflineSafetyReplay", "accepted-WP4-carry-forward"],
-      "covered_assertions": ["secret and target bytes stay outside ordinary state IPC artifacts and diagnostics", "accepted native qualification proved exact-target helper lifecycle and cleanup"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0035", "classification": "primary", "disposition": "covered-non-live",
-      "requirements": ["SEC-003", "SEC-004", "AUTH-002"],
-      "evidence_gates": ["CredentialSynthetic", "Adapter", "OfflineSafetyReplay"],
-      "covered_assertions": ["unknown operations paths headers URLs and helper frames fail closed", "renderer general worker and coordinator lack secret-return authority"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0064", "classification": "primary", "disposition": "covered-non-live",
-      "requirements": ["AI-001", "AI-004", "OPS-001"],
-      "evidence_gates": ["Adapter", "OfflineSafetyReplay"],
-      "covered_assertions": ["offline unavailable refusal incomplete failed and ambiguous states are distinct", "no fallback retry or false provider success"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0067", "classification": "primary", "disposition": "covered-non-live",
-      "requirements": ["EVID-001", "EVID-004", "EVID-007", "ANALYSIS-016"],
-      "evidence_gates": ["SourceClaimSemantics", "CandidateSemantics"],
-      "covered_assertions": ["strict proposals preserve evidence citations contradictions abstentions and gaps", "model output cannot create deterministic state finding or case authority"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0076", "classification": "primary", "disposition": "covered-non-live",
-      "requirements": ["AI-005", "SCAN-003", "PROD-002"],
-      "evidence_gates": ["Budget", "BudgetFaults"],
-      "covered_assertions": ["catalog cost usage billing rate headroom spend limits and credit remain distinct authorities", "unavailable billing facts are not guessed"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0077", "classification": "primary", "disposition": "covered-non-live",
-      "requirements": ["AI-004", "AI-007", "AUTH-002", "SEC-002"],
-      "evidence_gates": ["CredentialSynthetic", "Adapter", "accepted-WP4-carry-forward"],
-      "covered_assertions": ["credential generation and revocation are revalidated at dispatch", "disable replace delete cancel and unavailable states cannot select fallback"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0081", "classification": "primary", "disposition": "covered-non-live",
-      "requirements": ["SCAN-004", "SCAN-005", "AI-004", "AI-005"],
-      "evidence_gates": ["Budget", "BudgetFaults", "OfflineSafetyReplay"],
-      "covered_assertions": ["synchronous reservation final gate settlement overrun and ambiguous hold paths", "deadline rollback cancellation and concurrent synthetic reservation races"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0083", "classification": "primary", "disposition": "covered-non-live",
-      "requirements": ["SNAP-005", "SNAP-006", "AI-006", "OPS-002", "OPS-003"],
-      "evidence_gates": ["ProvenanceReplay", "SourceClaimSemantics", "CandidateSemantics"],
-      "covered_assertions": ["request response profile prompt schema capability price usage settlement and application provenance resolve end to end", "retained replay is distinct from new execution"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0089", "classification": "primary", "disposition": "covered-non-live",
-      "requirements": ["AUTH-002", "AUTH-003", "SEC-002", "AI-007"],
-      "evidence_gates": ["CredentialSynthetic", "accepted-WP4-carry-forward", "Adapter"],
-      "covered_assertions": ["one-shot helper exact private handles process containment staging and coordinator-only admission", "native namespace clean and no stale credential generation can dispatch"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0026", "classification": "applicable-extension", "disposition": "covered-with-assertion-level-na",
-      "requirements": ["SNAP-001", "SNAP-003", "SCAN-006"],
-      "evidence_gates": ["StateTotality", "ProvenanceReplay"],
-      "covered_assertions": ["immutable provider operations and replay preserve exact snapshot context and configuration identities"],
-      "n_a_assertions": [{"assertion_id":"full-M1-clean-incremental-equivalence","rationale":"WP8 covers provider-owned non-live reuse and replay but Slice 9 owns complete M1 clean versus incremental equivalence.","authority":"M1 plan Slice 9 and Slice 6 plan section 19","unreachable_proof":"No WP8 command creates a complete live or controlled-real M1 run.","later_authority":"M1 Slice 9 accepted plan","no_activation":true}]
-    },
-    {
-      "case_id": "EVAL-0037", "classification": "applicable-extension", "disposition": "covered-with-assertion-level-na",
-      "requirements": ["SNAP-005", "AI-006", "SCAN-009"],
-      "evidence_gates": ["ProvenanceReplay"],
-      "covered_assertions": ["retained response and admitted semantic artifacts reuse only through validated immutable dependencies with zero current debit"],
-      "n_a_assertions": [{"assertion_id":"live-source-refresh-reuse","rationale":"Source refresh and live provider execution are prohibited in WP8.","authority":"Slice 6 plan sections 19 through 22","unreachable_proof":"NonLiveAll has no live or source-refresh invocation and reports both counts zero.","later_authority":"Separate WP10 or WP11 owner authorization","no_activation":true}]
-    },
-    {
-      "case_id": "EVAL-0038", "classification": "applicable-extension", "disposition": "covered-with-assertion-level-na",
-      "requirements": ["SCAN-004", "SCAN-005", "SCAN-006"],
-      "evidence_gates": ["BudgetFaults", "CredentialSynthetic"],
-      "covered_assertions": ["crash restart fence reservation helper and cleanup recovery paths remain durable and conservative"],
-      "n_a_assertions": [{"assertion_id":"background-batch-pause-resume","rationale":"Background Responses and Batch are excluded and synchronous live work is not authorized.","authority":"ADR-0025 and Slice 6 plan sections 3 and 5","unreachable_proof":"The exact provider profile fixes background false and every non-live template is non-executable.","later_authority":"New accepted architecture and plan amendment","no_activation":true}]
-    },
-    {
-      "case_id": "EVAL-0039", "classification": "applicable-extension", "disposition": "covered-non-live",
-      "requirements": ["EVID-002", "EVID-006", "ANALYSIS-019"],
-      "evidence_gates": ["SourceClaimSemantics", "ProvenanceReplay"],
-      "covered_assertions": ["source acquisition extraction admission and run application ownership remain distinct and fully retained"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0040", "classification": "applicable-extension", "disposition": "covered-with-assertion-level-na",
-      "requirements": ["OPS-002", "OPS-003", "PROD-004"],
-      "evidence_gates": ["ProvenanceReplay", "StateSurfaces"],
-      "covered_assertions": ["provider output and CLI summary v2 distinguish not-used unavailable live replay hold and gaps"],
-      "n_a_assertions": [{"assertion_id":"complete-human-and-json-M1-run","rationale":"WP8 verifies provider projections but Slice 9 owns final complete CLI and JSON equivalence.","authority":"M1 plan Slice 9","unreachable_proof":"No WP8 gate creates the final M1 run-output completion record.","later_authority":"M1 Slice 9 accepted plan","no_activation":true}]
-    },
-    {
-      "case_id": "EVAL-0045", "classification": "applicable-extension", "disposition": "covered-non-live",
-      "requirements": ["AUTH-001", "AUTH-002", "AI-003"],
-      "evidence_gates": ["CredentialSynthetic", "accepted-WP4-carry-forward"],
-      "covered_assertions": ["credential and helper operations require explicit user gesture exact assignment and bounded manual initiation"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0046", "classification": "applicable-extension", "disposition": "covered-with-assertion-level-na",
-      "requirements": ["AUTH-001", "AUTH-003", "SEC-004"],
-      "evidence_gates": ["CredentialSynthetic", "accepted-WP4-carry-forward", "OfflineSafetyReplay"],
-      "covered_assertions": ["exact helper and native credential operations cannot mutate protected setup roots and leave the consumed namespace absent"],
-      "n_a_assertions": [{"assertion_id":"live-provider-non-mutation","rationale":"No provider request is authorized or executed in WP8.","authority":"Slice 6 plan section 19","unreachable_proof":"NonLiveAll and all four templates structurally prohibit execution and record provider count zero.","later_authority":"Separately owner-authorized WP9 through WP11 requests","no_activation":true}]
-    },
-    {
-      "case_id": "EVAL-0080", "classification": "applicable-extension", "disposition": "covered-with-assertion-level-na",
-      "requirements": ["AUTH-001", "AUTH-002", "AUTH-003"],
-      "evidence_gates": ["StateTotality", "CredentialSynthetic", "accepted-WP4-carry-forward"],
-      "covered_assertions": ["coordinator-owned durable provider writes and exact credential effects require explicit typed authority"],
-      "n_a_assertions": [{"assertion_id":"production-profile-write","rationale":"WP8 prepares only a non-executable production-profile template and cannot perform Credential Manager mutation.","authority":"Slice 6 plan sections 19 and 20","unreachable_proof":"The template has effect_authority none command null permitted false and no execution script exists.","later_authority":"Fresh exact production-profile owner authorization","no_activation":true}]
-    },
-    {
-      "case_id": "EVAL-0082", "classification": "applicable-extension", "disposition": "covered-non-live",
-      "requirements": ["EVID-003", "SNAP-003", "OPS-002"],
-      "evidence_gates": ["Contracts", "StateTotality", "Layer6Review"],
-      "covered_assertions": ["versioned closed contracts codecs storage and outputs reject unknown omitted and stale identities"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0087", "classification": "applicable-extension", "disposition": "covered-with-assertion-level-na",
-      "requirements": ["SNAP-005", "OPS-002", "OPS-003"],
-      "evidence_gates": ["StateTotality", "BudgetFaults", "ProvenanceReplay"],
-      "covered_assertions": ["schema migration backup restore projection rebuild deletion and retained replay preserve exact authority and typed audit-only loss"],
-      "n_a_assertions": [{"assertion_id":"live-retention-deletion-reconciliation","rationale":"No live response or production profile is created by WP8.","authority":"Slice 6 plan sections 19 through 22","unreachable_proof":"All templates remain pending and NonLiveAll has no live input root or dispatch path.","later_authority":"Separately authorized live packages and Slice 9 closeout","no_activation":true}]
-    },
-    {
-      "case_id": "EVAL-0088", "classification": "applicable-extension", "disposition": "covered-with-assertion-level-na",
-      "requirements": ["AI-003", "SCAN-004", "SCAN-006", "SEC-003"],
-      "evidence_gates": ["CredentialSynthetic", "Adapter", "BudgetFaults"],
-      "covered_assertions": ["coordinator helper role private handles job containment staging admission crash and no-survivor behavior"],
-      "n_a_assertions": [{"assertion_id":"concurrent-live-helper-dispatch","rationale":"M1 permits only one globally in-flight billable attempt and WP8 permits none.","authority":"ADR-0018 ADR-0023 and Slice 6 plan section 19","unreachable_proof":"The request templates each cap dispatch at one but are mutually non-inheriting and non-executable.","later_authority":"A future accepted concurrent-live capability plan","no_activation":true}]
-    },
-    {
-      "case_id": "EVAL-0084", "classification": "review-only-regression", "disposition": "mandatory-review-regression",
-      "requirements": ["ANALYSIS-003", "ANALYSIS-004", "ANALYSIS-005", "EVID-004"],
-      "evidence_gates": ["SourceClaimSemantics", "CandidateSemantics", "fresh-semantic-review"],
-      "covered_assertions": ["provider proposals remain evidence-only and cannot bypass Slice 5 hypothesis finding case or continuity rules"],
-      "n_a_assertions": []
-    },
-    {
-      "case_id": "EVAL-0085", "classification": "review-only-regression", "disposition": "mandatory-review-regression",
-      "requirements": ["COVER-001", "COVER-002", "COVER-003", "PROD-002", "PROD-004"],
-      "evidence_gates": ["StateSurfaces", "SourceClaimSemantics", "CandidateSemantics", "Layer6Review", "fresh-claim-review"],
-      "covered_assertions": ["unsupported unavailable abstention and gaps remain visible", "non-live public conformance is not described as held-out reliability readiness or broad safety"],
-      "n_a_assertions": []
-    }
+    {"case_id":"EVAL-0026","classification":"applicable-extension","disposition":"covered-non-live","requirements":["SNAP-002","SCAN-009","INTENT-004"],"evidence_gates":["StateTotality","ProvenanceReplay"],"covered_assertions":["mid-run context or configuration edits create a new version and never mutate the active run"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0033","classification":"primary","disposition":"covered-non-live","requirements":["SEC-001"],"evidence_gates":["OfflineSafetyReplay","SourceClaimSemantics","CandidateSemantics"],"covered_assertions":["prompt HTML search and tool-output instructions cannot grant source local-state operation tool secret or policy authority"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0034","classification":"primary","disposition":"covered-non-live","requirements":["SEC-002","SEC-004","AI-003","AI-004"],"evidence_gates":["CredentialSynthetic","OfflineSafetyReplay","accepted-WP4-carry-forward"],"covered_assertions":["secrets and unnecessary usernames paths and unrelated values are absent from prompts logs traces exports and ordinary state","confirmed deletion and revocation prevent undispatched use release unused reservation and disclose uncancellable in-flight work"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0035","classification":"primary","disposition":"covered-non-live","requirements":["AUTH-002","SEC-003"],"evidence_gates":["CredentialSynthetic","Adapter","OfflineSafetyReplay"],"covered_assertions":["out-of-scope path URL command tool argument and helper frame inputs are rejected"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0037","classification":"applicable-extension","disposition":"covered-with-assertion-level-na","requirements":["SCAN-007","DOC-011"],"evidence_gates":["StateTotality","ProvenanceReplay"],"covered_assertions":["clean analysis or extraction bypasses only its selected derived layer without implicitly refreshing source bytes","explicit refresh remains separately visible"],"n_a_assertions":[{"assertion_id":"execute-explicit-source-refresh","rationale":"WP8 proves clean-layer selection and refresh visibility without performing an internet-based source refresh.","authority":"Slice 6 plan section 19 allowed and prohibited actions","unreachable_proof":"NonLiveAll exposes no refresh command and official-document refresh requires a separate planning or research action before candidate freeze.","later_authority":"Separate accepted planning or research source-refresh authority; not WP10 or WP11 live-request authority.","no_activation":true}]},
+    {"case_id":"EVAL-0038","classification":"applicable-extension","disposition":"covered-with-assertion-level-na","requirements":["SCAN-005","SCAN-006","AI-004"],"evidence_gates":["BudgetFaults","CredentialSynthetic","ProvenanceReplay"],"covered_assertions":["cancellation is terminal and restart fencing limit exhaustion and new-run continuation remain conservative and provenance preserving"],"n_a_assertions":[{"assertion_id":"background-batch-pause-detach-continuation","rationale":"Background Responses Batch pause detach and attached-child continuation are not enabled in M1 Slice 6.","authority":"ADR-0025 and Slice 6 plan sections 3 5 and 19","unreachable_proof":"All request templates fix background false and every WP8 packet is non-executable.","later_authority":"New accepted architecture and implementation plan enabling the specific mode.","no_activation":true}]},
+    {"case_id":"EVAL-0039","classification":"applicable-extension","disposition":"covered-non-live","requirements":["DOC-002","DOC-011"],"evidence_gates":["SourceClaimSemantics","ProvenanceReplay"],"covered_assertions":["independent acquisition retains source-run provenance and coverage while profile application is explicit and local documents retain snapshot provenance"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0040","classification":"applicable-extension","disposition":"covered-with-assertion-level-na","requirements":["SEC-004","OPS-003"],"evidence_gates":["Contracts","StateTotality","ProvenanceReplay"],"covered_assertions":["M1 emits run-owned human-readable CLI and versioned JSON with exact omissions privacy source-policy and sharing boundaries"],"n_a_assertions":[{"assertion_id":"later-user-created-export-surfaces","rationale":"M2 and later user-created exports are outside the M1 Slice 6 output surface.","authority":"Case catalog EVAL-0040 and M1 product scope","unreachable_proof":"No WP8 command or packet creates a later user export.","later_authority":"Accepted milestone plan for each later export surface.","no_activation":true}]},
+    {"case_id":"EVAL-0045","classification":"applicable-extension","disposition":"covered-non-live","requirements":["SCOPE-004"],"evidence_gates":["CredentialSynthetic","Adapter"],"covered_assertions":["profile and source changes trigger no analysis paid or network work and configured children require a user-initiated parent"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0046","classification":"applicable-extension","disposition":"covered-non-live","requirements":["AUTH-001","AUTH-003"],"evidence_gates":["CredentialSynthetic","accepted-WP4-carry-forward"],"covered_assertions":["the exact helper subprocess and native credential operations were exercised against disposable targets without protected-root mutation and with every allowed effect recorded"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0064","classification":"primary","disposition":"covered-non-live","requirements":["AI-001","AI-002","OPS-001"],"evidence_gates":["Adapter","OfflineSafetyReplay"],"covered_assertions":["local-only runs require no provider credential and unavailable provider capabilities are explicit","OpenAI-specific behavior does not alter provider-independent contracts"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0067","classification":"primary","disposition":"covered-non-live","requirements":["EVID-001","EVID-004","EVID-007","OPS-002"],"evidence_gates":["SourceClaimSemantics","CandidateSemantics","ProvenanceReplay"],"covered_assertions":["observations claims candidates hypotheses findings recommendations gaps response items leads and admissions remain distinct","LLM involvement and required raw development intermediates remain retained and visible"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0076","classification":"primary","disposition":"covered-non-live","requirements":["SCAN-003","AI-005"],"evidence_gates":["Budget","BudgetFaults"],"covered_assertions":["tokens search calls rate headroom spend limits usage cost budgets hard bounds and billing latency remain distinct","unavailable credit or capability facts are never invented"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0077","classification":"primary","disposition":"covered-non-live","requirements":["AI-004","AI-007"],"evidence_gates":["Budget","CredentialSynthetic","Adapter"],"covered_assertions":["no authenticated or billable call can occur without current account authorization and no fallback credential exists","usage and cost remain attributed to the selected authority"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0080","classification":"applicable-extension","disposition":"covered-with-assertion-level-na","requirements":["AUTH-001","AUTH-002","SEC-003"],"evidence_gates":["StateTotality","CredentialSynthetic","accepted-WP4-carry-forward"],"covered_assertions":["exercised product-controlled and OS-backed synthetic writes reject direct and aliased protected-root paths"],"n_a_assertions":[{"assertion_id":"production-profile-write","rationale":"WP8 prepares a non-executable profile template and cannot perform Credential Manager mutation.","authority":"Slice 6 plan sections 19 and 20","unreachable_proof":"The profile template has effect authority none command null permitted false and no execution script exists.","later_authority":"Fresh exact production-profile owner authorization.","no_activation":true}]},
+    {"case_id":"EVAL-0081","classification":"primary","disposition":"covered-with-assertion-level-na","requirements":["SCAN-004","SCAN-005","AI-004"],"evidence_gates":["Budget","BudgetFaults","OfflineSafetyReplay"],"covered_assertions":["the synchronous substrate atomically reserves one worst-case amount handles abort partial or delayed usage and reconciles one owned actual ledger entry without oversubscription"],"n_a_assertions":[{"assertion_id":"background-batch-cancel-expiry-and-concurrent-live","rationale":"WP8 qualifies the required synchronous substrate; background Batch cancel-expiry and concurrent live modes are not enabled.","authority":"Case catalog EVAL-0081 and Slice 6 plan section 19","unreachable_proof":"All packets fix background false cap dispatch at one and remain non-executable.","later_authority":"Accepted capability-specific plan before enabling each excluded mode.","no_activation":true}]},
+    {"case_id":"EVAL-0082","classification":"applicable-extension","disposition":"covered-non-live","requirements":["SCAN-002","SCAN-009","EVID-007"],"evidence_gates":["Contracts","StateSurfaces","SourceClaimSemantics","CandidateSemantics"],"covered_assertions":["the M1 CLI and configuration independently control analyzers sources budgets cache policy and tracing and retain effective values","every enabled analyzer contributes raw typed output without preset or maturity suppression"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0083","classification":"primary","disposition":"covered-non-live","requirements":["EVID-002","SNAP-006","AI-006"],"evidence_gates":["SourceClaimSemantics","CandidateSemantics","ProvenanceReplay"],"covered_assertions":["material conclusions retain exact local tool source provider request response acquisition validation admission evidence and application provenance","deleted or unavailable inputs create honest gaps"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0084","classification":"review-only-regression","disposition":"mandatory-review-regression","requirements":["FIND-002"],"evidence_gates":["SourceClaimSemantics","CandidateSemantics","fresh-semantic-review"],"covered_assertions":["findings with one supported likely cause group into one case while shared mod or record family without shared cause remains separate","lead-only investigations remain distinct from supported cases"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0085","classification":"review-only-regression","disposition":"mandatory-review-regression","requirements":["PROD-004","COVER-001","COVER-002","COVER-003"],"evidence_gates":["StateSurfaces","SourceClaimSemantics","CandidateSemantics","Layer6Review","fresh-claim-review"],"covered_assertions":["coverage populations retain labeled denominators and states instead of one combined percentage","no-findings output remains qualified by gaps and uncertainty and never claims playthrough safety"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0087","classification":"applicable-extension","disposition":"covered-non-live","requirements":["SNAP-004","SNAP-006","OPS-002","OPS-004"],"evidence_gates":["StateTotality","BudgetFaults","ProvenanceReplay"],"covered_assertions":["authoritative state and payloads preserve atomic publication immutable history typed dependencies and gaps across crash WAL migration backup corruption deletion and rebuild","recovery never manufactures or silently rebinds evidence"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0088","classification":"applicable-extension","disposition":"covered-non-live","requirements":["SCAN-004","SCAN-005","AUTH-002","SEC-003"],"evidence_gates":["CredentialSynthetic","Adapter","BudgetFaults"],"covered_assertions":["coordinator races roles protocols nonces limits cancellation staging and coordinator-only publication fail closed across malformed slow and crash paths"],"n_a_assertions":[]},
+    {"case_id":"EVAL-0089","classification":"primary","disposition":"covered-non-live","requirements":["SEC-002","SEC-004","AI-004","AI-007"],"evidence_gates":["CredentialSynthetic","accepted-WP4-carry-forward","Adapter"],"covered_assertions":["exact-target enrollment verification replacement disable deletion recovery limits backup reauthentication and dispatch races preserve generation and revocation authority","secret leakage fallback and continued undispatched use are rejected"],"n_a_assertions":[]}
+  ],
+  "supplemental_requirement_mappings": [
+    {"requirement_id":"EVID-003","disposition":"covered-non-live","evidence_gates":["Contracts","SourceClaimSemantics","CandidateSemantics"],"covered_assertions":["typed evidence-bearing provider contracts retain exact identity and reject unknown state"],"n_a_assertions":[]},
+    {"requirement_id":"EVID-006","disposition":"covered-non-live","evidence_gates":["SourceClaimSemantics","ProvenanceReplay"],"covered_assertions":["source acquisition admission and application provenance remain separately retained"],"n_a_assertions":[]},
+    {"requirement_id":"ANALYSIS-003","disposition":"covered-non-live","evidence_gates":["CandidateSemantics","fresh-semantic-review"],"covered_assertions":["model proposals cannot create deterministic findings"],"n_a_assertions":[]},
+    {"requirement_id":"ANALYSIS-004","disposition":"covered-non-live","evidence_gates":["CandidateSemantics","fresh-semantic-review"],"covered_assertions":["hypothesis validation preserves support contradiction abstention and gaps"],"n_a_assertions":[]},
+    {"requirement_id":"ANALYSIS-005","disposition":"covered-non-live","evidence_gates":["CandidateSemantics","fresh-semantic-review"],"covered_assertions":["case grouping remains causal and is not inferred from shared family alone"],"n_a_assertions":[]},
+    {"requirement_id":"ANALYSIS-016","disposition":"covered-non-live","evidence_gates":["SourceClaimSemantics","CandidateSemantics"],"covered_assertions":["typed candidate and claim outputs cannot bypass host validation or admission"],"n_a_assertions":[]},
+    {"requirement_id":"ANALYSIS-019","disposition":"covered-non-live","evidence_gates":["SourceClaimSemantics","ProvenanceReplay"],"covered_assertions":["raw semantic intermediates and their exact provenance remain retained"],"n_a_assertions":[]},
+    {"requirement_id":"SNAP-001","disposition":"covered-non-live","evidence_gates":["StateSurfaces","StateTotality"],"covered_assertions":["the authoritative snapshot root is immutable and explicitly versioned"],"n_a_assertions":[]},
+    {"requirement_id":"SNAP-003","disposition":"covered-non-live","evidence_gates":["StateTotality","ProvenanceReplay"],"covered_assertions":["effective configuration and snapshot identities remain bound through replay"],"n_a_assertions":[]},
+    {"requirement_id":"SNAP-005","disposition":"covered-non-live","evidence_gates":["ProvenanceReplay"],"covered_assertions":["reuse is dependency validated and remains distinct from new execution"],"n_a_assertions":[]},
+    {"requirement_id":"PROD-002","disposition":"covered-non-live","evidence_gates":["Budget","StateSurfaces","fresh-claim-review"],"covered_assertions":["unavailable credit billing and readiness facts remain explicit and are not guessed"],"n_a_assertions":[]}
   ],
   "external_effects": {
     "credential_manager_operations": 0,

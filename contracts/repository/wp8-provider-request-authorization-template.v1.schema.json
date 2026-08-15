@@ -37,26 +37,27 @@
     "stringArray": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/nonEmpty" } },
     "candidateBinding": {
       "type": "object", "additionalProperties": false,
-      "required": ["accepted_wp4_execution_commit", "accepted_wp4_evidence_sha256", "accepted_wp4_audit_commit", "accepted_wp7_product_commit", "accepted_wp7_evidence_commit", "wp8_candidate_commit", "required_predecessor_live_acceptance"],
+      "required": ["accepted_wp4_execution_commit", "accepted_wp4_evidence_sha256", "accepted_wp4_audit_commit", "accepted_wp7_product_commit", "accepted_wp7_evidence_commit", "wp8_product_template_commit", "wp8_verification_candidate_commit", "required_predecessor_live_acceptance"],
       "properties": {
         "accepted_wp4_execution_commit": { "$ref": "#/$defs/gitSha" },
         "accepted_wp4_evidence_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
         "accepted_wp4_audit_commit": { "$ref": "#/$defs/gitSha" },
         "accepted_wp7_product_commit": { "$ref": "#/$defs/gitSha" },
         "accepted_wp7_evidence_commit": { "$ref": "#/$defs/gitSha" },
-        "wp8_candidate_commit": { "const": "pending-after-independent-wp8-acceptance" },
+        "wp8_product_template_commit": { "type": "string", "pattern": "^(pending-until-product-template-freeze|[0-9a-f]{40})$" },
+        "wp8_verification_candidate_commit": { "type": "string", "pattern": "^(pending-until-verification-freeze|[0-9a-f]{40})$" },
         "required_predecessor_live_acceptance": { "type": "string", "minLength": 1 }
       }
     },
     "materialization": {
       "type": "object", "additionalProperties": false,
-      "required": ["required", "fresh_packet_identity", "fresh_expiry", "fresh_exact_byte_review", "fresh_doc_drift_check", "request_fingerprint", "no_inheritance"],
+      "required": ["required", "fresh_packet_identity", "fresh_expiry", "fresh_exact_byte_review", "fresh_official_doc_review", "request_fingerprint", "no_inheritance"],
       "properties": {
         "required": { "const": true },
         "fresh_packet_identity": { "const": "pending" },
         "fresh_expiry": { "const": "pending" },
         "fresh_exact_byte_review": { "const": "required" },
-        "fresh_doc_drift_check": { "const": "required" },
+        "fresh_official_doc_review": { "const": "pending-separate-research-or-planning-authority-before-live-materialization" },
         "request_fingerprint": { "const": "pending-after-exact-canonical-request-materialization" },
         "no_inheritance": { "const": true }
       }
@@ -141,11 +142,12 @@
     },
     "capabilityPriceBinding": {
       "type": "object", "additionalProperties": false,
-      "required": ["official_doc_snapshot", "official_doc_snapshot_sha256", "fresh_drift_snapshot", "capability_snapshot_sha256", "price_snapshot_sha256"],
+      "required": ["official_doc_snapshot", "official_doc_snapshot_sha256", "official_doc_refresh_authority", "fresh_drift_snapshot", "capability_snapshot_sha256", "price_snapshot_sha256"],
       "properties": {
         "official_doc_snapshot": { "const": "docs/research/investigations/RESEARCH-0054-slice6-openai-profile-and-implementation-readiness-refresh.md" },
         "official_doc_snapshot_sha256": { "const": "bf585dee726ab386ca27570829e29ce51c3060a001e4a4749797357fd301c68a" },
-        "fresh_drift_snapshot": { "const": "pending-before-each-live-materialization" },
+        "official_doc_refresh_authority": { "const": "separate-accepted-research-or-planning-action-not-inherited-from-live-packet" },
+        "fresh_drift_snapshot": { "const": "pending-separate-authorized-research-or-planning-result" },
         "capability_snapshot_sha256": { "const": "pending" },
         "price_snapshot_sha256": { "const": "pending" }
       }

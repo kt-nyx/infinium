@@ -3,7 +3,7 @@
   "$id": "https://schemas.infinium.dev/repository/wp8-case-requirement-matrix.v1.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_identity", "matrix_id", "status", "claim_boundary", "candidate_binding", "registry_binding", "evidence_groups", "cases", "external_effects", "review"],
+  "required": ["schema_identity", "matrix_id", "status", "claim_boundary", "candidate_binding", "registry_binding", "evidence_groups", "cases", "supplemental_requirement_mappings", "external_effects", "review"],
   "properties": {
     "schema_identity": { "const": "infinium.repository.wp8-case-requirement-matrix/1.0.0" },
     "matrix_id": { "const": "infinium.m1-s6.wp8.case-requirement-matrix/v1" },
@@ -13,6 +13,7 @@
     "registry_binding": { "$ref": "#/$defs/registryBinding" },
     "evidence_groups": { "type": "array", "minItems": 6, "uniqueItems": true, "items": { "$ref": "#/$defs/evidenceGroup" } },
     "cases": { "type": "array", "minItems": 23, "maxItems": 23, "items": { "$ref": "#/$defs/case" } },
+    "supplemental_requirement_mappings": { "type": "array", "minItems": 11, "maxItems": 11, "items": { "$ref": "#/$defs/requirementMapping" } },
     "external_effects": { "$ref": "#/$defs/externalEffects" },
     "review": { "$ref": "#/$defs/review" }
   },
@@ -23,7 +24,7 @@
     "stringArray": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/nonEmpty" } },
     "candidateBinding": {
       "type": "object", "additionalProperties": false,
-      "required": ["slice5_base_commit", "wp8_baseline_commit", "accepted_wp4_execution_commit", "accepted_wp4_evidence_sha256", "accepted_wp4_audit_commit", "accepted_wp5_commit", "accepted_wp6_product_commit", "accepted_wp6_evidence_commit", "accepted_wp7_product_commit", "accepted_wp7_evidence_commit", "wp8_candidate_commit"],
+      "required": ["slice5_base_commit", "wp8_baseline_commit", "accepted_wp4_execution_commit", "accepted_wp4_evidence_sha256", "accepted_wp4_audit_commit", "accepted_wp5_commit", "accepted_wp6_product_commit", "accepted_wp6_evidence_commit", "accepted_wp7_product_commit", "accepted_wp7_evidence_commit", "wp8_product_template_commit", "wp8_verification_candidate_commit"],
       "properties": {
         "slice5_base_commit": { "$ref": "#/$defs/gitSha" },
         "wp8_baseline_commit": { "$ref": "#/$defs/gitSha" },
@@ -35,7 +36,8 @@
         "accepted_wp6_evidence_commit": { "$ref": "#/$defs/gitSha" },
         "accepted_wp7_product_commit": { "$ref": "#/$defs/gitSha" },
         "accepted_wp7_evidence_commit": { "$ref": "#/$defs/gitSha" },
-        "wp8_candidate_commit": { "type": "string", "pattern": "^(pending-until-candidate-freeze|[0-9a-f]{40})$" }
+        "wp8_product_template_commit": { "type": "string", "pattern": "^(pending-until-product-template-freeze|[0-9a-f]{40})$" },
+        "wp8_verification_candidate_commit": { "type": "string", "pattern": "^(pending-until-verification-freeze|[0-9a-f]{40})$" }
       }
     },
     "registryBinding": {
@@ -82,6 +84,17 @@
         "unreachable_proof": { "$ref": "#/$defs/nonEmpty" },
         "later_authority": { "$ref": "#/$defs/nonEmpty" },
         "no_activation": { "const": true }
+      }
+    },
+    "requirementMapping": {
+      "type": "object", "additionalProperties": false,
+      "required": ["requirement_id", "disposition", "evidence_gates", "covered_assertions", "n_a_assertions"],
+      "properties": {
+        "requirement_id": { "$ref": "#/$defs/nonEmpty" },
+        "disposition": { "enum": ["covered-non-live", "covered-with-assertion-level-na"] },
+        "evidence_gates": { "$ref": "#/$defs/stringArray" },
+        "covered_assertions": { "$ref": "#/$defs/stringArray" },
+        "n_a_assertions": { "type": "array", "items": { "$ref": "#/$defs/naAssertion" } }
       }
     },
     "externalEffects": {
