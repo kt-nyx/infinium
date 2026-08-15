@@ -7227,3 +7227,37 @@ WP8 correction and complete non-live reverification only; WP9 remains
 ineligible. No API-key, Credential Manager, DNS, public-network, provider,
 billable, private-fixture, archive, live-manifest, production-profile, or WP9
 effect occurred.
+
+## Final corrected WP8 mutation-bound acceptance — 2026-08-15
+
+The final phase-independent verification candidate is
+`fe93a360ccf3392358550acbe486d0440e0aec18`; the exact five-document pending
+binding and post-run evidence candidate is
+`0feb248ffb5e2f837ba7e14087d324761f4c66b3`. The standalone validator passed
+with receipt SHA-256
+`1f1939f044ec263fa5cace23fcef31cca5c0d2095c3c1b5e7032523d2bf06f45`.
+The combined WP8 and Provider Layer 6 filter passed 8/8, with zero failures
+and zero skips, including both accepted-to-pending and pending-to-accepted
+mixed-field mutation branches.
+
+Fresh-root NonLiveAll passed 36 commands with 355 tests passed, zero failed,
+and zero skipped. Its receipt SHA-256 is
+`eafe363721b9e7df1d1de5a3d186b94853c6ef9ead8d484f40aebbfcaf845364`.
+Direct candidate-bound Layer 6 passed over 16 paths with zero findings; its
+receipt SHA-256 is
+`95fb637009849a2db1bcfa2bbf3694ea00839a6f0b3052333b09214faeec282e`.
+
+Fresh independent read-only review returned `ACCEPT` with no must-fix for
+exact A6/B6, the state-aware mutation construction, the five identical pending
+bindings, the standalone receipt, the focused 8/8 result, and the zero-effect
+boundary. Final exact accepted-HEAD verification and a fresh closeout review
+remain required before WP9 planning becomes eligible.
+
+Corrected WP8 accepts only non-live readiness evidence and four non-secret,
+non-executable templates. No WP8 template, owner statement, packet identity,
+expiry, profile identity, predecessor acceptance, official-doc result, or
+request fingerprint grants inherited authority. No API-key use,
+live-manifest execution, native Credential Manager operation, DNS operation,
+public-network operation, provider request, billable operation,
+production-profile materialization/use, private-fixture access, archive access,
+or WP9 execution is authorized or occurred.
