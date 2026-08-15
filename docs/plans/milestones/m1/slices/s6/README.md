@@ -59,11 +59,12 @@ The canonical non-incremental Release build pins both informational-version and
 SourceLink revision identities to that exact commit. Two consecutive clean
 builds reproduced the coordinator, helper, and complete 126-file execution
 closure exactly.
-No corrected independent-review or owner-acceptance record exists, and WP9 execution remains ineligible.
+WP9 production-profile manifest `infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f` at SHA-256 `7123ee85fec6d238ef8965b8449e7729cd2fb204e525a30558d1ebac53209476` is independently accepted at exact candidate `6dbf687310dfcc13e5eac8f65c8ddc09cf17bccd` and remains pending exact owner acceptance.
+No execution or effect is authorized: no API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use. No authority is inherited.
 The exact B16 review marker remains append-only superseded historical evidence
-and cannot satisfy the corrected manifest. The replacement fixture resolves
-reviewed and pre-review current HEAD without weakening duplicate-marker or
-protected-path rejection.
+and cannot satisfy the corrected manifest. The exact B17 review marker is
+append-only independent acceptance only and grants no owner or execution
+authority. WP10 and WP11 remain blocked.
 The transport-qualification request manifest is not materialized. Current
 official guidance concerning `safety_identifier` requires a separate authority
 resolution before any such request packet can be prepared. The earlier WP8

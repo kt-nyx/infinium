@@ -7811,3 +7811,5 @@ and 126-file execution-closure SHA-256
 This replacement binding grants no review, owner acceptance, inherited
 authority, UI, API-key, Credential Manager, DNS, public-network, provider,
 billable, profile, private-fixture, archive, or later-packet effect.
+
+WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=6dbf687310dfcc13e5eac8f65c8ddc09cf17bccd manifest_id=infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f sha256=7123ee85fec6d238ef8965b8449e7729cd2fb204e525a30558d1ebac53209476 verdicts=security,semantics,diff
