@@ -50,6 +50,15 @@ public sealed class Wp8PreLiveReadinessContractTests
         Assert.AreEqual(4, packetIds.Count);
         Assert.AreEqual(4, packetKinds.Count);
 
+        string readme = File.ReadAllText(Path.Combine(root,
+            "docs/plans/milestones/m1/slices/s6/README.md".Replace('/', Path.DirectorySeparatorChar)));
+        string normalizedReadme = System.Text.RegularExpressions.Regex.Replace(readme, @"\s+", " ");
+        StringAssert.Contains(normalizedReadme, "WP8 is independently accepted at exact evidence/review HEAD");
+        StringAssert.Contains(normalizedReadme, "the owner's decision whether to begin WP9 fresh exact authorization-packet materialization planning");
+        StringAssert.Contains(normalizedReadme, "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.");
+        StringAssert.Contains(normalizedReadme, "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.");
+        Assert.IsFalse(readme.Contains("The live handoff authorizes only WP8 accumulated non-live verification", StringComparison.Ordinal));
+
         foreach (string relative in new[]
         {
             "contracts/repository/wp8-case-requirement-matrix.v1.schema.json",
@@ -133,6 +142,143 @@ public sealed class Wp8PreLiveReadinessContractTests
         Assert.IsFalse(function.Value.Contains("run-m1-slice6-credential", StringComparison.Ordinal));
     }
 
+    [TestMethod]
+    [TestCategory("Contract")]
+    public void FreezeModelAcceptsOnlyExactBindingOrAppendOnlyAcceptedHandoff()
+    {
+        string root = RepositoryRoot();
+        string script = TestRepository.Read("eng", "validate-m1-slice6-wp8-prelive.ps1");
+        string[] functionNames =
+        [
+            "Test-Wp8ExactPathSet",
+            "Test-Wp8VerificationCurrentState",
+            "Test-Wp8AcceptedHandoffCurrentState",
+            "Test-Wp8RetainedAcceptanceRecord",
+            "Get-Wp8PostVerificationDisposition",
+        ];
+        string functions = string.Join(Environment.NewLine, functionNames.Select(name =>
+        {
+            System.Text.RegularExpressions.Match match = System.Text.RegularExpressions.Regex.Match(
+                script, $@"(?ms)^function {System.Text.RegularExpressions.Regex.Escape(name)}\(.*?^\}}");
+            Assert.IsTrue(match.Success, $"Freeze function '{name}' was not found.");
+            return match.Value;
+        }));
+        string currentState = File.ReadAllText(Path.Combine(root, "docs", "current-state.md"));
+        string record = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6", "record.md"));
+        const string noEffect = "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.";
+        const string noInheritance = "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority";
+        string[] exactFacts =
+        [
+            "260a09ecfafea103227f113faf7625a5bf0ce759",
+            "fbdb1f03e006a85723b0533d44b2ed06e02cc724",
+            "36b980d226e9f9a0e91281a530fc959a211fb696",
+            "95919bcfbb6ea79f6ee5f6a8422d23da743c4b4da4f6ba6f9039ac4e69534e78",
+            "b8645da64eba4c12bbbc72953753e9e7debbc93ef576ef07cdd96b418399e498",
+            "4fe96ddf83e4472ba2bc66f6c046253d3055a69bf32716d934ea222b53072b0c",
+        ];
+        string[] noEffectFacts =
+        [
+            "API-key use", "live-manifest execution", "native Credential Manager operation", "DNS operation",
+            "public-network operation", "provider request", "billable operation", "production-profile materialization/use",
+        ];
+        List<string> currentStateMutations =
+        [
+            currentState.Replace("`M1/S6/WP9` owner decision and exact authorization-packet materialization planning only", "`M1/S6/WP9` planning", StringComparison.Ordinal),
+            currentState.Replace(noEffect, string.Empty, StringComparison.Ordinal),
+            currentState.Replace(noInheritance, string.Empty, StringComparison.Ordinal),
+        ];
+        currentStateMutations.AddRange(exactFacts.Select(fact => currentState.Replace(fact, new string('0', fact.Length), StringComparison.Ordinal)));
+        currentStateMutations.AddRange(noEffectFacts.Select(fact =>
+            currentState.Replace(noEffect, noEffect.Replace(fact, string.Empty, StringComparison.Ordinal), StringComparison.Ordinal)));
+
+        static string Encode(string value) => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+        string[] encodedMutations = currentStateMutations.Select(value => $"'{Encode(value)}'").ToArray();
+        string command = $$"""
+            {{functions}}
+            $current = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{Encode(currentState)}}'))
+            $record = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{Encode(record)}}'))
+            $baseRecord = "verification-record`n"
+            $binding = @(
+              'docs/plans/milestones/m1/slices/s6/wp8-candidate-investigation-authorization.template.v1.json',
+              'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json',
+              'docs/plans/milestones/m1/slices/s6/wp8-production-profile-authorization.template.v1.json',
+              'docs/plans/milestones/m1/slices/s6/wp8-qualification-authorization.template.v1.json',
+              'docs/plans/milestones/m1/slices/s6/wp8-source-claim-authorization.template.v1.json')
+            $closeout = @($binding) + @('docs/current-state.md','docs/plans/milestones/m1/slices/s6/record.md')
+            if ((Get-Wp8PostVerificationDisposition @() $current $record $record) -ne 'exact-accepted-handoff-state') { exit 10 }
+            if ((Get-Wp8PostVerificationDisposition $binding $current $record $record) -ne 'exact-accepted-handoff-state') { exit 11 }
+            if ((Get-Wp8PostVerificationDisposition $closeout $current $baseRecord ($baseRecord + $record)) -ne 'exact-accepted-append-only-handoff') { exit 12 }
+            $badSets = @(
+              ,(@($binding) + 'src/Infinium.Application/Unauthorized.cs'),
+              ,(@($binding) + 'docs/plans/milestones/m1/slices/s6/README.md'),
+              ,(@($binding) + 'docs/current-state.md'),
+              ,(@($binding) + 'docs/plans/milestones/m1/slices/s6/record.md'))
+            foreach ($bad in $badSets) {
+                if ((Get-Wp8PostVerificationDisposition $bad $current $record $record) -ne 'invalid') { exit 13 }
+            }
+            if ((Get-Wp8PostVerificationDisposition $closeout $current 'different-prefix' $record) -ne 'invalid') { exit 14 }
+            foreach ($encoded in @({{string.Join(",", encodedMutations)}})) {
+                $mutated = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encoded))
+                if ((Get-Wp8PostVerificationDisposition $binding $mutated $record $record) -ne 'invalid') { exit 15 }
+            }
+            exit 0
+            """;
+        Assert.AreEqual(0, RunPowerShellScript(command),
+            "Freeze model accepted unauthorized drift or rejected an exact state.");
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
+    public void NonLiveAllAuthorityPredicateRejectsGenericOrWeakenedWp9Handoff()
+    {
+        string root = RepositoryRoot();
+        string script = TestRepository.Read("eng", "verify-m1-slice6.ps1");
+        System.Text.RegularExpressions.Match function = System.Text.RegularExpressions.Regex.Match(
+            script, @"(?ms)^function Get-Wp8NonLiveCurrentStateDisposition\(.*?^\}");
+        Assert.IsTrue(function.Success, "NonLiveAll current-state predicate was not found.");
+        string currentState = File.ReadAllText(Path.Combine(root, "docs", "current-state.md"));
+        const string noEffect = "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.";
+        const string noInheritance = "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority";
+        string[] facts =
+        [
+            "API-key use", "live-manifest execution", "native Credential Manager operation", "DNS operation",
+            "public-network operation", "provider request", "billable operation", "production-profile materialization/use",
+        ];
+        string[] exactFacts =
+        [
+            "260a09ecfafea103227f113faf7625a5bf0ce759",
+            "fbdb1f03e006a85723b0533d44b2ed06e02cc724",
+            "36b980d226e9f9a0e91281a530fc959a211fb696",
+            "95919bcfbb6ea79f6ee5f6a8422d23da743c4b4da4f6ba6f9039ac4e69534e78",
+            "b8645da64eba4c12bbbc72953753e9e7debbc93ef576ef07cdd96b418399e498",
+            "4fe96ddf83e4472ba2bc66f6c046253d3055a69bf32716d934ea222b53072b0c",
+        ];
+        List<string> mutations =
+        [
+            currentState.Replace("`M1/S6/WP9` owner decision and exact authorization-packet materialization planning only", "`M1/S6/WP9` planning", StringComparison.Ordinal),
+            currentState.Replace(noEffect, string.Empty, StringComparison.Ordinal),
+            currentState.Replace(noInheritance, string.Empty, StringComparison.Ordinal),
+        ];
+        mutations.AddRange(facts.Select(fact =>
+            currentState.Replace(noEffect, noEffect.Replace(fact, string.Empty, StringComparison.Ordinal), StringComparison.Ordinal)));
+        mutations.AddRange(exactFacts.Select(fact =>
+            currentState.Replace(fact, new string('0', fact.Length), StringComparison.Ordinal)));
+        static string Encode(string value) => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+        string[] encoded = mutations.Select(value => $"'{Encode(value)}'").ToArray();
+        string command = $$"""
+            {{function.Value}}
+            $valid = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{Encode(currentState)}}'))
+            if ((Get-Wp8NonLiveCurrentStateDisposition $valid) -ne 'exact-accepted-wp9-planning-handoff') { exit 10 }
+            foreach ($encoded in @({{string.Join(",", encoded)}})) {
+                $mutated = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encoded))
+                if ((Get-Wp8NonLiveCurrentStateDisposition $mutated) -ne 'invalid') { exit 11 }
+            }
+            exit 0
+            """;
+        Assert.AreEqual(0, RunPowerShellScript(command),
+            "NonLiveAll accepted generic or weakened WP9 authority.");
+    }
+
     private static int RunValidator(Action<Dictionary<string, JsonObject>>? mutation)
     {
         string root = RepositoryRoot();
@@ -192,6 +338,31 @@ public sealed class Wp8PreLiveReadinessContractTests
 
     private static JsonObject ReadNode(string root, string relative) =>
         JsonNode.Parse(File.ReadAllText(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar))))!.AsObject();
+
+    private static int RunPowerShellScript(string command)
+    {
+        string path = Path.Combine(Path.GetTempPath(), "infinium-wp8-script-" + Guid.NewGuid().ToString("N") + ".ps1");
+        try
+        {
+            File.WriteAllText(path, command, new UTF8Encoding(false));
+            ProcessStartInfo start = new("pwsh.exe")
+            {
+                WorkingDirectory = RepositoryRoot(),
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            start.ArgumentList.Add("-NoProfile");
+            start.ArgumentList.Add("-File");
+            start.ArgumentList.Add(path);
+            using Process process = Process.Start(start)!;
+            Assert.IsTrue(process.WaitForExit(30_000), "PowerShell mutation script timed out.");
+            return process.ExitCode;
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
 
     private static string RepositoryRoot() => Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
 }

@@ -18,6 +18,99 @@ function Resolve-InputPath([string] $Value) {
     return [IO.Path]::GetFullPath((Join-Path $repoRoot $Value))
 }
 
+function Test-Wp8ExactPathSet([string[]] $Actual, [string[]] $Expected) {
+    $actualUnique = @($Actual | Sort-Object -Unique)
+    $expectedUnique = @($Expected | Sort-Object -Unique)
+    if ($actualUnique.Count -ne @($Actual).Count -or $expectedUnique.Count -ne @($Expected).Count -or
+        $actualUnique.Count -ne $expectedUnique.Count) {
+        return $false
+    }
+    return (($actualUnique -join "`n") -ceq ($expectedUnique -join "`n"))
+}
+
+function Test-Wp8VerificationCurrentState([string] $Text) {
+    foreach ($required in @(
+            '| Current authorized work | `M1/S6/WP8` accumulated non-live verification and pre-live review only; WP4 is accepted, no further Credential Manager operation is authorized, and no provider request is authorized |',
+            '| Next eligible action | Begin `M1/S6/WP8` accumulated non-live verification and pre-live review under accepted plan section 19; do not execute any native credential or live provider operation |',
+            '| Later work | WP4 and WP7 now satisfy WP8''s prerequisites. WP8 may prepare but may not execute live authorization packets. WP9-WP11 require their own exact owner authorization; no provider request is authorized now |')) {
+        if (-not $Text.Contains($required, [StringComparison]::Ordinal)) { return $false }
+    }
+    return $true
+}
+
+function Test-Wp8AcceptedHandoffCurrentState([string] $Text) {
+    foreach ($required in @(
+            '| Current authorized work | `M1/S6/WP9` owner decision and exact authorization-packet materialization planning only; WP8 is accepted. No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. |',
+            'Accepted `M1/S6/WP8` candidate',
+            '260a09ecfafea103227f113faf7625a5bf0ce759',
+            'fbdb1f03e006a85723b0533d44b2ed06e02cc724',
+            '36b980d226e9f9a0e91281a530fc959a211fb696',
+            '95919bcfbb6ea79f6ee5f6a8422d23da743c4b4da4f6ba6f9039ac4e69534e78',
+            'b8645da64eba4c12bbbc72953753e9e7debbc93ef576ef07cdd96b418399e498',
+            '4fe96ddf83e4472ba2bc66f6c046253d3055a69bf32716d934ea222b53072b0c',
+            '| Next eligible action | Owner decision whether to begin `M1/S6/WP9` materialization planning under accepted plan section 20; only fresh exact production-profile and WP9 request authorizations may be prepared, and neither may be executed without separate exact owner acceptance |',
+            'No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority',
+            'No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.')) {
+        if (-not $Text.Contains($required, [StringComparison]::Ordinal)) { return $false }
+    }
+    return $true
+}
+
+function Test-Wp8RetainedAcceptanceRecord([string] $Text) {
+    foreach ($required in @(
+            '## WP8 independent acceptance and handoff — 2026-08-14',
+            '| contract-persistence | `ACCEPT` |',
+            '| budget-settlement-faults | `ACCEPT` |',
+            '| credential-helper-security | `ACCEPT` |',
+            '| provider-adapter-offline-safety | `ACCEPT` |',
+            '| source-candidate-semantics-provenance | `ACCEPT` |',
+            '| overall-matrix-claims-diff | `ACCEPT` |',
+            '260a09ecfafea103227f113faf7625a5bf0ce759',
+            'fbdb1f03e006a85723b0533d44b2ed06e02cc724',
+            '36b980d226e9f9a0e91281a530fc959a211fb696',
+            '95919bcfbb6ea79f6ee5f6a8422d23da743c4b4da4f6ba6f9039ac4e69534e78',
+            'b8645da64eba4c12bbbc72953753e9e7debbc93ef576ef07cdd96b418399e498',
+            '4fe96ddf83e4472ba2bc66f6c046253d3055a69bf32716d934ea222b53072b0c',
+            'No separate reviewer-judgment artifact or hash was created or required.')) {
+        if (-not $Text.Contains($required, [StringComparison]::Ordinal)) { return $false }
+    }
+    return $true
+}
+
+function Get-Wp8PostVerificationDisposition(
+    [string[]] $Paths,
+    [string] $CurrentStateText,
+    [string] $VerificationRecordText,
+    [string] $HeadRecordText) {
+    $bindingPaths = @(
+        'docs/plans/milestones/m1/slices/s6/wp8-candidate-investigation-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-production-profile-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-qualification-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-source-claim-authorization.template.v1.json')
+    $closeoutPaths = @($bindingPaths) + @(
+        'docs/current-state.md',
+        'docs/plans/milestones/m1/slices/s6/record.md')
+    $verificationState = Test-Wp8VerificationCurrentState $CurrentStateText
+    $acceptedState = (Test-Wp8AcceptedHandoffCurrentState $CurrentStateText) -and
+        (Test-Wp8RetainedAcceptanceRecord $HeadRecordText)
+
+    if (@($Paths).Count -eq 0 -or (Test-Wp8ExactPathSet $Paths $bindingPaths)) {
+        if ($verificationState) { return 'exact-verification-state' }
+        if ($acceptedState) { return 'exact-accepted-handoff-state' }
+        return 'invalid'
+    }
+    if (Test-Wp8ExactPathSet $Paths $closeoutPaths) {
+        if (-not $acceptedState -or
+            -not $HeadRecordText.StartsWith($VerificationRecordText, [StringComparison]::Ordinal) -or
+            $HeadRecordText.Length -le $VerificationRecordText.Length) {
+            return 'invalid'
+        }
+        return 'exact-accepted-append-only-handoff'
+    }
+    return 'invalid'
+}
+
 function Read-StrictJson([string] $Path) {
     $bytes = [IO.File]::ReadAllBytes($Path)
     $text = [Text.Encoding]::UTF8.GetString($bytes)
@@ -269,17 +362,20 @@ foreach ($binding in @(
         if ($LASTEXITCODE -ne 0) { throw "WP8 $($binding[0]) binding is not an ancestor of HEAD." }
     }
 }
+$postVerificationDisposition = 'unfrozen-candidate'
 if ($verificationCandidateCommit -match '^[0-9a-f]{40}$') {
-    $allowedPostVerificationPaths = @(
-        'docs/plans/milestones/m1/slices/s6/record.md',
-        'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json',
-        'docs/plans/milestones/m1/slices/s6/wp8-production-profile-authorization.template.v1.json',
-        'docs/plans/milestones/m1/slices/s6/wp8-qualification-authorization.template.v1.json',
-        'docs/plans/milestones/m1/slices/s6/wp8-source-claim-authorization.template.v1.json',
-        'docs/plans/milestones/m1/slices/s6/wp8-candidate-investigation-authorization.template.v1.json')
     $postVerificationPaths = @(& git -C $repoRoot -c core.quotePath=false diff --name-only $verificationCandidateCommit HEAD --)
-    if ($LASTEXITCODE -ne 0 -or @($postVerificationPaths | Where-Object { $allowedPostVerificationPaths -cnotcontains $_ }).Count -ne 0) {
-        throw 'WP8 HEAD contains post-verification non-evidence drift.'
+    if ($LASTEXITCODE -ne 0) { throw 'WP8 post-verification path enumeration failed.' }
+    $currentStateAtHead = [string]::Join("`n", @(& git -C $repoRoot show 'HEAD:docs/current-state.md'))
+    if ($LASTEXITCODE -ne 0) { throw 'WP8 cannot read committed current-state authority.' }
+    $verificationRecord = [string]::Join("`n", @(& git -C $repoRoot show "$verificationCandidateCommit`:docs/plans/milestones/m1/slices/s6/record.md"))
+    if ($LASTEXITCODE -ne 0) { throw 'WP8 cannot read the verification-candidate record.' }
+    $headRecord = [string]::Join("`n", @(& git -C $repoRoot show 'HEAD:docs/plans/milestones/m1/slices/s6/record.md'))
+    if ($LASTEXITCODE -ne 0) { throw 'WP8 cannot read the committed head record.' }
+    $postVerificationDisposition = Get-Wp8PostVerificationDisposition `
+        $postVerificationPaths $currentStateAtHead $verificationRecord $headRecord
+    if ($postVerificationDisposition -eq 'invalid') {
+        throw 'WP8 HEAD is neither the exact verification state nor the exact accepted no-effect WP9-planning handoff.'
     }
 }
 foreach ($commitName in @('slice5_base_commit','wp8_baseline_commit','accepted_wp4_execution_commit','accepted_wp4_audit_commit',
@@ -537,6 +633,7 @@ $receipt = [ordered]@{
     wp8_product_template_commit = $productTemplateCommit
     wp8_verification_candidate_commit = $verificationCandidateCommit
     wp8_review_evidence_head = (& git -C $repoRoot rev-parse HEAD).Trim()
+    post_verification_disposition = $postVerificationDisposition
     execution_authorized = $false
     credential_manager_operations = 0
     dns_operations = 0

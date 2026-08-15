@@ -272,6 +272,28 @@ function Test-HandoffCloseoutCurrentState([string] $CurrentStateText) {
     return $wp1ToWp2 -or $wp4ToWp8 -or $wp8ToWp9
 }
 
+function Get-Wp8NonLiveCurrentStateDisposition([string] $CurrentStateText) {
+    $verificationState =
+        $CurrentStateText.Contains('| Current authorized work | `M1/S6/WP8` accumulated non-live verification and pre-live review only; WP4 is accepted, no further Credential Manager operation is authorized, and no provider request is authorized |', [StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('| Next eligible action | Begin `M1/S6/WP8` accumulated non-live verification and pre-live review under accepted plan section 19; do not execute any native credential or live provider operation |', [StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('| Later work | WP4 and WP7 now satisfy WP8''s prerequisites. WP8 may prepare but may not execute live authorization packets. WP9-WP11 require their own exact owner authorization; no provider request is authorized now |', [StringComparison]::Ordinal)
+    $acceptedNoEffectHandoff =
+        $CurrentStateText.Contains('| Current authorized work | `M1/S6/WP9` owner decision and exact authorization-packet materialization planning only; WP8 is accepted. No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. |', [StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('Accepted `M1/S6/WP8` candidate', [StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('260a09ecfafea103227f113faf7625a5bf0ce759', [StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('fbdb1f03e006a85723b0533d44b2ed06e02cc724', [StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('36b980d226e9f9a0e91281a530fc959a211fb696', [StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('95919bcfbb6ea79f6ee5f6a8422d23da743c4b4da4f6ba6f9039ac4e69534e78', [StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('b8645da64eba4c12bbbc72953753e9e7debbc93ef576ef07cdd96b418399e498', [StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('4fe96ddf83e4472ba2bc66f6c046253d3055a69bf32716d934ea222b53072b0c', [StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('| Next eligible action | Owner decision whether to begin `M1/S6/WP9` materialization planning under accepted plan section 20; only fresh exact production-profile and WP9 request authorizations may be prepared, and neither may be executed without separate exact owner acceptance |', [StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority', [StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.', [StringComparison]::Ordinal)
+    if ($verificationState) { return 'exact-wp8-verification-state' }
+    if ($acceptedNoEffectHandoff) { return 'exact-accepted-wp9-planning-handoff' }
+    return 'invalid'
+}
+
 function Assert-NoDuplicateJsonProperties([System.Text.Json.JsonElement] $Element, [string] $Path) {
     if ($Element.ValueKind -eq [System.Text.Json.JsonValueKind]::Object) {
         $names = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
@@ -1328,13 +1350,9 @@ function Invoke-NonLiveAllGate {
         throw 'NonLiveAll requires a clean committed candidate for content-bound evidence.'
     }
     $currentState = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/current-state.md') -Raw
-    foreach ($required in @(
-            '`M1/S6/WP8` accumulated non-live verification and pre-live review only',
-            'no further Credential Manager operation is authorized',
-            'no provider request is authorized')) {
-        if (-not $currentState.Contains($required, [StringComparison]::Ordinal)) {
-            throw "NonLiveAll current authority is missing '$required'."
-        }
+    $currentStateDisposition = Get-Wp8NonLiveCurrentStateDisposition $currentState
+    if ($currentStateDisposition -eq 'invalid') {
+        throw 'NonLiveAll requires either the exact WP8 verification authority or the exact accepted no-effect WP9-planning handoff.'
     }
 
     Invoke-ContractsGate
@@ -1416,6 +1434,7 @@ function Invoke-NonLiveAllGate {
     Write-Receipt 'NonLiveAll' ([ordered]@{
         baseline_commit = $baseline
         candidate_commit = $candidate
+        current_state_disposition = $currentStateDisposition
         verifier_sha256 = (Get-FileHash -LiteralPath $PSCommandPath -Algorithm SHA256).Hash.ToLowerInvariant()
         prelive_validator_sha256 = (Get-FileHash -LiteralPath (Join-Path $repoRoot 'eng/validate-m1-slice6-wp8-prelive.ps1') -Algorithm SHA256).Hash.ToLowerInvariant()
         case_matrix_sha256 = (Get-FileHash -LiteralPath (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
