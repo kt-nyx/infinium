@@ -7522,13 +7522,13 @@ are absent. WP9 profile output and product-state roots remain absent.
 ## WP9 replacement close-ready binding — 2026-08-15
 
 The corrected non-effectful implementation is frozen at
-`10caddae742fa196d1696069d3d9d968addb32f1`. A clean exact Release build at
+`82e803241db3942dfb31cca9cceae80a63239899`. A clean exact Release build at
 that commit passed with zero warnings/errors and produced coordinator SHA-256
-`2dc99bfea543526280676fdd62f79e5e949f98c5f641742f0d7ce870cd2a5352`,
+`6ba0f89f720b9d7dd61bbcaee301d4a58e546145b7c98412a61bf3d413d1ab3e`,
 helper SHA-256
-`93fbbc59c5b0350d8bb72e2c13cdeca9980719938cacb62a9cdfeb0f17907b54`,
+`51e7f2f05f6364462be0a0b7ea45a54f9955db197f10c8a258f7d7184e77cebc`,
 and a 126-file executable/dependency/runtime-metadata inventory SHA-256
-`9d41afcb2137367a37dd27a5323bb3fa8291ea7d5dfb79a1c26ac04534cb6389`.
+`511262d8c72920125e4fbaefe16da536c3229475d375ff3dee5dc422d8769212`.
 The replacement manifest binds those exact values and is ready only for the
 complete non-live floor and fresh independent security/semantic/diff review.
 
