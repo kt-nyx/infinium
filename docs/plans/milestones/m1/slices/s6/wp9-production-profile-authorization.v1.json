@@ -2,12 +2,12 @@
   "schema_identity": "infinium.repository.wp9-production-profile-authorization/1.0.0",
   "manifest_id": "infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f",
   "packet_kind": "EnrollOrVerifyProfile",
-  "status": "draft-close-ready-binding-pending",
+  "status": "ready-for-owner-acceptance",
   "effect_authority": "none-until-owner-accepts-exact-manifest-bytes",
   "prepared_at_utc": "2026-08-15T15:25:00.0000000Z",
   "expires_at_utc": "2026-08-17T15:25:00.0000000Z",
   "candidate_binding": {
-    "close_ready_implementation_commit": "0000000000000000000000000000000000000000",
+    "close_ready_implementation_commit": "c32ab6a193fefc91838a6e72747b1b5c2699e15a",
     "accepted_wp8_verification_commit": "cc14bf60f78c80280cb6eafe60fddaf2bc764d06",
     "accepted_wp8_evidence_commit": "baef115cdd43fa38d0a352c15f8ba44cbfa35312",
     "accepted_wp8_non_live_all_sha256": "52aa77325a2226505c35b1fba6d9d0fe2b6354022a6c85f6652211d609c529ad",
@@ -116,15 +116,15 @@
   "release_build": {
     "configuration": "Release",
     "target_framework": "net10.0",
-    "source_commit": "0000000000000000000000000000000000000000",
+    "source_commit": "c32ab6a193fefc91838a6e72747b1b5c2699e15a",
     "build_command": "dotnet build Infinium.sln -c Release --no-restore --nologo",
     "coordinator_relative_path": "src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe",
-    "coordinator_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "coordinator_sha256": "23af3bde58d01deb768a5d0a86d7cbb289d68303b62b1030ad190eff1d67614e",
     "helper_relative_path": "src/Infinium.Coordinator/bin/Release/net10.0/CredentialHelper/Infinium.CredentialHelper.exe",
-    "helper_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "helper_sha256": "3906366c3352507fd38f9e38bb93fbecb0e1ed7ae097bf428c9476c528faf685",
     "binary_inventory_pattern": "sorted-relative-path-lf-sha256-for-all-exe-dll-deps-json-and-runtimeconfig-json-under-coordinator-release-root",
-    "binary_inventory_file_count": 0,
-    "binary_inventory_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    "binary_inventory_file_count": 126,
+    "binary_inventory_sha256": "7715cec40d9348b518c7f570074c270ea2447ce225adddfae738022cba6dabe8"
   },
   "output": {
     "output_root_relative": "artifacts/m1-slice6/wp9-profile", "must_be_absent": true,

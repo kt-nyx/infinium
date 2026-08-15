@@ -7518,3 +7518,23 @@ result/UI/canary mutations, atomic lock collision, and Release metadata drift.
 No visible dialog was opened. The exact published Windows PowerShell command
 fails before launch while the manifest remains draft and owner/review markers
 are absent. WP9 profile output and product-state roots remain absent.
+
+## WP9 replacement close-ready binding — 2026-08-15
+
+The corrected non-effectful implementation is frozen at
+`c32ab6a193fefc91838a6e72747b1b5c2699e15a`. A clean exact Release build at
+that commit passed with zero warnings/errors and produced coordinator SHA-256
+`23af3bde58d01deb768a5d0a86d7cbb289d68303b62b1030ad190eff1d67614e`,
+helper SHA-256
+`3906366c3352507fd38f9e38bb93fbecb0e1ed7ae097bf428c9476c528faf685`,
+and a 126-file executable/dependency/runtime-metadata inventory SHA-256
+`7715cec40d9348b518c7f570074c270ea2447ce225adddfae738022cba6dabe8`.
+The replacement manifest binds those exact values and is ready only for the
+complete non-live floor and fresh independent security/semantic/diff review.
+
+No replacement `WP9_PROFILE_REVIEW_ACCEPTANCE` or
+`WP9_PROFILE_OWNER_ACCEPTANCE` line exists. This four-document binding does
+not launch the helper or UI, touch Credential Manager, materialize the profile,
+use an API key, perform DNS/public-network/provider/billable work, or create a
+transport-qualification request packet. Authority inheritance remains
+prohibited.
