@@ -52,8 +52,11 @@ close-ready implementation `688fb9e39c0c227389328d54d12b5b24eba657b6`.
 The canonical non-incremental Release build pins both informational-version and
 SourceLink revision identities to that exact commit. Two consecutive clean
 builds reproduced the coordinator, helper, and complete 126-file execution
-closure exactly. No corrected independent-review or owner-acceptance record
-exists, and WP9 execution remains ineligible.
+closure exactly.
+WP9 production-profile manifest `infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f` at SHA-256 `ff55f812a33860da739e8b1c22999c7cc219f7b3a9e843970380ef6ccf994469` is independently accepted at exact candidate `cd6a12d57ba6618e58221a30a2b41ce9bf029cd8` and remains pending exact owner acceptance.
+No execution or effect is authorized: no API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use. No authority is inherited.
+WP9 execution remains ineligible unless the exact canonical owner record is
+added.
 The transport-qualification request manifest is not materialized. Current
 official guidance concerning `safety_identifier` requires a separate authority
 resolution before any such request packet can be prepared. The earlier WP8

@@ -7703,3 +7703,5 @@ and 126-file execution-closure SHA-256
 SourceLink names that exact commit. The replacement grants no review, owner
 acceptance, inherited authority, credential/UI/key/native/network/provider/
 billable/profile/private/archive effect, or later request packet.
+
+WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=cd6a12d57ba6618e58221a30a2b41ce9bf029cd8 manifest_id=infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f sha256=ff55f812a33860da739e8b1c22999c7cc219f7b3a9e843970380ef6ccf994469 verdicts=security,semantics,diff
