@@ -14,7 +14,7 @@
     "accepted_wp6_evidence_commit": "2b277338390f7dac37b5a5436bbe2cd81dedc871",
     "accepted_wp7_product_commit": "59367a7479a7395b173b974bf720543aab2404d4",
     "accepted_wp7_evidence_commit": "51251c0e0eb98d67dbc9b295b9ff084ebca33890",
-    "wp8_candidate_commit": "pending-until-candidate-freeze"
+    "wp8_candidate_commit": "47c95f60b0cdcf2e3894f9ded89ee19d2f40e324"
   },
   "registry_binding": {
     "path": "fixtures/public/public-fixture-registry.v1.json",
