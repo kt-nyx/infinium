@@ -59,12 +59,13 @@ The canonical non-incremental Release build pins both informational-version and
 SourceLink revision identities to that exact commit. Two consecutive clean
 builds reproduced the coordinator, helper, and complete 126-file execution
 closure exactly.
-WP9 production-profile manifest `infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f` at SHA-256 `7123ee85fec6d238ef8965b8449e7729cd2fb204e525a30558d1ebac53209476` is independently accepted at exact candidate `6dbf687310dfcc13e5eac8f65c8ddc09cf17bccd` and remains pending exact owner acceptance.
-No execution or effect is authorized: no API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use. No authority is inherited.
+WP9 production-profile manifest `infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f` at SHA-256 `7123ee85fec6d238ef8965b8449e7729cd2fb204e525a30558d1ebac53209476` is owner accepted for exactly one enrollment-or-cancel operation after independent review at `6dbf687310dfcc13e5eac8f65c8ddc09cf17bccd`.
+Only the exact bounded helper-owned credential operation is authorized. No DNS or public-network operation, provider request, billable operation, transport qualification, inherited authority, retry, or additional credential operation is authorized.
 The exact B16 review marker remains append-only superseded historical evidence
 and cannot satisfy the corrected manifest. The exact B17 review marker is
-append-only independent acceptance only and grants no owner or execution
-authority. WP10 and WP11 remain blocked.
+append-only independent acceptance evidence. The separate exact owner marker
+authorizes only the bounded one-shot enrollment-or-cancel operation. WP10 and
+WP11 remain blocked.
 The transport-qualification request manifest is not materialized. Current
 official guidance concerning `safety_identifier` requires a separate authority
 resolution before any such request packet can be prepared. The earlier WP8
