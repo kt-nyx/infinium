@@ -7582,3 +7582,19 @@ This binding commit changes only the four WP9 authority documents. It does not
 launch the helper or UI, use an API key, touch Credential Manager, create the
 production profile or state, perform DNS/public-network/provider/billable work,
 or materialize a transport-qualification request. No authority is inherited.
+
+## WP9 repeated-build correction — 2026-08-15
+
+Immediate post-binding reproduction invalidated
+`38fcc90d45459d9ecc2e3dc6f56b187eb68bfc05`. The coordinator and helper
+executables reproduced exactly with SourceRevisionId pinned to close-ready
+commit `a4a756403ee0cf8d38e487a197f779596e052aa4`, but the aggregate dependency
+inventory changed from the initially incrementally reused output. Two
+consecutive non-incremental builds then reproduced the same 126-file inventory
+SHA-256 `641e8a6ca54d7d3615ca20cccb088718677a8650fd25c4d96a96b45f84f88ca5`.
+
+The canonical command is tightened to include `--no-incremental`, and the
+schema, validator, runner, and mutations require that exact command plus the
+close-ready SourceRevisionId. The manifest is reset to binding-pending for a
+fresh freeze and exact closure. No credential, UI, key, native, network,
+provider, billable, profile-state, private, or archive effect occurred.

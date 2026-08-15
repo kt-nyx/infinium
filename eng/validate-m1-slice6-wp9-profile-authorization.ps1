@@ -133,7 +133,7 @@ $releasePending = $m.release_build.source_commit -ceq ('0' * 40) -and
 if ($pending -ne $releasePending) {
     throw 'WP9 manifest status and exact Release build binding disagree.'
 }
-$expectedBuildCommand = "dotnet build Infinium.sln -c Release --no-restore --nologo -p:SourceRevisionId=$($m.release_build.source_commit)"
+$expectedBuildCommand = "dotnet build Infinium.sln -c Release --no-restore --nologo --no-incremental -p:SourceRevisionId=$($m.release_build.source_commit)"
 if ($m.release_build.build_command -cne $expectedBuildCommand) {
     throw 'WP9 Release build command must pin SourceRevisionId to the exact close-ready source commit.'
 }

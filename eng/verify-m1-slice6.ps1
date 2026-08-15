@@ -339,11 +339,18 @@ function Get-Wp8NonLiveCurrentStateDisposition([string] $CurrentStateText, [obje
         $normalized.Contains('The manifest is binding-pending; no independent-review or owner-acceptance record exists for corrected bytes.', [StringComparison]::Ordinal) -and
         $normalized.Contains('| Next eligible action | Freeze and bind the corrected commit-stable Release closure, action-time readiness evidence, and exact post-review/owner authority-document transitions; then rerun the complete non-live floor and fresh independent security/semantic/diff review. WP9 execution remains ineligible. |', [StringComparison]::Ordinal) -and
         $wp9NoEffect -and $noInheritance
+    $wp9OwnerStopRepeatBuildCorrection =
+        $AcceptanceBinding.state -eq 'accepted-closeout' -and
+        $normalized.Contains('| Current authorized work | `M1/S6/WP9` bounded non-effectful owner-stop correction and reverification only.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('Post-binding reproduction invalidated binding `38fcc90d45459d9ecc2e3dc6f56b187eb68bfc05`:', [StringComparison]::Ordinal) -and
+        $normalized.Contains('The manifest is binding-pending; no independent-review or owner-acceptance record exists for corrected bytes.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('| Next eligible action | Freeze and bind an exact non-incremental SourceRevisionId-pinned Release closure, prove repeated-build identity, then rerun the complete non-live floor and fresh independent security/semantic/diff review. WP9 execution remains ineligible. |', [StringComparison]::Ordinal) -and
+        $wp9NoEffect -and $noInheritance
     if ($verificationState) { return 'exact-wp8-correction-reverification-state' }
     if ($acceptedNoEffectHandoff) { return 'exact-corrected-wp8-accepted-handoff' }
     if ($wp9ProfilePreparation) { return 'exact-wp9-profile-preparation-no-effect-state' }
     if ($wp9ProfileOwnerStop) { return 'exact-wp9-profile-owner-stop-no-effect-state' }
-    if ($wp9OwnerStopCorrection) { return 'exact-wp9-owner-stop-correction-no-effect-state' }
+    if ($wp9OwnerStopCorrection -or $wp9OwnerStopRepeatBuildCorrection) { return 'exact-wp9-owner-stop-correction-no-effect-state' }
     return 'invalid'
 }
 

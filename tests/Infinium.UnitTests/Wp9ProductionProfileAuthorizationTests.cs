@@ -211,7 +211,7 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             node => node["owner_authorization"]!["independent_review_record"] = "missing",
             node => node["release_build"]!["source_commit"] = new string('f', 40),
             node => node["release_build"]!["build_command"] = "dotnet build Infinium.sln -c Release --no-restore --nologo",
-            node => node["release_build"]!["build_command"] = "dotnet build Infinium.sln -c Release --no-restore --nologo -p:SourceRevisionId=" + new string('f', 40),
+            node => node["release_build"]!["build_command"] = "dotnet build Infinium.sln -c Release --no-restore --nologo --no-incremental -p:SourceRevisionId=" + new string('f', 40),
             node => node["release_build"]!["binary_inventory_file_count"] = 501,
             node => MakePartiallyReady(node, "source_commit"),
             node => MakePartiallyReady(node, "coordinator_sha256"),

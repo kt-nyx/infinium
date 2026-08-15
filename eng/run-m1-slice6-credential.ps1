@@ -73,7 +73,7 @@ if ($LASTEXITCODE -ne 0 -or $branch -cne 'codex/m1-s6' -or $status.Count -ne 0) 
     throw 'WP9 profile execution requires the exact clean codex/m1-s6 candidate.'
 }
 $closeReady = [string]$m.candidate_binding.close_ready_implementation_commit
-$expectedBuildCommand = "dotnet build Infinium.sln -c Release --no-restore --nologo -p:SourceRevisionId=$closeReady"
+$expectedBuildCommand = "dotnet build Infinium.sln -c Release --no-restore --nologo --no-incremental -p:SourceRevisionId=$closeReady"
 if ([string]$m.release_build.build_command -cne $expectedBuildCommand) {
     throw 'WP9 execution requires the canonical Release build command pinned to the close-ready source revision.'
 }

@@ -233,7 +233,7 @@
         "configuration": { "const": "Release" },
         "target_framework": { "const": "net10.0" },
         "source_commit": { "$ref": "#/$defs/gitSha" },
-        "build_command": { "type": "string", "pattern": "^dotnet build Infinium\\.sln -c Release --no-restore --nologo -p:SourceRevisionId=[0-9a-f]{40}$" },
+        "build_command": { "type": "string", "pattern": "^dotnet build Infinium\\.sln -c Release --no-restore --nologo --no-incremental -p:SourceRevisionId=[0-9a-f]{40}$" },
         "coordinator_relative_path": { "const": "src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe" },
         "coordinator_sha256": { "$ref": "#/$defs/sha256" },
         "helper_relative_path": { "const": "src/Infinium.Coordinator/bin/Release/net10.0/CredentialHelper/Infinium.CredentialHelper.exe" },
