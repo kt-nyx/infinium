@@ -138,9 +138,12 @@ public sealed class Wp8PreLiveReadinessContractTests
     [TestCategory("Contract")]
     public void NonLiveAllIsClosedAndDoesNotInvokeNativeOrLiveGates()
     {
+        string root = RepositoryRoot();
         string script = TestRepository.Read("eng", "verify-m1-slice6.ps1");
         StringAssert.Contains(script, "'NonLiveAll'");
         StringAssert.Contains(script, "function Invoke-NonLiveAllGate");
+        StringAssert.Contains(script, "function Get-Wp8Layer6CurrentStateDisposition");
+        StringAssert.Contains(script, "$isWp8StructuredCurrentState");
         StringAssert.Contains(script, "NonLiveAll refuses every authorization manifest.");
         StringAssert.Contains(script, "Invoke-Wp8PreLiveValidationGate");
         StringAssert.Contains(script, "content-bound evidence");
@@ -155,6 +158,10 @@ public sealed class Wp8PreLiveReadinessContractTests
         Assert.IsFalse(function.Value.Contains("Invoke-CredentialNativeRecoveryGate", StringComparison.Ordinal));
         Assert.IsFalse(function.Value.Contains("run-m1-slice6-live", StringComparison.Ordinal));
         Assert.IsFalse(function.Value.Contains("run-m1-slice6-credential", StringComparison.Ordinal));
+        Assert.AreNotEqual(0, RunLayer6Mode(root, false),
+            "Ordinary Layer6 unexpectedly unprotected the WP8 current-state path.");
+        Assert.AreEqual(0, RunLayer6Mode(root, true),
+            "Explicit WP8 pre-live closeout Layer6 rejected the exact correction state.");
     }
 
     [TestMethod]
@@ -423,6 +430,47 @@ public sealed class Wp8PreLiveReadinessContractTests
         finally
         {
             File.Delete(path);
+        }
+    }
+
+    private static int RunLayer6Mode(string root, bool wp8Mode)
+    {
+        string output = Path.Combine(Path.GetTempPath(), "infinium-wp8-layer6-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            ProcessStartInfo start = new("pwsh.exe")
+            {
+                WorkingDirectory = root,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+            };
+            foreach (string argument in new[]
+            {
+                "-NoProfile", "-File", Path.Combine(root, "eng", "verify-m1-slice6.ps1"),
+                "-Gate", "Layer6Review", "-BaselineCommit", "63e4584f8926227c2a1e12ef31c71a3a88798c7f",
+                "-CandidateCommit", "HEAD", "-OutputRoot", output,
+            })
+            {
+                start.ArgumentList.Add(argument);
+            }
+            if (wp8Mode)
+            {
+                start.ArgumentList.Add("-Wp8PreLiveCloseout");
+            }
+            using Process process = Process.Start(start)!;
+            _ = process.StandardOutput.ReadToEnd();
+            _ = process.StandardError.ReadToEnd();
+            Assert.IsTrue(process.WaitForExit(30_000), "Layer6 mode contract process timed out.");
+            return process.ExitCode;
+        }
+        finally
+        {
+            if (Directory.Exists(output))
+            {
+                Directory.Delete(output, true);
+            }
         }
     }
 

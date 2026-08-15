@@ -19,6 +19,7 @@ public sealed class ProviderLayer6VerifierContractTests
             "[string] $CandidateCommit",
             "[switch] $HandoffCloseout",
             "[switch] $Wp4OwnerReviewHandoff",
+            "[switch] $Wp8PreLiveCloseout",
             "[switch] $OwnerTestProcessCleanup",
             "merge-base --is-ancestor",
             "layer6-changed-paths.json",
@@ -30,6 +31,7 @@ public sealed class ProviderLayer6VerifierContractTests
             "layer6-gap-inventory.json",
             "layer6-private-archive-absence.json",
             "candidate_bound = $true",
+            "wp8_pre_live_closeout = [bool]$Wp8PreLiveCloseoutMode",
             "network_permitted = $false",
             "credential_access_permitted = $false",
         ];

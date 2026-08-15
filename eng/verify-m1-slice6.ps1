@@ -17,6 +17,8 @@ param(
 
     [switch] $Wp4OwnerReviewHandoff,
 
+    [switch] $Wp8PreLiveCloseout,
+
     [switch] $OwnerTestProcessCleanup,
 
     [switch] $CredentialNativePostEffectAudit
@@ -42,6 +44,9 @@ if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 
     }
     if ($Wp4OwnerReviewHandoff) {
         $arguments += '-Wp4OwnerReviewHandoff'
+    }
+    if ($Wp8PreLiveCloseout) {
+        $arguments += '-Wp8PreLiveCloseout'
     }
     if ($OwnerTestProcessCleanup) {
         $arguments += '-OwnerTestProcessCleanup'
@@ -304,6 +309,41 @@ function Get-Wp8NonLiveCurrentStateDisposition([string] $CurrentStateText, [obje
     return 'invalid'
 }
 
+function Get-Wp8Layer6CurrentStateDisposition([string] $CandidateCommit) {
+    try {
+        $currentStateText = Get-CandidateText $CandidateCommit 'docs/current-state.md'
+        $matrixText = Get-CandidateText $CandidateCommit 'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json'
+        $matrix = $matrixText | ConvertFrom-Json -Depth 100
+        $binding = $matrix.acceptance_binding
+        if ($matrix.schema_identity -ne 'infinium.repository.wp8-case-requirement-matrix/1.0.0' -or
+            $matrix.matrix_id -ne 'infinium.m1-s6.wp8.case-requirement-matrix/v1' -or
+            [string]$matrix.candidate_binding.wp8_verification_candidate_commit -cne [string]$binding.verification_candidate_commit) {
+            return 'invalid'
+        }
+        foreach ($zero in @('credential_manager_operations','dns_operations','public_network_operations','provider_requests','billable_operations')) {
+            if ([int64]$matrix.external_effects.$zero -ne 0) { return 'invalid' }
+        }
+        foreach ($falseField in @('api_key_used','live_manifest_execution','private_fixture_access','archive_access')) {
+            if ([bool]$matrix.external_effects.$falseField) { return 'invalid' }
+        }
+        $pending = 'pending-until-post-run-evidence-freeze'
+        if ($binding.state -eq 'correction-verification-pending') {
+            foreach ($field in @('post_run_evidence_candidate_commit','non_live_all_receipt_sha256','pre_live_receipt_sha256','direct_layer6_receipt_sha256')) {
+                if ([string]$binding.$field -cne $pending) { return 'invalid' }
+            }
+        } elseif ($binding.state -eq 'accepted-closeout') {
+            if ([string]$binding.verification_candidate_commit -cnotmatch '^[0-9a-f]{40}$' -or
+                [string]$binding.post_run_evidence_candidate_commit -cnotmatch '^[0-9a-f]{40}$') { return 'invalid' }
+            foreach ($field in @('non_live_all_receipt_sha256','pre_live_receipt_sha256','direct_layer6_receipt_sha256')) {
+                if ([string]$binding.$field -cnotmatch '^[0-9a-f]{64}$') { return 'invalid' }
+            }
+        } else { return 'invalid' }
+        return Get-Wp8NonLiveCurrentStateDisposition $currentStateText $binding
+    } catch {
+        return 'invalid'
+    }
+}
+
 function Assert-NoDuplicateJsonProperties([System.Text.Json.JsonElement] $Element, [string] $Path) {
     if ($Element.ValueKind -eq [System.Text.Json.JsonValueKind]::Object) {
         $names = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
@@ -456,13 +496,19 @@ function Test-Wp1ProtectedPath([string] $Path) {
     return $Path.StartsWith('contracts/protobuf/infinium/helper/v1/', [System.StringComparison]::Ordinal)
 }
 
-function Invoke-Layer6ReviewGate([string] $ReviewBaseline = $BaselineCommit, [string] $ReviewCandidate = $CandidateCommit) {
+function Invoke-Layer6ReviewGate(
+    [string] $ReviewBaseline = $BaselineCommit,
+    [string] $ReviewCandidate = $CandidateCommit,
+    [bool] $Wp8PreLiveCloseoutMode = [bool]$Wp8PreLiveCloseout) {
     $baselineHash = Resolve-GitCommit $ReviewBaseline 'BaselineCommit'
     $candidateHash = Resolve-GitCommit $ReviewCandidate 'CandidateCommit'
     & git -C $repoRoot merge-base --is-ancestor $baselineHash $candidateHash
     if ($LASTEXITCODE -ne 0) {
         throw "Layer6Review baseline $baselineHash is not an ancestor of candidate $candidateHash."
     }
+    $wp8CurrentStateDisposition = if ($Wp8PreLiveCloseoutMode) {
+        Get-Wp8Layer6CurrentStateDisposition $candidateHash
+    } else { 'not-requested' }
 
     $nameStatusLines = @(& git -C $repoRoot -c core.quotePath=false diff --name-status --find-renames $baselineHash $candidateHash --)
     if ($LASTEXITCODE -ne 0) {
@@ -480,13 +526,18 @@ function Invoke-Layer6ReviewGate([string] $ReviewBaseline = $BaselineCommit, [st
         foreach ($path in $paths) {
             $isHandoffCurrentState = ($HandoffCloseout -or $Wp4OwnerReviewHandoff) -and
                 $path -ceq 'docs/current-state.md'
+            $isWp8StructuredCurrentState = $Wp8PreLiveCloseoutMode -and
+                $path -ceq 'docs/current-state.md' -and
+                $wp8CurrentStateDisposition -in @('exact-wp8-correction-reverification-state','exact-corrected-wp8-accepted-handoff')
             $isOwnerTestProcessCleanupPolicy = $OwnerTestProcessCleanup -and
                 $path -ceq 'docs/execution-policy.md'
             $isProtected = (Test-Wp1ProtectedPath $path) -and
                 -not $isHandoffCurrentState -and
+                -not $isWp8StructuredCurrentState -and
                 -not $isOwnerTestProcessCleanupPolicy
             $isAllowed = (Test-Wp1AllowedPath $path) -or
                 $isHandoffCurrentState -or
+                $isWp8StructuredCurrentState -or
                 $isOwnerTestProcessCleanupPolicy
             $privateOrArchive = $path -match '(?i)(^|/)(private|legacy|archive)(/|$)' -or
                 $path -match '(?i)independent-slice3-evaluator' -or
@@ -517,6 +568,7 @@ function Invoke-Layer6ReviewGate([string] $ReviewBaseline = $BaselineCommit, [st
     $pathReport = Write-JsonReport 'layer6-changed-paths.json' ([ordered]@{
         baseline_commit = $baselineHash
         candidate_commit = $candidateHash
+        wp8_current_state_disposition = $wp8CurrentStateDisposition
         changed_path_count = $changedPaths.Count
         failure_count = $pathFailures.Count
         paths = @($changedPaths)
@@ -654,6 +706,15 @@ function Invoke-Layer6ReviewGate([string] $ReviewBaseline = $BaselineCommit, [st
             }
         }
     }
+    if ($Wp8PreLiveCloseoutMode) {
+        $currentState = @($changedPaths | Where-Object { $_.path -ceq 'docs/current-state.md' })
+        if ($currentState.Count -ne 1 -or -not $currentState[0].candidate_blob) {
+            $failures.Add('Wp8PreLiveCloseout requires exactly one changed candidate docs/current-state.md.')
+        }
+        if ($wp8CurrentStateDisposition -notin @('exact-wp8-correction-reverification-state','exact-corrected-wp8-accepted-handoff')) {
+            $failures.Add('Wp8PreLiveCloseout requires the exact correction-reverification state or exact corrected-WP8 accepted no-effect planning handoff.')
+        }
+    }
     if ($Wp4OwnerReviewHandoff) {
         $currentState = @($changedPaths | Where-Object { $_.path -ceq 'docs/current-state.md' })
         if ($currentState.Count -ne 1 -or -not $currentState[0].candidate_blob) {
@@ -704,6 +765,8 @@ function Invoke-Layer6ReviewGate([string] $ReviewBaseline = $BaselineCommit, [st
         candidate_bound = $true
         handoff_closeout = [bool]$HandoffCloseout
         wp4_owner_review_handoff = [bool]$Wp4OwnerReviewHandoff
+        wp8_pre_live_closeout = [bool]$Wp8PreLiveCloseoutMode
+        wp8_current_state_disposition = $wp8CurrentStateDisposition
         owner_test_process_cleanup = [bool]$OwnerTestProcessCleanup
         changed_path_count = $changedPaths.Count
         allowed_path_failure_count = $pathFailures.Count
@@ -1381,7 +1444,7 @@ function Invoke-NonLiveAllGate {
 
     $candidate = (& git -C $repoRoot rev-parse HEAD).Trim()
     $baseline = '63e4584f8926227c2a1e12ef31c71a3a88798c7f'
-    Invoke-Layer6ReviewGate $baseline $candidate
+    Invoke-Layer6ReviewGate $baseline $candidate $true
 
     $childReceiptNames = @(
         'contracts.json', 'statesurfaces.json', 'statetotality.json', 'budget.json',
