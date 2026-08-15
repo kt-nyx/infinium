@@ -15,15 +15,15 @@
     "accepted_wp7_product_commit": "59367a7479a7395b173b974bf720543aab2404d4",
     "accepted_wp7_evidence_commit": "51251c0e0eb98d67dbc9b295b9ff084ebca33890",
     "wp8_product_template_commit": "260a09ecfafea103227f113faf7625a5bf0ce759",
-    "wp8_verification_candidate_commit": "aa98fcf418994ab724e182cb4eb385b647810ef0"
+    "wp8_verification_candidate_commit": "fe93a360ccf3392358550acbe486d0440e0aec18"
   },
   "acceptance_binding": {
-    "state": "accepted-closeout",
-    "verification_candidate_commit": "aa98fcf418994ab724e182cb4eb385b647810ef0",
-    "post_run_evidence_candidate_commit": "9ec4af57449ceb283f46bb136892c77a63fc2b97",
-    "non_live_all_receipt_sha256": "6c1b5cf79f0f719e28f73ed94dc4984bc4b192be880967ca7309eca036e8fa6f",
-    "pre_live_receipt_sha256": "569816a7f8e192d97039f2f1c271de92af6f930e18f6ffa0e7e512625b630812",
-    "direct_layer6_receipt_sha256": "bd207ab563246494b547d5124478d77a87ad3617b78c03d72507c944aaef1e40"
+    "state": "correction-verification-pending",
+    "verification_candidate_commit": "fe93a360ccf3392358550acbe486d0440e0aec18",
+    "post_run_evidence_candidate_commit": "pending-until-post-run-evidence-freeze",
+    "non_live_all_receipt_sha256": "pending-until-post-run-evidence-freeze",
+    "pre_live_receipt_sha256": "pending-until-post-run-evidence-freeze",
+    "direct_layer6_receipt_sha256": "pending-until-post-run-evidence-freeze"
   },
   "registry_binding": {
     "path": "fixtures/public/public-fixture-registry.v1.json",
