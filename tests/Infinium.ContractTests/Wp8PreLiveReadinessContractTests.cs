@@ -102,7 +102,8 @@ public sealed class Wp8PreLiveReadinessContractTests
             StringAssert.Contains(normalizedReadme, acceptance["direct_layer6_receipt_sha256"]!.GetValue<string>());
             Assert.IsTrue(
                 normalizedReadme.Contains("The next eligible action is only the owner's decision whether to begin WP9", StringComparison.Ordinal)
-                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is active.", StringComparison.Ordinal),
+                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is active.", StringComparison.Ordinal)
+                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is complete at close-ready", StringComparison.Ordinal),
                 "Accepted WP8 must retain either its exact closeout handoff or the exact later no-effect WP9 preparation handoff.");
         }
         StringAssert.Contains(normalizedReadme, "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.");

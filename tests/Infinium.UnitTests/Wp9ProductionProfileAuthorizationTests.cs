@@ -9,14 +9,17 @@ namespace Infinium.Tests;
 public sealed class Wp9ProductionProfileAuthorizationTests
 {
     [TestMethod]
-    public void ExactDraftManifestValidatesAndRecursiveSchemaIsClosed()
+    public void ExactPreparedManifestValidatesAndRecursiveSchemaIsClosed()
     {
         string root = RepositoryRoot();
         string manifest = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp9-production-profile-authorization.v1.json");
         ProcessResult result = RunValidator(root, manifest, mutation: false);
         Assert.AreEqual(0, result.ExitCode, result.Error);
-        StringAssert.Contains(result.Output, "validated-draft-binding-pending");
+        Assert.IsTrue(
+            result.Output.Contains("validated-draft-binding-pending", StringComparison.Ordinal)
+            || result.Output.Contains("validated-ready-for-owner-acceptance", StringComparison.Ordinal),
+            result.Output);
 
         using JsonDocument schema = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(
             root, "contracts", "repository", "wp9-production-profile-authorization.v1.schema.json")));
