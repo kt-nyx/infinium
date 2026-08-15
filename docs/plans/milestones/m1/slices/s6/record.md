@@ -7910,3 +7910,25 @@ retains mutation coverage for duplicate markers, extra protected paths, stale
 state, and wrong mode. No UI, API-key, Credential Manager, DNS, public-network,
 provider, billable, profile, private-fixture, archive, or later-packet effect
 occurred.
+
+## WP9 state-aware owner-closeout replacement binding — 2026-08-15
+
+The bounded correction is frozen at exact close-ready commit
+`4f0b82bf57eabc77ffcae1b2c6b69602584c7bb3`. The state-aware NonLiveAll
+contract now admits the exact owner-accepted transition only through the
+dedicated owner-acceptance mode; ordinary, WP8, owner-stop, review-closeout,
+and correction states reject that mode. Combined retained-WP8 and Layer 6
+contracts passed 13/13 before freeze.
+
+The canonical non-incremental Release build pinned to that exact source has
+coordinator SHA-256
+`bc9f606d1f38fcb09aa7c54fc17a4e8b07bbf4742b1f3bc2e791c9ec96ba757d`,
+helper SHA-256
+`b24ea2eda426fb165c809e4460cc30eb0432d5d394862303fd74c8ce49e18d7d`,
+and 126-file inventory SHA-256
+`bd43af246839245eeac8abcd485fdb6966b9cda6a5ab1084efec56c63c4b1f79`.
+The owner marker at `cba787882b854bbe0e471431e51024781a041fbd`
+remains append-only superseded historical non-executed evidence and grants no
+authority for this replacement. No helper launch, UI, API-key, Credential
+Manager, DNS, public-network, provider, billable, profile, private-fixture,
+archive, or later-packet effect occurred.

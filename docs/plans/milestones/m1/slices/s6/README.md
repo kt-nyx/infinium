@@ -65,10 +65,14 @@ The canonical non-incremental Release build pins both informational-version and
 SourceLink revision identities to that exact commit. Two consecutive clean
 builds reproduced the coordinator, helper, and complete 126-file execution
 closure exactly.
-WP9 post-owner contract correction and complete non-live reverification are active; owner acceptance and execution are ineligible.
-The exact current-manifest owner marker committed at `cba787882b854bbe0e471431e51024781a041fbd` remains append-only superseded historical non-executed evidence and grants no authority.
-The replacement must make the state-aware NonLiveAll contract admit only the exact owner-accepted Layer 6 mode while every ordinary, WP8, owner-stop, and review-closeout mode rejects.
-No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. No authority is inherited.
+WP9 non-effectful production-profile preparation is frozen at corrected
+close-ready implementation `4f0b82bf57eabc77ffcae1b2c6b69602584c7bb3`.
+The canonical non-incremental Release build pins both informational-version and
+SourceLink revision identities to that exact commit. Two consecutive clean
+builds reproduced the coordinator, helper, and complete 126-file execution
+closure exactly.
+No corrected independent-review or owner-acceptance record exists, and WP9 execution remains ineligible.
+The exact current-manifest owner marker committed at `cba787882b854bbe0e471431e51024781a041fbd` remains append-only superseded historical non-executed evidence and cannot satisfy the corrected manifest. Historical markers are identity-isolated from the exact current manifest ID and SHA-256.
 The exact B17 review and attached SHA-256
 `7123ee85fec6d238ef8965b8449e7729cd2fb204e525a30558d1ebac53209476`
 owner markers remain append-only superseded historical evidence and are
