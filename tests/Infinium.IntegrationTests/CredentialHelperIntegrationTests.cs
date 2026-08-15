@@ -223,6 +223,39 @@ public sealed class CredentialHelperIntegrationTests
     }
 
     [TestMethod]
+    public async Task Wp9VerifiedEnrollmentPublishesExactActiveVerifiedGenerationWithoutDispatch()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp9-VerifiedEnrollment-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
+        store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
+        _ = store.BeginCredentialEnrollment(
+            "profile-wp9", "generation-wp9", "WP9 verified enrollment", BaseTime.AddSeconds(1),
+            "account-wp9", "billing-wp9");
+        string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
+        OneShotCredentialHelperLauncher launcher = Launcher(helper);
+        CredentialHelperCoordinator coordinator = new(store, launcher);
+
+        (CoordinatedHelperReceipt receipt, CredentialProfileProjection projection) =
+            await coordinator.ExecuteVerifiedEnrollmentAsync(
+                "wp9-verified-enrollment-attempt",
+                CredentialBootstrap("profile-wp9", "generation-wp9", 121),
+                CredentialAssignment(
+                    "profile-wp9", "generation-wp9", HelperAssignmentKindV2.Enroll,
+                    "wp9-production-profile/enroll-and-verify"),
+                BaseTime.AddSeconds(2));
+
+        Assert.AreEqual(HelperOutcomeV2.Completed, receipt.Process.Receipt.Outcome);
+        Assert.AreEqual("active-verified", projection.LifecycleState);
+        Assert.AreEqual("available", projection.VerificationState);
+        Assert.AreEqual("generation-wp9", projection.GenerationId);
+        Assert.AreEqual(0, receipt.Process.NetworkOperationCount);
+        Assert.AreEqual(0, receipt.Process.NativeCredentialOperationCount);
+        Assert.AreEqual(0, receipt.Process.StagedResponseBytes.Length);
+        Assert.IsFalse(receipt.Process.RetryAttempted);
+    }
+
+    [TestMethod]
     public void ContainmentEvidenceRejectsReportedPidWithoutJobMembershipHistory()
     {
         Assert.IsFalse(OneShotCredentialHelperLauncher.ValidateContainmentEvidence(

@@ -149,6 +149,54 @@ public sealed class CredentialHelperCoordinator
                 .ConfigureAwait(false);
 
     internal async Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>
+        ExecuteVerifiedEnrollmentAsync(
+            string attemptId,
+            HelperPrivateFrameV2 bootstrap,
+            HelperPrivateFrameV2 assignment,
+            DateTimeOffset now,
+            CancellationToken cancellationToken = default)
+    {
+        if (assignment.Assignment.AssignmentKind != HelperAssignmentKindV2.Enroll)
+        {
+            throw new InvalidDataException("Verified enrollment accepts only an exact enrollment assignment.");
+        }
+        (CoordinatedHelperReceipt helper, CredentialProfileProjection enrolled) =
+            await ExecuteCredentialTransitionCoreAsync(
+                attemptId, bootstrap, assignment, now, CredentialLifecycleFaultPoint.None, cancellationToken)
+                .ConfigureAwait(false);
+        if (helper.Process.Receipt.Outcome != HelperOutcomeV2.Completed)
+        {
+            return (helper, enrolled);
+        }
+        if (enrolled.LifecycleState != "active-unverified"
+            || enrolled.GenerationId != assignment.Assignment.GenerationId?.Value)
+        {
+            throw new InvalidOperationException(
+                "A completed production enrollment did not reach the exact durable verification predecessor.");
+        }
+        CredentialProfileProjection verified = store.ApplyCredentialTransition(new(
+            attemptId + "-verified-generation",
+            enrolled.ProfileId,
+            enrolled.GenerationId,
+            "verify",
+            "active-unverified",
+            "active-verified",
+            "active-verified",
+            enrolled.CapabilitySnapshotId,
+            enrolled.AccountIdentityId,
+            enrolled.BillingScopeIdentityId,
+            now.AddTicks(5),
+            now.AddTicks(6)));
+        if (verified.LifecycleState != "active-verified"
+            || verified.VerificationState != "available"
+            || verified.GenerationId != enrolled.GenerationId)
+        {
+            throw new InvalidOperationException("Production enrollment failed to publish one exact verified generation.");
+        }
+        return (helper, verified);
+    }
+
+    internal async Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>
         ExecuteCredentialTransitionWithFaultAsync(
             string attemptId,
             HelperPrivateFrameV2 bootstrap,

@@ -19,6 +19,24 @@ using Microsoft.Extensions.Logging;
 
 #pragma warning disable CA1416 // The executable rejects non-Windows hosts before setup.
 
+if (args is ["--wp9-production-profile-enrollment", "--manifest", string wp9Manifest,
+    "--manifest-sha256", string wp9ManifestSha256,
+    "--output-root", string wp9OutputRoot,
+    "--product-root", string wp9ProductRoot])
+{
+    try
+    {
+        return await Wp9ProductionProfileEnrollmentRunner.RunAsync(
+            wp9Manifest, wp9ManifestSha256, wp9OutputRoot, wp9ProductRoot).ConfigureAwait(false);
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException
+        or InvalidOperationException or OperationCanceledException or PlatformNotSupportedException)
+    {
+        Console.Error.WriteLine($"WP9 production profile enrollment stopped with typed non-secret error: {exception.GetType().Name}");
+        return 73;
+    }
+}
+
 if (args is ["--credential-native-qualification-v2", "--manifest", string nativeManifest,
     "--manifest-sha256", string nativeManifestSha256,
     "--output-root", string nativeOutputRoot])

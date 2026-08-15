@@ -304,8 +304,17 @@ function Get-Wp8NonLiveCurrentStateDisposition([string] $CurrentStateText, [obje
         $normalized.Contains([string]$AcceptanceBinding.direct_layer6_receipt_sha256, [StringComparison]::Ordinal) -and
         $normalized.Contains('| Next eligible action | Owner decision whether to begin `M1/S6/WP9` materialization planning under accepted plan section 20; only fresh exact production-profile and WP9 request authorizations may be prepared, and neither may be executed without separate exact owner acceptance |', [StringComparison]::Ordinal) -and
         $noEffect -and $noInheritance
+    $wp9ProfilePreparation =
+        $AcceptanceBinding.state -eq 'accepted-closeout' -and
+        $normalized.Contains('| Current authorized work | `M1/S6/WP9` non-effectful production-profile enrollment packet preparation and verification only.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f', [StringComparison]::Ordinal) -and
+        $normalized.Contains('remains binding-pending and is not executable.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('| Next eligible action | Complete and independently review the exact WP9 production-profile close-ready binding, then stop for an exact owner decision.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('no WP9 transport-qualification request manifest may be materialized until that request-field authority is resolved.', [StringComparison]::Ordinal) -and
+        $noEffect -and $noInheritance
     if ($verificationState) { return 'exact-wp8-correction-reverification-state' }
     if ($acceptedNoEffectHandoff) { return 'exact-corrected-wp8-accepted-handoff' }
+    if ($wp9ProfilePreparation) { return 'exact-wp9-profile-preparation-no-effect-state' }
     return 'invalid'
 }
 
@@ -1395,9 +1404,14 @@ function Invoke-ProvenanceReplayGate {
     })
 }
 
-function Invoke-Wp8PreLiveValidationGate {
+function Invoke-Wp8PreLiveValidationGate([bool] $HistoricalEvidence = $false) {
     $receiptPath = Join-Path $resolvedOutputRoot 'wp8-prelive-validation.json'
-    & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp8-prelive.ps1') -OutputPath $receiptPath -RequireFrozenCandidate
+    if ($HistoricalEvidence) {
+        & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp8-prelive.ps1') -OutputPath $receiptPath -RequireAcceptedHistoricalEvidence
+    }
+    else {
+        & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp8-prelive.ps1') -OutputPath $receiptPath -RequireFrozenCandidate
+    }
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) {
         throw 'WP8 pre-live matrix and non-executable packet validation failed.'
     }
@@ -1440,7 +1454,7 @@ function Invoke-NonLiveAllGate {
     Invoke-SourceClaimSemanticsGate
     Invoke-CandidateSemanticsGate
     Invoke-ProvenanceReplayGate
-    Invoke-Wp8PreLiveValidationGate
+    Invoke-Wp8PreLiveValidationGate ($currentStateDisposition -eq 'exact-wp9-profile-preparation-no-effect-state')
 
     $candidate = (& git -C $repoRoot rev-parse HEAD).Trim()
     $baseline = '63e4584f8926227c2a1e12ef31c71a3a88798c7f'

@@ -726,6 +726,7 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
     private readonly HashSet<string> consumedNonces = new(StringComparer.Ordinal);
     private readonly HashSet<string> writtenTargetFingerprints = new(StringComparer.Ordinal);
     private string? deleteFailureGenerationId;
+    internal bool IsProductionEnrollment { get; private set; }
 
     public WindowsCredentialManagerStore()
         : this(new NativeNamespaceReuseGuard(), FiniteNativeDeadline.Start(TimeSpan.FromMinutes(30))) { }
@@ -856,6 +857,78 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
             or FormatException or OverflowException)
         {
             throw new InvalidDataException("The native store manifest structure is invalid.", exception);
+        }
+    }
+
+    internal static WindowsCredentialManagerStore FromProductionEnrollmentManifest(
+        string manifestPath,
+        string expectedSha256,
+        string expectedManifestId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(manifestPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(expectedSha256);
+        ArgumentException.ThrowIfNullOrWhiteSpace(expectedManifestId);
+        byte[] bytes = File.ReadAllBytes(Path.GetFullPath(manifestPath));
+        if (!string.Equals(
+            Convert.ToHexStringLower(SHA256.HashData(bytes)),
+            expectedSha256,
+            StringComparison.Ordinal))
+        {
+            throw new InvalidDataException("The production enrollment manifest is not the exact owner-accepted artifact.");
+        }
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(bytes);
+            JsonElement root = document.RootElement;
+            JsonElement profile = root.GetProperty("profile");
+            JsonElement boundary = root.GetProperty("native_boundary");
+            NativeTarget target = new(
+                "production-enrollment",
+                profile.GetProperty("access_profile_id").GetString()!,
+                profile.GetProperty("generation_id").GetString()!,
+                profile.GetProperty("target_fingerprint_sha256").GetString()!);
+            string actualTarget = profile.GetProperty("credential_target").GetString()!;
+            string actualFingerprint = Convert.ToHexStringLower(
+                SHA256.HashData(Encoding.UTF8.GetBytes(target.RawTarget)));
+            string[] callOrder = boundary.GetProperty("exact_call_order").EnumerateArray()
+                .Select(item => item.GetString()!).ToArray();
+            string[] results = boundary.GetProperty("exact_results").EnumerateArray()
+                .Select(item => item.GetString()!).ToArray();
+            JsonElement maxima = boundary.GetProperty("maximum_calls");
+            if (root.GetProperty("schema_identity").GetString()
+                    != "infinium.repository.wp9-production-profile-authorization/1.0.0"
+                || root.GetProperty("manifest_id").GetString() != expectedManifestId
+                || root.GetProperty("packet_kind").GetString() != "EnrollOrVerifyProfile"
+                || root.GetProperty("status").GetString() != "ready-for-owner-acceptance"
+                || root.GetProperty("effect_authority").GetString()
+                    != "none-until-owner-accepts-exact-manifest-bytes"
+                || profile.GetProperty("mode").GetString() != "new-only"
+                || actualTarget != target.RawTarget
+                || target.TargetFingerprintSha256 != actualFingerprint
+                || !callOrder.SequenceEqual(["CredReadW", "CredWriteW", "CredReadW", "CredFree"])
+                || !results.SequenceEqual(["ERROR_NOT_FOUND", "success", "success", "success"])
+                || maxima.GetProperty("CredWriteW").GetInt32() != 1
+                || maxima.GetProperty("CredReadW").GetInt32() != 2
+                || maxima.GetProperty("CredDeleteW").GetInt32() != 0
+                || maxima.GetProperty("CredFree").GetInt32() != 1
+                || maxima.GetProperty("total").GetInt32() != 4
+                || !root.GetProperty("m1_entry_surface").GetProperty("paste_permitted").GetBoolean()
+                || root.GetProperty("m1_entry_surface").GetProperty("renderer_receives_or_retains_secret").GetBoolean()
+                || root.GetProperty("provider_intent").GetProperty("provider_request_permitted").GetBoolean())
+            {
+                throw new InvalidDataException("The production enrollment manifest does not preserve its exact finite authority.");
+            }
+            Validate(target);
+            WindowsCredentialManagerStore store = new() { IsProductionEnrollment = true };
+            store.manifestTargets.Add(new(target.AccessProfileId, target.GenerationId), target);
+            store.manifestTargetOrder.Add(target);
+            store.BeginScenario("wp9-production-profile-enrollment");
+            return store;
+        }
+        catch (Exception exception) when (exception is JsonException or KeyNotFoundException
+            or FormatException or OverflowException)
+        {
+            throw new InvalidDataException("The production enrollment manifest structure is invalid.", exception);
         }
     }
 

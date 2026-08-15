@@ -138,7 +138,7 @@ public sealed class OneShotHelperEngine
                         assignment.AssignmentId,
                         assignment.AssignmentKind)
                     : null;
-            if (store is WindowsCredentialManagerStore nativeQualificationStore)
+            if (store is WindowsCredentialManagerStore { IsProductionEnrollment: false } nativeQualificationStore)
             {
                 nativeQualificationStore.ConfigureQualificationPhase(assignment);
             }

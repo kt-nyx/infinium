@@ -84,10 +84,13 @@ public sealed class OneShotCredentialHelperLauncher
     private readonly string? nativeQualificationManifestSha256;
     private readonly string? nativeQualificationManifestId;
     private readonly bool productionProviderTransport;
+    private readonly bool wp9ProductionEnrollment;
 
-    internal TimeSpan OperationTimeout => nativeQualificationManifestPath is null
-        ? TimeSpan.FromSeconds(30)
-        : CredentialNativeQualificationSupervisor.PrimaryPhaseTimeout;
+    internal TimeSpan OperationTimeout => wp9ProductionEnrollment
+        ? TimeSpan.FromMinutes(11)
+        : nativeQualificationManifestPath is null
+            ? TimeSpan.FromSeconds(30)
+            : CredentialNativeQualificationSupervisor.PrimaryPhaseTimeout;
 
     public OneShotCredentialHelperLauncher(
         string helperBinary,
@@ -100,7 +103,8 @@ public sealed class OneShotCredentialHelperLauncher
             nativeQualificationManifestPath: null,
             nativeQualificationManifestSha256: null,
             nativeQualificationManifestId: null,
-            productionProviderTransport: false)
+            productionProviderTransport: false,
+            wp9ProductionEnrollment: false)
     {
     }
 
@@ -111,7 +115,8 @@ public sealed class OneShotCredentialHelperLauncher
         string? nativeQualificationManifestPath,
         string? nativeQualificationManifestSha256,
         string? nativeQualificationManifestId,
-        bool productionProviderTransport)
+        bool productionProviderTransport,
+        bool wp9ProductionEnrollment)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(helperBinary);
         ArgumentException.ThrowIfNullOrWhiteSpace(expectedBinarySha256);
@@ -124,6 +129,7 @@ public sealed class OneShotCredentialHelperLauncher
         this.nativeQualificationManifestSha256 = nativeQualificationManifestSha256;
         this.nativeQualificationManifestId = nativeQualificationManifestId;
         this.productionProviderTransport = productionProviderTransport;
+        this.wp9ProductionEnrollment = wp9ProductionEnrollment;
         this.expectedBinarySha256 = expectedBinarySha256.ToLowerInvariant();
         if (!Path.IsPathFullyQualified(this.helperBinary) || !File.Exists(this.helperBinary)
             || !string.Equals(Path.GetFileName(this.helperBinary), "Infinium.CredentialHelper.exe", StringComparison.Ordinal)
@@ -145,7 +151,8 @@ public sealed class OneShotCredentialHelperLauncher
             nativeQualificationManifestPath: null,
             nativeQualificationManifestSha256: null,
             nativeQualificationManifestId: null,
-            productionProviderTransport: true);
+            productionProviderTransport: true,
+            wp9ProductionEnrollment: false);
 
     internal static OneShotCredentialHelperLauncher CreateNativeQualification(
         string helperBinary,
@@ -184,7 +191,40 @@ public sealed class OneShotCredentialHelperLauncher
             manifest,
             normalizedSha256,
             acceptedManifestId,
-            productionProviderTransport: false);
+            productionProviderTransport: false,
+            wp9ProductionEnrollment: false);
+    }
+
+    internal static OneShotCredentialHelperLauncher CreateWp9ProductionEnrollment(
+        string helperBinary,
+        string expectedBinarySha256,
+        string acceptedManifestPath,
+        string acceptedManifestSha256,
+        string acceptedManifestId)
+    {
+        string manifest = Path.GetFullPath(acceptedManifestPath);
+        if (!File.Exists(manifest)
+            || acceptedManifestSha256.Length != 64
+            || !acceptedManifestSha256.All(char.IsAsciiHexDigit)
+            || !string.Equals(HashFile(manifest), acceptedManifestSha256, StringComparison.Ordinal))
+        {
+            throw new InvalidDataException("The WP9 production enrollment manifest is not the exact accepted artifact.");
+        }
+        using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(manifest));
+        if (document.RootElement.GetProperty("manifest_id").GetString() != acceptedManifestId
+            || document.RootElement.GetProperty("status").GetString() != "ready-for-owner-acceptance")
+        {
+            throw new InvalidDataException("The WP9 production enrollment manifest identity or status is invalid.");
+        }
+        return new(
+            helperBinary,
+            expectedBinarySha256,
+            Path.GetDirectoryName(manifest)!,
+            manifest,
+            acceptedManifestSha256,
+            acceptedManifestId,
+            productionProviderTransport: false,
+            wp9ProductionEnrollment: true);
     }
 
     public async Task<HelperProcessReceipt> ExecuteAsync(
@@ -308,9 +348,11 @@ public sealed class OneShotCredentialHelperLauncher
         TimeSpan? containmentDescendantLifetime = null,
         TimeSpan? containmentPostEngineDelay = null)
     {
-        TimeSpan maximumTimeout = nativeManifestPath is null
-            ? TimeSpan.FromMinutes(2)
-            : CredentialNativeQualificationSupervisor.PrimaryPhaseTimeout;
+        TimeSpan maximumTimeout = wp9ProductionEnrollment
+            ? TimeSpan.FromMinutes(11)
+            : nativeManifestPath is null
+                ? TimeSpan.FromMinutes(2)
+                : CredentialNativeQualificationSupervisor.PrimaryPhaseTimeout;
         if (timeout <= TimeSpan.Zero || timeout > maximumTimeout)
         {
             throw new ArgumentOutOfRangeException(nameof(timeout));
@@ -336,6 +378,17 @@ public sealed class OneShotCredentialHelperLauncher
                 "--request-handle", requestHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 "--response-handle", responseHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 "--store-handle", directoryHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "--authority-now-unix-ms", now.ToUnixTimeMilliseconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ]
+            : wp9ProductionEnrollment
+            ? [
+                "--wp9-production-enrollment-request-handle", requestHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "--response-handle", responseHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "--manifest", nativeManifestPath,
+                "--manifest-sha256", nativeManifestSha256
+                    ?? throw new InvalidOperationException("WP9 production enrollment requires the exact accepted manifest SHA-256."),
+                "--manifest-id", nativeManifestId
+                    ?? throw new InvalidOperationException("WP9 production enrollment requires the exact accepted manifest identity."),
                 "--authority-now-unix-ms", now.ToUnixTimeMilliseconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
             ]
             : [

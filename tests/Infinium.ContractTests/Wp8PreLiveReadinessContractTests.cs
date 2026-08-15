@@ -100,7 +100,10 @@ public sealed class Wp8PreLiveReadinessContractTests
             StringAssert.Contains(normalizedReadme, acceptance["non_live_all_receipt_sha256"]!.GetValue<string>());
             StringAssert.Contains(normalizedReadme, acceptance["pre_live_receipt_sha256"]!.GetValue<string>());
             StringAssert.Contains(normalizedReadme, acceptance["direct_layer6_receipt_sha256"]!.GetValue<string>());
-            StringAssert.Contains(normalizedReadme, "The next eligible action is only the owner's decision whether to begin WP9");
+            Assert.IsTrue(
+                normalizedReadme.Contains("The next eligible action is only the owner's decision whether to begin WP9", StringComparison.Ordinal)
+                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is active.", StringComparison.Ordinal),
+                "Accepted WP8 must retain either its exact closeout handoff or the exact later no-effect WP9 preparation handoff.");
         }
         StringAssert.Contains(normalizedReadme, "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.");
         StringAssert.Contains(normalizedReadme, "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.");
@@ -435,6 +438,21 @@ public sealed class Wp8PreLiveReadinessContractTests
             if ((Get-Wp8NonLiveCurrentStateDisposition $acceptedText $accepted) -ne 'exact-corrected-wp8-accepted-handoff') { exit 15 }
             foreach ($value in @($accepted.verification_candidate_commit,$accepted.post_run_evidence_candidate_commit,$accepted.non_live_all_receipt_sha256,$accepted.pre_live_receipt_sha256,$accepted.direct_layer6_receipt_sha256)) {
                 if ((Get-Wp8NonLiveCurrentStateDisposition ($acceptedText.Replace($value,('0' * $value.Length))) $accepted) -ne 'invalid') { exit 16 }
+            }
+            $wp9 = @"
+            | Current authorized work | ``M1/S6/WP9`` non-effectful production-profile enrollment packet preparation and verification only. Exact new-only manifest ``infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f`` remains binding-pending and is not executable. {{noEffect}} |
+            | Next eligible action | Complete and independently review the exact WP9 production-profile close-ready binding, then stop for an exact owner decision. |
+            no WP9 transport-qualification request manifest may be materialized until that request-field authority is resolved.
+            {{noInheritance}}. {{noEffect}}
+            "@
+            if ((Get-Wp8NonLiveCurrentStateDisposition $wp9 $accepted) -ne 'exact-wp9-profile-preparation-no-effect-state') { exit 17 }
+            foreach ($weakened in @(
+                $wp9.Replace('binding-pending and is not executable.','ready'),
+                $wp9.Replace('no WP9 transport-qualification request manifest may be materialized until that request-field authority is resolved.',''),
+                $wp9.Replace('non-effectful production-profile enrollment packet preparation and verification only.','production profile execution.'),
+                $wp9.Replace('{{noInheritance}}',''),
+                $wp9.Replace('{{noEffect}}',''))) {
+                if ((Get-Wp8NonLiveCurrentStateDisposition $weakened $accepted) -ne 'invalid') { exit 18 }
             }
             exit 0
             """;

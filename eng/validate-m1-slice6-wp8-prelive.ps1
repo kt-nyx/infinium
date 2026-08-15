@@ -6,7 +6,8 @@ param(
     [string] $SourceClaimTemplatePath = 'docs/plans/milestones/m1/slices/s6/wp8-source-claim-authorization.template.v1.json',
     [string] $CandidateTemplatePath = 'docs/plans/milestones/m1/slices/s6/wp8-candidate-investigation-authorization.template.v1.json',
     [string] $OutputPath,
-    [switch] $RequireFrozenCandidate
+    [switch] $RequireFrozenCandidate,
+    [switch] $RequireAcceptedHistoricalEvidence
 )
 
 Set-StrictMode -Version Latest
@@ -352,7 +353,11 @@ $matrix = $matrixInput.value
 $profile = $profileInput.value
 $requests = @($requestInputs.value)
 
-if ($RequireFrozenCandidate -and -not [string]::IsNullOrWhiteSpace((& git -C $repoRoot status --porcelain))) {
+if ($RequireFrozenCandidate -and $RequireAcceptedHistoricalEvidence) {
+    throw 'WP8 validation modes are mutually exclusive.'
+}
+if (($RequireFrozenCandidate -or $RequireAcceptedHistoricalEvidence) -and
+    -not [string]::IsNullOrWhiteSpace((& git -C $repoRoot status --porcelain))) {
     throw 'WP8 frozen-candidate validation requires a clean committed worktree.'
 }
 
@@ -442,7 +447,13 @@ foreach ($binding in @(
     }
 }
 $postVerificationDisposition = 'unfrozen-candidate'
-if ($verificationCandidateCommit -match '^[0-9a-f]{40}$') {
+if ($RequireAcceptedHistoricalEvidence) {
+    if ($acceptanceBinding.state -ne 'accepted-closeout') {
+        throw 'WP8 historical evidence mode requires the exact accepted closeout binding.'
+    }
+    $postVerificationDisposition = 'accepted-historical-evidence-retained-for-later-no-effect-package'
+}
+elseif ($verificationCandidateCommit -match '^[0-9a-f]{40}$') {
     $postVerificationPaths = @(& git -C $repoRoot -c core.quotePath=false diff --name-only $verificationCandidateCommit HEAD --)
     if ($LASTEXITCODE -ne 0) { throw 'WP8 post-verification path enumeration failed.' }
     $currentStateAtHead = [string]::Join("`n", @(& git -C $repoRoot show 'HEAD:docs/current-state.md'))

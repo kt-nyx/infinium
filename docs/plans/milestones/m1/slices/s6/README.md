@@ -14,6 +14,7 @@ Live authorization remains stated only in
 - [Append-only implementation record](record.md)
 - [Frozen WP1 acceptance ledger](wp1-acceptance-ledger.v1.json)
 - [WP1 field-to-seam traceability inventory](wp1-contract-traceability.v1.json)
+- [WP9 exact production-profile enrollment authorization](wp9-production-profile-authorization.v1.json)
 
 The project owner accepted the plan and its explicit stateless/cache-off
 ADR-0025 conformance closure on 2026-08-10; no separate ADR is required. WP1
@@ -46,9 +47,14 @@ pre-live validation SHA-256
 `e5f0ca42e44e6a4ea4f98bf4aab0c1bf6769c436c51aecc32a01e22a3db5f567`, and
 direct Layer 6 SHA-256
 `4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`.
-The next eligible action is only the owner's decision whether to begin WP9
-fresh exact authorization-packet materialization planning. The earlier WP8
-acceptance identities and receipts remain superseded historical evidence.
+WP9 non-effectful production-profile preparation is active. The exact
+new-only authorization manifest is binding-pending and grants no effect;
+after close-ready binding and fresh review, work stops for the owner's exact
+byte acceptance decision. The transport-qualification request manifest is not
+materialized. Current official guidance concerning `safety_identifier`
+requires a separate authority resolution before any such request packet can
+be prepared. The earlier WP8 acceptance identities and receipts remain
+superseded historical evidence.
 
 The four WP8 packets remain non-secret, non-executable templates with pending
 future bindings. No WP8 template, prior owner statement, packet identity,
@@ -56,7 +62,10 @@ expiry, profile identity, predecessor acceptance, official-doc result, or
 request fingerprint grants inherited authority. No API-key use,
 live-manifest execution, native Credential Manager operation, DNS operation,
 public-network operation, provider request, billable operation, or
-production-profile materialization/use is authorized. WP9-WP11 remain later
-separately authorized packages. Only
+production-profile materialization/use is authorized. The M1 direct helper
+surface prepared by WP9 is a distinct masked, paste-capable native enrollment
+surface, not the future M2 Settings -> Add/Replace API key -> WPF-parented
+helper-owned modal. In both flows the renderer receives or retains no secret.
+WP9 request qualification and WP10-WP11 remain separately authorized work. Only
 [current project state](../../../../../current-state.md) states the active
 handoff.

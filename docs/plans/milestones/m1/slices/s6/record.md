@@ -7352,3 +7352,85 @@ Credential Manager operation, DNS operation, public-network operation,
 provider request, billable operation, production-profile materialization/use,
 private-fixture access, archive access, or WP9 execution is authorized or
 occurred.
+
+## WP9 production-profile packet preparation — 2026-08-15
+
+WP9 began from exact clean corrected-WP8 closeout
+`6cc26d8147d97110224ee9a8a625548d99426777`. The retained WP8 verification,
+post-run evidence, NonLiveAll, pre-live, and direct Layer 6 identities remain
+`cc14bf60f78c80280cb6eafe60fddaf2bc764d06`,
+`baef115cdd43fa38d0a352c15f8ba44cbfa35312`,
+`52aa77325a2226505c35b1fba6d9d0fe2b6354022a6c85f6652211d609c529ad`,
+`e5f0ca42e44e6a4ea4f98bf4aab0c1bf6769c436c51aecc32a01e22a3db5f567`,
+and `4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`.
+
+Fresh official Markdown snapshots were reviewed at
+`2026-08-15T14:30:00.0000000Z`: model 3,707 bytes SHA-256
+`124cce0f52e97d87bca8d5c383dc9912bdfbcd8b5c3b54a7f209dc8383f9a4ad`;
+latest-model 18,668 bytes SHA-256
+`7591e641abc3cb124b2173843a03d40ea05ee421c8a036f04dda44c79188953e`;
+prompt-caching 27,997 bytes SHA-256
+`2402d5a0bc2643daa28100121fa0397f1893d3e30552e9d0317ebf18288e8348`;
+reasoning 45,218 bytes SHA-256
+`237067018b227133a45f5465b545fd06596631c6a96bd6adec5835450354d7b1`;
+structured-outputs 86,127 bytes SHA-256
+`e894b773b2aa124f07baf3d3e232abf4cd8bed2e3d80f789078f98fed06b55db`;
+and safety-best-practices 7,626 bytes SHA-256
+`109a4729274e9a27435f8f1f0dc9f70fdd0f83eec7766c49ea661af94879f403`.
+Each exact URL/final URL, content type, retrieval time, byte count, hash, and
+null ETag/Last-Modified fact is retained in the closed manifest. Predecessor
+RESEARCH-0054 remains separate at SHA-256
+`bf585dee726ab386ca27570829e29ce51c3060a001e4a4749797357fd301c68a`.
+
+The refresh confirms `gpt-5.6-sol`, Responses, structured outputs, prompt
+caching, a 1,050,000-token context window, 922,000 maximum input, 128,000
+maximum output, and standard short-context nano-USD/token prices 5000 input,
+500 cache read, 6250 cache write, and 30000 output. Above 272,000 tokens the
+published multipliers are 2x input and 1.5x output. The accepted catalog
+fingerprints remain capability
+`7faad3537392728deb5866fed0c0ce5582bc93e765940718139705cc2991f667`
+and price
+`77107d07be03e55121c4d1de092ff5efd3cef565aeaef8359c051824aca12726`;
+its 272,000-token bound remains the conservative standard-price ceiling for
+planned smaller requests, not a claim about the advertised window. Current
+guidance recommends a stable privacy-preserving `safety_identifier` for apps
+serving individual end users. That is recorded as a request-packet authority
+decision: it neither changes nor blocks credential-profile preparation, but
+it blocks any WP9 transport-qualification request manifest until resolved.
+
+The fresh manifest is NEW-only and binds exact profile
+`openai-platform-492800995cf046c7815f974e865f9e1d`, generation
+`g-9c663cb01fb649cba7eff4e26e14274c`, raw target
+`Infinium:openai-platform-492800995cf046c7815f974e865f9e1d:g-9c663cb01fb649cba7eff4e26e14274c`,
+and target SHA-256
+`55ade50556f396dd0ba579632a21581887eeb1e4e44411a0ee8e37f460f09fca`.
+The finite native grammar is W1/R2/F1/D0/T4 in exact order preflight
+`CredReadW` -> `ERROR_NOT_FOUND`, `CredWriteW` -> success, verification
+`CredReadW` -> success, and paired `CredFree` -> success. Collision stops
+before write; delete, enumeration, overwrite, fallback, retry, provider,
+network, and billable effects are prohibited.
+
+The implementation adds a distinct WP9 M1 helper-owned masked paste-capable
+native entry surface; it does not invoke the consumed WP4 manual source or
+dialog. It is explicitly not the future M2 WPF-parented Settings flow. The
+secret remains helper-local. A successful helper write/read proof durably
+appends both enrollment and verification lifecycle intents and must finish at
+the exact `active-verified` generation; `active-unverified` is never an
+admissible request state. Cancel leaves the pending enrollment with no native
+write or dispatch. Partial or ambiguous effect blocks all request work until
+fresh recovery authority.
+
+The manifest is currently `draft-close-ready-binding-pending`. No canonical
+`WP9_PROFILE_OWNER_ACCEPTANCE` line exists. The runner validates exact clean
+Git ancestry, exact post-close paths, expiry, schema/semantics, manifest hash,
+one exact owner marker, fresh output/product roots, then consumes an authority
+lock before helper launch. Ordinary verification never invokes it.
+
+Focused compilation passed with zero warnings/errors. The closed manifest
+validator passed with zero credential/network/provider effects; 17 schema and
+semantic mutations were rejected. The three WP9 unit contracts passed 3/3,
+and the deterministic fake-store verified-enrollment integration passed 1/1,
+ending `active-verified` with zero native, network, provider, staged-response,
+or retry effect. No API key, UI, live manifest, Credential Manager, DNS,
+public network, provider, billable operation, private fixture, archive, or
+qualification-request packet was used or created.
