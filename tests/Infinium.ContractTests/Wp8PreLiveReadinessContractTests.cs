@@ -29,6 +29,10 @@ public sealed class Wp8PreLiveReadinessContractTests
         Assert.AreEqual(0, matrix["external_effects"]!["credential_manager_operations"]!.GetValue<int>());
         Assert.AreEqual(0, matrix["external_effects"]!["provider_requests"]!.GetValue<int>());
         Assert.AreEqual("pending-fresh-independent-review", matrix["review"]!["judgment"]!.GetValue<string>());
+        Assert.AreEqual("correction-verification-pending", matrix["acceptance_binding"]!["state"]!.GetValue<string>());
+        Assert.AreEqual("pending-until-post-run-evidence-freeze",
+            matrix["acceptance_binding"]!["post_run_evidence_candidate_commit"]!.GetValue<string>());
+        string acceptanceBinding = matrix["acceptance_binding"]!.ToJsonString();
 
         HashSet<string> packetIds = new(StringComparer.Ordinal);
         HashSet<string> packetKinds = new(StringComparer.Ordinal);
@@ -41,6 +45,8 @@ public sealed class Wp8PreLiveReadinessContractTests
             Assert.AreEqual("none", template.GetProperty("effect_authority").GetString());
             Assert.IsFalse(template.GetProperty("execution").GetProperty("permitted").GetBoolean());
             Assert.AreEqual(JsonValueKind.Null, template.GetProperty("execution").GetProperty("command").ValueKind);
+            Assert.AreEqual(acceptanceBinding,
+                JsonNode.Parse(template.GetProperty("acceptance_binding").GetRawText())!.ToJsonString());
             Assert.IsTrue(packetIds.Add(template.GetProperty("packet_id").GetString()!));
             Assert.IsTrue(packetKinds.Add(template.GetProperty("packet_kind").GetString()!));
             string text = Encoding.UTF8.GetString(bytes);
@@ -53,11 +59,12 @@ public sealed class Wp8PreLiveReadinessContractTests
         string readme = File.ReadAllText(Path.Combine(root,
             "docs/plans/milestones/m1/slices/s6/README.md".Replace('/', Path.DirectorySeparatorChar)));
         string normalizedReadme = System.Text.RegularExpressions.Regex.Replace(readme, @"\s+", " ");
-        StringAssert.Contains(normalizedReadme, "WP8 is independently accepted at exact evidence/review HEAD");
-        StringAssert.Contains(normalizedReadme, "the owner's decision whether to begin WP9 fresh exact authorization-packet materialization planning");
+        StringAssert.Contains(normalizedReadme, "WP8 closeout correction and complete non-live reverification are active.");
+        StringAssert.Contains(normalizedReadme, "WP9 is not eligible");
+        StringAssert.Contains(normalizedReadme, "The earlier WP8 acceptance identities and receipts are retained only as superseded historical evidence and do not certify the corrected candidate.");
         StringAssert.Contains(normalizedReadme, "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.");
         StringAssert.Contains(normalizedReadme, "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.");
-        Assert.IsFalse(readme.Contains("The live handoff authorizes only WP8 accumulated non-live verification", StringComparison.Ordinal));
+        Assert.IsFalse(normalizedReadme.Contains("The next eligible action is only the owner's decision whether to begin WP9", StringComparison.Ordinal));
 
         foreach (string relative in new[]
         {
@@ -87,6 +94,7 @@ public sealed class Wp8PreLiveReadinessContractTests
             ("matrix-nested-unknown", docs => docs["matrix"]["cases"]![0]!["unexpected"] = true),
             ("profile-nested-unknown", docs => docs["profile"]["persistence_delete"]!["unexpected"] = true),
             ("request-nested-unknown", docs => docs["qualification"]["limits"]!["unexpected"] = 1),
+            ("acceptance-nested-unknown", docs => docs["matrix"]["acceptance_binding"]!["unexpected"] = true),
             ("case-classification", docs => docs["matrix"]["cases"]![0]!["classification"] = "primary"),
             ("case-disposition", docs => docs["matrix"]["cases"]![4]!["disposition"] = "covered-non-live"),
             ("case-requirement", docs => docs["matrix"]["cases"]![0]!["requirements"]![0] = "SNAP-001"),
@@ -106,6 +114,13 @@ public sealed class Wp8PreLiveReadinessContractTests
             ("common-binding", docs => docs["profile"]["candidate_binding"]!["accepted_wp4_execution_commit"] = new string('0', 40)),
             ("product-template-identity", docs => docs["matrix"]["candidate_binding"]!["wp8_product_template_commit"] = new string('0', 40)),
             ("verification-identity", docs => docs["matrix"]["candidate_binding"]!["wp8_verification_candidate_commit"] = new string('0', 40)),
+            ("acceptance-verification-identity", docs => docs["matrix"]["acceptance_binding"]!["verification_candidate_commit"] = new string('0', 40)),
+            ("acceptance-old-verification-identity", docs => docs["matrix"]["acceptance_binding"]!["verification_candidate_commit"] = "fbdb1f03e006a85723b0533d44b2ed06e02cc724"),
+            ("acceptance-cross-document", docs => docs["profile"]["acceptance_binding"]!["state"] = "accepted-closeout"),
+            ("acceptance-premature-evidence", docs => docs["matrix"]["acceptance_binding"]!["post_run_evidence_candidate_commit"] = new string('1', 40)),
+            ("acceptance-premature-nonlive", docs => docs["matrix"]["acceptance_binding"]!["non_live_all_receipt_sha256"] = new string('1', 64)),
+            ("acceptance-premature-prelive", docs => docs["matrix"]["acceptance_binding"]!["pre_live_receipt_sha256"] = new string('1', 64)),
+            ("acceptance-premature-layer6", docs => docs["matrix"]["acceptance_binding"]!["direct_layer6_receipt_sha256"] = new string('1', 64)),
             ("delete-enabled", docs => docs["profile"]["persistence_delete"]!["deletion_permitted"] = true),
             ("delete-call-authorized", docs => docs["profile"]["native_boundary"]!["forbidden_calls"]!.AsArray().RemoveAt(0)),
             ("secret", docs => docs["qualification"]["request_binding"]!["canonical_request"] = "Bearer sk-proj-forbidden-canary"),
@@ -144,15 +159,17 @@ public sealed class Wp8PreLiveReadinessContractTests
 
     [TestMethod]
     [TestCategory("Contract")]
-    public void FreezeModelAcceptsOnlyExactBindingOrAppendOnlyAcceptedHandoff()
+    public void FreezeModelAcceptsOnlyCorrectionBindingOrStructuredAppendOnlyAcceptedHandoff()
     {
         string root = RepositoryRoot();
         string script = TestRepository.Read("eng", "validate-m1-slice6-wp8-prelive.ps1");
         string[] functionNames =
         [
             "Test-Wp8ExactPathSet",
-            "Test-Wp8VerificationCurrentState",
+            "Test-Wp8CorrectionCurrentState",
+            "Test-Wp8CorrectionReadme",
             "Test-Wp8AcceptedHandoffCurrentState",
+            "Test-Wp8AcceptedHandoffReadme",
             "Test-Wp8RetainedAcceptanceRecord",
             "Get-Wp8PostVerificationDisposition",
         ];
@@ -164,63 +181,90 @@ public sealed class Wp8PreLiveReadinessContractTests
             return match.Value;
         }));
         string currentState = File.ReadAllText(Path.Combine(root, "docs", "current-state.md"));
+        string readme = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6", "README.md"));
         string record = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6", "record.md"));
         const string noEffect = "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.";
         const string noInheritance = "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority";
-        string[] exactFacts =
-        [
-            "260a09ecfafea103227f113faf7625a5bf0ce759",
-            "fbdb1f03e006a85723b0533d44b2ed06e02cc724",
-            "36b980d226e9f9a0e91281a530fc959a211fb696",
-            "95919bcfbb6ea79f6ee5f6a8422d23da743c4b4da4f6ba6f9039ac4e69534e78",
-            "b8645da64eba4c12bbbc72953753e9e7debbc93ef576ef07cdd96b418399e498",
-            "4fe96ddf83e4472ba2bc66f6c046253d3055a69bf32716d934ea222b53072b0c",
-        ];
         string[] noEffectFacts =
         [
             "API-key use", "live-manifest execution", "native Credential Manager operation", "DNS operation",
             "public-network operation", "provider request", "billable operation", "production-profile materialization/use",
         ];
-        List<string> currentStateMutations =
-        [
-            currentState.Replace("`M1/S6/WP9` owner decision and exact authorization-packet materialization planning only", "`M1/S6/WP9` planning", StringComparison.Ordinal),
-            currentState.Replace(noEffect, string.Empty, StringComparison.Ordinal),
-            currentState.Replace(noInheritance, string.Empty, StringComparison.Ordinal),
-        ];
-        currentStateMutations.AddRange(exactFacts.Select(fact => currentState.Replace(fact, new string('0', fact.Length), StringComparison.Ordinal)));
-        currentStateMutations.AddRange(noEffectFacts.Select(fact =>
-            currentState.Replace(noEffect, noEffect.Replace(fact, string.Empty, StringComparison.Ordinal), StringComparison.Ordinal)));
-
         static string Encode(string value) => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
-        string[] encodedMutations = currentStateMutations.Select(value => $"'{Encode(value)}'").ToArray();
         string command = $$"""
             {{functions}}
-            $current = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{Encode(currentState)}}'))
+            $current = [regex]::Replace([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{Encode(currentState)}}')), '\s+', ' ')
+            $readme = [regex]::Replace([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{Encode(readme)}}')), '\s+', ' ')
             $record = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{Encode(record)}}'))
             $baseRecord = "verification-record`n"
+            $pending = [pscustomobject]@{
+              state='correction-verification-pending'; verification_candidate_commit=('a' * 40)
+              post_run_evidence_candidate_commit='pending-until-post-run-evidence-freeze'
+              non_live_all_receipt_sha256='pending-until-post-run-evidence-freeze'
+              pre_live_receipt_sha256='pending-until-post-run-evidence-freeze'
+              direct_layer6_receipt_sha256='pending-until-post-run-evidence-freeze'
+            }
+            $accepted = [pscustomobject]@{
+              state='accepted-closeout'; verification_candidate_commit=('a' * 40)
+              post_run_evidence_candidate_commit=('b' * 40)
+              non_live_all_receipt_sha256=('c' * 64); pre_live_receipt_sha256=('d' * 64)
+              direct_layer6_receipt_sha256=('e' * 64)
+            }
             $binding = @(
               'docs/plans/milestones/m1/slices/s6/wp8-candidate-investigation-authorization.template.v1.json',
               'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json',
               'docs/plans/milestones/m1/slices/s6/wp8-production-profile-authorization.template.v1.json',
               'docs/plans/milestones/m1/slices/s6/wp8-qualification-authorization.template.v1.json',
               'docs/plans/milestones/m1/slices/s6/wp8-source-claim-authorization.template.v1.json')
-            $closeout = @($binding) + @('docs/current-state.md','docs/plans/milestones/m1/slices/s6/record.md')
-            if ((Get-Wp8PostVerificationDisposition @() $current $record $record) -ne 'exact-accepted-handoff-state') { exit 10 }
-            if ((Get-Wp8PostVerificationDisposition $binding $current $record $record) -ne 'exact-accepted-handoff-state') { exit 11 }
-            if ((Get-Wp8PostVerificationDisposition $closeout $current $baseRecord ($baseRecord + $record)) -ne 'exact-accepted-append-only-handoff') { exit 12 }
+            $closeout = @($binding) + @('docs/current-state.md','docs/plans/milestones/m1/slices/s6/README.md','docs/plans/milestones/m1/slices/s6/record.md')
+            if ((Get-Wp8PostVerificationDisposition @() $current $readme $record $record $pending) -ne 'exact-correction-verification-state') { exit 10 }
+            if ((Get-Wp8PostVerificationDisposition $binding $current $readme $record $record $pending) -ne 'exact-correction-verification-state') { exit 11 }
+            $acceptedCurrent = @"
+            | Current authorized work | ``M1/S6/WP9`` owner decision and exact authorization-packet materialization planning only; corrected WP8 is accepted. {{noEffect}} |
+            Accepted corrected ``M1/S6/WP8`` candidate $($accepted.verification_candidate_commit) $($accepted.post_run_evidence_candidate_commit) $($accepted.non_live_all_receipt_sha256) $($accepted.pre_live_receipt_sha256) $($accepted.direct_layer6_receipt_sha256)
+            | Next eligible action | Owner decision whether to begin ``M1/S6/WP9`` materialization planning under accepted plan section 20; only fresh exact production-profile and WP9 request authorizations may be prepared, and neither may be executed without separate exact owner acceptance |
+            {{noInheritance}}. {{noEffect}}
+            "@
+            $acceptedReadme = "Corrected WP8 is independently accepted. $($accepted.verification_candidate_commit) $($accepted.post_run_evidence_candidate_commit) $($accepted.non_live_all_receipt_sha256) $($accepted.pre_live_receipt_sha256) $($accepted.direct_layer6_receipt_sha256) The next eligible action is only the owner's decision whether to begin WP9 fresh exact authorization-packet materialization planning. {{noInheritance}}. {{noEffect}}"
+            $acceptanceRecord = @"
+            Corrected WP8 independent acceptance and handoff
+            | contract-persistence | ``ACCEPT`` |
+            | budget-settlement-faults | ``ACCEPT`` |
+            | credential-helper-security | ``ACCEPT`` |
+            | provider-adapter-offline-safety | ``ACCEPT`` |
+            | source-candidate-semantics-provenance | ``ACCEPT`` |
+            | overall-matrix-claims-diff | ``ACCEPT`` |
+            $($accepted.verification_candidate_commit) $($accepted.post_run_evidence_candidate_commit)
+            $($accepted.non_live_all_receipt_sha256) $($accepted.pre_live_receipt_sha256) $($accepted.direct_layer6_receipt_sha256)
+            No separate reviewer-judgment artifact or hash was created or required.
+            "@
+            if ((Get-Wp8PostVerificationDisposition $closeout $acceptedCurrent $acceptedReadme $baseRecord ($baseRecord + $acceptanceRecord) $accepted) -ne 'exact-accepted-append-only-handoff') { exit 12 }
             $badSets = @(
               ,(@($binding) + 'src/Infinium.Application/Unauthorized.cs'),
               ,(@($binding) + 'docs/plans/milestones/m1/slices/s6/README.md'),
               ,(@($binding) + 'docs/current-state.md'),
               ,(@($binding) + 'docs/plans/milestones/m1/slices/s6/record.md'))
             foreach ($bad in $badSets) {
-                if ((Get-Wp8PostVerificationDisposition $bad $current $record $record) -ne 'invalid') { exit 13 }
+                if ((Get-Wp8PostVerificationDisposition $bad $current $readme $record $record $pending) -ne 'invalid') { exit 13 }
             }
-            if ((Get-Wp8PostVerificationDisposition $closeout $current 'different-prefix' $record) -ne 'invalid') { exit 14 }
-            foreach ($encoded in @({{string.Join(",", encodedMutations)}})) {
-                $mutated = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encoded))
-                if ((Get-Wp8PostVerificationDisposition $binding $mutated $record $record) -ne 'invalid') { exit 15 }
+            if ((Get-Wp8PostVerificationDisposition $closeout $acceptedCurrent $acceptedReadme 'different-prefix' $acceptanceRecord $accepted) -ne 'invalid') { exit 14 }
+            $old = '| Current authorized work | `M1/S6/WP9` owner decision and exact authorization-packet materialization planning only; WP8 is accepted. | Accepted `M1/S6/WP8` candidate fbdb1f03e006a85723b0533d44b2ed06e02cc724 36b980d226e9f9a0e91281a530fc959a211fb696 {{noInheritance}} {{noEffect}}'
+            if ((Get-Wp8PostVerificationDisposition $binding $old $readme $record $record $pending) -ne 'invalid') { exit 15 }
+            $wp9Pending = $current.Replace('`M1/S6/WP8` closeout correction and complete non-live reverification only; WP9 is not eligible.', '`M1/S6/WP9` planning is eligible.')
+            if ((Get-Wp8PostVerificationDisposition $binding $wp9Pending $readme $record $record $pending) -ne 'invalid') { exit 16 }
+            if ((Get-Wp8PostVerificationDisposition $binding $current ($readme.Replace('WP9 is not eligible','WP9 is eligible')) $record $record $pending) -ne 'invalid') { exit 16 }
+            foreach ($fact in @('API-key use','live-manifest execution','native Credential Manager operation','DNS operation','public-network operation','provider request','billable operation','production-profile materialization/use')) {
+                $mutated = $acceptedCurrent.Replace('{{noEffect}}', '{{noEffect}}'.Replace($fact, ''))
+                if ((Get-Wp8PostVerificationDisposition $closeout $mutated $acceptedReadme $baseRecord ($baseRecord + $acceptanceRecord) $accepted) -ne 'invalid') { exit 17 }
             }
+            if ((Get-Wp8PostVerificationDisposition $closeout ($acceptedCurrent.Replace('{{noInheritance}}','')) $acceptedReadme $baseRecord ($baseRecord + $acceptanceRecord) $accepted) -ne 'invalid') { exit 18 }
+            foreach ($value in @($accepted.verification_candidate_commit,$accepted.post_run_evidence_candidate_commit,$accepted.non_live_all_receipt_sha256,$accepted.pre_live_receipt_sha256,$accepted.direct_layer6_receipt_sha256)) {
+                $mutated = $acceptedCurrent.Replace($value, ('0' * $value.Length))
+                if ((Get-Wp8PostVerificationDisposition $closeout $mutated $acceptedReadme $baseRecord ($baseRecord + $acceptanceRecord) $accepted) -ne 'invalid') { exit 18 }
+            }
+            if ((Get-Wp8PostVerificationDisposition $closeout $acceptedCurrent ($acceptedReadme.Replace('Corrected WP8 is independently accepted.','WP8 accepted.')) $baseRecord ($baseRecord + $acceptanceRecord) $accepted) -ne 'invalid') { exit 19 }
+            $missingReadme = @($closeout | Where-Object { $_ -ne 'docs/plans/milestones/m1/slices/s6/README.md' })
+            if ((Get-Wp8PostVerificationDisposition $missingReadme $acceptedCurrent $acceptedReadme $baseRecord ($baseRecord + $acceptanceRecord) $accepted) -ne 'invalid') { exit 20 }
             exit 0
             """;
         Assert.AreEqual(0, RunPowerShellScript(command),
@@ -229,7 +273,7 @@ public sealed class Wp8PreLiveReadinessContractTests
 
     [TestMethod]
     [TestCategory("Contract")]
-    public void NonLiveAllAuthorityPredicateRejectsGenericOrWeakenedWp9Handoff()
+    public void NonLiveAllAuthorityPredicateAcceptsCorrectionAndRejectsOldOrWeakenedHandoffs()
     {
         string root = RepositoryRoot();
         string script = TestRepository.Read("eng", "verify-m1-slice6.ps1");
@@ -239,39 +283,41 @@ public sealed class Wp8PreLiveReadinessContractTests
         string currentState = File.ReadAllText(Path.Combine(root, "docs", "current-state.md"));
         const string noEffect = "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.";
         const string noInheritance = "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority";
-        string[] facts =
-        [
-            "API-key use", "live-manifest execution", "native Credential Manager operation", "DNS operation",
-            "public-network operation", "provider request", "billable operation", "production-profile materialization/use",
-        ];
-        string[] exactFacts =
-        [
-            "260a09ecfafea103227f113faf7625a5bf0ce759",
-            "fbdb1f03e006a85723b0533d44b2ed06e02cc724",
-            "36b980d226e9f9a0e91281a530fc959a211fb696",
-            "95919bcfbb6ea79f6ee5f6a8422d23da743c4b4da4f6ba6f9039ac4e69534e78",
-            "b8645da64eba4c12bbbc72953753e9e7debbc93ef576ef07cdd96b418399e498",
-            "4fe96ddf83e4472ba2bc66f6c046253d3055a69bf32716d934ea222b53072b0c",
-        ];
-        List<string> mutations =
-        [
-            currentState.Replace("`M1/S6/WP9` owner decision and exact authorization-packet materialization planning only", "`M1/S6/WP9` planning", StringComparison.Ordinal),
-            currentState.Replace(noEffect, string.Empty, StringComparison.Ordinal),
-            currentState.Replace(noInheritance, string.Empty, StringComparison.Ordinal),
-        ];
-        mutations.AddRange(facts.Select(fact =>
-            currentState.Replace(noEffect, noEffect.Replace(fact, string.Empty, StringComparison.Ordinal), StringComparison.Ordinal)));
-        mutations.AddRange(exactFacts.Select(fact =>
-            currentState.Replace(fact, new string('0', fact.Length), StringComparison.Ordinal)));
         static string Encode(string value) => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
-        string[] encoded = mutations.Select(value => $"'{Encode(value)}'").ToArray();
         string command = $$"""
             {{function.Value}}
-            $valid = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{Encode(currentState)}}'))
-            if ((Get-Wp8NonLiveCurrentStateDisposition $valid) -ne 'exact-accepted-wp9-planning-handoff') { exit 10 }
-            foreach ($encoded in @({{string.Join(",", encoded)}})) {
-                $mutated = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encoded))
-                if ((Get-Wp8NonLiveCurrentStateDisposition $mutated) -ne 'invalid') { exit 11 }
+            $valid = [regex]::Replace([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{Encode(currentState)}}')), '\s+', ' ')
+            $pending = [pscustomobject]@{
+              state='correction-verification-pending'; verification_candidate_commit=('a' * 40)
+              post_run_evidence_candidate_commit='pending-until-post-run-evidence-freeze'
+              non_live_all_receipt_sha256='pending-until-post-run-evidence-freeze'
+              pre_live_receipt_sha256='pending-until-post-run-evidence-freeze'
+              direct_layer6_receipt_sha256='pending-until-post-run-evidence-freeze'
+            }
+            if ((Get-Wp8NonLiveCurrentStateDisposition $valid $pending) -ne 'exact-wp8-correction-reverification-state') { exit 10 }
+            $old = '| Current authorized work | `M1/S6/WP9` owner decision and exact authorization-packet materialization planning only; WP8 is accepted. | Accepted `M1/S6/WP8` candidate fbdb1f03e006a85723b0533d44b2ed06e02cc724 36b980d226e9f9a0e91281a530fc959a211fb696 {{noInheritance}} {{noEffect}}'
+            if ((Get-Wp8NonLiveCurrentStateDisposition $old $pending) -ne 'invalid') { exit 11 }
+            if ((Get-Wp8NonLiveCurrentStateDisposition ($valid.Replace('WP9 is not eligible','WP9 is eligible')) $pending) -ne 'invalid') { exit 12 }
+            foreach ($fact in @('API-key use','live-manifest execution','native Credential Manager operation','DNS operation','public-network operation','provider request','billable operation','production-profile materialization/use')) {
+                $mutated = $valid.Replace('{{noEffect}}', '{{noEffect}}'.Replace($fact, ''))
+                if ((Get-Wp8NonLiveCurrentStateDisposition $mutated $pending) -ne 'invalid') { exit 13 }
+            }
+            if ((Get-Wp8NonLiveCurrentStateDisposition ($valid.Replace('{{noInheritance}}','')) $pending) -ne 'invalid') { exit 14 }
+            $accepted = [pscustomobject]@{
+              state='accepted-closeout'; verification_candidate_commit=('a' * 40)
+              post_run_evidence_candidate_commit=('b' * 40)
+              non_live_all_receipt_sha256=('c' * 64); pre_live_receipt_sha256=('d' * 64)
+              direct_layer6_receipt_sha256=('e' * 64)
+            }
+            $acceptedText = @"
+            | Current authorized work | ``M1/S6/WP9`` owner decision and exact authorization-packet materialization planning only; corrected WP8 is accepted. {{noEffect}} |
+            Accepted corrected ``M1/S6/WP8`` candidate $($accepted.verification_candidate_commit) $($accepted.post_run_evidence_candidate_commit) $($accepted.non_live_all_receipt_sha256) $($accepted.pre_live_receipt_sha256) $($accepted.direct_layer6_receipt_sha256)
+            | Next eligible action | Owner decision whether to begin ``M1/S6/WP9`` materialization planning under accepted plan section 20; only fresh exact production-profile and WP9 request authorizations may be prepared, and neither may be executed without separate exact owner acceptance |
+            {{noInheritance}}. {{noEffect}}
+            "@
+            if ((Get-Wp8NonLiveCurrentStateDisposition $acceptedText $accepted) -ne 'exact-corrected-wp8-accepted-handoff') { exit 15 }
+            foreach ($value in @($accepted.verification_candidate_commit,$accepted.post_run_evidence_candidate_commit,$accepted.non_live_all_receipt_sha256,$accepted.pre_live_receipt_sha256,$accepted.direct_layer6_receipt_sha256)) {
+                if ((Get-Wp8NonLiveCurrentStateDisposition ($acceptedText.Replace($value,('0' * $value.Length))) $accepted) -ne 'invalid') { exit 16 }
             }
             exit 0
             """;

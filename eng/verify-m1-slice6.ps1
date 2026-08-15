@@ -272,25 +272,29 @@ function Test-HandoffCloseoutCurrentState([string] $CurrentStateText) {
     return $wp1ToWp2 -or $wp4ToWp8 -or $wp8ToWp9
 }
 
-function Get-Wp8NonLiveCurrentStateDisposition([string] $CurrentStateText) {
+function Get-Wp8NonLiveCurrentStateDisposition([string] $CurrentStateText, [object] $AcceptanceBinding) {
+    $normalized = [regex]::Replace($CurrentStateText, '\s+', ' ')
+    $noEffect = $normalized.Contains('No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.', [StringComparison]::Ordinal)
+    $noInheritance = $normalized.Contains('No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority', [StringComparison]::Ordinal)
     $verificationState =
-        $CurrentStateText.Contains('| Current authorized work | `M1/S6/WP8` accumulated non-live verification and pre-live review only; WP4 is accepted, no further Credential Manager operation is authorized, and no provider request is authorized |', [StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('| Next eligible action | Begin `M1/S6/WP8` accumulated non-live verification and pre-live review under accepted plan section 19; do not execute any native credential or live provider operation |', [StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('| Later work | WP4 and WP7 now satisfy WP8''s prerequisites. WP8 may prepare but may not execute live authorization packets. WP9-WP11 require their own exact owner authorization; no provider request is authorized now |', [StringComparison]::Ordinal)
+        $AcceptanceBinding.state -eq 'correction-verification-pending' -and
+        $normalized.Contains('| Current authorized work | `M1/S6/WP8` closeout correction and complete non-live reverification only; WP9 is not eligible. |', [StringComparison]::Ordinal) -and
+        $normalized.Contains('| Next eligible action | Freeze the corrected WP8 verification candidate, bind its non-executable templates, then run the complete non-live floor and fresh independent review; do not begin WP9 |', [StringComparison]::Ordinal) -and
+        $normalized.Contains('| Later work | WP9 remains ineligible until the corrected WP8 evidence is independently accepted and an exact no-effect closeout is committed. No prior WP8 acceptance or template grants inherited authority |', [StringComparison]::Ordinal) -and
+        $noEffect -and $noInheritance
     $acceptedNoEffectHandoff =
-        $CurrentStateText.Contains('| Current authorized work | `M1/S6/WP9` owner decision and exact authorization-packet materialization planning only; WP8 is accepted. No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. |', [StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('Accepted `M1/S6/WP8` candidate', [StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('260a09ecfafea103227f113faf7625a5bf0ce759', [StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('fbdb1f03e006a85723b0533d44b2ed06e02cc724', [StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('36b980d226e9f9a0e91281a530fc959a211fb696', [StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('95919bcfbb6ea79f6ee5f6a8422d23da743c4b4da4f6ba6f9039ac4e69534e78', [StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('b8645da64eba4c12bbbc72953753e9e7debbc93ef576ef07cdd96b418399e498', [StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('4fe96ddf83e4472ba2bc66f6c046253d3055a69bf32716d934ea222b53072b0c', [StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('| Next eligible action | Owner decision whether to begin `M1/S6/WP9` materialization planning under accepted plan section 20; only fresh exact production-profile and WP9 request authorizations may be prepared, and neither may be executed without separate exact owner acceptance |', [StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority', [StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.', [StringComparison]::Ordinal)
-    if ($verificationState) { return 'exact-wp8-verification-state' }
-    if ($acceptedNoEffectHandoff) { return 'exact-accepted-wp9-planning-handoff' }
+        $AcceptanceBinding.state -eq 'accepted-closeout' -and
+        $normalized.Contains('| Current authorized work | `M1/S6/WP9` owner decision and exact authorization-packet materialization planning only; corrected WP8 is accepted. No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. |', [StringComparison]::Ordinal) -and
+        $normalized.Contains('Accepted corrected `M1/S6/WP8` candidate', [StringComparison]::Ordinal) -and
+        $normalized.Contains([string]$AcceptanceBinding.verification_candidate_commit, [StringComparison]::Ordinal) -and
+        $normalized.Contains([string]$AcceptanceBinding.post_run_evidence_candidate_commit, [StringComparison]::Ordinal) -and
+        $normalized.Contains([string]$AcceptanceBinding.non_live_all_receipt_sha256, [StringComparison]::Ordinal) -and
+        $normalized.Contains([string]$AcceptanceBinding.pre_live_receipt_sha256, [StringComparison]::Ordinal) -and
+        $normalized.Contains([string]$AcceptanceBinding.direct_layer6_receipt_sha256, [StringComparison]::Ordinal) -and
+        $normalized.Contains('| Next eligible action | Owner decision whether to begin `M1/S6/WP9` materialization planning under accepted plan section 20; only fresh exact production-profile and WP9 request authorizations may be prepared, and neither may be executed without separate exact owner acceptance |', [StringComparison]::Ordinal) -and
+        $noEffect -and $noInheritance
+    if ($verificationState) { return 'exact-wp8-correction-reverification-state' }
+    if ($acceptedNoEffectHandoff) { return 'exact-corrected-wp8-accepted-handoff' }
     return 'invalid'
 }
 
@@ -1350,9 +1354,10 @@ function Invoke-NonLiveAllGate {
         throw 'NonLiveAll requires a clean committed candidate for content-bound evidence.'
     }
     $currentState = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/current-state.md') -Raw
-    $currentStateDisposition = Get-Wp8NonLiveCurrentStateDisposition $currentState
+    $wp8Matrix = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json') -Raw | ConvertFrom-Json -Depth 100
+    $currentStateDisposition = Get-Wp8NonLiveCurrentStateDisposition $currentState $wp8Matrix.acceptance_binding
     if ($currentStateDisposition -eq 'invalid') {
-        throw 'NonLiveAll requires either the exact WP8 verification authority or the exact accepted no-effect WP9-planning handoff.'
+        throw 'NonLiveAll requires either the exact WP8 correction-reverification authority or the exact structured corrected-WP8 no-effect handoff.'
     }
 
     Invoke-ContractsGate

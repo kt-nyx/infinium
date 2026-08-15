@@ -38,13 +38,11 @@ and audit correction `be55eda59752f884fe6e113f40927295da45f2cd`; all 12 consumed
 are absent and that namespace may never be reused. The nine Slice 6 contracts
 remain `Implementation-active`.
 
-WP8 is independently accepted at exact evidence/review HEAD
-`36b980d226e9f9a0e91281a530fc959a211fb696`, with product/template identity
-`260a09ecfafea103227f113faf7625a5bf0ce759` and accepted verification identity
-`fbdb1f03e006a85723b0533d44b2ed06e02cc724`. The next eligible action is only
-the owner's decision whether to begin WP9 fresh exact authorization-packet
-materialization planning under plan section 20. This is not authority to begin
-WP9 execution.
+WP8 closeout correction and complete non-live reverification are active. WP9
+is not eligible until the corrected verification binding, complete non-live
+floor, fresh independent reviews, and exact no-effect closeout are accepted.
+The earlier WP8 acceptance identities and receipts are retained only as
+superseded historical evidence and do not certify the corrected candidate.
 
 The four WP8 packets remain non-secret, non-executable templates with pending
 future bindings. No WP8 template, prior owner statement, packet identity,
@@ -52,9 +50,9 @@ expiry, profile identity, predecessor acceptance, official-doc result, or
 request fingerprint grants inherited authority. No API-key use,
 live-manifest execution, native Credential Manager operation, DNS operation,
 public-network operation, provider request, billable operation, or
-production-profile materialization/use is authorized. Any production-profile
-or WP9 request packet must be freshly materialized, receive exact independent
-review, and receive separate exact owner acceptance before execution. WP10 and
-WP11 remain later separately authorized packages. Only
+production-profile materialization/use is authorized. The current correction
+may only freeze and reverify the non-executable WP8 materials; it may not
+materialize a production profile or any WP9 request packet. WP9-WP11 remain
+later separately authorized packages. Only
 [current project state](../../../../../current-state.md) states the active
 handoff.

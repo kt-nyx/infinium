@@ -3,13 +3,14 @@
   "$id": "https://schemas.infinium.dev/repository/wp8-case-requirement-matrix.v1.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_identity", "matrix_id", "status", "claim_boundary", "candidate_binding", "registry_binding", "evidence_groups", "cases", "supplemental_requirement_mappings", "external_effects", "review"],
+  "required": ["schema_identity", "matrix_id", "status", "claim_boundary", "candidate_binding", "acceptance_binding", "registry_binding", "evidence_groups", "cases", "supplemental_requirement_mappings", "external_effects", "review"],
   "properties": {
     "schema_identity": { "const": "infinium.repository.wp8-case-requirement-matrix/1.0.0" },
     "matrix_id": { "const": "infinium.m1-s6.wp8.case-requirement-matrix/v1" },
     "status": { "const": "candidate-pre-live-review" },
     "claim_boundary": { "$ref": "#/$defs/nonEmpty" },
     "candidate_binding": { "$ref": "#/$defs/candidateBinding" },
+    "acceptance_binding": { "$ref": "#/$defs/acceptanceBinding" },
     "registry_binding": { "$ref": "#/$defs/registryBinding" },
     "evidence_groups": { "type": "array", "minItems": 6, "uniqueItems": true, "items": { "$ref": "#/$defs/evidenceGroup" } },
     "cases": { "type": "array", "minItems": 23, "maxItems": 23, "items": { "$ref": "#/$defs/case" } },
@@ -38,6 +39,18 @@
         "accepted_wp7_evidence_commit": { "$ref": "#/$defs/gitSha" },
         "wp8_product_template_commit": { "type": "string", "pattern": "^(pending-until-product-template-freeze|[0-9a-f]{40})$" },
         "wp8_verification_candidate_commit": { "type": "string", "pattern": "^(pending-until-verification-freeze|[0-9a-f]{40})$" }
+      }
+    },
+    "acceptanceBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["state", "verification_candidate_commit", "post_run_evidence_candidate_commit", "non_live_all_receipt_sha256", "pre_live_receipt_sha256", "direct_layer6_receipt_sha256"],
+      "properties": {
+        "state": { "enum": ["correction-verification-pending", "accepted-closeout"] },
+        "verification_candidate_commit": { "$ref": "#/$defs/gitSha" },
+        "post_run_evidence_candidate_commit": { "type": "string", "pattern": "^(pending-until-post-run-evidence-freeze|[0-9a-f]{40})$" },
+        "non_live_all_receipt_sha256": { "type": "string", "pattern": "^(pending-until-post-run-evidence-freeze|[0-9a-f]{64})$" },
+        "pre_live_receipt_sha256": { "type": "string", "pattern": "^(pending-until-post-run-evidence-freeze|[0-9a-f]{64})$" },
+        "direct_layer6_receipt_sha256": { "type": "string", "pattern": "^(pending-until-post-run-evidence-freeze|[0-9a-f]{64})$" }
       }
     },
     "registryBinding": {

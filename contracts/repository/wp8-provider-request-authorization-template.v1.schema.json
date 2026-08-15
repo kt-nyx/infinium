@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": [
     "schema_identity", "packet_id", "packet_kind", "status", "effect_authority",
-    "candidate_binding", "materialization", "prerequisites", "owner_authorization",
+    "candidate_binding", "acceptance_binding", "materialization", "prerequisites", "owner_authorization",
     "billing_disclosure", "profile_binding", "provider_profile", "request_binding",
     "fixture_oracle_binding", "capability_price_binding", "limits", "transport_boundary",
     "canaries", "execution"
@@ -17,6 +17,7 @@
     "status": { "const": "non-executable-template" },
     "effect_authority": { "const": "none" },
     "candidate_binding": { "$ref": "#/$defs/candidateBinding" },
+    "acceptance_binding": { "$ref": "#/$defs/acceptanceBinding" },
     "materialization": { "$ref": "#/$defs/materialization" },
     "prerequisites": { "$ref": "#/$defs/stringArray" },
     "owner_authorization": { "$ref": "#/$defs/ownerAuthorization" },
@@ -47,6 +48,18 @@
         "wp8_product_template_commit": { "type": "string", "pattern": "^(pending-until-product-template-freeze|[0-9a-f]{40})$" },
         "wp8_verification_candidate_commit": { "type": "string", "pattern": "^(pending-until-verification-freeze|[0-9a-f]{40})$" },
         "required_predecessor_live_acceptance": { "type": "string", "minLength": 1 }
+      }
+    },
+    "acceptanceBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["state", "verification_candidate_commit", "post_run_evidence_candidate_commit", "non_live_all_receipt_sha256", "pre_live_receipt_sha256", "direct_layer6_receipt_sha256"],
+      "properties": {
+        "state": { "enum": ["correction-verification-pending", "accepted-closeout"] },
+        "verification_candidate_commit": { "$ref": "#/$defs/gitSha" },
+        "post_run_evidence_candidate_commit": { "type": "string", "pattern": "^(pending-until-post-run-evidence-freeze|[0-9a-f]{40})$" },
+        "non_live_all_receipt_sha256": { "type": "string", "pattern": "^(pending-until-post-run-evidence-freeze|[0-9a-f]{64})$" },
+        "pre_live_receipt_sha256": { "type": "string", "pattern": "^(pending-until-post-run-evidence-freeze|[0-9a-f]{64})$" },
+        "direct_layer6_receipt_sha256": { "type": "string", "pattern": "^(pending-until-post-run-evidence-freeze|[0-9a-f]{64})$" }
       }
     },
     "materialization": {
