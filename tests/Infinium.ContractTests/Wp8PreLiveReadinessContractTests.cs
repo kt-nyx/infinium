@@ -29,10 +29,36 @@ public sealed class Wp8PreLiveReadinessContractTests
         Assert.AreEqual(0, matrix["external_effects"]!["credential_manager_operations"]!.GetValue<int>());
         Assert.AreEqual(0, matrix["external_effects"]!["provider_requests"]!.GetValue<int>());
         Assert.AreEqual("pending-fresh-independent-review", matrix["review"]!["judgment"]!.GetValue<string>());
-        Assert.AreEqual("correction-verification-pending", matrix["acceptance_binding"]!["state"]!.GetValue<string>());
-        Assert.AreEqual("pending-until-post-run-evidence-freeze",
-            matrix["acceptance_binding"]!["post_run_evidence_candidate_commit"]!.GetValue<string>());
-        string acceptanceBinding = matrix["acceptance_binding"]!.ToJsonString();
+        JsonObject acceptance = matrix["acceptance_binding"]!.AsObject();
+        string acceptanceState = acceptance["state"]!.GetValue<string>();
+        Assert.IsTrue(acceptanceState is "correction-verification-pending" or "accepted-closeout");
+        StringAssert.Matches(acceptance["verification_candidate_commit"]!.GetValue<string>(),
+            new System.Text.RegularExpressions.Regex("^[0-9a-f]{40}$"));
+        Assert.AreEqual(matrix["candidate_binding"]!["wp8_verification_candidate_commit"]!.GetValue<string>(),
+            acceptance["verification_candidate_commit"]!.GetValue<string>());
+        string[] closeoutFields =
+        [
+            "post_run_evidence_candidate_commit", "non_live_all_receipt_sha256",
+            "pre_live_receipt_sha256", "direct_layer6_receipt_sha256",
+        ];
+        if (acceptanceState == "correction-verification-pending")
+        {
+            foreach (string field in closeoutFields)
+            {
+                Assert.AreEqual("pending-until-post-run-evidence-freeze", acceptance[field]!.GetValue<string>());
+            }
+        }
+        else
+        {
+            StringAssert.Matches(acceptance[closeoutFields[0]]!.GetValue<string>(),
+                new System.Text.RegularExpressions.Regex("^[0-9a-f]{40}$"));
+            foreach (string field in closeoutFields.Skip(1))
+            {
+                StringAssert.Matches(acceptance[field]!.GetValue<string>(),
+                    new System.Text.RegularExpressions.Regex("^[0-9a-f]{64}$"));
+            }
+        }
+        string acceptanceBinding = acceptance.ToJsonString();
 
         HashSet<string> packetIds = new(StringComparer.Ordinal);
         HashSet<string> packetKinds = new(StringComparer.Ordinal);
@@ -117,6 +143,31 @@ public sealed class Wp8PreLiveReadinessContractTests
             ("acceptance-verification-identity", docs => docs["matrix"]["acceptance_binding"]!["verification_candidate_commit"] = new string('0', 40)),
             ("acceptance-old-verification-identity", docs => docs["matrix"]["acceptance_binding"]!["verification_candidate_commit"] = "fbdb1f03e006a85723b0533d44b2ed06e02cc724"),
             ("acceptance-cross-document", docs => docs["profile"]["acceptance_binding"]!["state"] = "accepted-closeout"),
+            ("acceptance-arbitrary-state", docs =>
+            {
+                foreach (JsonObject document in docs.Values)
+                {
+                    document["acceptance_binding"]!["state"] = "arbitrary";
+                }
+            }),
+            ("acceptance-mixed-accepted-pending-fields", docs =>
+            {
+                foreach (JsonObject document in docs.Values)
+                {
+                    document["acceptance_binding"]!["state"] = "accepted-closeout";
+                }
+            }),
+            ("acceptance-mixed-pending-exact-fields", docs =>
+            {
+                foreach (JsonObject document in docs.Values)
+                {
+                    JsonNode binding = document["acceptance_binding"]!;
+                    binding["post_run_evidence_candidate_commit"] = new string('1', 40);
+                    binding["non_live_all_receipt_sha256"] = new string('2', 64);
+                    binding["pre_live_receipt_sha256"] = new string('3', 64);
+                    binding["direct_layer6_receipt_sha256"] = new string('4', 64);
+                }
+            }),
             ("acceptance-premature-evidence", docs => docs["matrix"]["acceptance_binding"]!["post_run_evidence_candidate_commit"] = new string('1', 40)),
             ("acceptance-premature-nonlive", docs => docs["matrix"]["acceptance_binding"]!["non_live_all_receipt_sha256"] = new string('1', 64)),
             ("acceptance-premature-prelive", docs => docs["matrix"]["acceptance_binding"]!["pre_live_receipt_sha256"] = new string('1', 64)),
