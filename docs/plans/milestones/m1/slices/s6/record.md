@@ -7674,3 +7674,32 @@ and the same 126-file execution-closure SHA-256
 SourceLink names the exact close-ready commit. The replacement binding grants
 no review, owner acceptance, inherited authority, credential/UI/key/native/
 network/provider/billable/profile/private/archive effect, or later packet.
+
+## WP9 action-time button-focus correction — 2026-08-15
+
+Terminal credential review withheld B13 acceptance because a real native button
+click moves keyboard focus from the edit control to the clicked Submit or Cancel
+button before `WM_COMMAND`. The action-time check still required edit focus for
+every source, so both real button actions would be rejected despite otherwise
+valid readiness. B13 and its receipts are superseded.
+
+The corrected action-time invariant is source-specific: Submit requires focus
+on the Submit button, Cancel requires focus on the Cancel button, Enter/Escape
+require edit focus, and window-close requires focus within the owned top-level
+window tree. Foreground, active-window, session, input-desktop, ownership,
+visibility, monitor, cloak, enabled, and finite-input facts remain mandatory.
+The non-live hidden Win32 harness creates actual production-style BUTTON
+controls, moves focus to each button, issues `BM_CLICK`, dispatches the resulting
+`WM_COMMAND`, and proves both Submit and Cancel admission without showing UI.
+
+The corrected implementation is frozen at
+`688fb9e39c0c227389328d54d12b5b24eba657b6`. Two consecutive canonical
+non-incremental Release builds reproduced coordinator SHA-256
+`87a8dde203e5fea29a8e0be90596edbd71d50b495f871740a5550eebf98e67aa`,
+helper SHA-256
+`afa57f94f23973785d3672e63f7cf06893f8254d3b0f2c3b63ffc6d37036134f`,
+and 126-file execution-closure SHA-256
+`7cc5188bf8e173160f518b6b9b1c8ca49b544a9c82daf0eca2cfed1efd6fa9ee`.
+SourceLink names that exact commit. The replacement grants no review, owner
+acceptance, inherited authority, credential/UI/key/native/network/provider/
+billable/profile/private/archive effect, or later request packet.
