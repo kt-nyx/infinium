@@ -31,20 +31,19 @@ WP6 is independently accepted at exact product candidate
 at exact product candidate `59367a7479a7395b173b974bf720543aab2404d4`,
 with append-only evidence `51251c0e0eb98d67dbc9b295b9ff084ebca33890`
 and answer-isolated VAL-v3 oracle freeze
-`e9b032366552aa67649636655ed07a3bb50bb3b1`. The nine Slice 6 contracts
-remain `Implementation-active`. The live handoff now authorizes only fresh
-WP4 authorization-manifest preparation and review; its prior native
-authorization is stale/non-authoritative and no `CredentialNative` or
-Credential Manager operation is authorized. WP8 remains blocked until WP4 is
-freshly authorized, executed, independently accepted, and the handoff advances.
-[The post-WP7 WP4 preparation manifest](wp4-credential-native-authorization.post-wp7.json)
-has no effect authority and is now superseded/non-executable after authorizing
-only the bounded non-native consumer-binding correction. The exact executable
-proposal is [WP4 v2](wp4-credential-native-authorization.v2.json); after a
-review-found non-native compatibility correction, it has a further fresh
-identity/namespace and remains
-closed until fresh review and explicit owner native-effect acceptance of its
-exact bytes.
+`e9b032366552aa67649636655ed07a3bb50bb3b1`. WP4 is accepted through
+owner-authorized execution `1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b`, retained evidence SHA-256
+`3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390`,
+and audit correction `be55eda59752f884fe6e113f40927295da45f2cd`; all 12 consumed targets
+are absent and that namespace may never be reused. The nine Slice 6 contracts
+remain `Implementation-active`.
+
+The live handoff authorizes only WP8 accumulated non-live verification and
+pre-live packet-template review. The four WP8 packets are non-secret,
+non-executable templates with pending future bindings; they create no owner
+authorization and cannot execute a native credential or provider operation.
+Production-profile enrollment and each of the three provider requests remain
+separate future owner decisions under plan sections 20 through 22.
 [Current project state](../../../../../current-state.md) authorizes only the
 exact active package and governs automatic non-live progression. Disposable
 native qualification, production-profile enrollment/verification, and each of

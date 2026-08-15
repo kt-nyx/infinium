@@ -1,0 +1,77 @@
+{
+  "schema_identity": "infinium.repository.wp8-production-profile-authorization-template/1.0.0",
+  "packet_id": "infinium.m1-s6.wp8.pre-live-profile-authorization-template/v1",
+  "packet_kind": "EnrollOrVerifyProfile",
+  "status": "non-executable-template",
+  "effect_authority": "none",
+  "candidate_binding": {
+    "accepted_wp4_execution_commit": "1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b",
+    "accepted_wp4_evidence_sha256": "3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390",
+    "accepted_wp4_audit_commit": "be55eda59752f884fe6e113f40927295da45f2cd",
+    "accepted_wp7_product_commit": "59367a7479a7395b173b974bf720543aab2404d4",
+    "accepted_wp7_evidence_commit": "51251c0e0eb98d67dbc9b295b9ff084ebca33890",
+    "wp8_candidate_commit": "pending-after-independent-wp8-acceptance"
+  },
+  "materialization": {
+    "required": true,
+    "operation_choice": "pending-new-or-exact-existing-owner-choice",
+    "fresh_identity": "pending",
+    "fresh_expiry": "pending",
+    "fresh_exact_byte_review": "required",
+    "no_inheritance": true
+  },
+  "owner_authorization": {
+    "authorization_identity": "pending",
+    "manifest_sha256": "pending",
+    "expires_at_utc": "pending",
+    "scope": "exactly-one-production-profile-enrollment-or-verification-effect",
+    "inheritance": "prohibited"
+  },
+  "provider_intent": {
+    "provider": "openai",
+    "purpose": "user-owned-platform-api-inference",
+    "account_authority": "pending-owner-confirmation",
+    "billing_scope_authority": "pending-owner-confirmation"
+  },
+  "profile_binding": {
+    "mode": "pending-new-or-exact-existing",
+    "profile_id": "pending",
+    "generation_id": "pending",
+    "revocation_epoch": "pending",
+    "verification_expectation": "materialized-manifest-must-bind-one-exact-generation-and-revocation-epoch"
+  },
+  "native_boundary": {
+    "new_profile_calls": ["CredWriteW", "CredReadW", "CredFree"],
+    "existing_profile_calls": ["CredReadW", "CredFree"],
+    "forbidden_calls": ["CredEnumerateW", "arbitrary-target access", "alternate credential or secret-storage mechanism"],
+    "enumeration": "prohibited",
+    "fallback": "none"
+  },
+  "entry_cancel": {
+    "owner": "one-shot-credential-helper",
+    "presentation": "Settings -> Add/Replace API key -> WPF-parented helper-owned modal",
+    "masked": true,
+    "paste_permitted": true,
+    "renderer_receives_value": false,
+    "cancel_result": "typed-cancel-with-no-write-and-no-dispatch"
+  },
+  "persistence_delete": {
+    "credential_persistence": "pending-owner-choice",
+    "post_qualification_intent": "pending-retain-or-delete-exact-generation",
+    "partial_or_ambiguous_effect": "block-provider-request-until-fresh-authorized-recovery"
+  },
+  "deadline": {
+    "expires_at_utc": "pending",
+    "maximum_wall_clock_seconds": 1800
+  },
+  "canaries": {
+    "secret_canary": "pending-generated-at-materialization-not-stored-in-template",
+    "target_canary": "pending-fingerprint-only-at-materialization",
+    "pass_condition": "zero-forbidden-surface-matches"
+  },
+  "execution": {
+    "permitted": false,
+    "command": null,
+    "script_status": "not-created-by-wp8"
+  }
+}

@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'CredentialNativeRecovery', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'Layer6Review')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'CredentialNativeRecovery', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'NonLiveAll', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -22,7 +22,7 @@ param(
     [switch] $CredentialNativePostEffectAudit
 )
 
-if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProvenanceReplay') -and $PSVersionTable.PSEdition -ne 'Core') {
+if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProvenanceReplay', 'NonLiveAll') -and $PSVersionTable.PSEdition -ne 'Core') {
     $pwsh = Get-Command pwsh.exe -ErrorAction Stop
     $arguments = @(
         '-NoProfile',
@@ -268,6 +268,9 @@ function Test-Wp1AllowedPath([string] $Path) {
         'contracts/repository/wp4-credential-native-recovery.e6e04651.v1.schema.json',
         'contracts/repository/wp4-credential-native-recovery.4936dcef.v1.schema.json',
         'contracts/repository/wp4-credential-native-recovery.076b981a.v1.schema.json',
+        'contracts/repository/wp8-case-requirement-matrix.v1.schema.json',
+        'contracts/repository/wp8-production-profile-authorization-template.v1.schema.json',
+        'contracts/repository/wp8-provider-request-authorization-template.v1.schema.json',
         'dependencies/README.md',
         'dependencies/dependency-curation.json',
         'dependencies/dependency-manifest.json',
@@ -286,6 +289,11 @@ function Test-Wp1AllowedPath([string] $Path) {
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.4936dcef.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.076b981a.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.post-wp7.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-production-profile-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-qualification-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-source-claim-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-candidate-investigation-authorization.template.v1.json',
         'docs/research/investigations/README.md',
         'docs/research/investigations/RESEARCH-0055-slice6-local-input-bound-policy.md',
         'docs/research/source-registry.md',
@@ -301,6 +309,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'eng/validate-m1-slice6-wp4-recovery-4936dcef.ps1',
         'eng/validate-m1-slice6-wp4-recovery-076b981a.ps1',
         'eng/validate-m1-slice6-wp4-recovery-evidence.ps1',
+        'eng/validate-m1-slice6-wp8-prelive.ps1',
         'eng/reconstruct-m1-slice6-wp4-recovery-receipt.ps1',
         'eng/reconstruct-m1-slice6-wp4-recovery-ad876b9a-receipt.ps1',
         'eng/reconstruct-m1-slice6-wp4-recovery-e3f76cd6-receipt.ps1',
@@ -378,9 +387,9 @@ function Test-Wp1ProtectedPath([string] $Path) {
     return $Path.StartsWith('contracts/protobuf/infinium/helper/v1/', [System.StringComparison]::Ordinal)
 }
 
-function Invoke-Layer6ReviewGate {
-    $baselineHash = Resolve-GitCommit $BaselineCommit 'BaselineCommit'
-    $candidateHash = Resolve-GitCommit $CandidateCommit 'CandidateCommit'
+function Invoke-Layer6ReviewGate([string] $ReviewBaseline = $BaselineCommit, [string] $ReviewCandidate = $CandidateCommit) {
+    $baselineHash = Resolve-GitCommit $ReviewBaseline 'BaselineCommit'
+    $candidateHash = Resolve-GitCommit $ReviewCandidate 'CandidateCommit'
     & git -C $repoRoot merge-base --is-ancestor $baselineHash $candidateHash
     if ($LASTEXITCODE -ne 0) {
         throw "Layer6Review baseline $baselineHash is not an ancestor of candidate $candidateHash."
@@ -619,9 +628,9 @@ function Invoke-Layer6ReviewGate {
 
     $status = if ($failures.Count -eq 0) { 'passed' } else { 'failed' }
     Write-Receipt 'Layer6Review' ([ordered]@{
-        baseline_input = $BaselineCommit
+        baseline_input = $ReviewBaseline
         baseline_commit = $baselineHash
-        candidate_input = $CandidateCommit
+        candidate_input = $ReviewCandidate
         candidate_commit = $candidateHash
         candidate_bound = $true
         handoff_closeout = [bool]$HandoffCloseout
@@ -1243,6 +1252,108 @@ function Invoke-ProvenanceReplayGate {
         identity_drift = 'failed-closed'
         no_model_and_unavailable_provider = 'distinct'
         network_send_count = 0; credential_operation_count = 0; source_refresh_count = 0
+    })
+}
+
+function Invoke-Wp8PreLiveValidationGate {
+    $receiptPath = Join-Path $resolvedOutputRoot 'wp8-prelive-validation.json'
+    & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp8-prelive.ps1') -OutputPath $receiptPath -RequireFrozenCandidate
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) {
+        throw 'WP8 pre-live matrix and non-executable packet validation failed.'
+    }
+    $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json -Depth 20
+    if ($receipt.status -ne 'passed-non-executable-templates-only' -or
+        [int64]$receipt.case_count -ne 23 -or [int64]$receipt.packet_count -ne 4 -or
+        [bool]$receipt.execution_authorized -or [int64]$receipt.credential_manager_operations -ne 0 -or
+        [int64]$receipt.dns_operations -ne 0 -or [int64]$receipt.public_network_operations -ne 0 -or
+        [int64]$receipt.provider_requests -ne 0 -or [int64]$receipt.billable_operations -ne 0 -or
+        [bool]$receipt.api_key_used -or [bool]$receipt.live_manifest_execution) {
+        throw 'WP8 pre-live validation receipt permits or reports an external effect.'
+    }
+}
+
+function Invoke-NonLiveAllGate {
+    if (-not [string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
+        throw 'NonLiveAll refuses every authorization manifest.'
+    }
+    if ($outputRootHadEntriesBeforeInvocation) {
+        throw 'NonLiveAll requires a fresh empty output root so retained receipts cannot be inherited.'
+    }
+    if (-not [string]::IsNullOrWhiteSpace((& git -C $repoRoot status --porcelain))) {
+        throw 'NonLiveAll requires a clean committed candidate for content-bound evidence.'
+    }
+    $currentState = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/current-state.md') -Raw
+    foreach ($required in @(
+            '`M1/S6/WP8` accumulated non-live verification and pre-live review only',
+            'no further Credential Manager operation is authorized',
+            'no provider request is authorized')) {
+        if (-not $currentState.Contains($required, [StringComparison]::Ordinal)) {
+            throw "NonLiveAll current authority is missing '$required'."
+        }
+    }
+
+    Invoke-ContractsGate
+    Invoke-StateSurfaceGate $false
+    Invoke-StateSurfaceGate $true
+    Invoke-BudgetGate
+    Invoke-BudgetFaultGate
+    Invoke-CredentialSyntheticGate
+    Invoke-AdapterGate
+    Invoke-OfflineSafetyReplayGate
+    Invoke-SourceClaimSemanticsGate
+    Invoke-CandidateSemanticsGate
+    Invoke-ProvenanceReplayGate
+    Invoke-Wp8PreLiveValidationGate
+
+    $candidate = (& git -C $repoRoot rev-parse HEAD).Trim()
+    $baseline = '63e4584f8926227c2a1e12ef31c71a3a88798c7f'
+    Invoke-Layer6ReviewGate $baseline $candidate
+
+    $childReceiptNames = @(
+        'contracts.json', 'statesurfaces.json', 'statetotality.json', 'budget.json',
+        'budgetfaults.json', 'credentialsynthetic.json', 'adapter.json',
+        'offlinesafetyreplay.json', 'sourceclaimsemantics.json', 'candidatesemantics.json',
+        'provenancereplay.json', 'wp8-prelive-validation.json', 'layer6review.json')
+    $childReceipts = @()
+    foreach ($name in $childReceiptNames) {
+        $path = Join-Path $resolvedOutputRoot $name
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+            throw "NonLiveAll is missing child receipt '$name'."
+        }
+        $childReceipts += [ordered]@{
+            file = $name
+            bytes = (Get-Item -LiteralPath $path).Length
+            sha256 = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
+        }
+    }
+    $packetPaths = @(
+        'docs/plans/milestones/m1/slices/s6/wp8-production-profile-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-qualification-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-source-claim-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-candidate-investigation-authorization.template.v1.json')
+    $packetHashes = @($packetPaths | ForEach-Object {
+        [ordered]@{ path = $_; sha256 = (Get-FileHash -LiteralPath (Join-Path $repoRoot $_) -Algorithm SHA256).Hash.ToLowerInvariant() }
+    })
+    Write-Receipt 'NonLiveAll' ([ordered]@{
+        baseline_commit = $baseline
+        candidate_commit = $candidate
+        verifier_sha256 = (Get-FileHash -LiteralPath $PSCommandPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        prelive_validator_sha256 = (Get-FileHash -LiteralPath (Join-Path $repoRoot 'eng/validate-m1-slice6-wp8-prelive.ps1') -Algorithm SHA256).Hash.ToLowerInvariant()
+        case_matrix_sha256 = (Get-FileHash -LiteralPath (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+        packet_templates = $packetHashes
+        child_receipts = $childReceipts
+        external_effect_scope = 'zero-public-external-effects; one deterministic literal-loopback adapter send is local-only evidence'
+        execution_authorized = $false
+        authorization_manifest_accepted = $false
+        credential_manager_operations = 0
+        dns_operations = 0
+        public_network_operations = 0
+        provider_requests = 0
+        billable_operations = 0
+        api_key_used = $false
+        live_manifest_execution = $false
+        private_fixture_access = $false
+        archive_access = $false
     })
 }
 
@@ -2103,6 +2214,7 @@ try {
         'SourceClaimSemantics' { Invoke-SourceClaimSemanticsGate }
         'CandidateSemantics' { Invoke-CandidateSemanticsGate }
         'ProvenanceReplay' { Invoke-ProvenanceReplayGate }
+        'NonLiveAll' { Invoke-NonLiveAllGate }
         'Layer6Review' { Invoke-Layer6ReviewGate }
     }
 } finally {

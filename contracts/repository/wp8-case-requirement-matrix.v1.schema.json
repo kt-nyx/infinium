@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/wp8-case-requirement-matrix.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_identity", "matrix_id", "status", "claim_boundary", "candidate_binding", "registry_binding", "evidence_groups", "cases", "external_effects", "review"],
+  "properties": {
+    "schema_identity": { "const": "infinium.repository.wp8-case-requirement-matrix/1.0.0" },
+    "matrix_id": { "const": "infinium.m1-s6.wp8.case-requirement-matrix/v1" },
+    "status": { "const": "candidate-pre-live-review" },
+    "claim_boundary": { "$ref": "#/$defs/nonEmpty" },
+    "candidate_binding": { "$ref": "#/$defs/candidateBinding" },
+    "registry_binding": { "$ref": "#/$defs/registryBinding" },
+    "evidence_groups": { "type": "array", "minItems": 6, "uniqueItems": true, "items": { "$ref": "#/$defs/evidenceGroup" } },
+    "cases": { "type": "array", "minItems": 23, "maxItems": 23, "items": { "$ref": "#/$defs/case" } },
+    "external_effects": { "$ref": "#/$defs/externalEffects" },
+    "review": { "$ref": "#/$defs/review" }
+  },
+  "$defs": {
+    "nonEmpty": { "type": "string", "minLength": 1 },
+    "gitSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "stringArray": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/nonEmpty" } },
+    "candidateBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["slice5_base_commit", "wp8_baseline_commit", "accepted_wp4_execution_commit", "accepted_wp4_evidence_sha256", "accepted_wp4_audit_commit", "accepted_wp5_commit", "accepted_wp6_product_commit", "accepted_wp6_evidence_commit", "accepted_wp7_product_commit", "accepted_wp7_evidence_commit", "wp8_candidate_commit"],
+      "properties": {
+        "slice5_base_commit": { "$ref": "#/$defs/gitSha" },
+        "wp8_baseline_commit": { "$ref": "#/$defs/gitSha" },
+        "accepted_wp4_execution_commit": { "$ref": "#/$defs/gitSha" },
+        "accepted_wp4_evidence_sha256": { "$ref": "#/$defs/sha256" },
+        "accepted_wp4_audit_commit": { "$ref": "#/$defs/gitSha" },
+        "accepted_wp5_commit": { "$ref": "#/$defs/gitSha" },
+        "accepted_wp6_product_commit": { "$ref": "#/$defs/gitSha" },
+        "accepted_wp6_evidence_commit": { "$ref": "#/$defs/gitSha" },
+        "accepted_wp7_product_commit": { "$ref": "#/$defs/gitSha" },
+        "accepted_wp7_evidence_commit": { "$ref": "#/$defs/gitSha" },
+        "wp8_candidate_commit": { "type": "string", "pattern": "^(pending-until-candidate-freeze|[0-9a-f]{40})$" }
+      }
+    },
+    "registryBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "schema_identity", "registry_version", "package_count", "sha256", "required_package_identities"],
+      "properties": {
+        "path": { "const": "fixtures/public/public-fixture-registry.v1.json" },
+        "schema_identity": { "const": "infinium.repository.public-fixture-registry/1.6.0" },
+        "registry_version": { "const": "1.6.0" },
+        "package_count": { "const": 35 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "required_package_identities": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "evidenceGroup": {
+      "type": "object", "additionalProperties": false,
+      "required": ["group_id", "gates", "assertions"],
+      "properties": {
+        "group_id": { "$ref": "#/$defs/nonEmpty" },
+        "gates": { "$ref": "#/$defs/stringArray" },
+        "assertions": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "case": {
+      "type": "object", "additionalProperties": false,
+      "required": ["case_id", "classification", "disposition", "requirements", "evidence_gates", "covered_assertions", "n_a_assertions"],
+      "properties": {
+        "case_id": { "type": "string", "pattern": "^EVAL-[0-9]{4}$" },
+        "classification": { "enum": ["primary", "applicable-extension", "review-only-regression"] },
+        "disposition": { "enum": ["covered-non-live", "covered-with-assertion-level-na", "mandatory-review-regression"] },
+        "requirements": { "$ref": "#/$defs/stringArray" },
+        "evidence_gates": { "$ref": "#/$defs/stringArray" },
+        "covered_assertions": { "$ref": "#/$defs/stringArray" },
+        "n_a_assertions": { "type": "array", "items": { "$ref": "#/$defs/naAssertion" } }
+      }
+    },
+    "naAssertion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["assertion_id", "rationale", "authority", "unreachable_proof", "later_authority", "no_activation"],
+      "properties": {
+        "assertion_id": { "$ref": "#/$defs/nonEmpty" },
+        "rationale": { "$ref": "#/$defs/nonEmpty" },
+        "authority": { "$ref": "#/$defs/nonEmpty" },
+        "unreachable_proof": { "$ref": "#/$defs/nonEmpty" },
+        "later_authority": { "$ref": "#/$defs/nonEmpty" },
+        "no_activation": { "const": true }
+      }
+    },
+    "externalEffects": {
+      "type": "object", "additionalProperties": false,
+      "required": ["credential_manager_operations", "dns_operations", "public_network_operations", "provider_requests", "billable_operations", "api_key_used", "live_manifest_execution", "private_fixture_access", "archive_access"],
+      "properties": {
+        "credential_manager_operations": { "const": 0 },
+        "dns_operations": { "const": 0 },
+        "public_network_operations": { "const": 0 },
+        "provider_requests": { "const": 0 },
+        "billable_operations": { "const": 0 },
+        "api_key_used": { "const": false },
+        "live_manifest_execution": { "const": false },
+        "private_fixture_access": { "const": false },
+        "archive_access": { "const": false }
+      }
+    },
+    "review": {
+      "type": "object", "additionalProperties": false,
+      "required": ["required_roles", "self_acceptance", "judgment"],
+      "properties": {
+        "required_roles": { "type": "array", "minItems": 6, "uniqueItems": true, "items": { "$ref": "#/$defs/nonEmpty" } },
+        "self_acceptance": { "const": "prohibited" },
+        "judgment": { "const": "pending-fresh-independent-review" }
+      }
+    }
+  }
+}
