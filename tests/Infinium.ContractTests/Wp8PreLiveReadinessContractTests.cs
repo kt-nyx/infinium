@@ -389,6 +389,8 @@ public sealed class Wp8PreLiveReadinessContractTests
         System.Text.RegularExpressions.Match function = System.Text.RegularExpressions.Regex.Match(
             script, @"(?ms)^function Get-Wp8NonLiveCurrentStateDisposition\(.*?^\}");
         Assert.IsTrue(function.Success, "NonLiveAll current-state predicate was not found.");
+        StringAssert.Contains(script, "one closeout commit changing exactly the four reviewed binding documents");
+        StringAssert.Contains(script, "validate-m1-slice6-wp9-profile-authorization.ps1");
         string currentState = """
             | Current authorized work | `M1/S6/WP8` closeout correction and complete non-live reverification only; WP9 is not eligible. |
             | Next eligible action | Freeze the corrected WP8 verification candidate, bind its non-executable templates, then run the complete non-live floor and fresh independent review; do not begin WP9 |
@@ -456,17 +458,21 @@ public sealed class Wp8PreLiveReadinessContractTests
                 if ((Get-Wp8NonLiveCurrentStateDisposition $weakened $accepted) -ne 'invalid') { exit 18 }
             }
             $ownerStop = @"
-            | Current authorized work | ``M1/S6/WP9`` exact new-only production-profile enrollment manifest is ready for owner acceptance and has no execution authority until exact owner acceptance. ``infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f``. {{noEffect}} |
-            | Next eligible action | Owner may accept or decline the exact WP9 production-profile manifest bytes. The transport-qualification request manifest remains unmaterialized and blocked pending separate request-field authority. |
-            {{noInheritance}}. {{noEffect}}
+            | Current authorized work | ``M1/S6/WP9`` non-effectful production-profile preparation verification and independent review only. Corrected close-ready implementation ``ffffffffffffffffffffffffffffffffffffffff`` is bound by manifest ``infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f``, but no exact replacement independent-review or owner-acceptance record exists yet. The prior binding at ``1c3b64a651361c147cba018b8054cb2f0ac4f036`` is historical and non-executable. No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. |
+            Accepted corrected ``M1/S6/WP8`` candidate $($accepted.verification_candidate_commit) $($accepted.post_run_evidence_candidate_commit) $($accepted.non_live_all_receipt_sha256) $($accepted.pre_live_receipt_sha256) $($accepted.direct_layer6_receipt_sha256)
+            | Next eligible action | Run the complete non-live floor and fresh independent security/semantic/diff review against the exact corrected manifest binding. Only an accepted exact reviewed candidate may then reach the owner accept-or-decline stop. The transport-qualification request manifest remains unmaterialized and blocked pending separate ``safety_identifier`` authority resolution plus successful profile enrollment. |
+            {{noInheritance}}.
             "@
             if ((Get-Wp8NonLiveCurrentStateDisposition $ownerStop $accepted) -ne 'exact-wp9-profile-owner-stop-no-effect-state') { exit 19 }
             foreach ($weakened in @(
-                $ownerStop.Replace('has no execution authority until exact owner acceptance.','is executable.'),
-                $ownerStop.Replace('Owner may accept or decline the exact WP9 production-profile manifest bytes.','Execute WP9.'),
+                $ownerStop.Replace('non-effectful production-profile preparation verification and independent review only.','production profile execution.'),
+                $ownerStop.Replace('but no exact replacement independent-review or owner-acceptance record exists yet.','is executable.'),
+                $ownerStop.Replace('Run the complete non-live floor and fresh independent security/semantic/diff review against the exact corrected manifest binding.','Execute WP9.'),
                 $ownerStop.Replace('The transport-qualification request manifest remains unmaterialized and blocked','The transport-qualification request manifest is ready'),
+                $ownerStop.Replace('UI launch, ',''),
+                $ownerStop.Replace($accepted.non_live_all_receipt_sha256,('0' * 64)),
                 $ownerStop.Replace('{{noInheritance}}',''),
-                $ownerStop.Replace('{{noEffect}}',''))) {
+                $ownerStop.Replace('No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.',''))) {
                 if ((Get-Wp8NonLiveCurrentStateDisposition $weakened $accepted) -ne 'invalid') { exit 20 }
             }
             exit 0

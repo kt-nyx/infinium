@@ -280,6 +280,7 @@ function Test-HandoffCloseoutCurrentState([string] $CurrentStateText) {
 function Get-Wp8NonLiveCurrentStateDisposition([string] $CurrentStateText, [object] $AcceptanceBinding) {
     $normalized = [regex]::Replace($CurrentStateText, '\s+', ' ')
     $noEffect = $normalized.Contains('No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.', [StringComparison]::Ordinal)
+    $wp9NoEffect = $normalized.Contains('No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.', [StringComparison]::Ordinal)
     $noInheritance = $normalized.Contains('No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority', [StringComparison]::Ordinal)
     $staleWp8Handoff =
         $normalized.Contains('WP8 is independently accepted at exact', [StringComparison]::Ordinal) -or
@@ -314,11 +315,19 @@ function Get-Wp8NonLiveCurrentStateDisposition([string] $CurrentStateText, [obje
         $noEffect -and $noInheritance
     $wp9ProfileOwnerStop =
         $AcceptanceBinding.state -eq 'accepted-closeout' -and
-        $normalized.Contains('| Current authorized work | `M1/S6/WP9` exact new-only production-profile enrollment manifest is ready for owner acceptance and has no execution authority until exact owner acceptance.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('| Current authorized work | `M1/S6/WP9` non-effectful production-profile preparation verification and independent review only. Corrected close-ready implementation `', [StringComparison]::Ordinal) -and
         $normalized.Contains('infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f', [StringComparison]::Ordinal) -and
-        $normalized.Contains('| Next eligible action | Owner may accept or decline the exact WP9 production-profile manifest bytes.', [StringComparison]::Ordinal) -and
-        $normalized.Contains('The transport-qualification request manifest remains unmaterialized and blocked', [StringComparison]::Ordinal) -and
-        $noEffect -and $noInheritance
+        $normalized.Contains('but no exact replacement independent-review or owner-acceptance record exists yet.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('The prior binding at `1c3b64a651361c147cba018b8054cb2f0ac4f036` is historical and non-executable.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('Accepted corrected `M1/S6/WP8` candidate', [StringComparison]::Ordinal) -and
+        $normalized.Contains([string]$AcceptanceBinding.verification_candidate_commit, [StringComparison]::Ordinal) -and
+        $normalized.Contains([string]$AcceptanceBinding.post_run_evidence_candidate_commit, [StringComparison]::Ordinal) -and
+        $normalized.Contains([string]$AcceptanceBinding.non_live_all_receipt_sha256, [StringComparison]::Ordinal) -and
+        $normalized.Contains([string]$AcceptanceBinding.pre_live_receipt_sha256, [StringComparison]::Ordinal) -and
+        $normalized.Contains([string]$AcceptanceBinding.direct_layer6_receipt_sha256, [StringComparison]::Ordinal) -and
+        $normalized.Contains('| Next eligible action | Run the complete non-live floor and fresh independent security/semantic/diff review against the exact corrected manifest binding. Only an accepted exact reviewed candidate may then reach the owner accept-or-decline stop.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('The transport-qualification request manifest remains unmaterialized and blocked pending separate `safety_identifier` authority resolution plus successful profile enrollment.', [StringComparison]::Ordinal) -and
+        $wp9NoEffect -and $noInheritance
     if ($verificationState) { return 'exact-wp8-correction-reverification-state' }
     if ($acceptedNoEffectHandoff) { return 'exact-corrected-wp8-accepted-handoff' }
     if ($wp9ProfilePreparation) { return 'exact-wp9-profile-preparation-no-effect-state' }
@@ -1449,6 +1458,37 @@ function Invoke-NonLiveAllGate {
     $currentStateDisposition = Get-Wp8NonLiveCurrentStateDisposition $currentState $wp8Matrix.acceptance_binding
     if ($currentStateDisposition -eq 'invalid') {
         throw 'NonLiveAll requires either the exact WP8 correction-reverification authority or the exact structured corrected-WP8 no-effect handoff.'
+    }
+    if ($currentStateDisposition -eq 'exact-wp9-profile-owner-stop-no-effect-state') {
+        $profileManifestPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
+        $profileManifest = Get-Content -LiteralPath $profileManifestPath -Raw | ConvertFrom-Json -Depth 100
+        $profileValidationJson = @(& (Join-Path $repoRoot 'eng/validate-m1-slice6-wp9-profile-authorization.ps1') `
+            -AuthorizationManifest $profileManifestPath -RequireReady) -join "`n"
+        if ($LASTEXITCODE -ne 0) {
+            throw 'NonLiveAll exact WP9 owner-stop state failed its ready manifest validator.'
+        }
+        $profileValidation = $profileValidationJson | ConvertFrom-Json -Depth 20
+        $closeReady = [string]$profileManifest.binding.close_ready_implementation_commit
+        if ($profileValidation.status -cne 'validated-ready-for-owner-acceptance' -or
+            $profileValidation.manifest_id -cne 'infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f' -or
+            $profileManifest.release_build.source_commit -cne $closeReady -or
+            -not $currentState.Contains($closeReady, [StringComparison]::Ordinal) -or
+            $closeReady -notmatch '^[0-9a-f]{40}$') {
+            throw 'NonLiveAll exact WP9 owner-stop state has a stale or incomplete manifest/candidate binding.'
+        }
+        $head = (& git -C $repoRoot rev-parse HEAD).Trim()
+        [string[]]$actualCloseoutPaths = @(& git -C $repoRoot diff --name-only "$closeReady..$head")
+        [string[]]$expectedCloseoutPaths = @(
+            'docs/current-state.md',
+            'docs/plans/milestones/m1/slices/s6/README.md',
+            'docs/plans/milestones/m1/slices/s6/record.md',
+            'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json')
+        [Array]::Sort($actualCloseoutPaths, [StringComparer]::Ordinal)
+        [Array]::Sort($expectedCloseoutPaths, [StringComparer]::Ordinal)
+        if ((& git -C $repoRoot rev-list --count "$closeReady..$head").Trim() -ne '1' -or
+            [string]::Join("`n", $actualCloseoutPaths) -cne [string]::Join("`n", $expectedCloseoutPaths)) {
+            throw 'NonLiveAll exact WP9 owner-stop state requires one closeout commit changing exactly the four reviewed binding documents.'
+        }
     }
 
     Invoke-ContractsGate
