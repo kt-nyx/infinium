@@ -7308,3 +7308,19 @@ Authority is returned to WP8 correction and complete non-live reverification
 only; WP9 remains ineligible. No API-key, Credential Manager, DNS,
 public-network, provider, billable, private-fixture, archive, live-manifest,
 production-profile, or WP9 effect occurred.
+
+## WP8 accepted-record EOF correction — 2026-08-15
+
+The accepted closeout `3f7f1e0cb7e9c18d7a8f72ed0697377336bef028`
+was rejected by its own standalone validator before testing because its
+deterministic-floor acceptance section had been inserted before later retained
+entries rather than appended at EOF. All bytes remain retained; the defect is
+document ordering and append-only sealing, not product, validator, schema,
+test, packet, or runtime behavior.
+
+The next verification baseline includes the complete retained record exactly
+as found. Its eventual accepted closeout must extend those bytes strictly at
+EOF. Authority remains WP8 correction and complete non-live reverification
+only; WP9 is ineligible. No API-key, Credential Manager, DNS, public-network,
+provider, billable, private-fixture, archive, live-manifest,
+production-profile, or WP9 effect occurred.

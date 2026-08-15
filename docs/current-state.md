@@ -17,7 +17,7 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S6` - owner-accepted; implementation-active |
-| Current authorized work | `M1/S6/WP9` owner decision and exact authorization-packet materialization planning only; corrected WP8 is accepted. No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. |
+| Current authorized work | `M1/S6/WP8` closeout correction and complete non-live reverification only; WP9 is not eligible. |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
 | Accepted Slice 6 WP1 candidate | `61b90314d8273749849f590b303814008fa2fdfa`; nine Slice 6 contracts are `Implementation-active` and the accepted local input-bound policy is `openai-responses-o200k-byte-envelope/v1` |
 | Accepted `M1/S6/WP2` candidate | `ed27ed04897103d93a60e6200971ca12d04f2e11`; capability, price, atomic reservation/final-gate, settlement, projection, replay, simulator, and public fixture/oracle evidence are independently accepted |
@@ -27,10 +27,9 @@ review history.
 | Accepted `M1/S6/WP6` candidate | Product `ee0b6d31f1c1826c2af7634766155397e916c3e1`, append-only evidence `2b277338390f7dac37b5a5436bbe2cd81dedc871`, and answer-isolated oracle `37aa2b4e2fc084307ba5211f21bbeeb7a93efab0`; source-claim acquisition, deterministic admission, retained semantic provenance/replay, and later admitted-artifact consumption are independently accepted |
 | Accepted `M1/S6/WP7` candidate | Product `59367a7479a7395b173b974bf720543aab2404d4`, append-only acceptance evidence `51251c0e0eb98d67dbc9b295b9ff084ebca33890`, and answer-isolated VAL-v3 oracle freeze `e9b032366552aa67649636655ed07a3bb50bb3b1`; deterministic candidate investigation, complete provenance, durable retention/readback, and database-owned replay are independently accepted |
 | Superseded `M1/S6/WP8` acceptance evidence | Product/template `260a09ecfafea103227f113faf7625a5bf0ce759`, verification `fbdb1f03e006a85723b0533d44b2ed06e02cc724`, evidence/review HEAD `36b980d226e9f9a0e91281a530fc959a211fb696`, and their receipt hashes remain historical evidence only; they do not certify the corrected closeout candidate or make WP9 eligible |
-| Accepted corrected `M1/S6/WP8` candidate | Verification `abd09a5bab29f3f9ccf9f7857d2bbfd94f8ccde9`, post-run evidence candidate `d3c44ba22c7debcff86ae8505acb00fe595eb0ca`, NonLiveAll SHA-256 `a946fbd0f07c4afdcad322ce3b9f1566656d6a2e24fce842042207c57019414a`, pre-live validation SHA-256 `2617ee4bd8d18208bb9cc14de024712caa12f48587a595cd220386864bbddb98`, and direct Layer 6 SHA-256 `d2bcb3d54c2ba3b84d38b8bbff617aacba2de66771bdce00f4e2dc8d4db32414`; accepted without provider qualification, dispatch authority, or production-profile authority |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure; no separate ADR; eleven packages with distinct native/live authorization gates |
-| Next eligible action | Owner decision whether to begin `M1/S6/WP9` materialization planning under accepted plan section 20; only fresh exact production-profile and WP9 request authorizations may be prepared, and neither may be executed without separate exact owner acceptance |
-| Later work | WP9-WP11 each require their own exact fresh owner authorization. No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority; no provider request is authorized now |
+| Next eligible action | Freeze the corrected WP8 verification candidate, bind its non-executable templates, then run the complete non-live floor and fresh independent review; do not begin WP9 |
+| Later work | WP9 remains ineligible until the corrected WP8 evidence is independently accepted and an exact no-effect closeout is committed. No prior WP8 acceptance or template grants inherited authority |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
 | Slice entry | [Slice 6 current summary and navigation](plans/milestones/m1/slices/s6/README.md) |
@@ -157,12 +156,8 @@ root are consumed forever. The earlier WP8 acceptance at evidence/review HEAD
 `260a09ecfafea103227f113faf7625a5bf0ce759`, and verification identity
 `fbdb1f03e006a85723b0533d44b2ed06e02cc724` was later invalidated as current
 handoff authority by current-HEAD review and remains historical evidence only.
-The corrected WP8 verification candidate
-`abd09a5bab29f3f9ccf9f7857d2bbfd94f8ccde9` and post-run evidence candidate
-`d3c44ba22c7debcff86ae8505acb00fe595eb0ca` are independently accepted with
-the exact three receipt hashes retained above. The only eligible next step is
-the owner's decision whether to begin WP9 fresh exact authorization-packet
-materialization planning. No WP8 template or prior authorization is executable
+Only WP8 closeout correction and complete non-live reverification are eligible;
+WP9 remains ineligible. No WP8 template or prior authorization is executable
 or inheritable. No API-key use, live-manifest execution, native Credential
 Manager operation, DNS operation, public-network operation, provider request,
 billable operation, or production-profile materialization/use is authorized.
