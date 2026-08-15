@@ -7153,3 +7153,22 @@ Manager operation, DNS operation, public-network operation, provider request,
 billable operation, or production-profile materialization/use is authorized.
 No credential, provider, network, secret, private, archive, or live effect
 occurred during correction, verification, review, or this handoff.
+
+## WP8 accepted-state contract-test correction — 2026-08-15
+
+The exact accepted closeout candidate `9d7aa782750e5a13fb47cf5ed708553586d1cba9`
+passed its standalone semantic validator but failed four of eight focused WP8
+and Layer 6 contract tests. The failures were phase-dependent test fixtures:
+the structural test required correction-only README wording; one
+cross-document mutation was a no-op in accepted state; and two predicate tests
+fed accepted repository text to synthetic pending bindings. No product,
+schema, validator, verifier, packet, or runtime defect was found.
+
+The former A4/B4 evidence and `9d7aa78` closeout remain retained historical
+evidence but do not certify the next corrected exact candidate. Authority is
+returned to WP8 closeout correction and complete non-live reverification only;
+WP9 is ineligible until a fresh pending binding, complete exact-HEAD floor,
+fresh independent review, and exact append-only accepted closeout all pass.
+No API-key, Credential Manager, DNS, public-network, provider, billable,
+private-fixture, archive, live-manifest, production-profile, or WP9 effect was
+performed.

@@ -85,12 +85,25 @@ public sealed class Wp8PreLiveReadinessContractTests
         string readme = File.ReadAllText(Path.Combine(root,
             "docs/plans/milestones/m1/slices/s6/README.md".Replace('/', Path.DirectorySeparatorChar)));
         string normalizedReadme = System.Text.RegularExpressions.Regex.Replace(readme, @"\s+", " ");
-        StringAssert.Contains(normalizedReadme, "WP8 closeout correction and complete non-live reverification are active.");
-        StringAssert.Contains(normalizedReadme, "WP9 is not eligible");
-        StringAssert.Contains(normalizedReadme, "The earlier WP8 acceptance identities and receipts are retained only as superseded historical evidence and do not certify the corrected candidate.");
+        if (acceptanceState == "correction-verification-pending")
+        {
+            StringAssert.Contains(normalizedReadme, "WP8 closeout correction and complete non-live reverification are active.");
+            StringAssert.Contains(normalizedReadme, "WP9 is not eligible");
+            StringAssert.Contains(normalizedReadme, "The earlier WP8 acceptance identities and receipts are retained only as superseded historical evidence and do not certify the corrected candidate.");
+            Assert.IsFalse(normalizedReadme.Contains("The next eligible action is only the owner's decision whether to begin WP9", StringComparison.Ordinal));
+        }
+        else
+        {
+            StringAssert.Contains(normalizedReadme, "Corrected WP8 is independently accepted.");
+            StringAssert.Contains(normalizedReadme, acceptance["verification_candidate_commit"]!.GetValue<string>());
+            StringAssert.Contains(normalizedReadme, acceptance["post_run_evidence_candidate_commit"]!.GetValue<string>());
+            StringAssert.Contains(normalizedReadme, acceptance["non_live_all_receipt_sha256"]!.GetValue<string>());
+            StringAssert.Contains(normalizedReadme, acceptance["pre_live_receipt_sha256"]!.GetValue<string>());
+            StringAssert.Contains(normalizedReadme, acceptance["direct_layer6_receipt_sha256"]!.GetValue<string>());
+            StringAssert.Contains(normalizedReadme, "The next eligible action is only the owner's decision whether to begin WP9");
+        }
         StringAssert.Contains(normalizedReadme, "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.");
         StringAssert.Contains(normalizedReadme, "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.");
-        Assert.IsFalse(normalizedReadme.Contains("The next eligible action is only the owner's decision whether to begin WP9", StringComparison.Ordinal));
 
         foreach (string relative in new[]
         {
@@ -142,7 +155,12 @@ public sealed class Wp8PreLiveReadinessContractTests
             ("verification-identity", docs => docs["matrix"]["candidate_binding"]!["wp8_verification_candidate_commit"] = new string('0', 40)),
             ("acceptance-verification-identity", docs => docs["matrix"]["acceptance_binding"]!["verification_candidate_commit"] = new string('0', 40)),
             ("acceptance-old-verification-identity", docs => docs["matrix"]["acceptance_binding"]!["verification_candidate_commit"] = "fbdb1f03e006a85723b0533d44b2ed06e02cc724"),
-            ("acceptance-cross-document", docs => docs["profile"]["acceptance_binding"]!["state"] = "accepted-closeout"),
+            ("acceptance-cross-document", docs =>
+            {
+                string state = docs["matrix"]["acceptance_binding"]!["state"]!.GetValue<string>();
+                docs["profile"]["acceptance_binding"]!["state"] =
+                    state == "accepted-closeout" ? "correction-verification-pending" : "accepted-closeout";
+            }),
             ("acceptance-arbitrary-state", docs =>
             {
                 foreach (JsonObject document in docs.Values)
@@ -238,8 +256,21 @@ public sealed class Wp8PreLiveReadinessContractTests
             Assert.IsTrue(match.Success, $"Freeze function '{name}' was not found.");
             return match.Value;
         }));
-        string currentState = File.ReadAllText(Path.Combine(root, "docs", "current-state.md"));
-        string readme = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6", "README.md"));
+        string currentState = """
+            | Current authorized work | `M1/S6/WP8` closeout correction and complete non-live reverification only; WP9 is not eligible. |
+            | Next eligible action | Freeze the corrected WP8 verification candidate, bind its non-executable templates, then run the complete non-live floor and fresh independent review; do not begin WP9 |
+            | Later work | WP9 remains ineligible until the corrected WP8 evidence is independently accepted and an exact no-effect closeout is committed. No prior WP8 acceptance or template grants inherited authority |
+            The former evidence was later invalidated as current handoff authority by current-HEAD review and remains historical evidence only.
+            Only WP8 closeout correction and complete non-live reverification are eligible; WP9 remains ineligible.
+            No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.
+            No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.
+            """;
+        string readme = """
+            WP8 closeout correction and complete non-live reverification are active. WP9 is not eligible.
+            The earlier WP8 acceptance identities and receipts are retained only as superseded historical evidence and do not certify the corrected candidate.
+            No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.
+            No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.
+            """;
         string record = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6", "record.md"));
         const string noEffect = "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.";
         const string noInheritance = "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority";
@@ -343,7 +374,15 @@ public sealed class Wp8PreLiveReadinessContractTests
         System.Text.RegularExpressions.Match function = System.Text.RegularExpressions.Regex.Match(
             script, @"(?ms)^function Get-Wp8NonLiveCurrentStateDisposition\(.*?^\}");
         Assert.IsTrue(function.Success, "NonLiveAll current-state predicate was not found.");
-        string currentState = File.ReadAllText(Path.Combine(root, "docs", "current-state.md"));
+        string currentState = """
+            | Current authorized work | `M1/S6/WP8` closeout correction and complete non-live reverification only; WP9 is not eligible. |
+            | Next eligible action | Freeze the corrected WP8 verification candidate, bind its non-executable templates, then run the complete non-live floor and fresh independent review; do not begin WP9 |
+            | Later work | WP9 remains ineligible until the corrected WP8 evidence is independently accepted and an exact no-effect closeout is committed. No prior WP8 acceptance or template grants inherited authority |
+            The former evidence was later invalidated as current handoff authority by current-HEAD review and remains historical evidence only.
+            Only WP8 closeout correction and complete non-live reverification are eligible; WP9 remains ineligible.
+            No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.
+            No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.
+            """;
         const string noEffect = "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.";
         const string noInheritance = "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority";
         static string Encode(string value) => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
