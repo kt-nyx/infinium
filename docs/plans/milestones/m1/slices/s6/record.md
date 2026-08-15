@@ -7631,3 +7631,19 @@ both assembly informational versions and SourceLink. The ready binding is reset
 to pending until this complete closure reproduces across a later commit. No
 credential/UI/key/native/network/provider/billable/profile/private/archive
 effect occurred.
+
+## WP9 complete revision-stable binding — 2026-08-15
+
+The corrected implementation is frozen at
+`5e8362a3863141f607e200947aaf3c4e027295a2`. Two consecutive clean canonical
+non-incremental Release builds pinned both SourceRevisionId and SourceRoot
+revision metadata to that commit. Both builds reproduced coordinator SHA-256
+`7a4f54acd2afa52fcf0ed6d10b28d89b12d60349bb008321c281238ce41db675`, helper
+SHA-256 `aaf15fadb0dbf8ed2a68fc0e624b948badd67b36f4081a3fd6b1d1bc2d24032a`,
+and 126-file execution-closure SHA-256
+`bb95bc02e10efabf8500b10ee380e6c66a6fa6e3570947407a4e70a7fe66e435`.
+The embedded SourceLink URL also names exactly that close-ready commit.
+
+The four-document binding retains those exact identities. It creates no review,
+owner acceptance, inherited authority, credential/UI/key/native/network/
+provider/billable/profile/private/archive effect, or later request packet.
