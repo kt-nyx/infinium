@@ -65,11 +65,12 @@ The canonical non-incremental Release build pins both informational-version and
 SourceLink revision identities to that exact commit. Two consecutive clean
 builds reproduced the coordinator, helper, and complete 126-file execution
 closure exactly.
-No corrected independent-review or owner-acceptance record exists, and WP9 execution remains ineligible.
-The exact B17 review and `b64353f0f5a843fce7c1c395a606c47e62d274ee`
-owner markers remain append-only superseded historical evidence and cannot
-satisfy the corrected manifest. Historical markers are identity-isolated from
-the exact current manifest ID and SHA-256.
+WP9 production-profile manifest `infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f` at SHA-256 `bbf010ce443e3f4cb3c34c15592d96652f5cfba8ab6199ed37a86810d58ce12a` is independently accepted at exact candidate `3f56b5d80d7c384d59e86783b03ab660ada13321` and remains pending exact owner acceptance.
+No execution or effect is authorized: no API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use. No authority is inherited.
+The exact B17 review and attached SHA-256
+`7123ee85fec6d238ef8965b8449e7729cd2fb204e525a30558d1ebac53209476`
+owner markers remain append-only superseded historical evidence and are
+non-authoritative for the exact current manifest ID and SHA-256.
 The exact B16 review marker remains append-only superseded historical evidence
 and cannot satisfy the corrected manifest. The exact B17 review marker is
 append-only superseded historical evidence. WP10 and WP11 remain blocked.
