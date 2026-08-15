@@ -104,7 +104,8 @@ public sealed class Wp8PreLiveReadinessContractTests
                 normalizedReadme.Contains("The next eligible action is only the owner's decision whether to begin WP9", StringComparison.Ordinal)
                 || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is active.", StringComparison.Ordinal)
                 || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is complete at close-ready", StringComparison.Ordinal)
-                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is in bounded correction and reverification.", StringComparison.Ordinal),
+                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is in bounded correction and reverification.", StringComparison.Ordinal)
+                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is frozen at corrected close-ready implementation", StringComparison.Ordinal),
                 "Accepted WP8 must retain either its exact closeout handoff or the exact later no-effect WP9 preparation handoff.");
         }
         StringAssert.Contains(normalizedReadme, "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.");
@@ -260,6 +261,7 @@ public sealed class Wp8PreLiveReadinessContractTests
         string[] functionNames =
         [
             "Test-Wp8ExactPathSet",
+            "Get-Wp8Wp9OwnerStopPaths",
             "Test-Wp8CorrectionCurrentState",
             "Test-Wp8CorrectionReadme",
             "Test-Wp8AcceptedHandoffCurrentState",
@@ -380,13 +382,20 @@ public sealed class Wp8PreLiveReadinessContractTests
             $missingReadme = @($closeout | Where-Object { $_ -ne 'docs/plans/milestones/m1/slices/s6/README.md' })
             if ((Get-Wp8PostVerificationDisposition $missingReadme $acceptedCurrent $acceptedReadme $baseRecord ($baseRecord + $acceptanceRecord) $accepted) -ne 'invalid') { exit 20 }
             $wp9Current = @"
-            | Current authorized work | ``M1/S6/WP9`` non-effectful production-profile preparation verification and independent review only. Corrected close-ready implementation ``ffffffffffffffffffffffffffffffffffffffff`` is bound by manifest ``infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f``, but no exact replacement independent-review or owner-acceptance record exists yet. The prior binding at ``1c3b64a651361c147cba018b8054cb2f0ac4f036`` is historical and non-executable. No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. |
+            | Current authorized work | ``M1/S6/WP9`` non-effectful production-profile preparation verification and independent review only. Corrected close-ready implementation ``ffffffffffffffffffffffffffffffffffffffff`` is bound by manifest ``infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f``, but no exact replacement independent-review or owner-acceptance record exists yet. No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. |
             Accepted corrected ``M1/S6/WP8`` candidate $($accepted.verification_candidate_commit) $($accepted.post_run_evidence_candidate_commit) $($accepted.non_live_all_receipt_sha256) $($accepted.pre_live_receipt_sha256) $($accepted.direct_layer6_receipt_sha256)
             | Next eligible action | Run the complete non-live floor and fresh independent security/semantic/diff review against the exact corrected manifest binding. Only an accepted exact reviewed candidate may then reach the owner accept-or-decline stop. The transport-qualification request manifest remains unmaterialized and blocked pending separate ``safety_identifier`` authority resolution plus successful profile enrollment. |
             {{noInheritance}}
             "@
-            $wp9Readme = "Corrected WP8 is independently accepted. $($accepted.verification_candidate_commit) $($accepted.post_run_evidence_candidate_commit) $($accepted.non_live_all_receipt_sha256) $($accepted.pre_live_receipt_sha256) $($accepted.direct_layer6_receipt_sha256) WP9 non-effectful production-profile preparation is in bounded correction and reverification. The new-only authorization manifest has no replacement independent-review or owner-acceptance record, and WP9 has not reached a new owner accept-or-decline stop. The transport-qualification request manifest is not materialized. {{noInheritance}}. {{noEffect}}"
+            $wp9Readme = "Corrected WP8 is independently accepted. $($accepted.verification_candidate_commit) $($accepted.post_run_evidence_candidate_commit) $($accepted.non_live_all_receipt_sha256) $($accepted.pre_live_receipt_sha256) $($accepted.direct_layer6_receipt_sha256) WP9 non-effectful production-profile preparation is frozen at corrected close-ready implementation ``ffffffffffffffffffffffffffffffffffffffff``. The canonical non-incremental Release build pins both informational-version and SourceLink revision identities to that exact commit. Two consecutive clean builds reproduced the coordinator, helper, and complete 126-file execution closure exactly. No corrected independent-review or owner-acceptance record exists, and WP9 execution remains ineligible. The transport-qualification request manifest is not materialized. {{noInheritance}}. {{noEffect}}"
             if (-not (Test-Wp9OwnerStopCurrentState $wp9Current $accepted) -or -not (Test-Wp9OwnerStopReadme $wp9Readme $accepted)) { exit 21 }
+            $wp9Paths = @(Get-Wp8Wp9OwnerStopPaths)
+            if ((Get-Wp8PostVerificationDisposition $wp9Paths $wp9Current $wp9Readme $baseRecord ($baseRecord + $acceptanceRecord) $accepted) -ne 'exact-wp9-owner-stop-no-effect-state') { exit 21 }
+            foreach ($requiredPath in @('Directory.Build.targets','eng/wp9-owner-documentation-contract.ps1')) {
+                $missingPath = @($wp9Paths | Where-Object { $_ -cne $requiredPath })
+                if ((Get-Wp8PostVerificationDisposition $missingPath $wp9Current $wp9Readme $baseRecord ($baseRecord + $acceptanceRecord) $accepted) -ne 'invalid') { exit 22 }
+            }
+            if ((Get-Wp8PostVerificationDisposition @($wp9Paths + 'src/Infinium.Application/Unauthorized.cs') $wp9Current $wp9Readme $baseRecord ($baseRecord + $acceptanceRecord) $accepted) -ne 'invalid') { exit 22 }
             foreach ($weakened in @(
                 $wp9Current.Replace('UI launch, ',''),
                 $wp9Current.Replace('but no exact replacement independent-review or owner-acceptance record exists yet.','is executable.'),
@@ -395,8 +404,9 @@ public sealed class Wp8PreLiveReadinessContractTests
                 if (Test-Wp9OwnerStopCurrentState $weakened $accepted) { exit 22 }
             }
             foreach ($weakened in @(
-                $wp9Readme.Replace('bounded correction and reverification','execution'),
-                $wp9Readme.Replace('has no replacement independent-review or owner-acceptance record','has execution authority'),
+                $wp9Readme.Replace('frozen at corrected close-ready implementation','is executable at'),
+                $wp9Readme.Replace('No corrected independent-review or owner-acceptance record exists','Execution authority exists'),
+                $wp9Readme.Replace('Two consecutive clean builds reproduced the coordinator, helper, and complete 126-file execution closure exactly.',''),
                 $wp9Readme.Replace('{{noEffect}}',''),
                 $wp9Readme.Replace('{{noInheritance}}',''))) {
                 if (Test-Wp9OwnerStopReadme $weakened $accepted) { exit 23 }
