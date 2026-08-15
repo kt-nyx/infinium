@@ -7038,3 +7038,45 @@ overall acceptance remain pending against the exact evidence-only record
 commit and its final resealed receipts. This checkpoint does not accept WP8,
 advance WP9, materialize any packet, enroll a production profile, or authorize
 an external effect.
+
+## WP8 independent acceptance and handoff — 2026-08-14
+
+Fresh independent read-only re-reviews accepted the exact clean evidence HEAD
+`36b980d226e9f9a0e91281a530fc959a211fb696` with no findings and no reviewer
+effect. The canonical role judgments are:
+
+| Review role | Judgment |
+| --- | --- |
+| contract-persistence | `ACCEPT` |
+| budget-settlement-faults | `ACCEPT` |
+| credential-helper-security | `ACCEPT` |
+| provider-adapter-offline-safety | `ACCEPT` |
+| source-candidate-semantics-provenance | `ACCEPT` |
+| overall-matrix-claims-diff | `ACCEPT` |
+
+The accepted identities remain separate and exact: product/template
+`260a09ecfafea103227f113faf7625a5bf0ce759`, verification
+`fbdb1f03e006a85723b0533d44b2ed06e02cc724`, and accepted evidence/review
+HEAD `36b980d226e9f9a0e91281a530fc959a211fb696`. Acceptance binds the final
+`NonLiveAll` receipt SHA-256
+`95919bcfbb6ea79f6ee5f6a8422d23da743c4b4da4f6ba6f9039ac4e69534e78`,
+pre-live validation receipt SHA-256
+`b8645da64eba4c12bbbc72953753e9e7debbc93ef576ef07cdd96b418399e498`,
+and independent direct Layer 6 receipt SHA-256
+`4fe96ddf83e4472ba2bc66f6c046253d3055a69bf32716d934ea222b53072b0c`.
+No separate reviewer-judgment artifact or hash was created or required.
+
+WP8 accepts only the complete non-live Slice 6 candidate and readiness of four
+distinct non-secret, non-executable authorization templates. It does not
+qualify a provider or authorize dispatch. The next eligible action is the
+owner's decision whether to begin WP9 materialization planning. Any production
+profile or WP9 request packet must be materialized as a fresh exact packet and
+receive separate exact owner acceptance. No WP8 template, earlier owner
+statement, packet identity, expiry, profile identity, predecessor acceptance,
+official-document result, or request fingerprint grants inherited authority.
+Provider requests, DNS/network operations, API-key use, live-manifest
+execution, production-profile enrollment, and native Credential Manager
+operations remain unauthorized. WP10 and WP11 remain later separately
+authorized packages. No product code, credential, provider, network, private,
+archive, or live effect occurred during acceptance or this documentation
+handoff.
