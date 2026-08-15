@@ -6853,3 +6853,82 @@ candidate-bound Layer 6 passed from `be55eda59752f884fe6e113f40927295da45f2cd`
 through `db282f1ee96a56dbb552072f5b7fd79d6fd84268` with the same four exact
 paths and zero findings. Its 1,356-byte receipt has SHA-256
 `695bf43be961dd3fe412c0aa42e3267dd34b6dfe43e63eaa1eeb779281e83564`.
+
+## WP8 accumulated non-live verification pre-live checkpoint — 2026-08-14
+
+M1/S6/WP8 accumulated non-live implementation began from exact clean baseline
+`63e4584f8926227c2a1e12ef31c71a3a88798c7f`. The pre-live product and
+template candidate is `47c95f60b0cdcf2e3894f9ded89ee19d2f40e324`; its matrix binding was frozen
+at `56c09f24582b3ca14a09fba7c77f8a8da7d8d36a`. A bounded accumulated-gate
+correction at `a8fb9795c1b585c801e763cc891b2d5e472ad4ce` makes the historical WP3
+upgrade proof cross-host and binds it to exact accepted WP2, rejected WP3, and
+accepted WP3 sources rather than treating a later Slice 6 candidate as WP3.
+It also hashes the exact IntegrationTests helper copy actually executed by the
+synthetic gate.
+
+The exact `NonLiveAll` gate passed at clean candidate `a8fb9795c1b585c801e763cc891b2d5e472ad4ce`.
+Its 3,236-byte receipt has SHA-256
+`8f61ea60964b3b4119de56bf7d01e56474f3d0bcef1f823300dd5578a22ead3c`
+and content-binds all 13 child receipts. Direct and aggregate Layer 6 review
+used baseline `63e4584f8926227c2a1e12ef31c71a3a88798c7f`, found 13 changed paths,
+and reported zero allowed-path, relative-link, strict-JSON, or private/archive
+failures. The aggregate Layer 6 receipt SHA-256 is
+`0aafd2278a0cc34c4b132879963bfb63ff5479278e57cb1fdc36379dafedb5f7`;
+the direct receipt SHA-256 is
+`2bae87192d3814b673274155ba05f1289db34b1c86c727c9b97eda6c9bdad4c1`.
+
+The closed matrix SHA-256 is
+`b871115777230dc306c6fbea7a41fe452070d953cc3c002d0ae9149bf04b1b59`.
+It maps 23 exact cases, 41 requirement identities, and six evidence groups.
+No primary case or mandatory EVAL-0084/0085 review case is marked N/A;
+extension N/A dispositions are assertion-level only and retain exact later
+authority, unreachability, no-activation, and reviewer-acceptance obligations.
+The public registry remains 35 packages at SHA-256
+`1fe7b483164c53802b619848efe0678900d63d00a344118764507723bcd6db7e`.
+
+Exactly four distinct non-secret, non-executable packet templates were
+validated. Their SHA-256 identities are production profile
+`ec4f098797127ebbe2f13428ec76522f0ce486593216ff934cdf226c118482d4`,
+qualification
+`098b72f5b6d852bc32d4eff5b27d969830fa0d2bd74c4dca9eae27f8e1429ce0`,
+source-claim extraction
+`491fa1d88963023c29062dade01b93eaad70694c32497688adc580bf4d7ec1f4`,
+and candidate investigation
+`f3c76e8074b96e5b5926eaaeb0b6f4656e1ad77d2a5dec17a09e6df282390316`.
+Future owner, expiry, profile, predecessor, live-freeze, and drift values remain
+typed pending; validation rejects executable status, secret or raw target
+material, operation/identity/limit/retry swaps, unknown fields, and stale
+predecessors. No value or authority is inherited between templates.
+
+The exact plan floor passed: locked restore; Release build with zero warnings
+and errors; Unit 246 passed with one expected platform skip; Contract 145/145;
+Integration 134/134; Evaluation 86 passed with eight expected private/exact-
+machine skips; Security 170 passed with three expected private/platform skips;
+Fault 108 passed with three expected private/exact-machine skips; and the
+unfiltered solution 681 passed with nine expected skips. Formatting,
+dependency-manifest check, documentation validation (166 metadata files, 168
+Markdown link sources, and 29 JSON files), analysis-pipeline `All`, direct
+Layer 6, and `git diff --check` passed. Analysis `All` receipt SHA-256 is
+`76ea96f48b29dfddc61b500db3e6c955c51848dac252f087c454383c2bb8e2ba`.
+The focused synthetic credential floor passed Unit 44, Integration 6,
+Security 5, Fault 4, and Evaluation 2 with no failure or skip. Its historical
+upgrade receipt SHA-256 is
+`46ce4361591a11d2b5a46914e81aa59d0d8bda84c113ed7c58214bef77cc165f`;
+the exact executed-helper SHA-256 is
+`5da9cf544520c8f50d19c7f01e489db338534998436c50360a5499bc9240b164`.
+
+Credential Manager operations, DNS operations, public-network operations,
+provider requests, billable operations, API-key use, and live-manifest
+execution are all zero or false. The only socket evidence is the deterministic
+literal-loopback adapter send and is not a public network effect. Accepted WP4
+execution `1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b`, retained evidence SHA-256
+`3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390`,
+audit correction `be55eda59752f884fe6e113f40927295da45f2cd`, and all-12 terminal absence
+remain carry-only evidence; WP8 performed no native operation. Repository-owned
+.NET and testhost survivor count is zero.
+
+Fresh independent contract/persistence, budget, credential/helper,
+provider-adapter, semantic/provenance, and overall diff/claim judgments remain
+pending against the final exact committed candidate. This checkpoint does not
+accept WP8, advance WP9, materialize a live manifest, enroll a production
+profile, or authorize any external effect.
