@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active slice navigation; live authority remains in current state
 
-Last reviewed: 2026-08-14
+Last reviewed: 2026-08-15
 
 Live authorization remains stated only in
 [current project state](../../../../../current-state.md).
@@ -38,11 +38,17 @@ and audit correction `be55eda59752f884fe6e113f40927295da45f2cd`; all 12 consumed
 are absent and that namespace may never be reused. The nine Slice 6 contracts
 remain `Implementation-active`.
 
-WP8 closeout correction and complete non-live reverification are active. WP9
-is not eligible until the corrected verification binding, complete non-live
-floor, fresh independent reviews, and exact no-effect closeout are accepted.
-The earlier WP8 acceptance identities and receipts are retained only as
-superseded historical evidence and do not certify the corrected candidate.
+Corrected WP8 is independently accepted. Its exact verification candidate is
+`f7d3385e87b666fc2ddd7f6eb4ce8822b8559697`; its post-run evidence candidate
+is `ce882954a8e3348351f88623309bbfd3277e7e61`. Acceptance binds NonLiveAll
+SHA-256 `469329c0068f3ce8363fd7ce2f80c6c07aa2a513b32efbcad9a520f5d582bf79`,
+pre-live validation SHA-256
+`f8b3efe014c474a7cfd7edd6dce4af6790d7569dfbd8aa77d277d97b5c056818`, and
+direct Layer 6 SHA-256
+`f21a536f22d3afc0a4e6579da6516f45206b4052b10dfafdaa0f4593818ba586`.
+The next eligible action is only the owner's decision whether to begin WP9
+fresh exact authorization-packet materialization planning. The earlier WP8
+acceptance identities and receipts remain superseded historical evidence.
 
 The four WP8 packets remain non-secret, non-executable templates with pending
 future bindings. No WP8 template, prior owner statement, packet identity,
@@ -50,9 +56,7 @@ expiry, profile identity, predecessor acceptance, official-doc result, or
 request fingerprint grants inherited authority. No API-key use,
 live-manifest execution, native Credential Manager operation, DNS operation,
 public-network operation, provider request, billable operation, or
-production-profile materialization/use is authorized. The current correction
-may only freeze and reverify the non-executable WP8 materials; it may not
-materialize a production profile or any WP9 request packet. WP9-WP11 remain
-later separately authorized packages. Only
+production-profile materialization/use is authorized. WP9-WP11 remain later
+separately authorized packages. Only
 [current project state](../../../../../current-state.md) states the active
 handoff.

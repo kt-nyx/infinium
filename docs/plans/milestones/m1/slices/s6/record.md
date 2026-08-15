@@ -7095,3 +7095,61 @@ or the whole no-inheritance clause is rejected. This is a verifier and
 documentation correction only; it changes no accepted WP8 product/template,
 verification, evidence, packet, or receipt identity and caused no native,
 credential, provider, network, secret, private, archive, or live effect.
+
+## Corrected WP8 independent acceptance and handoff — 2026-08-15
+
+The owner independently reproduced two defects at the former closeout HEAD
+`e84b2e9b`: the standalone pre-live validator rejected post-verification drift,
+and the exact combined focused contract filter failed one of six tests at
+`SemanticValidatorAcceptsExactCandidateAndRejectsPacketMatrixMutations`.
+Those findings invalidated the former closeout as current handoff authority;
+its identities and receipts remain historical evidence only.
+
+The bounded correction was refrozen through distinct verification and binding
+cycles. Cross-host correction `fb603f3` / `06d3eab` was followed by structured
+binding `41f57ca` / `c9d365a`, stale-current-state correction `7e5b29a` /
+`58fd565`, exact WP8 pre-live Layer 6 mode `1afd19f` / `5610f20`, and the final
+dual-state structural correction `f7d3385e87b666fc2ddd7f6eb4ce8822b8559697` /
+`ce882954a8e3348351f88623309bbfd3277e7e61`. The short-timeout partial output
+and the B2 `run2` output are explicitly excluded: the former was incomplete,
+and the latter failed its internal Layer 6 seam. B3 evidence was superseded by
+the A4 structural-test correction and is not final acceptance evidence.
+
+The accepted corrected identities are exact: verification candidate
+`f7d3385e87b666fc2ddd7f6eb4ce8822b8559697` and post-run evidence candidate
+`ce882954a8e3348351f88623309bbfd3277e7e61`. Acceptance binds the fresh-root
+`NonLiveAll` receipt SHA-256
+`469329c0068f3ce8363fd7ce2f80c6c07aa2a513b32efbcad9a520f5d582bf79`,
+pre-live validation receipt SHA-256
+`f8b3efe014c474a7cfd7edd6dce4af6790d7569dfbd8aa77d277d97b5c056818`, and
+direct candidate-bound Layer 6 receipt SHA-256
+`f21a536f22d3afc0a4e6579da6516f45206b4052b10dfafdaa0f4593818ba586`.
+The focused combined WP8 and Provider Layer 6 filter passed 8/8 with zero
+failures and zero skips. NonLiveAll retained 36 commands with 355 passed, zero
+failed, and zero skipped tests. Direct Layer 6 checked 16 paths with zero
+allowed-path, JSON, link, private, or archive failures.
+
+Fresh independent read-only re-reviews accepted exact binding candidate
+`ce882954a8e3348351f88623309bbfd3277e7e61` with no findings and no reviewer
+effect. The canonical role judgments are:
+
+| Review role | Judgment |
+| --- | --- |
+| contract-persistence | `ACCEPT` |
+| budget-settlement-faults | `ACCEPT` |
+| credential-helper-security | `ACCEPT` |
+| provider-adapter-offline-safety | `ACCEPT` |
+| source-candidate-semantics-provenance | `ACCEPT` |
+| overall-matrix-claims-diff | `ACCEPT` |
+
+No separate reviewer-judgment artifact or hash was created or required.
+Corrected WP8 accepts only the non-live readiness evidence and four distinct
+non-secret, non-executable templates. Any production profile or WP9 packet
+must be freshly and exactly materialized and separately owner-accepted. No WP8
+template, prior owner statement, packet identity, expiry, profile identity,
+predecessor acceptance, official-doc result, or request fingerprint grants
+inherited authority. No API-key use, live-manifest execution, native Credential
+Manager operation, DNS operation, public-network operation, provider request,
+billable operation, or production-profile materialization/use is authorized.
+No credential, provider, network, secret, private, archive, or live effect
+occurred during correction, verification, review, or this handoff.
