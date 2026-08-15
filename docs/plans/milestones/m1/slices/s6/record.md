@@ -7565,3 +7565,20 @@ The authorization manifest is reset to binding-pending. No credential helper,
 visible UI, API key, Credential Manager operation, DNS/public network/provider
 request, billable operation, production-profile state, private fixture, or
 archive was used. All prior B9 receipts are superseded for the replacement.
+
+## WP9 commit-stable replacement binding — 2026-08-15
+
+The corrected implementation is frozen at
+`a4a756403ee0cf8d38e487a197f779596e052aa4`. Its exact canonical Release command
+pins `SourceRevisionId` to that commit and produced coordinator SHA-256
+`312bb403552c1cc07949be947cd7ee9bad19817624b74245509f7d3bc1c817c2`, helper
+SHA-256 `285cb8761e0f5e988081f3880fecfcb352c6e4e187d46918ae8f82c60e3f66a0`,
+and 126-file execution-closure SHA-256
+`a916bbc21eb549269b206ffb561437dfb7165181d92146cb4b13965483d49b31`.
+The replacement manifest binds those exact values. No corrected independent
+review or owner acceptance exists yet.
+
+This binding commit changes only the four WP9 authority documents. It does not
+launch the helper or UI, use an API key, touch Credential Manager, create the
+production profile or state, perform DNS/public-network/provider/billable work,
+or materialize a transport-qualification request. No authority is inherited.
