@@ -15,12 +15,12 @@
     "required_predecessor_live_acceptance": "accepted-production-profile-sub-gate-receipt-pending"
   },
   "acceptance_binding": {
-    "state": "correction-verification-pending",
+    "state": "accepted-closeout",
     "verification_candidate_commit": "abd09a5bab29f3f9ccf9f7857d2bbfd94f8ccde9",
-    "post_run_evidence_candidate_commit": "pending-until-post-run-evidence-freeze",
-    "non_live_all_receipt_sha256": "pending-until-post-run-evidence-freeze",
-    "pre_live_receipt_sha256": "pending-until-post-run-evidence-freeze",
-    "direct_layer6_receipt_sha256": "pending-until-post-run-evidence-freeze"
+    "post_run_evidence_candidate_commit": "d3c44ba22c7debcff86ae8505acb00fe595eb0ca",
+    "non_live_all_receipt_sha256": "a946fbd0f07c4afdcad322ce3b9f1566656d6a2e24fce842042207c57019414a",
+    "pre_live_receipt_sha256": "2617ee4bd8d18208bb9cc14de024712caa12f48587a595cd220386864bbddb98",
+    "direct_layer6_receipt_sha256": "d2bcb3d54c2ba3b84d38b8bbff617aacba2de66771bdce00f4e2dc8d4db32414"
   },
   "materialization": {
     "required": true,

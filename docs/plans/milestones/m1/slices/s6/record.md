@@ -7228,6 +7228,31 @@ ineligible. No API-key, Credential Manager, DNS, public-network, provider,
 billable, private-fixture, archive, live-manifest, production-profile, or WP9
 effect occurred.
 
+## Deterministic-floor WP8 acceptance — 2026-08-15
+
+The deterministic verification candidate is
+`abd09a5bab29f3f9ccf9f7857d2bbfd94f8ccde9`; the exact five-document pending
+binding and post-run evidence candidate is
+`d3c44ba22c7debcff86ae8505acb00fe595eb0ca`. The corrected historical-expiry
+regression passed, the combined WP8 and Provider Layer 6 filter passed 8/8,
+and the standalone pre-live validator passed with receipt SHA-256
+`2617ee4bd8d18208bb9cc14de024712caa12f48587a595cd220386864bbddb98`.
+
+Fresh-root NonLiveAll passed 36 commands with 355 tests passed, zero failed,
+and zero skipped; its receipt SHA-256 is
+`a946fbd0f07c4afdcad322ce3b9f1566656d6a2e24fce842042207c57019414a`.
+Direct candidate-bound Layer 6 passed over the exact 16-path correction range
+with zero findings; its receipt SHA-256 is
+`d2bcb3d54c2ba3b84d38b8bbff617aacba2de66771bdce00f4e2dc8d4db32414`.
+
+Final exact accepted-HEAD verification and fresh independent closeout review
+remain required. Corrected WP8 accepts only non-live readiness evidence and
+four non-secret, non-executable templates. No inherited execution authority
+exists. No API-key use, live-manifest execution, native Credential Manager
+operation, DNS operation, public-network operation, provider request,
+billable operation, production-profile materialization/use, private-fixture
+access, archive access, or WP9 execution is authorized or occurred.
+
 ## Final corrected WP8 mutation-bound acceptance — 2026-08-15
 
 The final phase-independent verification candidate is
