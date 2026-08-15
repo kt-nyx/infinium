@@ -7705,3 +7705,23 @@ acceptance, inherited authority, credential/UI/key/native/network/provider/
 billable/profile/private/archive effect, or later request packet.
 
 WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=cd6a12d57ba6618e58221a30a2b41ce9bf029cd8 manifest_id=infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f sha256=ff55f812a33860da739e8b1c22999c7cc219f7b3a9e843970380ef6ccf994469 verdicts=security,semantics,diff
+
+## WP9 reviewed-closeout predicate correction — 2026-08-15
+
+Fresh independent security and semantic/diff reviews accepted exact B14
+`cd6a12d57ba6618e58221a30a2b41ce9bf029cd8` with no findings, and the exact
+review marker above was appended. The subsequent predeclared three-document
+reviewed-pending-owner transition exposed two stale retained-WP8 predicates and
+the absence of a dedicated Layer 6 review-closeout mode. The transition could
+not pass the complete required closeout floor and is superseded; its review
+marker remains append-only historical evidence but grants no owner or execution
+authority.
+
+The bounded correction must distinguish the exact pre-review owner-stop state
+from the exact reviewed-pending-owner state, require the exact current manifest
+and append-only review marker, admit only current-state, Slice 6 README, and
+record in the post-review closeout, and reject every weakened fact, stale
+identity, extra path, owner marker, or inherited authority. Owner acceptance
+and WP9 execution remain ineligible. No UI, API key, Credential Manager, DNS,
+public network, provider, billable, profile, private-fixture, or archive effect
+occurred.

@@ -13,6 +13,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+. (Join-Path $repoRoot 'eng/wp9-owner-documentation-contract.ps1')
 
 function Resolve-InputPath([string] $Value) {
     if ([IO.Path]::IsPathRooted($Value)) { return [IO.Path]::GetFullPath($Value) }
@@ -182,6 +183,59 @@ function Test-Wp9OwnerStopReadme([string] $Text, [object] $Binding) {
     return $true
 }
 
+function Test-Wp9ReviewCloseoutCorrectionCurrentState([string] $Text) {
+    $normalized = [regex]::Replace($Text, '\s+', ' ')
+    foreach ($required in @(
+            '| Current authorized work | `M1/S6/WP9` bounded non-effectful review-closeout correction and reverification only.',
+            'The B14 reviewed-pending-owner transition exposed stale retained-WP8 and Layer 6 closeout predicates.',
+            'Its exact review marker is retained as superseded historical evidence and grants no owner or execution authority.',
+            'Owner acceptance and WP9 execution are ineligible.',
+            '| Next eligible action | Correct and mutation-test both exact WP9 owner-stop states plus a dedicated three-document review-closeout Layer 6 mode; then refreeze, rebind, and rerun the complete non-live floor and fresh independent review. |',
+            'No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.',
+            'No packet, review, or prior owner statement grants inherited authority.')) {
+        if (-not $normalized.Contains($required, [StringComparison]::Ordinal)) { return $false }
+    }
+    return $true
+}
+
+function Test-Wp9ReviewCloseoutCorrectionReadme([string] $Text) {
+    $normalized = [regex]::Replace($Text, '\s+', ' ')
+    foreach ($required in @(
+            'WP9 review-closeout correction and complete non-live reverification are active; owner acceptance and execution are ineligible.',
+            'The exact B14 review marker remains append-only superseded historical evidence and grants no authority.',
+            'A replacement must support both the exact pre-review owner-stop state and exact reviewed-pending-owner state, plus a dedicated exact three-document Layer 6 closeout.',
+            'No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. No authority is inherited.')) {
+        if (-not $normalized.Contains($required, [StringComparison]::Ordinal)) { return $false }
+    }
+    return $true
+}
+
+function Test-Wp9ReviewedOwnerPendingState(
+    [string] $CurrentStateText,
+    [string] $ReadmeText,
+    [string] $ReviewedRecordText,
+    [string] $HeadRecordText,
+    [object] $ReviewBinding) {
+    if ($null -eq $ReviewBinding -or
+        [string]$ReviewBinding.manifest_id -notmatch '^infinium\.m1-s6\.wp9\.production-profile-authorization/' -or
+        [string]$ReviewBinding.manifest_sha256 -notmatch '^[0-9a-f]{64}$' -or
+        [string]$ReviewBinding.close_ready_commit -notmatch '^[0-9a-f]{40}$' -or
+        [string]$ReviewBinding.reviewed_candidate_commit -notmatch '^[0-9a-f]{40}$') {
+        return $false
+    }
+    $requirements = Get-Wp9ReviewedOwnerPendingDocumentationRequirements `
+        -ManifestId ([string]$ReviewBinding.manifest_id) `
+        -ManifestSha256 ([string]$ReviewBinding.manifest_sha256) `
+        -CloseReadyCommit ([string]$ReviewBinding.close_ready_commit) `
+        -ReviewedCandidate ([string]$ReviewBinding.reviewed_candidate_commit)
+    return (Test-Wp9DocumentationRequirements -CurrentStateText $CurrentStateText `
+            -ReadmeText $ReadmeText -Requirements $requirements) -and
+        (Test-Wp9ReviewedOwnerPendingRecord -ReviewedRecordText $ReviewedRecordText `
+            -CurrentRecordText $HeadRecordText -ManifestId ([string]$ReviewBinding.manifest_id) `
+            -ManifestSha256 ([string]$ReviewBinding.manifest_sha256) `
+            -ReviewedCandidate ([string]$ReviewBinding.reviewed_candidate_commit))
+}
+
 function Test-Wp8RetainedAcceptanceRecord([string] $Text, [object] $Binding) {
     $normalized = [regex]::Replace($Text, '\s+', ' ')
     foreach ($required in @(
@@ -209,7 +263,14 @@ function Get-Wp8PostVerificationDisposition(
     [string] $ReadmeText,
     [string] $VerificationRecordText,
     [string] $HeadRecordText,
-    [object] $AcceptanceBinding) {
+    [object] $AcceptanceBinding,
+    [object] $Wp9ReviewBinding) {
+    if ($null -eq $Wp9ReviewBinding) {
+        $Wp9ReviewBinding = [pscustomobject]@{
+            manifest_id = ''; manifest_sha256 = ''; close_ready_commit = ''
+            reviewed_candidate_commit = ''; reviewed_record_text = ''; closeout_paths = @()
+        }
+    }
     $bindingPaths = @(
         'docs/plans/milestones/m1/slices/s6/wp8-candidate-investigation-authorization.template.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json',
@@ -232,6 +293,14 @@ function Get-Wp8PostVerificationDisposition(
         (Test-Wp9OwnerStopCurrentState $CurrentStateText $AcceptanceBinding) -and
         (Test-Wp9OwnerStopReadme $ReadmeText $AcceptanceBinding) -and
         (Test-Wp8RetainedAcceptanceRecord $HeadRecordText $AcceptanceBinding)
+    $wp9ReviewCorrectionState = $AcceptanceBinding.state -eq 'accepted-closeout' -and
+        (Test-Wp9ReviewCloseoutCorrectionCurrentState $CurrentStateText) -and
+        (Test-Wp9ReviewCloseoutCorrectionReadme $ReadmeText) -and
+        (Test-Wp8RetainedAcceptanceRecord $HeadRecordText $AcceptanceBinding)
+    $wp9ReviewedOwnerPendingState = $AcceptanceBinding.state -eq 'accepted-closeout' -and
+        (Test-Wp8RetainedAcceptanceRecord $HeadRecordText $AcceptanceBinding) -and
+        (Test-Wp9ReviewedOwnerPendingState $CurrentStateText $ReadmeText `
+            ([string]$Wp9ReviewBinding.reviewed_record_text) $HeadRecordText $Wp9ReviewBinding)
 
     if (@($Paths).Count -eq 0 -or (Test-Wp8ExactPathSet $Paths $bindingPaths)) {
         if ($verificationState) { return 'exact-correction-verification-state' }
@@ -246,12 +315,21 @@ function Get-Wp8PostVerificationDisposition(
         return 'exact-accepted-append-only-handoff'
     }
     if (Test-Wp8ExactPathSet $Paths $wp9OwnerStopPaths) {
-        if (-not $wp9OwnerStopState -or
-            -not $HeadRecordText.StartsWith($VerificationRecordText, [StringComparison]::Ordinal) -or
+        if (-not $HeadRecordText.StartsWith($VerificationRecordText, [StringComparison]::Ordinal) -or
             $HeadRecordText.Length -le $VerificationRecordText.Length) {
             return 'invalid'
         }
-        return 'exact-wp9-owner-stop-no-effect-state'
+        if ($wp9OwnerStopState) { return 'exact-wp9-owner-stop-no-effect-state' }
+        if ($wp9ReviewCorrectionState) { return 'exact-wp9-review-closeout-correction-no-effect-state' }
+        $reviewCloseoutPaths = @(
+            'docs/current-state.md',
+            'docs/plans/milestones/m1/slices/s6/README.md',
+            'docs/plans/milestones/m1/slices/s6/record.md')
+        if ($wp9ReviewedOwnerPendingState -and
+            (Test-Wp8ExactPathSet @($Wp9ReviewBinding.closeout_paths) $reviewCloseoutPaths)) {
+            return 'exact-wp9-reviewed-owner-pending-no-effect-state'
+        }
+        return 'invalid'
     }
     return 'invalid'
 }
@@ -559,8 +637,37 @@ elseif ($verificationCandidateCommit -match '^[0-9a-f]{40}$') {
     if ($LASTEXITCODE -ne 0) { throw 'WP8 cannot read the verification-candidate record.' }
     $headRecord = [string]::Join("`n", @(& git -C $repoRoot show 'HEAD:docs/plans/milestones/m1/slices/s6/record.md'))
     if ($LASTEXITCODE -ne 0) { throw 'WP8 cannot read the committed head record.' }
+    $wp9ManifestInput = Read-StrictJson (Resolve-InputPath 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json')
+    $wp9Manifest = $wp9ManifestInput.value
+    $reviewPattern = '^WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=([0-9a-f]{40}) manifest_id=' +
+        [Regex]::Escape([string]$wp9Manifest.manifest_id) + ' sha256=' +
+        [Regex]::Escape([string]$wp9ManifestInput.sha256) + ' verdicts=security,semantics,diff$'
+    $matchingReviewLines = @($headRecord -split "`n" | Where-Object { [Regex]::IsMatch($_, $reviewPattern) })
+    $reviewedCandidate = if ($matchingReviewLines.Count -eq 1) {
+        [Regex]::Match($matchingReviewLines[0], $reviewPattern).Groups[1].Value
+    } else { '' }
+    $reviewedRecord = ''
+    $reviewCloseoutPaths = @()
+    if ($reviewedCandidate -match '^[0-9a-f]{40}$') {
+        & git -C $repoRoot merge-base --is-ancestor $reviewedCandidate HEAD
+        if ($LASTEXITCODE -eq 0) {
+            $reviewedRecord = [string]::Join("`n", @(& git -C $repoRoot show "$reviewedCandidate`:docs/plans/milestones/m1/slices/s6/record.md"))
+            if ($LASTEXITCODE -ne 0) { $reviewedRecord = '' }
+            $reviewCloseoutPaths = @(& git -C $repoRoot -c core.quotePath=false diff --name-only $reviewedCandidate HEAD --)
+            if ($LASTEXITCODE -ne 0) { $reviewCloseoutPaths = @() }
+        }
+    }
+    $wp9ReviewBinding = [pscustomobject]@{
+        manifest_id = [string]$wp9Manifest.manifest_id
+        manifest_sha256 = [string]$wp9ManifestInput.sha256
+        close_ready_commit = [string]$wp9Manifest.candidate_binding.close_ready_implementation_commit
+        reviewed_candidate_commit = $reviewedCandidate
+        reviewed_record_text = $reviewedRecord
+        closeout_paths = @($reviewCloseoutPaths)
+    }
     $postVerificationDisposition = Get-Wp8PostVerificationDisposition `
-        $postVerificationPaths $currentStateAtHead $readmeAtHead $verificationRecord $headRecord $acceptanceBinding
+        $postVerificationPaths $currentStateAtHead $readmeAtHead $verificationRecord $headRecord `
+        $acceptanceBinding $wp9ReviewBinding
     if ($postVerificationDisposition -eq 'invalid') {
         $debugCorrection = Test-Wp8CorrectionCurrentState $currentStateAtHead
         $debugReadme = Test-Wp8CorrectionReadme $readmeAtHead

@@ -17,7 +17,7 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S6` - owner-accepted; implementation-active |
-| Current authorized work | `M1/S6/WP9` exact production-profile enrollment manifest `infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f` at SHA-256 `ff55f812a33860da739e8b1c22999c7cc219f7b3a9e843970380ef6ccf994469` is independently accepted at candidate `cd6a12d57ba6618e58221a30a2b41ce9bf029cd8` and remains pending exact owner acceptance. Close-ready source is `688fb9e39c0c227389328d54d12b5b24eba657b6`. No execution or effect is authorized. |
+| Current authorized work | `M1/S6/WP9` bounded non-effectful review-closeout correction and reverification only. The B14 reviewed-pending-owner transition exposed stale retained-WP8 and Layer 6 closeout predicates. Its exact review marker is retained as superseded historical evidence and grants no owner or execution authority. Owner acceptance and WP9 execution are ineligible. No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
 | Accepted Slice 6 WP1 candidate | `61b90314d8273749849f590b303814008fa2fdfa`; nine Slice 6 contracts are `Implementation-active` and the accepted local input-bound policy is `openai-responses-o200k-byte-envelope/v1` |
 | Accepted `M1/S6/WP2` candidate | `ed27ed04897103d93a60e6200971ca12d04f2e11`; capability, price, atomic reservation/final-gate, settlement, projection, replay, simulator, and public fixture/oracle evidence are independently accepted |
@@ -29,7 +29,7 @@ review history.
 | Superseded `M1/S6/WP8` acceptance evidence | Product/template `260a09ecfafea103227f113faf7625a5bf0ce759`, verification `fbdb1f03e006a85723b0533d44b2ed06e02cc724`, evidence/review HEAD `36b980d226e9f9a0e91281a530fc959a211fb696`, and their receipt hashes remain historical evidence only; they do not certify the corrected closeout candidate or make WP9 eligible |
 | Accepted corrected `M1/S6/WP8` candidate | Verification `cc14bf60f78c80280cb6eafe60fddaf2bc764d06`, post-run evidence candidate `baef115cdd43fa38d0a352c15f8ba44cbfa35312`, NonLiveAll SHA-256 `52aa77325a2226505c35b1fba6d9d0fe2b6354022a6c85f6652211d609c529ad`, pre-live validation SHA-256 `e5f0ca42e44e6a4ea4f98bf4aab0c1bf6769c436c51aecc32a01e22a3db5f567`, and direct Layer 6 SHA-256 `4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`; accepted without provider qualification, dispatch authority, or production-profile authority |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure; no separate ADR; eleven packages with distinct native/live authorization gates |
-| Next eligible action | Owner decision on the exact independently reviewed WP9 production-profile manifest only; do not execute unless the exact canonical owner record is added. |
+| Next eligible action | Correct and mutation-test both exact WP9 owner-stop states plus a dedicated three-document review-closeout Layer 6 mode; then refreeze, rebind, and rerun the complete non-live floor and fresh independent review. |
 | WP9 owner-stop effect boundary | No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. No packet, review, or prior owner statement grants inherited authority. |
 | Later work | WP9-WP11 each require their own exact fresh owner authorization. No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority; no provider request is authorized now |
 | Execution policy | [Repository execution policy](execution-policy.md) |
@@ -37,9 +37,10 @@ review history.
 | Slice entry | [Slice 6 current summary and navigation](plans/milestones/m1/slices/s6/README.md) |
 | Public verification profile | [M1 continuation verification profile](evaluation/m1-continuation-verification-profile.md) |
 
-The exact WP9 production-profile manifest is independently reviewed, but it
-creates no execution authority without separate exact owner acceptance. No
-WP8 template, prior owner statement, packet identity, expiry, profile
+The B14 independent review remains historical evidence, but the subsequent
+documentation transition exposed stale verifier predicates and is superseded.
+No current WP9 manifest is independently accepted or owner accepted. No WP8
+template, prior owner statement, packet identity, expiry, profile
 identity, predecessor acceptance, official-doc result, or request fingerprint
 grants inherited authority. No API-key use, live-manifest execution, native
 Credential Manager operation, DNS operation, public-network operation,
@@ -171,13 +172,13 @@ handoff authority by current-HEAD review and remains historical evidence only.
 The corrected WP8 verification candidate
 `cc14bf60f78c80280cb6eafe60fddaf2bc764d06` and post-run evidence candidate
 `baef115cdd43fa38d0a352c15f8ba44cbfa35312` are independently accepted with
-the exact three receipt hashes retained above. The exact WP9 production-profile
-manifest at candidate `cd6a12d57ba6618e58221a30a2b41ce9bf029cd8` is
-independently accepted and pending the owner's accept-or-decline decision. No
-WP8 template or prior authorization is executable or inheritable. No API-key
-use, UI launch, live-manifest execution, native Credential Manager operation,
-DNS operation, public-network operation, provider request, billable operation,
-or production-profile materialization/use is authorized.
+the exact three receipt hashes retained above. WP9 review-closeout correction
+and complete non-live reverification are now the only eligible work. Owner
+acceptance and execution are ineligible. No WP8 template or prior authorization
+is executable or inheritable. No API-key use, UI launch, live-manifest
+execution, native Credential Manager operation, DNS operation, public-network
+operation, provider request, billable operation, or production-profile
+materialization/use is authorized.
 
 ## Completed Slice 5 boundary
 

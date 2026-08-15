@@ -91,13 +91,14 @@ $reviewPattern = '^WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=([0-9a-f]{40})
     [Regex]::Escape([string]$m.manifest_id) + ' sha256=' + [Regex]::Escape($manifestSha) +
     ' verdicts=security,semantics,diff$'
 $recordPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/record.md'
-$reviewLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object {
+$allReviewLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object {
     $_.StartsWith('WP9_PROFILE_REVIEW_ACCEPTANCE ', [StringComparison]::Ordinal)
 })
+$reviewLines = @($allReviewLines | Where-Object { [Regex]::IsMatch($_, $reviewPattern) })
 $acceptanceLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object {
     $_.StartsWith('WP9_PROFILE_OWNER_ACCEPTANCE ', [StringComparison]::Ordinal)
 })
-if ($reviewLines.Count -ne 1 -or -not [Regex]::IsMatch($reviewLines[0], $reviewPattern)) {
+if ($reviewLines.Count -ne 1) {
     throw 'WP9 profile execution requires one exact independent-review acceptance for the current manifest bytes.'
 }
 $reviewedCandidate = [Regex]::Match($reviewLines[0], $reviewPattern).Groups[1].Value

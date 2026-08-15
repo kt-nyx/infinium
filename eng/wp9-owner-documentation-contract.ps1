@@ -1,5 +1,14 @@
 Set-StrictMode -Version Latest
 
+function Get-Wp9ReviewAcceptanceMarker {
+    param(
+        [Parameter(Mandatory = $true)] [string] $ManifestId,
+        [Parameter(Mandatory = $true)] [string] $ManifestSha256,
+        [Parameter(Mandatory = $true)] [string] $ReviewedCandidate
+    )
+    return "WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=$ReviewedCandidate manifest_id=$ManifestId sha256=$ManifestSha256 verdicts=security,semantics,diff"
+}
+
 function Get-Wp9ReviewedOwnerPendingDocumentationRequirements {
     param(
         [Parameter(Mandatory = $true)] [string] $ManifestId,
@@ -52,5 +61,26 @@ function Test-Wp9DocumentationRequirements {
     foreach ($line in @($Requirements.readme)) {
         if ([Regex]::Matches($ReadmeText, [Regex]::Escape([string]$line)).Count -ne 1) { return $false }
     }
+    return $true
+}
+
+function Test-Wp9ReviewedOwnerPendingRecord {
+    param(
+        [Parameter(Mandatory = $true)] [string] $ReviewedRecordText,
+        [Parameter(Mandatory = $true)] [string] $CurrentRecordText,
+        [Parameter(Mandatory = $true)] [string] $ManifestId,
+        [Parameter(Mandatory = $true)] [string] $ManifestSha256,
+        [Parameter(Mandatory = $true)] [string] $ReviewedCandidate
+    )
+    $reviewed = ($ReviewedRecordText -replace "`r`n", "`n").TrimEnd("`n")
+    $current = ($CurrentRecordText -replace "`r`n", "`n").TrimEnd("`n")
+    $marker = Get-Wp9ReviewAcceptanceMarker -ManifestId $ManifestId `
+        -ManifestSha256 $ManifestSha256 -ReviewedCandidate $ReviewedCandidate
+    if ($current -cne ($reviewed + "`n`n" + $marker)) { return $false }
+    $currentLines = @($current -split "`n")
+    if (@($currentLines | Where-Object { $_ -ceq $marker }).Count -ne 1) { return $false }
+    if (@($currentLines | Where-Object {
+                $_.StartsWith('WP9_PROFILE_OWNER_ACCEPTANCE ', [StringComparison]::Ordinal)
+            }).Count -ne 0) { return $false }
     return $true
 }

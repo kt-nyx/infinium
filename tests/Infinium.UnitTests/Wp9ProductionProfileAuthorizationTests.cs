@@ -270,6 +270,8 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         string root = RepositoryRoot();
         string runner = File.ReadAllText(Path.Combine(root, "eng", "run-m1-slice6-credential.ps1"));
         string verifier = File.ReadAllText(Path.Combine(root, "eng", "verify-m1-slice6.ps1"));
+        StringAssert.Contains(runner, "$allReviewLines");
+        StringAssert.Contains(runner, "$reviewLines = @($allReviewLines | Where-Object { [Regex]::IsMatch($_, $reviewPattern) })");
         StringAssert.Contains(runner, "WP9_PROFILE_OWNER_ACCEPTANCE");
         StringAssert.Contains(runner, "status --porcelain=v1");
         StringAssert.Contains(runner, "merge-base --is-ancestor");
@@ -305,6 +307,19 @@ public sealed class Wp9ProductionProfileAuthorizationTests
               foreach($line in @($set.readme)){
                 if(Test-Wp9DocumentationRequirements -CurrentStateText $state -ReadmeText ($readme.Replace($line,'')) -Requirements $set){throw 'missing README fact admitted'}
               }
+            }
+            $reviewedRecord="historical marker retained`nreviewed candidate record"
+            $marker=Get-Wp9ReviewAcceptanceMarker -ManifestId 'manifest' -ManifestSha256 ('a'*64) -ReviewedCandidate ('c'*40)
+            $currentRecord=$reviewedRecord+"`n`n"+$marker
+            if(-not (Test-Wp9ReviewedOwnerPendingRecord -ReviewedRecordText $reviewedRecord -CurrentRecordText $currentRecord -ManifestId 'manifest' -ManifestSha256 ('a'*64) -ReviewedCandidate ('c'*40))){throw 'exact review record rejected'}
+            foreach($mutated in @(
+              $reviewedRecord,
+              ($currentRecord.Replace('security,semantics,diff','security,diff')),
+              ($currentRecord.Replace(('a'*64),('d'*64))),
+              ($currentRecord.Replace(('c'*40),('e'*40))),
+              ($currentRecord+"`nextra"),
+              ($currentRecord+"`nWP9_PROFILE_OWNER_ACCEPTANCE invalid"))) {
+              if(Test-Wp9ReviewedOwnerPendingRecord -ReviewedRecordText $reviewedRecord -CurrentRecordText $mutated -ManifestId 'manifest' -ManifestSha256 ('a'*64) -ReviewedCandidate ('c'*40)){throw 'mutated review record admitted'}
             }
             "validated"
             """);

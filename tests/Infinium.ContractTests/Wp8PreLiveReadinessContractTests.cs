@@ -248,8 +248,25 @@ public sealed class Wp8PreLiveReadinessContractTests
             "Ordinary Layer6 unexpectedly unprotected the WP8 current-state path.");
         Assert.AreNotEqual(0, RunLayer6Mode(root, "wp8"),
             "Explicit WP8 pre-live closeout mode incorrectly accepted the later WP9 state.");
-        Assert.AreEqual(0, RunLayer6Mode(root, "wp9"),
-            "Exact WP9 owner-stop Layer6 rejected the current no-effect state.");
+        string currentState = TestRepository.Read("docs", "current-state.md");
+        int ownerStop = RunLayer6Mode(root, "wp9");
+        int reviewCloseout = RunLayer6Mode(root, "wp9-review");
+        if (currentState.Contains("non-effectful production-profile preparation verification and independent review only", StringComparison.Ordinal))
+        {
+            Assert.AreEqual(0, ownerStop, "Exact WP9 pre-review owner-stop state was rejected.");
+            Assert.AreNotEqual(0, reviewCloseout, "Pre-review owner-stop state was admitted as reviewed closeout.");
+        }
+        else if (currentState.Contains("remains pending exact owner acceptance", StringComparison.Ordinal))
+        {
+            Assert.AreNotEqual(0, ownerStop, "Reviewed state was admitted as pre-review owner-stop.");
+            Assert.AreEqual(0, reviewCloseout, "Exact reviewed-pending-owner closeout was rejected.");
+        }
+        else
+        {
+            StringAssert.Contains(currentState, "review-closeout correction and reverification only");
+            Assert.AreNotEqual(0, ownerStop, "Correction state was admitted as pre-review owner-stop.");
+            Assert.AreNotEqual(0, reviewCloseout, "Correction state was admitted as reviewed closeout.");
+        }
     }
 
     [TestMethod]
@@ -268,6 +285,9 @@ public sealed class Wp8PreLiveReadinessContractTests
             "Test-Wp8AcceptedHandoffReadme",
             "Test-Wp9OwnerStopCurrentState",
             "Test-Wp9OwnerStopReadme",
+            "Test-Wp9ReviewCloseoutCorrectionCurrentState",
+            "Test-Wp9ReviewCloseoutCorrectionReadme",
+            "Test-Wp9ReviewedOwnerPendingState",
             "Test-Wp8RetainedAcceptanceRecord",
             "Get-Wp8PostVerificationDisposition",
         ];
@@ -302,7 +322,10 @@ public sealed class Wp8PreLiveReadinessContractTests
             "public-network operation", "provider request", "billable operation", "production-profile materialization/use",
         ];
         static string Encode(string value) => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+        string ownerContract = Path.Combine(root, "eng", "wp9-owner-documentation-contract.ps1")
+            .Replace("'", "''", StringComparison.Ordinal);
         string command = $$"""
+            . '{{ownerContract}}'
             {{functions}}
             $current = [regex]::Replace([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{Encode(currentState)}}')), '\s+', ' ')
             $readme = [regex]::Replace([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{Encode(readme)}}')), '\s+', ' ')
@@ -411,6 +434,37 @@ public sealed class Wp8PreLiveReadinessContractTests
                 $wp9Readme.Replace('{{noInheritance}}',''))) {
                 if (Test-Wp9OwnerStopReadme $weakened $accepted) { exit 23 }
             }
+            $reviewCandidate=('f'*40); $manifestSha=('1'*64); $manifestId='infinium.m1-s6.wp9.production-profile-authorization/test'
+            $reviewRequirements=Get-Wp9ReviewedOwnerPendingDocumentationRequirements -ManifestId $manifestId -ManifestSha256 $manifestSha -CloseReadyCommit ('9'*40) -ReviewedCandidate $reviewCandidate
+            $reviewCurrent=[string]::Join("`n",@($reviewRequirements.current_state))
+            $reviewReadme=[string]::Join("`n",@($reviewRequirements.readme))
+            $reviewedRecord=$baseRecord+$acceptanceRecord
+            $marker=Get-Wp9ReviewAcceptanceMarker -ManifestId $manifestId -ManifestSha256 $manifestSha -ReviewedCandidate $reviewCandidate
+            $reviewHeadRecord=$reviewedRecord+"`n`n"+$marker
+            $reviewBinding=[pscustomobject]@{
+              manifest_id=$manifestId; manifest_sha256=$manifestSha; close_ready_commit=('9'*40)
+              reviewed_candidate_commit=$reviewCandidate; reviewed_record_text=$reviewedRecord
+              closeout_paths=@('docs/current-state.md','docs/plans/milestones/m1/slices/s6/README.md','docs/plans/milestones/m1/slices/s6/record.md')
+            }
+            if((Get-Wp8PostVerificationDisposition $wp9Paths $reviewCurrent $reviewReadme $baseRecord $reviewHeadRecord $accepted $reviewBinding) -ne 'exact-wp9-reviewed-owner-pending-no-effect-state'){exit 24}
+            foreach($mutatedBinding in @(
+              [pscustomobject]@{manifest_id='wrong';manifest_sha256=$manifestSha;close_ready_commit=('9'*40);reviewed_candidate_commit=$reviewCandidate;reviewed_record_text=$reviewedRecord;closeout_paths=$reviewBinding.closeout_paths},
+              [pscustomobject]@{manifest_id=$manifestId;manifest_sha256=('2'*64);close_ready_commit=('9'*40);reviewed_candidate_commit=$reviewCandidate;reviewed_record_text=$reviewedRecord;closeout_paths=$reviewBinding.closeout_paths},
+              [pscustomobject]@{manifest_id=$manifestId;manifest_sha256=$manifestSha;close_ready_commit=('8'*40);reviewed_candidate_commit=$reviewCandidate;reviewed_record_text=$reviewedRecord;closeout_paths=$reviewBinding.closeout_paths},
+              [pscustomobject]@{manifest_id=$manifestId;manifest_sha256=$manifestSha;close_ready_commit=('9'*40);reviewed_candidate_commit=('7'*40);reviewed_record_text=$reviewedRecord;closeout_paths=$reviewBinding.closeout_paths},
+              [pscustomobject]@{manifest_id=$manifestId;manifest_sha256=$manifestSha;close_ready_commit=('9'*40);reviewed_candidate_commit=$reviewCandidate;reviewed_record_text=$reviewedRecord;closeout_paths=@($reviewBinding.closeout_paths+'src/unauthorized.cs')})) {
+              if((Get-Wp8PostVerificationDisposition $wp9Paths $reviewCurrent $reviewReadme $baseRecord $reviewHeadRecord $accepted $mutatedBinding) -ne 'invalid'){exit 25}
+            }
+            foreach($mutated in @(
+              $reviewCurrent.Replace('No execution or effect is authorized.',''),
+              $reviewCurrent.Replace('No packet, review, or prior owner statement grants inherited authority.',''),
+              $reviewReadme.Replace('No authority is inherited.',''),
+              $reviewHeadRecord.Replace('security,semantics,diff','security,diff'),
+              ($reviewHeadRecord+"`nWP9_PROFILE_OWNER_ACCEPTANCE invalid"))) {
+              $c=$reviewCurrent; $r=$reviewReadme; $rec=$reviewHeadRecord
+              if($mutated -like '*Current authorized work*'){$c=$mutated}elseif($mutated -like '*WP9 production-profile manifest*'){$r=$mutated}else{$rec=$mutated}
+              if((Get-Wp8PostVerificationDisposition $wp9Paths $c $r $baseRecord $rec $accepted $reviewBinding) -ne 'invalid'){exit 26}
+            }
             exit 0
             """;
         Assert.AreEqual(0, RunPowerShellScript(command),
@@ -426,7 +480,7 @@ public sealed class Wp8PreLiveReadinessContractTests
         System.Text.RegularExpressions.Match function = System.Text.RegularExpressions.Regex.Match(
             script, @"(?ms)^function Get-Wp8NonLiveCurrentStateDisposition\(.*?^\}");
         Assert.IsTrue(function.Success, "NonLiveAll current-state predicate was not found.");
-        StringAssert.Contains(script, "one closeout commit changing exactly the four reviewed binding documents");
+        StringAssert.Contains(script, "one exact state-specific closeout commit with no extra paths");
         StringAssert.Contains(script, "validate-m1-slice6-wp9-profile-authorization.ps1");
         StringAssert.Contains(script, "profileManifest.candidate_binding.close_ready_implementation_commit");
         string currentState = """
@@ -441,7 +495,10 @@ public sealed class Wp8PreLiveReadinessContractTests
         const string noEffect = "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.";
         const string noInheritance = "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority";
         static string Encode(string value) => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+        string ownerContract = Path.Combine(root, "eng", "wp9-owner-documentation-contract.ps1")
+            .Replace("'", "''", StringComparison.Ordinal);
         string command = $$"""
+            . '{{ownerContract}}'
             {{function.Value}}
             $valid = [regex]::Replace([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{{Encode(currentState)}}')), '\s+', ' ')
             $pending = [pscustomobject]@{
@@ -556,6 +613,21 @@ public sealed class Wp8PreLiveReadinessContractTests
                 $sourceLinkCorrection.Replace('No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.',''))) {
                 if ((Get-Wp8NonLiveCurrentStateDisposition $weakened $accepted) -ne 'invalid') { exit 26 }
             }
+            $reviewCandidate=('f'*40); $manifestSha=('1'*64); $manifestId='infinium.m1-s6.wp9.production-profile-authorization/test'; $closeReady=('9'*40)
+            $requirements=Get-Wp9ReviewedOwnerPendingDocumentationRequirements -ManifestId $manifestId -ManifestSha256 $manifestSha -CloseReadyCommit $closeReady -ReviewedCandidate $reviewCandidate
+            $reviewCurrent=[string]::Join("`n",@($requirements.current_state)); $reviewReadme=[string]::Join("`n",@($requirements.readme))
+            $reviewedRecord='reviewed record'; $marker=Get-Wp9ReviewAcceptanceMarker -ManifestId $manifestId -ManifestSha256 $manifestSha -ReviewedCandidate $reviewCandidate
+            $reviewRecord=$reviewedRecord+"`n`n"+$marker
+            $reviewBinding=[pscustomobject]@{manifest_id=$manifestId;manifest_sha256=$manifestSha;close_ready_commit=$closeReady;reviewed_candidate_commit=$reviewCandidate;reviewed_record_text=$reviewedRecord;closeout_paths=@('docs/current-state.md','docs/plans/milestones/m1/slices/s6/README.md','docs/plans/milestones/m1/slices/s6/record.md')}
+            if((Get-Wp8NonLiveCurrentStateDisposition $reviewCurrent $accepted $reviewReadme $reviewRecord $reviewBinding) -ne 'exact-wp9-reviewed-owner-pending-no-effect-state'){exit 27}
+            foreach($mutation in @(
+              @($reviewCurrent.Replace('No execution or effect is authorized.',''),$reviewReadme,$reviewRecord,$reviewBinding),
+              @($reviewCurrent,$reviewReadme.Replace('No authority is inherited.',''),$reviewRecord,$reviewBinding),
+              @($reviewCurrent,$reviewReadme,$reviewRecord.Replace('security,semantics,diff','security,diff'),$reviewBinding),
+              @($reviewCurrent,$reviewReadme,($reviewRecord+"`nWP9_PROFILE_OWNER_ACCEPTANCE invalid"),$reviewBinding),
+              @($reviewCurrent,$reviewReadme,$reviewRecord,[pscustomobject]@{manifest_id=$manifestId;manifest_sha256=('2'*64);close_ready_commit=$closeReady;reviewed_candidate_commit=$reviewCandidate;reviewed_record_text=$reviewedRecord;closeout_paths=$reviewBinding.closeout_paths}))) {
+              if((Get-Wp8NonLiveCurrentStateDisposition $mutation[0] $accepted $mutation[1] $mutation[2] $mutation[3]) -ne 'invalid'){exit 28}
+            }
             exit 0
             """;
         Assert.AreEqual(0, RunPowerShellScript(command),
@@ -659,6 +731,21 @@ public sealed class Wp8PreLiveReadinessContractTests
         string output = Path.Combine(Path.GetTempPath(), "infinium-wp8-layer6-" + Guid.NewGuid().ToString("N"));
         try
         {
+            string baseline = "63e4584f8926227c2a1e12ef31c71a3a88798c7f";
+            if (mode == "wp9-review")
+            {
+                string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+                    "wp9-production-profile-authorization.v1.json");
+                using JsonDocument manifest = JsonDocument.Parse(File.ReadAllText(manifestPath));
+                string manifestId = manifest.RootElement.GetProperty("manifest_id").GetString()!;
+                string sha = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(manifestPath))).ToLowerInvariant();
+                string record = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6", "record.md"));
+                System.Text.RegularExpressions.Match review = System.Text.RegularExpressions.Regex.Match(record,
+                    "(?m)^WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=([0-9a-f]{40}) manifest_id=" +
+                    System.Text.RegularExpressions.Regex.Escape(manifestId) + " sha256=" + sha +
+                    " verdicts=security,semantics,diff$");
+                if (review.Success) { baseline = review.Groups[1].Value; }
+            }
             ProcessStartInfo start = new("pwsh.exe")
             {
                 WorkingDirectory = root,
@@ -670,7 +757,7 @@ public sealed class Wp8PreLiveReadinessContractTests
             foreach (string argument in new[]
             {
                 "-NoProfile", "-File", Path.Combine(root, "eng", "verify-m1-slice6.ps1"),
-                "-Gate", "Layer6Review", "-BaselineCommit", "63e4584f8926227c2a1e12ef31c71a3a88798c7f",
+                "-Gate", "Layer6Review", "-BaselineCommit", baseline,
                 "-CandidateCommit", "HEAD", "-OutputRoot", output,
             })
             {
@@ -683,6 +770,10 @@ public sealed class Wp8PreLiveReadinessContractTests
             else if (mode == "wp9")
             {
                 start.ArgumentList.Add("-Wp9OwnerStopReview");
+            }
+            else if (mode == "wp9-review")
+            {
+                start.ArgumentList.Add("-Wp9ReviewCloseout");
             }
             using Process process = Process.Start(start)!;
             _ = process.StandardOutput.ReadToEnd();

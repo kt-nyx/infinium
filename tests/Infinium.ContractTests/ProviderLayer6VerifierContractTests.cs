@@ -16,6 +16,55 @@ public sealed class ProviderLayer6VerifierContractTests
         StringAssert.Contains(script, "Invoke-Layer6ReviewGate $baseline $candidate $false $true");
         StringAssert.Contains(script, "wp9_owner_stop_review = [bool]$Wp9OwnerStopMode");
         StringAssert.Contains(script, "-not $isWp9OwnerStopPath");
+        StringAssert.Contains(script, "[switch] $Wp9ReviewCloseout");
+        StringAssert.Contains(script, "Wp9ReviewCloseout requires one exact three-document reviewed-pending-owner transition from the exact reviewed candidate.");
+        StringAssert.Contains(script, "Wp9ReviewCloseout requires exactly current-state, Slice 6 README, and append-only record in the exact reviewed-pending-owner state.");
+        StringAssert.Contains(script, "wp9_review_closeout = [bool]$Wp9ReviewCloseoutMode");
+        StringAssert.Contains(script, "-not $isWp9ReviewCloseoutPath");
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
+    public void Wp9ReviewCloseoutPredicateRejectsEveryIdentityCountAndPathMutation()
+    {
+        string script = TestRepository.Read("eng", "verify-m1-slice6.ps1");
+        System.Text.RegularExpressions.Match function = System.Text.RegularExpressions.Regex.Match(
+            script, @"(?ms)^function Test-Wp9ReviewCloseoutLayer6Transition\(.*?^\}");
+        Assert.IsTrue(function.Success, "Pure WP9 review-closeout predicate was not found.");
+        string command = $$$"""
+            {{{function.Value}}}
+            $a=('a'*40); $b=('b'*40)
+            $binding=[pscustomobject]@{reviewed_candidate_commit=$a}
+            $paths=@('docs/current-state.md','docs/plans/milestones/m1/slices/s6/README.md','docs/plans/milestones/m1/slices/s6/record.md')
+            if(-not (Test-Wp9ReviewCloseoutLayer6Transition $a $b $b $binding 'exact-wp9-reviewed-owner-pending-no-effect-state' '1' $paths)){exit 10}
+            $mutations=@(
+              ,@($a,$b,$b,[pscustomobject]@{reviewed_candidate_commit=('c'*40)},'exact-wp9-reviewed-owner-pending-no-effect-state','1',$paths),
+              ,@(('c'*40),$b,$b,$binding,'exact-wp9-reviewed-owner-pending-no-effect-state','1',$paths),
+              ,@($a,$b,('c'*40),$binding,'exact-wp9-reviewed-owner-pending-no-effect-state','1',$paths),
+              ,@($a,$b,$b,$binding,'exact-wp9-profile-owner-stop-no-effect-state','1',$paths),
+              ,@($a,$b,$b,$binding,'exact-wp9-reviewed-owner-pending-no-effect-state','2',$paths),
+              ,@($a,$b,$b,$binding,'exact-wp9-reviewed-owner-pending-no-effect-state','1',@($paths[0],$paths[1])),
+              ,@($a,$b,$b,$binding,'exact-wp9-reviewed-owner-pending-no-effect-state','1',@($paths+'src/unauthorized.cs')),
+              ,@($a,$b,$b,$binding,'exact-wp9-reviewed-owner-pending-no-effect-state','1',@($paths+$paths[0]))
+            )
+            foreach($m in $mutations){if(Test-Wp9ReviewCloseoutLayer6Transition @m){exit 11}}
+            exit 0
+            """;
+        System.Diagnostics.ProcessStartInfo start = new("pwsh.exe")
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        };
+        start.ArgumentList.Add("-NoProfile");
+        start.ArgumentList.Add("-Command");
+        start.ArgumentList.Add(command);
+        using System.Diagnostics.Process process = System.Diagnostics.Process.Start(start)!;
+        string output = process.StandardOutput.ReadToEnd();
+        string error = process.StandardError.ReadToEnd();
+        Assert.IsTrue(process.WaitForExit(30_000), "WP9 review-closeout mutation test timed out.");
+        Assert.AreEqual(0, process.ExitCode, $"WP9 review-closeout predicate admitted a mutation. output={output} error={error}");
     }
 
     [TestMethod]
