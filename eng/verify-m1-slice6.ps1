@@ -373,6 +373,15 @@ function Get-Wp8NonLiveCurrentStateDisposition(
         $normalized.Contains('| Next eligible action | Correct and mutation-test both exact WP9 owner-stop states plus a dedicated three-document review-closeout Layer 6 mode; then refreeze, rebind, and rerun the complete non-live floor and fresh independent review. |', [StringComparison]::Ordinal) -and
         $wp9NoEffect -and
         $normalized.Contains('No packet, review, or prior owner statement grants inherited authority.', [StringComparison]::Ordinal)
+    $wp9ReviewCloseoutFixtureCorrection =
+        $AcceptanceBinding.state -eq 'accepted-closeout' -and
+        $normalized.Contains('| Current authorized work | `M1/S6/WP9` bounded non-effectful review-closeout fixture correction and reverification only.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('The B16 reviewed-pending-owner transition exposed a state-dependent positive closeout fixture.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('Its exact review marker is retained as superseded historical evidence and grants no owner or execution authority.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('Owner acceptance and WP9 execution are ineligible.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('| Next eligible action | Make the exact closeout fixture state-aware for both pre-review and reviewed current HEAD, prove duplicate-marker and protected-path rejection, then refreeze, rebind, rerun the complete non-live floor, and obtain fresh independent review. |', [StringComparison]::Ordinal) -and
+        $wp9NoEffect -and
+        $normalized.Contains('No packet, review, or prior owner statement grants inherited authority.', [StringComparison]::Ordinal)
     $wp9ReviewedOwnerPending = $false
     if ($AcceptanceBinding.state -eq 'accepted-closeout' -and $null -ne $Wp9ReviewBinding -and
         [string]$Wp9ReviewBinding.manifest_id -match '^infinium\.m1-s6\.wp9\.production-profile-authorization/' -and
@@ -398,7 +407,7 @@ function Get-Wp8NonLiveCurrentStateDisposition(
     if ($wp9ProfilePreparation) { return 'exact-wp9-profile-preparation-no-effect-state' }
     if ($wp9ProfileOwnerStop) { return 'exact-wp9-profile-owner-stop-no-effect-state' }
     if ($wp9ReviewedOwnerPending) { return 'exact-wp9-reviewed-owner-pending-no-effect-state' }
-    if ($wp9ReviewCloseoutCorrection) { return 'exact-wp9-review-closeout-correction-no-effect-state' }
+    if ($wp9ReviewCloseoutCorrection -or $wp9ReviewCloseoutFixtureCorrection) { return 'exact-wp9-review-closeout-correction-no-effect-state' }
     if ($wp9OwnerStopCorrection -or $wp9OwnerStopRepeatBuildCorrection -or $wp9OwnerStopSourceLinkCorrection) { return 'exact-wp9-owner-stop-correction-no-effect-state' }
     return 'invalid'
 }

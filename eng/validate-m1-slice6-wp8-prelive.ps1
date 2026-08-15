@@ -185,6 +185,18 @@ function Test-Wp9OwnerStopReadme([string] $Text, [object] $Binding) {
 
 function Test-Wp9ReviewCloseoutCorrectionCurrentState([string] $Text) {
     $normalized = [regex]::Replace($Text, '\s+', ' ')
+    $fixtureCorrection = $true
+    foreach ($required in @(
+            '| Current authorized work | `M1/S6/WP9` bounded non-effectful review-closeout fixture correction and reverification only.',
+            'The B16 reviewed-pending-owner transition exposed a state-dependent positive closeout fixture.',
+            'Its exact review marker is retained as superseded historical evidence and grants no owner or execution authority.',
+            'Owner acceptance and WP9 execution are ineligible.',
+            '| Next eligible action | Make the exact closeout fixture state-aware for both pre-review and reviewed current HEAD, prove duplicate-marker and protected-path rejection, then refreeze, rebind, rerun the complete non-live floor, and obtain fresh independent review. |',
+            'No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.',
+            'No packet, review, or prior owner statement grants inherited authority.')) {
+        if (-not $normalized.Contains($required, [StringComparison]::Ordinal)) { $fixtureCorrection = $false; break }
+    }
+    if ($fixtureCorrection) { return $true }
     foreach ($required in @(
             '| Current authorized work | `M1/S6/WP9` bounded non-effectful review-closeout correction and reverification only.',
             'The B14 reviewed-pending-owner transition exposed stale retained-WP8 and Layer 6 closeout predicates.',
@@ -200,6 +212,15 @@ function Test-Wp9ReviewCloseoutCorrectionCurrentState([string] $Text) {
 
 function Test-Wp9ReviewCloseoutCorrectionReadme([string] $Text) {
     $normalized = [regex]::Replace($Text, '\s+', ' ')
+    $fixtureCorrection = $true
+    foreach ($required in @(
+            'WP9 review-closeout fixture correction and complete non-live reverification are active; owner acceptance and execution are ineligible.',
+            'The exact B16 review marker remains append-only superseded historical evidence and grants no authority.',
+            'The replacement fixture resolves the unique current matching review marker to its recorded baseline, uses current HEAD when no matching marker exists, and rejects duplicate markers and any protected fourth path.',
+            'No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. No authority is inherited.')) {
+        if (-not $normalized.Contains($required, [StringComparison]::Ordinal)) { $fixtureCorrection = $false; break }
+    }
+    if ($fixtureCorrection) { return $true }
     foreach ($required in @(
             'WP9 review-closeout correction and complete non-live reverification are active; owner acceptance and execution are ineligible.',
             'The exact B14 review marker remains append-only superseded historical evidence and grants no authority.',

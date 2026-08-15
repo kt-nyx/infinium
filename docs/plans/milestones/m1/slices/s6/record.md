@@ -7773,3 +7773,20 @@ authority, UI, API-key, Credential Manager, DNS, public-network, provider,
 billable, profile, private-fixture, archive, or later-packet effect.
 
 WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=6597794700ba8cb243688a6419b9ae503fdf511d manifest_id=infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f sha256=93cccdbf15ac08c1a96058c3a9ae0593806745e14258bc593732f1ca6b6e532f verdicts=security,semantics,diff
+
+## WP9 reviewed-state fixture correction — 2026-08-15
+
+The exact three-document B16 closeout committed at
+`9b2d41381d4f119ab9d38a3838485b9988750899` passed the ready and retained-WP8
+reviewed-state validators. The positive Layer 6 contract then cloned that
+already-reviewed HEAD and appended a second current-manifest review marker,
+which the production predicate correctly rejected. The B16 review marker above
+remains append-only historical evidence, but owner acceptance and execution are
+ineligible while the fixture is corrected and the replacement is reverified.
+
+The bounded correction selects the unique current matching review marker's
+recorded candidate as the temporary transition baseline and otherwise uses
+current HEAD. It must pass from both reviewed and pre-review states, reject a
+duplicate current-manifest marker, and reject any protected fourth path. No UI,
+API key, Credential Manager, DNS, public network, provider, billable, profile,
+private-fixture, or archive effect occurred.

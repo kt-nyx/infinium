@@ -280,6 +280,12 @@ public sealed class Wp8PreLiveReadinessContractTests
             Assert.AreEqual(0, RunGit(sourceRoot, "clone", "--quiet", "--shared", sourceRoot, cloneRoot));
             Assert.AreEqual(0, RunGit(cloneRoot, "config", "user.name", "Infinium Contract Test"));
             Assert.AreEqual(0, RunGit(cloneRoot, "config", "user.email", "contract-test@invalid.example"));
+            string startingHead = RunGitOutput(cloneRoot, "rev-parse", "HEAD").Trim();
+            string selectedBaseline = ResolveWp9ReviewBaseline(cloneRoot);
+            if (!string.Equals(startingHead, selectedBaseline, StringComparison.Ordinal))
+            {
+                Assert.AreEqual(0, RunGit(cloneRoot, "checkout", "--quiet", "--detach", selectedBaseline));
+            }
             string sourceVerifier = Path.Combine(sourceRoot, "eng", "verify-m1-slice6.ps1");
             string cloneVerifier = Path.Combine(cloneRoot, "eng", "verify-m1-slice6.ps1");
             File.Copy(sourceVerifier, cloneVerifier, true);
@@ -308,9 +314,22 @@ public sealed class Wp8PreLiveReadinessContractTests
                     evidence.GetProperty("wp9_current_state_disposition").GetString());
             }), "Exact WP9 reviewed-pending-owner closeout did not produce a passing receipt.");
 
+            string exactRecordPath = Path.Combine(cloneRoot, "docs", "plans", "milestones", "m1", "slices", "s6", "record.md");
+            string exactRecord = File.ReadAllText(exactRecordPath);
+            string exactMarker = exactRecord.Replace("\r\n", "\n", StringComparison.Ordinal)
+                .Split('\n').Single(line => line.StartsWith(
+                    $"WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit={reviewedCandidate} ", StringComparison.Ordinal));
+            File.AppendAllText(exactRecordPath, "\n" + exactMarker + "\n", new UTF8Encoding(false));
+            Assert.AreEqual(0, RunGit(cloneRoot, "add", "docs/plans/milestones/m1/slices/s6/record.md"));
+            Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "--amend", "--no-edit"));
+            Assert.AreNotEqual(0, RunLayer6Mode(cloneRoot, "wp9-review"),
+                "WP9 review closeout admitted a duplicate current-manifest review marker.");
+
+            File.WriteAllText(exactRecordPath, exactRecord, new UTF8Encoding(false));
             File.AppendAllText(Path.Combine(cloneRoot, "docs", "execution-policy.md"),
                 "\nunauthorized-review-closeout-mutation\n", new UTF8Encoding(false));
-            Assert.AreEqual(0, RunGit(cloneRoot, "add", "docs/execution-policy.md"));
+            Assert.AreEqual(0, RunGit(cloneRoot, "add", "docs/plans/milestones/m1/slices/s6/record.md",
+                "docs/execution-policy.md"));
             Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "--amend", "--no-edit"));
             Assert.AreNotEqual(0, RunLayer6Mode(cloneRoot, "wp9-review"),
                 "WP9 review closeout admitted an additional protected document mutation.");
@@ -934,6 +953,27 @@ public sealed class Wp8PreLiveReadinessContractTests
         Assert.IsTrue(process.WaitForExit(30_000), "Git contract process timed out.");
         Assert.AreEqual(0, process.ExitCode, error);
         return output;
+    }
+
+    private static string ResolveWp9ReviewBaseline(string root)
+    {
+        string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp9-production-profile-authorization.v1.json");
+        using JsonDocument manifest = JsonDocument.Parse(File.ReadAllText(manifestPath));
+        string manifestId = manifest.RootElement.GetProperty("manifest_id").GetString()!;
+        string sha = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(manifestPath)))
+            .ToLowerInvariant();
+        string record = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6", "record.md"));
+        System.Text.RegularExpressions.MatchCollection matches = System.Text.RegularExpressions.Regex.Matches(record,
+            "(?m)^WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=([0-9a-f]{40}) manifest_id=" +
+            System.Text.RegularExpressions.Regex.Escape(manifestId) + " sha256=" + sha +
+            " verdicts=security,semantics,diff$");
+        Assert.IsTrue(matches.Count <= 1, "Current state contains duplicate current-manifest review markers.");
+        string head = RunGitOutput(root, "rev-parse", "HEAD").Trim();
+        if (matches.Count == 0) { return head; }
+        string baseline = matches[0].Groups[1].Value;
+        Assert.AreEqual(0, RunGit(root, "merge-base", "--is-ancestor", baseline, head));
+        return baseline;
     }
 
     private static void DeleteReadOnlyTree(string root)
