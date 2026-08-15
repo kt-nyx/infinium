@@ -10,7 +10,7 @@
     "accepted_wp4_audit_commit": "be55eda59752f884fe6e113f40927295da45f2cd",
     "accepted_wp7_product_commit": "59367a7479a7395b173b974bf720543aab2404d4",
     "accepted_wp7_evidence_commit": "51251c0e0eb98d67dbc9b295b9ff084ebca33890",
-    "wp8_product_template_commit": "pending-until-product-template-freeze",
+    "wp8_product_template_commit": "260a09ecfafea103227f113faf7625a5bf0ce759",
     "wp8_verification_candidate_commit": "pending-until-verification-freeze",
     "required_predecessor_live_acceptance": "accepted-WP10-source-claim-operation-receipt-pending"
   },
