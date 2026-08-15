@@ -7209,3 +7209,21 @@ execution, native Credential Manager operation, DNS operation, public-network
 operation, provider request, billable operation, production-profile
 materialization/use, private-fixture access, archive access, or WP9 execution
 is authorized or occurred.
+
+## WP8 accepted-state mixed-field mutation correction — 2026-08-15
+
+The exact closeout `9966a63cc6da963deb28d94fa24e9387ef50798f` passed
+standalone accepted-state validation, but the exact focused run failed one of
+eight tests because `acceptance-mixed-accepted-pending-fields` changed only an
+already-accepted state value and was therefore a no-op. That defect is limited
+to mutation-test construction; no validator, schema, verifier, packet, product,
+or runtime defect was found. `9966a63` and its preceding A5/B5 receipts remain
+historical evidence and are not final acceptance evidence.
+
+The mutation now preserves an accepted state while replacing its four exact
+post-run fields with pending sentinels, and preserves pending fields while
+changing a pending state to accepted. Both forms must fail. Authority is again
+WP8 correction and complete non-live reverification only; WP9 remains
+ineligible. No API-key, Credential Manager, DNS, public-network, provider,
+billable, private-fixture, archive, live-manifest, production-profile, or WP9
+effect occurred.

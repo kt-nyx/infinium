@@ -172,7 +172,18 @@ public sealed class Wp8PreLiveReadinessContractTests
             {
                 foreach (JsonObject document in docs.Values)
                 {
-                    document["acceptance_binding"]!["state"] = "accepted-closeout";
+                    JsonNode binding = document["acceptance_binding"]!;
+                    if (binding["state"]!.GetValue<string>() == "accepted-closeout")
+                    {
+                        binding["post_run_evidence_candidate_commit"] = "pending-until-post-run-evidence-freeze";
+                        binding["non_live_all_receipt_sha256"] = "pending-until-post-run-evidence-freeze";
+                        binding["pre_live_receipt_sha256"] = "pending-until-post-run-evidence-freeze";
+                        binding["direct_layer6_receipt_sha256"] = "pending-until-post-run-evidence-freeze";
+                    }
+                    else
+                    {
+                        binding["state"] = "accepted-closeout";
+                    }
                 }
             }),
             ("acceptance-mixed-pending-exact-fields", docs =>
