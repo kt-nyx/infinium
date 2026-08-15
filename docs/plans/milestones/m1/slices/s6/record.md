@@ -6932,3 +6932,109 @@ provider-adapter, semantic/provenance, and overall diff/claim judgments remain
 pending against the final exact committed candidate. This checkpoint does not
 accept WP8, advance WP9, materialize a live manifest, enroll a production
 profile, or authorize any external effect.
+
+## WP8 pre-live correction and exact verification checkpoint — 2026-08-14
+
+This append-only checkpoint supersedes the preceding WP8 checkpoint wherever
+the two differ. The corrected product/template candidate is
+`260a09ecfafea103227f113faf7625a5bf0ce759`; the separately named verification
+candidate is `fbdb1f03e006a85723b0533d44b2ed06e02cc724`; and the exact clean
+verification/review HEAD was
+`b65d119fc8a71856dd306adf44c5aa07806345ea`. Post-verification drift is
+fail-closed: only the five exact WP8 matrix/template binding documents and this
+append-only record may differ from the verification candidate. These three
+identities are not interchangeable.
+
+The corrected matrix has SHA-256
+`27eed60563f6ea653253e6f400a73669fd60ecff81b298f29fc0263104ba1708`.
+It retains the authoritative 23-case order and exact ordered requirement sets,
+classifications, dispositions, evidence gates, covered assertions, and N/A
+tuples. Its exact catalog mappings cover 41 unique catalog requirements; 11
+supplemental mappings bind EVID-003/006, ANALYSIS-003/004/005/016/019,
+SNAP-001/003/005, and PROD-002, for 52 mapped requirement identities total.
+EVAL-0026, EVAL-0045, EVAL-0046 exact native/subprocess assertions,
+EVAL-0082, and mandatory EVAL-0084 have no N/A. EVAL-0037 limits its N/A to a
+fresh source-refresh assertion under separate accepted research/planning
+authority, explicitly not WP10 or WP11. No primary case has whole-case N/A;
+the synchronous EVAL-0081 assertions remain covered, while only unreachable
+background/Batch/cancel-expiry/concurrent-live assertions retain exact
+assertion-level N/A tuples. A deterministic aggregate tuple hash and exact
+mutation suite reject classification, disposition, requirement, gate,
+assertion, N/A, supplemental-mapping, identity, predecessor, official-doc,
+owner-inheritance, common-binding, limit, retry, secret, target, and executable
+status drift.
+
+All three repository schemas now execute recursively over all five WP8 JSON
+documents. Nested unknown properties are rejected at every represented object
+boundary. The four distinct non-secret, non-executable template SHA-256 values
+are production-profile
+`62970e692a73c27afbfb92610b7f2f99941e0d8b08615cb9e48ab636fd89e393`,
+WP9 qualification
+`d436e3f509dba30201940139de04f1a01d7e7495a4391c4458e634e74c56d434`,
+WP10 source-claim extraction
+`aa8dfea8a7abd19e800903c9e65e53e71c4250cc7e496e198a1919ce89ff680b`,
+and WP11 candidate investigation
+`0b39ac699ee1a26716028b3fea74f9f0ef258c5997ea828eaf129993e497a4a8`.
+Future owner, expiry, production-profile, predecessor acceptance, live freeze,
+capability/price, and drift-result values remain typed pending and cannot be
+executed. Official-document refresh is a separate research/planning action and
+is not inherited from any live packet. The production-profile packet permits
+no deletion: `CredDeleteW` is forbidden, the one exact generation is retained
+through WP9-WP11, and deletion requires separate fresh exact owner authority.
+
+The clean `NonLiveAll` receipt at exact verification/review HEAD
+`b65d119fc8a71856dd306adf44c5aa07806345ea` is 20,249 bytes with SHA-256
+`b411df21a1f2979b797348f62d5129e2044738b6deca41361f339e7596c2685d`.
+It content-binds all 13 child receipts and, rather than relying on a broad
+green suite, retains every focused command and its exact result:
+
+| Focused gate | Commands | Passed | Failed | Skipped | Receipt SHA-256 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Contracts | 1 | 31 | 0 | 0 | `0dda0948193791fc1ed98071edb90616054814738a23f2ccd81e11d741b706af` |
+| StateSurfaces | 2 | 45 | 0 | 0 | `bb41caecee00140cd65fe0b061208d9688d9c0d710781ff77b101ceb848414a4` |
+| StateTotality | 2 | 45 | 0 | 0 | `30eb7c25e19132d97176bc348e1f2a826fa39f15d150261ef3a95dc6ca54c023` |
+| Budget | 3 | 23 | 0 | 0 | `8a876f44b2dce3191c4ccdd306a2c7b66dd80f8ac0ed1e6a6fd9a4eaad454693` |
+| BudgetFaults | 3 | 15 | 0 | 0 | `bb86ef8a09ec5085fdc2cef07b0501d0c1492703ae78eed9e7c5c86f570b3342` |
+| CredentialSynthetic | 5 | 61 | 0 | 0 | `f02b3877f351d599656f8eaa1c10e90139990196ef9da7d45aec5d5febb55736` |
+| Adapter | 5 | 50 | 0 | 0 | `a71a6573e4374346560632da096eb04a2ecda63621f0fa63efae84c0d8a4024d` |
+| OfflineSafetyReplay | 4 | 24 | 0 | 0 | `83a2f51e3989acaaa471571536a1a80e7d6d661585819147572d17b84e8d6517` |
+| SourceClaimSemantics | 4 | 28 | 0 | 0 | `57acfa7af58ab8259be5b9e26304f903751d5765e43da6d75fd1e521bd0ca777` |
+| CandidateSemantics | 4 | 19 | 0 | 0 | `0d9b6990f995ae5d97d19580a739023d5575afeedc5120e8a8b4c2d93c35d98e` |
+| ProvenanceReplay | 3 | 13 | 0 | 0 | `7465571add43d145b7705abe1428925c80419cbedc8cc8e42414828ff6b4feed` |
+| **Total** | **36** | **354** | **0** | **0** | content-bound above |
+
+Adapter evidence distinguishes one canonical-operation send and one redirect
+safety-probe send: total deterministic literal-loopback sends are exactly two.
+Redirect follows, public DNS, provider operations, retries, and replay sends
+are each zero. This local safety oracle is not a provider or public-network
+effect.
+
+The exact independent common floor passed: locked restore; Release build with
+zero warnings/errors; Unit 246 plus one expected platform skip; Contract 145;
+Integration 134; Evaluation 86 plus eight expected private/exact-machine
+skips; Security 170 plus three expected private/platform skips; Fault 108 plus
+three expected private/exact-machine skips; and unfiltered 681 plus nine
+expected skips. Format verification, dependency-manifest freshness,
+documentation validation (166 metadata files, 168 Markdown link sources, 29
+JSON files), analysis-pipeline `All`, direct Layer 6, and `git diff --check`
+passed. The `All` receipt SHA-256 is
+`14a027d31439f1f54eeaa81571ff538c29d8a4d39d6e6d57f7a787960e1aef5b`.
+Aggregate Layer 6 found 14 changed paths and zero allowed-path, relative-link,
+strict-JSON, or private/archive failures; its receipt SHA-256 is
+`d2953c898b74e80801321b3f917d4bb892d40b9d0a08f315a8bfe8e43be5d02d`.
+The independent direct Layer 6 result reports the same 14 paths and zero
+failures; receipt SHA-256 is
+`62694bb1b24c92f559ba9f10208b78ebc20445c1a107ebe9c39fb720d6d97af8`.
+
+Credential Manager operations, DNS operations, public-network operations,
+provider requests, billable operations, API-key use, live-manifest execution,
+private-fixture access, and archive access are all zero or false. Accepted WP4
+execution `1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b`, evidence SHA-256
+`3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390`,
+audit `be55eda59752f884fe6e113f40927295da45f2cd`, and exact all-12 absence are
+carry-only; no native credential operation was invoked. Repository-owned .NET
+or testhost survivor count is zero. Fresh independent semantic/security and
+overall acceptance remain pending against the exact evidence-only record
+commit and its final resealed receipts. This checkpoint does not accept WP8,
+advance WP9, materialize any packet, enroll a production profile, or authorize
+an external effect.
