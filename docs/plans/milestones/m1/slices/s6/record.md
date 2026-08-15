@@ -7868,3 +7868,24 @@ the append-only record. Same-manifest malformed or duplicate markers remain
 rejected. No helper launch, UI, API-key, Credential Manager, DNS,
 public-network, provider, billable, profile, private-fixture, archive, or
 later-packet effect occurred.
+
+## WP9 identity-isolated owner-closeout binding — 2026-08-15
+
+The final bounded correction is frozen at exact close-ready commit
+`3017fe1bbebbd904b57ca562a91148884f665d5a`. It preserves append-only
+historical markers while scoping owner-marker absence and uniqueness to the
+exact current manifest ID and SHA-256 in both the shared contract and the
+production runner. WP9 unit tests passed 10/10 and combined retained-WP8/Layer6
+contracts passed 13/13 before freeze.
+
+Two consecutive canonical non-incremental Release builds reproduced
+coordinator SHA-256
+`f19c611b5786e1554473e6c9b7e47af410c96832cda04e9072c4fb6f9c7396bd`,
+helper SHA-256
+`09be396ad5d18fc4905ba9de6751567fb9975045c909062ae2d502a9b72fea5f`,
+and 126-file inventory SHA-256
+`72c46335b4e0d643a95cada4176beac0beaca6e90c95599ab46f3e50be8a37ee`.
+No historical review or owner marker grants authority for the replacement
+manifest. No helper launch, UI, API-key, Credential Manager, DNS,
+public-network, provider, billable, profile, private-fixture, archive, or
+later-packet effect occurred.
