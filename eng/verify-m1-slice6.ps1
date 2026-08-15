@@ -276,11 +276,17 @@ function Get-Wp8NonLiveCurrentStateDisposition([string] $CurrentStateText, [obje
     $normalized = [regex]::Replace($CurrentStateText, '\s+', ' ')
     $noEffect = $normalized.Contains('No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.', [StringComparison]::Ordinal)
     $noInheritance = $normalized.Contains('No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority', [StringComparison]::Ordinal)
+    $staleWp8Handoff =
+        $normalized.Contains('WP8 is independently accepted at exact', [StringComparison]::Ordinal) -or
+        $normalized.Contains('The only next eligible action is an owner decision and exact packet-materialization planning for WP9', [StringComparison]::Ordinal)
     $verificationState =
         $AcceptanceBinding.state -eq 'correction-verification-pending' -and
+        -not $staleWp8Handoff -and
         $normalized.Contains('| Current authorized work | `M1/S6/WP8` closeout correction and complete non-live reverification only; WP9 is not eligible. |', [StringComparison]::Ordinal) -and
         $normalized.Contains('| Next eligible action | Freeze the corrected WP8 verification candidate, bind its non-executable templates, then run the complete non-live floor and fresh independent review; do not begin WP9 |', [StringComparison]::Ordinal) -and
         $normalized.Contains('| Later work | WP9 remains ineligible until the corrected WP8 evidence is independently accepted and an exact no-effect closeout is committed. No prior WP8 acceptance or template grants inherited authority |', [StringComparison]::Ordinal) -and
+        $normalized.Contains('was later invalidated as current handoff authority by current-HEAD review and remains historical evidence only.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('Only WP8 closeout correction and complete non-live reverification are eligible; WP9 remains ineligible.', [StringComparison]::Ordinal) -and
         $noEffect -and $noInheritance
     $acceptedNoEffectHandoff =
         $AcceptanceBinding.state -eq 'accepted-closeout' -and

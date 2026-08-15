@@ -252,7 +252,12 @@ public sealed class Wp8PreLiveReadinessContractTests
             if ((Get-Wp8PostVerificationDisposition $binding $old $readme $record $record $pending) -ne 'invalid') { exit 15 }
             $wp9Pending = $current.Replace('`M1/S6/WP8` closeout correction and complete non-live reverification only; WP9 is not eligible.', '`M1/S6/WP9` planning is eligible.')
             if ((Get-Wp8PostVerificationDisposition $binding $wp9Pending $readme $record $record $pending) -ne 'invalid') { exit 16 }
+            if ((Get-Wp8PostVerificationDisposition $binding ($current.Replace('was later invalidated as current handoff authority by current-HEAD review and remains historical evidence only.','')) $readme $record $record $pending) -ne 'invalid') { exit 16 }
             if ((Get-Wp8PostVerificationDisposition $binding $current ($readme.Replace('WP9 is not eligible','WP9 is eligible')) $record $record $pending) -ne 'invalid') { exit 16 }
+            foreach ($stale in @('WP8 is independently accepted at exact','The only next eligible action is an owner decision and exact packet-materialization planning for WP9')) {
+                if ((Get-Wp8PostVerificationDisposition $binding ($current + ' ' + $stale) $readme $record $record $pending) -ne 'invalid') { exit 16 }
+                if ((Get-Wp8PostVerificationDisposition $binding $current ($readme + ' ' + $stale) $record $record $pending) -ne 'invalid') { exit 16 }
+            }
             foreach ($fact in @('API-key use','live-manifest execution','native Credential Manager operation','DNS operation','public-network operation','provider request','billable operation','production-profile materialization/use')) {
                 $mutated = $acceptedCurrent.Replace('{{noEffect}}', '{{noEffect}}'.Replace($fact, ''))
                 if ((Get-Wp8PostVerificationDisposition $closeout $mutated $acceptedReadme $baseRecord ($baseRecord + $acceptanceRecord) $accepted) -ne 'invalid') { exit 17 }
@@ -298,6 +303,10 @@ public sealed class Wp8PreLiveReadinessContractTests
             $old = '| Current authorized work | `M1/S6/WP9` owner decision and exact authorization-packet materialization planning only; WP8 is accepted. | Accepted `M1/S6/WP8` candidate fbdb1f03e006a85723b0533d44b2ed06e02cc724 36b980d226e9f9a0e91281a530fc959a211fb696 {{noInheritance}} {{noEffect}}'
             if ((Get-Wp8NonLiveCurrentStateDisposition $old $pending) -ne 'invalid') { exit 11 }
             if ((Get-Wp8NonLiveCurrentStateDisposition ($valid.Replace('WP9 is not eligible','WP9 is eligible')) $pending) -ne 'invalid') { exit 12 }
+            if ((Get-Wp8NonLiveCurrentStateDisposition ($valid.Replace('was later invalidated as current handoff authority by current-HEAD review and remains historical evidence only.','')) $pending) -ne 'invalid') { exit 12 }
+            foreach ($stale in @('WP8 is independently accepted at exact','The only next eligible action is an owner decision and exact packet-materialization planning for WP9')) {
+                if ((Get-Wp8NonLiveCurrentStateDisposition ($valid + ' ' + $stale) $pending) -ne 'invalid') { exit 12 }
+            }
             foreach ($fact in @('API-key use','live-manifest execution','native Credential Manager operation','DNS operation','public-network operation','provider request','billable operation','production-profile materialization/use')) {
                 $mutated = $valid.Replace('{{noEffect}}', '{{noEffect}}'.Replace($fact, ''))
                 if ((Get-Wp8NonLiveCurrentStateDisposition $mutated $pending) -ne 'invalid') { exit 13 }

@@ -151,15 +151,16 @@ native run; exact audit-only receipt SHA-256
 binds the retained evidence and consumed authority lock. Fresh independent
 Windows credential/security review accepted the qualification. WP4 is
 accepted, and its identity, authority, namespace, targets, lock, and output
-root are consumed forever. WP8 is independently accepted at exact
-evidence/review HEAD `36b980d226e9f9a0e91281a530fc959a211fb696`, with separate
-product/template identity `260a09ecfafea103227f113faf7625a5bf0ce759` and
-verification identity `fbdb1f03e006a85723b0533d44b2ed06e02cc724`. The only
-next eligible action is an owner decision and exact packet-materialization
-planning for WP9. No WP8 template or prior authorization is executable or
-inheritable. No API-key use, live-manifest execution, native Credential Manager
-operation, DNS operation, public-network operation, provider request, billable
-operation, or production-profile materialization/use is authorized.
+root are consumed forever. The earlier WP8 acceptance at evidence/review HEAD
+`36b980d226e9f9a0e91281a530fc959a211fb696`, product/template identity
+`260a09ecfafea103227f113faf7625a5bf0ce759`, and verification identity
+`fbdb1f03e006a85723b0533d44b2ed06e02cc724` was later invalidated as current
+handoff authority by current-HEAD review and remains historical evidence only.
+Only WP8 closeout correction and complete non-live reverification are eligible;
+WP9 remains ineligible. No WP8 template or prior authorization is executable
+or inheritable. No API-key use, live-manifest execution, native Credential
+Manager operation, DNS operation, public-network operation, provider request,
+billable operation, or production-profile materialization/use is authorized.
 
 ## Completed Slice 5 boundary
 
