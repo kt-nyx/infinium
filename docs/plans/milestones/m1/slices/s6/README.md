@@ -47,14 +47,14 @@ pre-live validation SHA-256
 `e5f0ca42e44e6a4ea4f98bf4aab0c1bf6769c436c51aecc32a01e22a3db5f567`, and
 direct Layer 6 SHA-256
 `4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`.
-WP9 non-effectful production-profile preparation remains in bounded correction.
-Post-binding reproduction invalidated `38fcc90d45459d9ecc2e3dc6f56b187eb68bfc05`:
-its SourceRevisionId-pinned primary executables were stable, but the first
-incrementally reused dependency inventory differed from the subsequent rebuild.
-The canonical command now requires a non-incremental rebuild before hashing the
-complete execution closure. The manifest is binding-pending; no corrected
-independent-review or owner-acceptance record exists, and WP9 execution is
-ineligible.
+WP9 non-effectful production-profile preparation is frozen at corrected
+close-ready implementation `99450c168a937d8c658fb15d6bb520898be1a21e`.
+Its canonical Release command pins SourceRevisionId to that exact commit and
+forces a non-incremental rebuild. Two consecutive builds reproduced the exact
+coordinator, helper, and complete execution inventory. Submit/Cancel action-time
+readiness and exact post-review/owner authority-document transitions remain
+closed and mutation-tested. No corrected independent-review or owner-acceptance
+record exists, and WP9 execution remains ineligible.
 The transport-qualification request manifest is not materialized. Current
 official guidance concerning `safety_identifier` requires a separate authority
 resolution before any such request packet can be prepared. The earlier WP8

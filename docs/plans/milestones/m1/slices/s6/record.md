@@ -7598,3 +7598,19 @@ schema, validator, runner, and mutations require that exact command plus the
 close-ready SourceRevisionId. The manifest is reset to binding-pending for a
 fresh freeze and exact closure. No credential, UI, key, native, network,
 provider, billable, profile-state, private, or archive effect occurred.
+
+## WP9 reproducible replacement binding — 2026-08-15
+
+The replacement implementation is frozen at
+`99450c168a937d8c658fb15d6bb520898be1a21e`. Two consecutive exact canonical
+non-incremental Release builds with SourceRevisionId pinned to that commit
+reproduced coordinator SHA-256
+`d71b2f9f965dbad26ceb1bc5235e135d298a5a668d95c93142f52300a43bd44f`, helper
+SHA-256 `25d5deff48ea64ca5ef67df363b2656f59c48687b50225241fb1c8cb0c930b0c`,
+and the same 126-file execution-closure SHA-256
+`4c01795eefdf9d080562c38336325298581139284d13954ea8b351948bb569fc`.
+
+The exact four-document binding carries those values into the ready manifest.
+No corrected review or owner marker exists. No helper/UI/key/native/network/
+provider/billable/profile-state/private/archive effect occurred, and no later
+packet or inherited authority is created.
