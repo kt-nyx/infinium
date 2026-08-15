@@ -265,8 +265,8 @@ function Test-HandoffCloseoutCurrentState([string] $CurrentStateText) {
         $CurrentStateText.Contains('4fe96ddf83e4472ba2bc66f6c046253d3055a69bf32716d934ea222b53072b0c', [System.StringComparison]::Ordinal) -and
         $CurrentStateText.Contains('only fresh exact production-profile and WP9 request authorizations may be prepared', [System.StringComparison]::Ordinal) -and
         $CurrentStateText.Contains('neither may be executed without separate exact owner acceptance', [System.StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('No WP8 template', [System.StringComparison]::Ordinal) -and
-        $CurrentStateText.Contains('grants inherited authority', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.', [System.StringComparison]::Ordinal) -and
         $CurrentStateText.Contains('no provider request is authorized now', [System.StringComparison]::Ordinal)
 
     return $wp1ToWp2 -or $wp4ToWp8 -or $wp8ToWp9

@@ -55,6 +55,8 @@ public sealed class ProviderLayer6VerifierContractTests
         StringAssert.Contains(script, "fresh qualification-manifest consumer binding and owner-review preparation only");
         StringAssert.Contains(script, "03ae6929bad069c7c9e351b2ed5bd361e31b89e7");
         StringAssert.Contains(script, "c6e9226e-3d95-496c-bda6-c9142bb6b980");
+        StringAssert.Contains(script, "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.");
+        StringAssert.Contains(script, "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority");
         StringAssert.Contains(script, "Do not append an owner marker or execute `CredentialNative` during preparation");
         StringAssert.Contains(script, "OwnerTestProcessCleanup requires exactly one changed candidate docs/execution-policy.md");
         StringAssert.Contains(script, "Never terminate by process name alone");
@@ -137,8 +139,8 @@ public sealed class ProviderLayer6VerifierContractTests
             "4fe96ddf83e4472ba2bc66f6c046253d3055a69bf32716d934ea222b53072b0c",
             "only fresh exact production-profile and WP9 request authorizations may be prepared",
             "neither may be executed without separate exact owner acceptance",
-            "No WP8 template",
-            "grants inherited authority",
+            "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority",
+            "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.",
             "no provider request is authorized now",
         ];
         string valid = string.Join(Environment.NewLine, required);
@@ -149,6 +151,25 @@ public sealed class ProviderLayer6VerifierContractTests
         {
             encoded[index] = $"'{Encode(required[index])}'";
         }
+        const string noEffectClause = "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.";
+        string[] requiredNoEffectFacts =
+        [
+            "API-key use",
+            "live-manifest execution",
+            "native Credential Manager operation",
+            "DNS operation",
+            "public-network operation",
+            "provider request",
+            "billable operation",
+            "production-profile materialization/use",
+        ];
+        string[] encodedEffectMutations = new string[requiredNoEffectFacts.Length];
+        for (int index = 0; index < requiredNoEffectFacts.Length; index++)
+        {
+            string mutatedClause = noEffectClause.Replace(requiredNoEffectFacts[index], string.Empty, StringComparison.Ordinal);
+            string mutated = valid.Replace(noEffectClause, mutatedClause, StringComparison.Ordinal);
+            encodedEffectMutations[index] = $"'{Encode(mutated)}'";
+        }
 
         string command = $$"""
             {{function.Value}}
@@ -157,6 +178,10 @@ public sealed class ProviderLayer6VerifierContractTests
             foreach ($encoded in @({{string.Join(",", encoded)}})) {
                 $token = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encoded))
                 if (Test-HandoffCloseoutCurrentState $valid.Replace($token, '')) { exit 11 }
+            }
+            foreach ($encoded in @({{string.Join(",", encodedEffectMutations)}})) {
+                $mutated = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encoded))
+                if (Test-HandoffCloseoutCurrentState $mutated) { exit 12 }
             }
             exit 0
             """;

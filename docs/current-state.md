@@ -17,7 +17,7 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S6` - owner-accepted; implementation-active |
-| Current authorized work | `M1/S6/WP9` owner decision and exact authorization-packet materialization planning only; WP8 is accepted, but no provider request, DNS/network operation, API-key use, live-manifest execution, production-profile enrollment, or native Credential Manager operation is authorized |
+| Current authorized work | `M1/S6/WP9` owner decision and exact authorization-packet materialization planning only; WP8 is accepted. No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
 | Accepted Slice 6 WP1 candidate | `61b90314d8273749849f590b303814008fa2fdfa`; nine Slice 6 contracts are `Implementation-active` and the accepted local input-bound policy is `openai-responses-o200k-byte-envelope/v1` |
 | Accepted `M1/S6/WP2` candidate | `ed27ed04897103d93a60e6200971ca12d04f2e11`; capability, price, atomic reservation/final-gate, settlement, projection, replay, simulator, and public fixture/oracle evidence are independently accepted |
@@ -150,9 +150,9 @@ product/template identity `260a09ecfafea103227f113faf7625a5bf0ce759` and
 verification identity `fbdb1f03e006a85723b0533d44b2ed06e02cc724`. The only
 next eligible action is an owner decision and exact packet-materialization
 planning for WP9. No WP8 template or prior authorization is executable or
-inheritable, and no provider request, DNS/network operation, API-key use,
-live-manifest execution, production-profile enrollment, or native Credential
-Manager operation is authorized.
+inheritable. No API-key use, live-manifest execution, native Credential Manager
+operation, DNS operation, public-network operation, provider request, billable
+operation, or production-profile materialization/use is authorized.
 
 ## Completed Slice 5 boundary
 

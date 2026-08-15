@@ -7080,3 +7080,18 @@ operations remain unauthorized. WP10 and WP11 remain later separately
 authorized packages. No product code, credential, provider, network, private,
 archive, or live effect occurred during acceptance or this documentation
 handoff.
+
+### WP8 handoff no-effect predicate correction — 2026-08-14
+
+Final handoff review found that the WP8-to-WP9 `HandoffCloseout` predicate did
+not bind every individual no-effect fact even though current authority remained
+non-live. The closeout predicate and mutation test now require the exact
+current-state clause: No API-key use, live-manifest execution, native
+Credential Manager operation, DNS operation, public-network operation,
+provider request, billable operation, or production-profile
+materialization/use is authorized. They also require the exact no-inheritance
+clause. Removing the whole no-effect clause, any one of its eight effect facts,
+or the whole no-inheritance clause is rejected. This is a verifier and
+documentation correction only; it changes no accepted WP8 product/template,
+verification, evidence, packet, or receipt identity and caused no native,
+credential, provider, network, secret, private, archive, or live effect.
