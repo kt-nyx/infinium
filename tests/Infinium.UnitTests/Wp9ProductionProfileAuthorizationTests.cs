@@ -187,7 +187,7 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             node => node["owner_authorization"]!["inheritance"] = "allowed",
             node => node["owner_authorization"]!["independent_review_record"] = "missing",
             node => node["release_build"]!["source_commit"] = new string('f', 40),
-            node => node["release_build"]!["binary_inventory_file_count"] = 1,
+            node => node["release_build"]!["binary_inventory_file_count"] = 501,
             node => MakePartiallyReady(node, "source_commit"),
             node => MakePartiallyReady(node, "coordinator_sha256"),
             node => MakePartiallyReady(node, "helper_sha256"),
