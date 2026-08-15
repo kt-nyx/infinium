@@ -454,6 +454,20 @@ public sealed class Wp8PreLiveReadinessContractTests
                 $wp9.Replace('{{noEffect}}',''))) {
                 if ((Get-Wp8NonLiveCurrentStateDisposition $weakened $accepted) -ne 'invalid') { exit 18 }
             }
+            $ownerStop = @"
+            | Current authorized work | ``M1/S6/WP9`` exact new-only production-profile enrollment manifest is ready for owner acceptance and has no execution authority until exact owner acceptance. ``infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f``. {{noEffect}} |
+            | Next eligible action | Owner may accept or decline the exact WP9 production-profile manifest bytes. The transport-qualification request manifest remains unmaterialized and blocked pending separate request-field authority. |
+            {{noInheritance}}. {{noEffect}}
+            "@
+            if ((Get-Wp8NonLiveCurrentStateDisposition $ownerStop $accepted) -ne 'exact-wp9-profile-owner-stop-no-effect-state') { exit 19 }
+            foreach ($weakened in @(
+                $ownerStop.Replace('has no execution authority until exact owner acceptance.','is executable.'),
+                $ownerStop.Replace('Owner may accept or decline the exact WP9 production-profile manifest bytes.','Execute WP9.'),
+                $ownerStop.Replace('The transport-qualification request manifest remains unmaterialized and blocked','The transport-qualification request manifest is ready'),
+                $ownerStop.Replace('{{noInheritance}}',''),
+                $ownerStop.Replace('{{noEffect}}',''))) {
+                if ((Get-Wp8NonLiveCurrentStateDisposition $weakened $accepted) -ne 'invalid') { exit 20 }
+            }
             exit 0
             """;
         Assert.AreEqual(0, RunPowerShellScript(command),
