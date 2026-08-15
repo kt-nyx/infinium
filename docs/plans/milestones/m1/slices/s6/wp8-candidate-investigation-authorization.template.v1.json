@@ -15,12 +15,12 @@
     "required_predecessor_live_acceptance": "accepted-WP10-source-claim-operation-receipt-pending"
   },
   "acceptance_binding": {
-    "state": "correction-verification-pending",
+    "state": "accepted-closeout",
     "verification_candidate_commit": "cc14bf60f78c80280cb6eafe60fddaf2bc764d06",
-    "post_run_evidence_candidate_commit": "pending-until-post-run-evidence-freeze",
-    "non_live_all_receipt_sha256": "pending-until-post-run-evidence-freeze",
-    "pre_live_receipt_sha256": "pending-until-post-run-evidence-freeze",
-    "direct_layer6_receipt_sha256": "pending-until-post-run-evidence-freeze"
+    "post_run_evidence_candidate_commit": "baef115cdd43fa38d0a352c15f8ba44cbfa35312",
+    "non_live_all_receipt_sha256": "52aa77325a2226505c35b1fba6d9d0fe2b6354022a6c85f6652211d609c529ad",
+    "pre_live_receipt_sha256": "e5f0ca42e44e6a4ea4f98bf4aab0c1bf6769c436c51aecc32a01e22a3db5f567",
+    "direct_layer6_receipt_sha256": "4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5"
   },
   "materialization": {
     "required": true,

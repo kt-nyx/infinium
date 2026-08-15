@@ -38,11 +38,17 @@ and audit correction `be55eda59752f884fe6e113f40927295da45f2cd`; all 12 consumed
 are absent and that namespace may never be reused. The nine Slice 6 contracts
 remain `Implementation-active`.
 
-WP8 closeout correction and complete non-live reverification are active. WP9
-is not eligible until the corrected verification binding, complete non-live
-floor, fresh independent reviews, and exact no-effect closeout are accepted.
-The earlier WP8 acceptance identities and receipts are retained only as
-superseded historical evidence and do not certify the corrected candidate.
+Corrected WP8 is independently accepted. Its exact verification candidate is
+`cc14bf60f78c80280cb6eafe60fddaf2bc764d06`; its post-run evidence candidate
+is `baef115cdd43fa38d0a352c15f8ba44cbfa35312`. Acceptance binds NonLiveAll
+SHA-256 `52aa77325a2226505c35b1fba6d9d0fe2b6354022a6c85f6652211d609c529ad`,
+pre-live validation SHA-256
+`e5f0ca42e44e6a4ea4f98bf4aab0c1bf6769c436c51aecc32a01e22a3db5f567`, and
+direct Layer 6 SHA-256
+`4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`.
+The next eligible action is only the owner's decision whether to begin WP9
+fresh exact authorization-packet materialization planning. The earlier WP8
+acceptance identities and receipts remain superseded historical evidence.
 
 The four WP8 packets remain non-secret, non-executable templates with pending
 future bindings. No WP8 template, prior owner statement, packet identity,
@@ -50,9 +56,7 @@ expiry, profile identity, predecessor acceptance, official-doc result, or
 request fingerprint grants inherited authority. No API-key use,
 live-manifest execution, native Credential Manager operation, DNS operation,
 public-network operation, provider request, billable operation, or
-production-profile materialization/use is authorized. The current correction
-may only freeze and reverify the non-executable WP8 materials; it may not
-materialize a production profile or any WP9 request packet. WP9-WP11 remain
-later separately authorized packages. Only
+production-profile materialization/use is authorized. WP9-WP11 remain later
+separately authorized packages. Only
 [current project state](../../../../../current-state.md) states the active
 handoff.

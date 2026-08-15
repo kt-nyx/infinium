@@ -7324,3 +7324,31 @@ EOF. Authority remains WP8 correction and complete non-live reverification
 only; WP9 is ineligible. No API-key, Credential Manager, DNS, public-network,
 provider, billable, private-fixture, archive, live-manifest,
 production-profile, or WP9 effect occurred.
+
+## Append-only deterministic WP8 acceptance — 2026-08-15
+
+The exact verification baseline is
+`cc14bf60f78c80280cb6eafe60fddaf2bc764d06`; the exact five-document pending
+binding and post-run evidence candidate is
+`baef115cdd43fa38d0a352c15f8ba44cbfa35312`. The standalone pre-live
+validator passed with receipt SHA-256
+`e5f0ca42e44e6a4ea4f98bf4aab0c1bf6769c436c51aecc32a01e22a3db5f567`,
+and the combined WP8 and Provider Layer 6 contract filter passed 8/8 with zero
+failures and zero skips.
+
+Fresh-root NonLiveAll passed 36 commands with 355 tests passed, zero failed,
+and zero skipped; its receipt SHA-256 is
+`52aa77325a2226505c35b1fba6d9d0fe2b6354022a6c85f6652211d609c529ad`.
+Direct candidate-bound Layer 6 passed over the exact 16-path correction range
+with zero findings; its receipt SHA-256 is
+`4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`.
+
+This section is appended strictly at EOF relative to the verification
+baseline. Final exact accepted-HEAD verification and fresh independent
+closeout review remain required. Corrected WP8 accepts only non-live readiness
+evidence and four non-secret, non-executable templates; it grants no inherited
+execution authority. No API-key use, live-manifest execution, native
+Credential Manager operation, DNS operation, public-network operation,
+provider request, billable operation, production-profile materialization/use,
+private-fixture access, archive access, or WP9 execution is authorized or
+occurred.
