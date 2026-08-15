@@ -7647,3 +7647,30 @@ The embedded SourceLink URL also names exactly that close-ready commit.
 The four-document binding retains those exact identities. It creates no review,
 owner acceptance, inherited authority, credential/UI/key/native/network/
 provider/billable/profile/private/archive effect, or later request packet.
+
+## WP9 retained-WP8 handoff correction — 2026-08-15
+
+The first complete B12 Contract floor rejected two stale retained-WP8 handoff
+checks. The WP8 semantic validator's exact later-WP9 path set omitted
+`Directory.Build.targets` and `eng/wp9-owner-documentation-contract.ps1`, and
+its current-state/README predicates still required superseded correction prose
+instead of the exact frozen owner-stop state. The earlier B12 NonLiveAll receipt
+is superseded even though its narrower 357-test floor passed.
+
+The bounded correction centralizes the exact later-WP9 path set, includes both
+missing authority paths, matches only the current frozen non-effectful owner-stop
+prose, and mutation-tests removal of each new path, an extra unauthorized path,
+and weakened build/review/no-effect/no-inheritance statements. The corrected
+implementation is frozen at
+`6918903d1de19d146e451c573128c731ef7c70c9`.
+
+Two consecutive clean canonical non-incremental Release builds pinned to that
+commit reproduced coordinator SHA-256
+`79f9bb9dc7eb99c3ffab0a325a62cde91491fd149be5b15fa0003855764ca8a1`,
+helper SHA-256
+`2b06a8c3e7f7795611b4bf62865fc812bef02c1b728b48d9b278e0ebaf6b8160`,
+and the same 126-file execution-closure SHA-256
+`fa92201a55bd342c42069755cf83ca30602a3aebd0fbc8581cfaf732c88bad03`.
+SourceLink names the exact close-ready commit. The replacement binding grants
+no review, owner acceptance, inherited authority, credential/UI/key/native/
+network/provider/billable/profile/private/archive effect, or later packet.
