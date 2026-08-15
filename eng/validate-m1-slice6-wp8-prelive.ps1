@@ -100,6 +100,47 @@ function Test-Wp8AcceptedHandoffReadme([string] $Text, [object] $Binding) {
     return $true
 }
 
+function Test-Wp9OwnerStopCurrentState([string] $Text, [object] $Binding) {
+    $normalized = [regex]::Replace($Text, '\s+', ' ')
+    foreach ($required in @(
+            '| Current authorized work | `M1/S6/WP9` non-effectful production-profile preparation verification and independent review only. Corrected close-ready implementation `',
+            'infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f',
+            'but no exact replacement independent-review or owner-acceptance record exists yet.',
+            'The prior binding at `1c3b64a651361c147cba018b8054cb2f0ac4f036` is historical and non-executable.',
+            'Accepted corrected `M1/S6/WP8` candidate',
+            [string]$Binding.verification_candidate_commit,
+            [string]$Binding.post_run_evidence_candidate_commit,
+            [string]$Binding.non_live_all_receipt_sha256,
+            [string]$Binding.pre_live_receipt_sha256,
+            [string]$Binding.direct_layer6_receipt_sha256,
+            '| Next eligible action | Run the complete non-live floor and fresh independent security/semantic/diff review against the exact corrected manifest binding. Only an accepted exact reviewed candidate may then reach the owner accept-or-decline stop.',
+            'The transport-qualification request manifest remains unmaterialized and blocked pending separate `safety_identifier` authority resolution plus successful profile enrollment.',
+            'No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority',
+            'No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.')) {
+        if (-not $normalized.Contains($required, [StringComparison]::Ordinal)) { return $false }
+    }
+    return $true
+}
+
+function Test-Wp9OwnerStopReadme([string] $Text, [object] $Binding) {
+    $normalized = [regex]::Replace($Text, '\s+', ' ')
+    foreach ($required in @(
+            'Corrected WP8 is independently accepted.',
+            [string]$Binding.verification_candidate_commit,
+            [string]$Binding.post_run_evidence_candidate_commit,
+            [string]$Binding.non_live_all_receipt_sha256,
+            [string]$Binding.pre_live_receipt_sha256,
+            [string]$Binding.direct_layer6_receipt_sha256,
+            'WP9 non-effectful production-profile preparation is in bounded correction and reverification.',
+            'The new-only authorization manifest has no replacement independent-review or owner-acceptance record, and WP9 has not reached a new owner accept-or-decline stop.',
+            'The transport-qualification request manifest is not materialized.',
+            'No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.',
+            'No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.')) {
+        if (-not $normalized.Contains($required, [StringComparison]::Ordinal)) { return $false }
+    }
+    return $true
+}
+
 function Test-Wp8RetainedAcceptanceRecord([string] $Text, [object] $Binding) {
     $normalized = [regex]::Replace($Text, '\s+', ' ')
     foreach ($required in @(
@@ -145,6 +186,44 @@ function Get-Wp8PostVerificationDisposition(
         (Test-Wp8AcceptedHandoffCurrentState $CurrentStateText $AcceptanceBinding) -and
         (Test-Wp8AcceptedHandoffReadme $ReadmeText $AcceptanceBinding) -and
         (Test-Wp8RetainedAcceptanceRecord $HeadRecordText $AcceptanceBinding)
+    $wp9OwnerStopPaths = @(
+        'contracts/repository/wp9-production-profile-authorization.v1.schema.json',
+        'docs/current-state.md',
+        'docs/plans/milestones/m1/slices/s6/README.md',
+        'docs/plans/milestones/m1/slices/s6/record.md',
+        'docs/plans/milestones/m1/slices/s6/wp8-candidate-investigation-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-production-profile-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-qualification-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-source-claim-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json',
+        'eng/run-m1-slice6-credential.ps1',
+        'eng/validate-m1-slice6-wp4-recovery-4936dcef.ps1',
+        'eng/validate-m1-slice6-wp4-recovery-e3f76cd6.ps1',
+        'eng/validate-m1-slice6-wp4-recovery-e6e04651.ps1',
+        'eng/validate-m1-slice6-wp8-prelive.ps1',
+        'eng/validate-m1-slice6-wp9-profile-authorization.ps1',
+        'eng/verify-m1-slice6.ps1',
+        'src/Infinium.Application/Runtime/NativeHelperFailureProtocol.cs',
+        'src/Infinium.Coordinator/CredentialHelperCoordinator.cs',
+        'src/Infinium.Coordinator/CredentialNativeQualificationSupervisor.cs',
+        'src/Infinium.Coordinator/OneShotCredentialHelperLauncher.cs',
+        'src/Infinium.Coordinator/Program.cs',
+        'src/Infinium.Coordinator/Wp9ProductionProfileEnrollmentRunner.cs',
+        'src/Infinium.CredentialHelper/OneShotHelperEngine.cs',
+        'src/Infinium.CredentialHelper/Program.cs',
+        'src/Infinium.CredentialHelper/WindowsCredentialNativeQualification.cs',
+        'src/Infinium.CredentialHelper/Wp9ProductionEnrollmentSurface.cs',
+        'tests/Infinium.ContractTests/ProviderLayer6VerifierContractTests.cs',
+        'tests/Infinium.ContractTests/Wp8PreLiveReadinessContractTests.cs',
+        'tests/Infinium.IntegrationTests/CredentialHelperIntegrationTests.cs',
+        'tests/Infinium.IntegrationTests/Wp9ProductionEnrollmentEvidenceTests.cs',
+        'tests/Infinium.UnitTests/CredentialNativeAuthorizationTests.cs',
+        'tests/Infinium.UnitTests/Wp9ProductionProfileAuthorizationTests.cs')
+    $wp9OwnerStopState = $AcceptanceBinding.state -eq 'accepted-closeout' -and
+        (Test-Wp9OwnerStopCurrentState $CurrentStateText $AcceptanceBinding) -and
+        (Test-Wp9OwnerStopReadme $ReadmeText $AcceptanceBinding) -and
+        (Test-Wp8RetainedAcceptanceRecord $HeadRecordText $AcceptanceBinding)
 
     if (@($Paths).Count -eq 0 -or (Test-Wp8ExactPathSet $Paths $bindingPaths)) {
         if ($verificationState) { return 'exact-correction-verification-state' }
@@ -157,6 +236,14 @@ function Get-Wp8PostVerificationDisposition(
             return 'invalid'
         }
         return 'exact-accepted-append-only-handoff'
+    }
+    if (Test-Wp8ExactPathSet $Paths $wp9OwnerStopPaths) {
+        if (-not $wp9OwnerStopState -or
+            -not $HeadRecordText.StartsWith($VerificationRecordText, [StringComparison]::Ordinal) -or
+            $HeadRecordText.Length -le $VerificationRecordText.Length) {
+            return 'invalid'
+        }
+        return 'exact-wp9-owner-stop-no-effect-state'
     }
     return 'invalid'
 }

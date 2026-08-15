@@ -103,7 +103,8 @@ public sealed class Wp8PreLiveReadinessContractTests
             Assert.IsTrue(
                 normalizedReadme.Contains("The next eligible action is only the owner's decision whether to begin WP9", StringComparison.Ordinal)
                 || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is active.", StringComparison.Ordinal)
-                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is complete at close-ready", StringComparison.Ordinal),
+                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is complete at close-ready", StringComparison.Ordinal)
+                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is in bounded correction and reverification.", StringComparison.Ordinal),
                 "Accepted WP8 must retain either its exact closeout handoff or the exact later no-effect WP9 preparation handoff.");
         }
         StringAssert.Contains(normalizedReadme, "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.");
@@ -242,10 +243,12 @@ public sealed class Wp8PreLiveReadinessContractTests
         Assert.IsFalse(function.Value.Contains("Invoke-CredentialNativeRecoveryGate", StringComparison.Ordinal));
         Assert.IsFalse(function.Value.Contains("run-m1-slice6-live", StringComparison.Ordinal));
         Assert.IsFalse(function.Value.Contains("run-m1-slice6-credential", StringComparison.Ordinal));
-        Assert.AreNotEqual(0, RunLayer6Mode(root, false),
+        Assert.AreNotEqual(0, RunLayer6Mode(root, null),
             "Ordinary Layer6 unexpectedly unprotected the WP8 current-state path.");
-        Assert.AreEqual(0, RunLayer6Mode(root, true),
-            "Explicit WP8 pre-live closeout Layer6 rejected the exact correction state.");
+        Assert.AreNotEqual(0, RunLayer6Mode(root, "wp8"),
+            "Explicit WP8 pre-live closeout mode incorrectly accepted the later WP9 state.");
+        Assert.AreEqual(0, RunLayer6Mode(root, "wp9"),
+            "Exact WP9 owner-stop Layer6 rejected the current no-effect state.");
     }
 
     [TestMethod]
@@ -261,6 +264,8 @@ public sealed class Wp8PreLiveReadinessContractTests
             "Test-Wp8CorrectionReadme",
             "Test-Wp8AcceptedHandoffCurrentState",
             "Test-Wp8AcceptedHandoffReadme",
+            "Test-Wp9OwnerStopCurrentState",
+            "Test-Wp9OwnerStopReadme",
             "Test-Wp8RetainedAcceptanceRecord",
             "Get-Wp8PostVerificationDisposition",
         ];
@@ -374,6 +379,28 @@ public sealed class Wp8PreLiveReadinessContractTests
             if ((Get-Wp8PostVerificationDisposition $closeout $acceptedCurrent ($acceptedReadme.Replace('Corrected WP8 is independently accepted.','WP8 accepted.')) $baseRecord ($baseRecord + $acceptanceRecord) $accepted) -ne 'invalid') { exit 19 }
             $missingReadme = @($closeout | Where-Object { $_ -ne 'docs/plans/milestones/m1/slices/s6/README.md' })
             if ((Get-Wp8PostVerificationDisposition $missingReadme $acceptedCurrent $acceptedReadme $baseRecord ($baseRecord + $acceptanceRecord) $accepted) -ne 'invalid') { exit 20 }
+            $wp9Current = @"
+            | Current authorized work | ``M1/S6/WP9`` non-effectful production-profile preparation verification and independent review only. Corrected close-ready implementation ``ffffffffffffffffffffffffffffffffffffffff`` is bound by manifest ``infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f``, but no exact replacement independent-review or owner-acceptance record exists yet. The prior binding at ``1c3b64a651361c147cba018b8054cb2f0ac4f036`` is historical and non-executable. No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. |
+            Accepted corrected ``M1/S6/WP8`` candidate $($accepted.verification_candidate_commit) $($accepted.post_run_evidence_candidate_commit) $($accepted.non_live_all_receipt_sha256) $($accepted.pre_live_receipt_sha256) $($accepted.direct_layer6_receipt_sha256)
+            | Next eligible action | Run the complete non-live floor and fresh independent security/semantic/diff review against the exact corrected manifest binding. Only an accepted exact reviewed candidate may then reach the owner accept-or-decline stop. The transport-qualification request manifest remains unmaterialized and blocked pending separate ``safety_identifier`` authority resolution plus successful profile enrollment. |
+            {{noInheritance}}
+            "@
+            $wp9Readme = "Corrected WP8 is independently accepted. $($accepted.verification_candidate_commit) $($accepted.post_run_evidence_candidate_commit) $($accepted.non_live_all_receipt_sha256) $($accepted.pre_live_receipt_sha256) $($accepted.direct_layer6_receipt_sha256) WP9 non-effectful production-profile preparation is in bounded correction and reverification. The new-only authorization manifest has no replacement independent-review or owner-acceptance record, and WP9 has not reached a new owner accept-or-decline stop. The transport-qualification request manifest is not materialized. {{noInheritance}}. {{noEffect}}"
+            if (-not (Test-Wp9OwnerStopCurrentState $wp9Current $accepted) -or -not (Test-Wp9OwnerStopReadme $wp9Readme $accepted)) { exit 21 }
+            foreach ($weakened in @(
+                $wp9Current.Replace('UI launch, ',''),
+                $wp9Current.Replace('but no exact replacement independent-review or owner-acceptance record exists yet.','is executable.'),
+                $wp9Current.Replace('{{noInheritance}}',''),
+                $wp9Current.Replace($accepted.non_live_all_receipt_sha256,('0' * 64)))) {
+                if (Test-Wp9OwnerStopCurrentState $weakened $accepted) { exit 22 }
+            }
+            foreach ($weakened in @(
+                $wp9Readme.Replace('bounded correction and reverification','execution'),
+                $wp9Readme.Replace('has no replacement independent-review or owner-acceptance record','has execution authority'),
+                $wp9Readme.Replace('{{noEffect}}',''),
+                $wp9Readme.Replace('{{noInheritance}}',''))) {
+                if (Test-Wp9OwnerStopReadme $weakened $accepted) { exit 23 }
+            }
             exit 0
             """;
         Assert.AreEqual(0, RunPowerShellScript(command),
@@ -574,7 +601,7 @@ public sealed class Wp8PreLiveReadinessContractTests
         }
     }
 
-    private static int RunLayer6Mode(string root, bool wp8Mode)
+    private static int RunLayer6Mode(string root, string? mode)
     {
         string output = Path.Combine(Path.GetTempPath(), "infinium-wp8-layer6-" + Guid.NewGuid().ToString("N"));
         try
@@ -596,9 +623,13 @@ public sealed class Wp8PreLiveReadinessContractTests
             {
                 start.ArgumentList.Add(argument);
             }
-            if (wp8Mode)
+            if (mode == "wp8")
             {
                 start.ArgumentList.Add("-Wp8PreLiveCloseout");
+            }
+            else if (mode == "wp9")
+            {
+                start.ArgumentList.Add("-Wp9OwnerStopReview");
             }
             using Process process = Process.Start(start)!;
             _ = process.StandardOutput.ReadToEnd();
