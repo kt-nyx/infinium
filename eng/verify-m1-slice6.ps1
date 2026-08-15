@@ -19,6 +19,8 @@ param(
 
     [switch] $Wp8PreLiveCloseout,
 
+    [switch] $Wp9OwnerStopReview,
+
     [switch] $OwnerTestProcessCleanup,
 
     [switch] $CredentialNativePostEffectAudit
@@ -47,6 +49,9 @@ if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 
     }
     if ($Wp8PreLiveCloseout) {
         $arguments += '-Wp8PreLiveCloseout'
+    }
+    if ($Wp9OwnerStopReview) {
+        $arguments += '-Wp9OwnerStopReview'
     }
     if ($OwnerTestProcessCleanup) {
         $arguments += '-OwnerTestProcessCleanup'
@@ -525,7 +530,8 @@ function Test-Wp1ProtectedPath([string] $Path) {
 function Invoke-Layer6ReviewGate(
     [string] $ReviewBaseline = $BaselineCommit,
     [string] $ReviewCandidate = $CandidateCommit,
-    [bool] $Wp8PreLiveCloseoutMode = [bool]$Wp8PreLiveCloseout) {
+    [bool] $Wp8PreLiveCloseoutMode = [bool]$Wp8PreLiveCloseout,
+    [bool] $Wp9OwnerStopMode = [bool]$Wp9OwnerStopReview) {
     $baselineHash = Resolve-GitCommit $ReviewBaseline 'BaselineCommit'
     $candidateHash = Resolve-GitCommit $ReviewCandidate 'CandidateCommit'
     & git -C $repoRoot merge-base --is-ancestor $baselineHash $candidateHash
@@ -535,6 +541,76 @@ function Invoke-Layer6ReviewGate(
     $wp8CurrentStateDisposition = if ($Wp8PreLiveCloseoutMode) {
         Get-Wp8Layer6CurrentStateDisposition $candidateHash
     } else { 'not-requested' }
+    [string[]]$wp9ExpectedPaths = @(
+        'contracts/repository/wp8-case-requirement-matrix.v1.schema.json',
+        'contracts/repository/wp8-production-profile-authorization-template.v1.schema.json',
+        'contracts/repository/wp8-provider-request-authorization-template.v1.schema.json',
+        'contracts/repository/wp9-production-profile-authorization.v1.schema.json',
+        'docs/current-state.md',
+        'docs/plans/milestones/m1/slices/s6/README.md',
+        'docs/plans/milestones/m1/slices/s6/record.md',
+        'docs/plans/milestones/m1/slices/s6/wp8-candidate-investigation-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-production-profile-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-qualification-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp8-source-claim-authorization.template.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json',
+        'eng/run-m1-slice6-credential.ps1',
+        'eng/validate-m1-slice6-wp4-recovery-4936dcef.ps1',
+        'eng/validate-m1-slice6-wp4-recovery-e3f76cd6.ps1',
+        'eng/validate-m1-slice6-wp4-recovery-e6e04651.ps1',
+        'eng/validate-m1-slice6-wp8-prelive.ps1',
+        'eng/validate-m1-slice6-wp9-profile-authorization.ps1',
+        'eng/verify-m1-slice6-wp3-upgrade.ps1',
+        'eng/verify-m1-slice6.ps1',
+        'src/Infinium.Application/Runtime/NativeHelperFailureProtocol.cs',
+        'src/Infinium.Coordinator/CredentialHelperCoordinator.cs',
+        'src/Infinium.Coordinator/CredentialNativeQualificationSupervisor.cs',
+        'src/Infinium.Coordinator/OneShotCredentialHelperLauncher.cs',
+        'src/Infinium.Coordinator/Program.cs',
+        'src/Infinium.Coordinator/Wp9ProductionProfileEnrollmentRunner.cs',
+        'src/Infinium.CredentialHelper/OneShotHelperEngine.cs',
+        'src/Infinium.CredentialHelper/Program.cs',
+        'src/Infinium.CredentialHelper/WindowsCredentialNativeQualification.cs',
+        'src/Infinium.CredentialHelper/Wp9ProductionEnrollmentSurface.cs',
+        'tests/Infinium.ContractTests/ProviderLayer6VerifierContractTests.cs',
+        'tests/Infinium.ContractTests/Wp8PreLiveReadinessContractTests.cs',
+        'tests/Infinium.IntegrationTests/CredentialHelperIntegrationTests.cs',
+        'tests/Infinium.IntegrationTests/Wp9ProductionEnrollmentEvidenceTests.cs',
+        'tests/Infinium.UnitTests/CredentialNativeAuthorizationTests.cs',
+        'tests/Infinium.UnitTests/Wp9ProductionProfileAuthorizationTests.cs')
+    $wp9CurrentStateDisposition = 'not-requested'
+    if ($Wp9OwnerStopMode) {
+        $expectedBaseline = '63e4584f8926227c2a1e12ef31c71a3a88798c7f'
+        $head = (& git -C $repoRoot rev-parse HEAD).Trim()
+        $currentText = Get-CandidateText $candidateHash 'docs/current-state.md'
+        $matrix = Get-CandidateText $candidateHash 'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json' | ConvertFrom-Json -Depth 100
+        $wp9CurrentStateDisposition = Get-Wp8NonLiveCurrentStateDisposition $currentText $matrix.acceptance_binding
+        $manifest = Get-CandidateText $candidateHash 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json' | ConvertFrom-Json -Depth 100
+        $closeReady = [string]$manifest.candidate_binding.close_ready_implementation_commit
+        [string[]]$closeoutPaths = @(& git -C $repoRoot diff --name-only "$closeReady..$candidateHash")
+        [Array]::Sort($closeoutPaths, [StringComparer]::Ordinal)
+        [string[]]$exactCloseoutPaths = @(
+            'docs/current-state.md',
+            'docs/plans/milestones/m1/slices/s6/README.md',
+            'docs/plans/milestones/m1/slices/s6/record.md',
+            'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json')
+        [Array]::Sort($exactCloseoutPaths, [StringComparer]::Ordinal)
+        if ($baselineHash -cne $expectedBaseline -or $candidateHash -cne $head -or
+            $wp9CurrentStateDisposition -cne 'exact-wp9-profile-owner-stop-no-effect-state' -or
+            $manifest.status -cne 'ready-for-owner-acceptance' -or
+            $manifest.release_build.source_commit -cne $closeReady -or
+            -not $currentText.Contains($closeReady, [StringComparison]::Ordinal) -or
+            (& git -C $repoRoot rev-list --count "$closeReady..$candidateHash").Trim() -ne '1' -or
+            [string]::Join("`n", $closeoutPaths) -cne [string]::Join("`n", $exactCloseoutPaths)) {
+            throw 'Wp9OwnerStopReview requires the exact current ready manifest, no-effect state, baseline, candidate, and one four-document binding commit.'
+        }
+        $validationJson = @(& (Join-Path $repoRoot 'eng/validate-m1-slice6-wp9-profile-authorization.ps1') `
+            -AuthorizationManifest (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json') -RequireReady) -join "`n"
+        if ($LASTEXITCODE -ne 0 -or ($validationJson | ConvertFrom-Json -Depth 20).status -cne 'validated-ready-for-owner-acceptance') {
+            throw 'Wp9OwnerStopReview requires the exact ready manifest validator disposition.'
+        }
+    }
 
     $nameStatusLines = @(& git -C $repoRoot -c core.quotePath=false diff --name-status --find-renames $baselineHash $candidateHash --)
     if ($LASTEXITCODE -ne 0) {
@@ -555,15 +631,18 @@ function Invoke-Layer6ReviewGate(
             $isWp8StructuredCurrentState = $Wp8PreLiveCloseoutMode -and
                 $path -ceq 'docs/current-state.md' -and
                 $wp8CurrentStateDisposition -in @('exact-wp8-correction-reverification-state','exact-corrected-wp8-accepted-handoff')
+            $isWp9OwnerStopPath = $Wp9OwnerStopMode -and $wp9ExpectedPaths -ccontains $path
             $isOwnerTestProcessCleanupPolicy = $OwnerTestProcessCleanup -and
                 $path -ceq 'docs/execution-policy.md'
             $isProtected = (Test-Wp1ProtectedPath $path) -and
                 -not $isHandoffCurrentState -and
                 -not $isWp8StructuredCurrentState -and
+                -not $isWp9OwnerStopPath -and
                 -not $isOwnerTestProcessCleanupPolicy
             $isAllowed = (Test-Wp1AllowedPath $path) -or
                 $isHandoffCurrentState -or
                 $isWp8StructuredCurrentState -or
+                $isWp9OwnerStopPath -or
                 $isOwnerTestProcessCleanupPolicy
             $privateOrArchive = $path -match '(?i)(^|/)(private|legacy|archive)(/|$)' -or
                 $path -match '(?i)independent-slice3-evaluator' -or
@@ -741,6 +820,14 @@ function Invoke-Layer6ReviewGate(
             $failures.Add('Wp8PreLiveCloseout requires the exact correction-reverification state or exact corrected-WP8 accepted no-effect planning handoff.')
         }
     }
+    if ($Wp9OwnerStopMode) {
+        [string[]]$actualWp9Paths = @($changedPaths | ForEach-Object { [string]$_.path })
+        [Array]::Sort($actualWp9Paths, [StringComparer]::Ordinal)
+        [Array]::Sort($wp9ExpectedPaths, [StringComparer]::Ordinal)
+        if ([string]::Join("`n", $actualWp9Paths) -cne [string]::Join("`n", $wp9ExpectedPaths)) {
+            $failures.Add('Wp9OwnerStopReview requires the exact finite 37-path WP8-to-WP9 candidate set.')
+        }
+    }
     if ($Wp4OwnerReviewHandoff) {
         $currentState = @($changedPaths | Where-Object { $_.path -ceq 'docs/current-state.md' })
         if ($currentState.Count -ne 1 -or -not $currentState[0].candidate_blob) {
@@ -792,6 +879,8 @@ function Invoke-Layer6ReviewGate(
         handoff_closeout = [bool]$HandoffCloseout
         wp4_owner_review_handoff = [bool]$Wp4OwnerReviewHandoff
         wp8_pre_live_closeout = [bool]$Wp8PreLiveCloseoutMode
+        wp9_owner_stop_review = [bool]$Wp9OwnerStopMode
+        wp9_current_state_disposition = $wp9CurrentStateDisposition
         wp8_current_state_disposition = $wp8CurrentStateDisposition
         owner_test_process_cleanup = [bool]$OwnerTestProcessCleanup
         changed_path_count = $changedPaths.Count
@@ -1506,7 +1595,7 @@ function Invoke-NonLiveAllGate {
 
     $candidate = (& git -C $repoRoot rev-parse HEAD).Trim()
     $baseline = '63e4584f8926227c2a1e12ef31c71a3a88798c7f'
-    Invoke-Layer6ReviewGate $baseline $candidate $true
+    Invoke-Layer6ReviewGate $baseline $candidate $false $true
 
     $childReceiptNames = @(
         'contracts.json', 'statesurfaces.json', 'statetotality.json', 'budget.json',
