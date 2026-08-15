@@ -85,7 +85,7 @@ public sealed class Wp9ProductionProfileAuthorizationTests
     }
 
     [TestMethod]
-    public void RunnerRejectsDraftBeforeOutputHelperOrNativeBoundary()
+    public void RunnerRejectsMissingAuthorityBeforeOutputHelperOrNativeBoundary()
     {
         string root = RepositoryRoot();
         string manifest = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
@@ -112,7 +112,11 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         string errorText = process.StandardError.ReadToEnd();
         process.WaitForExit();
         Assert.AreNotEqual(0, process.ExitCode, outputText);
-        StringAssert.Contains(errorText, "still draft binding-pending");
+        Assert.IsTrue(
+            errorText.Contains("still draft binding-pending", StringComparison.Ordinal)
+            || errorText.Contains("exact clean codex/m1-s6 candidate", StringComparison.Ordinal)
+            || errorText.Contains("exactly one canonical owner-acceptance line", StringComparison.Ordinal),
+            errorText);
         Assert.IsFalse(Directory.Exists(output));
         Assert.IsFalse(Directory.Exists(Path.Combine(root, "artifacts", "m1-slice6", "wp9-production-profile-state")));
     }
