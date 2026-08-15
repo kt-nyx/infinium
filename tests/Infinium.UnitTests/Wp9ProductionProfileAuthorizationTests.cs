@@ -321,6 +321,18 @@ public sealed class Wp9ProductionProfileAuthorizationTests
               ($currentRecord+"`nWP9_PROFILE_OWNER_ACCEPTANCE invalid"))) {
               if(Test-Wp9ReviewedOwnerPendingRecord -ReviewedRecordText $reviewedRecord -CurrentRecordText $mutated -ManifestId 'manifest' -ManifestSha256 ('a'*64) -ReviewedCandidate ('c'*40)){throw 'mutated review record admitted'}
             }
+            $ownerMarker=Get-Wp9OwnerAcceptanceMarker -ManifestId 'manifest' -ManifestSha256 ('a'*64) -CloseReadyCommit ('b'*40) -ExpiresAtUtc '2026-08-17T15:25:00.0000000Z'
+            $ownerRecord=$currentRecord+"`n`n"+$ownerMarker
+            if(-not (Test-Wp9OwnerAcceptedRecord -ReviewedRecordText $reviewedRecord -CurrentRecordText $ownerRecord -ManifestId 'manifest' -ManifestSha256 ('a'*64) -CloseReadyCommit ('b'*40) -ExpiresAtUtc '2026-08-17T15:25:00.0000000Z' -ReviewedCandidate ('c'*40))){throw 'exact owner record rejected'}
+            foreach($mutated in @(
+              $currentRecord,
+              ($ownerRecord.Replace(('a'*64),('d'*64))),
+              ($ownerRecord.Replace(('b'*40),('e'*40))),
+              ($ownerRecord.Replace('2026-08-17T15:25:00.0000000Z','2026-08-17T15:25:01.0000000Z')),
+              ($ownerRecord+"`n"+$ownerMarker),
+              ($ownerRecord+"`nextra"))) {
+              if(Test-Wp9OwnerAcceptedRecord -ReviewedRecordText $reviewedRecord -CurrentRecordText $mutated -ManifestId 'manifest' -ManifestSha256 ('a'*64) -CloseReadyCommit ('b'*40) -ExpiresAtUtc '2026-08-17T15:25:00.0000000Z' -ReviewedCandidate ('c'*40)){throw 'mutated owner record admitted'}
+            }
             "validated"
             """);
         try

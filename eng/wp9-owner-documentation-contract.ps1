@@ -9,6 +9,16 @@ function Get-Wp9ReviewAcceptanceMarker {
     return "WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=$ReviewedCandidate manifest_id=$ManifestId sha256=$ManifestSha256 verdicts=security,semantics,diff"
 }
 
+function Get-Wp9OwnerAcceptanceMarker {
+    param(
+        [Parameter(Mandatory = $true)] [string] $ManifestId,
+        [Parameter(Mandatory = $true)] [string] $ManifestSha256,
+        [Parameter(Mandatory = $true)] [string] $CloseReadyCommit,
+        [Parameter(Mandatory = $true)] [string] $ExpiresAtUtc
+    )
+    return "WP9_PROFILE_OWNER_ACCEPTANCE manifest_id=$ManifestId sha256=$ManifestSha256 close_ready_commit=$CloseReadyCommit expires_at_utc=$ExpiresAtUtc"
+}
+
 function Get-Wp9ReviewedOwnerPendingDocumentationRequirements {
     param(
         [Parameter(Mandatory = $true)] [string] $ManifestId,
@@ -82,5 +92,32 @@ function Test-Wp9ReviewedOwnerPendingRecord {
     if (@($currentLines | Where-Object {
                 $_.StartsWith('WP9_PROFILE_OWNER_ACCEPTANCE ', [StringComparison]::Ordinal)
             }).Count -ne 0) { return $false }
+    return $true
+}
+
+function Test-Wp9OwnerAcceptedRecord {
+    param(
+        [Parameter(Mandatory = $true)] [string] $ReviewedRecordText,
+        [Parameter(Mandatory = $true)] [string] $CurrentRecordText,
+        [Parameter(Mandatory = $true)] [string] $ManifestId,
+        [Parameter(Mandatory = $true)] [string] $ManifestSha256,
+        [Parameter(Mandatory = $true)] [string] $CloseReadyCommit,
+        [Parameter(Mandatory = $true)] [string] $ExpiresAtUtc,
+        [Parameter(Mandatory = $true)] [string] $ReviewedCandidate
+    )
+    $reviewed = ($ReviewedRecordText -replace "`r`n", "`n").TrimEnd("`n")
+    $current = ($CurrentRecordText -replace "`r`n", "`n").TrimEnd("`n")
+    $reviewMarker = Get-Wp9ReviewAcceptanceMarker -ManifestId $ManifestId `
+        -ManifestSha256 $ManifestSha256 -ReviewedCandidate $ReviewedCandidate
+    $ownerMarker = Get-Wp9OwnerAcceptanceMarker -ManifestId $ManifestId `
+        -ManifestSha256 $ManifestSha256 -CloseReadyCommit $CloseReadyCommit `
+        -ExpiresAtUtc $ExpiresAtUtc
+    if ($current -cne ($reviewed + "`n`n" + $reviewMarker + "`n`n" + $ownerMarker)) { return $false }
+    $currentLines = @($current -split "`n")
+    if (@($currentLines | Where-Object { $_ -ceq $reviewMarker }).Count -ne 1) { return $false }
+    if (@($currentLines | Where-Object { $_ -ceq $ownerMarker }).Count -ne 1) { return $false }
+    if (@($currentLines | Where-Object {
+                $_.StartsWith('WP9_PROFILE_OWNER_ACCEPTANCE ', [StringComparison]::Ordinal)
+            }).Count -ne 1) { return $false }
     return $true
 }

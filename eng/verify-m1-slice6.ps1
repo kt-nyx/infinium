@@ -23,6 +23,8 @@ param(
 
     [switch] $Wp9ReviewCloseout,
 
+    [switch] $Wp9OwnerAcceptanceCloseout,
+
     [switch] $OwnerTestProcessCleanup,
 
     [switch] $CredentialNativePostEffectAudit
@@ -57,6 +59,9 @@ if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 
     }
     if ($Wp9ReviewCloseout) {
         $arguments += '-Wp9ReviewCloseout'
+    }
+    if ($Wp9OwnerAcceptanceCloseout) {
+        $arguments += '-Wp9OwnerAcceptanceCloseout'
     }
     if ($OwnerTestProcessCleanup) {
         $arguments += '-OwnerTestProcessCleanup'
@@ -383,6 +388,7 @@ function Get-Wp8NonLiveCurrentStateDisposition(
         $wp9NoEffect -and
         $normalized.Contains('No packet, review, or prior owner statement grants inherited authority.', [StringComparison]::Ordinal)
     $wp9ReviewedOwnerPending = $false
+    $wp9OwnerAccepted = $false
     if ($AcceptanceBinding.state -eq 'accepted-closeout' -and $null -ne $Wp9ReviewBinding -and
         [string]$Wp9ReviewBinding.manifest_id -match '^infinium\.m1-s6\.wp9\.production-profile-authorization/' -and
         [string]$Wp9ReviewBinding.manifest_sha256 -match '^[0-9a-f]{64}$' -and
@@ -401,12 +407,38 @@ function Get-Wp8NonLiveCurrentStateDisposition(
                 -CurrentRecordText $RecordText -ManifestId ([string]$Wp9ReviewBinding.manifest_id) `
                 -ManifestSha256 ([string]$Wp9ReviewBinding.manifest_sha256) `
                 -ReviewedCandidate ([string]$Wp9ReviewBinding.reviewed_candidate_commit))
+        $ownerRequirements = Get-Wp9OwnerAcceptedDocumentationRequirements `
+            -ManifestId ([string]$Wp9ReviewBinding.manifest_id) `
+            -ManifestSha256 ([string]$Wp9ReviewBinding.manifest_sha256) `
+            -CloseReadyCommit ([string]$Wp9ReviewBinding.close_ready_commit) `
+            -ReviewedCandidate ([string]$Wp9ReviewBinding.reviewed_candidate_commit)
+        $wp9OwnerAccepted =
+            [string]$Wp9ReviewBinding.expires_at_utc -match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{7}Z$' -and
+            (Test-Wp9DocumentationRequirements -CurrentStateText $CurrentStateText `
+                -ReadmeText $ReadmeText -Requirements $ownerRequirements) -and
+            (Test-Wp9OwnerAcceptedRecord `
+                -ReviewedRecordText ([string]$Wp9ReviewBinding.reviewed_record_text) `
+                -CurrentRecordText $RecordText -ManifestId ([string]$Wp9ReviewBinding.manifest_id) `
+                -ManifestSha256 ([string]$Wp9ReviewBinding.manifest_sha256) `
+                -CloseReadyCommit ([string]$Wp9ReviewBinding.close_ready_commit) `
+                -ExpiresAtUtc ([string]$Wp9ReviewBinding.expires_at_utc) `
+                -ReviewedCandidate ([string]$Wp9ReviewBinding.reviewed_candidate_commit))
     }
+    $wp9OwnerAcceptanceCorrection =
+        $AcceptanceBinding.state -eq 'accepted-closeout' -and
+        $normalized.Contains('| Current authorized work | `M1/S6/WP9` bounded non-effectful owner-acceptance closeout correction and reverification only.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('The exact owner marker at `b64353f0f5a843fce7c1c395a606c47e62d274ee` is retained as superseded historical evidence and grants no current owner or execution authority.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('Owner acceptance and WP9 execution are ineligible.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('| Next eligible action | Add an exact owner-accepted state predicate and dedicated three-document owner-acceptance Layer 6 closeout, mutation-test both, then refreeze, rebind, rerun the complete non-live floor, and obtain fresh independent review. |', [StringComparison]::Ordinal) -and
+        $wp9NoEffect -and
+        $normalized.Contains('No packet, review, or prior owner statement grants inherited authority.', [StringComparison]::Ordinal)
     if ($verificationState) { return 'exact-wp8-correction-reverification-state' }
     if ($acceptedNoEffectHandoff) { return 'exact-corrected-wp8-accepted-handoff' }
     if ($wp9ProfilePreparation) { return 'exact-wp9-profile-preparation-no-effect-state' }
     if ($wp9ProfileOwnerStop) { return 'exact-wp9-profile-owner-stop-no-effect-state' }
     if ($wp9ReviewedOwnerPending) { return 'exact-wp9-reviewed-owner-pending-no-effect-state' }
+    if ($wp9OwnerAccepted) { return 'exact-wp9-owner-accepted-bounded-effect-state' }
+    if ($wp9OwnerAcceptanceCorrection) { return 'exact-wp9-owner-acceptance-closeout-correction-no-effect-state' }
     if ($wp9ReviewCloseoutCorrection -or $wp9ReviewCloseoutFixtureCorrection) { return 'exact-wp9-review-closeout-correction-no-effect-state' }
     if ($wp9OwnerStopCorrection -or $wp9OwnerStopRepeatBuildCorrection -or $wp9OwnerStopSourceLinkCorrection) { return 'exact-wp9-owner-stop-correction-no-effect-state' }
     return 'invalid'
@@ -416,7 +448,7 @@ function Get-Wp9ReviewBindingForCandidate([string] $CandidateCommit) {
     $head = (& git -C $repoRoot rev-parse HEAD).Trim()
     if ($CandidateCommit -cne $head) { return $null }
     $manifestPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
-    $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json -Depth 100
+    $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
     $manifestSha = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
     $recordText = Get-CandidateText $CandidateCommit 'docs/plans/milestones/m1/slices/s6/record.md'
     $reviewPattern = '^WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=([0-9a-f]{40}) manifest_id=' +
@@ -434,6 +466,7 @@ function Get-Wp9ReviewBindingForCandidate([string] $CandidateCommit) {
         manifest_id = [string]$manifest.manifest_id
         manifest_sha256 = $manifestSha
         close_ready_commit = [string]$manifest.candidate_binding.close_ready_implementation_commit
+        expires_at_utc = [string]$manifest.expires_at_utc
         reviewed_candidate_commit = $reviewedCandidate
         reviewed_record_text = $reviewedRecord
         closeout_paths = @($closeoutPaths)
@@ -458,6 +491,31 @@ function Test-Wp9ReviewCloseoutLayer6Transition(
         $CandidateCommitValue -ceq $HeadCommitValue -and
         [string]$ReviewBinding.reviewed_candidate_commit -ceq $BaselineCommitValue -and
         $CurrentStateDisposition -ceq 'exact-wp9-reviewed-owner-pending-no-effect-state' -and
+        $CommitCount -ceq '1' -and
+        $actual.Count -eq @($ChangedPaths).Count -and
+        [string]::Join("`n", $actual) -ceq [string]::Join("`n", $expected)
+}
+
+function Test-Wp9OwnerAcceptanceCloseoutLayer6Transition(
+    [string] $BaselineCommitValue,
+    [string] $CandidateCommitValue,
+    [string] $HeadCommitValue,
+    [object] $ReviewBinding,
+    [string] $BaselineDisposition,
+    [string] $CandidateDisposition,
+    [string] $CommitCount,
+    [string[]] $ChangedPaths) {
+    [string[]]$expectedPaths = @(
+        'docs/current-state.md',
+        'docs/plans/milestones/m1/slices/s6/README.md',
+        'docs/plans/milestones/m1/slices/s6/record.md')
+    [string[]]$actual = @($ChangedPaths | Sort-Object -Unique -CaseSensitive)
+    [string[]]$expected = @($expectedPaths | Sort-Object -Unique -CaseSensitive)
+    return $null -ne $ReviewBinding -and
+        $BaselineCommitValue -match '^[0-9a-f]{40}$' -and
+        $CandidateCommitValue -ceq $HeadCommitValue -and
+        $BaselineDisposition -ceq 'exact-wp9-reviewed-owner-pending-no-effect-state' -and
+        $CandidateDisposition -ceq 'exact-wp9-owner-accepted-bounded-effect-state' -and
         $CommitCount -ceq '1' -and
         $actual.Count -eq @($ChangedPaths).Count -and
         [string]::Join("`n", $actual) -ceq [string]::Join("`n", $expected)
@@ -655,7 +713,8 @@ function Invoke-Layer6ReviewGate(
     [string] $ReviewCandidate = $CandidateCommit,
     [bool] $Wp8PreLiveCloseoutMode = [bool]$Wp8PreLiveCloseout,
     [bool] $Wp9OwnerStopMode = [bool]$Wp9OwnerStopReview,
-    [bool] $Wp9ReviewCloseoutMode = [bool]$Wp9ReviewCloseout) {
+    [bool] $Wp9ReviewCloseoutMode = [bool]$Wp9ReviewCloseout,
+    [bool] $Wp9OwnerAcceptanceCloseoutMode = [bool]$Wp9OwnerAcceptanceCloseout) {
     $baselineHash = Resolve-GitCommit $ReviewBaseline 'BaselineCommit'
     $candidateHash = Resolve-GitCommit $ReviewCandidate 'CandidateCommit'
     & git -C $repoRoot merge-base --is-ancestor $baselineHash $candidateHash
@@ -742,7 +801,7 @@ function Invoke-Layer6ReviewGate(
         'docs/plans/milestones/m1/slices/s6/README.md',
         'docs/plans/milestones/m1/slices/s6/record.md')
     if ($Wp9ReviewCloseoutMode) {
-        if ($Wp9OwnerStopMode -or $Wp8PreLiveCloseoutMode -or $HandoffCloseout -or $Wp4OwnerReviewHandoff) {
+        if ($Wp9OwnerStopMode -or $Wp8PreLiveCloseoutMode -or $HandoffCloseout -or $Wp4OwnerReviewHandoff -or $Wp9OwnerAcceptanceCloseoutMode) {
             throw 'Wp9ReviewCloseout cannot be combined with any other Layer6 authority mode.'
         }
         $head = (& git -C $repoRoot rev-parse HEAD).Trim()
@@ -770,6 +829,56 @@ function Invoke-Layer6ReviewGate(
         & git -C $repoRoot diff --quiet $baselineHash $candidateHash -- 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
         if ($LASTEXITCODE -ne 0) { throw 'Wp9ReviewCloseout forbids manifest drift after independent review.' }
     }
+    if ($Wp9OwnerAcceptanceCloseoutMode) {
+        if ($Wp9OwnerStopMode -or $Wp8PreLiveCloseoutMode -or $HandoffCloseout -or
+            $Wp4OwnerReviewHandoff -or $Wp9ReviewCloseoutMode) {
+            throw 'Wp9OwnerAcceptanceCloseout cannot be combined with any other Layer6 authority mode.'
+        }
+        $head = (& git -C $repoRoot rev-parse HEAD).Trim()
+        $reviewBinding = Get-Wp9ReviewBindingForCandidate $candidateHash
+        if ($null -eq $reviewBinding) {
+            throw 'Wp9OwnerAcceptanceCloseout requires one exact current-manifest review binding.'
+        }
+        $matrix = Get-CandidateText $candidateHash 'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json' | ConvertFrom-Json -Depth 100
+        $candidateCurrent = Get-CandidateText $candidateHash 'docs/current-state.md'
+        $candidateReadme = Get-CandidateText $candidateHash 'docs/plans/milestones/m1/slices/s6/README.md'
+        $candidateRecord = Get-CandidateText $candidateHash 'docs/plans/milestones/m1/slices/s6/record.md'
+        $candidateDisposition = Get-Wp8NonLiveCurrentStateDisposition `
+            $candidateCurrent $matrix.acceptance_binding $candidateReadme $candidateRecord $reviewBinding
+        $baselineCurrent = Get-CandidateText $baselineHash 'docs/current-state.md'
+        $baselineReadme = Get-CandidateText $baselineHash 'docs/plans/milestones/m1/slices/s6/README.md'
+        $baselineRecord = Get-CandidateText $baselineHash 'docs/plans/milestones/m1/slices/s6/record.md'
+        $reviewRequirements = Get-Wp9ReviewedOwnerPendingDocumentationRequirements `
+            -ManifestId ([string]$reviewBinding.manifest_id) `
+            -ManifestSha256 ([string]$reviewBinding.manifest_sha256) `
+            -CloseReadyCommit ([string]$reviewBinding.close_ready_commit) `
+            -ReviewedCandidate ([string]$reviewBinding.reviewed_candidate_commit)
+        $baselineDisposition = if (
+            (Test-Wp9DocumentationRequirements -CurrentStateText $baselineCurrent `
+                -ReadmeText $baselineReadme -Requirements $reviewRequirements) -and
+            (Test-Wp9ReviewedOwnerPendingRecord `
+                -ReviewedRecordText ([string]$reviewBinding.reviewed_record_text) `
+                -CurrentRecordText $baselineRecord -ManifestId ([string]$reviewBinding.manifest_id) `
+                -ManifestSha256 ([string]$reviewBinding.manifest_sha256) `
+                -ReviewedCandidate ([string]$reviewBinding.reviewed_candidate_commit))) {
+            'exact-wp9-reviewed-owner-pending-no-effect-state'
+        } else { 'invalid' }
+        [string[]]$actualCloseoutPaths = @(& git -C $repoRoot -c core.quotePath=false diff --name-only $baselineHash $candidateHash --)
+        $closeoutCommitCount = (& git -C $repoRoot rev-list --count "$baselineHash..$candidateHash").Trim()
+        if (-not (Test-Wp9OwnerAcceptanceCloseoutLayer6Transition `
+                $baselineHash $candidateHash $head $reviewBinding $baselineDisposition `
+                $candidateDisposition $closeoutCommitCount $actualCloseoutPaths)) {
+            throw 'Wp9OwnerAcceptanceCloseout requires one exact three-document owner-acceptance transition from the exact reviewed-pending-owner baseline.'
+        }
+        $wp9CurrentStateDisposition = $candidateDisposition
+        $validationJson = @(& (Join-Path $repoRoot 'eng/validate-m1-slice6-wp9-profile-authorization.ps1') `
+            -AuthorizationManifest (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json') -RequireReady) -join "`n"
+        if ($LASTEXITCODE -ne 0 -or ($validationJson | ConvertFrom-Json -Depth 20).status -cne 'validated-ready-for-owner-acceptance') {
+            throw 'Wp9OwnerAcceptanceCloseout requires the unchanged exact ready manifest.'
+        }
+        & git -C $repoRoot diff --quiet $baselineHash $candidateHash -- 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
+        if ($LASTEXITCODE -ne 0) { throw 'Wp9OwnerAcceptanceCloseout forbids manifest drift after independent review.' }
+    }
 
     $nameStatusLines = @(& git -C $repoRoot -c core.quotePath=false diff --name-status --find-renames $baselineHash $candidateHash --)
     if ($LASTEXITCODE -ne 0) {
@@ -792,6 +901,7 @@ function Invoke-Layer6ReviewGate(
                 $wp8CurrentStateDisposition -in @('exact-wp8-correction-reverification-state','exact-corrected-wp8-accepted-handoff')
             $isWp9OwnerStopPath = $Wp9OwnerStopMode -and $wp9ExpectedPaths -ccontains $path
             $isWp9ReviewCloseoutPath = $Wp9ReviewCloseoutMode -and $wp9ReviewCloseoutPaths -ccontains $path
+            $isWp9OwnerAcceptanceCloseoutPath = $Wp9OwnerAcceptanceCloseoutMode -and $wp9ReviewCloseoutPaths -ccontains $path
             $isOwnerTestProcessCleanupPolicy = $OwnerTestProcessCleanup -and
                 $path -ceq 'docs/execution-policy.md'
             $isProtected = (Test-Wp1ProtectedPath $path) -and
@@ -799,12 +909,14 @@ function Invoke-Layer6ReviewGate(
                 -not $isWp8StructuredCurrentState -and
                 -not $isWp9OwnerStopPath -and
                 -not $isWp9ReviewCloseoutPath -and
+                -not $isWp9OwnerAcceptanceCloseoutPath -and
                 -not $isOwnerTestProcessCleanupPolicy
             $isAllowed = (Test-Wp1AllowedPath $path) -or
                 $isHandoffCurrentState -or
                 $isWp8StructuredCurrentState -or
                 $isWp9OwnerStopPath -or
                 $isWp9ReviewCloseoutPath -or
+                $isWp9OwnerAcceptanceCloseoutPath -or
                 $isOwnerTestProcessCleanupPolicy
             $privateOrArchive = $path -match '(?i)(^|/)(private|legacy|archive)(/|$)' -or
                 $path -match '(?i)independent-slice3-evaluator' -or
@@ -828,6 +940,15 @@ function Invoke-Layer6ReviewGate(
                 baseline_blob = $baselineBlob
                 candidate_blob = $candidateBlob
             })
+        }
+    }
+    if ($Wp9OwnerAcceptanceCloseoutMode) {
+        [string[]]$actualOwnerCloseoutPaths = @($changedPaths | ForEach-Object { [string]$_.path })
+        [Array]::Sort($actualOwnerCloseoutPaths, [StringComparer]::Ordinal)
+        [Array]::Sort($wp9ReviewCloseoutPaths, [StringComparer]::Ordinal)
+        if ([string]::Join("`n", $actualOwnerCloseoutPaths) -cne [string]::Join("`n", $wp9ReviewCloseoutPaths) -or
+            $wp9CurrentStateDisposition -cne 'exact-wp9-owner-accepted-bounded-effect-state') {
+            $failures.Add('Wp9OwnerAcceptanceCloseout requires exactly current-state, Slice 6 README, and append-only record in the exact owner-accepted bounded-effect state.')
         }
     }
 
@@ -1052,6 +1173,7 @@ function Invoke-Layer6ReviewGate(
         wp8_pre_live_closeout = [bool]$Wp8PreLiveCloseoutMode
         wp9_owner_stop_review = [bool]$Wp9OwnerStopMode
         wp9_review_closeout = [bool]$Wp9ReviewCloseoutMode
+        wp9_owner_acceptance_closeout = [bool]$Wp9OwnerAcceptanceCloseoutMode
         wp9_current_state_disposition = $wp9CurrentStateDisposition
         wp8_current_state_disposition = $wp8CurrentStateDisposition
         owner_test_process_cleanup = [bool]$OwnerTestProcessCleanup

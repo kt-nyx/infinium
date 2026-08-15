@@ -257,6 +257,61 @@ function Test-Wp9ReviewedOwnerPendingState(
             -ReviewedCandidate ([string]$ReviewBinding.reviewed_candidate_commit))
 }
 
+function Test-Wp9OwnerAcceptedState(
+    [string] $CurrentStateText,
+    [string] $ReadmeText,
+    [string] $ReviewedRecordText,
+    [string] $HeadRecordText,
+    [object] $ReviewBinding) {
+    if ($null -eq $ReviewBinding -or
+        [string]$ReviewBinding.manifest_id -notmatch '^infinium\.m1-s6\.wp9\.production-profile-authorization/' -or
+        [string]$ReviewBinding.manifest_sha256 -notmatch '^[0-9a-f]{64}$' -or
+        [string]$ReviewBinding.close_ready_commit -notmatch '^[0-9a-f]{40}$' -or
+        [string]$ReviewBinding.expires_at_utc -notmatch '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{7}Z$' -or
+        [string]$ReviewBinding.reviewed_candidate_commit -notmatch '^[0-9a-f]{40}$') {
+        return $false
+    }
+    $requirements = Get-Wp9OwnerAcceptedDocumentationRequirements `
+        -ManifestId ([string]$ReviewBinding.manifest_id) `
+        -ManifestSha256 ([string]$ReviewBinding.manifest_sha256) `
+        -CloseReadyCommit ([string]$ReviewBinding.close_ready_commit) `
+        -ReviewedCandidate ([string]$ReviewBinding.reviewed_candidate_commit)
+    return (Test-Wp9DocumentationRequirements -CurrentStateText $CurrentStateText `
+            -ReadmeText $ReadmeText -Requirements $requirements) -and
+        (Test-Wp9OwnerAcceptedRecord -ReviewedRecordText $ReviewedRecordText `
+            -CurrentRecordText $HeadRecordText -ManifestId ([string]$ReviewBinding.manifest_id) `
+            -ManifestSha256 ([string]$ReviewBinding.manifest_sha256) `
+            -CloseReadyCommit ([string]$ReviewBinding.close_ready_commit) `
+            -ExpiresAtUtc ([string]$ReviewBinding.expires_at_utc) `
+            -ReviewedCandidate ([string]$ReviewBinding.reviewed_candidate_commit))
+}
+
+function Test-Wp9OwnerAcceptanceCloseoutCorrectionCurrentState([string] $Text) {
+    $normalized = [regex]::Replace($Text, '\s+', ' ')
+    foreach ($required in @(
+            '| Current authorized work | `M1/S6/WP9` bounded non-effectful owner-acceptance closeout correction and reverification only.',
+            'The exact owner marker at `b64353f0f5a843fce7c1c395a606c47e62d274ee` is retained as superseded historical evidence and grants no current owner or execution authority.',
+            'Owner acceptance and WP9 execution are ineligible.',
+            '| Next eligible action | Add an exact owner-accepted state predicate and dedicated three-document owner-acceptance Layer 6 closeout, mutation-test both, then refreeze, rebind, rerun the complete non-live floor, and obtain fresh independent review. |',
+            'No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.',
+            'No packet, review, or prior owner statement grants inherited authority.')) {
+        if (-not $normalized.Contains($required, [StringComparison]::Ordinal)) { return $false }
+    }
+    return $true
+}
+
+function Test-Wp9OwnerAcceptanceCloseoutCorrectionReadme([string] $Text) {
+    $normalized = [regex]::Replace($Text, '\s+', ' ')
+    foreach ($required in @(
+            'WP9 owner-acceptance closeout correction and complete non-live reverification are active; owner acceptance and execution are ineligible.',
+            'The exact owner marker at `b64353f0f5a843fce7c1c395a606c47e62d274ee` remains append-only superseded historical evidence and grants no authority.',
+            'The replacement must recognize only the exact owner-accepted documents and canonical review-plus-owner record, plus a dedicated exact three-document Layer 6 closeout.',
+            'No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. No authority is inherited.')) {
+        if (-not $normalized.Contains($required, [StringComparison]::Ordinal)) { return $false }
+    }
+    return $true
+}
+
 function Test-Wp8RetainedAcceptanceRecord([string] $Text, [object] $Binding) {
     $normalized = [regex]::Replace($Text, '\s+', ' ')
     foreach ($required in @(
@@ -289,7 +344,7 @@ function Get-Wp8PostVerificationDisposition(
     if ($null -eq $Wp9ReviewBinding) {
         $Wp9ReviewBinding = [pscustomobject]@{
             manifest_id = ''; manifest_sha256 = ''; close_ready_commit = ''
-            reviewed_candidate_commit = ''; reviewed_record_text = ''; closeout_paths = @()
+            expires_at_utc = ''; reviewed_candidate_commit = ''; reviewed_record_text = ''; closeout_paths = @()
         }
     }
     $bindingPaths = @(
@@ -322,6 +377,14 @@ function Get-Wp8PostVerificationDisposition(
         (Test-Wp8RetainedAcceptanceRecord $HeadRecordText $AcceptanceBinding) -and
         (Test-Wp9ReviewedOwnerPendingState $CurrentStateText $ReadmeText `
             ([string]$Wp9ReviewBinding.reviewed_record_text) $HeadRecordText $Wp9ReviewBinding)
+    $wp9OwnerAcceptedState = $AcceptanceBinding.state -eq 'accepted-closeout' -and
+        (Test-Wp8RetainedAcceptanceRecord $HeadRecordText $AcceptanceBinding) -and
+        (Test-Wp9OwnerAcceptedState $CurrentStateText $ReadmeText `
+            ([string]$Wp9ReviewBinding.reviewed_record_text) $HeadRecordText $Wp9ReviewBinding)
+    $wp9OwnerAcceptanceCorrectionState = $AcceptanceBinding.state -eq 'accepted-closeout' -and
+        (Test-Wp9OwnerAcceptanceCloseoutCorrectionCurrentState $CurrentStateText) -and
+        (Test-Wp9OwnerAcceptanceCloseoutCorrectionReadme $ReadmeText) -and
+        (Test-Wp8RetainedAcceptanceRecord $HeadRecordText $AcceptanceBinding)
 
     if (@($Paths).Count -eq 0 -or (Test-Wp8ExactPathSet $Paths $bindingPaths)) {
         if ($verificationState) { return 'exact-correction-verification-state' }
@@ -349,6 +412,13 @@ function Get-Wp8PostVerificationDisposition(
         if ($wp9ReviewedOwnerPendingState -and
             (Test-Wp8ExactPathSet @($Wp9ReviewBinding.closeout_paths) $reviewCloseoutPaths)) {
             return 'exact-wp9-reviewed-owner-pending-no-effect-state'
+        }
+        if ($wp9OwnerAcceptedState -and
+            (Test-Wp8ExactPathSet @($Wp9ReviewBinding.closeout_paths) $reviewCloseoutPaths)) {
+            return 'exact-wp9-owner-accepted-bounded-effect-state'
+        }
+        if ($wp9OwnerAcceptanceCorrectionState) {
+            return 'exact-wp9-owner-acceptance-closeout-correction-no-effect-state'
         }
         return 'invalid'
     }
@@ -682,6 +752,7 @@ elseif ($verificationCandidateCommit -match '^[0-9a-f]{40}$') {
         manifest_id = [string]$wp9Manifest.manifest_id
         manifest_sha256 = [string]$wp9ManifestInput.sha256
         close_ready_commit = [string]$wp9Manifest.candidate_binding.close_ready_implementation_commit
+        expires_at_utc = [string]$wp9Manifest.expires_at_utc
         reviewed_candidate_commit = $reviewedCandidate
         reviewed_record_text = $reviewedRecord
         closeout_paths = @($reviewCloseoutPaths)

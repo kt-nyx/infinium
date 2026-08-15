@@ -263,10 +263,79 @@ public sealed class Wp8PreLiveReadinessContractTests
         }
         else
         {
-            StringAssert.Contains(currentState, "review-closeout");
+            Assert.IsTrue(currentState.Contains("review-closeout", StringComparison.Ordinal) ||
+                currentState.Contains("owner-acceptance closeout", StringComparison.Ordinal));
             StringAssert.Contains(currentState, "correction and reverification only");
             Assert.AreNotEqual(0, ownerStop, "Correction state was admitted as pre-review owner-stop.");
             Assert.AreNotEqual(0, reviewCloseout, "Correction state was admitted as reviewed closeout.");
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
+    public void Wp9OwnerAcceptanceCloseoutLayer6ModeAdmitsExactTransitionAndRejectsDuplicateOrFourthPath()
+    {
+        string sourceRoot = RepositoryRoot();
+        string cloneRoot = Path.Combine(Path.GetTempPath(), "infinium-wp9-owner-closeout-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Assert.AreEqual(0, RunGit(sourceRoot, "clone", "--quiet", "--shared", sourceRoot, cloneRoot));
+            Assert.AreEqual(0, RunGit(cloneRoot, "config", "user.name", "Infinium Contract Test"));
+            Assert.AreEqual(0, RunGit(cloneRoot, "config", "user.email", "contract-test@invalid.example"));
+            string selectedBaseline = ResolveWp9ReviewBaseline(cloneRoot);
+            Assert.AreEqual(0, RunGit(cloneRoot, "checkout", "--quiet", "--detach", selectedBaseline));
+            File.Copy(Path.Combine(sourceRoot, "eng", "verify-m1-slice6.ps1"),
+                Path.Combine(cloneRoot, "eng", "verify-m1-slice6.ps1"), true);
+            File.Copy(Path.Combine(sourceRoot, "eng", "validate-m1-slice6-wp8-prelive.ps1"),
+                Path.Combine(cloneRoot, "eng", "validate-m1-slice6-wp8-prelive.ps1"), true);
+            File.Copy(Path.Combine(sourceRoot, "eng", "wp9-owner-documentation-contract.ps1"),
+                Path.Combine(cloneRoot, "eng", "wp9-owner-documentation-contract.ps1"), true);
+            Assert.AreEqual(0, RunGit(cloneRoot, "add", "eng/verify-m1-slice6.ps1",
+                "eng/validate-m1-slice6-wp8-prelive.ps1", "eng/wp9-owner-documentation-contract.ps1"));
+            if (!string.IsNullOrWhiteSpace(RunGitOutput(cloneRoot, "diff", "--cached", "--name-only")))
+            {
+                Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "-m", "Test owner closeout verifier"));
+            }
+            string reviewedCandidate = RunGitOutput(cloneRoot, "rev-parse", "HEAD").Trim();
+            MaterializeWp9ReviewedOwnerPendingTransition(cloneRoot, reviewedCandidate);
+            Assert.AreEqual(0, RunGit(cloneRoot, "add", "docs/current-state.md",
+                "docs/plans/milestones/m1/slices/s6/README.md", "docs/plans/milestones/m1/slices/s6/record.md"));
+            Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "-m", "Test reviewed owner stop"));
+            MaterializeWp9OwnerAcceptedTransition(cloneRoot, reviewedCandidate);
+            Assert.AreEqual(0, RunGit(cloneRoot, "add", "docs/current-state.md",
+                "docs/plans/milestones/m1/slices/s6/README.md", "docs/plans/milestones/m1/slices/s6/record.md"));
+            Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "-m", "Test owner acceptance closeout"));
+
+            Assert.AreEqual(0, RunLayer6Mode(cloneRoot, "wp9-owner-acceptance", output =>
+            {
+                using JsonDocument receipt = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "layer6review.json")));
+                JsonElement evidence = receipt.RootElement.GetProperty("evidence");
+                Assert.IsTrue(evidence.GetProperty("wp9_owner_acceptance_closeout").GetBoolean());
+                Assert.AreEqual("exact-wp9-owner-accepted-bounded-effect-state",
+                    evidence.GetProperty("wp9_current_state_disposition").GetString());
+                Assert.AreEqual(3, evidence.GetProperty("changed_path_count").GetInt32());
+                Assert.AreEqual(0, evidence.GetProperty("allowed_path_failure_count").GetInt32());
+            }));
+
+            string recordPath = Path.Combine(cloneRoot, "docs", "plans", "milestones", "m1", "slices", "s6", "record.md");
+            string exactRecord = File.ReadAllText(recordPath);
+            string owner = exactRecord.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n')
+                .Single(line => line.StartsWith("WP9_PROFILE_OWNER_ACCEPTANCE ", StringComparison.Ordinal));
+            File.AppendAllText(recordPath, "\n" + owner + "\n", new UTF8Encoding(false));
+            Assert.AreEqual(0, RunGit(cloneRoot, "add", "docs/plans/milestones/m1/slices/s6/record.md"));
+            Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "--amend", "--no-edit"));
+            Assert.AreNotEqual(0, RunLayer6Mode(cloneRoot, "wp9-owner-acceptance"));
+
+            File.WriteAllText(recordPath, exactRecord, new UTF8Encoding(false));
+            File.AppendAllText(Path.Combine(cloneRoot, "docs", "execution-policy.md"),
+                "\nunauthorized-owner-closeout-mutation\n", new UTF8Encoding(false));
+            Assert.AreEqual(0, RunGit(cloneRoot, "add", "docs/plans/milestones/m1/slices/s6/record.md", "docs/execution-policy.md"));
+            Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "--amend", "--no-edit"));
+            Assert.AreNotEqual(0, RunLayer6Mode(cloneRoot, "wp9-owner-acceptance"));
+        }
+        finally
+        {
+            if (Directory.Exists(cloneRoot)) { DeleteReadOnlyTree(cloneRoot); }
         }
     }
 
@@ -363,6 +432,9 @@ public sealed class Wp8PreLiveReadinessContractTests
             "Test-Wp9ReviewCloseoutCorrectionCurrentState",
             "Test-Wp9ReviewCloseoutCorrectionReadme",
             "Test-Wp9ReviewedOwnerPendingState",
+            "Test-Wp9OwnerAcceptedState",
+            "Test-Wp9OwnerAcceptanceCloseoutCorrectionCurrentState",
+            "Test-Wp9OwnerAcceptanceCloseoutCorrectionReadme",
             "Test-Wp8RetainedAcceptanceRecord",
             "Get-Wp8PostVerificationDisposition",
         ];
@@ -821,6 +893,10 @@ public sealed class Wp8PreLiveReadinessContractTests
                     " verdicts=security,semantics,diff$");
                 if (review.Success) { baseline = review.Groups[1].Value; }
             }
+            else if (mode == "wp9-owner-acceptance")
+            {
+                baseline = RunGitOutput(root, "rev-parse", "HEAD^").Trim();
+            }
             ProcessStartInfo start = new("pwsh.exe")
             {
                 WorkingDirectory = root,
@@ -849,6 +925,10 @@ public sealed class Wp8PreLiveReadinessContractTests
             else if (mode == "wp9-review")
             {
                 start.ArgumentList.Add("-Wp9ReviewCloseout");
+            }
+            else if (mode == "wp9-owner-acceptance")
+            {
+                start.ArgumentList.Add("-Wp9OwnerAcceptanceCloseout");
             }
             using Process process = Process.Start(start)!;
             string standardOutput = process.StandardOutput.ReadToEnd();
@@ -904,6 +984,40 @@ public sealed class Wp8PreLiveReadinessContractTests
         string recordPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6", "record.md");
         string record = File.ReadAllText(recordPath).TrimEnd('\r', '\n');
         record += $"\n\nWP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit={reviewedCandidate} manifest_id={manifestId} sha256={sha} verdicts=security,semantics,diff\n";
+        File.WriteAllText(recordPath, record, new UTF8Encoding(false));
+    }
+
+    private static void MaterializeWp9OwnerAcceptedTransition(string root, string reviewedCandidate)
+    {
+        string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp9-production-profile-authorization.v1.json");
+        using JsonDocument manifest = JsonDocument.Parse(File.ReadAllText(manifestPath));
+        string manifestId = manifest.RootElement.GetProperty("manifest_id").GetString()!;
+        string expires = manifest.RootElement.GetProperty("expires_at_utc").GetString()!;
+        string closeReady = manifest.RootElement.GetProperty("candidate_binding")
+            .GetProperty("close_ready_implementation_commit").GetString()!;
+        string sha = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(manifestPath)))
+            .ToLowerInvariant();
+
+        string currentStatePath = Path.Combine(root, "docs", "current-state.md");
+        string currentState = File.ReadAllText(currentStatePath);
+        currentState = ReplaceMarkdownTableRow(currentState, "| Current authorized work |",
+            $"| Current authorized work | `M1/S6/WP9` exactly one owner-accepted production-profile enrollment-or-cancel operation for manifest `{manifestId}` at SHA-256 `{sha}`, independently reviewed at candidate `{reviewedCandidate}` with close-ready source `{closeReady}`. |");
+        currentState = ReplaceMarkdownTableRow(currentState, "| Next eligible action |",
+            "| Next eligible action | Execute the exact owner-accepted EnrollOrVerifyProfile command once, or cancel; stop after its retained terminal evidence. No retry or other WP9/WP10/WP11 action is authorized. |");
+        currentState = ReplaceMarkdownTableRow(currentState, "| WP9 owner-stop effect boundary |",
+            "| WP9 owner-accepted effect boundary | Only the exact bounded helper-owned production-profile credential operation is authorized. No DNS operation, public-network operation, provider request, billable operation, transport qualification, inherited packet authority, or additional credential operation is authorized. |");
+        File.WriteAllText(currentStatePath, currentState, new UTF8Encoding(false));
+
+        string readmePath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6", "README.md");
+        string readme = File.ReadAllText(readmePath).TrimEnd('\r', '\n');
+        readme += $"\n\nWP9 production-profile manifest `{manifestId}` at SHA-256 `{sha}` is owner accepted for exactly one enrollment-or-cancel operation after independent review at `{reviewedCandidate}`.\n\n";
+        readme += "Only the exact bounded helper-owned credential operation is authorized. No DNS or public-network operation, provider request, billable operation, transport qualification, inherited authority, retry, or additional credential operation is authorized.\n";
+        File.WriteAllText(readmePath, readme, new UTF8Encoding(false));
+
+        string recordPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6", "record.md");
+        string record = File.ReadAllText(recordPath).TrimEnd('\r', '\n');
+        record += $"\n\nWP9_PROFILE_OWNER_ACCEPTANCE manifest_id={manifestId} sha256={sha} close_ready_commit={closeReady} expires_at_utc={expires}\n";
         File.WriteAllText(recordPath, record, new UTF8Encoding(false));
     }
 

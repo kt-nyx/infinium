@@ -7815,3 +7815,20 @@ billable, profile, private-fixture, archive, or later-packet effect.
 WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=6dbf687310dfcc13e5eac8f65c8ddc09cf17bccd manifest_id=infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f sha256=7123ee85fec6d238ef8965b8449e7729cd2fb204e525a30558d1ebac53209476 verdicts=security,semantics,diff
 
 WP9_PROFILE_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f sha256=7123ee85fec6d238ef8965b8449e7729cd2fb204e525a30558d1ebac53209476 close_ready_commit=af1bfd6345c5a29f6535771fbbc86b33ec1826b9 expires_at_utc=2026-08-17T15:25:00.0000000Z
+
+## WP9 owner-acceptance closeout correction — 2026-08-15
+
+The exact owner transition at `b64353f0f5a843fce7c1c395a606c47e62d274ee`
+passed the ready manifest, documentation, WP9 unit, and enrollment-evidence
+checks. The retained-WP8 semantic validator and combined Layer 6 contract then
+rejected the owner-accepted authority state because no exact owner-accepted
+disposition or dedicated owner-acceptance closeout mode existed. The helper was
+not launched; the profile output, durable state, and authority lock remained
+absent, and no API-key, UI, Credential Manager, DNS, public-network, provider,
+billable, profile, private-fixture, or archive effect occurred.
+
+The owner marker above remains append-only superseded historical evidence. It
+grants no current authority. Correction adds an exact owner-accepted document
+and record predicate, an exact three-document Layer 6 closeout mode, and
+mutation coverage before a new close-ready freeze, manifest binding, complete
+non-live floor, fresh independent review, and separate exact owner transition.
