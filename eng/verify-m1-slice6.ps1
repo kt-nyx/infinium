@@ -254,8 +254,22 @@ function Test-HandoffCloseoutCurrentState([string] $CurrentStateText) {
         $CurrentStateText.Contains('3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390', [System.StringComparison]::Ordinal) -and
         $CurrentStateText.Contains('no further Credential Manager operation is authorized', [System.StringComparison]::Ordinal) -and
         $CurrentStateText.Contains('no provider request is authorized', [System.StringComparison]::Ordinal)
+    $wp8ToWp9 =
+        $CurrentStateText.Contains('`M1/S6/WP9` owner decision and exact authorization-packet materialization planning only', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('Accepted `M1/S6/WP8` candidate', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('260a09ecfafea103227f113faf7625a5bf0ce759', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('fbdb1f03e006a85723b0533d44b2ed06e02cc724', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('36b980d226e9f9a0e91281a530fc959a211fb696', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('95919bcfbb6ea79f6ee5f6a8422d23da743c4b4da4f6ba6f9039ac4e69534e78', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('b8645da64eba4c12bbbc72953753e9e7debbc93ef576ef07cdd96b418399e498', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('4fe96ddf83e4472ba2bc66f6c046253d3055a69bf32716d934ea222b53072b0c', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('only fresh exact production-profile and WP9 request authorizations may be prepared', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('neither may be executed without separate exact owner acceptance', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('No WP8 template', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('grants inherited authority', [System.StringComparison]::Ordinal) -and
+        $CurrentStateText.Contains('no provider request is authorized now', [System.StringComparison]::Ordinal)
 
-    return $wp1ToWp2 -or $wp4ToWp8
+    return $wp1ToWp2 -or $wp4ToWp8 -or $wp8ToWp9
 }
 
 function Assert-NoDuplicateJsonProperties([System.Text.Json.JsonElement] $Element, [string] $Path) {
@@ -604,7 +618,7 @@ function Invoke-Layer6ReviewGate([string] $ReviewBaseline = $BaselineCommit, [st
         } else {
             $currentStateText = Get-CandidateText $candidateHash 'docs/current-state.md'
             if (-not (Test-HandoffCloseoutCurrentState $currentStateText)) {
-                $failures.Add('HandoffCloseout current state must record accepted WP1 and authorize M1/S6/WP2, or record accepted WP4 and authorize non-live M1/S6/WP8 only.')
+                $failures.Add('HandoffCloseout current state must record accepted WP1 and authorize M1/S6/WP2, or record accepted WP4 and authorize non-live M1/S6/WP8 only, or record accepted WP8 and authorize WP9 owner decision/materialization planning only.')
             }
         }
     }
