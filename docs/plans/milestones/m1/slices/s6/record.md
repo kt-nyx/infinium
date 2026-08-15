@@ -7725,3 +7725,21 @@ identity, extra path, owner marker, or inherited authority. Owner acceptance
 and WP9 execution remain ineligible. No UI, API key, Credential Manager, DNS,
 public network, provider, billable, profile, private-fixture, or archive effect
 occurred.
+
+## WP9 corrected review-closeout binding — 2026-08-15
+
+The corrected implementation is frozen at
+`2f8ec6afcb2c20b3480c01e86d33aa76f73611f9`. Two consecutive canonical
+non-incremental Release builds pinned SourceRevisionId and SourceRoot metadata
+to that commit and reproduced coordinator SHA-256
+`148f4ab4db2149e04e77c852d8eb22ec4483dd3d67d7945215c09f5d5d8e3a92`, helper
+SHA-256 `1bba84b93f650db7bbaddae365db6bc2cf594a98703df32a42337741ad04ca47`,
+and 126-file execution-closure SHA-256
+`3324d782046b74ff2e50d3aa094e1ff25d9b029a7b5023c59a6142f29353017a`.
+SourceLink names the exact close-ready commit.
+
+The replacement ready manifest binds those bytes. The historical B14 review
+marker remains append-only but does not match the corrected manifest SHA-256
+and grants no authority. No corrected independent-review or owner-acceptance
+record exists. No UI, API key, Credential Manager, DNS, public network,
+provider, billable, profile, private-fixture, or archive effect occurred.

@@ -48,15 +48,16 @@ pre-live validation SHA-256
 direct Layer 6 SHA-256
 `4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`.
 WP9 non-effectful production-profile preparation is frozen at corrected
-close-ready implementation `688fb9e39c0c227389328d54d12b5b24eba657b6`.
+close-ready implementation `2f8ec6afcb2c20b3480c01e86d33aa76f73611f9`.
 The canonical non-incremental Release build pins both informational-version and
 SourceLink revision identities to that exact commit. Two consecutive clean
 builds reproduced the coordinator, helper, and complete 126-file execution
 closure exactly.
-WP9 review-closeout correction and complete non-live reverification are active; owner acceptance and execution are ineligible.
-The exact B14 review marker remains append-only superseded historical evidence and grants no authority.
-A replacement must support both the exact pre-review owner-stop state and exact reviewed-pending-owner state, plus a dedicated exact three-document Layer 6 closeout.
-No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. No authority is inherited.
+No corrected independent-review or owner-acceptance record exists, and WP9 execution remains ineligible.
+The exact B14 review marker remains append-only superseded historical evidence
+and cannot satisfy the corrected manifest. The replacement verifier supports
+both the exact pre-review owner-stop and reviewed-pending-owner states, with a
+dedicated exact three-document Layer 6 closeout.
 The transport-qualification request manifest is not materialized. Current
 official guidance concerning `safety_identifier` requires a separate authority
 resolution before any such request packet can be prepared. The earlier WP8
