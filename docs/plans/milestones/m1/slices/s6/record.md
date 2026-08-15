@@ -7743,3 +7743,31 @@ marker remains append-only but does not match the corrected manifest SHA-256
 and grants no authority. No corrected independent-review or owner-acceptance
 record exists. No UI, API key, Credential Manager, DNS, public network,
 provider, billable, profile, private-fixture, or archive effect occurred.
+
+## WP9 review-closeout path-admission correction — 2026-08-15
+
+Fresh overall review of B15
+`11de4519645600ac3008a7188fd2083b296d24d1` found that the dedicated
+`Wp9ReviewCloseout` mode correctly unprotected the exact three reviewed
+owner-pending documents, but the finite allowed-path expression omitted that
+same mode-gated path term. A future exact reviewed-pending-owner transition
+would therefore fail Layer 6 with one false allowed-path failure even though
+its semantic predicate passed. B15 and its receipts are superseded.
+
+The bounded correction adds only the missing mode-gated allowed term. A real
+temporary-repository contract now materializes the exact current-state, Slice 6
+README, and append-only record transition, proves the candidate-bound Layer 6
+receipt passes with three changed paths and zero allowed-path failures, then
+proves an added protected fourth path is rejected. The corrected implementation
+is frozen at `0d0064bc5813cf26e704e7b79714d7a55c4d01fc`.
+
+Two consecutive canonical non-incremental Release builds pinned to that commit
+reproduced coordinator SHA-256
+`d9238a608cfbb840a7d97c72585cc0a8636c187d671dacba6829a56a9b47f9b6`,
+helper SHA-256
+`427a03f3a507caf9d251c8bf045805b592d753f069b1bb1d2550ae9301020faf`,
+and 126-file execution-closure SHA-256
+`d3f3729b642dee25fdb716adaf1baea54adf47baead8b49f07b47bd0cd951809`.
+The replacement binding creates no review, owner acceptance, inherited
+authority, UI, API-key, Credential Manager, DNS, public-network, provider,
+billable, profile, private-fixture, archive, or later-packet effect.

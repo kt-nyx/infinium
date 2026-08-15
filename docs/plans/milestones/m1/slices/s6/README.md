@@ -48,7 +48,7 @@ pre-live validation SHA-256
 direct Layer 6 SHA-256
 `4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`.
 WP9 non-effectful production-profile preparation is frozen at corrected
-close-ready implementation `2f8ec6afcb2c20b3480c01e86d33aa76f73611f9`.
+close-ready implementation `0d0064bc5813cf26e704e7b79714d7a55c4d01fc`.
 The canonical non-incremental Release build pins both informational-version and
 SourceLink revision identities to that exact commit. Two consecutive clean
 builds reproduced the coordinator, helper, and complete 126-file execution
