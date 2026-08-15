@@ -7614,3 +7614,20 @@ The exact four-document binding carries those values into the ready manifest.
 No corrected review or owner marker exists. No helper/UI/key/native/network/
 provider/billable/profile-state/private/archive effect occurred, and no later
 packet or inherited authority is created.
+
+## WP9 SourceLink revision correction — 2026-08-15
+
+The first build after binding `76c7827609364abe7bf852c01cd95156ac98f62c`
+proved that `SourceRevisionId` controlled assembly informational versions but
+did not replace the `RevisionId` metadata emitted on `SourceRoot`; embedded
+SourceLink therefore named the later binding HEAD. The primary executable
+hashes stayed pinned, while the full inventory correctly changed and invalidated
+the manifest.
+
+The build now updates every discovered `SourceRoot` revision to the explicit
+`SourceRevisionId` immediately after source-control discovery. The canonical
+non-incremental build must therefore carry the same close-ready identity in
+both assembly informational versions and SourceLink. The ready binding is reset
+to pending until this complete closure reproduces across a later commit. No
+credential/UI/key/native/network/provider/billable/profile/private/archive
+effect occurred.

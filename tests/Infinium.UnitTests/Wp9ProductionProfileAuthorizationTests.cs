@@ -137,9 +137,17 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         StringAssert.Contains(runner, "binary_inventory_file_count");
         StringAssert.Contains(runner, "binary_inventory_sha256");
         StringAssert.Contains(runner, "SourceRevisionId=$closeReady");
+        string buildTargets = File.ReadAllText(Path.Combine(root, "Directory.Build.targets"));
+        StringAssert.Contains(buildTargets, "AfterTargets=\"InitializeSourceControlInformationFromSourceControlManager\"");
+        StringAssert.Contains(buildTargets, "RevisionId=\"$(SourceRevisionId)\"");
         string manifest = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp9-production-profile-authorization.v1.json"));
         StringAssert.Contains(manifest, "bin/Release/net10.0/Infinium.Coordinator.exe");
+        using JsonDocument manifestDocument = JsonDocument.Parse(manifest);
+        string sourceCommit = manifestDocument.RootElement.GetProperty("release_build").GetProperty("source_commit").GetString()!;
+        string sourceLink = File.ReadAllText(Path.Combine(root, "src", "Infinium.Coordinator", "obj", "Release", "net10.0",
+            "Infinium.Coordinator.sourcelink.json"));
+        if (sourceCommit != new string('0', 40)) { StringAssert.Contains(sourceLink, sourceCommit); }
         string directory = Path.Combine(Path.GetTempPath(), "infinium-wp9-binaries-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(directory, "CredentialHelper"));
         try

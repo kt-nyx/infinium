@@ -532,6 +532,20 @@ public sealed class Wp8PreLiveReadinessContractTests
                 $repeatCorrection.Replace('No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.',''))) {
                 if ((Get-Wp8NonLiveCurrentStateDisposition $weakened $accepted) -ne 'invalid') { exit 24 }
             }
+            $sourceLinkCorrection = @"
+            | Current authorized work | ``M1/S6/WP9`` bounded non-effectful owner-stop correction and reverification only. Post-binding reproduction invalidated binding ``76c7827609364abe7bf852c01cd95156ac98f62c``: SourceLink drift. The manifest is binding-pending; no independent-review or owner-acceptance record exists for corrected bytes. No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized. |
+            | Next eligible action | Pin SourceRoot revision metadata together with SourceRevisionId, prove repeated non-incremental full-closure identity across a later binding HEAD, then rerun the complete non-live floor and fresh independent review. WP9 execution remains ineligible. |
+            {{noInheritance}}.
+            "@
+            if ((Get-Wp8NonLiveCurrentStateDisposition $sourceLinkCorrection $accepted) -ne 'exact-wp9-owner-stop-correction-no-effect-state') { exit 25 }
+            foreach ($weakened in @(
+                $sourceLinkCorrection.Replace('Post-binding reproduction invalidated binding','Reproduction accepted binding'),
+                $sourceLinkCorrection.Replace('Pin SourceRoot revision metadata together with SourceRevisionId','Use ordinary build metadata'),
+                $sourceLinkCorrection.Replace('The manifest is binding-pending; no independent-review or owner-acceptance record exists for corrected bytes.',''),
+                $sourceLinkCorrection.Replace('{{noInheritance}}',''),
+                $sourceLinkCorrection.Replace('No API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.',''))) {
+                if ((Get-Wp8NonLiveCurrentStateDisposition $weakened $accepted) -ne 'invalid') { exit 26 }
+            }
             exit 0
             """;
         Assert.AreEqual(0, RunPowerShellScript(command),

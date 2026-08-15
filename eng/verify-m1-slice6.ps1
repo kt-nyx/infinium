@@ -346,11 +346,18 @@ function Get-Wp8NonLiveCurrentStateDisposition([string] $CurrentStateText, [obje
         $normalized.Contains('The manifest is binding-pending; no independent-review or owner-acceptance record exists for corrected bytes.', [StringComparison]::Ordinal) -and
         $normalized.Contains('| Next eligible action | Freeze and bind an exact non-incremental SourceRevisionId-pinned Release closure, prove repeated-build identity, then rerun the complete non-live floor and fresh independent security/semantic/diff review. WP9 execution remains ineligible. |', [StringComparison]::Ordinal) -and
         $wp9NoEffect -and $noInheritance
+    $wp9OwnerStopSourceLinkCorrection =
+        $AcceptanceBinding.state -eq 'accepted-closeout' -and
+        $normalized.Contains('| Current authorized work | `M1/S6/WP9` bounded non-effectful owner-stop correction and reverification only.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('Post-binding reproduction invalidated binding `76c7827609364abe7bf852c01cd95156ac98f62c`:', [StringComparison]::Ordinal) -and
+        $normalized.Contains('The manifest is binding-pending; no independent-review or owner-acceptance record exists for corrected bytes.', [StringComparison]::Ordinal) -and
+        $normalized.Contains('| Next eligible action | Pin SourceRoot revision metadata together with SourceRevisionId, prove repeated non-incremental full-closure identity across a later binding HEAD, then rerun the complete non-live floor and fresh independent review. WP9 execution remains ineligible. |', [StringComparison]::Ordinal) -and
+        $wp9NoEffect -and $noInheritance
     if ($verificationState) { return 'exact-wp8-correction-reverification-state' }
     if ($acceptedNoEffectHandoff) { return 'exact-corrected-wp8-accepted-handoff' }
     if ($wp9ProfilePreparation) { return 'exact-wp9-profile-preparation-no-effect-state' }
     if ($wp9ProfileOwnerStop) { return 'exact-wp9-profile-owner-stop-no-effect-state' }
-    if ($wp9OwnerStopCorrection -or $wp9OwnerStopRepeatBuildCorrection) { return 'exact-wp9-owner-stop-correction-no-effect-state' }
+    if ($wp9OwnerStopCorrection -or $wp9OwnerStopRepeatBuildCorrection -or $wp9OwnerStopSourceLinkCorrection) { return 'exact-wp9-owner-stop-correction-no-effect-state' }
     return 'invalid'
 }
 
@@ -560,6 +567,7 @@ function Invoke-Layer6ReviewGate(
         'contracts/repository/wp8-production-profile-authorization-template.v1.schema.json',
         'contracts/repository/wp8-provider-request-authorization-template.v1.schema.json',
         'contracts/repository/wp9-production-profile-authorization.v1.schema.json',
+        'Directory.Build.targets',
         'docs/current-state.md',
         'docs/plans/milestones/m1/slices/s6/README.md',
         'docs/plans/milestones/m1/slices/s6/record.md',
@@ -840,7 +848,7 @@ function Invoke-Layer6ReviewGate(
         [Array]::Sort($actualWp9Paths, [StringComparer]::Ordinal)
         [Array]::Sort($wp9ExpectedPaths, [StringComparer]::Ordinal)
         if ([string]::Join("`n", $actualWp9Paths) -cne [string]::Join("`n", $wp9ExpectedPaths)) {
-            $failures.Add('Wp9OwnerStopReview requires the exact finite 38-path WP8-to-WP9 candidate set.')
+            $failures.Add('Wp9OwnerStopReview requires the exact finite 39-path WP8-to-WP9 candidate set.')
         }
     }
     if ($Wp4OwnerReviewHandoff) {

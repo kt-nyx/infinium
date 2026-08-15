@@ -1,0 +1,9 @@
+<Project>
+  <Target Name="PinExplicitSourceRevisionInSourceRoots"
+          AfterTargets="InitializeSourceControlInformationFromSourceControlManager"
+          Condition="'$(SourceRevisionId)' != ''">
+    <ItemGroup>
+      <SourceRoot Update="@(SourceRoot)" RevisionId="$(SourceRevisionId)" />
+    </ItemGroup>
+  </Target>
+</Project>

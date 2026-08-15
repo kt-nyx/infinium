@@ -12,7 +12,7 @@ public sealed class ProviderLayer6VerifierContractTests
         string script = TestRepository.Read("eng", "verify-m1-slice6.ps1");
         StringAssert.Contains(script, "[switch] $Wp9OwnerStopReview");
         StringAssert.Contains(script, "Wp9OwnerStopReview requires the exact current ready manifest, no-effect state, baseline, candidate, and one four-document binding commit.");
-        StringAssert.Contains(script, "Wp9OwnerStopReview requires the exact finite 38-path WP8-to-WP9 candidate set.");
+        StringAssert.Contains(script, "Wp9OwnerStopReview requires the exact finite 39-path WP8-to-WP9 candidate set.");
         StringAssert.Contains(script, "Invoke-Layer6ReviewGate $baseline $candidate $false $true");
         StringAssert.Contains(script, "wp9_owner_stop_review = [bool]$Wp9OwnerStopMode");
         StringAssert.Contains(script, "-not $isWp9OwnerStopPath");
