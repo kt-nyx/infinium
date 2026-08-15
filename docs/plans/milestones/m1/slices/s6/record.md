@@ -7261,3 +7261,25 @@ live-manifest execution, native Credential Manager operation, DNS operation,
 public-network operation, provider request, billable operation,
 production-profile materialization/use, private-fixture access, archive access,
 or WP9 execution is authorized or occurred.
+
+## WP8 exact-floor historical-expiry correction — 2026-08-15
+
+Fresh independent exact-HEAD review of `9365e351` reproduced every focused and
+category count, then found one unfiltered failure in
+`RecoveryManifestValidatorRejectsNestedAuthorityMutations`. The retained
+`wp4-credential-native-recovery.ad876b9a.v1.json` expired at
+`2026-08-15T05:55:40.8636922Z`; the production validator correctly rejects an
+expired ready manifest, but the test still required the immutable historical
+bytes to validate forever. Isolated rerun reproduced the same failure.
+
+The correction does not weaken expiry validation. The test now deep-copies the
+historical manifest, supplies bounded prepared/expiry timestamps for its
+positive absolute- and relative-path checks, and separately requires an
+already-expired copy to fail. The source manifest remains immutable and
+consumed. The former A6/B6 receipts and `9365e351` closeout remain historical,
+not final acceptance evidence.
+
+Authority is returned to WP8 correction and complete non-live reverification
+only; WP9 remains ineligible. No API-key, Credential Manager, DNS,
+public-network, provider, billable, private-fixture, archive, live-manifest,
+production-profile, or WP9 effect occurred.

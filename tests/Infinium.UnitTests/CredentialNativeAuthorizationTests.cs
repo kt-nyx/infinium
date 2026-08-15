@@ -744,9 +744,12 @@ public sealed class CredentialNativeAuthorizationTests
         string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp4-credential-native-recovery.ad876b9a.v1.json");
         JsonObject valid = JsonNode.Parse(File.ReadAllBytes(manifestPath))!.AsObject();
-        Assert.AreEqual(0, RunPwsh(root, "eng/validate-m1-slice6-wp4-recovery-ad876b9a.ps1",
-            "-ManifestPath", manifestPath), "The gate supplies an absolute manifest path.");
+        DateTimeOffset prepared = DateTimeOffset.UtcNow.AddMinutes(-1);
+        valid["prepared_at_utc"] = prepared.ToString("O");
+        valid["expires_at_utc"] = prepared.AddHours(1).ToString("O");
+        AssertManifestValidation(root, valid, expectedSuccess: true, absolutePath: true);
         AssertManifestValidation(root, valid, expectedSuccess: true);
+        Reject(node => node["expires_at_utc"] = prepared.AddMinutes(-1).ToString("O"));
         Reject(node => node["binding"]!["failed_manifest_sha256"] = new string('0', 64));
         Reject(node => node["binding"]!["terminal_evidence_sha256"] = new string('0', 64));
         Reject(node => node["binding"]!["prior_exact_absence_count"] = 9);
@@ -1351,7 +1354,8 @@ public sealed class CredentialNativeAuthorizationTests
         finally { Directory.Delete(tempRoot, recursive: true); }
     }
 
-    private static void AssertManifestValidation(string root, JsonObject manifest, bool expectedSuccess)
+    private static void AssertManifestValidation(string root, JsonObject manifest, bool expectedSuccess,
+        bool absolutePath = false)
     {
         string tempRoot = Path.Combine(root, "artifacts", "test-temp", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
@@ -1359,8 +1363,8 @@ public sealed class CredentialNativeAuthorizationTests
         try
         {
             File.WriteAllText(manifestPath, manifest.ToJsonString());
-            string relative = Path.GetRelativePath(root, manifestPath);
-            int exitCode = RunPwsh(root, "eng/validate-m1-slice6-wp4-recovery-ad876b9a.ps1", "-ManifestPath", relative);
+            string suppliedPath = absolutePath ? manifestPath : Path.GetRelativePath(root, manifestPath);
+            int exitCode = RunPwsh(root, "eng/validate-m1-slice6-wp4-recovery-ad876b9a.ps1", "-ManifestPath", suppliedPath);
             Assert.AreEqual(expectedSuccess ? 0 : 1, exitCode);
         }
         finally { Directory.Delete(tempRoot, recursive: true); }
