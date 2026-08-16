@@ -47,6 +47,13 @@ public sealed class M1Slice6CampaignRehearsalTests
             string manifestPath = Path.Combine(clone, "docs", "plans", "milestones", "m1", "slices", "s6", "m1-slice6-finite-campaign-authorization.v1.json");
             File.Copy(TestRepository.PathFromRoot("docs", "plans", "milestones", "m1", "slices", "s6", "m1-slice6-finite-campaign-authorization.v1.json"),
                 manifestPath, overwrite: true);
+            JsonObject sourceManifest = JsonNode.Parse(File.ReadAllText(manifestPath))!.AsObject();
+            sourceManifest["status"] = "verification-pending";
+            sourceManifest["candidate_binding"]!["close_ready_implementation_commit"] = "pending";
+            sourceManifest["candidate_binding"]!["review_candidate_resolution"] = "pending";
+            File.WriteAllText(manifestPath,
+                sourceManifest.ToJsonString(IndentedJson).Replace("\r\n", "\n", StringComparison.Ordinal) + "\n",
+                new UTF8Encoding(false));
             Run("git", ["add", "--", "eng/validate-m1-slice6-campaign.ps1", "eng/verify-m1-slice6.ps1",
                 "eng/run-m1-slice6-live.ps1",
                 "contracts/repository/m1-slice6-finite-campaign-authorization.v1.schema.json",

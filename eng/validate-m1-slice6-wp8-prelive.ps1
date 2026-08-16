@@ -111,14 +111,20 @@ function Test-Wp8CampaignCorrectionState(
     $record = [regex]::Replace($RecordText, '\s+', ' ')
     $excluded = [regex]::Match($state,
         'Binding `(?<candidate>[0-9a-f]{40})` is excluded by terminal review because production credential-evidence and provider-stage transitions were incomplete and the A/B candidate binding was self-referential; it is not review-ready or executable\.')
-    if (-not $excluded.Success) { return $false }
+    $rehearsalExcluded = [regex]::Match($state,
+        'Binding `(?<candidate>[0-9a-f]{40})` is excluded by focused committed-rehearsal review because its synthetic close-ready source inherited ready bindings; it is not review-ready or executable\.')
+    if (-not $excluded.Success -and -not $rehearsalExcluded.Success) { return $false }
+    if ($rehearsalExcluded.Success) { $excluded = $rehearsalExcluded }
     $candidate = $excluded.Groups['candidate'].Value
+    $readmeCorrection =
+        $readme.Contains("Binding ``$candidate`` is excluded because terminal review found incomplete production credential-evidence and provider-stage transitions plus a self-referential A/B candidate binding.", [StringComparison]::Ordinal) -or
+        $readme.Contains("Binding ``$candidate`` is also excluded because its committed rehearsal inherited ready bindings into the synthetic close-ready source.", [StringComparison]::Ordinal)
     return (
         $state.Contains('| Current authorized work | `M1/S6` finite-campaign amendment implementation, non-live verification, and correction/reverification only.', [StringComparison]::Ordinal) -and
         $state.Contains('Immutable owner authority source SHA-256 is `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.', [StringComparison]::Ordinal) -and
         $state.Contains('Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee` remains non-executable.', [StringComparison]::Ordinal) -and
         $state.Contains('No credential or provider effect is admitted.', [StringComparison]::Ordinal) -and
-        $readme.Contains("Binding ``$candidate`` is excluded because terminal review found incomplete production credential-evidence and provider-stage transitions plus a self-referential A/B candidate binding.", [StringComparison]::Ordinal) -and
+        $readmeCorrection -and
         $readme.Contains('Current authority is correction and non-live reverification only; no replacement candidate is bound.', [StringComparison]::Ordinal) -and
         -not $state.Contains('fresh review only. Exact candidate', [StringComparison]::Ordinal) -and
         -not $readme.Contains('is ready for review and remains non-executable.', [StringComparison]::Ordinal) -and

@@ -8291,3 +8291,17 @@ validator and Layer 6 bind that derived current commit and exact A-to-B path
 equation. No helper, UI, readiness, authority lock, API key, Credential
 Manager, profile, DNS/public network, provider, billable, private/archive, or
 push effect occurred.
+
+Bound candidate `876130e6a030b3228c151e030a6914cc2f156c04`
+passed campaign Ready, credential Ready, retained-WP8, and campaign Layer 6
+validation with effect count zero. Its exact focused unit filter passed 45/45.
+The integration filter passed 6/7 and stopped before NonLiveAll because the
+committed rehearsal, when launched from an already bound candidate, copied the
+ready manifest into its synthetic close-ready source instead of explicitly
+materializing the required verification-pending source state. The production
+validator correctly rejected that source. The bounded fixture correction now
+sets the synthetic source to `verification-pending` with both candidate fields
+typed `pending` before committing its distinct exact four-document successor.
+The bound candidate and all pre-floor receipts are excluded. No helper, UI,
+readiness, authority lock, API key, Credential Manager, profile, DNS/public
+network, provider, billable, private/archive, or push effect occurred.
