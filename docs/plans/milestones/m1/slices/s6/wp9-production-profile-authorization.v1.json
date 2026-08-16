@@ -116,15 +116,15 @@
   "release_build": {
     "configuration": "Release",
     "target_framework": "net10.0",
-    "source_commit": "38030a7ac2238c0d095942873b6425299040aaa7",
-    "build_command": "dotnet build Infinium.sln -c Release --no-restore --nologo --no-incremental -p:SourceRevisionId=38030a7ac2238c0d095942873b6425299040aaa7",
+    "source_commit": "b58cb2cee5695e6402c98e69001ecf157dbdbfa2",
+    "build_command": "dotnet build Infinium.sln -c Release --no-restore --nologo --no-incremental -p:SourceRevisionId=b58cb2cee5695e6402c98e69001ecf157dbdbfa2",
     "coordinator_relative_path": "src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe",
-    "coordinator_sha256": "cc5d234ee1cb39b317803848af4ebfbfde5a708f521549c2574e9ee62c020808",
+    "coordinator_sha256": "fe455a0572a79ae0d8220f608e6bc72ae4d21493d0a2f6ff829df63d74b6b340",
     "helper_relative_path": "src/Infinium.Coordinator/bin/Release/net10.0/CredentialHelper/Infinium.CredentialHelper.exe",
-    "helper_sha256": "7ce195105fcd4f0142463fd0354f3d2be03aa7aca7ab91f8e713226960255169",
+    "helper_sha256": "fc03f3af3eaa11198883577a63f756d3bd4019ab897ec4d4cedfeac22cd0dd02",
     "binary_inventory_pattern": "sorted-relative-path-lf-sha256-for-all-exe-dll-deps-json-and-runtimeconfig-json-under-coordinator-release-root",
     "binary_inventory_file_count": 126,
-    "binary_inventory_sha256": "b0fd0b539c93443bcc25d9ee1b029c5da8f51a30ecaf8db8cdd09c7baeede46d"
+    "binary_inventory_sha256": "e91b21392d3a8333876cb5d83dba682f2e3f3dcbd772eef52561d8e8953943ff"
   },
   "output": {
     "output_root_relative": "artifacts/m1-slice6/wp9-profile", "must_be_absent": true,
