@@ -137,18 +137,18 @@ function Test-Wp8CampaignReviewState(
     $state = [regex]::Replace($CurrentStateText, '\s+', ' ')
     $readme = [regex]::Replace($ReadmeText, '\s+', ' ')
     $record = [regex]::Replace($RecordText, '\s+', ' ')
-    $candidateMatch = [regex]::Match($state,
-        [regex]::Escape('| Current authorized work | `M1/S6` finite-campaign amendment implementation, non-live verification, and fresh review only. Exact candidate `') +
-        '(?<candidate>[0-9a-f]{40})' +
-        [regex]::Escape('` is bound for the complete non-live floor and independent review; it is not executable.'))
-    if (-not $candidateMatch.Success) { return $false }
-    $candidate = $candidateMatch.Groups['candidate'].Value
+    $sourceMatch = [regex]::Match($state,
+        [regex]::Escape('| Current authorized work | `M1/S6` finite-campaign amendment implementation, non-live verification, and fresh review only. Close-ready source `') +
+        '(?<source>[0-9a-f]{40})' +
+        [regex]::Escape('` is verification-pending; its exact clean committed four-document binding successor is the review candidate and is bound for the complete non-live floor and independent review. Neither source nor candidate is executable.'))
+    if (-not $sourceMatch.Success) { return $false }
+    $source = $sourceMatch.Groups['source'].Value
     return (
         $state.Contains('Immutable owner authority source SHA-256 is `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.', [StringComparison]::Ordinal) -and
         $state.Contains('Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee` remains non-executable.', [StringComparison]::Ordinal) -and
         $state.Contains('No credential or provider effect is admitted.', [StringComparison]::Ordinal) -and
-        $readme.Contains("The corrected finite-campaign candidate ``$candidate`` is bound for complete non-live verification and fresh independent review only.", [StringComparison]::Ordinal) -and
-        $readme.Contains('is ready for review and remains non-executable.', [StringComparison]::Ordinal) -and
+        $readme.Contains("The corrected finite-campaign close-ready source ``$source`` is verification-pending. Its exact clean committed four-document binding successor is the review candidate, bound for complete non-live verification and fresh independent review only.", [StringComparison]::Ordinal) -and
+        $readme.Contains('The resulting review candidate is ready for review and remains non-executable.', [StringComparison]::Ordinal) -and
         $readme.Contains('No authority is inherited.', [StringComparison]::Ordinal) -and
         $record.Contains('Current authority is correction and non-live reverification only.', [StringComparison]::Ordinal))
 }

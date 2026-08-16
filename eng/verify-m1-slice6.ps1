@@ -907,9 +907,12 @@ function Invoke-Layer6ReviewGate(
         if ($LASTEXITCODE -ne 0 -or ($validationJson | ConvertFrom-Json -Depth 20).disposition -cne 'ready') {
             throw 'M1Slice6CampaignReview requires the exact ready non-executable campaign manifest.'
         }
+        $campaignManifest = Get-CandidateText $candidateHash 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json' | ConvertFrom-Json -Depth 100
+        $campaignCloseReady = [string]$campaignManifest.candidate_binding.close_ready_implementation_commit
         $currentText = Get-CandidateText $candidateHash 'docs/current-state.md'
         if ($baselineHash -cne 'deadb9850fbd832435dcb4672fa93f8bd0a3d8cd' -or $candidateHash -cne $head -or
             -not $currentText.Contains('finite-campaign amendment implementation, non-live verification', [StringComparison]::Ordinal) -or
+            -not $currentText.Contains("Close-ready source ``$campaignCloseReady`` is verification-pending; its exact clean committed four-document binding successor is the review candidate", [StringComparison]::Ordinal) -or
             -not $currentText.Contains('No credential or provider effect is admitted.', [StringComparison]::Ordinal)) {
             throw 'M1Slice6CampaignReview requires exact E20 ancestry and the exact no-effect campaign correction state.'
         }

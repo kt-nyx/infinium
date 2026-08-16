@@ -8279,3 +8279,15 @@ changes only that receipt literal and retains the finding append-only. No
 helper, UI, readiness, authority lock, API key, Credential Manager, profile,
 DNS/public network, provider, billable, private/archive, or push effect
 occurred.
+
+Source A2 `290f802a340947cbf5f2e64fcbb2e64e94caa323` passed the
+committed retained-WP8/campaign contract filter 10/10. The pre-binding audit
+then found that the retained ready-state documentation predicate still named
+an exact candidate hash inside the candidate itself, which would recreate the
+self-reference rejected by terminal review. No B commit was made. The bounded
+correction instead names the immutable close-ready source and defines the exact
+clean committed four-document successor as the review candidate; the campaign
+validator and Layer 6 bind that derived current commit and exact A-to-B path
+equation. No helper, UI, readiness, authority lock, API key, Credential
+Manager, profile, DNS/public network, provider, billable, private/archive, or
+push effect occurred.

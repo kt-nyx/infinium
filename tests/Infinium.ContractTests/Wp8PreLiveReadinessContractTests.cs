@@ -272,7 +272,7 @@ public sealed class Wp8PreLiveReadinessContractTests
             Assert.AreEqual(0, ownerAcceptanceCloseout, "Exact owner-accepted closeout was rejected.");
             Assert.AreNotEqual(0, campaignReview, "Owner-accepted state was admitted as campaign review.");
         }
-        else if (currentState.Contains("finite-campaign amendment implementation, non-live verification, and fresh review only. Exact candidate", StringComparison.Ordinal))
+        else if (currentState.Contains("finite-campaign amendment implementation, non-live verification, and fresh review only. Close-ready source", StringComparison.Ordinal))
         {
             Assert.AreNotEqual(0, ownerStop, "Campaign review state was admitted as WP9 owner-stop.");
             Assert.AreNotEqual(0, reviewCloseout, "Campaign review state was admitted as WP9 review closeout.");
