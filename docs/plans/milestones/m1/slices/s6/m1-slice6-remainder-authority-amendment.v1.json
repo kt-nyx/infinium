@@ -21,8 +21,8 @@
   "bound_documents": [
     {
       "path": "docs/plans/milestones/m1/slices/s6/remainder-plan.md",
-      "length_bytes": 42717,
-      "sha256": "9be76f755ee4f89a6f64e2a3e7cf8f1b3f163134962be5d2132bb0a76ff645cf"
+      "length_bytes": 44427,
+      "sha256": "0942854c7404b9d136e55ab93c65698f941f23341ad6588a23aa2be2a444505c"
     },
     {
       "path": "docs/evaluation/specifications/m1-slice6-live-semantic-v2-amendment.md",
@@ -133,6 +133,7 @@
       "stream": false,
       "tool_choice": "none",
       "tools": [],
+      "parallel_tool_use": false,
       "truncation": "disabled",
       "prompt_cache_mode": "explicit",
       "prompt_cache_key": null,
@@ -143,8 +144,33 @@
       "file_image_audio_input": false,
       "hosted_search": false,
       "batch": false,
+      "metadata_map": false,
       "caller_selected_host_model_or_tier": false,
       "arbitrary_provider_options": false
+    },
+    "safety_identifier": {
+      "state_version": "infinium.product-user-safety-identifier/1.0.0",
+      "seed_generation": "cryptographic-random-32-bytes-create-new-once",
+      "local_state_file": "product-user-safety-identifier.v1.seed",
+      "use_latch_file": "product-user-safety-identifier.v1.use",
+      "use_latch_schema": "infinium.product-user-safety-identifier-use/v1",
+      "atomic_use_latch_before_first_possible_start": true,
+      "reopen_requires_seed_latch_and_ledger_projection_exact_agreement": true,
+      "post_use_missing_corrupt_torn_deleted_or_changed_state": "terminal-stop-never-regenerate-no-retry",
+      "transmitted_projection": "lowercase-hex-sha256(domain-utf8-nul || seed)",
+      "domain": "infinium.openai.safety-identifier/v1",
+      "projection_length": 64,
+      "stable_for_product_user": true,
+      "raw_seed_transmitted": false,
+      "forbidden_inputs": [
+        "api-key-or-credential-bytes",
+        "credential-target-profile-or-generation",
+        "email-or-account-identifier",
+        "os-user-or-machine-name",
+        "source-content-or-prompt",
+        "file-path-or-mod-name",
+        "advertising-or-telemetry-identifier"
+      ]
     },
     "automatic_retry": false,
     "manual_retry": false,

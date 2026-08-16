@@ -183,8 +183,9 @@ mode `standard`, strict structured output, `store: false`, `background: false`,
 `stream: false`, `tool_choice: none`, empty `tools`, truncation `disabled`, and
 prompt-cache mode `explicit` with null key and breakpoint. Conversation,
 previous response, prompt template, file/image/audio input, hosted search,
-Batch, caller-selected host/model/tier, and arbitrary provider options are
-absent. R3 binds its exact canonical fingerprint. It authorizes at most:
+Batch, parallel tool use, metadata map, caller-selected host/model/tier, and
+arbitrary provider options are absent. R3 binds its exact canonical
+fingerprint. It authorizes at most:
 
 | Stage | Starts | Request bytes | Input tokens | Output tokens | Raw response bytes | Deadline | Maximum cost |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -217,6 +218,24 @@ Every native credential effect, including stage reads, must begin strictly
 before credential-effect expiry; every provider effect must begin strictly
 before campaign expiry. A started operation may finish retention, settlement,
 and adjudication after expiry, but expiry never creates retry authority.
+
+The accepted safety-identifier contract is unchanged. R2 preserves one stable
+per-product-user seed created once from 32 operating-system cryptographic RNG
+bytes in atomic create-new local state
+`product-user-safety-identifier.v1.seed`. The only transmitted value is the
+64-character lowercase-hex SHA-256 of UTF-8 domain
+`infinium.openai.safety-identifier/v1`, a NUL framing byte, and the seed. Raw
+seed bytes are never transmitted. Credential/key bytes, target/profile/
+generation, account/email, OS user/machine, source/prompt, file/mod, and
+advertising/telemetry identities are forbidden inputs.
+
+Before the first possible provider start, the coordinator atomically writes
+`product-user-safety-identifier.v1.use` under schema
+`infinium.product-user-safety-identifier-use/v1` with the exact transmitted
+projection, and the ledger retains the same projection. Every stage reopen
+requires seed, use latch, and ledger projection to agree byte-for-byte.
+Missing, corrupt, torn, deleted, or changed seed/use-latch state after use is a
+terminal campaign stop and can never regenerate identity or authorize retry.
 
 ## 6. Advancement and intervention policy
 
@@ -325,6 +344,9 @@ authorization v2 handling, scripts/templates/tests/docs, and non-live evidence.
 Remove any fixture-specific production literal: the WP11 positive must be
 opened from the exact persisted WP10 acquisition, proposal, admission,
 admitted-artifact identity and payload digest/bytes, and application chain.
+R2 also preserves the Section 5 safety-seed projection, atomic use-latch,
+ledger binding, reopen, forbidden-input, and terminal fail-closed seams without
+changing their accepted versions.
 
 **Seams.** Producers emit v2 identities and canonical digests; consumers
 default-deny v1, mixed, unknown, or absent campaign bindings. The repository
@@ -343,7 +365,8 @@ identical domain values, payload bytes, root discriminator, and provenance.
 Invalid-state tests cover missing/duplicated/mismatched rows, swapped digests,
 orphan application, wrong root discriminator, positive/negative root swap,
 fabricated negative source-claim application, wrong campaign/stage/package,
-stage-order violations,
+stage-order violations, safety-seed regeneration, forbidden identifier input,
+missing/corrupt/torn/changed use-latch state or ledger-projection disagreement,
 incomplete raw evidence, pre-start failures, committed starts, recovery,
 expiry, and exhausted ceilings.
 
@@ -411,7 +434,10 @@ The raw credential target is never recorded.
 **Seams.** Campaign materialization rejects dirty or wrong commit/branch,
 mutable/unfrozen packages, wrong hashes, wrong profile/config, secret-bearing
 files, stale evidence, mismatched expiry, any earlier campaign identity, or
-nonzero effect counters. Stage manifests do not exist before their stage gate.
+nonzero effect counters. It also binds the exact safety-identifier state/use-
+latch schemas and paths, domain/projection algorithm, forbidden inputs, and
+pre-start/reopen fail-closed rules. Stage manifests do not exist before their
+stage gate.
 
 **Dependencies and automatic advancement.** R2 acceptance is required. A
 single coherent freeze is followed by the complete non-live common floor and
@@ -428,7 +454,8 @@ WP9/WP10/WP11 success evidence before its stage.
 **Verification.** Focused corrections first. Then exactly one complete clean
 common floor for the coherent candidate, strict campaign/schema validation,
 hash recomputation, tracked-secret scans, v1 preservation, v2 registry closure,
-zero-effect-counter proof, expiry arithmetic, branch/commit ancestry, and
+zero-effect-counter proof, safety-identifier generation/projection/use-latch/
+reopen/invalid-state tests, expiry arithmetic, branch/commit ancestry, and
 clean-worktree check. If a must-fix changes a bound byte, rerun only affected
 focused checks, rebind once, then rerun the complete floor for the new coherent
 candidate.
