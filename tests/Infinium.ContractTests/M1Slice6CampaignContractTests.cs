@@ -167,6 +167,7 @@ public sealed class M1Slice6CampaignContractTests
         RunProcess(TestRepository.Root, "git", "-c", "safe.directory=" + TestRepository.Root,
             "-c", "safe.directory=" + Path.Combine(TestRepository.Root, ".git"),
             "clone", "--quiet", "--no-hardlinks", TestRepository.Root, destination);
+        bool overlayChanged = false;
         foreach (string relative in new[]
         {
             "eng/validate-m1-slice6-campaign.ps1",
@@ -176,13 +177,18 @@ public sealed class M1Slice6CampaignContractTests
         })
         {
             string target = Path.Combine(destination, relative.Replace('/', Path.DirectorySeparatorChar));
-            File.Copy(TestRepository.PathFromRoot(relative.Split('/')), target, overwrite: true);
+            string source = TestRepository.PathFromRoot(relative.Split('/'));
+            overlayChanged |= !File.ReadAllBytes(source).SequenceEqual(File.ReadAllBytes(target));
+            File.Copy(source, target, overwrite: true);
         }
-        RunProcess(destination, "git", "add", "--", "eng/validate-m1-slice6-campaign.ps1",
-            "contracts/repository/m1-slice6-finite-campaign-authorization.v1.schema.json",
-            "contracts/repository/m1-slice6-finite-campaign-owner-authority.v1.schema.json", ManifestRelative);
-        RunProcess(destination, "git", "-c", "user.name=Infinium Contract", "-c", "user.email=contract@invalid",
-            "commit", "--quiet", "-m", "contract validator overlay");
+        if (overlayChanged)
+        {
+            RunProcess(destination, "git", "add", "--", "eng/validate-m1-slice6-campaign.ps1",
+                "contracts/repository/m1-slice6-finite-campaign-authorization.v1.schema.json",
+                "contracts/repository/m1-slice6-finite-campaign-owner-authority.v1.schema.json", ManifestRelative);
+            RunProcess(destination, "git", "-c", "user.name=Infinium Contract", "-c", "user.email=contract@invalid",
+                "commit", "--quiet", "-m", "contract validator overlay");
+        }
     }
 
     private static void RunProcess(string root, string file, params string[] arguments)

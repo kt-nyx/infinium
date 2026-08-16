@@ -8038,3 +8038,14 @@ No campaign review, admission, rollover, UI/helper/readiness launch, authority
 lock, API key, native Credential Manager operation, production profile,
 DNS/public-network operation, provider request, billable operation,
 private-fixture/archive access, or push occurred.
+
+The first replacement binding `a652e835f843737637f686050e035930e913d001`
+validated its exact campaign and credential bytes and reproduced the pinned
+Release closure, but the committed contract run stopped 2/3 before the
+rehearsal because its temp-clone overlay unconditionally attempted an empty
+Git commit when the clean candidate already contained the exact validator
+bytes. This is a test-fixture lifecycle defect, not campaign admission or
+product evidence. The bounded correction makes that overlay commit
+conditional on an actual byte change. The partial focused sequence is
+excluded; no helper, output root, lock, UI, native, network, provider, or
+billable effect occurred.
