@@ -8391,3 +8391,15 @@ terminal-review exclusion to current authority documentation. No helper, UI,
 readiness, authority lock, API key, Credential Manager, production profile,
 DNS/public network, provider, billable, private/archive, or push effect
 occurred.
+
+Source `e09f31c4441be9325684896f36dab9577d9c6b48` retained the exact
+finite path equation but its first focused rerun exposed two historical-
+validation defects: WP8 compared its frozen registry binding to the current
+three-package campaign extension, and the new path-presence assertion inspected
+the Layer 6 verifier rather than the retained-WP8 validator that owns the
+equation. The bounded correction reads and hashes the exact accepted WP8
+evidence-commit registry blob, still validates every referenced authority file,
+and makes the static assertion inspect the owning validator. The two affected
+HEAD-sensitive tests then passed 2/2. No helper, UI/readiness, authority lock,
+API key, Credential Manager, production profile, DNS/public network, provider,
+billable, private/archive, or push effect occurred.

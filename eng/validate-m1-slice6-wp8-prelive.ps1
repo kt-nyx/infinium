@@ -602,6 +602,40 @@ function Read-StrictJson([string] $Path) {
     }
 }
 
+function Read-GitStrictJson([string] $Commit, [string] $RelativePath) {
+    if ($Commit -notmatch '^[0-9a-f]{40}$') { throw 'Historical JSON commit is not exact.' }
+    $root = (& git rev-parse --show-toplevel).Trim()
+    if ($LASTEXITCODE -ne 0) { throw 'Historical JSON validation requires a Git worktree.' }
+    $start = [Diagnostics.ProcessStartInfo]::new()
+    $start.FileName = 'git'
+    $start.WorkingDirectory = $root
+    $start.UseShellExecute = $false
+    $start.CreateNoWindow = $true
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    [void]$start.ArgumentList.Add('-C')
+    [void]$start.ArgumentList.Add($root)
+    [void]$start.ArgumentList.Add('show')
+    [void]$start.ArgumentList.Add("$Commit`:$RelativePath")
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $start
+    $temporary = Join-Path ([IO.Path]::GetTempPath()) ('infinium-wp8-historical-' + [guid]::NewGuid().ToString('N') + '.json')
+    try {
+        if (-not $process.Start()) { throw 'Historical JSON Git process did not start.' }
+        $errorTask = $process.StandardError.ReadToEndAsync()
+        $stream = [IO.MemoryStream]::new()
+        try { $process.StandardOutput.BaseStream.CopyTo($stream) } finally { $stream.Dispose() }
+        $process.WaitForExit()
+        $errorText = $errorTask.GetAwaiter().GetResult()
+        if ($process.ExitCode -ne 0) { throw "Historical JSON Git read failed: $errorText" }
+        [IO.File]::WriteAllBytes($temporary, $stream.ToArray())
+        return Read-StrictJson $temporary
+    } finally {
+        $process.Dispose()
+        if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force }
+    }
+}
+
 function Assert-ExactSequence([object[]] $Actual, [object[]] $Expected, [string] $Name) {
     if (($Actual -join '|') -cne ($Expected -join '|')) { throw "$Name is missing, reordered, or mutated." }
 }
@@ -950,8 +984,8 @@ foreach ($commitName in @('slice5_base_commit','wp8_baseline_commit','accepted_w
     if ($LASTEXITCODE -ne 0) { throw "Required accepted ancestor '$commitName' is absent from HEAD." }
 }
 
-$registryPath = Resolve-InputPath ([string]$matrix.registry_binding.path)
-$registryInput = Read-StrictJson $registryPath
+$registryInput = Read-GitStrictJson ([string]$acceptanceBinding.post_run_evidence_candidate_commit) `
+    ([string]$matrix.registry_binding.path)
 $registry = $registryInput.value
 if ($registryInput.sha256 -ne $matrix.registry_binding.sha256 -or
     $registry.schema_identity -ne $matrix.registry_binding.schema_identity -or

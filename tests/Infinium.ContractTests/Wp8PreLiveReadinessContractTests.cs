@@ -244,8 +244,9 @@ public sealed class Wp8PreLiveReadinessContractTests
         Assert.IsFalse(function.Value.Contains("Invoke-CredentialNativeRecoveryGate", StringComparison.Ordinal));
         Assert.IsFalse(function.Value.Contains("run-m1-slice6-live", StringComparison.Ordinal));
         Assert.IsFalse(function.Value.Contains("run-m1-slice6-credential", StringComparison.Ordinal));
-        System.Text.RegularExpressions.Match campaignPaths = System.Text.RegularExpressions.Regex.Match(script,
-            @"(?ms)^function Get-Wp8CampaignReviewPaths\(\) \{.*?^\}");
+        string retainedValidator = TestRepository.Read("eng", "validate-m1-slice6-wp8-prelive.ps1");
+        System.Text.RegularExpressions.Match campaignPaths = System.Text.RegularExpressions.Regex.Match(retainedValidator,
+            @"(?ms)^function Get-Wp8CampaignReviewPaths\(\) \{.*?^function Test-Wp8CampaignCorrectionState");
         Assert.IsTrue(campaignPaths.Success, "Finite-campaign retained path equation was not found.");
         foreach (string requiredPath in new[]
         {
