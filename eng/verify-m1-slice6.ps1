@@ -2335,7 +2335,7 @@ function Invoke-ComposedProvenanceGate {
         [bool]$composed.prohibited_effects.credential_delete -or [bool]$composed.prohibited_effects.hosted_search -or
         [bool]$composed.prohibited_effects.private_fixture_access -or [bool]$composed.prohibited_effects.secret_retained -or
         [string]$composed.composed_validation_package.package_id -cne 'PROV-LIVE-COMPOSED-VAL' -or
-        [string]$composed.composed_validation_package.manifest_sha256 -cne '56ccbefc38ba6cd7342dd753b46088e56c4aa23dc419a833f4a3bc1ee6439a28' -or
+        [string]$composed.composed_validation_package.manifest_sha256 -cne 'da6b6b05456a2ed956393c3a0f7c7d470a947adba8e991cae72e9dd7f28250c8' -or
         [string]$composed.composed_validation_package.oracle_sha256 -cne '2b8174aceaa03a39567d686be1a1f225a300109ac7922fc2247c70e9fc7d7d32' -or
         (($composed.explicit_omissions -join '|') -cne 'credential-secret|hosted-search|nexus|private-fixture') -or
         [string]$stages[0].evidence_sha256 -cne [string]$retained[0].evidence_sha256 -or

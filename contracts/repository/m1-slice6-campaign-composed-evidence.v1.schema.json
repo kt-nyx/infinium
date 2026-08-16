@@ -36,7 +36,7 @@
         { "properties": {
           "package_id": { "const": "PROV-LIVE-COMPOSED-VAL" },
           "manifest_path": { "const": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json" },
-          "manifest_sha256": { "const": "56ccbefc38ba6cd7342dd753b46088e56c4aa23dc419a833f4a3bc1ee6439a28" },
+          "manifest_sha256": { "const": "da6b6b05456a2ed956393c3a0f7c7d470a947adba8e991cae72e9dd7f28250c8" },
           "oracle_path": { "const": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/oracle.v1.json" },
           "oracle_sha256": { "const": "2b8174aceaa03a39567d686be1a1f225a300109ac7922fc2247c70e9fc7d7d32" },
           "semantic_use": { "const": true }

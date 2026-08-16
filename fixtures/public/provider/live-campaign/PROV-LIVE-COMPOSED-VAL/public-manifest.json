@@ -1,7 +1,7 @@
 {
   "schema_identity": "infinium.public-fixture.live-provider-provenance/1.0.0",
-  "package_identity": "PROV-LIVE-COMPOSED-VAL",
-  "package_version": "1.0.0",
+  "fixture_id": "PROV-LIVE-COMPOSED-VAL",
+  "fixture_version": "1.0.0",
   "partition": "validation",
   "status": "oracle-frozen-pre-live-comparison",
   "operation": "ComposedProvenance",

@@ -8415,3 +8415,18 @@ duplicate-free campaign Layer 6 path equation and returns current authority to
 correction/reverification before refreeze. No helper, UI/readiness, authority
 lock, API key, Credential Manager, production profile, DNS/public network,
 provider, billable, private/archive, or push effect occurred.
+
+Bound candidate `aa1c1f582309f39daf57a17922128e068e134d40` passed
+campaign Ready, credential Ready, the complete focused contract/unit filters,
+and the committed rehearsal. Fresh NonLiveAll then stopped in its first 35-test
+contract tranche at 32/35: the public registry schema still fixed the
+pre-extension count at 35; the three new package manifests used noncanonical
+identity field names; and legacy helper/application contract fixtures retained
+input-bound policy v1 and the superseded request shape. No later tranche ran
+and the root is excluded. The bounded correction closes the registry at 38,
+uses standard public-fixture manifest identities, rebinds the exact three
+manifest byte hashes throughout registry/stage/composed evidence, and updates
+all affected consumers to the exact v2 canonical request. The three failed
+tests then passed 3/3. No helper, UI/readiness, authority lock, API key,
+Credential Manager, production profile, DNS/public network, provider,
+billable, private/archive, or push effect occurred.

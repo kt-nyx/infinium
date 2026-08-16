@@ -1003,7 +1003,7 @@ public sealed class ProviderContractJsonCodecTests
             expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
             expectedRequestFingerprintSha256: new byte[32],
             expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
-            expectedInputBoundPolicyVersion: "v1", expectedCoordinatorFencingEpoch: 1,
+            expectedInputBoundPolicyVersion: "v2", expectedCoordinatorFencingEpoch: 1,
             expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
             expectedSettings: Digest(), expectedOutputSchema: Digest(),
             expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest(),
@@ -1023,7 +1023,7 @@ public sealed class ProviderContractJsonCodecTests
                 expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
                 expectedRequestFingerprintSha256: new byte[32],
                 expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
-                expectedInputBoundPolicyVersion: "v1", expectedCoordinatorFencingEpoch: 1,
+                expectedInputBoundPolicyVersion: "v2", expectedCoordinatorFencingEpoch: 1,
                 expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
                 expectedSettings: Digest(), expectedOutputSchema: Digest(),
                 expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest(),
@@ -1065,7 +1065,7 @@ public sealed class ProviderContractJsonCodecTests
             expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
             expectedRequestFingerprintSha256: new byte[32],
             expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
-            expectedInputBoundPolicyVersion: "v1", expectedCoordinatorFencingEpoch: 1,
+            expectedInputBoundPolicyVersion: "v2", expectedCoordinatorFencingEpoch: 1,
             expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
             expectedSettings: Digest(), expectedOutputSchema: Digest(),
             expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest(),
@@ -1081,7 +1081,7 @@ public sealed class ProviderContractJsonCodecTests
             expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
             expectedRequestFingerprintSha256: new byte[32],
             expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
-            expectedInputBoundPolicyVersion: "v1", expectedCoordinatorFencingEpoch: 1,
+            expectedInputBoundPolicyVersion: "v2", expectedCoordinatorFencingEpoch: 1,
             expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
             expectedSettings: Digest(), expectedOutputSchema: Digest(),
             expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest(),
@@ -1198,7 +1198,7 @@ public sealed class ProviderContractJsonCodecTests
         ListProviderBudgetRequest query = new() { ScopeKind = "global", ScopeId = "global", RequestedPageSize = 100 };
         Assert.IsTrue(query.CalculateSize() < ProtocolConstants.MaximumMessageBytes);
         byte[] replayBytes = """
-            {"model":"gpt-5.6-sol","reasoning":{"effort":"medium","context":"current_turn","mode":"standard"},"text":{"format":{"type":"json_schema","name":"source_claim_extraction","strict":true,"schema":{"type":"object","additionalProperties":false}}},"store":false,"service_tier":"default","background":false,"stream":false,"tool_choice":"none","tools":[],"truncation":"disabled","max_output_tokens":4096,"prompt_cache_options":{"mode":"explicit"},"instructions":"closed instruction","input":"closed input"}
+            {"model":"gpt-5.6-sol","safety_identifier":"8e9ad7b878f9d93c3c933d6db1b810f297d15ad3144205186335528148af6b75","reasoning":{"effort":"medium","context":"current_turn","mode":"standard"},"text":{"format":{"type":"json_schema","name":"source_claim_extraction","strict":true,"schema":{"type":"object","additionalProperties":false}}},"store":false,"service_tier":"default","background":false,"stream":false,"tool_choice":"none","tools":[],"truncation":"disabled","max_output_tokens":4096,"prompt_cache_options":{"mode":"explicit"},"input":[{"role":"developer","content":[{"type":"input_text","text":"closed instruction"}]},{"role":"user","content":[{"type":"input_text","text":"BEGIN_UNTRUSTED_EVIDENCE\nclosed input\nEND_UNTRUSTED_EVIDENCE"}]}]}
             """u8.ToArray();
         ProviderReplayPayload replay = new()
         {
@@ -2136,7 +2136,7 @@ public sealed class ProviderContractJsonCodecTests
         expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
         expectedRequestFingerprintSha256: SHA256.HashData(requestBytes),
         expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
-        expectedInputBoundPolicyVersion: "v1", expectedRevocationEpoch: 0,
+        expectedInputBoundPolicyVersion: "v2", expectedRevocationEpoch: 0,
         expectedAccountIdentityId: "account-1", expectedBillingScopeIdentityId: "billing-1",
         expectedReservationGroupId: "reservation-1", expectedOperationKind: V2OperationKind.SourceClaimExtraction,
         expectedLimits: HelperLimits(), expectedDispatchDeadline: FutureInstant(),
@@ -2151,7 +2151,7 @@ public sealed class ProviderContractJsonCodecTests
         expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
         expectedRequestFingerprintSha256: new byte[32],
         expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
-        expectedInputBoundPolicyVersion: "v1", expectedCoordinatorFencingEpoch: 1,
+        expectedInputBoundPolicyVersion: "v2", expectedCoordinatorFencingEpoch: 1,
         expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
         expectedSettings: Digest(), expectedOutputSchema: Digest(), expectedEffectiveConfigurationId: "configuration-1",
         expectedRevocationEpoch: 0, expectedAccountIdentityId: "account-1",
@@ -2166,7 +2166,7 @@ public sealed class ProviderContractJsonCodecTests
         expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
         expectedRequestFingerprintSha256: new byte[32],
         expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
-        expectedInputBoundPolicyVersion: "v1", expectedCoordinatorFencingEpoch: 1,
+        expectedInputBoundPolicyVersion: "v2", expectedCoordinatorFencingEpoch: 1,
         expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
         expectedSettings: Digest(), expectedOutputSchema: Digest(),
         expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest(),

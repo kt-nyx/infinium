@@ -17,7 +17,7 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S6` - owner-accepted; implementation-active |
-| Current authorized work | `M1/S6` finite-campaign amendment implementation, non-live verification, and fresh review only. Close-ready source `d9ca091bffb168d83ae3941d3e677aa7a62b6b59` is verification-pending; its exact clean committed four-document binding successor is the review candidate and is bound for the complete non-live floor and independent review. Neither source nor candidate is executable. Immutable owner authority source SHA-256 is `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`. Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee` remains non-executable. No credential or provider effect is admitted. |
+| Current authorized work | `M1/S6` finite-campaign amendment implementation, non-live verification, and correction/reverification only. A replacement close-ready source and exact four-document binding will be frozen only after the registry and input-bound-v2 consumer corrections are proven. Neither the dirty correction nor any historical candidate is executable. Immutable owner authority source SHA-256 is `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`. Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee` remains non-executable. No credential or provider effect is admitted. |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
 | Accepted Slice 6 WP1 candidate | `61b90314d8273749849f590b303814008fa2fdfa`; nine Slice 6 contracts are `Implementation-active` and the accepted local input-bound policy is `openai-responses-o200k-byte-envelope/v1` |
 | Accepted `M1/S6/WP2` candidate | `ed27ed04897103d93a60e6200971ca12d04f2e11`; capability, price, atomic reservation/final-gate, settlement, projection, replay, simulator, and public fixture/oracle evidence are independently accepted |
@@ -29,7 +29,7 @@ review history.
 | Superseded `M1/S6/WP8` acceptance evidence | Product/template `260a09ecfafea103227f113faf7625a5bf0ce759`, verification `fbdb1f03e006a85723b0533d44b2ed06e02cc724`, evidence/review HEAD `36b980d226e9f9a0e91281a530fc959a211fb696`, and their receipt hashes remain historical evidence only; they do not certify the corrected closeout candidate or make WP9 eligible |
 | Accepted corrected `M1/S6/WP8` candidate | Verification `cc14bf60f78c80280cb6eafe60fddaf2bc764d06`, post-run evidence candidate `baef115cdd43fa38d0a352c15f8ba44cbfa35312`, NonLiveAll SHA-256 `52aa77325a2226505c35b1fba6d9d0fe2b6354022a6c85f6652211d609c529ad`, pre-live validation SHA-256 `e5f0ca42e44e6a4ea4f98bf4aab0c1bf6769c436c51aecc32a01e22a3db5f567`, and direct Layer 6 SHA-256 `4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`; accepted without provider qualification, dispatch authority, or production-profile authority |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure plus the exact finite-campaign amendment in Section 19A; one campaign may replace the original separate WP9-WP11 owner acceptances only after exact campaign review/admission and predecessor evidence |
-| Next eligible action | Run the complete non-live floor and fresh independent review against the exact four-document binding candidate. Credential execution remains ineligible. |
+| Next eligible action | Finish the bounded contract correction, freeze and bind a replacement candidate, then restart the complete non-live floor and fresh independent review. Credential execution remains ineligible. |
 | Campaign effect boundary | No API-key use, UI/helper/readiness launch, authority lock, live-manifest execution, native Credential Manager operation, profile materialization, DNS/public-network operation, provider request, or billable operation is authorized. All such observed counts are exactly zero. |
 | Later work | Provider-stage manifests remain unmaterialized. Credential success must be independently accepted before WP9 request materialization; WP9 live evidence before WP10; WP10 live evidence before WP11. No historical marker grants inherited authority. |
 | Execution policy | [Repository execution policy](execution-policy.md) |
@@ -41,9 +41,10 @@ The B20 WP9 production-profile manifest and E20 review remain append-only
 predecessor evidence. Section 19A now authorizes only a pre-effect,
 field-by-field non-broadening semantic rollover into one finite campaign. It
 does not make either historical owner marker current and does not pre-accept
-unknown replacement bytes. Current authority is complete non-live verification
-and fresh independent review of the exact four-document binding candidate
-only; the close-ready source remains non-executable.
+unknown replacement bytes. Current authority is bounded correction and
+non-live reverification only. A later fresh review is required after the
+replacement close-ready source and exact four-document bound review candidate
+are frozen; neither candidate exists during this correction state.
 Binding `cfb11302d2011a0edc18aed6891ec1efff681713` is excluded by terminal
 review because authoritative provider persistence, retained semantic evidence,
 and offline evidence gates were incomplete; it is not review-ready or
@@ -52,6 +53,9 @@ Binding `f7257e63fb5269ff5f44e28097c7ce00cd71475b` is excluded by
 post-bind Layer 6 verification because the exact finite-campaign review path
 equation omitted current provider evidence surfaces; it is not review-ready or
 executable.
+Binding `aa1c1f582309f39daf57a17922128e068e134d40` is excluded by
+NonLiveAll contract validation because registry and input-bound-v2 consumer
+contracts were stale; it is not review-ready or executable.
 Every helper, readiness, authority-lock, native, profile, DNS/network,
 provider, billable, and API-key observation remains zero; production output
 roots remain absent. WP9 credential execution, WP9 request materialization,
@@ -194,8 +198,9 @@ credential-evidence acceptance, production stage orchestration, successor
 equations, and mutation proof remained incomplete. Binding
 `876130e6a030b3228c151e030a6914cc2f156c04` was then excluded because its
 committed rehearsal inherited ready bindings into the synthetic source A.
-Current authority is complete non-live verification and fresh review of the
-exact finite-campaign bound candidate only. The separately committed zero-effect
+Current authority is correction and non-live reverification of the
+finite-campaign implementation only; fresh review follows a new exact bound
+candidate. The separately committed zero-effect
 credential handoff and review/admission transitions for all three exact stage
 manifests exist only inside the disposable committed temp-clone rehearsal.
 They are synthetic proof of the production validators and coordinator state

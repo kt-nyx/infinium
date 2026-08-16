@@ -475,7 +475,7 @@ public sealed class M1Slice6CampaignRehearsalTests
                     {
                         package_id = "PROV-LIVE-COMPOSED-VAL",
                         manifest_path = "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json",
-                        manifest_sha256 = "56ccbefc38ba6cd7342dd753b46088e56c4aa23dc419a833f4a3bc1ee6439a28",
+                        manifest_sha256 = "da6b6b05456a2ed956393c3a0f7c7d470a947adba8e991cae72e9dd7f28250c8",
                         oracle_path = "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/oracle.v1.json",
                         oracle_sha256 = "2b8174aceaa03a39567d686be1a1f225a300109ac7922fc2247c70e9fc7d7d32",
                         semantic_use = true,
@@ -929,7 +929,7 @@ public sealed class M1Slice6CampaignRehearsalTests
         {
             ["package_id"] = "LLM-CLAIM-LIVE-VAL",
             ["manifest_path"] = "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/public-manifest.json",
-            ["manifest_sha256"] = "d158ca537cfe72a4ff6c61d6f4bdc2d35270344f02150632d8c408796a65ed99",
+            ["manifest_sha256"] = "83a63ba290966f27f7f6ddc581f63f7e2cb7b4d745f6958177f17043f220b3e6",
             ["oracle_path"] = "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/oracle.v1.json",
             ["oracle_sha256"] = "d917aed55912b0d6c82f8d19c772c6c504b9edcd3b1d3dcf9082da0f7a52e9eb",
             ["semantic_use"] = true,
@@ -938,7 +938,7 @@ public sealed class M1Slice6CampaignRehearsalTests
         {
             ["package_id"] = "LLM-INVESTIGATE-LIVE-VAL",
             ["manifest_path"] = "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/public-manifest.json",
-            ["manifest_sha256"] = "57efeb5022a8d9429c1c7f6dc42f630318a877b3d7b7590d2cebbd8060e74db1",
+            ["manifest_sha256"] = "486181221a67311ca14e5454451f40012465535e0f09e999561a58ed5110a135",
             ["oracle_path"] = "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/oracle.v1.json",
             ["oracle_sha256"] = "3f6db5e3618d8d0b5d35f2e79c203ef5bcd1bac8166e5cae417e7b5ac2e3348a",
             ["semantic_use"] = true,

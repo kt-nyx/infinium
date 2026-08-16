@@ -68,8 +68,8 @@
       "partition": "validation",
       "package_path": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL",
       "authority_file": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/public-manifest.json",
-      "authority_bytes": 939,
-      "authority_sha256": "d158ca537cfe72a4ff6c61d6f4bdc2d35270344f02150632d8c408796a65ed99",
+      "authority_bytes": 933,
+      "authority_sha256": "83a63ba290966f27f7f6ddc581f63f7e2cb7b4d745f6958177f17043f220b3e6",
       "authority_status": "oracle-frozen-pre-live-comparison"
     },
     {
@@ -78,8 +78,8 @@
       "partition": "validation",
       "package_path": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL",
       "authority_file": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/public-manifest.json",
-      "authority_bytes": 977,
-      "authority_sha256": "57efeb5022a8d9429c1c7f6dc42f630318a877b3d7b7590d2cebbd8060e74db1",
+      "authority_bytes": 971,
+      "authority_sha256": "486181221a67311ca14e5454451f40012465535e0f09e999561a58ed5110a135",
       "authority_status": "oracle-frozen-pre-live-comparison"
     },
     {
@@ -88,8 +88,8 @@
       "partition": "validation",
       "package_path": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL",
       "authority_file": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json",
-      "authority_bytes": 710,
-      "authority_sha256": "56ccbe21deca47243c577d30b6467ae645e9ede93b4475c45f474115c37fdb69",
+      "authority_bytes": 704,
+      "authority_sha256": "da6b6b05456a2ed956393c3a0f7c7d470a947adba8e991cae72e9dd7f28250c8",
       "authority_status": "oracle-frozen-pre-live-comparison"
     },
     {

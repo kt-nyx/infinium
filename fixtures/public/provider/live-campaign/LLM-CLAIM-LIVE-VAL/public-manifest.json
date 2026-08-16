@@ -1,7 +1,7 @@
 {
   "schema_identity": "infinium.public-fixture.live-provider-semantic/1.0.0",
-  "package_identity": "LLM-CLAIM-LIVE-VAL",
-  "package_version": "1.0.0",
+  "fixture_id": "LLM-CLAIM-LIVE-VAL",
+  "fixture_version": "1.0.0",
   "partition": "validation",
   "status": "oracle-frozen-pre-live-comparison",
   "operation": "SourceClaimExtraction",

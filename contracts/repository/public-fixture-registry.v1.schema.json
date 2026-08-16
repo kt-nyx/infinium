@@ -21,12 +21,12 @@
       "const": "current"
     },
     "package_count": {
-      "const": 35
+      "const": 38
     },
     "packages": {
       "type": "array",
-      "minItems": 35,
-      "maxItems": 35,
+      "minItems": 38,
+      "maxItems": 38,
       "uniqueItems": true,
       "items": {
         "$ref": "#/$defs/package"
