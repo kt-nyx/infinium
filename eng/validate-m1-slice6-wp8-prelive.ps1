@@ -69,6 +69,51 @@ function Get-Wp8Wp9OwnerStopPaths() {
         'tests/Infinium.UnitTests/Wp9ProductionProfileAuthorizationTests.cs')
 }
 
+function Get-Wp8CampaignReviewPaths() {
+    return @(Get-Wp8Wp9OwnerStopPaths) + @(
+        'contracts/repository/m1-slice6-finite-campaign-authorization.v1.schema.json',
+        'contracts/repository/m1-slice6-finite-campaign-owner-authority.v1.schema.json',
+        'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json',
+        'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-owner-authority.v1.json',
+        'docs/plans/milestones/m1/slices/s6/plan.md',
+        'docs/research/investigations/RESEARCH-0055-slice6-finite-campaign-and-safety-identifier-refresh.md',
+        'eng/validate-m1-slice6-campaign.ps1',
+        'src/Infinium.Application/Provider/CredentialSemanticRolloverPolicy.cs',
+        'src/Infinium.Domain/Contracts/ProductUserSafetyIdentifier.cs',
+        'src/Infinium.OpenAI/OpenAiResponsesAdapter.cs',
+        'src/Infinium.Persistence/M1Slice6FiniteCampaignLedger.cs',
+        'src/Infinium.Persistence/ProductUserSafetyIdentifierStateStore.cs',
+        'tests/Infinium.ContractTests/M1Slice6CampaignContractTests.cs',
+        'tests/Infinium.IntegrationTests/M1Slice6CampaignRehearsalTests.cs',
+        'tests/Infinium.UnitTests/CredentialSemanticRolloverPolicyTests.cs',
+        'tests/Infinium.UnitTests/M1Slice6FiniteCampaignLedgerTests.cs',
+        'tests/Infinium.UnitTests/OpenAiResponsesAdapterTests.cs',
+        'tests/Infinium.UnitTests/ProductUserSafetyIdentifierTests.cs',
+        'tests/Infinium.UnitTests/ProviderAdapterTestSupport.cs')
+}
+
+function Test-Wp8CampaignReviewState(
+    [string] $CurrentStateText,
+    [string] $ReadmeText,
+    [string] $RecordText,
+    [object] $AcceptanceBinding) {
+    if ($AcceptanceBinding.state -cne 'accepted-closeout' -or
+        -not (Test-Wp8RetainedAcceptanceRecord $RecordText $AcceptanceBinding)) {
+        return $false
+    }
+    $state = [regex]::Replace($CurrentStateText, '\s+', ' ')
+    $readme = [regex]::Replace($ReadmeText, '\s+', ' ')
+    $record = [regex]::Replace($RecordText, '\s+', ' ')
+    return (
+        $state.Contains('`M1/S6` finite-campaign amendment implementation, non-live verification, exact manifest materialization, and fresh review only.', [StringComparison]::Ordinal) -and
+        $state.Contains('Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee` remains verification-pending and non-executable.', [StringComparison]::Ordinal) -and
+        $state.Contains('No credential or provider effect is admitted.', [StringComparison]::Ordinal) -and
+        $readme.Contains('The finite-campaign amendment is in correction and non-live verification.', [StringComparison]::Ordinal) -and
+        $readme.Contains('is verification-pending and non-executable.', [StringComparison]::Ordinal) -and
+        $readme.Contains('No authority is inherited.', [StringComparison]::Ordinal) -and
+        $record.Contains('Current authority is correction and non-live reverification only.', [StringComparison]::Ordinal))
+}
+
 function Test-Wp8CorrectionCurrentState([string] $Text) {
     $normalized = [regex]::Replace($Text, '\s+', ' ')
     if ($normalized.Contains('WP8 is independently accepted at exact', [StringComparison]::Ordinal) -or
@@ -385,6 +430,9 @@ function Get-Wp8PostVerificationDisposition(
         (Test-Wp9OwnerAcceptanceCloseoutCorrectionCurrentState $CurrentStateText) -and
         (Test-Wp9OwnerAcceptanceCloseoutCorrectionReadme $ReadmeText) -and
         (Test-Wp8RetainedAcceptanceRecord $HeadRecordText $AcceptanceBinding)
+    $campaignReviewPaths = @(Get-Wp8CampaignReviewPaths)
+    $campaignReviewState = Test-Wp8CampaignReviewState `
+        $CurrentStateText $ReadmeText $HeadRecordText $AcceptanceBinding
 
     if (@($Paths).Count -eq 0 -or (Test-Wp8ExactPathSet $Paths $bindingPaths)) {
         if ($verificationState) { return 'exact-correction-verification-state' }
@@ -421,6 +469,14 @@ function Get-Wp8PostVerificationDisposition(
             return 'exact-wp9-owner-acceptance-closeout-correction-no-effect-state'
         }
         return 'invalid'
+    }
+    if (Test-Wp8ExactPathSet $Paths $campaignReviewPaths) {
+        if (-not $HeadRecordText.StartsWith($VerificationRecordText, [StringComparison]::Ordinal) -or
+            $HeadRecordText.Length -le $VerificationRecordText.Length -or
+            -not $campaignReviewState) {
+            return 'invalid'
+        }
+        return 'exact-m1-s6-finite-campaign-review-no-effect-state'
     }
     return 'invalid'
 }
@@ -760,6 +816,15 @@ elseif ($verificationCandidateCommit -match '^[0-9a-f]{40}$') {
     $postVerificationDisposition = Get-Wp8PostVerificationDisposition `
         $postVerificationPaths $currentStateAtHead $readmeAtHead $verificationRecord $headRecord `
         $acceptanceBinding $wp9ReviewBinding
+    if ($postVerificationDisposition -eq 'exact-m1-s6-finite-campaign-review-no-effect-state') {
+        $campaignValidationJson = @(& (Join-Path $repoRoot 'eng/validate-m1-slice6-campaign.ps1') `
+            -AuthorizationManifest (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json') `
+            -RequireState Ready) -join "`n"
+        if ($LASTEXITCODE -ne 0 -or
+            ($campaignValidationJson | ConvertFrom-Json -Depth 20).disposition -cne 'ready') {
+            throw 'WP8 retained historical validation requires the exact ready non-executable finite campaign.'
+        }
+    }
     if ($postVerificationDisposition -eq 'invalid') {
         $debugCorrection = Test-Wp8CorrectionCurrentState $currentStateAtHead
         $debugReadme = Test-Wp8CorrectionReadme $readmeAtHead

@@ -252,6 +252,7 @@ public sealed class Wp8PreLiveReadinessContractTests
         int ownerStop = RunLayer6Mode(root, "wp9");
         int reviewCloseout = RunLayer6Mode(root, "wp9-review");
         int ownerAcceptanceCloseout = RunLayer6Mode(root, "wp9-owner-acceptance");
+        int campaignReview = RunLayer6Mode(root, "campaign-review");
         if (currentState.Contains("non-effectful production-profile preparation verification and independent review only", StringComparison.Ordinal))
         {
             Assert.AreEqual(0, ownerStop, "Exact WP9 pre-review owner-stop state was rejected.");
@@ -269,6 +270,14 @@ public sealed class Wp8PreLiveReadinessContractTests
             Assert.AreNotEqual(0, ownerStop, "Owner-accepted state was admitted as pre-review owner-stop.");
             Assert.AreNotEqual(0, reviewCloseout, "Owner-accepted state was admitted as reviewed closeout.");
             Assert.AreEqual(0, ownerAcceptanceCloseout, "Exact owner-accepted closeout was rejected.");
+            Assert.AreNotEqual(0, campaignReview, "Owner-accepted state was admitted as campaign review.");
+        }
+        else if (currentState.Contains("finite-campaign amendment implementation, non-live verification", StringComparison.Ordinal))
+        {
+            Assert.AreNotEqual(0, ownerStop, "Campaign review state was admitted as WP9 owner-stop.");
+            Assert.AreNotEqual(0, reviewCloseout, "Campaign review state was admitted as WP9 review closeout.");
+            Assert.AreNotEqual(0, ownerAcceptanceCloseout, "Campaign review state was admitted as WP9 owner acceptance.");
+            Assert.AreEqual(0, campaignReview, "Exact finite-campaign review state was rejected.");
         }
         else
         {
@@ -848,9 +857,17 @@ public sealed class Wp8PreLiveReadinessContractTests
             start.ArgumentList.Add("-CandidateTemplatePath");
             start.ArgumentList.Add(Path.Combine(temp, "candidate.json"));
             using Process process = Process.Start(start)!;
-            string standardOutput = process.StandardOutput.ReadToEnd();
-            string standardError = process.StandardError.ReadToEnd();
-            Assert.IsTrue(process.WaitForExit(30_000), "WP8 validator mutation process timed out.");
+            Task<string> standardOutputTask = process.StandardOutput.ReadToEndAsync();
+            Task<string> standardErrorTask = process.StandardError.ReadToEndAsync();
+            bool exited = process.WaitForExit(30_000);
+            if (!exited)
+            {
+                process.Kill(entireProcessTree: true);
+                process.WaitForExit();
+            }
+            string standardOutput = standardOutputTask.GetAwaiter().GetResult();
+            string standardError = standardErrorTask.GetAwaiter().GetResult();
+            Assert.IsTrue(exited, "WP8 validator mutation process timed out.");
             if (process.ExitCode != 0 && mutation is null)
             {
                 Console.WriteLine(standardOutput);
@@ -916,6 +933,10 @@ public sealed class Wp8PreLiveReadinessContractTests
             {
                 baseline = RunGitOutput(root, "rev-parse", "HEAD^").Trim();
             }
+            else if (mode == "campaign-review")
+            {
+                baseline = "deadb9850fbd832435dcb4672fa93f8bd0a3d8cd";
+            }
             ProcessStartInfo start = new("pwsh.exe")
             {
                 WorkingDirectory = root,
@@ -949,10 +970,22 @@ public sealed class Wp8PreLiveReadinessContractTests
             {
                 start.ArgumentList.Add("-Wp9OwnerAcceptanceCloseout");
             }
+            else if (mode == "campaign-review")
+            {
+                start.ArgumentList.Add("-M1Slice6CampaignReview");
+            }
             using Process process = Process.Start(start)!;
-            string standardOutput = process.StandardOutput.ReadToEnd();
-            string standardError = process.StandardError.ReadToEnd();
-            Assert.IsTrue(process.WaitForExit(30_000), "Layer6 mode contract process timed out.");
+            Task<string> standardOutputTask = process.StandardOutput.ReadToEndAsync();
+            Task<string> standardErrorTask = process.StandardError.ReadToEndAsync();
+            bool exited = process.WaitForExit(30_000);
+            if (!exited)
+            {
+                process.Kill(entireProcessTree: true);
+                process.WaitForExit();
+            }
+            string standardOutput = standardOutputTask.GetAwaiter().GetResult();
+            string standardError = standardErrorTask.GetAwaiter().GetResult();
+            Assert.IsTrue(exited, "Layer6 mode contract process timed out.");
             if (process.ExitCode == 0)
             {
                 inspectOutput?.Invoke(output);
