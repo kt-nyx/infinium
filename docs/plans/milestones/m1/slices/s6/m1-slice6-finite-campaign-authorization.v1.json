@@ -6,7 +6,7 @@
   "prepared_at_utc": "2026-08-15T16:00:00.0000000Z",
   "expires_at_utc": "2026-08-22T23:59:00.0000000Z",
   "candidate_binding": {
-    "close_ready_implementation_commit": "18eb46b641410f3ca3879d297190a8dd9104a72b",
+    "close_ready_implementation_commit": "f8069f2d540f85718bde6ad58885b62a51b8222c",
     "review_candidate_resolution": "exact-clean-head-after-four-document-binding"
   },
   "authority_source": {
