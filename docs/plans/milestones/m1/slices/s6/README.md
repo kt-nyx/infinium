@@ -9,9 +9,9 @@ Live authorization remains stated only in
 [current project state](../../../../../current-state.md).
 
 - [Accepted Slice 6 plan](plan.md)
-- [Proposed accepted-ready remainder plan](remainder-plan.md)
-- [Proposed remainder authority amendment](m1-slice6-remainder-authority-amendment.v1.json)
-- [Proposed live semantic v2 fixture-authority amendment](../../../../../evaluation/specifications/m1-slice6-live-semantic-v2-amendment.md)
+- [Owner-accepted remainder plan](remainder-plan.md)
+- [Owner-accepted remainder authority amendment](m1-slice6-remainder-authority-amendment.v1.json)
+- [Owner-accepted live semantic v2 fixture-authority amendment](../../../../../evaluation/specifications/m1-slice6-live-semantic-v2-amendment.md)
 - [Live semantic authority-conflict investigation](../../../../../research/investigations/RESEARCH-0056-slice6-live-semantic-authority-conflict.md)
 - [Slice 6 provider-profile and implementation-readiness investigation](../../../../../research/investigations/RESEARCH-0054-slice6-openai-profile-and-implementation-readiness-refresh.md)
 - [Copy-paste implementation-orchestrator handoff](orchestrator-handoff.md)
@@ -23,9 +23,19 @@ Live authorization remains stated only in
 - [Finite campaign authorization](m1-slice6-finite-campaign-authorization.v1.json)
 - [Finite campaign and safety-identifier official snapshot](../../../../../research/investigations/RESEARCH-0055-slice6-finite-campaign-and-safety-identifier-refresh.md)
 
-The proposed remainder documents are navigation and owner-decision inputs
-only. They grant no implementation or external-effect authority unless the
-project owner accepts their exact committed candidate and bound digests.
+The project owner accepted the exact remainder planning candidate
+`5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98` and bound digests on 2026-08-16.
+The four accepted artifacts retain their immutable `Proposed` bytes; acceptance
+is recorded in [current project state](../../../../../current-state.md) and the
+[append-only implementation record](record.md). The current
+[implementation-orchestrator handoff](orchestrator-handoff.md) explains the
+R1-R7 to WP9-WP11 mapping and requires user-facing conceptual reports.
+
+Historical material must not be accumulated in a new in-repository archive.
+Any future archival move requires a separate owner-authorized transfer into an
+explicit sibling archive repository with inventory, provenance, recovery, and
+active-reference validation. No existing sibling archive is in scope by
+default.
 
 The project owner accepted the plan and its explicit stateless/cache-off
 ADR-0025 conformance closure on 2026-08-10; no separate ADR is required. WP1

@@ -8620,3 +8620,52 @@ owner choice of separately authorized live semantic input/oracle authority.
 No helper, UI/readiness, authority lock, API key, Credential Manager,
 production profile, DNS/public network, provider, billable, private/archive,
 or push effect occurred.
+
+## Remainder-plan owner acceptance and execution handoff — 2026-08-16
+
+The project owner accepted exact planning candidate
+`5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98` as the Slice 6 remainder plan
+amendment, public-fixture authority amendment, and finite-campaign successor
+authority. The acceptance binds:
+
+- remainder plan SHA-256
+  `135bd2a524bbd06190af7f64ffa1d57baa568e0f193f562a83ee5706f1a0c1ea`;
+- authority amendment SHA-256
+  `4f4ffefa0b70d4063738e232ef5aba9968571665ba0146f7a6446d4674580666`;
+- fixture-authority amendment SHA-256
+  `4c4e2c2b249a370874e3731e301b95ab75200c0e1d471bc41083d36387f57657`;
+  and
+- RESEARCH-0056 SHA-256
+  `ad718ae64075e02340bf9c4376a13c1216f5a6da1a387002a17218159993974c`.
+
+The bound documents retain their exact committed `Proposed` bytes. This
+append-only marker and `docs/current-state.md` record their owner acceptance;
+the accepted files are not rewritten merely to change status metadata.
+
+M1_S6_REMAINDER_OWNER_ACCEPTANCE candidate_commit=5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98 plan_sha256=135bd2a524bbd06190af7f64ffa1d57baa568e0f193f562a83ee5706f1a0c1ea authority_sha256=4f4ffefa0b70d4063738e232ef5aba9968571665ba0146f7a6446d4674580666 fixture_authority_sha256=4c4e2c2b249a370874e3731e301b95ab75200c0e1d471bc41083d36387f57657 research_sha256=ad718ae64075e02340bf9c4376a13c1216f5a6da1a387002a17218159993974c credential_effect_expires_at_utc=2026-08-31T23:00:00.0000000Z campaign_expires_at_utc=2026-08-31T23:59:00.0000000Z
+
+R1-R3 are effect-free execution packages spanning the remaining WP9-WP11
+vertical path. R4 and R5 split WP9 into its credential-enrollment and transport-
+qualification effects; R6 is WP10 source-claim extraction; R7 is WP11 candidate
+investigation, composition, accumulated regression, contract freeze, and Slice
+6 closeout. The R labels refine execution order and acceptance boundaries; they
+do not replace or renumber the accepted work-package taxonomy.
+
+The owner also directed every future implementation-orchestrator prompt and
+user-facing report to explain conceptual accomplishments, their place in the
+current project area and whole project, significant deviation or failure, and
+any required owner input with its reason, options, consequences, and a clear
+recommendation. The current copy-paste handoff carries that reporting contract
+forward to descendant prompts.
+
+The owner prefers historical material removed from the active repository and
+placed in a separate sibling archive repository rather than accumulated in an
+in-repository archive. No file is moved or deleted by this acceptance. Any
+archive transfer is a separate owner-authorized package with an exact source
+inventory, destination repository, retained identity/digest mapping, active-
+reference update, recovery proof, and post-transfer validation. Existing
+sibling archives remain out of scope unless the owner explicitly selects one.
+
+No helper, UI/readiness, authority lock, API key, Credential Manager,
+production profile, DNS/public network, provider, billable, private/archive,
+or push effect occurred.

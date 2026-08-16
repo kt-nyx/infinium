@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Current execution authority
 
-Last reviewed: 2026-08-15
+Last reviewed: 2026-08-16
 Owner: Project owner
 
 This is the only document that states the live milestone, slice, work-package,
@@ -17,7 +17,7 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S6` - owner-accepted; implementation-active |
-| Current authorized work | `M1/S6` finite-campaign correction and non-live verification only. The latest frozen source `acb76c0e9754568013fee9597ee5a7d257b19c38` and exact four-document binding `0b72c001db0a06c35b330a980090952f62c5613e` were reviewed but not accepted: authoritative settlement recovery, exact stage-native tuples, and the frozen semantic-package/live-input relationship remain under correction or owner decision. Neither candidate is executable. Immutable owner authority source SHA-256 is `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`. Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee` remains non-executable. No credential or provider effect is admitted. |
+| Current authorized work | Execute the owner-accepted Slice 6 remainder amendment from exact planning candidate `5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98`. R1-R3 are active effect-free correction, integration, fixture freeze, full non-live verification, and successor-campaign materialization. R4-R7 have dormant conditional authority only and become exercisable in order after their exact predecessor, machine, independent-review, clean-candidate, and expiry gates. No credential or provider effect is currently admitted. |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
 | Accepted Slice 6 WP1 candidate | `61b90314d8273749849f590b303814008fa2fdfa`; nine Slice 6 contracts are `Implementation-active` and the accepted local input-bound policy is `openai-responses-o200k-byte-envelope/v1` |
 | Accepted `M1/S6/WP2` candidate | `ed27ed04897103d93a60e6200971ca12d04f2e11`; capability, price, atomic reservation/final-gate, settlement, projection, replay, simulator, and public fixture/oracle evidence are independently accepted |
@@ -29,13 +29,21 @@ review history.
 | Superseded `M1/S6/WP8` acceptance evidence | Product/template `260a09ecfafea103227f113faf7625a5bf0ce759`, verification `fbdb1f03e006a85723b0533d44b2ed06e02cc724`, evidence/review HEAD `36b980d226e9f9a0e91281a530fc959a211fb696`, and their receipt hashes remain historical evidence only; they do not certify the corrected closeout candidate or make WP9 eligible |
 | Accepted corrected `M1/S6/WP8` candidate | Verification `cc14bf60f78c80280cb6eafe60fddaf2bc764d06`, post-run evidence candidate `baef115cdd43fa38d0a352c15f8ba44cbfa35312`, NonLiveAll SHA-256 `52aa77325a2226505c35b1fba6d9d0fe2b6354022a6c85f6652211d609c529ad`, pre-live validation SHA-256 `e5f0ca42e44e6a4ea4f98bf4aab0c1bf6769c436c51aecc32a01e22a3db5f567`, and direct Layer 6 SHA-256 `4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`; accepted without provider qualification, dispatch authority, or production-profile authority |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure plus the exact finite-campaign amendment in Section 19A; one campaign may replace the original separate WP9-WP11 owner acceptances only after exact campaign review/admission and predecessor evidence |
-| Next eligible action | Complete the bounded non-live corrections and resolve the frozen WP10 package/oracle versus required admitted-WP10-artifact authority conflict. Refreeze, complete verification, review, credential execution, and every provider stage remain ineligible until then. |
-| Campaign effect boundary | No API-key use, UI/helper/readiness launch, authority lock, live-manifest execution, native Credential Manager operation, profile materialization, DNS/public-network operation, provider request, or billable operation is authorized. All such observed counts are exactly zero. |
-| Later work | Provider-stage manifests remain unmaterialized. Credential success must be independently accepted before WP9 request materialization; WP9 live evidence before WP10; WP10 live evidence before WP11. No historical marker grants inherited authority. |
+| Accepted Slice 6 remainder amendment | Owner accepted exact candidate `5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98` on 2026-08-16. Bound plan SHA-256 is `135bd2a524bbd06190af7f64ffa1d57baa568e0f193f562a83ee5706f1a0c1ea`; authority amendment SHA-256 is `4f4ffefa0b70d4063738e232ef5aba9968571665ba0146f7a6446d4674580666`; fixture-authority amendment SHA-256 is `4c4e2c2b249a370874e3731e301b95ab75200c0e1d471bc41083d36387f57657`; research conclusion SHA-256 is `ad718ae64075e02340bf9c4376a13c1216f5a6da1a387002a17218159993974c`. The four bound files retain their exact `Proposed` bytes; this current-state and record marker supply acceptance without mutating them. |
+| Remainder decomposition | R1-R3 are cross-cutting preparation for the remaining WPs: v2 public authority/fixture freeze, complete WP10-to-WP11 product/persistence integration, then coherent candidate and successor-campaign freeze. R4 and R5 split `WP9` into credential enrollment and transport qualification. R6 executes `WP10` source-claim extraction. R7 executes `WP11` candidate investigation, composed provenance, accumulated regression, contract freeze, and Slice 6 closeout. The accepted WP identities remain unchanged. |
+| Next eligible action | Begin `R1`: materialize and independently freeze the five answer-isolated v2 public packages, all named v2 schemas, and additive registry v2 while preserving current package trees and registry v1 exactly. Product comparison and every external effect remain prohibited in R1. |
+| Campaign effect boundary | R1-R3 authorize no API-key use, UI/helper/readiness launch, authority lock, live-manifest execution, native Credential Manager operation, profile materialization, DNS/public-network operation, provider request, or billable operation. All observed counts remain zero. After accepted R3 evidence, R4-R7 may advance automatically only within the accepted successor campaign's exact ceilings, expiries, stage admission, and no-retry rules. |
+| Later work | R4 masked enrollment must be accepted before R5/WP9 request materialization; R5/WP9 live evidence before R6/WP10; R6/WP10 live evidence before R7/WP11. No historical marker grants inherited authority. Final Slice 6 owner acceptance remains the milestone closeout decision. |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
 | Slice entry | [Slice 6 current summary and navigation](plans/milestones/m1/slices/s6/README.md) |
 | Public verification profile | [M1 continuation verification profile](evaluation/m1-continuation-verification-profile.md) |
+
+The remainder acceptance above supersedes earlier current-authority wording in
+the retained chronology below. That chronology remains evidence of prior
+candidate rejection and correction, not a competing live handoff. It is a
+candidate for a separately authorized sibling-repository archive transfer under
+the owner's 2026-08-16 preference; no archive move or deletion has occurred.
 
 The B20 WP9 production-profile manifest and E20 review remain append-only
 predecessor evidence. Section 19A now authorizes only a pre-effect,

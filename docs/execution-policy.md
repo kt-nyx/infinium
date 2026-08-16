@@ -2,7 +2,7 @@
 
 Status: Accepted
 
-Last reviewed: 2026-08-12
+Last reviewed: 2026-08-16
 Owner: Project owner
 
 ## Purpose and scope
@@ -191,3 +191,42 @@ The current execution handoff is maintained in
 documents and ADRs define meaning, and implementation records preserve
 evidence. None of those historical records substitutes for the current-state
 handoff.
+
+## User-facing orchestration reports
+
+Every implementation-orchestrator or replacement-orchestrator prompt must
+require user-facing reports that lead with the practical outcome and explain:
+
+1. what was accomplished conceptually;
+2. how it fits into the current package, owning work package and slice, active
+   milestone, and wider Infinium product path;
+3. verification evidence, with dense commands and identifiers after the
+   conceptual explanation;
+4. material failures, deviations, or corrections, distinguishing recovered
+   implementation defects from genuine authority or safety stops;
+5. every issue requiring project-owner input, why current authority cannot
+   decide it, the viable options and practical consequences, and a recommended
+   choice; and
+6. the next action and whether it proceeds automatically or waits for the
+   owner.
+
+If no material deviation or owner input exists, say so explicitly. At an owner
+checkpoint, ask one concrete decision question and state exactly what remains
+blocked. Technical implementer and reviewer prompts may remain narrow, but the
+orchestrator must synthesize their results in this form rather than requiring
+the owner to reconstruct meaning from logs, hashes, or internal terminology.
+
+## Historical archival separation
+
+Do not create a new archive tree inside the active repository. When historical
+material is no longer required for current authority, navigation, build,
+verification, provenance, or recovery, propose its transfer as a separate
+owner-authorized package into an explicit sibling archive repository. The
+proposal must identify exact source paths, destination repository and paths,
+Git identities and content digests, active references to update, recovery
+method, and post-transfer validation.
+
+Archival preference is not deletion authority. Do not move, delete, rewrite,
+or inspect an existing sibling archive merely because material appears
+historical. Until the project owner accepts the exact transfer, retain the
+material in place and keep ordinary implementation independent of it.
