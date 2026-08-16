@@ -131,9 +131,12 @@ source attempt `f8069f2d540f85718bde6ad58885b62a51b8222c` was not a valid
 pending-source freeze and its binding is excluded. Binding
 `21193145f0d01abb524d98d23ac6faf0c20abc01` is also excluded because its
 complete unfiltered run showed that range-scoped Git pickaxe lookup remained
-attribution-sensitive under concurrency. Current authority is correction and
-non-live reverification only. No current candidate is ready for review or
-execution.
+attribution-sensitive under concurrency. The corrected finite-campaign
+close-ready source `acb76c0e9754568013fee9597ee5a7d257b19c38` is
+verification-pending. Its exact clean committed four-document binding
+successor is the review candidate, bound for complete non-live verification
+and fresh independent review only. The resulting review candidate is ready for
+review and remains non-executable.
 No authority is inherited. The
 immutable owner authority source is SHA-256
 `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
