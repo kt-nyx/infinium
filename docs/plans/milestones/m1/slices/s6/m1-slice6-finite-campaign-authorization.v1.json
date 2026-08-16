@@ -6,8 +6,8 @@
   "prepared_at_utc": "2026-08-15T16:00:00.0000000Z",
   "expires_at_utc": "2026-08-22T23:59:00.0000000Z",
   "candidate_binding": {
-    "close_ready_implementation_commit": "c34fdd3e8ec18aacbcca02c90635f171efa676a5",
-    "verification_candidate_commit": "c34fdd3e8ec18aacbcca02c90635f171efa676a5"
+    "close_ready_implementation_commit": "0e61ef1b8d5e860478da99dcb61f552a4f1600ea",
+    "verification_candidate_commit": "0e61ef1b8d5e860478da99dcb61f552a4f1600ea"
   },
   "authority_source": {
     "artifact": "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-owner-authority.v1.json",
