@@ -6,7 +6,11 @@ namespace Infinium.Tests;
 [TestCategory("Unit")]
 public sealed class M1Slice6FiniteCampaignLedgerTests
 {
+    private const string SafetyIdentifier = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
     private const string CampaignId = "infinium.m1-s6.finite-live-campaign/test";
+    private static readonly M1Slice6CampaignIdentity Identity = new(CampaignId, new string('1', 64),
+        new string('2', 64), new string('3', 40), "infinium.m1-s6.wp9/test", new string('4', 64),
+        "openai-platform-test", "g-test", new string('5', 64));
     private static readonly DateTimeOffset Start = DateTimeOffset.Parse("2026-08-15T16:00:00Z", System.Globalization.CultureInfo.InvariantCulture);
     private static readonly DateTimeOffset CredentialExpiry = DateTimeOffset.Parse("2026-08-17T15:25:00Z", System.Globalization.CultureInfo.InvariantCulture);
     private static readonly DateTimeOffset CampaignExpiry = DateTimeOffset.Parse("2026-08-22T23:59:00Z", System.Globalization.CultureInfo.InvariantCulture);
@@ -27,9 +31,10 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
             Assert.AreEqual(3L, ledger.Current.DnsResolutionCount);
             Assert.AreEqual(790_000_000L, ledger.Current.SettledNanoUsd);
             Assert.ThrowsExactly<InvalidOperationException>(() => ledger.ReserveStage(
-                M1Slice6CampaignStage.CandidateInvestigation, 1, Start.AddMinutes(8)));
+                M1Slice6CampaignStage.CandidateInvestigation,
+                Reservation(M1Slice6CampaignStage.CandidateInvestigation, 1), Start.AddMinutes(8)));
 
-            M1Slice6FiniteCampaignLedger reopened = new(path, CampaignId, CampaignExpiry, CredentialExpiry, Start.AddMinutes(9));
+            M1Slice6FiniteCampaignLedger reopened = new(path, Identity, CampaignExpiry, CredentialExpiry, Start.AddMinutes(9));
             Assert.AreEqual(ledger.Current.EventHash, reopened.Current.EventHash);
             Assert.AreEqual(M1Slice6CampaignState.Completed, reopened.Current.State);
         }
@@ -43,15 +48,15 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
         try
         {
             M1Slice6FiniteCampaignLedger ledger = ReadyThroughCredential(path);
-            ledger.ReserveStage(M1Slice6CampaignStage.Qualification, 140_000_000, Start.AddMinutes(5));
-            ledger.LatchPossibleStart(M1Slice6CampaignStage.Qualification, Start.AddMinutes(5).AddSeconds(1));
-            ledger.StopAfterAmbiguousStart(M1Slice6CampaignStage.Qualification, Start.AddMinutes(5).AddSeconds(2));
+            ledger.ReserveStage(M1Slice6CampaignStage.Qualification, Reservation(M1Slice6CampaignStage.Qualification, 140_000_000), Start.AddMinutes(5));
+            ledger.LatchPossibleStart(M1Slice6CampaignStage.Qualification, SafetyIdentifier, Start.AddMinutes(5).AddSeconds(1));
+            ledger.StopAfterAmbiguousStart(M1Slice6CampaignStage.Qualification, "ambiguous-start", Start.AddMinutes(5).AddSeconds(2));
 
             Assert.AreEqual(M1Slice6CampaignState.Stopped, ledger.Current.State);
             Assert.AreEqual(1L, ledger.Current.ProviderCallCount);
             Assert.AreEqual(140_000_000L, ledger.Current.ReservedNanoUsd);
             Assert.ThrowsExactly<InvalidOperationException>(() => ledger.ReserveStage(
-                M1Slice6CampaignStage.Qualification, 1, Start.AddMinutes(6)));
+                M1Slice6CampaignStage.Qualification, Reservation(M1Slice6CampaignStage.Qualification, 1), Start.AddMinutes(6)));
             Assert.ThrowsExactly<InvalidOperationException>(() => ledger.BeginCredentialExecutionHandoff(Start.AddMinutes(6)));
         }
         finally { Cleanup(path); }
@@ -63,7 +68,7 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
         string path = TempPath();
         try
         {
-            M1Slice6FiniteCampaignLedger ledger = new(path, CampaignId, CampaignExpiry, CredentialExpiry, Start);
+            M1Slice6FiniteCampaignLedger ledger = new(path, Identity, CampaignExpiry, CredentialExpiry, Start);
             ledger.RecordIndependentReview(Start.AddMinutes(1));
             Assert.ThrowsExactly<InvalidOperationException>(() => ledger.AdmitCampaign(CampaignExpiry));
         }
@@ -72,7 +77,21 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
         path = TempPath();
         try
         {
-            M1Slice6FiniteCampaignLedger ledger = new(path, CampaignId, CampaignExpiry, CredentialExpiry, Start);
+            M1Slice6FiniteCampaignLedger ledger = new(path, Identity, CampaignExpiry, CredentialExpiry, Start);
+            ledger.RecordIndependentReview(Start.AddMinutes(1));
+            ledger.AdmitCampaign(Start.AddMinutes(2));
+            ledger.BeginCredentialExecutionHandoff(Start.AddMinutes(3));
+            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.AcceptCredentialEvidence(
+                "credential-evidence", new string('6', 64), CampaignExpiry));
+            Assert.AreEqual(M1Slice6CampaignState.Stopped, ledger.Current.State);
+            Assert.AreEqual("campaign-expired-before-credential-evidence-handoff-terminal-stop", ledger.Current.Event);
+        }
+        finally { Cleanup(path); }
+
+        path = TempPath();
+        try
+        {
+            M1Slice6FiniteCampaignLedger ledger = new(path, Identity, CampaignExpiry, CredentialExpiry, Start);
             ledger.RecordIndependentReview(Start.AddMinutes(1));
             ledger.AdmitCampaign(Start.AddMinutes(2));
             Assert.ThrowsExactly<InvalidOperationException>(() => ledger.BeginCredentialExecutionHandoff(CredentialExpiry));
@@ -83,12 +102,11 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
         try
         {
             M1Slice6FiniteCampaignLedger ledger = ReadyThroughCredential(path);
-            ledger.ReserveStage(M1Slice6CampaignStage.Qualification, 1, CampaignExpiry.AddTicks(-1));
-            ledger.LatchPossibleStart(M1Slice6CampaignStage.Qualification, CampaignExpiry.AddSeconds(1));
-            ledger.AcceptStageEvidence(M1Slice6CampaignStage.Qualification, 1, CampaignExpiry.AddSeconds(2));
-            Assert.AreEqual(M1Slice6CampaignState.StageAccepted, ledger.Current.State);
+            ledger.ReserveStage(M1Slice6CampaignStage.Qualification, Reservation(M1Slice6CampaignStage.Qualification, 1), CampaignExpiry.AddTicks(-1));
+            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.LatchPossibleStart(
+                M1Slice6CampaignStage.Qualification, SafetyIdentifier, CampaignExpiry.AddSeconds(1)));
             Assert.ThrowsExactly<InvalidOperationException>(() => ledger.ReserveStage(
-                M1Slice6CampaignStage.SourceClaimExtraction, 1, CampaignExpiry));
+                M1Slice6CampaignStage.SourceClaimExtraction, Reservation(M1Slice6CampaignStage.SourceClaimExtraction, 1), CampaignExpiry));
         }
         finally { Cleanup(path); }
     }
@@ -100,12 +118,13 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
         try
         {
             M1Slice6FiniteCampaignLedger ledger = ReadyThroughCredential(path);
-            ledger.ReserveStage(M1Slice6CampaignStage.Qualification, 1, Start.AddMinutes(5));
-            ledger.LatchPossibleStart(M1Slice6CampaignStage.Qualification, Start.AddMinutes(6));
+            ledger.ReserveStage(M1Slice6CampaignStage.Qualification, Reservation(M1Slice6CampaignStage.Qualification, 1), Start.AddMinutes(5));
+            ledger.LatchPossibleStart(M1Slice6CampaignStage.Qualification, SafetyIdentifier,
+                Start.AddMinutes(5).AddSeconds(30));
             string text = File.ReadAllText(path);
             File.WriteAllText(path, text.Replace("\"provider_call_count\":1", "\"provider_call_count\":0", StringComparison.Ordinal));
             Assert.ThrowsExactly<InvalidDataException>(() => new M1Slice6FiniteCampaignLedger(
-                path, CampaignId, CampaignExpiry, CredentialExpiry, Start.AddMinutes(7)));
+                path, Identity, CampaignExpiry, CredentialExpiry, Start.AddMinutes(7)));
         }
         finally { Cleanup(path); }
     }
@@ -123,24 +142,114 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
             M1Slice6FiniteCampaignLedger.AggregateMaximumDnsResolutions,
             M1Slice6FiniteCampaignLedger.AggregateMaximumNanoUsd,
         });
+        CollectionAssert.AreEqual(new long[] { 147_456, 167_936, 8_448, 2_359_296 }, new long[]
+        {
+            M1Slice6FiniteCampaignLedger.AggregateMaximumRequestBytes,
+            M1Slice6FiniteCampaignLedger.AggregateMaximumInputTokens,
+            M1Slice6FiniteCampaignLedger.AggregateMaximumOutputTokens,
+            M1Slice6FiniteCampaignLedger.AggregateMaximumRawResponseBytes,
+        });
+    }
+
+    [TestMethod]
+    public void IdentityClockDeadlineAndEveryVectorDimensionFailClosed()
+    {
+        string path = TempPath();
+        try
+        {
+            M1Slice6FiniteCampaignLedger ledger = ReadyThroughCredential(path);
+            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.ReserveStage(
+                M1Slice6CampaignStage.Qualification,
+                Reservation(M1Slice6CampaignStage.Qualification, 1) with { RequestBytes = 16_385 }, Start.AddMinutes(5)));
+            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.ReserveStage(
+                M1Slice6CampaignStage.Qualification,
+                Reservation(M1Slice6CampaignStage.Qualification, 1) with { InputTokens = 20_481 }, Start.AddMinutes(5)));
+            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.ReserveStage(
+                M1Slice6CampaignStage.Qualification,
+                Reservation(M1Slice6CampaignStage.Qualification, 1) with { OutputTokens = 257 }, Start.AddMinutes(5)));
+            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.ReserveStage(
+                M1Slice6CampaignStage.Qualification,
+                Reservation(M1Slice6CampaignStage.Qualification, 1) with { RawResponseBytes = 262_145 }, Start.AddMinutes(5)));
+            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.ReserveStage(
+                M1Slice6CampaignStage.Qualification,
+                Reservation(M1Slice6CampaignStage.Qualification, 140_000_001), Start.AddMinutes(5)));
+
+            ledger.ReserveStage(M1Slice6CampaignStage.Qualification,
+                Reservation(M1Slice6CampaignStage.Qualification, 1), Start.AddMinutes(5));
+            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.LatchPossibleStart(
+                M1Slice6CampaignStage.Qualification, SafetyIdentifier, Start.AddMinutes(4)));
+            ledger.LatchPossibleStart(M1Slice6CampaignStage.Qualification, SafetyIdentifier,
+                Start.AddMinutes(5).AddSeconds(1));
+            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.AcceptStageEvidence(
+                M1Slice6CampaignStage.Qualification, "late-evidence", new string('9', 64), 0,
+                Start.AddMinutes(6)));
+            Assert.AreEqual(M1Slice6CampaignState.Stopped, ledger.Current.State);
+            Assert.AreEqual(1L, ledger.Current.ProviderCallCount);
+            Assert.AreEqual(1L, ledger.Current.ReservedNanoUsd);
+
+            M1Slice6CampaignIdentity stale = Identity with { CredentialManifestSha256 = new string('a', 64) };
+            Assert.ThrowsExactly<InvalidDataException>(() => new M1Slice6FiniteCampaignLedger(
+                path, stale, CampaignExpiry, CredentialExpiry, Start.AddMinutes(7)));
+        }
+        finally { Cleanup(path); }
+    }
+
+    [TestMethod]
+    public void UsedSafetyStateDeletionStopsBeforeAnotherPossibleStartAndNeverRegenerates()
+    {
+        string path = TempPath();
+        string stateRoot = Path.Combine(Path.GetTempPath(), "infinium-campaign-safety-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            M1Slice6FiniteCampaignLedger ledger = ReadyThroughCredential(path);
+            ProductUserSafetyIdentifierStateStore state = new(stateRoot);
+            string projection = state.GetOrCreateProjection();
+            M1Slice6CampaignDispatchAdmission admission = new(ledger, state);
+            admission.ReserveAndLatchPossibleStart(M1Slice6CampaignStage.Qualification,
+                Reservation(M1Slice6CampaignStage.Qualification, 1), projection, Start.AddMinutes(5),
+                Start.AddMinutes(5).AddSeconds(1));
+            ledger.AcceptStageEvidence(M1Slice6CampaignStage.Qualification, "qualification-evidence",
+                new string('b', 64), 0, Start.AddMinutes(5).AddSeconds(2));
+            File.Delete(Path.Combine(stateRoot, ProductUserSafetyIdentifierStateStore.StateFileName));
+            Assert.ThrowsExactly<InvalidDataException>(() => admission.ReserveAndLatchPossibleStart(
+                M1Slice6CampaignStage.SourceClaimExtraction,
+                Reservation(M1Slice6CampaignStage.SourceClaimExtraction, 1), projection, Start.AddMinutes(6),
+                Start.AddMinutes(6).AddSeconds(1)));
+            Assert.AreEqual(M1Slice6CampaignState.Stopped, ledger.Current.State);
+            Assert.AreEqual(1L, ledger.Current.ProviderCallCount);
+            Assert.IsFalse(File.Exists(Path.Combine(stateRoot, ProductUserSafetyIdentifierStateStore.StateFileName)));
+        }
+        finally
+        {
+            Cleanup(path);
+            if (Directory.Exists(stateRoot)) { Directory.Delete(stateRoot, recursive: true); }
+        }
     }
 
     private static M1Slice6FiniteCampaignLedger ReadyThroughCredential(string path)
     {
-        M1Slice6FiniteCampaignLedger ledger = new(path, CampaignId, CampaignExpiry, CredentialExpiry, Start);
+        M1Slice6FiniteCampaignLedger ledger = new(path, Identity, CampaignExpiry, CredentialExpiry, Start);
         ledger.RecordIndependentReview(Start.AddMinutes(1));
         ledger.AdmitCampaign(Start.AddMinutes(2));
         ledger.BeginCredentialExecutionHandoff(Start.AddMinutes(3));
-        ledger.AcceptCredentialEvidence(Start.AddMinutes(4));
+        ledger.AcceptCredentialEvidence("credential-evidence", new string('6', 64), Start.AddMinutes(4));
         return ledger;
     }
 
     private static void RunStage(M1Slice6FiniteCampaignLedger ledger, M1Slice6CampaignStage stage,
         long reserve, long settle, DateTimeOffset now)
     {
-        ledger.ReserveStage(stage, reserve, now);
-        ledger.LatchPossibleStart(stage, now.AddSeconds(1));
-        ledger.AcceptStageEvidence(stage, settle, now.AddSeconds(2));
+        ledger.ReserveStage(stage, Reservation(stage, reserve), now);
+        ledger.LatchPossibleStart(stage, SafetyIdentifier, now.AddSeconds(1));
+        ledger.AcceptStageEvidence(stage, "evidence-" + stage, new string('7', 64), settle, now.AddSeconds(2));
+    }
+
+    private static M1Slice6CampaignStageReservation Reservation(M1Slice6CampaignStage stage, long reserve)
+    {
+        M1Slice6CampaignStageLimits limits = M1Slice6CampaignStageLimits.For(stage);
+        return new("request-" + stage, new string('8', 64), Math.Min(1024, limits.MaximumRequestBytes),
+            Math.Min(1024, limits.MaximumInputTokens), Math.Min(128, limits.MaximumOutputTokens),
+            Math.Min(4096, limits.MaximumRawResponseBytes), reserve);
     }
 
     private static string TempPath() => Path.Combine(Path.GetTempPath(), "infinium-campaign-" + Guid.NewGuid().ToString("N"), "ledger.jsonl");

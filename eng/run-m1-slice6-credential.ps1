@@ -2,12 +2,15 @@
 param(
     [Parameter(Mandatory = $true)] [ValidateSet('EnrollOrVerifyProfile')] [string] $Operation,
     [Parameter(Mandatory = $true)] [string] $AuthorizationManifest,
-    [Parameter(Mandatory = $true)] [string] $OutputRoot
+    [Parameter(Mandatory = $true)] [string] $OutputRoot,
+    [switch] $ValidateCampaignAdmissionOnly
 )
 
 if ($PSVersionTable.PSEdition -ne 'Core') {
-    & (Get-Command pwsh.exe).Source -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
-        -Operation $Operation -AuthorizationManifest $AuthorizationManifest -OutputRoot $OutputRoot
+    $relay = @('-NoProfile','-ExecutionPolicy','Bypass','-File',$PSCommandPath,
+        '-Operation',$Operation,'-AuthorizationManifest',$AuthorizationManifest,'-OutputRoot',$OutputRoot)
+    if ($ValidateCampaignAdmissionOnly) { $relay += '-ValidateCampaignAdmissionOnly' }
+    & (Get-Command pwsh.exe).Source @relay
     exit $LASTEXITCODE
 }
 
@@ -91,51 +94,65 @@ $reviewPattern = '^WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=([0-9a-f]{40})
     [Regex]::Escape([string]$m.manifest_id) + ' sha256=' + [Regex]::Escape($manifestSha) +
     ' verdicts=security,semantics,diff$'
 $recordPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/record.md'
-$allReviewLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object {
-    $_.StartsWith('WP9_PROFILE_REVIEW_ACCEPTANCE ', [StringComparison]::Ordinal)
+$campaignManifestPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json'
+$campaignIdentity = Get-Content -LiteralPath $campaignManifestPath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
+$campaignIntentLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object {
+    ($_.StartsWith('M1_S6_CAMPAIGN_REVIEW_ACCEPTANCE ', [StringComparison]::Ordinal) -or
+        $_.StartsWith('M1_S6_CAMPAIGN_ADMISSION ', [StringComparison]::Ordinal) -or
+        $_.StartsWith('WP9_PROFILE_CAMPAIGN_ROLLOVER_ADMISSION ', [StringComparison]::Ordinal)) -and
+    $_.Contains("campaign_id=$($campaignIdentity.campaign_id)", [StringComparison]::Ordinal)
 })
-$reviewLines = @($allReviewLines | Where-Object { [Regex]::IsMatch($_, $reviewPattern) })
-$currentOwnerPrefix = "WP9_PROFILE_OWNER_ACCEPTANCE manifest_id=$($m.manifest_id) sha256=$manifestSha "
-$acceptanceLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object {
-    $_.StartsWith($currentOwnerPrefix, [StringComparison]::Ordinal)
-})
-if ($reviewLines.Count -ne 1) {
-    throw 'WP9 profile execution requires one exact independent-review acceptance for the current manifest bytes.'
+$campaignValidation = $null
+try {
+    $campaignValidation = & (Join-Path $PSScriptRoot 'validate-m1-slice6-campaign.ps1') `
+        -AuthorizationManifest $campaignManifestPath -RequireState RolloverAdmitted 2>$null | ConvertFrom-Json
 }
-$reviewedCandidate = [Regex]::Match($reviewLines[0], $reviewPattern).Groups[1].Value
-& git -C $repoRoot merge-base --is-ancestor $closeReady $reviewedCandidate
-if ($LASTEXITCODE -ne 0) { throw 'The independently reviewed WP9 candidate does not descend from the close-ready implementation.' }
-$postClose = @(& git -C $repoRoot diff --name-only "$closeReady..$reviewedCandidate")
-if (@($postClose | Where-Object { $_ -notin $allowedPostClose }).Count -ne 0) {
-    throw 'Code or unapproved documentation drift exists before the exact independently reviewed WP9 candidate.'
+catch { $campaignValidation = $null }
+$campaignRoute = $null -ne $campaignValidation -and $campaignValidation.disposition -ceq 'rollover-admitted'
+if (-not $campaignRoute -and $campaignIntentLines.Count -ne 0) {
+    throw 'Campaign-scoped authority is present but invalid; credential execution refuses downgrade to an owner-marker route.'
 }
-& git -C $repoRoot diff --quiet $reviewedCandidate -- 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
-if ($LASTEXITCODE -ne 0) { throw 'The owner-accepted WP9 manifest differs from the exact independently reviewed bytes.' }
-$postReview = @(& git -C $repoRoot diff --name-only "$reviewedCandidate..$head")
-$expectedPostReview = @(
-    'docs/current-state.md',
-    'docs/plans/milestones/m1/slices/s6/README.md',
-    'docs/plans/milestones/m1/slices/s6/record.md'
-)
-if ([string]::Join("`n", @($postReview | Sort-Object -CaseSensitive)) -cne
-    [string]::Join("`n", $expectedPostReview)) {
-    throw 'Only the exact owner-stop authority-document transition and append-only markers may follow the independently reviewed candidate.'
+if ($campaignRoute) {
+    $campaign = Get-Content -LiteralPath $campaignManifestPath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
+    $reviewedCandidate = [string]$campaignValidation.reviewed_candidate_commit
+    $rolloverLine = "WP9_PROFILE_CAMPAIGN_ROLLOVER_ADMISSION campaign_candidate_commit=$reviewedCandidate authority_sha256=$($campaign.authority_source.attachment_sha256) campaign_id=$($campaign.campaign_id) campaign_sha256=$($campaignValidation.manifest_sha256) manifest_id=$($m.manifest_id) sha256=$manifestSha close_ready_commit=$closeReady credential_expires_at_utc=$($m.expires_at_utc)"
+    $rolloverLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object { $_ -ceq $rolloverLine })
+    if ($rolloverLines.Count -ne 1) { throw 'Campaign-derived credential execution requires one exact identity-scoped rollover admission.' }
+    & git -C $repoRoot diff --quiet $reviewedCandidate -- 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
+    if ($LASTEXITCODE -ne 0) { throw 'The campaign-derived credential manifest differs from the exact reviewed campaign candidate.' }
+    $postReview = @(& git -C $repoRoot diff --name-only "$reviewedCandidate..$head")
+    $expectedPostReview = @('docs/current-state.md','docs/plans/milestones/m1/slices/s6/README.md','docs/plans/milestones/m1/slices/s6/record.md')
+    if (@($postReview | Where-Object { $_ -notin $expectedPostReview }).Count -ne 0) {
+        throw 'Campaign-derived execution contains post-review product or manifest drift.'
+    }
 }
-$reviewedRecord = [string]::Join("`n", @(& git -C $repoRoot show "$reviewedCandidate`:docs/plans/milestones/m1/slices/s6/record.md"))
-if ($LASTEXITCODE -ne 0) { throw 'The exact independently reviewed WP9 record is unavailable.' }
-$currentRecord = ([IO.File]::ReadAllText($recordPath) -replace "`r`n", "`n").TrimEnd("`n")
-$expectedRecord = $reviewedRecord.TrimEnd("`n") + "`n`n" + $reviewLines[0] + "`n" + $canonical
-if ($currentRecord -cne $expectedRecord -or $acceptanceLines.Count -ne 1 -or $acceptanceLines[0] -cne $canonical) {
-    throw 'WP9 profile execution requires exactly one canonical owner-acceptance line for these exact manifest bytes.'
-}
-$currentStateText = [IO.File]::ReadAllText((Join-Path $repoRoot 'docs/current-state.md')) -replace "`r`n", "`n"
-$sliceReadmeText = [IO.File]::ReadAllText((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/README.md')) -replace "`r`n", "`n"
-$ownerAcceptedRequirements = Get-Wp9OwnerAcceptedDocumentationRequirements `
-    -ManifestId ([string]$m.manifest_id) -ManifestSha256 $manifestSha `
-    -CloseReadyCommit $closeReady -ReviewedCandidate $reviewedCandidate
-if (-not (Test-Wp9DocumentationRequirements -CurrentStateText $currentStateText `
-    -ReadmeText $sliceReadmeText -Requirements $ownerAcceptedRequirements)) {
-    throw 'WP9 execution requires the exact owner-accepted current-state and Slice 6 README transition.'
+else {
+    $allReviewLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object {
+        $_.StartsWith('WP9_PROFILE_REVIEW_ACCEPTANCE ', [StringComparison]::Ordinal)
+    })
+    $reviewLines = @($allReviewLines | Where-Object { [Regex]::IsMatch($_, $reviewPattern) })
+    $currentOwnerPrefix = "WP9_PROFILE_OWNER_ACCEPTANCE manifest_id=$($m.manifest_id) sha256=$manifestSha "
+    $acceptanceLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object { $_.StartsWith($currentOwnerPrefix, [StringComparison]::Ordinal) })
+    if ($reviewLines.Count -ne 1) { throw 'WP9 profile execution requires one exact independent-review acceptance for the current manifest bytes.' }
+    $reviewedCandidate = [Regex]::Match($reviewLines[0], $reviewPattern).Groups[1].Value
+    & git -C $repoRoot merge-base --is-ancestor $closeReady $reviewedCandidate
+    if ($LASTEXITCODE -ne 0) { throw 'The independently reviewed WP9 candidate does not descend from the close-ready implementation.' }
+    $postClose = @(& git -C $repoRoot diff --name-only "$closeReady..$reviewedCandidate")
+    if (@($postClose | Where-Object { $_ -notin $allowedPostClose }).Count -ne 0) { throw 'Code or unapproved documentation drift exists before the exact independently reviewed WP9 candidate.' }
+    & git -C $repoRoot diff --quiet $reviewedCandidate -- 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
+    if ($LASTEXITCODE -ne 0) { throw 'The owner-accepted WP9 manifest differs from the exact independently reviewed bytes.' }
+    $postReview = @(& git -C $repoRoot diff --name-only "$reviewedCandidate..$head")
+    $expectedPostReview = @('docs/current-state.md','docs/plans/milestones/m1/slices/s6/README.md','docs/plans/milestones/m1/slices/s6/record.md')
+    if ([string]::Join("`n", @($postReview | Sort-Object -CaseSensitive)) -cne [string]::Join("`n", $expectedPostReview)) { throw 'Only the exact owner-stop authority-document transition and append-only markers may follow the independently reviewed candidate.' }
+    $reviewedRecord = [string]::Join("`n", @(& git -C $repoRoot show "$reviewedCandidate`:docs/plans/milestones/m1/slices/s6/record.md"))
+    $currentRecord = ([IO.File]::ReadAllText($recordPath) -replace "`r`n", "`n").TrimEnd("`n")
+    $expectedRecord = $reviewedRecord.TrimEnd("`n") + "`n`n" + $reviewLines[0] + "`n" + $canonical
+    if ($LASTEXITCODE -ne 0 -or $currentRecord -cne $expectedRecord -or $acceptanceLines.Count -ne 1 -or $acceptanceLines[0] -cne $canonical) { throw 'WP9 profile execution requires exactly one canonical owner acceptance.' }
+    $currentStateText = [IO.File]::ReadAllText((Join-Path $repoRoot 'docs/current-state.md')) -replace "`r`n", "`n"
+    $sliceReadmeText = [IO.File]::ReadAllText((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/README.md')) -replace "`r`n", "`n"
+    $ownerAcceptedRequirements = Get-Wp9OwnerAcceptedDocumentationRequirements -ManifestId ([string]$m.manifest_id) `
+        -ManifestSha256 $manifestSha -CloseReadyCommit $closeReady -ReviewedCandidate $reviewedCandidate
+    if (-not (Test-Wp9DocumentationRequirements -CurrentStateText $currentStateText -ReadmeText $sliceReadmeText -Requirements $ownerAcceptedRequirements)) { throw 'WP9 execution requires exact owner-accepted documentation.' }
 }
 
 $expectedOutput = Join-Path $repoRoot ([string]$m.output.output_root_relative -replace '/', [IO.Path]::DirectorySeparatorChar)
@@ -165,6 +182,25 @@ if ($inventory.count -ne [int]$m.release_build.binary_inventory_file_count -or
     $inventory.sha256 -cne [string]$m.release_build.binary_inventory_sha256) {
     throw 'The exact reviewed Release dependency-binary inventory differs.'
 }
+if ($ValidateCampaignAdmissionOnly) {
+    if (-not $campaignRoute) { throw 'Campaign admission-only validation cannot use the owner-marker route.' }
+    & $coordinator --wp9-campaign-credential-admission-probe --manifest $manifestPath `
+        --manifest-sha256 $manifestSha --campaign-manifest $campaignManifestPath `
+        --campaign-manifest-sha256 ([string]$campaignValidation.manifest_sha256) `
+        --campaign-reviewed-candidate $reviewedCandidate
+    if ($LASTEXITCODE -ne 0) { throw 'The contained Coordinator campaign credential route rejected admission.' }
+    [pscustomobject]@{
+        schema = 'infinium.m1-s6.wp9.campaign-credential-route-validation/v1'
+        disposition = 'validated-before-output-lock-helper-readiness-ui-native-or-provider-effect'
+        campaign_id = [string]$campaign.campaign_id
+        campaign_manifest_sha256 = [string]$campaignValidation.manifest_sha256
+        reviewed_candidate_commit = $reviewedCandidate
+        credential_manifest_id = [string]$m.manifest_id
+        credential_manifest_sha256 = $manifestSha
+        effect_count = 0
+    } | ConvertTo-Json -Depth 5
+    return
+}
 [IO.Directory]::CreateDirectory($resolvedOutput) | Out-Null
 $lockPath = Join-Path $resolvedOutput 'authority-lock.json'
 $lock = [ordered]@{
@@ -174,6 +210,9 @@ $lock = [ordered]@{
     close_ready_implementation_commit = $closeReady
     execution_candidate_commit = $head
     independently_reviewed_candidate_commit = $reviewedCandidate
+    authority_route = if ($campaignRoute) { 'campaign-derived-semantic-rollover' } else { 'exact-owner-marker' }
+    campaign_id = if ($campaignRoute) { [string]$campaign.campaign_id } else { $null }
+    campaign_manifest_sha256 = if ($campaignRoute) { [string]$campaignValidation.manifest_sha256 } else { $null }
     release_source_commit = [string]$m.release_build.source_commit
     coordinator_sha256 = [string]$m.release_build.coordinator_sha256
     helper_sha256 = [string]$m.release_build.helper_sha256
@@ -193,8 +232,18 @@ finally {
     [Security.Cryptography.CryptographicOperations]::ZeroMemory($lockBytes)
 }
 
-& $coordinator --wp9-production-profile-enrollment --manifest $manifestPath `
-    --manifest-sha256 $manifestSha --output-root $resolvedOutput --product-root $stateRoot
+$campaignLedgerPath = Join-Path $resolvedOutput 'finite-campaign-ledger.v1.jsonl'
+if ($campaignRoute) {
+    & $coordinator --wp9-production-profile-enrollment --manifest $manifestPath `
+        --manifest-sha256 $manifestSha --output-root $resolvedOutput --product-root $stateRoot `
+        --campaign-manifest $campaignManifestPath `
+        --campaign-manifest-sha256 ([string]$campaignValidation.manifest_sha256) `
+        --campaign-reviewed-candidate $reviewedCandidate --campaign-ledger $campaignLedgerPath
+}
+else {
+    & $coordinator --wp9-production-profile-enrollment --manifest $manifestPath `
+        --manifest-sha256 $manifestSha --output-root $resolvedOutput --product-root $stateRoot
+}
 $coordinatorExit = $LASTEXITCODE
 if ($coordinatorExit -ne 0) {
     $failurePath = Join-Path $resolvedOutput 'profile-enrollment-failure.json'

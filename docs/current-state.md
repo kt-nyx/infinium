@@ -174,11 +174,14 @@ handoff authority by current-HEAD review and remains historical evidence only.
 The corrected WP8 verification candidate
 `cc14bf60f78c80280cb6eafe60fddaf2bc764d06` and post-run evidence candidate
 `baef115cdd43fa38d0a352c15f8ba44cbfa35312` are independently accepted with
-the exact three receipt hashes retained above. WP9 complete non-live
-reverification and fresh independent review of the exact corrected binding are
-now the only eligible work. Owner acceptance and execution remain ineligible.
-No WP8 template or prior authorization is executable or inheritable. No
-API-key use, UI launch, live-manifest execution, native Credential Manager
+the exact three receipt hashes retained above. B20/E20 and every later WP9
+owner marker remain append-only historical predecessor evidence only. The
+first finite-campaign candidate B11 was rejected by terminal review because
+its marker transitions, schema enforcement, production rollover/ledger route,
+and post-use safety-identifier state were incomplete. Current authority is
+campaign correction and non-live reverification only. No WP8 template, prior
+authorization, campaign marker, or owner marker is executable or inheritable.
+No API-key use, UI launch, live-manifest execution, native Credential Manager
 operation, DNS operation, public-network operation, provider request, billable
 operation, or production-profile materialization/use is authorized.
 

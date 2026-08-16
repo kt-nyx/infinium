@@ -7998,3 +7998,43 @@ run failed while deleting read-only Git object files from the temporary clone.
 The bounded correction normalizes attributes only under the exact generated
 temporary root before recursive deletion. This run is also excluded until its
 cleanup is observed terminal. External effects remained zero.
+
+## Finite-campaign B11 terminal-review correction — 2026-08-16
+
+The first complete bound campaign candidate
+`5594f5ac3ebf0b9f9f17753569a55c1cb5f744a5` was rejected by both fresh
+terminal reviews. Its review/admission markers were tied to a moving HEAD,
+the standalone validator parsed but did not recursively evaluate the closed
+schemas, the closeout modes were incomplete, the production credential route
+did not consume campaign rollover authority, the coordinator ledger was not
+the production authority, and deleting the safety-identifier seed after a
+possible start could silently create a new identity. Its manifest SHA-256
+`680678feb0428ff955aceb68fc5733ae4eadd62c7ce4950819032dffbb2cd04a`
+and all associated rehearsal or verification output are rejected evidence.
+
+The bounded replacement makes review, admission, and credential rollover
+three distinct committed three-document successors bound to the fixed
+reviewed candidate. It recursively enforces both closed schemas, canonical
+paths, exact marker lines, expiry, candidate ancestry, append-only record
+growth, and mutually exclusive Layer 6 modes. The production credential route
+now requires the exact campaign-derived rollover admission and exercises the
+contained Coordinator admission route before any output root, authority lock,
+helper readiness, UI, or native operation. The coordinator owns the exact
+campaign/credential/request/evidence/safety identities, monotonic counters,
+immutable deadlines, full holds, legal reopen transitions, and terminal
+expiry/ambiguity outcomes. The safety seed and use latch are atomically
+created and versioned; after a possible start, loss, corruption, or drift is a
+terminal campaign stop and never regenerates an identity.
+
+Pre-freeze checks on the replacement source passed the Windows PowerShell
+verification-state validator, recursive schema/marker mutation contracts
+3/3, product ledger/safety/rollover/adapter/profile tests 43/43, Release build
+with zero warnings/errors, PowerShell parsing, formatting, and diff checks.
+The committed fresh-clone review/admission/rollover, fake-store,
+literal-loopback, exact stage-manifest, and no-fourth-call rehearsal remains a
+post-freeze gate so it consumes the exact committed verifier and candidate
+bytes. Current authority remains correction and non-live reverification only.
+No campaign review, admission, rollover, UI/helper/readiness launch, authority
+lock, API key, native Credential Manager operation, production profile,
+DNS/public-network operation, provider request, billable operation,
+private-fixture/archive access, or push occurred.

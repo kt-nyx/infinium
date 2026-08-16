@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$AuthorizationManifest,
-    [ValidateSet('Verification', 'Ready', 'Reviewed', 'Admitted')][string]$RequireState = 'Verification',
+    [ValidateSet('Verification', 'Ready', 'Reviewed', 'Admitted', 'RolloverAdmitted')][string]$RequireState = 'Verification',
     [string]$RecordPath = 'docs/plans/milestones/m1/slices/s6/record.md',
     [string]$PriorCredentialManifest,
     [string]$ReplacementCredentialManifest,
@@ -10,12 +10,144 @@ param(
     [datetime]$NowUtc = [datetime]::UtcNow
 )
 
+if ($PSVersionTable.PSEdition -ne 'Core') {
+    $relay = @('-NoProfile','-File',$PSCommandPath,'-AuthorizationManifest',$AuthorizationManifest,
+        '-RequireState',$RequireState,'-RecordPath',$RecordPath,'-AuthorityArtifact',$AuthorityArtifact,
+        '-NowUtc',$NowUtc.ToUniversalTime().ToString('O',[Globalization.CultureInfo]::InvariantCulture))
+    if ($PriorCredentialManifest) { $relay += @('-PriorCredentialManifest',$PriorCredentialManifest) }
+    if ($ReplacementCredentialManifest) { $relay += @('-ReplacementCredentialManifest',$ReplacementCredentialManifest) }
+    if ($ZeroEffectEvidence) { $relay += @('-ZeroEffectEvidence',$ZeroEffectEvidence) }
+    & pwsh @relay
+    exit $LASTEXITCODE
+}
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 function Get-FullPath([string]$PathValue) {
     if ([IO.Path]::IsPathRooted($PathValue)) { return [IO.Path]::GetFullPath($PathValue) }
     return [IO.Path]::GetFullPath((Join-Path (Get-Location) $PathValue))
+}
+
+function Require-CanonicalRepositoryPath([string]$ActualPath, [string]$ExpectedRelativePath, [string]$Name) {
+    $root = (& git rev-parse --show-toplevel).Trim()
+    if ($LASTEXITCODE -ne 0) { throw 'Campaign validation requires a Git worktree.' }
+    $expected = [IO.Path]::GetFullPath((Join-Path $root $ExpectedRelativePath))
+    if ((Get-FullPath $ActualPath) -cne $expected) { throw "$Name is not the canonical campaign authority path." }
+}
+
+function Require-ExactMarkerTransition([string]$Marker,[string]$ExpectedParent,[string]$StatePhrase) {
+    $recordRelative = 'docs/plans/milestones/m1/slices/s6/record.md'
+    $commits = @(& git log --format=%H --fixed-strings -S $Marker -- $recordRelative)
+    if ($LASTEXITCODE -ne 0 -or $commits.Count -ne 1) { throw 'Campaign marker must be introduced by one unique committed transition.' }
+    $commit = [string]$commits[0]
+    $parent = (& git rev-parse "$commit^").Trim()
+    if ($LASTEXITCODE -ne 0 -or $parent -cne $ExpectedParent) { throw 'Campaign marker transition has the wrong exact predecessor.' }
+    [string[]]$actual = @(& git -c core.quotePath=false diff --name-only $parent $commit --)
+    [Array]::Sort($actual,[StringComparer]::Ordinal)
+    [string[]]$expected = @('docs/current-state.md','docs/plans/milestones/m1/slices/s6/README.md',$recordRelative)
+    [Array]::Sort($expected,[StringComparer]::Ordinal)
+    if ([string]::Join("`n",$actual) -cne [string]::Join("`n",$expected)) { throw 'Campaign marker transition changed a fourth or missing path.' }
+    $parentRecord = (@(& git show "$parent`:$recordRelative") -join "`n").TrimEnd("`n")
+    $commitRecord = (@(& git show "$commit`:$recordRelative") -join "`n").TrimEnd("`n")
+    if ($LASTEXITCODE -ne 0 -or -not $commitRecord.StartsWith($parentRecord + "`n",[StringComparison]::Ordinal)) { throw 'Campaign marker transition is not append-only.' }
+    foreach($path in @('docs/current-state.md','docs/plans/milestones/m1/slices/s6/README.md')) {
+        $text = @(& git show "$commit`:$path") -join "`n"
+        if ($LASTEXITCODE -ne 0 -or -not $text.Contains($StatePhrase,[StringComparison]::Ordinal)) { throw 'Campaign marker transition has stale authority documentation.' }
+    }
+    & git merge-base --is-ancestor $commit HEAD
+    if ($LASTEXITCODE -ne 0) { throw 'Campaign marker transition is not an ancestor of current HEAD.' }
+    return $commit
+}
+
+function Resolve-LocalSchemaReference([Text.Json.JsonElement]$Root, [string]$Reference) {
+    if (-not $Reference.StartsWith('#/', [StringComparison]::Ordinal)) { throw "Non-local schema reference is prohibited: $Reference" }
+    $resolved = $Root
+    foreach ($segment in $Reference.Substring(2).Split('/')) {
+        $next = [Text.Json.JsonElement]::new()
+        $name = $segment.Replace('~1','/').Replace('~0','~')
+        if (-not $resolved.TryGetProperty($name, [ref]$next)) { throw "Unresolved schema reference: $Reference" }
+        $resolved = $next
+    }
+    return $resolved
+}
+
+function Assert-CampaignSchemaNode([Text.Json.JsonElement]$Instance, [Text.Json.JsonElement]$Schema,
+    [Text.Json.JsonElement]$Root, [string]$Location) {
+    $probe = [Text.Json.JsonElement]::new()
+    if ($Schema.TryGetProperty('$ref', [ref]$probe)) {
+        Assert-CampaignSchemaNode $Instance (Resolve-LocalSchemaReference $Root $probe.GetString()) $Root $Location
+        return
+    }
+    if ($Schema.TryGetProperty('allOf', [ref]$probe)) {
+        foreach ($member in $probe.EnumerateArray()) { Assert-CampaignSchemaNode $Instance $member $Root $Location }
+    }
+    if ($Schema.TryGetProperty('type', [ref]$probe)) {
+        $ok = switch ($probe.GetString()) {
+            'object' { $Instance.ValueKind -eq [Text.Json.JsonValueKind]::Object }
+            'array' { $Instance.ValueKind -eq [Text.Json.JsonValueKind]::Array }
+            'string' { $Instance.ValueKind -eq [Text.Json.JsonValueKind]::String }
+            'integer' { $value = [int64]0; $Instance.ValueKind -eq [Text.Json.JsonValueKind]::Number -and $Instance.TryGetInt64([ref]$value) }
+            'boolean' { $Instance.ValueKind -in @([Text.Json.JsonValueKind]::True,[Text.Json.JsonValueKind]::False) }
+            'null' { $Instance.ValueKind -eq [Text.Json.JsonValueKind]::Null }
+            default { throw "Unsupported campaign schema type at $Location." }
+        }
+        if (-not $ok) { throw "$Location has the wrong schema type." }
+    }
+    if ($Schema.TryGetProperty('const', [ref]$probe) -and -not [Text.Json.JsonElement]::DeepEquals($Instance,$probe)) {
+        throw "$Location differs from its schema constant."
+    }
+    if ($Schema.TryGetProperty('enum', [ref]$probe)) {
+        $ok = $false
+        foreach ($member in $probe.EnumerateArray()) { if ([Text.Json.JsonElement]::DeepEquals($Instance,$member)) { $ok=$true; break } }
+        if (-not $ok) { throw "$Location is outside its schema enumeration." }
+    }
+    if ($Instance.ValueKind -eq [Text.Json.JsonValueKind]::Object) {
+        $required = [Text.Json.JsonElement]::new()
+        if ($Schema.TryGetProperty('required',[ref]$required)) {
+            foreach ($name in $required.EnumerateArray()) { $found=[Text.Json.JsonElement]::new(); if (-not $Instance.TryGetProperty($name.GetString(),[ref]$found)) { throw "$Location is missing $($name.GetString())." } }
+        }
+        $properties=[Text.Json.JsonElement]::new(); $hasProperties=$Schema.TryGetProperty('properties',[ref]$properties)
+        $additional=[Text.Json.JsonElement]::new(); $closed=$Schema.TryGetProperty('additionalProperties',[ref]$additional) -and $additional.ValueKind -eq [Text.Json.JsonValueKind]::False
+        foreach ($property in $Instance.EnumerateObject()) {
+            $child=[Text.Json.JsonElement]::new()
+            if ($hasProperties -and $properties.TryGetProperty($property.Name,[ref]$child)) { Assert-CampaignSchemaNode $property.Value $child $Root "$Location.$($property.Name)" }
+            elseif ($closed) { throw "$Location has unknown property $($property.Name)." }
+        }
+    } elseif ($Instance.ValueKind -eq [Text.Json.JsonValueKind]::Array) {
+        $items=@($Instance.EnumerateArray()); $min=[Text.Json.JsonElement]::new(); $max=[Text.Json.JsonElement]::new()
+        if ($Schema.TryGetProperty('minItems',[ref]$min) -and $items.Count -lt $min.GetInt32()) { throw "$Location has too few items." }
+        if ($Schema.TryGetProperty('maxItems',[ref]$max) -and $items.Count -gt $max.GetInt32()) { throw "$Location has too many items." }
+        $prefix=[Text.Json.JsonElement]::new()
+        if ($Schema.TryGetProperty('prefixItems',[ref]$prefix)) { $schemas=@($prefix.EnumerateArray()); for($i=0;$i -lt $items.Count -and $i -lt $schemas.Count;$i++){ Assert-CampaignSchemaNode $items[$i] $schemas[$i] $Root "$Location[$i]" } }
+        $itemSchema=[Text.Json.JsonElement]::new()
+        if ($Schema.TryGetProperty('items',[ref]$itemSchema)) {
+            if ($itemSchema.ValueKind -eq [Text.Json.JsonValueKind]::False -and (-not $Schema.TryGetProperty('prefixItems',[ref]$prefix) -or $items.Count -gt @($prefix.EnumerateArray()).Count)) { throw "$Location has an unmodelled item." }
+            if ($itemSchema.ValueKind -eq [Text.Json.JsonValueKind]::Object) { for($i=0;$i -lt $items.Count;$i++){ Assert-CampaignSchemaNode $items[$i] $itemSchema $Root "$Location[$i]" } }
+        }
+    } elseif ($Instance.ValueKind -eq [Text.Json.JsonValueKind]::String) {
+        $pattern=[Text.Json.JsonElement]::new(); if ($Schema.TryGetProperty('pattern',[ref]$pattern) -and $Instance.GetString() -cnotmatch $pattern.GetString()) { throw "$Location does not match its schema pattern." }
+    }
+}
+
+function Assert-CampaignSchema([string]$DocumentPath,[string]$SchemaPath) {
+    $document=[Text.Json.JsonDocument]::Parse([IO.File]::ReadAllText($DocumentPath)); $schema=[Text.Json.JsonDocument]::Parse([IO.File]::ReadAllText($SchemaPath))
+    try {
+        Assert-NoDuplicateCampaignProperties $document.RootElement '$campaign'
+        Assert-CampaignSchemaNode $document.RootElement $schema.RootElement $schema.RootElement '$campaign'
+    } finally { $schema.Dispose(); $document.Dispose() }
+}
+
+function Assert-NoDuplicateCampaignProperties([Text.Json.JsonElement]$Value,[string]$Location) {
+    if ($Value.ValueKind -eq [Text.Json.JsonValueKind]::Object) {
+        $names=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+        foreach($property in $Value.EnumerateObject()) {
+            if (-not $names.Add($property.Name)) { throw "$Location has duplicate property $($property.Name)." }
+            Assert-NoDuplicateCampaignProperties $property.Value "$Location.$($property.Name)"
+        }
+    } elseif ($Value.ValueKind -eq [Text.Json.JsonValueKind]::Array) {
+        $index=0; foreach($item in $Value.EnumerateArray()){ Assert-NoDuplicateCampaignProperties $item "$Location[$index]"; $index++ }
+    }
 }
 
 function Get-Sha256([string]$PathValue) {
@@ -27,6 +159,8 @@ function Get-Sha256([string]$PathValue) {
     }
     finally { $stream.Dispose() }
 }
+
+function ConvertTo-LowerHex([byte[]]$Bytes) { return ([BitConverter]::ToString($Bytes)).Replace('-','').ToLowerInvariant() }
 
 function Get-ExactUtcText($Value) {
     if ($Value -is [datetime]) { return $Value.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ', [Globalization.CultureInfo]::InvariantCulture) }
@@ -93,8 +227,14 @@ function Require-CredentialNonBroadening($Prior, $Replacement, $Effects) {
 
 $manifestPath = Get-FullPath $AuthorizationManifest
 $schemaPath = Get-FullPath 'contracts/repository/m1-slice6-finite-campaign-authorization.v1.schema.json'
+$authoritySchemaPath = Get-FullPath 'contracts/repository/m1-slice6-finite-campaign-owner-authority.v1.schema.json'
 $authorityPath = Get-FullPath $AuthorityArtifact
-foreach ($path in @($manifestPath, $schemaPath, $authorityPath)) { if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Required campaign authority file is absent: $path" } }
+foreach ($path in @($manifestPath, $schemaPath, $authorityPath, $authoritySchemaPath)) { if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Required campaign authority file is absent: $path" } }
+Require-CanonicalRepositoryPath $AuthorizationManifest 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json' 'AuthorizationManifest'
+Require-CanonicalRepositoryPath $AuthorityArtifact 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-owner-authority.v1.json' 'AuthorityArtifact'
+Require-CanonicalRepositoryPath $RecordPath 'docs/plans/milestones/m1/slices/s6/record.md' 'RecordPath'
+Assert-CampaignSchema $manifestPath $schemaPath
+Assert-CampaignSchema $authorityPath $authoritySchemaPath
 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
 $null = Get-Content -LiteralPath $schemaPath -Raw | ConvertFrom-Json
 $authority = Get-Content -LiteralPath $authorityPath -Raw | ConvertFrom-Json
@@ -119,7 +259,7 @@ if ($authority.schema_identity -cne 'infinium.repository.m1-slice6-finite-campai
     throw 'The immutable campaign authority artifact is stale or broadened.'
 }
 
-Require-ExactProperties $manifest @('schema_identity','campaign_id','status','effect_authority','prepared_at_utc','expires_at_utc','candidate_binding','authority_source','semantic_rollover','credential_envelope','safety_identifier','official_document_snapshot','ordered_stages','aggregate_limits','admission','rehearsal','execution') 'campaign'
+Require-ExactProperties $manifest @('schema_identity','campaign_id','status','effect_authority','prepared_at_utc','expires_at_utc','candidate_binding','authority_source','semantic_rollover','credential_envelope','safety_identifier','official_document_snapshot','ordered_stages','aggregate_limits','campaign_ledger','admission','rehearsal','execution') 'campaign'
 if ($manifest.schema_identity -cne 'infinium.repository.m1-slice6-finite-campaign-authorization/1.0.0' -or $manifest.campaign_id -cne 'infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee') { throw 'Campaign identity is not exact.' }
 if ($manifest.effect_authority -cne 'none-until-exact-reviewed-campaign-admission') { throw 'Campaign effect authority was broadened.' }
 if ((Get-ExactUtcText $manifest.expires_at_utc) -cne '2026-08-22T23:59:00.0000000Z') { throw 'Campaign expiry is not exact.' }
@@ -178,18 +318,50 @@ Require-ExactArray @([string]$manifest.aggregate_limits.maximum_credential_calls
 if ($manifest.safety_identifier.domain -cne 'infinium.openai.safety-identifier/v1' -or $manifest.safety_identifier.seed_generation -cne 'cryptographic-random-32-bytes-create-new-once' -or $manifest.safety_identifier.raw_seed_transmitted -or -not $manifest.safety_identifier.stable_for_product_user) { throw 'Safety identifier contract was weakened.' }
 if ($manifest.execution.campaign_permitted -or $manifest.execution.credential_helper_launch_permitted -or $manifest.execution.credential_manager_operation_permitted -or $manifest.execution.provider_request_permitted -or $null -ne $manifest.execution.command) { throw 'The pre-effect campaign manifest became executable.' }
 
-$rank = @{ Verification = 0; Ready = 1; Reviewed = 2; Admitted = 3 }
+$rank = @{ Verification = 0; Ready = 1; Reviewed = 2; Admitted = 3; RolloverAdmitted = 4 }
 if ($rank[$RequireState] -ge 1 -and -not $ready) { throw 'Exact campaign bindings are not ready.' }
 $manifestSha = Get-Sha256 $manifestPath
 $recordText = if (Test-Path -LiteralPath (Get-FullPath $RecordPath)) { Get-Content -LiteralPath (Get-FullPath $RecordPath) -Raw } else { '' }
-$currentHead = (& git rev-parse HEAD).Trim()
-$reviewMarker = 'M1_S6_CAMPAIGN_REVIEW_ACCEPTANCE candidate_commit=' + $currentHead + ' campaign_id=' + $manifest.campaign_id + ' sha256=' + $manifestSha + ' verdicts=security,semantics,diff'
-$admissionMarker = 'M1_S6_CAMPAIGN_ADMISSION authority_sha256=' + $manifest.authority_source.attachment_sha256 + ' campaign_id=' + $manifest.campaign_id + ' sha256=' + $manifestSha + ' close_ready_commit=' + $manifest.candidate_binding.close_ready_implementation_commit + ' expires_at_utc=' + (Get-ExactUtcText $manifest.expires_at_utc)
-$reviewCount = ([regex]::Matches($recordText, [regex]::Escape($reviewMarker))).Count
-$admissionCount = ([regex]::Matches($recordText, [regex]::Escape($admissionMarker))).Count
+$recordLines = @($recordText -split "`r?`n")
+$reviewPattern = '^M1_S6_CAMPAIGN_REVIEW_ACCEPTANCE candidate_commit=([0-9a-f]{40}) campaign_id=' + [regex]::Escape([string]$manifest.campaign_id) + ' sha256=' + $manifestSha + ' verdicts=security,semantics,diff$'
+$reviewMatches = @($recordLines | ForEach-Object { if ($_ -cmatch $reviewPattern) { $Matches[1] } })
+$reviewCount = $reviewMatches.Count
+$reviewedCandidate = if ($reviewCount -eq 1) { [string]$reviewMatches[0] } else { $null }
+$admissionPattern = '^M1_S6_CAMPAIGN_ADMISSION candidate_commit=([0-9a-f]{40}) authority_sha256=' + $manifest.authority_source.attachment_sha256 + ' campaign_id=' + [regex]::Escape([string]$manifest.campaign_id) + ' sha256=' + $manifestSha + ' close_ready_commit=' + $manifest.candidate_binding.close_ready_implementation_commit + ' expires_at_utc=' + [regex]::Escape((Get-ExactUtcText $manifest.expires_at_utc)) + '$'
+$admissionMatches = @($recordLines | ForEach-Object { if ($_ -cmatch $admissionPattern) { $Matches[1] } })
+$admissionCount = $admissionMatches.Count
 if ($rank[$RequireState] -ge 2 -and $reviewCount -ne 1) { throw 'The exact campaign review marker is absent or duplicated.' }
 if ($rank[$RequireState] -ge 3 -and $admissionCount -ne 1) { throw 'The exact campaign admission marker is absent or duplicated.' }
 if ($admissionCount -gt 0 -and $reviewCount -ne 1) { throw 'Campaign admission has no unique predecessor review.' }
+if ($reviewCount -eq 1) {
+    & git cat-file -e "$reviewedCandidate^{commit}" 2>$null
+    if ($LASTEXITCODE -ne 0) { throw 'The reviewed campaign candidate does not exist.' }
+    & git merge-base --is-ancestor $reviewedCandidate HEAD
+    if ($LASTEXITCODE -ne 0) { throw 'The reviewed campaign candidate is not an ancestor of current HEAD.' }
+    $candidateBytes = (& git show ($reviewedCandidate + ':docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json') 2>$null) -join "`n"
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($candidateBytes)) { throw 'The reviewed candidate does not retain the exact campaign manifest path.' }
+    $candidateHash = ConvertTo-LowerHex ([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($candidateBytes + "`n")))
+    if ($candidateHash -cne $manifestSha) { throw 'The review marker candidate does not bind the exact campaign manifest bytes.' }
+}
+if ($admissionCount -eq 1 -and [string]$admissionMatches[0] -cne $reviewedCandidate) { throw 'Campaign admission does not bind the exact reviewed candidate.' }
+if ($rank[$RequireState] -ge 3 -and $NowUtc.ToUniversalTime() -ge ([datetime]$manifest.expires_at_utc).ToUniversalTime()) { throw 'Campaign admission is expired.' }
+$reviewCommit = $null
+if ($rank[$RequireState] -ge 2) {
+    $exactReviewMarker = 'M1_S6_CAMPAIGN_REVIEW_ACCEPTANCE candidate_commit=' + $reviewedCandidate + ' campaign_id=' + $manifest.campaign_id + ' sha256=' + $manifestSha + ' verdicts=security,semantics,diff'
+    $reviewCommit = Require-ExactMarkerTransition $exactReviewMarker $reviewedCandidate 'Campaign review accepted; exact owner admission remains pending and no effect is authorized.'
+}
+$admissionCommit = $null
+if ($rank[$RequireState] -ge 3) {
+    $exactAdmissionMarker = 'M1_S6_CAMPAIGN_ADMISSION candidate_commit=' + $reviewedCandidate + ' authority_sha256=' + $manifest.authority_source.attachment_sha256 + ' campaign_id=' + $manifest.campaign_id + ' sha256=' + $manifestSha + ' close_ready_commit=' + $manifest.candidate_binding.close_ready_implementation_commit + ' expires_at_utc=' + (Get-ExactUtcText $manifest.expires_at_utc)
+    $admissionCommit = Require-ExactMarkerTransition $exactAdmissionMarker $reviewCommit 'Campaign admitted; exact credential rollover admission remains pending and no effect is authorized.'
+}
+$rolloverCommit = $null
+if ($rank[$RequireState] -ge 4) {
+    $credentialSha = Get-Sha256 $currentCredentialPath
+    $rolloverMarker = 'WP9_PROFILE_CAMPAIGN_ROLLOVER_ADMISSION campaign_candidate_commit=' + $reviewedCandidate + ' authority_sha256=' + $manifest.authority_source.attachment_sha256 + ' campaign_id=' + $manifest.campaign_id + ' campaign_sha256=' + $manifestSha + ' manifest_id=' + $currentCredential.manifest_id + ' sha256=' + $credentialSha + ' close_ready_commit=' + $currentCredential.candidate_binding.close_ready_implementation_commit + ' credential_expires_at_utc=' + (Get-ExactUtcText $currentCredential.expires_at_utc)
+    if (@($recordLines | Where-Object { $_ -ceq $rolloverMarker }).Count -ne 1) { throw 'The exact campaign credential rollover marker is absent or duplicated.' }
+    $rolloverCommit = Require-ExactMarkerTransition $rolloverMarker $admissionCommit 'Campaign credential rollover admitted; only the exact one-shot credential enrollment-or-cancel handoff is eligible.'
+}
 
 if ($PriorCredentialManifest -or $ReplacementCredentialManifest -or $ZeroEffectEvidence) {
     if (-not ($PriorCredentialManifest -and $ReplacementCredentialManifest -and $ZeroEffectEvidence)) { throw 'Credential rollover comparison requires all three inputs.' }
@@ -201,11 +373,15 @@ if ($PriorCredentialManifest -or $ReplacementCredentialManifest -or $ZeroEffectE
 
 [pscustomobject]@{
     schema = 'infinium.m1-s6.campaign-validation-receipt/v1'
-    disposition = $RequireState.ToLowerInvariant()
+    disposition = if ($RequireState -ceq 'RolloverAdmitted') { 'rollover-admitted' } else { $RequireState.ToLowerInvariant() }
     campaign_id = $manifest.campaign_id
     manifest_sha256 = $manifestSha
     review_marker_count = $reviewCount
     admission_marker_count = $admissionCount
+    reviewed_candidate_commit = $reviewedCandidate
+    review_closeout_commit = $reviewCommit
+    admission_closeout_commit = $admissionCommit
+    rollover_closeout_commit = $rolloverCommit
     provider_call_maximum = 3
     dns_maximum = 3
     maximum_nano_usd = 1340000000

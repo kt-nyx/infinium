@@ -78,7 +78,10 @@ The finite-campaign amendment is in correction and non-live verification. The
 immutable owner authority source is SHA-256
 `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
 Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee`
-is verification-pending and non-executable. B20 manifest SHA-256
+is verification-pending and non-executable. The first B11 campaign candidate
+was rejected because committed review/admission/rollover transitions, schema
+enforcement, the production rollover/ledger route, and durable post-use safety
+identifier state were incomplete. B20 manifest SHA-256
 `fb301a17843496b0452561facdbaa29412c2ba0d44ce4cc7c8bc102a391e88a9`
 and E20 are predecessor evidence only. No API-key use, UI/helper/readiness
 launch, authority lock, live-manifest execution, native Credential Manager

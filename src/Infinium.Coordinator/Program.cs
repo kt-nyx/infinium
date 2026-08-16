@@ -37,6 +37,51 @@ if (args is ["--wp9-production-profile-enrollment", "--manifest", string wp9Mani
     }
 }
 
+if (args is ["--wp9-production-profile-enrollment", "--manifest", string campaignWp9Manifest,
+    "--manifest-sha256", string campaignWp9ManifestSha256,
+    "--output-root", string campaignWp9OutputRoot,
+    "--product-root", string campaignWp9ProductRoot,
+    "--campaign-manifest", string campaignManifest,
+    "--campaign-manifest-sha256", string campaignManifestSha256,
+    "--campaign-reviewed-candidate", string campaignReviewedCandidate,
+    "--campaign-ledger", string campaignLedger])
+{
+    try
+    {
+        return await Wp9ProductionProfileEnrollmentRunner.RunAsync(campaignWp9Manifest,
+            campaignWp9ManifestSha256, campaignWp9OutputRoot, campaignWp9ProductRoot,
+            new(campaignManifest, campaignManifestSha256, campaignReviewedCandidate, campaignLedger))
+            .ConfigureAwait(false);
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException
+        or InvalidOperationException or OperationCanceledException or PlatformNotSupportedException)
+    {
+        Console.Error.WriteLine($"WP9 campaign-derived production enrollment stopped with typed non-secret error: {exception.GetType().Name}");
+        return 73;
+    }
+}
+
+if (args is ["--wp9-campaign-credential-admission-probe", "--manifest", string probeWp9Manifest,
+    "--manifest-sha256", string probeWp9ManifestSha256,
+    "--campaign-manifest", string probeCampaignManifest,
+    "--campaign-manifest-sha256", string probeCampaignManifestSha256,
+    "--campaign-reviewed-candidate", string probeReviewedCandidate])
+{
+    try
+    {
+        Wp9ProductionProfileEnrollmentRunner.ValidateCampaignAdmissionOnly(probeWp9Manifest,
+            probeWp9ManifestSha256, probeCampaignManifest, probeCampaignManifestSha256,
+            probeReviewedCandidate);
+        Console.WriteLine("WP9 campaign credential admission validated with zero effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"WP9 campaign credential admission probe stopped: {exception.GetType().Name}");
+        return 74;
+    }
+}
+
 if (args is ["--credential-native-qualification-v2", "--manifest", string nativeManifest,
     "--manifest-sha256", string nativeManifestSha256,
     "--output-root", string nativeOutputRoot])

@@ -1,13 +1,13 @@
 {
   "schema_identity": "infinium.repository.m1-slice6-finite-campaign-authorization/1.0.0",
   "campaign_id": "infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee",
-  "status": "ready-for-campaign-review",
+  "status": "verification-pending",
   "effect_authority": "none-until-exact-reviewed-campaign-admission",
   "prepared_at_utc": "2026-08-15T16:00:00.0000000Z",
   "expires_at_utc": "2026-08-22T23:59:00.0000000Z",
   "candidate_binding": {
-    "close_ready_implementation_commit": "5147ea821ef0f99f1d69fc6931b7f02ec266b664",
-    "verification_candidate_commit": "5147ea821ef0f99f1d69fc6931b7f02ec266b664"
+    "close_ready_implementation_commit": "pending",
+    "verification_candidate_commit": "pending"
   },
   "authority_source": {
     "artifact": "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-owner-authority.v1.json",
@@ -72,6 +72,9 @@
     "state_version": "infinium.product-user-safety-identifier/1.0.0",
     "seed_generation": "cryptographic-random-32-bytes-create-new-once",
     "local_state_file": "product-user-safety-identifier.v1.seed",
+    "use_latch_file": "product-user-safety-identifier.v1.use",
+    "use_latch_schema": "infinium.product-user-safety-identifier-use/v1",
+    "post_use_missing_corrupt_or_torn_state": "terminal-stop-never-regenerate",
     "transmitted_projection": "lowercase-hex-sha256(domain-utf8-nul || seed)",
     "domain": "infinium.openai.safety-identifier/v1",
     "projection_length": 64,
@@ -159,10 +162,60 @@
     "fourth_call": "prohibited",
     "ambiguous_start": "stop-campaign-retain-hold-no-retry"
   },
+  "campaign_ledger": {
+    "schema_identity": "infinium.m1-s6.finite-campaign-ledger/v1",
+    "path": "artifacts/m1-slice6/wp9-profile/finite-campaign-ledger.v1.jsonl",
+    "owner": "coordinator-only-append-create-write-through",
+    "state_order": [
+      "ready",
+      "reviewed",
+      "admitted",
+      "credential-execution-handoff",
+      "credential-evidence-accepted",
+      "stage-reserved",
+      "transport-may-have-started",
+      "stage-accepted",
+      "completed-or-stopped"
+    ],
+    "identity_fields": [
+      "campaign-id",
+      "campaign-manifest-sha256",
+      "authority-attachment-sha256",
+      "verification-candidate-commit",
+      "credential-manifest-id",
+      "credential-manifest-sha256",
+      "credential-profile-id",
+      "credential-generation-id",
+      "credential-target-fingerprint-sha256"
+    ],
+    "aggregate_vector_fields": [
+      "provider-calls",
+      "dns-resolutions",
+      "request-bytes",
+      "input-tokens",
+      "output-tokens",
+      "raw-response-bytes",
+      "reserved-nano-usd",
+      "settled-nano-usd"
+    ],
+    "request_and_evidence_binding": "exact-stage-manifest-id-and-sha256-plus-independent-evidence-id-and-sha256",
+    "clock": "utc-monotonic-no-rollback",
+    "expiry_checks": [
+      "campaign-admission",
+      "credential-handoff",
+      "credential-evidence-handoff",
+      "stage-reservation",
+      "possible-start"
+    ],
+    "stage_deadline": "immutable-reservation-time-plus-exact-stage-deadline",
+    "reopen_validation": "full-hash-chain-identity-state-clock-vector-and-successor-grammar",
+    "terminal_failure": "append-stopped-retain-reservation-and-possible-start-hold-no-retry",
+    "possible_start_hold": "one-call-and-one-dns-consumed-before-send"
+  },
   "admission": {
     "review_marker": "M1_S6_CAMPAIGN_REVIEW_ACCEPTANCE candidate_commit=<exact-reviewed-candidate> campaign_id=<campaign_id> sha256=<manifest_sha256> verdicts=security,semantics,diff",
-    "campaign_admission_marker": "M1_S6_CAMPAIGN_ADMISSION authority_sha256=<attachment_sha256> campaign_id=<campaign_id> sha256=<manifest_sha256> close_ready_commit=<close_ready_implementation_commit> expires_at_utc=<expires_at_utc>",
-    "credential_rollover_marker": "WP9_PROFILE_CAMPAIGN_ROLLOVER_ADMISSION campaign_id=<campaign_id> campaign_sha256=<manifest_sha256> manifest_id=<credential_manifest_id> sha256=<credential_manifest_sha256> close_ready_commit=<close_ready_implementation_commit> credential_expires_at_utc=<credential_expires_at_utc>",
+    "campaign_admission_marker": "M1_S6_CAMPAIGN_ADMISSION candidate_commit=<exact-reviewed-candidate> authority_sha256=<attachment_sha256> campaign_id=<campaign_id> sha256=<manifest_sha256> close_ready_commit=<close_ready_implementation_commit> expires_at_utc=<expires_at_utc>",
+    "credential_rollover_marker": "WP9_PROFILE_CAMPAIGN_ROLLOVER_ADMISSION campaign_candidate_commit=<exact-reviewed-candidate> authority_sha256=<attachment_sha256> campaign_id=<campaign_id> campaign_sha256=<manifest_sha256> manifest_id=<credential_manifest_id> sha256=<credential_manifest_sha256> close_ready_commit=<close_ready_implementation_commit> credential_expires_at_utc=<credential_expires_at_utc>",
     "review_required_before_owner_admission": true,
     "exact_manifest_bytes_required": true,
     "prior_marker_inheritance": false,
@@ -175,10 +228,17 @@
     "effects": "none",
     "required_states": ["ready", "reviewed", "campaign-admitted", "credential-execution-handoff", "credential-evidence-handoff"],
     "required_stop_mutations": [
-      "expired", "dirty-tree", "wrong-candidate", "missing-review", "duplicate-review", "missing-owner", "duplicate-owner",
-      "stale-sha", "broadened-credential-envelope", "nonzero-prior-effect", "stage-swap", "raised-stage-limit",
-      "raised-aggregate-limit", "retry-enabled", "parallel-enabled", "fourth-call-enabled", "provider-packet-materialized-early",
-      "safety-identifier-forbidden-input", "safety-identifier-raw-seed-transmitted"
+      "expired", "dirty-tree", "wrong-candidate", "missing-review", "duplicate-review", "stale-review-candidate",
+      "missing-owner", "duplicate-owner", "missing-campaign-admission", "duplicate-campaign-admission",
+      "stale-campaign-admission-candidate", "missing-credential-rollover", "duplicate-credential-rollover",
+      "stale-sha", "fourth-closeout-path", "nonappend-record", "broadened-credential-envelope",
+      "nonzero-prior-effect", "stage-swap", "raised-stage-limit", "raised-aggregate-limit",
+      "request-input-output-raw-or-cost-vector-overrun", "clock-rollback",
+      "admission-handoff-reservation-or-start-expiry", "immutable-stage-deadline-overrun",
+      "settlement-overrun-full-hold", "ledger-identity-or-hash-chain-drift", "illegal-ledger-reopen-transition",
+      "retry-enabled", "parallel-enabled", "fourth-call-enabled", "provider-packet-materialized-early",
+      "safety-identifier-forbidden-input", "safety-identifier-raw-seed-transmitted",
+      "safety-identifier-use-latch-missing-corrupt-torn-or-concurrent", "forbidden-host-path-endpoint-or-tool"
     ]
   },
   "execution": {

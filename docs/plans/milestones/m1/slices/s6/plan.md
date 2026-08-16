@@ -1089,7 +1089,12 @@ The canonical Responses body carries only lowercase-hex SHA-256 of UTF-8
 credential, target/profile/generation, provider account/email, OS user/machine,
 source/prompt, file/mod, advertising, or telemetry identity may contribute.
 Missing/corrupt state fails closed and may never be silently regenerated after
-possible start.
+possible start. Before the first possible start, the coordinator atomically
+persists a versioned use latch containing the exact transmitted projection;
+the campaign ledger retains the same projection. Every later stage requires
+both bytes to reopen and agree. Missing, corrupt, torn, deleted, or changed
+seed/use-latch bytes after use terminally stop the campaign rather than create
+a replacement identity.
 
 Bootstrap is exact: freeze the amendment implementation A; materialize the
 campaign manifest C; obtain fresh independent review; append the distinct
@@ -1119,9 +1124,12 @@ production path to qualify transport/profile/capability/price/credential/
 budget/settlement behavior. The response is not semantic evidence.
 
 **Entry gate.** WP8 accepted; clean exact candidate commit; fresh official-doc
-drift check; native test namespace clean; and the owner accepts the exact
-production-profile enrollment/verification manifest. A general instruction to
-implement Slice 6 is insufficient.
+drift check; and native test namespace clean. Outside the finite campaign, the
+owner accepts the exact production-profile enrollment/verification manifest.
+Inside the finite campaign, the exact committed campaign review, owner-derived
+campaign admission, and candidate-scoped credential-rollover admission replace
+that separate marker only after the field-by-field zero-effect comparison. A
+general instruction to implement Slice 6 is insufficient.
 
 **Production-profile sub-gate.** Before request reservation, run exactly one
 explicit enrollment-or-verification operation. For a new profile, the helper
@@ -1134,7 +1142,7 @@ the manifest; a partial or ambiguous native effect blocks request execution
 until recovered under fresh authority.
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File eng/run-m1-slice6-credential.ps1 -Operation EnrollOrVerifyProfile -AuthorizationManifest <owner-accepted-production-profile-manifest> -OutputRoot artifacts/m1-slice6/wp9-profile
+powershell -NoProfile -ExecutionPolicy Bypass -File eng/run-m1-slice6-credential.ps1 -Operation EnrollOrVerifyProfile -AuthorizationManifest <exact-owner-accepted-or-campaign-rollover-admitted-production-profile-manifest> -OutputRoot artifacts/m1-slice6/wp9-profile
 ```
 
 After that sub-gate is independently accepted, materialize the distinct
@@ -1185,7 +1193,12 @@ effects to their distinct manifests and returns `ACCEPT`, `CORRECT` only for
 non-live evidence/implementation work, or `ESCALATE`. The reviewer cannot
 self-authorize a new credential effect or request.
 
-**Unblocks.** Owner decision whether to authorize `M1/S6/WP10`; never automatic.
+**Unblocks.** Outside the exact finite campaign, an owner decision whether to
+authorize `M1/S6/WP10`; never automatic. Inside the exact admitted campaign,
+only independently accepted WP9 live evidence, a fresh exact WP10 stage
+manifest/review, and the coordinator ledger's legal next-stage admission can
+unblock WP10. That finite transition consumes the campaign's preaccepted bound;
+it is not inherited authority, an automatic retry, or reviewer self-approval.
 
 ## 21. `M1/S6/WP10` — Separately authorized live source-claim extraction
 
@@ -1221,15 +1234,24 @@ EVAL-0067/0083 live assertions. Refusal, incomplete, error, malformed, or empty
 output is retained as its typed non-success state but cannot pass WP10.
 
 **Failure/replacement.** Ambiguity keeps the hold and closes WP11. A result that
-drives code/prompt/schema/oracle change becomes development evidence; a new
-materially independent validation package, WP8 re-review, and separate owner-
-authorized request are required.
+drives code/prompt/schema/oracle change becomes development evidence. Outside
+the campaign, a new materially independent validation package, WP8 re-review,
+and separate owner-authorized request are required. Inside the campaign, the
+possible-start latch consumes the stage and the campaign stops; campaign
+authority cannot repair, retry, roll over, or replace a post-start stage.
 
 **Review.** Fresh source-claim, provider, and provenance reviewers inspect
 answer isolation, exact manifest, semantic transitions, settlement, replay,
-and claim wording. They cannot authorize WP11.
+and claim wording. Outside the campaign they cannot authorize WP11. Inside the
+campaign their exact accepted evidence is one predecessor fact; only the
+already admitted finite campaign plus the legal coordinator-ledger transition
+and fresh WP11 stage review can advance.
 
-**Unblocks.** Owner decision whether to authorize `M1/S6/WP11`; never automatic.
+**Unblocks.** Outside the campaign, owner decision whether to authorize
+`M1/S6/WP11`; never automatic. Inside the campaign, exact independently
+accepted WP10 evidence and the fresh exact WP11 stage review may consume the
+third and final campaign stage through the coordinator ledger; no fourth call,
+retry, or inherited authority exists.
 
 ## 22. `M1/S6/WP11` — Separately authorized live candidate investigation and closeout
 

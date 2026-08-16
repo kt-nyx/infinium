@@ -64,6 +64,59 @@ public sealed class ProductUserSafetyIdentifierTests
     }
 
     [TestMethod]
+    public void UsedStateSurvivesRestartAndMissingCorruptOrTornBytesNeverRegenerate()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "infinium-safety-id-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            ProductUserSafetyIdentifierStateStore first = new(root);
+            string projection = first.LatchPossibleStart();
+            ProductUserSafetyIdentifierStateStore reopened = new(root);
+            Assert.AreEqual(projection, reopened.GetRequiredProjection(projection));
+            Assert.AreEqual(projection, reopened.GetOrCreateProjection());
+
+            string seed = Path.Combine(root, ProductUserSafetyIdentifierStateStore.StateFileName);
+            byte[] retained = File.ReadAllBytes(seed);
+            File.Delete(seed);
+            Assert.ThrowsExactly<InvalidDataException>(() => reopened.GetRequiredProjection(projection));
+            Assert.ThrowsExactly<InvalidDataException>(() => reopened.GetOrCreateProjection());
+
+            File.WriteAllBytes(seed, retained);
+            string latch = Path.Combine(root, ProductUserSafetyIdentifierStateStore.UseLatchFileName);
+            File.WriteAllText(latch, projection[..31]);
+            Assert.ThrowsExactly<InvalidDataException>(() => reopened.GetRequiredProjection(projection));
+            File.WriteAllText(latch, "{\"Schema\":\"infinium.product-user-safety-identifier-use/v1\",\"Projection\":\""
+                + new string('f', 64) + "\",\"State\":\"possible-start-latched\"}");
+            Assert.ThrowsExactly<InvalidDataException>(() => reopened.GetRequiredProjection(projection));
+            CryptographicOperations.ZeroMemory(retained);
+        }
+        finally
+        {
+            if (Directory.Exists(root)) { Directory.Delete(root, recursive: true); }
+        }
+    }
+
+    [TestMethod]
+    public async Task ConcurrentCreateAndUseLatchConvergeOnOneProjection()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "infinium-safety-id-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Task<string>[] operations = Enumerable.Range(0, 16)
+                .Select(_ => Task.Run(() => new ProductUserSafetyIdentifierStateStore(root).LatchPossibleStart()))
+                .ToArray();
+            string[] projections = await Task.WhenAll(operations);
+            Assert.AreEqual(1, projections.Distinct(StringComparer.Ordinal).Count());
+            Assert.AreEqual(projections[0], new ProductUserSafetyIdentifierStateStore(root)
+                .GetRequiredProjection(projections[0]));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) { Directory.Delete(root, recursive: true); }
+        }
+    }
+
+    [TestMethod]
     public void SerializerRejectsMissingUppercaseAndMalformedProjection()
     {
         using System.Text.Json.JsonDocument schema = System.Text.Json.JsonDocument.Parse(ProviderAdapterTestData.OutputSchemaBytes);

@@ -35,11 +35,12 @@ public sealed class M1Slice6CampaignContractTests
     [TestMethod]
     public void StandaloneValidatorAcceptsExactDraftAndRejectsEveryBoundaryMutation()
     {
-        Assert.AreEqual(0, RunValidator(null));
+        Assert.AreEqual(0, RunValidator(TestRepository.Root, null));
         Action<JsonObject>[] mutations =
         [
             root => root["unexpected"] = true,
             root => root["authority_source"]!["attachment_sha256"] = new string('0', 64),
+            root => root["authority_source"]!["unexpected_nested"] = true,
             root => root["expires_at_utc"] = "2026-08-23T00:00:00.0000000Z",
             root => root["semantic_rollover"]!["zero_effect_proof"]!["credential_helper_launch_count"] = 1,
             root => root["semantic_rollover"]!["zero_effect_proof"]!["credential_helper_readiness_count"] = 1,
@@ -49,6 +50,8 @@ public sealed class M1Slice6CampaignContractTests
             root => root["credential_envelope"]!["profile_id"] = "openai-platform-other",
             root => root["safety_identifier"]!["raw_seed_transmitted"] = true,
             root => root["safety_identifier"]!["domain"] = "unframed",
+            root => root["safety_identifier"]!["use_latch_schema"] = "unversioned",
+            root => root["admission"]!["campaign_admission_marker"] = "substring-marker",
             root =>
             {
                 JsonArray stages = root["ordered_stages"]!.AsArray();
@@ -66,9 +69,26 @@ public sealed class M1Slice6CampaignContractTests
             root => root["execution"]!["provider_request_permitted"] = true,
             root => root["ordered_stages"]![0]!["request_manifest"] = "materialized-early",
         ];
-        foreach (Action<JsonObject> mutation in mutations)
+        string temporary = Path.Combine(Path.GetTempPath(), "infinium-campaign-contract-" + Guid.NewGuid().ToString("N"));
+        try
         {
-            Assert.AreNotEqual(0, RunValidator(mutation), mutation.Method.Name);
+            CloneWithCurrentCampaignValidator(temporary);
+            foreach (Action<JsonObject> mutation in mutations)
+            {
+                Assert.AreNotEqual(0, RunValidator(temporary, mutation), mutation.Method.Name);
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(temporary))
+            {
+                foreach (string path in Directory.EnumerateFileSystemEntries(temporary, "*", SearchOption.AllDirectories))
+                {
+                    File.SetAttributes(path, FileAttributes.Normal);
+                }
+                File.SetAttributes(temporary, FileAttributes.Normal);
+                Directory.Delete(temporary, recursive: true);
+            }
         }
     }
 
@@ -96,24 +116,22 @@ public sealed class M1Slice6CampaignContractTests
             "Layer6 must initialize its finding list before any mode-specific path-set finding can be retained.");
     }
 
-    private static int RunValidator(Action<JsonObject>? mutation)
+    private static int RunValidator(string root, Action<JsonObject>? mutation)
     {
-        string? temporary = null;
+        string manifest = Path.Combine(root, ManifestRelative.Replace('/', Path.DirectorySeparatorChar));
+        string exact = File.ReadAllText(manifest);
         try
         {
-            string manifest = TestRepository.PathFromRoot(ManifestRelative.Split('/'));
             if (mutation is not null)
             {
-                JsonObject node = JsonNode.Parse(File.ReadAllText(manifest))!.AsObject();
+                JsonObject node = JsonNode.Parse(exact)!.AsObject();
                 mutation(node);
-                temporary = Path.Combine(Path.GetTempPath(), "infinium-campaign-manifest-" + Guid.NewGuid().ToString("N") + ".json");
-                File.WriteAllText(temporary, node.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
-                manifest = temporary;
+                File.WriteAllText(manifest, node.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
             }
             using Process process = Process.Start(new ProcessStartInfo
             {
                 FileName = "powershell",
-                WorkingDirectory = TestRepository.Root,
+                WorkingDirectory = root,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -121,7 +139,7 @@ public sealed class M1Slice6CampaignContractTests
                 ArgumentList =
                 {
                     "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "eng/validate-m1-slice6-campaign.ps1",
-                    "-AuthorizationManifest", manifest, "-RequireState", "Verification",
+                    "-AuthorizationManifest", ManifestRelative, "-RequireState", "Verification",
                 },
             }) ?? throw new InvalidOperationException("Campaign validator did not start.");
             process.WaitForExit(30_000);
@@ -140,11 +158,49 @@ public sealed class M1Slice6CampaignContractTests
         }
         finally
         {
-            if (temporary is not null && File.Exists(temporary))
-            {
-                File.Delete(temporary);
-            }
+            if (mutation is not null) { File.WriteAllText(manifest, exact); }
         }
+    }
+
+    private static void CloneWithCurrentCampaignValidator(string destination)
+    {
+        RunProcess(TestRepository.Root, "git", "-c", "safe.directory=" + TestRepository.Root,
+            "-c", "safe.directory=" + Path.Combine(TestRepository.Root, ".git"),
+            "clone", "--quiet", "--no-hardlinks", TestRepository.Root, destination);
+        foreach (string relative in new[]
+        {
+            "eng/validate-m1-slice6-campaign.ps1",
+            "contracts/repository/m1-slice6-finite-campaign-authorization.v1.schema.json",
+            "contracts/repository/m1-slice6-finite-campaign-owner-authority.v1.schema.json",
+            ManifestRelative,
+        })
+        {
+            string target = Path.Combine(destination, relative.Replace('/', Path.DirectorySeparatorChar));
+            File.Copy(TestRepository.PathFromRoot(relative.Split('/')), target, overwrite: true);
+        }
+        RunProcess(destination, "git", "add", "--", "eng/validate-m1-slice6-campaign.ps1",
+            "contracts/repository/m1-slice6-finite-campaign-authorization.v1.schema.json",
+            "contracts/repository/m1-slice6-finite-campaign-owner-authority.v1.schema.json", ManifestRelative);
+        RunProcess(destination, "git", "-c", "user.name=Infinium Contract", "-c", "user.email=contract@invalid",
+            "commit", "--quiet", "-m", "contract validator overlay");
+    }
+
+    private static void RunProcess(string root, string file, params string[] arguments)
+    {
+        ProcessStartInfo start = new(file)
+        {
+            WorkingDirectory = root,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+        foreach (string argument in arguments) { start.ArgumentList.Add(argument); }
+        using Process process = Process.Start(start)!;
+        string output = process.StandardOutput.ReadToEnd();
+        string error = process.StandardError.ReadToEnd();
+        process.WaitForExit(60_000);
+        if (process.ExitCode != 0) { throw new InvalidOperationException(file + " failed: " + output + error); }
     }
 
     private static JsonObject ReadManifest() => JsonNode.Parse(File.ReadAllText(

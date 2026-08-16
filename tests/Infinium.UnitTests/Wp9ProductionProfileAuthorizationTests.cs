@@ -171,19 +171,30 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             string campaignPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
                 "m1-slice6-finite-campaign-authorization.v1.json");
             using JsonDocument campaign = JsonDocument.Parse(File.ReadAllText(campaignPath));
-            Assert.AreEqual("ready-for-campaign-review", campaign.RootElement.GetProperty("status").GetString());
+            string campaignStatus = campaign.RootElement.GetProperty("status").GetString()!;
+            Assert.IsTrue(campaignStatus is "verification-pending" or "ready-for-campaign-review");
             Assert.AreEqual("c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be",
                 campaign.RootElement.GetProperty("authority_source").GetProperty("attachment_sha256").GetString());
             expectedSourceCommit = campaign.RootElement.GetProperty("candidate_binding")
                 .GetProperty("close_ready_implementation_commit").GetString()!;
-            Assert.IsFalse(string.Equals(sourceCommit, expectedSourceCommit, StringComparison.Ordinal),
-                "The historical credential closure must remain distinct until exact reviewed campaign rollover.");
+            if (campaignStatus == "ready-for-campaign-review")
+            {
+                Assert.AreEqual(expectedSourceCommit, sourceCommit,
+                    "The campaign-reviewed credential closure must share the exact non-broadening rollover source.");
+            }
+            else
+            {
+                Assert.AreEqual("pending", expectedSourceCommit);
+            }
             StringAssert.Contains(runner, "(Get-Wp9Sha256 $coordinator) -cne [string]$m.release_build.coordinator_sha256");
             StringAssert.Contains(runner, "$inventory.sha256 -cne [string]$m.release_build.binary_inventory_sha256");
         }
         string sourceLink = File.ReadAllText(Path.Combine(root, "src", "Infinium.Coordinator", "obj", "Release", "net10.0",
             "Infinium.Coordinator.sourcelink.json"));
-        if (expectedSourceCommit != new string('0', 40)) { StringAssert.Contains(sourceLink, expectedSourceCommit); }
+        if (expectedSourceCommit.Length == 40 && expectedSourceCommit != new string('0', 40))
+        {
+            StringAssert.Contains(sourceLink, expectedSourceCommit);
+        }
         string directory = Path.Combine(Path.GetTempPath(), "infinium-wp9-binaries-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(directory, "CredentialHelper"));
         try
@@ -283,7 +294,7 @@ public sealed class Wp9ProductionProfileAuthorizationTests
     }
 
     [TestMethod]
-    public void RunnerIsAbsentFromOrdinaryVerifierAndRequiresExactOwnerMarkerBeforeLaunch()
+    public void RunnerIsAbsentFromOrdinaryVerifierAndRequiresExactOwnerOrCampaignRolloverBeforeLaunch()
     {
         string root = RepositoryRoot();
         string runner = File.ReadAllText(Path.Combine(root, "eng", "run-m1-slice6-credential.ps1"));
@@ -291,6 +302,12 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         StringAssert.Contains(runner, "$allReviewLines");
         StringAssert.Contains(runner, "$reviewLines = @($allReviewLines | Where-Object { [Regex]::IsMatch($_, $reviewPattern) })");
         StringAssert.Contains(runner, "WP9_PROFILE_OWNER_ACCEPTANCE");
+        StringAssert.Contains(runner, "WP9_PROFILE_CAMPAIGN_ROLLOVER_ADMISSION");
+        StringAssert.Contains(runner, "-RequireState RolloverAdmitted");
+        StringAssert.Contains(runner, "$campaignIntentLines");
+        StringAssert.Contains(runner, "refuses downgrade to an owner-marker route");
+        StringAssert.Contains(runner, "--campaign-reviewed-candidate");
+        StringAssert.Contains(runner, "-ValidateCampaignAdmissionOnly");
         StringAssert.Contains(runner, "$currentOwnerPrefix");
         StringAssert.Contains(runner, "status --porcelain=v1");
         StringAssert.Contains(runner, "merge-base --is-ancestor");
@@ -298,7 +315,10 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         StringAssert.Contains(runner, "new-only WP9 production profile state root already exists");
         StringAssert.Contains(runner, "authority-lock.json");
         StringAssert.Contains(runner, "--wp9-production-profile-enrollment");
-        Assert.IsFalse(verifier.Contains("run-m1-slice6-credential.ps1", StringComparison.Ordinal));
+        System.Text.RegularExpressions.Match nonLiveAll = System.Text.RegularExpressions.Regex.Match(
+            verifier, @"(?ms)^function Invoke-NonLiveAllGate \{.*?^\}");
+        Assert.IsTrue(nonLiveAll.Success);
+        Assert.IsFalse(nonLiveAll.Value.Contains("run-m1-slice6-credential.ps1", StringComparison.Ordinal));
         Assert.IsFalse(verifier.Contains("--wp9-production-profile-enrollment", StringComparison.Ordinal));
     }
 
