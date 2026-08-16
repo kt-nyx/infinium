@@ -102,8 +102,12 @@ committed transitions only in a disposable synthetic temp-clone rehearsal.
 They are proof of the production validators and coordinator-owned
 successor/limit/safety enforcement, not active-repository authority or live
 evidence. No provider-stage manifest or stage/evidence marker is materialized
-in the active repository. Current authority is correction and non-live
-reverification only; no replacement candidate is bound. No authority is inherited. The
+in the active repository. The corrected finite-campaign close-ready source
+`55059743dfe4a977c363b8336d0565cfeba4307b` is verification-pending. Its exact
+clean committed four-document binding successor is the review candidate, bound
+for complete non-live verification and fresh independent review only. The
+resulting review candidate is ready for review and remains non-executable. No
+authority is inherited. The
 immutable owner authority source is SHA-256
 `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
 Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee`

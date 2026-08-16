@@ -7,7 +7,7 @@
   "prepared_at_utc": "2026-08-15T15:25:00.0000000Z",
   "expires_at_utc": "2026-08-17T15:25:00.0000000Z",
   "candidate_binding": {
-    "close_ready_implementation_commit": "d9ca091bffb168d83ae3941d3e677aa7a62b6b59",
+    "close_ready_implementation_commit": "55059743dfe4a977c363b8336d0565cfeba4307b",
     "accepted_wp8_verification_commit": "cc14bf60f78c80280cb6eafe60fddaf2bc764d06",
     "accepted_wp8_evidence_commit": "baef115cdd43fa38d0a352c15f8ba44cbfa35312",
     "accepted_wp8_non_live_all_sha256": "52aa77325a2226505c35b1fba6d9d0fe2b6354022a6c85f6652211d609c529ad",
@@ -116,15 +116,15 @@
   "release_build": {
     "configuration": "Release",
     "target_framework": "net10.0",
-    "source_commit": "d9ca091bffb168d83ae3941d3e677aa7a62b6b59",
-    "build_command": "dotnet build Infinium.sln -c Release --no-restore --nologo --no-incremental -p:SourceRevisionId=d9ca091bffb168d83ae3941d3e677aa7a62b6b59",
+    "source_commit": "55059743dfe4a977c363b8336d0565cfeba4307b",
+    "build_command": "dotnet build Infinium.sln -c Release --no-restore --nologo --no-incremental -p:SourceRevisionId=55059743dfe4a977c363b8336d0565cfeba4307b",
     "coordinator_relative_path": "src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe",
-    "coordinator_sha256": "502efbc969d41af87d3a847a5fe01a3c5e61d6e206f7710ca9766e333199bf2f",
+    "coordinator_sha256": "43832aef09cc6661e2d73707b7c12f64539e1976dbed03e596fae00013162e26",
     "helper_relative_path": "src/Infinium.Coordinator/bin/Release/net10.0/CredentialHelper/Infinium.CredentialHelper.exe",
-    "helper_sha256": "c5d2bee2d6850912d14815c044fd8490edf580e8bd4967e06bfbf2ec04c6d7a8",
+    "helper_sha256": "2499802fd2481d8f318c72af8c3d60df993a1f61bcef41f8493509f34804324b",
     "binary_inventory_pattern": "sorted-relative-path-lf-sha256-for-all-exe-dll-deps-json-and-runtimeconfig-json-under-coordinator-release-root",
     "binary_inventory_file_count": 126,
-    "binary_inventory_sha256": "b4663badc3da8d6fda6427df04bb0bc1331c11c97f213ea31e31afa895a68790"
+    "binary_inventory_sha256": "5193f4f1340ce1d5190fecd09d13c1b1cd8db98a7b0a37e6699416aee207525b"
   },
   "output": {
     "output_root_relative": "artifacts/m1-slice6/wp9-profile", "must_be_absent": true,
