@@ -112,9 +112,12 @@ and input-bound policy version. Source
 retained-WP8 validation found that the exact finite-campaign path equation
 omitted the changed persistence-state contract test. Binding
 `ff5c18024bf1265ced69bb36f45ecf1d0843ab50` is excluded because README
-formatting split the exact `finite-campaign` review-state token. Current
-authority is correction and non-live reverification only; no replacement
-candidate is bound. No authority is inherited. The
+formatting split the exact `finite-campaign` review-state token.
+The corrected finite-campaign close-ready source `b86fa5bc467cc035847934ceec95f9c2b5203cbd`
+is verification-pending. Its exact clean committed four-document binding
+successor is the review candidate, bound for complete non-live verification and
+fresh independent review only. The resulting review candidate is ready for
+review and remains non-executable. No authority is inherited. The
 immutable owner authority source is SHA-256
 `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
 Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee`
