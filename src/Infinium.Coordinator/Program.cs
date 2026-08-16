@@ -82,6 +82,141 @@ if (args is ["--wp9-campaign-credential-admission-probe", "--manifest", string p
     }
 }
 
+if (args is ["--wp9-campaign-credential-handoff-admission", "--manifest", string handoffWp9Manifest,
+    "--manifest-sha256", string handoffWp9ManifestSha256,
+    "--campaign-manifest", string handoffCampaignManifest,
+    "--campaign-manifest-sha256", string handoffCampaignManifestSha256,
+    "--campaign-reviewed-candidate", string handoffReviewedCandidate,
+    "--campaign-ledger", string handoffCampaignLedger])
+{
+    try
+    {
+        Wp9ProductionProfileEnrollmentRunner.AdmitCampaignCredentialExecutionHandoff(
+            handoffWp9Manifest, handoffWp9ManifestSha256, handoffCampaignManifest,
+            handoffCampaignManifestSha256, handoffReviewedCandidate, handoffCampaignLedger,
+            DateTimeOffset.UtcNow);
+        Console.WriteLine("WP9 campaign credential execution handoff admitted with zero effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"WP9 campaign credential handoff admission stopped: {exception.GetType().Name}");
+        return 76;
+    }
+}
+
+if (args is ["--wp9-campaign-credential-evidence-acceptance", "--manifest", string acceptedWp9Manifest,
+    "--manifest-sha256", string acceptedWp9ManifestSha256,
+    "--campaign-manifest", string acceptedCampaignManifest,
+    "--campaign-manifest-sha256", string acceptedCampaignManifestSha256,
+    "--campaign-reviewed-candidate", string acceptedReviewedCandidate,
+    "--campaign-ledger", string acceptedCampaignLedger,
+    "--evidence", string acceptedCredentialEvidence,
+    "--record", string acceptedCredentialRecord])
+{
+    try
+    {
+        Wp9ProductionProfileEnrollmentRunner.AcceptCampaignCredentialEvidence(acceptedWp9Manifest,
+            acceptedWp9ManifestSha256, acceptedCampaignManifest, acceptedCampaignManifestSha256,
+            acceptedReviewedCandidate, acceptedCampaignLedger, acceptedCredentialEvidence,
+            acceptedCredentialRecord, DateTimeOffset.UtcNow);
+        Console.WriteLine("WP9 campaign credential evidence accepted with zero provider effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"WP9 campaign credential evidence acceptance stopped: {exception.GetType().Name}");
+        return 75;
+    }
+}
+
+if (args is ["--m1-slice6-campaign-stage", "--stage-manifest", string stageManifest,
+    "--stage-manifest-sha256", string stageManifestSha256,
+    "--campaign-manifest", string stageCampaignManifest,
+    "--campaign-manifest-sha256", string stageCampaignManifestSha256,
+    "--campaign-reviewed-candidate", string stageCampaignReviewedCandidate,
+    "--credential-manifest", string stageCredentialManifest,
+    "--credential-manifest-sha256", string stageCredentialManifestSha256,
+    "--campaign-ledger", string stageCampaignLedger,
+    "--safety-state-root", string stageSafetyStateRoot,
+    "--helper-binary", string stageHelperBinary,
+    "--helper-sha256", string stageHelperSha256,
+    "--evidence", string stageEvidence])
+{
+    try
+    {
+        return await M1Slice6CampaignStageRunner.RunAsync(stageManifest, stageManifestSha256,
+            stageCampaignManifest, stageCampaignManifestSha256, stageCampaignReviewedCandidate,
+            stageCredentialManifest, stageCredentialManifestSha256, stageCampaignLedger,
+            stageSafetyStateRoot, stageHelperBinary, stageHelperSha256, stageEvidence)
+            .ConfigureAwait(false);
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException
+        or InvalidOperationException or OperationCanceledException or TimeoutException
+        or PlatformNotSupportedException)
+    {
+        Console.Error.WriteLine($"M1 Slice 6 campaign stage stopped with typed non-secret error: {exception.GetType().Name}");
+        return 79;
+    }
+}
+
+if (args is ["--m1-slice6-campaign-stage-evidence-acceptance", "--stage", string acceptedStageText,
+    "--campaign-manifest", string acceptedStageCampaignManifest,
+    "--campaign-manifest-sha256", string acceptedStageCampaignManifestSha256,
+    "--campaign-reviewed-candidate", string acceptedStageReviewedCandidate,
+    "--credential-manifest", string acceptedStageCredentialManifest,
+    "--credential-manifest-sha256", string acceptedStageCredentialManifestSha256,
+    "--campaign-ledger", string acceptedStageLedger,
+    "--stage-manifest", string acceptedStageManifest,
+    "--evidence", string acceptedStageEvidence,
+    "--record", string acceptedStageRecord]
+    && Enum.TryParse(acceptedStageText, ignoreCase: false, out M1Slice6CampaignStage acceptedStage)
+    && acceptedStage is M1Slice6CampaignStage.Qualification or M1Slice6CampaignStage.SourceClaimExtraction
+        or M1Slice6CampaignStage.CandidateInvestigation)
+{
+    try
+    {
+        M1Slice6CampaignStageRunner.AcceptEvidence(acceptedStageCampaignManifest,
+            acceptedStageCampaignManifestSha256, acceptedStageReviewedCandidate,
+            acceptedStageCredentialManifest, acceptedStageCredentialManifestSha256,
+            acceptedStageLedger, acceptedStageManifest, acceptedStageEvidence, acceptedStage, acceptedStageRecord,
+            DateTimeOffset.UtcNow);
+        Console.WriteLine("M1 Slice 6 campaign stage evidence independently accepted.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"Campaign stage evidence acceptance stopped: {exception.GetType().Name}");
+        return 80;
+    }
+}
+
+if (args is ["--m1-slice6-campaign-composed-evidence-acceptance",
+    "--campaign-manifest", string composedCampaignManifest,
+    "--campaign-manifest-sha256", string composedCampaignManifestSha256,
+    "--campaign-reviewed-candidate", string composedReviewedCandidate,
+    "--credential-manifest", string composedCredentialManifest,
+    "--credential-manifest-sha256", string composedCredentialManifestSha256,
+    "--campaign-ledger", string composedLedger,
+    "--evidence", string composedEvidence,
+    "--record", string composedRecord])
+{
+    try
+    {
+        M1Slice6CampaignStageRunner.CompleteComposedEvidence(composedCampaignManifest,
+            composedCampaignManifestSha256, composedReviewedCandidate, composedCredentialManifest,
+            composedCredentialManifestSha256, composedLedger, composedEvidence, composedRecord,
+            DateTimeOffset.UtcNow);
+        Console.WriteLine("M1 Slice 6 composed campaign evidence independently accepted.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"Campaign composed evidence acceptance stopped: {exception.GetType().Name}");
+        return 81;
+    }
+}
+
 if (args is ["--credential-native-qualification-v2", "--manifest", string nativeManifest,
     "--manifest-sha256", string nativeManifestSha256,
     "--output-root", string nativeOutputRoot])

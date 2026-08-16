@@ -1073,8 +1073,9 @@ consumes its stage, retains the full unresolved hold when ambiguous, and may
 never be retried.
 
 The coordinator owns an append-only, hash-chained campaign ledger with exact
-ready, reviewed, admitted, credential-handoff, credential-evidence-accepted,
-stage-reserved, transport-may-have-started, stage-accepted, completed, and
+ready, reviewed, admitted, credential-handoff, credential-evidence-handoff,
+credential-evidence-accepted, stage-reserved, transport-may-have-started,
+stage-evidence-handoff, stage-accepted, completed, and
 stopped states. Enrollment plus the three exact request credential reads yield
 the finite native maximum `CredWriteW=1`, `CredReadW=5`, `CredDeleteW=0`,
 `CredFree=4`, total 10, with every successful read paired to its allocation's
@@ -1107,6 +1108,13 @@ accepted. WP10 remains unmaterialized until WP9 live evidence is independently
 accepted, and WP11 remains unmaterialized until WP10 live evidence is
 independently accepted. Semantic-driving bytes freeze at possible start;
 evidence-only corrections may replay retained bytes without another request.
+Credential evidence, each stage evidence set, and the composed no-fourth-call
+evidence each require a distinct exact-SHA independent-acceptance marker in a
+one-commit, three-document, append-only transition. Dedicated mutually
+exclusive `M1Slice6CampaignCredentialEvidenceCloseout`,
+`M1Slice6CampaignStageEvidenceCloseout`, and
+`M1Slice6CampaignComposedEvidenceCloseout` Layer 6 modes validate those
+transitions; a review marker never performs the acceptance transition itself.
 
 Before any effect, a fresh temporary Git clone must rehearse ready -> reviewed
 -> campaign admitted -> credential execution/evidence handoff -> all three

@@ -33,6 +33,20 @@ param(
 
     [switch] $Wp9CampaignRolloverCloseout,
 
+    [switch] $M1Slice6CampaignStageReviewCloseout,
+
+    [switch] $M1Slice6CampaignStageAdmissionCloseout,
+
+    [switch] $M1Slice6CampaignCredentialEvidenceCloseout,
+
+    [switch] $M1Slice6CampaignStageEvidenceCloseout,
+
+    [switch] $M1Slice6CampaignComposedEvidenceCloseout,
+
+    [string] $CampaignStageManifest,
+
+    [string] $CampaignEvidence,
+
     [switch] $OwnerTestProcessCleanup,
 
     [switch] $CredentialNativePostEffectAudit
@@ -75,6 +89,15 @@ if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 
     if ($M1Slice6CampaignReviewCloseout) { $arguments += '-M1Slice6CampaignReviewCloseout' }
     if ($M1Slice6CampaignAdmissionCloseout) { $arguments += '-M1Slice6CampaignAdmissionCloseout' }
     if ($Wp9CampaignRolloverCloseout) { $arguments += '-Wp9CampaignRolloverCloseout' }
+    if ($M1Slice6CampaignStageReviewCloseout) { $arguments += '-M1Slice6CampaignStageReviewCloseout' }
+    if ($M1Slice6CampaignStageAdmissionCloseout) { $arguments += '-M1Slice6CampaignStageAdmissionCloseout' }
+    if ($M1Slice6CampaignCredentialEvidenceCloseout) { $arguments += '-M1Slice6CampaignCredentialEvidenceCloseout' }
+    if ($M1Slice6CampaignStageEvidenceCloseout) { $arguments += '-M1Slice6CampaignStageEvidenceCloseout' }
+    if ($M1Slice6CampaignComposedEvidenceCloseout) { $arguments += '-M1Slice6CampaignComposedEvidenceCloseout' }
+    if (-not [string]::IsNullOrWhiteSpace($CampaignEvidence)) { $arguments += @('-CampaignEvidence', $CampaignEvidence) }
+    if (-not [string]::IsNullOrWhiteSpace($CampaignStageManifest)) {
+        $arguments += @('-CampaignStageManifest', $CampaignStageManifest)
+    }
     if ($OwnerTestProcessCleanup) {
         $arguments += '-OwnerTestProcessCleanup'
     }
@@ -730,7 +753,12 @@ function Invoke-Layer6ReviewGate(
     [bool] $CampaignReviewMode = [bool]$M1Slice6CampaignReview,
     [bool] $CampaignReviewCloseoutMode = [bool]$M1Slice6CampaignReviewCloseout,
     [bool] $CampaignAdmissionCloseoutMode = [bool]$M1Slice6CampaignAdmissionCloseout,
-    [bool] $CampaignRolloverCloseoutMode = [bool]$Wp9CampaignRolloverCloseout) {
+    [bool] $CampaignRolloverCloseoutMode = [bool]$Wp9CampaignRolloverCloseout,
+    [bool] $CampaignStageReviewCloseoutMode = [bool]$M1Slice6CampaignStageReviewCloseout,
+    [bool] $CampaignStageAdmissionCloseoutMode = [bool]$M1Slice6CampaignStageAdmissionCloseout,
+    [bool] $CampaignCredentialEvidenceCloseoutMode = [bool]$M1Slice6CampaignCredentialEvidenceCloseout,
+    [bool] $CampaignStageEvidenceCloseoutMode = [bool]$M1Slice6CampaignStageEvidenceCloseout,
+    [bool] $CampaignComposedEvidenceCloseoutMode = [bool]$M1Slice6CampaignComposedEvidenceCloseout) {
     $baselineHash = Resolve-GitCommit $ReviewBaseline 'BaselineCommit'
     $candidateHash = Resolve-GitCommit $ReviewCandidate 'CandidateCommit'
     & git -C $repoRoot merge-base --is-ancestor $baselineHash $candidateHash
@@ -820,6 +848,9 @@ function Invoke-Layer6ReviewGate(
         'Directory.Build.targets',
         'contracts/repository/m1-slice6-finite-campaign-authorization.v1.schema.json',
         'contracts/repository/m1-slice6-finite-campaign-owner-authority.v1.schema.json',
+        'contracts/repository/m1-slice6-campaign-composed-evidence.v1.schema.json',
+        'contracts/repository/m1-slice6-campaign-stage-evidence.v1.schema.json',
+        'contracts/repository/m1-slice6-campaign-stage-request.v1.schema.json',
         'docs/current-state.md',
         'docs/plans/milestones/m1/slices/s6/README.md',
         'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json',
@@ -829,6 +860,7 @@ function Invoke-Layer6ReviewGate(
         'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json',
         'docs/research/investigations/RESEARCH-0055-slice6-finite-campaign-and-safety-identifier-refresh.md',
         'eng/run-m1-slice6-credential.ps1',
+        'eng/run-m1-slice6-live.ps1',
         'eng/validate-m1-slice6-campaign.ps1',
         'eng/validate-m1-slice6-wp8-prelive.ps1',
         'eng/verify-m1-slice6.ps1',
@@ -836,7 +868,11 @@ function Invoke-Layer6ReviewGate(
         'src/Infinium.Domain/Contracts/ProductUserSafetyIdentifier.cs',
         'src/Infinium.OpenAI/OpenAiResponsesAdapter.cs',
         'src/Infinium.Coordinator/Program.cs',
+        'src/Infinium.Coordinator/M1Slice6CampaignStageCoordinator.cs',
+        'src/Infinium.Coordinator/OneShotCredentialHelperLauncher.cs',
         'src/Infinium.Coordinator/Wp9ProductionProfileEnrollmentRunner.cs',
+        'src/Infinium.CredentialHelper/OneShotHelperEngine.cs',
+        'src/Infinium.CredentialHelper/Program.cs',
         'src/Infinium.Persistence/M1Slice6FiniteCampaignLedger.cs',
         'src/Infinium.Persistence/ProductUserSafetyIdentifierStateStore.cs',
         'tests/Infinium.ContractTests/M1Slice6CampaignContractTests.cs',
@@ -853,7 +889,10 @@ function Invoke-Layer6ReviewGate(
         'docs/plans/milestones/m1/slices/s6/README.md',
         'docs/plans/milestones/m1/slices/s6/record.md')
     $campaignModeCount = @(@($CampaignReviewMode, $CampaignReviewCloseoutMode,
-        $CampaignAdmissionCloseoutMode, $CampaignRolloverCloseoutMode) | Where-Object { $_ }).Count
+        $CampaignAdmissionCloseoutMode, $CampaignRolloverCloseoutMode,
+        $CampaignStageReviewCloseoutMode, $CampaignStageAdmissionCloseoutMode,
+        $CampaignCredentialEvidenceCloseoutMode, $CampaignStageEvidenceCloseoutMode,
+        $CampaignComposedEvidenceCloseoutMode) | Where-Object { $_ }).Count
     if ($campaignModeCount -gt 1) { throw 'Campaign Layer6 modes are mutually exclusive.' }
     if ($CampaignReviewMode) {
         if ($Wp9OwnerStopMode -or $Wp8PreLiveCloseoutMode -or $HandoffCloseout -or $Wp4OwnerReviewHandoff -or
@@ -931,6 +970,161 @@ function Invoke-Layer6ReviewGate(
                 ' credential_expires_at_utc=' + [string]$credentialManifest.expires_at_utc
             if (@($candidateRecord -split "`r?`n" | Where-Object { $_ -ceq $rollover }).Count -ne 1) {
                 throw 'Campaign credential rollover closeout lacks one exact identity-scoped marker.'
+            }
+        }
+    }
+    if ($CampaignStageReviewCloseoutMode -or $CampaignStageAdmissionCloseoutMode) {
+        if ($Wp9OwnerStopMode -or $Wp8PreLiveCloseoutMode -or $HandoffCloseout -or $Wp4OwnerReviewHandoff -or
+            $Wp9ReviewCloseoutMode -or $Wp9OwnerAcceptanceCloseoutMode) {
+            throw 'Campaign stage closeout cannot be combined with another Layer6 authority mode.'
+        }
+        if ([string]::IsNullOrWhiteSpace($CampaignStageManifest)) {
+            throw 'Campaign stage closeout requires -CampaignStageManifest.'
+        }
+        $head = (& git -C $repoRoot rev-parse HEAD).Trim()
+        $stagePath = if ([System.IO.Path]::IsPathRooted($CampaignStageManifest)) {
+            [System.IO.Path]::GetFullPath($CampaignStageManifest)
+        } else { [System.IO.Path]::GetFullPath((Join-Path $repoRoot $CampaignStageManifest)) }
+        $stageRelative = [System.IO.Path]::GetRelativePath($repoRoot, $stagePath).Replace('\','/')
+        if (-not $stageRelative.StartsWith('docs/plans/milestones/m1/slices/s6/live/', [StringComparison]::Ordinal) -or
+            -not (Test-Path -LiteralPath $stagePath -PathType Leaf)) {
+            throw 'Campaign stage closeout manifest escaped the exact canonical live authority directory.'
+        }
+        if ($candidateHash -cne $head -or (& git -C $repoRoot rev-list --count "$baselineHash..$candidateHash").Trim() -ne '1') {
+            throw 'Campaign stage closeout requires one exact clean committed successor at current HEAD.'
+        }
+        [string[]]$actualStageCloseoutPaths = @(& git -C $repoRoot -c core.quotePath=false diff --name-only $baselineHash $candidateHash --)
+        [Array]::Sort($actualStageCloseoutPaths, [StringComparer]::Ordinal)
+        [Array]::Sort($campaignCloseoutPaths, [StringComparer]::Ordinal)
+        if ([string]::Join("`n", $actualStageCloseoutPaths) -cne [string]::Join("`n", $campaignCloseoutPaths)) {
+            throw 'Campaign stage closeout requires exactly current-state, Slice 6 README, and append-only record.'
+        }
+        $stageBytes = [System.IO.File]::ReadAllBytes($stagePath)
+        $stageSha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($stageBytes)).ToLowerInvariant()
+        $stage = [System.Text.Encoding]::UTF8.GetString($stageBytes) | ConvertFrom-Json -Depth 100
+        $campaign = $stage.campaign_binding
+        $predecessorSha = [string]$stage.predecessor_evidence.evidence_sha256
+        $stageId = [string]$stage.manifest_id
+        $record = Get-CandidateText $candidateHash 'docs/plans/milestones/m1/slices/s6/record.md'
+        $reviewPrefix = 'M1_S6_CAMPAIGN_STAGE_REVIEW_ACCEPTANCE candidate_commit='
+        $reviewSuffix = ' campaign_id=' + [string]$campaign.campaign_id +
+            ' campaign_sha256=' + [string]$campaign.campaign_manifest_sha256 +
+            ' stage_manifest_id=' + $stageId + ' sha256=' + $stageSha +
+            ' predecessor_evidence_sha256=' + $predecessorSha + ' verdicts=security,semantics,diff'
+        [string[]]$reviewLines = @($record -split "`r?`n" | Where-Object {
+            $_.StartsWith($reviewPrefix, [StringComparison]::Ordinal) -and $_.EndsWith($reviewSuffix, [StringComparison]::Ordinal) })
+        if ($reviewLines.Count -ne 1) { throw 'Campaign stage closeout lacks one exact identity-scoped review marker.' }
+        $reviewed = $reviewLines[0].Substring($reviewPrefix.Length, 40)
+        if ($reviewed -cne [string]$stage.candidate_binding.close_ready_implementation_commit -and
+            (& git -C $repoRoot rev-list --count "$($stage.candidate_binding.close_ready_implementation_commit)..$reviewed").Trim() -ne '1') {
+            throw 'Campaign stage review marker does not bind the exact two-file stage candidate.'
+        }
+        if ($CampaignStageReviewCloseoutMode -and $baselineHash -cne $reviewed) {
+            throw 'Campaign stage review closeout baseline is not the exact reviewed stage candidate.'
+        }
+        if ($CampaignStageAdmissionCloseoutMode) {
+            $admission = 'M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=' + $reviewed +
+                ' campaign_id=' + [string]$campaign.campaign_id +
+                ' campaign_sha256=' + [string]$campaign.campaign_manifest_sha256 +
+                ' stage_manifest_id=' + $stageId + ' sha256=' + $stageSha +
+                ' predecessor_evidence_sha256=' + $predecessorSha +
+                ' expires_at_utc=2026-08-22T23:59:00.0000000Z'
+            if (@($record -split "`r?`n" | Where-Object { $_ -ceq $admission }).Count -ne 1) {
+                throw 'Campaign stage admission closeout lacks one exact identity-scoped admission marker.'
+            }
+        }
+        $baselineRecord = Get-CandidateText $baselineHash 'docs/plans/milestones/m1/slices/s6/record.md'
+        if (-not $record.StartsWith($baselineRecord.TrimEnd("`r","`n") + "`n", [StringComparison]::Ordinal)) {
+            throw 'Campaign stage closeout record is not append-only.'
+        }
+        $statePhrase = if ($CampaignStageReviewCloseoutMode) {
+            'Campaign stage review accepted; exact stage admission remains pending and no request is authorized.'
+        } else { 'Campaign stage admitted; only the exact one-shot stage request is eligible.' }
+        foreach ($authorityPath in @('docs/current-state.md','docs/plans/milestones/m1/slices/s6/README.md')) {
+            if (-not (Get-CandidateText $candidateHash $authorityPath).Contains($statePhrase, [StringComparison]::Ordinal)) {
+                throw 'Campaign stage closeout authority documents do not state the exact stage boundary.'
+            }
+        }
+    }
+    if ($CampaignCredentialEvidenceCloseoutMode -or $CampaignStageEvidenceCloseoutMode -or
+        $CampaignComposedEvidenceCloseoutMode) {
+        if ($Wp9OwnerStopMode -or $Wp8PreLiveCloseoutMode -or $HandoffCloseout -or $Wp4OwnerReviewHandoff -or
+            $Wp9ReviewCloseoutMode -or $Wp9OwnerAcceptanceCloseoutMode -or
+            [string]::IsNullOrWhiteSpace($CampaignEvidence)) {
+            throw 'Campaign evidence closeout requires one dedicated mode and -CampaignEvidence only.'
+        }
+        $head = (& git -C $repoRoot rev-parse HEAD).Trim()
+        if ($candidateHash -cne $head -or (& git -C $repoRoot rev-list --count "$baselineHash..$candidateHash").Trim() -ne '1') {
+            throw 'Campaign evidence closeout requires one exact clean committed successor at current HEAD.'
+        }
+        [string[]]$actualEvidencePaths = @(& git -C $repoRoot -c core.quotePath=false diff --name-only $baselineHash $candidateHash --)
+        [Array]::Sort($actualEvidencePaths, [StringComparer]::Ordinal)
+        [Array]::Sort($campaignCloseoutPaths, [StringComparer]::Ordinal)
+        if ([string]::Join("`n", $actualEvidencePaths) -cne [string]::Join("`n", $campaignCloseoutPaths)) {
+            throw 'Campaign evidence closeout requires exactly current-state, Slice 6 README, and append-only record.'
+        }
+        $evidencePath = if ([IO.Path]::IsPathRooted($CampaignEvidence)) {
+            [IO.Path]::GetFullPath($CampaignEvidence)
+        } else { [IO.Path]::GetFullPath((Join-Path $repoRoot $CampaignEvidence)) }
+        if (-not (Test-Path -LiteralPath $evidencePath -PathType Leaf)) {
+            throw 'Campaign evidence closeout lacks exact retained evidence bytes.'
+        }
+        $evidenceBytes = [IO.File]::ReadAllBytes($evidencePath)
+        $evidenceSha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($evidenceBytes)).ToLowerInvariant()
+        $evidence = [Text.Encoding]::UTF8.GetString($evidenceBytes) | ConvertFrom-Json -Depth 100 -DateKind String
+        $campaignPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json'
+        $campaignBytes = [IO.File]::ReadAllBytes($campaignPath)
+        $campaignSha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($campaignBytes)).ToLowerInvariant()
+        $campaign = [Text.Encoding]::UTF8.GetString($campaignBytes) | ConvertFrom-Json -Depth 100 -DateKind String
+        $baselineRecord = Get-CandidateText $baselineHash 'docs/plans/milestones/m1/slices/s6/record.md'
+        $candidateRecord = Get-CandidateText $candidateHash 'docs/plans/milestones/m1/slices/s6/record.md'
+        if (-not $candidateRecord.StartsWith($baselineRecord.TrimEnd("`r","`n") + "`n", [StringComparison]::Ordinal)) {
+            throw 'Campaign evidence closeout record is not append-only.'
+        }
+        if ($CampaignCredentialEvidenceCloseoutMode) {
+            $credentialPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
+            $credentialSha = (Get-FileHash -LiteralPath $credentialPath -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ([string]$evidence.schema -cne 'infinium.m1-s6.wp9.production-profile-enrollment-evidence/v1' -or
+                [string]$evidence.status -cne 'passed-active-verified' -or
+                [string]$evidence.manifest_sha256 -cne $credentialSha) {
+                throw 'Campaign credential evidence closeout has stale evidence identity or disposition.'
+            }
+            $marker = 'M1_S6_CAMPAIGN_CREDENTIAL_EVIDENCE_ACCEPTANCE campaign_id=' + [string]$campaign.campaign_id +
+                ' campaign_sha256=' + $campaignSha + ' manifest_id=' + [string]$evidence.manifest_id +
+                ' manifest_sha256=' + [string]$evidence.manifest_sha256 +
+                ' evidence_id=wp9-production-profile-enrollment-evidence sha256=' + $evidenceSha +
+                ' verdicts=credential,security,semantics,diff'
+            $statePhrase = 'Campaign credential evidence independently accepted; provider stages remain separately gated.'
+        } elseif ($CampaignStageEvidenceCloseoutMode) {
+            if ([string]::IsNullOrWhiteSpace($CampaignStageManifest) -or
+                [string]$evidence.schema -cne 'infinium.m1-s6.campaign-stage-evidence/v1' -or
+                [string]$evidence.status -cne 'independent-review-pending' -or
+                [string]$evidence.campaign_manifest_sha256 -cne $campaignSha) {
+                throw 'Campaign stage evidence closeout has stale evidence or manifest input.'
+            }
+            $marker = 'M1_S6_CAMPAIGN_STAGE_EVIDENCE_ACCEPTANCE campaign_id=' + [string]$campaign.campaign_id +
+                ' campaign_sha256=' + $campaignSha + ' stage_manifest_id=' + [string]$evidence.stage_manifest_id +
+                ' stage_manifest_sha256=' + [string]$evidence.stage_manifest_sha256 +
+                ' evidence_id=campaign-stage-evidence-' + ([array]::IndexOf(@('Qualification','SourceClaimExtraction','CandidateInvestigation'), [string]$evidence.stage) + 1) +
+                ' sha256=' + $evidenceSha + ' verdicts=security,semantics,budget,provenance'
+            $statePhrase = 'Campaign stage evidence independently accepted; only the exact legal successor may be materialized.'
+        } else {
+            if ([string]$evidence.schema -cne 'infinium.m1-s6.campaign-composed-evidence/v1' -or
+                [int]$evidence.provider_call_count -ne 3 -or [bool]$evidence.fourth_call_observed) {
+                throw 'Campaign composed evidence closeout is incomplete or observed a fourth call.'
+            }
+            $marker = 'M1_S6_CAMPAIGN_COMPOSED_EVIDENCE_ACCEPTANCE campaign_id=' + [string]$campaign.campaign_id +
+                ' campaign_sha256=' + $campaignSha + ' evidence_id=campaign-composed-evidence sha256=' +
+                $evidenceSha + ' verdicts=security,semantics,budget,provenance,diff'
+            $statePhrase = 'Campaign composed evidence independently accepted; the finite campaign is complete and no fourth call exists.'
+        }
+        if (@($candidateRecord -split "`r?`n" | Where-Object { $_ -ceq $marker }).Count -ne 1 -or
+            @($baselineRecord -split "`r?`n" | Where-Object { $_ -ceq $marker }).Count -ne 0) {
+            throw 'Campaign evidence closeout lacks one newly appended exact identity-scoped marker.'
+        }
+        foreach ($authorityPath in @('docs/current-state.md','docs/plans/milestones/m1/slices/s6/README.md')) {
+            if (-not (Get-CandidateText $candidateHash $authorityPath).Contains($statePhrase, [StringComparison]::Ordinal)) {
+                throw 'Campaign evidence closeout authority documents do not state the exact evidence boundary.'
             }
         }
     }
@@ -1039,7 +1233,10 @@ function Invoke-Layer6ReviewGate(
             $isWp9OwnerAcceptanceCloseoutPath = $Wp9OwnerAcceptanceCloseoutMode -and $wp9ReviewCloseoutPaths -ccontains $path
             $isCampaignReviewPath = $CampaignReviewMode -and $campaignReviewPaths -ccontains $path
             $isCampaignCloseoutPath = ($CampaignReviewCloseoutMode -or $CampaignAdmissionCloseoutMode -or
-                $CampaignRolloverCloseoutMode) -and $campaignCloseoutPaths -ccontains $path
+                $CampaignRolloverCloseoutMode -or $CampaignStageReviewCloseoutMode -or
+                $CampaignStageAdmissionCloseoutMode -or $CampaignCredentialEvidenceCloseoutMode -or
+                $CampaignStageEvidenceCloseoutMode -or $CampaignComposedEvidenceCloseoutMode) -and
+                $campaignCloseoutPaths -ccontains $path
             $isOwnerTestProcessCleanupPolicy = $OwnerTestProcessCleanup -and
                 $path -ceq 'docs/execution-policy.md'
             $isProtected = (Test-Wp1ProtectedPath $path) -and
@@ -1327,6 +1524,13 @@ function Invoke-Layer6ReviewGate(
         m1_slice6_campaign_review_closeout = [bool]$CampaignReviewCloseoutMode
         m1_slice6_campaign_admission_closeout = [bool]$CampaignAdmissionCloseoutMode
         wp9_campaign_rollover_closeout = [bool]$CampaignRolloverCloseoutMode
+        m1_slice6_campaign_stage_review_closeout = [bool]$CampaignStageReviewCloseoutMode
+        m1_slice6_campaign_stage_admission_closeout = [bool]$CampaignStageAdmissionCloseoutMode
+        m1_slice6_campaign_credential_evidence_closeout = [bool]$CampaignCredentialEvidenceCloseoutMode
+        m1_slice6_campaign_stage_evidence_closeout = [bool]$CampaignStageEvidenceCloseoutMode
+        m1_slice6_campaign_composed_evidence_closeout = [bool]$CampaignComposedEvidenceCloseoutMode
+        campaign_stage_manifest = $CampaignStageManifest
+        campaign_evidence = $CampaignEvidence
         wp9_current_state_disposition = $wp9CurrentStateDisposition
         wp8_current_state_disposition = $wp8CurrentStateDisposition
         owner_test_process_cleanup = [bool]$OwnerTestProcessCleanup

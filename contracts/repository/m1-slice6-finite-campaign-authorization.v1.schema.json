@@ -6,7 +6,7 @@
   "required": [
     "schema_identity", "campaign_id", "status", "effect_authority", "prepared_at_utc", "expires_at_utc",
     "candidate_binding", "authority_source", "semantic_rollover", "credential_envelope", "safety_identifier",
-    "official_document_snapshot", "ordered_stages", "aggregate_limits", "campaign_ledger", "admission", "rehearsal", "execution"
+    "official_document_snapshot", "ordered_stages", "aggregate_limits", "campaign_ledger", "stage_authority_contract", "admission", "rehearsal", "execution"
   ],
   "properties": {
     "schema_identity": { "const": "infinium.repository.m1-slice6-finite-campaign-authorization/1.0.0" },
@@ -30,6 +30,7 @@
     },
     "aggregate_limits": { "$ref": "#/$defs/aggregateLimits" },
     "campaign_ledger": { "$ref": "#/$defs/campaignLedger" },
+    "stage_authority_contract": { "$ref": "#/$defs/stageAuthorityContract" },
     "admission": { "$ref": "#/$defs/admission" },
     "rehearsal": { "$ref": "#/$defs/rehearsal" },
     "execution": { "$ref": "#/$defs/execution" }
@@ -49,26 +50,26 @@
     "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "candidateBinding": {
       "type": "object", "additionalProperties": false,
-      "required": ["close_ready_implementation_commit", "verification_candidate_commit"],
+      "required": ["close_ready_implementation_commit", "review_candidate_resolution"],
       "properties": {
         "close_ready_implementation_commit": { "type": "string" },
-        "verification_candidate_commit": { "type": "string" }
+        "review_candidate_resolution": { "type": "string" }
       }
     },
     "pendingCandidateBinding": {
       "type": "object", "additionalProperties": false,
-      "required": ["close_ready_implementation_commit", "verification_candidate_commit"],
+      "required": ["close_ready_implementation_commit", "review_candidate_resolution"],
       "properties": {
         "close_ready_implementation_commit": { "const": "pending" },
-        "verification_candidate_commit": { "const": "pending" }
+        "review_candidate_resolution": { "const": "pending" }
       }
     },
     "readyCandidateBinding": {
       "type": "object", "additionalProperties": false,
-      "required": ["close_ready_implementation_commit", "verification_candidate_commit"],
+      "required": ["close_ready_implementation_commit", "review_candidate_resolution"],
       "properties": {
         "close_ready_implementation_commit": { "$ref": "#/$defs/gitSha" },
-        "verification_candidate_commit": { "$ref": "#/$defs/gitSha" }
+        "review_candidate_resolution": { "const": "exact-clean-head-after-four-document-binding" }
       }
     },
     "authoritySource": {
@@ -233,16 +234,45 @@
         "schema_identity": { "const": "infinium.m1-s6.finite-campaign-ledger/v1" },
         "path": { "const": "artifacts/m1-slice6/wp9-profile/finite-campaign-ledger.v1.jsonl" },
         "owner": { "const": "coordinator-only-append-create-write-through" },
-        "state_order": { "const": ["ready", "reviewed", "admitted", "credential-execution-handoff", "credential-evidence-accepted", "stage-reserved", "transport-may-have-started", "stage-accepted", "completed-or-stopped"] },
+        "state_order": { "const": ["ready", "reviewed", "admitted", "credential-execution-handoff", "credential-evidence-handoff", "credential-evidence-accepted", "stage-reserved", "transport-may-have-started", "stage-evidence-handoff", "stage-accepted", "completed-or-stopped"] },
         "identity_fields": { "const": ["campaign-id", "campaign-manifest-sha256", "authority-attachment-sha256", "verification-candidate-commit", "credential-manifest-id", "credential-manifest-sha256", "credential-profile-id", "credential-generation-id", "credential-target-fingerprint-sha256"] },
-        "aggregate_vector_fields": { "const": ["provider-calls", "dns-resolutions", "request-bytes", "input-tokens", "output-tokens", "raw-response-bytes", "reserved-nano-usd", "settled-nano-usd"] },
+        "aggregate_vector_fields": { "const": ["provider-calls", "dns-resolutions", "request-bytes", "input-tokens", "output-tokens", "raw-response-bytes", "reserved-nano-usd", "settled-nano-usd", "observed-input-tokens", "observed-output-tokens", "observed-raw-response-bytes"] },
         "request_and_evidence_binding": { "const": "exact-stage-manifest-id-and-sha256-plus-independent-evidence-id-and-sha256" },
         "clock": { "const": "utc-monotonic-no-rollback" },
-        "expiry_checks": { "const": ["campaign-admission", "credential-handoff", "credential-evidence-handoff", "stage-reservation", "possible-start"] },
+        "expiry_checks": { "const": ["campaign-admission", "credential-execution-handoff", "stage-reservation", "possible-start"] },
         "stage_deadline": { "const": "immutable-reservation-time-plus-exact-stage-deadline" },
         "reopen_validation": { "const": "full-hash-chain-identity-state-clock-vector-and-successor-grammar" },
         "terminal_failure": { "const": "append-stopped-retain-reservation-and-possible-start-hold-no-retry" },
         "possible_start_hold": { "const": "one-call-and-one-dns-consumed-before-send" }
+      }
+    },
+    "stageAuthorityContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_path", "schema_identity", "stage_evidence_schema_path", "stage_evidence_schema_identity", "composed_evidence_schema_path", "composed_evidence_schema_identity", "canonical_directory", "review_candidate_shape", "review_closeout_mode", "admission_closeout_mode", "credential_evidence_closeout_mode", "stage_evidence_closeout_mode", "composed_evidence_closeout_mode", "execution_runner", "helper_boundary", "stage_review_marker", "stage_admission_marker", "credential_evidence_acceptance_marker", "stage_evidence_acceptance_marker", "composed_evidence_acceptance_marker", "stage_evidence_acceptance", "composed_evidence_acceptance", "fourth_stage"],
+      "properties": {
+        "schema_path": { "const": "contracts/repository/m1-slice6-campaign-stage-request.v1.schema.json" },
+        "schema_identity": { "const": "infinium.repository.m1-slice6-campaign-stage-request/1.0.0" },
+        "stage_evidence_schema_path": { "const": "contracts/repository/m1-slice6-campaign-stage-evidence.v1.schema.json" },
+        "stage_evidence_schema_identity": { "const": "infinium.m1-s6.campaign-stage-evidence/v1" },
+        "composed_evidence_schema_path": { "const": "contracts/repository/m1-slice6-campaign-composed-evidence.v1.schema.json" },
+        "composed_evidence_schema_identity": { "const": "infinium.m1-s6.campaign-composed-evidence/v1" },
+        "canonical_directory": { "const": "docs/plans/milestones/m1/slices/s6/live/" },
+        "review_candidate_shape": { "const": "exact-clean-committed-manifest-plus-canonical-request" },
+        "review_closeout_mode": { "const": "M1Slice6CampaignStageReviewCloseout" },
+        "admission_closeout_mode": { "const": "M1Slice6CampaignStageAdmissionCloseout" },
+        "credential_evidence_closeout_mode": { "const": "M1Slice6CampaignCredentialEvidenceCloseout" },
+        "stage_evidence_closeout_mode": { "const": "M1Slice6CampaignStageEvidenceCloseout" },
+        "composed_evidence_closeout_mode": { "const": "M1Slice6CampaignComposedEvidenceCloseout" },
+        "execution_runner": { "const": "eng/run-m1-slice6-live.ps1" },
+        "helper_boundary": { "const": "helper-owned-exact-credential-read-free-production-responses" },
+        "stage_review_marker": { "const": "M1_S6_CAMPAIGN_STAGE_REVIEW_ACCEPTANCE candidate_commit=<stage_review_candidate> campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> stage_manifest_id=<stage_manifest_id> sha256=<stage_manifest_sha256> predecessor_evidence_sha256=<predecessor_evidence_sha256> verdicts=security,semantics,diff" },
+        "stage_admission_marker": { "const": "M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=<stage_review_candidate> campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> stage_manifest_id=<stage_manifest_id> sha256=<stage_manifest_sha256> predecessor_evidence_sha256=<predecessor_evidence_sha256> expires_at_utc=<campaign_expires_at_utc>" },
+        "credential_evidence_acceptance_marker": { "const": "M1_S6_CAMPAIGN_CREDENTIAL_EVIDENCE_ACCEPTANCE campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> manifest_id=<credential_manifest_id> manifest_sha256=<credential_manifest_sha256> evidence_id=wp9-production-profile-enrollment-evidence sha256=<evidence_sha256> verdicts=credential,security,semantics,diff" },
+        "stage_evidence_acceptance_marker": { "const": "M1_S6_CAMPAIGN_STAGE_EVIDENCE_ACCEPTANCE campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> stage_manifest_id=<stage_manifest_id> stage_manifest_sha256=<stage_manifest_sha256> evidence_id=<evidence_id> sha256=<evidence_sha256> verdicts=security,semantics,budget,provenance" },
+        "composed_evidence_acceptance_marker": { "const": "M1_S6_CAMPAIGN_COMPOSED_EVIDENCE_ACCEPTANCE campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> evidence_id=campaign-composed-evidence sha256=<evidence_sha256> verdicts=security,semantics,budget,provenance,diff" },
+        "stage_evidence_acceptance": { "const": "distinct-exact-sha256-independent-review-transition" },
+        "composed_evidence_acceptance": { "const": "distinct-exact-sha256-three-stage-no-fourth-transition" },
+        "fourth_stage": { "const": "prohibited" }
       }
     },
     "admission": {

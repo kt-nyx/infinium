@@ -9,6 +9,8 @@ namespace Infinium.Persistence;
 public sealed class ProductUserSafetyIdentifierStateStore
 {
     public const string StateFileName = "product-user-safety-identifier.v1.seed";
+    public const string StateSchema = "infinium.product-user-safety-identifier/1.0.0";
+    public const string ProductUserScope = "infinium-product-user/v1";
     public const string UseLatchFileName = "product-user-safety-identifier.v1.use";
     public const string UseLatchSchema = "infinium.product-user-safety-identifier-use/v1";
     private readonly string statePath;
@@ -30,13 +32,15 @@ public sealed class ProductUserSafetyIdentifierStateStore
         }
 
         byte[] seed = ProductUserSafetyIdentifier.GenerateSeed();
+        byte[] stateBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new SeedRecord(
+            StateSchema, ProductUserScope, Convert.ToBase64String(seed), ProductUserSafetyIdentifier.Project(seed)));
         string temporaryPath = statePath + ".new-" + Guid.NewGuid().ToString("N");
         try
         {
             using (FileStream stream = new(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096,
                 FileOptions.WriteThrough))
             {
-                stream.Write(seed);
+                stream.Write(stateBytes);
                 stream.Flush(flushToDisk: true);
             }
             File.Move(temporaryPath, statePath, overwrite: false);
@@ -49,6 +53,7 @@ public sealed class ProductUserSafetyIdentifierStateStore
         finally
         {
             if (File.Exists(temporaryPath)) { File.Delete(temporaryPath); }
+            System.Security.Cryptography.CryptographicOperations.ZeroMemory(stateBytes);
         }
 
         try
@@ -161,15 +166,39 @@ public sealed class ProductUserSafetyIdentifierStateStore
         {
             throw new InvalidDataException("The product-user safety identifier state is absent.");
         }
-        using FileStream stream = new(statePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        if (stream.Length != ProductUserSafetyIdentifier.SeedBytes)
+        byte[] bytes = File.ReadAllBytes(statePath);
+        try
         {
-            throw new InvalidDataException("The product-user safety identifier state is malformed.");
+            SeedRecord? record;
+            try { record = System.Text.Json.JsonSerializer.Deserialize<SeedRecord>(bytes); }
+            catch (System.Text.Json.JsonException exception)
+            {
+                throw new InvalidDataException("The product-user safety identifier state is malformed.", exception);
+            }
+            byte[] canonical = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(record);
+            if (record is null || !bytes.AsSpan().SequenceEqual(canonical)
+                || record.Schema != StateSchema || record.Scope != ProductUserScope
+                || !ProductUserSafetyIdentifier.IsValidProjection(record.Projection))
+            {
+                throw new InvalidDataException("The product-user safety identifier state is malformed.");
+            }
+            byte[] seed;
+            try { seed = Convert.FromBase64String(record.SeedBase64); }
+            catch (FormatException exception)
+            {
+                throw new InvalidDataException("The product-user safety identifier seed encoding is malformed.", exception);
+            }
+            if (seed.Length != ProductUserSafetyIdentifier.SeedBytes
+                || ProductUserSafetyIdentifier.Project(seed) != record.Projection)
+            {
+                System.Security.Cryptography.CryptographicOperations.ZeroMemory(seed);
+                throw new InvalidDataException("The product-user safety identifier state projection is stale.");
+            }
+            return seed;
         }
-        byte[] seed = new byte[ProductUserSafetyIdentifier.SeedBytes];
-        stream.ReadExactly(seed);
-        return seed;
+        finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(bytes); }
     }
 
+    private sealed record SeedRecord(string Schema, string Scope, string SeedBase64, string Projection);
     private sealed record UseLatchRecord(string Schema, string Projection, string State);
 }

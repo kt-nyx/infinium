@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/m1-slice6-campaign-stage-evidence.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "status", "campaign_id", "campaign_manifest_sha256", "stage_manifest_id",
+    "stage_manifest_sha256", "stage", "canonical_request_sha256", "predecessor_evidence_id",
+    "predecessor_evidence_sha256", "safety_identifier_projection", "provider_state",
+    "provider_send_count", "dns_resolution_count", "retry_permitted", "input_tokens",
+    "output_tokens", "raw_response_bytes", "calculated_nano_usd", "credential_reads",
+    "credential_frees", "credential_writes", "credential_deletes", "cumulative_credential_calls",
+    "retained_response_sha256"
+  ],
+  "properties": {
+    "schema": { "const": "infinium.m1-s6.campaign-stage-evidence/v1" },
+    "status": { "const": "independent-review-pending" },
+    "campaign_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "campaign_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "stage_manifest_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "stage_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "stage": { "enum": ["Qualification", "SourceClaimExtraction", "CandidateInvestigation"] },
+    "canonical_request_sha256": { "$ref": "#/$defs/sha256" },
+    "predecessor_evidence_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "predecessor_evidence_sha256": { "$ref": "#/$defs/sha256" },
+    "safety_identifier_projection": { "$ref": "#/$defs/sha256" },
+    "provider_state": { "const": "Completed" },
+    "provider_send_count": { "const": 1 },
+    "dns_resolution_count": { "const": 1 },
+    "retry_permitted": { "const": false },
+    "input_tokens": { "type": "integer", "minimum": 0, "maximum": 73728 },
+    "output_tokens": { "type": "integer", "minimum": 0, "maximum": 4096 },
+    "raw_response_bytes": { "type": "integer", "minimum": 1, "maximum": 1048576 },
+    "calculated_nano_usd": { "type": "integer", "minimum": 0, "maximum": 600000000 },
+    "credential_reads": { "const": 1 }, "credential_frees": { "const": 1 },
+    "credential_writes": { "const": 0 }, "credential_deletes": { "const": 0 },
+    "cumulative_credential_calls": {
+      "type": "object", "additionalProperties": false,
+      "required": ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree", "total"],
+      "properties": {
+        "CredWriteW": { "const": 1 }, "CredReadW": { "type": "integer", "minimum": 3, "maximum": 5 },
+        "CredDeleteW": { "const": 0 }, "CredFree": { "type": "integer", "minimum": 2, "maximum": 4 },
+        "total": { "type": "integer", "minimum": 6, "maximum": 10 }
+      }
+    },
+    "retained_response_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "stage": { "const": "Qualification" } }, "required": ["stage"] },
+      "then": { "properties": { "cumulative_credential_calls": { "$ref": "#/$defs/nativeQualification" } } }
+    },
+    {
+      "if": { "properties": { "stage": { "const": "SourceClaimExtraction" } }, "required": ["stage"] },
+      "then": { "properties": { "cumulative_credential_calls": { "$ref": "#/$defs/nativeSourceClaim" } } }
+    },
+    {
+      "if": { "properties": { "stage": { "const": "CandidateInvestigation" } }, "required": ["stage"] },
+      "then": { "properties": { "cumulative_credential_calls": { "$ref": "#/$defs/nativeCandidate" } } }
+    }
+  ],
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "nativeQualification": { "type": "object", "additionalProperties": false, "required": ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree", "total"], "properties": { "CredWriteW": { "const": 1 }, "CredReadW": { "const": 3 }, "CredDeleteW": { "const": 0 }, "CredFree": { "const": 2 }, "total": { "const": 6 } } },
+    "nativeSourceClaim": { "type": "object", "additionalProperties": false, "required": ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree", "total"], "properties": { "CredWriteW": { "const": 1 }, "CredReadW": { "const": 4 }, "CredDeleteW": { "const": 0 }, "CredFree": { "const": 3 }, "total": { "const": 8 } } },
+    "nativeCandidate": { "type": "object", "additionalProperties": false, "required": ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree", "total"], "properties": { "CredWriteW": { "const": 1 }, "CredReadW": { "const": 5 }, "CredDeleteW": { "const": 0 }, "CredFree": { "const": 4 }, "total": { "const": 10 } } }
+  }
+}

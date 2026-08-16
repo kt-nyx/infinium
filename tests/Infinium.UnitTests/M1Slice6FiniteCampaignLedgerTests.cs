@@ -1,3 +1,7 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Infinium.Persistence;
 
 namespace Infinium.Tests;
@@ -25,6 +29,7 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
             RunStage(ledger, M1Slice6CampaignStage.Qualification, 100_000_000, 90_000_000, Start.AddMinutes(5));
             RunStage(ledger, M1Slice6CampaignStage.SourceClaimExtraction, 500_000_000, 400_000_000, Start.AddMinutes(6));
             RunStage(ledger, M1Slice6CampaignStage.CandidateInvestigation, 500_000_000, 300_000_000, Start.AddMinutes(7));
+            ledger.CompleteComposedEvidence("composed-evidence", new string('c', 64), Start.AddMinutes(8));
 
             Assert.AreEqual(M1Slice6CampaignState.Completed, ledger.Current.State);
             Assert.AreEqual(3L, ledger.Current.ProviderCallCount);
@@ -63,7 +68,7 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
     }
 
     [TestMethod]
-    public void ExpiryIsCheckedAtAdmissionCredentialAndStageBeginNotCompletion()
+    public void ExpiryIsCheckedAtAdmissionCredentialHandoffReservationAndPossibleStartNotEvidenceReview()
     {
         string path = TempPath();
         try
@@ -81,10 +86,14 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
             ledger.RecordIndependentReview(Start.AddMinutes(1));
             ledger.AdmitCampaign(Start.AddMinutes(2));
             ledger.BeginCredentialExecutionHandoff(Start.AddMinutes(3));
-            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.AcceptCredentialEvidence(
-                "credential-evidence", new string('6', 64), CampaignExpiry));
+            ledger.RecordCredentialEvidenceHandoff("credential-evidence", new string('6', 64), Start.AddMinutes(4));
+            ledger.AcceptCredentialEvidence("credential-evidence", new string('6', 64), CampaignExpiry);
+            Assert.AreEqual(M1Slice6CampaignState.CredentialEvidenceAccepted, ledger.Current.State);
+            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.ReserveStage(
+                M1Slice6CampaignStage.Qualification,
+                Reservation(M1Slice6CampaignStage.Qualification, 1), CampaignExpiry.AddTicks(1)));
             Assert.AreEqual(M1Slice6CampaignState.Stopped, ledger.Current.State);
-            Assert.AreEqual("campaign-expired-before-credential-evidence-handoff-terminal-stop", ledger.Current.Event);
+            Assert.AreEqual("campaign-expired-before-stage-reservation-terminal-stop", ledger.Current.Event);
         }
         finally { Cleanup(path); }
 
@@ -109,6 +118,22 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
                 M1Slice6CampaignStage.SourceClaimExtraction, Reservation(M1Slice6CampaignStage.SourceClaimExtraction, 1), CampaignExpiry));
         }
         finally { Cleanup(path); }
+
+        path = TempPath();
+        try
+        {
+            M1Slice6FiniteCampaignLedger ledger = ReadyThroughCredential(path);
+            ledger.ReserveStage(M1Slice6CampaignStage.Qualification,
+                Reservation(M1Slice6CampaignStage.Qualification, 1), Start.AddMinutes(5));
+            ledger.LatchPossibleStart(M1Slice6CampaignStage.Qualification, SafetyIdentifier,
+                Start.AddMinutes(5).AddSeconds(1));
+            ledger.RecordStageEvidenceHandoff(M1Slice6CampaignStage.Qualification, "review-later",
+                new string('a', 64), 1, 1, 1, 0, Start.AddMinutes(5).AddSeconds(2));
+            ledger.AcceptStageEvidence(M1Slice6CampaignStage.Qualification, "review-later",
+                new string('a', 64), Start.AddMinutes(7));
+            Assert.AreEqual(M1Slice6CampaignState.StageAccepted, ledger.Current.State);
+        }
+        finally { Cleanup(path); }
     }
 
     [TestMethod]
@@ -125,6 +150,30 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
             File.WriteAllText(path, text.Replace("\"provider_call_count\":1", "\"provider_call_count\":0", StringComparison.Ordinal));
             Assert.ThrowsExactly<InvalidDataException>(() => new M1Slice6FiniteCampaignLedger(
                 path, Identity, CampaignExpiry, CredentialExpiry, Start.AddMinutes(7)));
+        }
+        finally { Cleanup(path); }
+    }
+
+    [TestMethod]
+    public void RehashedIllegalSuccessorIsRejectedAfterHashValidation()
+    {
+        string path = TempPath();
+        try
+        {
+            _ = ReadyThroughCredential(path);
+            string[] lines = File.ReadAllLines(path);
+            M1Slice6CampaignLedgerEntry final = JsonSerializer.Deserialize<M1Slice6CampaignLedgerEntry>(
+                lines[^1], LedgerJson) ?? throw new AssertFailedException("Ledger fixture did not deserialize.");
+            M1Slice6CampaignLedgerEntry illegal = final with
+            {
+                State = M1Slice6CampaignState.Ready,
+                Event = "campaign-ready",
+                EventHash = Rehash(final with { State = M1Slice6CampaignState.Ready, Event = "campaign-ready" }),
+            };
+            lines[^1] = JsonSerializer.Serialize(illegal, LedgerJson);
+            File.WriteAllText(path, string.Join('\n', lines) + "\n", new UTF8Encoding(false));
+            Assert.ThrowsExactly<InvalidDataException>(() => new M1Slice6FiniteCampaignLedger(
+                path, Identity, CampaignExpiry, CredentialExpiry, Start.AddMinutes(5)));
         }
         finally { Cleanup(path); }
     }
@@ -180,8 +229,8 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
                 M1Slice6CampaignStage.Qualification, SafetyIdentifier, Start.AddMinutes(4)));
             ledger.LatchPossibleStart(M1Slice6CampaignStage.Qualification, SafetyIdentifier,
                 Start.AddMinutes(5).AddSeconds(1));
-            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.AcceptStageEvidence(
-                M1Slice6CampaignStage.Qualification, "late-evidence", new string('9', 64), 0,
+            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.RecordStageEvidenceHandoff(
+                M1Slice6CampaignStage.Qualification, "late-evidence", new string('9', 64), 1, 1, 1, 0,
                 Start.AddMinutes(6)));
             Assert.AreEqual(M1Slice6CampaignState.Stopped, ledger.Current.State);
             Assert.AreEqual(1L, ledger.Current.ProviderCallCount);
@@ -208,8 +257,10 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
             admission.ReserveAndLatchPossibleStart(M1Slice6CampaignStage.Qualification,
                 Reservation(M1Slice6CampaignStage.Qualification, 1), projection, Start.AddMinutes(5),
                 Start.AddMinutes(5).AddSeconds(1));
+            ledger.RecordStageEvidenceHandoff(M1Slice6CampaignStage.Qualification, "qualification-evidence",
+                new string('b', 64), 1, 1, 1, 0, Start.AddMinutes(5).AddSeconds(2));
             ledger.AcceptStageEvidence(M1Slice6CampaignStage.Qualification, "qualification-evidence",
-                new string('b', 64), 0, Start.AddMinutes(5).AddSeconds(2));
+                new string('b', 64), Start.AddMinutes(5).AddSeconds(3));
             File.Delete(Path.Combine(stateRoot, ProductUserSafetyIdentifierStateStore.StateFileName));
             Assert.ThrowsExactly<InvalidDataException>(() => admission.ReserveAndLatchPossibleStart(
                 M1Slice6CampaignStage.SourceClaimExtraction,
@@ -226,13 +277,36 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
         }
     }
 
+    [TestMethod]
+    public void IndependentReopenUsesExclusiveCompareAndSwapAndRejectsStaleWriter()
+    {
+        string path = TempPath();
+        try
+        {
+            M1Slice6FiniteCampaignLedger first = ReadyThroughCredential(path);
+            M1Slice6FiniteCampaignLedger stale = new(path, Identity, CampaignExpiry, CredentialExpiry,
+                Start.AddMinutes(4).AddTicks(2));
+            first.ReserveStage(M1Slice6CampaignStage.Qualification,
+                Reservation(M1Slice6CampaignStage.Qualification, 1), Start.AddMinutes(5));
+            Assert.ThrowsExactly<InvalidOperationException>(() => stale.ReserveStage(
+                M1Slice6CampaignStage.Qualification,
+                Reservation(M1Slice6CampaignStage.Qualification, 1), Start.AddMinutes(5).AddTicks(1)));
+            M1Slice6FiniteCampaignLedger reopened = new(path, Identity, CampaignExpiry, CredentialExpiry,
+                Start.AddMinutes(6));
+            Assert.AreEqual(M1Slice6CampaignState.StageReserved, reopened.Current.State);
+            Assert.AreEqual(first.Current.EventHash, reopened.Current.EventHash);
+        }
+        finally { Cleanup(path); }
+    }
+
     private static M1Slice6FiniteCampaignLedger ReadyThroughCredential(string path)
     {
         M1Slice6FiniteCampaignLedger ledger = new(path, Identity, CampaignExpiry, CredentialExpiry, Start);
         ledger.RecordIndependentReview(Start.AddMinutes(1));
         ledger.AdmitCampaign(Start.AddMinutes(2));
         ledger.BeginCredentialExecutionHandoff(Start.AddMinutes(3));
-        ledger.AcceptCredentialEvidence("credential-evidence", new string('6', 64), Start.AddMinutes(4));
+        ledger.RecordCredentialEvidenceHandoff("credential-evidence", new string('6', 64), Start.AddMinutes(4));
+        ledger.AcceptCredentialEvidence("credential-evidence", new string('6', 64), Start.AddMinutes(4).AddTicks(1));
         return ledger;
     }
 
@@ -241,7 +315,9 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
     {
         ledger.ReserveStage(stage, Reservation(stage, reserve), now);
         ledger.LatchPossibleStart(stage, SafetyIdentifier, now.AddSeconds(1));
-        ledger.AcceptStageEvidence(stage, "evidence-" + stage, new string('7', 64), settle, now.AddSeconds(2));
+        ledger.RecordStageEvidenceHandoff(stage, "evidence-" + stage, new string('7', 64), 100, 10, 1000,
+            settle, now.AddSeconds(2));
+        ledger.AcceptStageEvidence(stage, "evidence-" + stage, new string('7', 64), now.AddSeconds(3));
     }
 
     private static M1Slice6CampaignStageReservation Reservation(M1Slice6CampaignStage stage, long reserve)
@@ -253,6 +329,24 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
     }
 
     private static string TempPath() => Path.Combine(Path.GetTempPath(), "infinium-campaign-" + Guid.NewGuid().ToString("N"), "ledger.jsonl");
+    private static string Rehash(M1Slice6CampaignLedgerEntry value)
+    {
+        string material = string.Join('|', value.Sequence, JsonSerializer.Serialize(value.Identity, LedgerJson),
+            value.State, value.Stage, value.Event, value.RequestManifestId, value.RequestManifestSha256,
+            value.EvidenceId, value.EvidenceSha256, value.ProviderCallCount, value.DnsResolutionCount,
+            value.AggregateRequestBytes, value.AggregateInputTokens, value.AggregateOutputTokens,
+            value.AggregateRawResponseBytes, value.ReservedNanoUsd, value.SettledNanoUsd,
+            value.ObservedInputTokens, value.ObservedOutputTokens, value.ObservedRawResponseBytes,
+            value.StageDeadlineUtc?.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture) ?? "",
+            value.PossibleStartLatched, value.SafetyIdentifierProjection, value.PreviousHash,
+            value.RecordedAtUtc.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+        return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(material)));
+    }
+    private static readonly JsonSerializerOptions LedgerJson = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.KebabCaseLower) },
+    };
     private static void Cleanup(string path)
     {
         string? root = Path.GetDirectoryName(path);

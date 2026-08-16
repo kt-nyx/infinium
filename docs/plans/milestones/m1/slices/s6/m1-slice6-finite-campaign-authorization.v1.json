@@ -1,13 +1,13 @@
 {
   "schema_identity": "infinium.repository.m1-slice6-finite-campaign-authorization/1.0.0",
   "campaign_id": "infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee",
-  "status": "ready-for-campaign-review",
+  "status": "verification-pending",
   "effect_authority": "none-until-exact-reviewed-campaign-admission",
   "prepared_at_utc": "2026-08-15T16:00:00.0000000Z",
   "expires_at_utc": "2026-08-22T23:59:00.0000000Z",
   "candidate_binding": {
-    "close_ready_implementation_commit": "40e8ab033a1114fa56cf82650b314c0b8ba2458b",
-    "verification_candidate_commit": "40e8ab033a1114fa56cf82650b314c0b8ba2458b"
+    "close_ready_implementation_commit": "pending",
+    "review_candidate_resolution": "pending"
   },
   "authority_source": {
     "artifact": "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-owner-authority.v1.json",
@@ -171,9 +171,11 @@
       "reviewed",
       "admitted",
       "credential-execution-handoff",
+      "credential-evidence-handoff",
       "credential-evidence-accepted",
       "stage-reserved",
       "transport-may-have-started",
+      "stage-evidence-handoff",
       "stage-accepted",
       "completed-or-stopped"
     ],
@@ -196,14 +198,16 @@
       "output-tokens",
       "raw-response-bytes",
       "reserved-nano-usd",
-      "settled-nano-usd"
+      "settled-nano-usd",
+      "observed-input-tokens",
+      "observed-output-tokens",
+      "observed-raw-response-bytes"
     ],
     "request_and_evidence_binding": "exact-stage-manifest-id-and-sha256-plus-independent-evidence-id-and-sha256",
     "clock": "utc-monotonic-no-rollback",
     "expiry_checks": [
       "campaign-admission",
-      "credential-handoff",
-      "credential-evidence-handoff",
+      "credential-execution-handoff",
       "stage-reservation",
       "possible-start"
     ],
@@ -211,6 +215,31 @@
     "reopen_validation": "full-hash-chain-identity-state-clock-vector-and-successor-grammar",
     "terminal_failure": "append-stopped-retain-reservation-and-possible-start-hold-no-retry",
     "possible_start_hold": "one-call-and-one-dns-consumed-before-send"
+  },
+  "stage_authority_contract": {
+    "schema_path": "contracts/repository/m1-slice6-campaign-stage-request.v1.schema.json",
+    "schema_identity": "infinium.repository.m1-slice6-campaign-stage-request/1.0.0",
+    "stage_evidence_schema_path": "contracts/repository/m1-slice6-campaign-stage-evidence.v1.schema.json",
+    "stage_evidence_schema_identity": "infinium.m1-s6.campaign-stage-evidence/v1",
+    "composed_evidence_schema_path": "contracts/repository/m1-slice6-campaign-composed-evidence.v1.schema.json",
+    "composed_evidence_schema_identity": "infinium.m1-s6.campaign-composed-evidence/v1",
+    "canonical_directory": "docs/plans/milestones/m1/slices/s6/live/",
+    "review_candidate_shape": "exact-clean-committed-manifest-plus-canonical-request",
+    "review_closeout_mode": "M1Slice6CampaignStageReviewCloseout",
+    "admission_closeout_mode": "M1Slice6CampaignStageAdmissionCloseout",
+    "credential_evidence_closeout_mode": "M1Slice6CampaignCredentialEvidenceCloseout",
+    "stage_evidence_closeout_mode": "M1Slice6CampaignStageEvidenceCloseout",
+    "composed_evidence_closeout_mode": "M1Slice6CampaignComposedEvidenceCloseout",
+    "execution_runner": "eng/run-m1-slice6-live.ps1",
+    "helper_boundary": "helper-owned-exact-credential-read-free-production-responses",
+    "stage_review_marker": "M1_S6_CAMPAIGN_STAGE_REVIEW_ACCEPTANCE candidate_commit=<stage_review_candidate> campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> stage_manifest_id=<stage_manifest_id> sha256=<stage_manifest_sha256> predecessor_evidence_sha256=<predecessor_evidence_sha256> verdicts=security,semantics,diff",
+    "stage_admission_marker": "M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=<stage_review_candidate> campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> stage_manifest_id=<stage_manifest_id> sha256=<stage_manifest_sha256> predecessor_evidence_sha256=<predecessor_evidence_sha256> expires_at_utc=<campaign_expires_at_utc>",
+    "credential_evidence_acceptance_marker": "M1_S6_CAMPAIGN_CREDENTIAL_EVIDENCE_ACCEPTANCE campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> manifest_id=<credential_manifest_id> manifest_sha256=<credential_manifest_sha256> evidence_id=wp9-production-profile-enrollment-evidence sha256=<evidence_sha256> verdicts=credential,security,semantics,diff",
+    "stage_evidence_acceptance_marker": "M1_S6_CAMPAIGN_STAGE_EVIDENCE_ACCEPTANCE campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> stage_manifest_id=<stage_manifest_id> stage_manifest_sha256=<stage_manifest_sha256> evidence_id=<evidence_id> sha256=<evidence_sha256> verdicts=security,semantics,budget,provenance",
+    "composed_evidence_acceptance_marker": "M1_S6_CAMPAIGN_COMPOSED_EVIDENCE_ACCEPTANCE campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> evidence_id=campaign-composed-evidence sha256=<evidence_sha256> verdicts=security,semantics,budget,provenance,diff",
+    "stage_evidence_acceptance": "distinct-exact-sha256-independent-review-transition",
+    "composed_evidence_acceptance": "distinct-exact-sha256-three-stage-no-fourth-transition",
+    "fourth_stage": "prohibited"
   },
   "admission": {
     "review_marker": "M1_S6_CAMPAIGN_REVIEW_ACCEPTANCE candidate_commit=<exact-reviewed-candidate> campaign_id=<campaign_id> sha256=<manifest_sha256> verdicts=security,semantics,diff",

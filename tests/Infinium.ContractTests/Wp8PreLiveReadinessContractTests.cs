@@ -272,12 +272,19 @@ public sealed class Wp8PreLiveReadinessContractTests
             Assert.AreEqual(0, ownerAcceptanceCloseout, "Exact owner-accepted closeout was rejected.");
             Assert.AreNotEqual(0, campaignReview, "Owner-accepted state was admitted as campaign review.");
         }
-        else if (currentState.Contains("finite-campaign amendment implementation, non-live verification", StringComparison.Ordinal))
+        else if (currentState.Contains("finite-campaign amendment implementation, non-live verification, and fresh review only. Exact candidate", StringComparison.Ordinal))
         {
             Assert.AreNotEqual(0, ownerStop, "Campaign review state was admitted as WP9 owner-stop.");
             Assert.AreNotEqual(0, reviewCloseout, "Campaign review state was admitted as WP9 review closeout.");
             Assert.AreNotEqual(0, ownerAcceptanceCloseout, "Campaign review state was admitted as WP9 owner acceptance.");
             Assert.AreEqual(0, campaignReview, "Exact finite-campaign review state was rejected.");
+        }
+        else if (currentState.Contains("finite-campaign amendment implementation, non-live verification, and correction/reverification only", StringComparison.Ordinal))
+        {
+            Assert.AreNotEqual(0, ownerStop, "Campaign correction state was admitted as WP9 owner-stop.");
+            Assert.AreNotEqual(0, reviewCloseout, "Campaign correction state was admitted as WP9 review closeout.");
+            Assert.AreNotEqual(0, ownerAcceptanceCloseout, "Campaign correction state was admitted as WP9 owner acceptance.");
+            Assert.AreNotEqual(0, campaignReview, "Campaign correction state was admitted as a frozen campaign review candidate.");
         }
         else
         {

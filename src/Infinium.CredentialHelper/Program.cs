@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text.Json;
 using Infinium.Application.Runtime;
 using Infinium.CredentialHelper;
@@ -112,6 +113,111 @@ if (args is ["--wp9-production-nonlive-probe", "--response-handle", string wp9Pr
         "[]", null, JsonSerializer.Serialize(wp9ProbeCanaries), false, false, 0, false, null);
     await NativeHelperFailureProtocol.WriteAsync(response, wp9ProbeEnvelope, CancellationToken.None);
     return 72;
+}
+
+if (args is ["--wp9-campaign-provider-request-handle", string campaignRequestHandle,
+    "--response-handle", string campaignResponseHandle,
+    "--credential-manifest", string campaignCredentialManifestPath,
+    "--credential-manifest-sha256", string campaignCredentialManifestSha256,
+    "--credential-manifest-id", string campaignCredentialManifestId,
+    "--authority-now-unix-ms", string campaignAuthorityNow, .. string[] campaignOptions]
+    && long.TryParse(campaignAuthorityNow, System.Globalization.NumberStyles.None,
+        System.Globalization.CultureInfo.InvariantCulture, out long campaignAuthorityNowUnixMs))
+{
+    WindowsCredentialManagerStore? campaignStore = null;
+    Process? campaignDescendant = null;
+    byte[] campaignSecretCanary = [];
+    try
+    {
+        using AnonymousPipeClientStream request = new(PipeDirection.In, campaignRequestHandle);
+        using AnonymousPipeClientStream response = new(PipeDirection.Out, campaignResponseHandle);
+        ClearHandleInheritance(request.SafePipeHandle.DangerousGetHandle());
+        ClearHandleInheritance(response.SafePipeHandle.DangerousGetHandle());
+        if (!Wp9ProductionLaunchContract.TryParse(campaignOptions, out Wp9ProductionLaunchOptions? launchOptions))
+        {
+            throw new InvalidDataException("Campaign provider containment options are invalid.");
+        }
+        bool excludedHandleAccessible = launchOptions!.ExcludedHandle != 0
+            && GetHandleInformation(launchOptions.ExcludedHandle, out _);
+        campaignStore = WindowsCredentialManagerStore.FromProductionEnrollmentManifest(
+            campaignCredentialManifestPath, campaignCredentialManifestSha256, campaignCredentialManifestId);
+        campaignStore.BeginScenario("m1-s6-campaign-provider-dispatch");
+        campaignDescendant = Process.Start(new ProcessStartInfo
+        {
+            FileName = Environment.ProcessPath!,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            ArgumentList = { "--containment-descendant", "30000" },
+        }) ?? throw new InvalidOperationException("Campaign provider containment descendant could not start.");
+        using Infinium.OpenAI.OpenAiResponsesAdapter provider =
+            Infinium.OpenAI.OpenAiResponsesAdapter.CreateProduction();
+        using RecordingReadStream recordedRequest = new(request);
+        using RecordingWriteStream recordedResponse = new(response);
+        OneShotHelperEngine engine = new(campaignStore,
+            new FixedUtcTimeProvider(DateTimeOffset.FromUnixTimeMilliseconds(campaignAuthorityNowUnixMs)),
+            providerTransport: provider, allowSyntheticProviderDispatch: false,
+            providerSecretObserver: secret =>
+            {
+                CryptographicOperations.ZeroMemory(campaignSecretCanary);
+                campaignSecretCanary = secret.ToArray();
+            });
+        using CancellationTokenSource deadline = new(TimeSpan.FromMinutes(2));
+        await engine.RunAsync(recordedRequest, recordedResponse, deadline.Token);
+        (int listeners, int networkOperations) = NetworkMeasurement.MeasureCurrentProcessTcp();
+        NativeRawTargetCanary[] targets = campaignStore.RawTargetCanaries.ToArray();
+        NativeCanaryEvidence canaries;
+        try
+        {
+            byte[] traceBytes = JsonSerializer.SerializeToUtf8Bytes(campaignStore.CallTrace);
+            canaries = NativeCanaryScanner.Scan(campaignSecretCanary, targets,
+            [
+                new("private protocol request", "private-pipe-bytes", recordedRequest.CapturedBytes),
+                new("private protocol response", "private-pipe-bytes", recordedResponse.CapturedBytes),
+                new("native call trace", "canonical-trace-bytes", traceBytes),
+                NativeCanarySurface.FromText("process command line", Environment.CommandLine),
+                NativeCanarySurface.FromText("process environment names",
+                    string.Join('\n', Environment.GetEnvironmentVariables().Keys.Cast<object>()
+                        .Select(value => value.ToString()).Order(StringComparer.Ordinal))),
+            ]);
+        }
+        finally
+        {
+            foreach (NativeRawTargetCanary target in targets)
+            {
+                CryptographicOperations.ZeroMemory(target.Bytes);
+            }
+        }
+        byte[] metrics = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            excluded_handle_accessible = excludedHandleAccessible,
+            descendant_pid = campaignDescendant.Id,
+            listener_count = listeners,
+            network_operation_count = networkOperations,
+            native_credential_operation_count = campaignStore.CallCounts.Total,
+            native_call_trace = campaignStore.CallTrace,
+            entry_cleanup = (object?)null,
+            canaries,
+            namespace_reuse_blocked = campaignStore.NamespaceReuseBlocked,
+            namespace_reuse_block_reason = campaignStore.NamespaceReuseBlockReason,
+        });
+        await response.WriteAsync(BitConverter.GetBytes(checked((uint)metrics.Length)), deadline.Token);
+        await response.WriteAsync(metrics, deadline.Token);
+        await response.FlushAsync(deadline.Token);
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException
+        or InvalidOperationException or OperationCanceledException or TimeoutException
+        or System.ComponentModel.Win32Exception)
+    {
+        Console.Error.WriteLine($"Campaign provider helper stopped with typed non-secret failure: {exception.GetType().Name}");
+        return 78;
+    }
+    finally
+    {
+        CryptographicOperations.ZeroMemory(campaignSecretCanary);
+        campaignStore?.Dispose();
+        campaignDescendant?.Dispose();
+    }
 }
 
 if (args is ["--wp9-production-enrollment-request-handle", string productionRequestHandle,

@@ -48,19 +48,22 @@ public sealed class OneShotHelperEngine
     private readonly IHelperSecretSource secretSource;
     private readonly IOpenAiResponsesTransport? providerTransport;
     private readonly bool allowSyntheticProviderDispatch;
+    private readonly Action<byte[]>? providerSecretObserver;
 
     public OneShotHelperEngine(
         ISyntheticSecureStore store,
         TimeProvider? timeProvider = null,
         IHelperSecretSource? secretSource = null,
         IOpenAiResponsesTransport? providerTransport = null,
-        bool allowSyntheticProviderDispatch = false)
+        bool allowSyntheticProviderDispatch = false,
+        Action<byte[]>? providerSecretObserver = null)
     {
         this.store = store ?? throw new ArgumentNullException(nameof(store));
         this.timeProvider = timeProvider ?? TimeProvider.System;
         this.secretSource = secretSource ?? DeterministicHelperSecretSource.Instance;
         this.providerTransport = providerTransport;
         this.allowSyntheticProviderDispatch = allowSyntheticProviderDispatch;
+        this.providerSecretObserver = providerSecretObserver;
     }
 
     public async Task RunAsync(Stream request, Stream response, CancellationToken cancellationToken)
@@ -206,6 +209,7 @@ public sealed class OneShotHelperEngine
                     break;
                 case HelperAssignmentKindV2.ProviderDispatch:
                     secret = store.ReadExact(slot);
+                    providerSecretObserver?.Invoke(secret);
                     if (providerTransport is null)
                     {
                         if (!allowSyntheticProviderDispatch)

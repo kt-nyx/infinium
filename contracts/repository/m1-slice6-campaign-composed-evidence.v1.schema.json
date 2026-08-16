@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/m1-slice6-campaign-composed-evidence.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "provider_call_count", "fourth_call_observed"],
+  "properties": {
+    "schema": { "const": "infinium.m1-s6.campaign-composed-evidence/v1" },
+    "provider_call_count": { "const": 3 },
+    "fourth_call_observed": { "const": false }
+  }
+}

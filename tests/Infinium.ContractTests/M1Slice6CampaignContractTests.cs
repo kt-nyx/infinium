@@ -10,7 +10,11 @@ public sealed class M1Slice6CampaignContractTests
 {
     private const string ManifestRelative = "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json";
     private static readonly string[] OrderedOperations = ["Qualification", "SourceClaimExtraction", "CandidateInvestigation"];
-    private static readonly string[] CampaignSchemas = ["m1-slice6-finite-campaign-authorization.v1.schema.json", "m1-slice6-finite-campaign-owner-authority.v1.schema.json"];
+    private static readonly string[] CampaignSchemas = ["m1-slice6-finite-campaign-authorization.v1.schema.json",
+        "m1-slice6-finite-campaign-owner-authority.v1.schema.json",
+        "m1-slice6-campaign-stage-request.v1.schema.json",
+        "m1-slice6-campaign-stage-evidence.v1.schema.json",
+        "m1-slice6-campaign-composed-evidence.v1.schema.json"];
 
     [TestMethod]
     public void CampaignSchemaIsRecursivelyClosedAndAuthorityBound()
@@ -52,6 +56,9 @@ public sealed class M1Slice6CampaignContractTests
             root => root["safety_identifier"]!["domain"] = "unframed",
             root => root["safety_identifier"]!["use_latch_schema"] = "unversioned",
             root => root["admission"]!["campaign_admission_marker"] = "substring-marker",
+            root => root["stage_authority_contract"]!["stage_evidence_schema_path"] = "unknown.json",
+            root => root["rehearsal"]!["required_stop_mutations"]!.AsArray().Add(
+                root["rehearsal"]!["required_stop_mutations"]![0]!.DeepClone()),
             root =>
             {
                 JsonArray stages = root["ordered_stages"]!.AsArray();

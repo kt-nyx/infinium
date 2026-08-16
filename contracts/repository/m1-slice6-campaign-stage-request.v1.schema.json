@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infinium.invalid/contracts/repository/m1-slice6-campaign-stage-request.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_identity", "manifest_id", "status", "candidate_binding", "campaign_binding", "stage", "predecessor_evidence", "canonical_request", "transport", "limits", "safety_identifier", "execution"],
+  "properties": {
+    "schema_identity": { "const": "infinium.repository.m1-slice6-campaign-stage-request/1.0.0" },
+    "manifest_id": { "$ref": "#/$defs/id" },
+    "status": { "enum": ["verification-pending", "ready-for-independent-review", "reviewed-and-admitted"] },
+    "candidate_binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["close_ready_implementation_commit", "review_candidate_resolution"],
+      "properties": {
+        "close_ready_implementation_commit": { "$ref": "#/$defs/sha40OrPending" },
+        "review_candidate_resolution": { "enum": ["pending", "exact-clean-committed-two-file-stage-candidate"] }
+      }
+    },
+    "campaign_binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["campaign_id", "campaign_manifest_sha256", "campaign_review_candidate_commit", "credential_manifest_id", "credential_manifest_sha256"],
+      "properties": {
+        "campaign_id": { "$ref": "#/$defs/id" },
+        "campaign_manifest_sha256": { "$ref": "#/$defs/sha64" },
+        "campaign_review_candidate_commit": { "$ref": "#/$defs/sha40" },
+        "credential_manifest_id": { "$ref": "#/$defs/id" },
+        "credential_manifest_sha256": { "$ref": "#/$defs/sha64" }
+      }
+    },
+    "stage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ordinal", "work_package", "operation"],
+      "properties": {
+        "ordinal": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "work_package": { "enum": ["WP9", "WP10", "WP11"] },
+        "operation": { "enum": ["Qualification", "SourceClaimExtraction", "CandidateInvestigation"] }
+      }
+    },
+    "predecessor_evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ledger_event_hash", "evidence_id", "evidence_sha256"],
+      "properties": {
+        "ledger_event_hash": { "$ref": "#/$defs/sha64" },
+        "evidence_id": { "$ref": "#/$defs/id" },
+        "evidence_sha256": { "$ref": "#/$defs/sha64" }
+      }
+    },
+    "canonical_request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "bytes", "input_bound_policy_id", "input_bound_policy_version", "proved_input_tokens", "maximum_output_tokens"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^[A-Za-z0-9._/-]{1,240}$" },
+        "sha256": { "$ref": "#/$defs/sha64" },
+        "bytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "input_bound_policy_id": { "const": "openai-responses-o200k-byte-envelope" },
+        "input_bound_policy_version": { "const": "v1" },
+        "proved_input_tokens": { "type": "integer", "minimum": 0, "maximum": 73728 },
+        "maximum_output_tokens": { "type": "integer", "minimum": 1, "maximum": 4096 }
+      }
+    },
+    "transport": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scheme", "host", "path", "method", "tool_choice", "tool_count", "retry_count", "parallel", "maximum_provider_calls", "maximum_dns_resolutions"],
+      "properties": {
+        "scheme": { "const": "https" }, "host": { "const": "api.openai.com" },
+        "path": { "const": "/v1/responses" }, "method": { "const": "POST" },
+        "tool_choice": { "const": "none" }, "tool_count": { "const": 0 },
+        "retry_count": { "const": 0 }, "parallel": { "const": false },
+        "maximum_provider_calls": { "const": 1 }, "maximum_dns_resolutions": { "const": 1 }
+      }
+    },
+    "limits": {
+      "type": "object", "additionalProperties": false,
+      "required": ["maximum_request_bytes", "maximum_input_tokens", "maximum_output_tokens", "maximum_raw_response_bytes", "maximum_nano_usd", "deadline_milliseconds"],
+      "properties": {
+        "maximum_request_bytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "maximum_input_tokens": { "type": "integer", "minimum": 1, "maximum": 73728 },
+        "maximum_output_tokens": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "maximum_raw_response_bytes": { "type": "integer", "minimum": 1, "maximum": 1048576 },
+        "maximum_nano_usd": { "type": "integer", "minimum": 1, "maximum": 600000000 },
+        "deadline_milliseconds": { "enum": [60000, 120000] }
+      }
+    },
+    "safety_identifier": {
+      "type": "object", "additionalProperties": false,
+      "required": ["projection", "state_version", "raw_seed_present"],
+      "properties": {
+        "projection": { "$ref": "#/$defs/sha64" },
+        "state_version": { "const": "infinium.product-user-safety-identifier/1.0.0" },
+        "raw_seed_present": { "const": false }
+      }
+    },
+    "execution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["provider_request_permitted", "requires_exact_review_marker", "requires_exact_admission_marker", "automatic_retry", "fourth_call_permitted"],
+      "properties": {
+        "provider_request_permitted": { "type": "boolean" },
+        "requires_exact_review_marker": { "const": true },
+        "requires_exact_admission_marker": { "const": true },
+        "automatic_retry": { "const": false },
+        "fourth_call_permitted": { "const": false }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "verification-pending" } }, "required": ["status"] },
+      "then": { "properties": { "execution": { "properties": { "provider_request_permitted": { "const": false } } } } },
+      "else": { "properties": { "candidate_binding": { "properties": { "close_ready_implementation_commit": { "$ref": "#/$defs/sha40" }, "review_candidate_resolution": { "const": "exact-clean-committed-two-file-stage-candidate" } } } } }
+    }
+  ],
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9._:/-]{1,200}$" },
+    "sha40": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha64": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "sha40OrPending": { "oneOf": [{ "$ref": "#/$defs/sha40" }, { "const": "pending" }] }
+  }
+}

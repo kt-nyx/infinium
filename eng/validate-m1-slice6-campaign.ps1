@@ -104,12 +104,48 @@ function Resolve-LocalSchemaReference([Text.Json.JsonElement]$Root, [string]$Ref
 function Assert-CampaignSchemaNode([Text.Json.JsonElement]$Instance, [Text.Json.JsonElement]$Schema,
     [Text.Json.JsonElement]$Root, [string]$Location) {
     $probe = [Text.Json.JsonElement]::new()
+    if ($Schema.TryGetProperty('oneOf', [ref]$probe)) {
+        $matchCount = 0
+        foreach ($member in $probe.EnumerateArray()) {
+            try { Assert-CampaignSchemaNode $Instance $member $Root $Location; $matchCount++ } catch { }
+        }
+        if ($matchCount -ne 1) { throw "$Location does not match exactly one schema branch." }
+        return
+    }
     if ($Schema.TryGetProperty('$ref', [ref]$probe)) {
         Assert-CampaignSchemaNode $Instance (Resolve-LocalSchemaReference $Root $probe.GetString()) $Root $Location
         return
     }
     if ($Schema.TryGetProperty('allOf', [ref]$probe)) {
         foreach ($member in $probe.EnumerateArray()) { Assert-CampaignSchemaNode $Instance $member $Root $Location }
+    }
+    if ($Schema.TryGetProperty('if', [ref]$probe)) {
+        $condition = $probe
+        $conditionMatches = $true
+        $conditionRequired = [Text.Json.JsonElement]::new()
+        if ($condition.TryGetProperty('required', [ref]$conditionRequired)) {
+            foreach ($name in $conditionRequired.EnumerateArray()) {
+                $found = [Text.Json.JsonElement]::new()
+                if ($Instance.ValueKind -ne [Text.Json.JsonValueKind]::Object -or
+                    -not $Instance.TryGetProperty($name.GetString(), [ref]$found)) { $conditionMatches = $false }
+            }
+        }
+        $conditionProperties = [Text.Json.JsonElement]::new()
+        if ($conditionMatches -and $condition.TryGetProperty('properties', [ref]$conditionProperties)) {
+            foreach ($property in $conditionProperties.EnumerateObject()) {
+                $actual = [Text.Json.JsonElement]::new()
+                if (-not $Instance.TryGetProperty($property.Name, [ref]$actual)) { continue }
+                $constant = [Text.Json.JsonElement]::new()
+                if ($property.Value.TryGetProperty('const', [ref]$constant) -and
+                    -not [Text.Json.JsonElement]::DeepEquals($actual, $constant)) { $conditionMatches = $false }
+            }
+        }
+        $branch = [Text.Json.JsonElement]::new()
+        if ($conditionMatches -and $Schema.TryGetProperty('then', [ref]$branch)) {
+            Assert-CampaignSchemaNode $Instance $branch $Root $Location
+        } elseif (-not $conditionMatches -and $Schema.TryGetProperty('else', [ref]$branch)) {
+            Assert-CampaignSchemaNode $Instance $branch $Root $Location
+        }
     }
     if ($Schema.TryGetProperty('type', [ref]$probe)) {
         $ok = switch ($probe.GetString()) {
@@ -130,6 +166,18 @@ function Assert-CampaignSchemaNode([Text.Json.JsonElement]$Instance, [Text.Json.
         $ok = $false
         foreach ($member in $probe.EnumerateArray()) { if ([Text.Json.JsonElement]::DeepEquals($Instance,$member)) { $ok=$true; break } }
         if (-not $ok) { throw "$Location is outside its schema enumeration." }
+    }
+    if ($Instance.ValueKind -eq [Text.Json.JsonValueKind]::Number) {
+        $minimum = [Text.Json.JsonElement]::new()
+        $maximum = [Text.Json.JsonElement]::new()
+        $hasMinimum = $Schema.TryGetProperty('minimum',[ref]$minimum)
+        $hasMaximum = $Schema.TryGetProperty('maximum',[ref]$maximum)
+        if ($hasMinimum -or $hasMaximum) {
+            $number = [decimal]0
+            if (-not $Instance.TryGetDecimal([ref]$number)) { throw "$Location is not an exact bounded number." }
+            if ($hasMinimum -and $number -lt $minimum.GetDecimal()) { throw "$Location is below its schema minimum." }
+            if ($hasMaximum -and $number -gt $maximum.GetDecimal()) { throw "$Location exceeds its schema maximum." }
+        }
     }
     if ($Instance.ValueKind -eq [Text.Json.JsonValueKind]::Object) {
         $required = [Text.Json.JsonElement]::new()
@@ -154,8 +202,23 @@ function Assert-CampaignSchemaNode([Text.Json.JsonElement]$Instance, [Text.Json.
             if ($itemSchema.ValueKind -eq [Text.Json.JsonValueKind]::False -and (-not $Schema.TryGetProperty('prefixItems',[ref]$prefix) -or $items.Count -gt @($prefix.EnumerateArray()).Count)) { throw "$Location has an unmodelled item." }
             if ($itemSchema.ValueKind -eq [Text.Json.JsonValueKind]::Object) { for($i=0;$i -lt $items.Count;$i++){ Assert-CampaignSchemaNode $items[$i] $itemSchema $Root "$Location[$i]" } }
         }
+        $unique = [Text.Json.JsonElement]::new()
+        if ($Schema.TryGetProperty('uniqueItems', [ref]$unique) -and $unique.GetBoolean()) {
+            for ($left = 0; $left -lt $items.Count; $left++) {
+                for ($right = $left + 1; $right -lt $items.Count; $right++) {
+                    if ([Text.Json.JsonElement]::DeepEquals($items[$left], $items[$right])) {
+                        throw "$Location contains duplicate items."
+                    }
+                }
+            }
+        }
     } elseif ($Instance.ValueKind -eq [Text.Json.JsonValueKind]::String) {
-        $pattern=[Text.Json.JsonElement]::new(); if ($Schema.TryGetProperty('pattern',[ref]$pattern) -and $Instance.GetString() -cnotmatch $pattern.GetString()) { throw "$Location does not match its schema pattern." }
+        $text = $Instance.GetString()
+        $minLength=[Text.Json.JsonElement]::new()
+        $maxLength=[Text.Json.JsonElement]::new()
+        if ($Schema.TryGetProperty('minLength',[ref]$minLength) -and $text.Length -lt $minLength.GetInt32()) { throw "$Location is shorter than its schema minimum." }
+        if ($Schema.TryGetProperty('maxLength',[ref]$maxLength) -and $text.Length -gt $maxLength.GetInt32()) { throw "$Location exceeds its schema maximum length." }
+        $pattern=[Text.Json.JsonElement]::new(); if ($Schema.TryGetProperty('pattern',[ref]$pattern) -and $text -cnotmatch $pattern.GetString()) { throw "$Location does not match its schema pattern." }
     }
 }
 
@@ -288,7 +351,7 @@ if ($authority.schema_identity -cne 'infinium.repository.m1-slice6-finite-campai
     throw 'The immutable campaign authority artifact is stale or broadened.'
 }
 
-Require-ExactProperties $manifest @('schema_identity','campaign_id','status','effect_authority','prepared_at_utc','expires_at_utc','candidate_binding','authority_source','semantic_rollover','credential_envelope','safety_identifier','official_document_snapshot','ordered_stages','aggregate_limits','campaign_ledger','admission','rehearsal','execution') 'campaign'
+Require-ExactProperties $manifest @('schema_identity','campaign_id','status','effect_authority','prepared_at_utc','expires_at_utc','candidate_binding','authority_source','semantic_rollover','credential_envelope','safety_identifier','official_document_snapshot','ordered_stages','aggregate_limits','campaign_ledger','stage_authority_contract','admission','rehearsal','execution') 'campaign'
 if ($manifest.schema_identity -cne 'infinium.repository.m1-slice6-finite-campaign-authorization/1.0.0' -or $manifest.campaign_id -cne 'infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee') { throw 'Campaign identity is not exact.' }
 if ($manifest.effect_authority -cne 'none-until-exact-reviewed-campaign-admission') { throw 'Campaign effect authority was broadened.' }
 if ((Get-ExactUtcText $manifest.expires_at_utc) -cne '2026-08-22T23:59:00.0000000Z') { throw 'Campaign expiry is not exact.' }
@@ -314,11 +377,49 @@ $currentCredentialPath = Get-FullPath 'docs/plans/milestones/m1/slices/s6/wp9-pr
 $currentCredential = Get-Content -LiteralPath $currentCredentialPath -Raw | ConvertFrom-Json
 Require-CredentialNonBroadening $priorCredential $currentCredential $manifest.semantic_rollover.zero_effect_proof
 
-Require-ExactProperties $manifest.candidate_binding @('close_ready_implementation_commit','verification_candidate_commit') 'candidate_binding'
+$manifestSha = Get-Sha256 $manifestPath
+$recordText = if (Test-Path -LiteralPath (Get-FullPath $RecordPath)) { Get-Content -LiteralPath (Get-FullPath $RecordPath) -Raw } else { '' }
+$recordLines = @($recordText -split "`r?`n")
+$reviewPattern = '^M1_S6_CAMPAIGN_REVIEW_ACCEPTANCE candidate_commit=([0-9a-f]{40}) campaign_id=' + [regex]::Escape([string]$manifest.campaign_id) + ' sha256=' + $manifestSha + ' verdicts=security,semantics,diff$'
+$reviewMatches = @($recordLines | ForEach-Object { if ($_ -cmatch $reviewPattern) { $Matches[1] } })
+$reviewCount = $reviewMatches.Count
+$reviewedCandidate = if ($reviewCount -eq 1) { [string]$reviewMatches[0] } else { $null }
+
+Require-ExactProperties $manifest.candidate_binding @('close_ready_implementation_commit','review_candidate_resolution') 'candidate_binding'
 $ready = $manifest.status -ceq 'ready-for-campaign-review'
+$reviewCandidateCommit = $null
 if ($ready) {
     Require-LowerHex $manifest.candidate_binding.close_ready_implementation_commit 40 'candidate_binding.close_ready_implementation_commit'
-    Require-LowerHex $manifest.candidate_binding.verification_candidate_commit 40 'candidate_binding.verification_candidate_commit'
+    if ($manifest.candidate_binding.review_candidate_resolution -cne 'exact-clean-head-after-four-document-binding') {
+        throw 'Ready campaign review candidate resolution is not exact.'
+    }
+    if (-not [string]::IsNullOrWhiteSpace((& git status --porcelain))) {
+        throw 'Ready campaign validation requires a clean committed review candidate.'
+    }
+    $reviewCandidateCommit = if ($reviewCount -eq 1) { $reviewedCandidate } else { (& git rev-parse HEAD).Trim() }
+    & git merge-base --is-ancestor $reviewCandidateCommit HEAD
+    if ($LASTEXITCODE -ne 0) { throw 'The bound campaign review candidate is not an ancestor of current HEAD.' }
+    $closeReady = [string]$manifest.candidate_binding.close_ready_implementation_commit
+    & git merge-base --is-ancestor $closeReady $reviewCandidateCommit
+    if ($LASTEXITCODE -ne 0 -or $closeReady -ceq $reviewCandidateCommit) {
+        throw 'Ready campaign requires a distinct ancestor close-ready source A and bound review candidate B.'
+    }
+    [string[]]$actualBindingPaths = @(& git -c core.quotePath=false diff --name-only $closeReady $reviewCandidateCommit --)
+    [string[]]$exactBindingPaths = @(
+        'docs/current-state.md',
+        'docs/plans/milestones/m1/slices/s6/README.md',
+        'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json')
+    [Array]::Sort($actualBindingPaths, [StringComparer]::Ordinal)
+    [Array]::Sort($exactBindingPaths, [StringComparer]::Ordinal)
+    if ([string]::Join("`n", $actualBindingPaths) -cne [string]::Join("`n", $exactBindingPaths)) {
+        throw ('Ready campaign review candidate B must differ from close-ready source A by exactly four binding documents. actual=' + [string]::Join('|',$actualBindingPaths))
+    }
+    $pendingManifest = @(& git show "$closeReady`:docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json") -join "`n"
+    if ($LASTEXITCODE -ne 0 -or -not $pendingManifest.Contains('"status": "verification-pending"', [StringComparison]::Ordinal) -or
+        -not $pendingManifest.Contains('"review_candidate_resolution": "pending"', [StringComparison]::Ordinal)) {
+        throw 'Close-ready source A is not the exact pending non-executable campaign state.'
+    }
 } elseif ($manifest.status -ceq 'verification-pending') {
     foreach ($name in $manifest.candidate_binding.PSObject.Properties.Name) { if ($manifest.candidate_binding.$name -cne 'pending') { throw 'Pending campaign binding mixed exact and pending values.' } }
 } else { throw 'Campaign status is unknown.' }
@@ -349,13 +450,6 @@ if ($manifest.execution.campaign_permitted -or $manifest.execution.credential_he
 
 $rank = @{ Verification = 0; Ready = 1; Reviewed = 2; Admitted = 3; RolloverAdmitted = 4 }
 if ($rank[$RequireState] -ge 1 -and -not $ready) { throw 'Exact campaign bindings are not ready.' }
-$manifestSha = Get-Sha256 $manifestPath
-$recordText = if (Test-Path -LiteralPath (Get-FullPath $RecordPath)) { Get-Content -LiteralPath (Get-FullPath $RecordPath) -Raw } else { '' }
-$recordLines = @($recordText -split "`r?`n")
-$reviewPattern = '^M1_S6_CAMPAIGN_REVIEW_ACCEPTANCE candidate_commit=([0-9a-f]{40}) campaign_id=' + [regex]::Escape([string]$manifest.campaign_id) + ' sha256=' + $manifestSha + ' verdicts=security,semantics,diff$'
-$reviewMatches = @($recordLines | ForEach-Object { if ($_ -cmatch $reviewPattern) { $Matches[1] } })
-$reviewCount = $reviewMatches.Count
-$reviewedCandidate = if ($reviewCount -eq 1) { [string]$reviewMatches[0] } else { $null }
 $admissionPattern = '^M1_S6_CAMPAIGN_ADMISSION candidate_commit=([0-9a-f]{40}) authority_sha256=' + $manifest.authority_source.attachment_sha256 + ' campaign_id=' + [regex]::Escape([string]$manifest.campaign_id) + ' sha256=' + $manifestSha + ' close_ready_commit=' + $manifest.candidate_binding.close_ready_implementation_commit + ' expires_at_utc=' + [regex]::Escape((Get-ExactUtcText $manifest.expires_at_utc)) + '$'
 $admissionMatches = @($recordLines | ForEach-Object { if ($_ -cmatch $admissionPattern) { $Matches[1] } })
 $admissionCount = $admissionMatches.Count
@@ -408,6 +502,7 @@ if ($PriorCredentialManifest -or $ReplacementCredentialManifest -or $ZeroEffectE
     review_marker_count = $reviewCount
     admission_marker_count = $admissionCount
     reviewed_candidate_commit = $reviewedCandidate
+    bound_review_candidate_commit = $reviewCandidateCommit
     review_closeout_commit = $reviewCommit
     admission_closeout_commit = $admissionCommit
     rollover_closeout_commit = $rolloverCommit

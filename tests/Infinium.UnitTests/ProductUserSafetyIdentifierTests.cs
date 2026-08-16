@@ -9,6 +9,7 @@ namespace Infinium.Tests;
 [TestCategory("Unit")]
 public sealed class ProductUserSafetyIdentifierTests
 {
+    private static readonly string[] SeedRecordProperties = ["Schema", "Scope", "SeedBase64", "Projection"];
     [TestMethod]
     public void ProjectionIsDomainSeparatedStableAndContainsNoSeedMaterial()
     {
@@ -34,7 +35,16 @@ public sealed class ProductUserSafetyIdentifierTests
             string second = store.GetOrCreateProjection();
             Assert.AreEqual(first, second);
             string path = Path.Combine(root, ProductUserSafetyIdentifierStateStore.StateFileName);
-            Assert.AreEqual(ProductUserSafetyIdentifier.SeedBytes, new FileInfo(path).Length);
+            using System.Text.Json.JsonDocument state = System.Text.Json.JsonDocument.Parse(File.ReadAllBytes(path));
+            CollectionAssert.AreEqual(SeedRecordProperties,
+                state.RootElement.EnumerateObject().Select(property => property.Name).ToArray());
+            Assert.AreEqual(ProductUserSafetyIdentifierStateStore.StateSchema,
+                state.RootElement.GetProperty("Schema").GetString());
+            Assert.AreEqual(ProductUserSafetyIdentifierStateStore.ProductUserScope,
+                state.RootElement.GetProperty("Scope").GetString());
+            Assert.AreEqual(ProductUserSafetyIdentifier.SeedBytes,
+                Convert.FromBase64String(state.RootElement.GetProperty("SeedBase64").GetString()!).Length);
+            Assert.AreEqual(first, state.RootElement.GetProperty("Projection").GetString());
 
             Assert.AreNotEqual(first, ProductUserSafetyIdentifier.Project(new byte[ProductUserSafetyIdentifier.SeedBytes]));
         }

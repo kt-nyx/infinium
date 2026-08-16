@@ -202,6 +202,16 @@ if ($ValidateCampaignAdmissionOnly) {
     return
 }
 [IO.Directory]::CreateDirectory($resolvedOutput) | Out-Null
+$campaignLedgerPath = Join-Path $resolvedOutput 'finite-campaign-ledger.v1.jsonl'
+if ($campaignRoute) {
+    & $coordinator --wp9-campaign-credential-handoff-admission --manifest $manifestPath `
+        --manifest-sha256 $manifestSha --campaign-manifest $campaignManifestPath `
+        --campaign-manifest-sha256 ([string]$campaignValidation.manifest_sha256) `
+        --campaign-reviewed-candidate $reviewedCandidate --campaign-ledger $campaignLedgerPath
+    if ($LASTEXITCODE -ne 0) {
+        throw 'The zero-effect campaign credential handoff admission failed before the authority lock or helper launch.'
+    }
+}
 $lockPath = Join-Path $resolvedOutput 'authority-lock.json'
 $lock = [ordered]@{
     schema = 'infinium.m1-s6.wp9.profile-authority-lock/v1'
@@ -232,7 +242,6 @@ finally {
     [Security.Cryptography.CryptographicOperations]::ZeroMemory($lockBytes)
 }
 
-$campaignLedgerPath = Join-Path $resolvedOutput 'finite-campaign-ledger.v1.jsonl'
 if ($campaignRoute) {
     & $coordinator --wp9-production-profile-enrollment --manifest $manifestPath `
         --manifest-sha256 $manifestSha --output-root $resolvedOutput --product-root $stateRoot `

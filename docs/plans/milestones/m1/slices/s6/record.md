@@ -8168,3 +8168,104 @@ and returns the campaign to verification-pending before refreeze. B8 and all
 partial evidence are excluded. No helper, readiness, authority lock, UI, API
 key, native Credential Manager, profile, DNS/public network, provider,
 billable, private, archive, or push effect occurred.
+
+## Finite-campaign B9 terminal-review correction — 2026-08-16
+
+Terminal review of binding `a9c497691a16b9c9639ba6422941b3e9b9e52256`
+found that its campaign A/B identity was self-referential, credential evidence
+acceptance was not a separate exact production transition, provider-stage
+manifest/admission/orchestration/settlement remained rehearsal-only, and the
+ledger/schema/runtime mutation proof was incomplete. B9 is excluded before any
+review, admission, rollover, helper, readiness, authority lock, UI, API key,
+native Credential Manager, profile, DNS/public-network, provider, billable,
+private, archive, or push effect. Its completed floor remains diagnostic only;
+final receipt identities will be retained only for the corrected independently
+reviewed replacement.
+
+The correction distinguishes the immutable close-ready implementation source
+from its exact four-document bound review candidate. Campaign marker resolution
+stays bound to that fixed candidate across clean committed review and admission
+successors. Credential execution now requires a separately materialized durable
+campaign handoff; the effect runner cannot synthesize review or admission
+state. Successful enrollment stops at an exact credential-evidence handoff,
+and a separate no-provider-effect transition independently accepts those exact
+bytes. Cancel, collision, readiness failure, native failure, cleanup ambiguity,
+and helper-evidence ambiguity instead append distinct terminal campaign states.
+
+The product now has a recursively closed stage-manifest contract and production
+validator/coordinator for the exact WP9, WP10, and WP11 sequence. It binds the
+canonical request bytes, exact predecessor evidence, campaign/credential/safety
+identities, fixed host/path/method/tool/retry/parallel policy, per-stage limits,
+aggregate limits, one possible-start latch, exact observed usage/cost, distinct
+stage evidence handoff/acceptance, and composed three-stage no-fourth closeout.
+The hash-chained ledger uses an exclusive cross-process compare-and-swap lock,
+full successor equations, monotonic time, immutable stage deadlines, terminal
+full holds after ambiguity, and the exact W1/R5/D0/F4/T10 campaign envelope.
+The versioned safety record is create-once; deletion, corruption, torn bytes,
+or projection drift after its first use is terminal and cannot regenerate.
+
+The committed temporary-clone rehearsal now includes exact clean commits for
+campaign binding, review, admission, credential rollover, every stage manifest,
+every stage review/admission transition, fake-store credential evidence, three
+literal-loopback calls, composed evidence, and no-fourth closeout. Its mutation
+surface covers stale identities and predecessors, duplicate markers, unknown
+schema fields, broadened host/path/tool/retry/parallel settings, raised limits,
+safety drift, counter reset, expiry, ambiguous start, and fourth-path/call
+rejection. Current authority remains correction and non-live reverification
+only. No campaign marker, credential helper, UI, API key, native credential,
+production profile, DNS/public network, provider, billable, private, archive,
+or push effect occurred.
+
+The subsequent terminal review found that B9 still lacked production-bound
+credential-evidence marker ancestry, exact stage/composed evidence schemas and
+closeout modes, a non-native test of the concrete contained-helper composition,
+and rehashed illegal-successor proof. It also found that staged-response replay
+correctly stripped effect facts for offline use, but the production boundary
+had not truthfully reattached the helper-observed one-send/network/start facts.
+Those are ordinary pre-effect findings; B9 remains excluded and no receipt from
+it is acceptance evidence.
+
+The corrected implementation requires each credential, stage, and composed
+evidence acceptance marker to be introduced once by an exact three-document,
+append-only committed successor of its exact rollover/admission/evidence
+predecessor. Closed stage-evidence and composed-evidence schemas, exact marker
+templates, and three dedicated mutually exclusive evidence-closeout Layer 6
+modes now bind those transitions. Evidence validators reject changed request,
+predecessor, safety, result, usage, cost, native-envelope, nested-property, and
+no-fourth facts. The ledger additionally rejects an illegal successor even
+when its public hash material is recomputed, and evidence review may occur
+after the already-bounded operation deadline without creating a new start;
+expiry remains enforced at admission, credential execution handoff, stage
+reservation, and possible start.
+
+The production stage composition is now exercised without native or public
+effect through its actual frame builder and result validator with an injected
+literal-loopback helper receipt. That proof covers exact assignment,
+revalidation, finite limits, conservative pre-descendant possible-start latch,
+R-success/F-released trace, canary inventory, containment, staged response,
+and one-send restoration. It exposed and corrected the lost replay effect
+facts before any execution authority existed. The latest focused results are
+Release build 0 warnings/errors; campaign ledger and safety unit tests 15/15;
+campaign contracts 3/3; and the committed temporary-clone campaign rehearsal
+1/1. Standalone campaign verification reports effect count zero. Current
+authority remains correction and non-live reverification only; helper, UI,
+authority lock, API key, Credential Manager, production profile, DNS/public
+network, provider, billable, private/archive, and push effects remain zero.
+
+The final pre-freeze focused rerun passed the combined campaign, rollover,
+adapter, safety, and WP9 authorization unit filter 45/45 and the production
+credential-evidence plus committed campaign-rehearsal integration filter 7/7.
+The retained-WP8/campaign contract filter then exposed two state-model fixture
+gaps before freeze: the retained validator treated the exact
+verification-pending correction state as already review-ready, and its finite
+campaign path equation omitted the new closed stage/evidence schemas, live
+fail-before-launch surface, and production stage coordinator. The correction
+now distinguishes the exact correction source from the exact bound review
+candidate, requires `Verification` versus `Ready` accordingly, extends the
+finite path equation to the complete production surface, and makes the Layer 6
+contract reject correction state as review authority. Documentation validation
+passes for 167 metadata files, 169 Markdown link sources, and 32 JSON files;
+PowerShell parsing, strict JSON parsing, diff whitespace checks, and literal
+secret/raw-target scans pass with zero matches. No helper, UI, readiness,
+authority lock, API key, Credential Manager, production profile, DNS/public
+network, provider, billable, private/archive, or push effect occurred.

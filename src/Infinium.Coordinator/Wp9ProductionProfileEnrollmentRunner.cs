@@ -43,6 +43,135 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             reviewedCandidate);
     }
 
+    internal static void AdmitCampaignCredentialExecutionHandoff(string credentialManifestPath,
+        string credentialManifestSha256, string campaignManifestPath, string campaignManifestSha256,
+        string reviewedCandidate, string ledgerPath, DateTimeOffset now)
+    {
+        byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
+        if (Convert.ToHexStringLower(SHA256.HashData(credentialBytes)) != credentialManifestSha256)
+        {
+            throw new InvalidDataException("Campaign credential handoff admission has stale manifest bytes.");
+        }
+        using JsonDocument credential = JsonDocument.Parse(credentialBytes);
+        JsonElement root = credential.RootElement;
+        JsonElement profile = root.GetProperty("profile");
+        DateTimeOffset expiry = DateTimeOffset.Parse(root.GetProperty("expires_at_utc").GetString()!,
+            System.Globalization.CultureInfo.InvariantCulture);
+        Wp9CampaignCredentialExecution campaign = new(campaignManifestPath, campaignManifestSha256,
+            reviewedCandidate, ledgerPath);
+        M1Slice6FiniteCampaignLedger ledger = OpenCampaignCredentialHandoff(campaign, root,
+            root.GetProperty("manifest_id").GetString()!, credentialManifestSha256,
+            profile.GetProperty("access_profile_id").GetString()!,
+            profile.GetProperty("generation_id").GetString()!,
+            profile.GetProperty("target_fingerprint_sha256").GetString()!, now, expiry,
+            M1Slice6CampaignState.Ready);
+        ledger.RecordIndependentReview(now.AddTicks(1));
+        ledger.AdmitCampaign(now.AddTicks(2));
+        ledger.BeginCredentialExecutionHandoff(now.AddTicks(3));
+    }
+
+    internal static void AcceptCampaignCredentialEvidence(string credentialManifestPath,
+        string credentialManifestSha256, string campaignManifestPath, string campaignManifestSha256,
+        string reviewedCandidate, string ledgerPath, string evidencePath, string repositoryRecordPath,
+        DateTimeOffset now)
+    {
+        byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
+        if (Convert.ToHexStringLower(SHA256.HashData(credentialBytes)) != credentialManifestSha256)
+        {
+            throw new InvalidDataException("Credential evidence acceptance has stale manifest bytes.");
+        }
+        using JsonDocument credential = JsonDocument.Parse(credentialBytes);
+        JsonElement profile = credential.RootElement.GetProperty("profile");
+        DateTimeOffset expiry = DateTimeOffset.Parse(
+            credential.RootElement.GetProperty("expires_at_utc").GetString()!,
+            System.Globalization.CultureInfo.InvariantCulture);
+        Wp9CampaignCredentialExecution campaign = new(campaignManifestPath, campaignManifestSha256,
+            reviewedCandidate, ledgerPath);
+        M1Slice6FiniteCampaignLedger ledger = OpenCampaignCredentialHandoff(campaign,
+            credential.RootElement, credential.RootElement.GetProperty("manifest_id").GetString()!,
+            credentialManifestSha256, profile.GetProperty("access_profile_id").GetString()!,
+            profile.GetProperty("generation_id").GetString()!,
+            profile.GetProperty("target_fingerprint_sha256").GetString()!, now,
+            expiry, M1Slice6CampaignState.CredentialEvidenceHandoff);
+        byte[] evidenceBytes = File.ReadAllBytes(Path.GetFullPath(evidencePath));
+        string evidenceSha = Convert.ToHexStringLower(SHA256.HashData(evidenceBytes));
+        using JsonDocument evidence = JsonDocument.Parse(evidenceBytes);
+        JsonElement root = evidence.RootElement;
+        string[] exactProperties = ["schema", "status", "manifest_id", "manifest_sha256",
+            "campaign_credential_handoff_event_hash", "profile_id", "generation_id",
+            "target_fingerprint_sha256", "lifecycle_state", "verification_state",
+            "native_credential_operation_count", "native_call_trace", "entry_evidence", "canaries",
+            "network_operation_count", "listener_count", "provider_operation_count",
+            "billable_operation_count", "retry_attempted", "containment", "namespace_reuse_blocked",
+            "namespace_reuse_block_reason", "retention", "completed_at_utc"];
+        M1Slice6CampaignLedgerEntry handoffPredecessor = ledger.Entries.Count >= 2
+            ? ledger.Entries[^2]
+            : throw new InvalidDataException("Credential evidence has no exact execution handoff predecessor.");
+        JsonElement containment = root.GetProperty("containment");
+        if (!root.EnumerateObject().Select(property => property.Name).SequenceEqual(exactProperties,
+                StringComparer.Ordinal)
+            || !containment.EnumerateObject().Select(property => property.Name).SequenceEqual(
+                ["probe_executed", "excluded_handle_accessible", "process_tree_terminated",
+                    "process_tree_survivor_count", "total_contained_process_count"], StringComparer.Ordinal)
+            || root.GetProperty("schema").GetString()
+                != "infinium.m1-s6.wp9.production-profile-enrollment-evidence/v1"
+            || root.GetProperty("status").GetString() != "passed-active-verified"
+            || root.GetProperty("manifest_id").GetString()
+                != credential.RootElement.GetProperty("manifest_id").GetString()
+            || root.GetProperty("manifest_sha256").GetString() != credentialManifestSha256
+            || root.GetProperty("profile_id").GetString() != profile.GetProperty("access_profile_id").GetString()
+            || root.GetProperty("generation_id").GetString() != profile.GetProperty("generation_id").GetString()
+            || root.GetProperty("target_fingerprint_sha256").GetString()
+                != profile.GetProperty("target_fingerprint_sha256").GetString()
+            || root.GetProperty("campaign_credential_handoff_event_hash").GetString()
+                != handoffPredecessor.EventHash
+            || root.GetProperty("lifecycle_state").GetString() != "active-verified"
+            || root.GetProperty("verification_state").GetString() != "available"
+            || root.GetProperty("native_credential_operation_count").GetInt32() != 4
+            || root.GetProperty("network_operation_count").GetInt32() != 0
+            || root.GetProperty("provider_operation_count").GetInt32() != 0
+            || root.GetProperty("billable_operation_count").GetInt32() != 0
+            || root.GetProperty("retry_attempted").GetBoolean()
+            || !containment.GetProperty("probe_executed").GetBoolean()
+            || containment.GetProperty("excluded_handle_accessible").GetBoolean()
+            || !containment.GetProperty("process_tree_terminated").GetBoolean()
+            || containment.GetProperty("process_tree_survivor_count").GetInt32() != 0
+            || containment.GetProperty("total_contained_process_count").GetInt32() < 2
+            || root.GetProperty("namespace_reuse_blocked").GetBoolean()
+            || root.GetProperty("namespace_reuse_block_reason").ValueKind != JsonValueKind.Null
+            || root.GetProperty("retention").GetString() != "exact-generation-retained-no-delete-authority"
+            || ledger.Current.EvidenceSha256 != evidenceSha)
+        {
+            throw new InvalidDataException("Credential evidence is not the exact independently reviewable success handoff.");
+        }
+        using JsonDocument campaignDocument = JsonDocument.Parse(
+            File.ReadAllBytes(Path.GetFullPath(campaignManifestPath)));
+        JsonElement campaignRoot = campaignDocument.RootElement;
+        string evidenceId = "wp9-production-profile-enrollment-evidence";
+        string marker = "M1_S6_CAMPAIGN_CREDENTIAL_EVIDENCE_ACCEPTANCE campaign_id="
+            + ledger.Current.Identity.CampaignId + " campaign_sha256=" + campaignManifestSha256
+            + " manifest_id=" + ledger.Current.Identity.CredentialManifestId
+            + " manifest_sha256=" + credentialManifestSha256
+            + " evidence_id=" + evidenceId + " sha256=" + evidenceSha
+            + " verdicts=credential,security,semantics,diff";
+        string rolloverMarker = "WP9_PROFILE_CAMPAIGN_ROLLOVER_ADMISSION campaign_candidate_commit="
+            + reviewedCandidate + " authority_sha256="
+            + campaignRoot.GetProperty("authority_source").GetProperty("attachment_sha256").GetString()
+            + " campaign_id=" + ledger.Current.Identity.CampaignId + " campaign_sha256=" + campaignManifestSha256
+            + " manifest_id=" + ledger.Current.Identity.CredentialManifestId + " sha256=" + credentialManifestSha256
+            + " close_ready_commit=" + credential.RootElement.GetProperty("candidate_binding")
+                .GetProperty("close_ready_implementation_commit").GetString()
+            + " credential_expires_at_utc=" + credential.RootElement.GetProperty("expires_at_utc").GetString();
+        string repository = M1Slice6CampaignStageManifestValidator.FindRepositoryRoot(repositoryRecordPath);
+        const string recordRelative = "docs/plans/milestones/m1/slices/s6/record.md";
+        string rolloverCommit = M1Slice6CampaignStageManifestValidator.FindUniqueMarkerCommit(
+            repository, rolloverMarker, recordRelative);
+        _ = M1Slice6CampaignStageManifestValidator.UniqueMarkerCommit(repository, marker,
+            rolloverCommit, recordRelative);
+        ledger.AcceptCredentialEvidence(evidenceId, evidenceSha,
+            now);
+    }
+
     internal static async Task<int> RunAsync(
         string manifestPath,
         string manifestSha256,
@@ -58,6 +187,11 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         {
             string durableState = TryMarkRecoveryBlocked(productRoot, manifestPath);
             RetainAmbiguousFailure(outputRoot, manifestPath, manifestSha256, exception, durableState);
+            if (campaign is not null)
+            {
+                TryStopCampaignCredentialHandoff(campaign, manifestPath, manifestSha256, outputRoot,
+                    "helper-evidence-ambiguity", DateTimeOffset.UtcNow);
+            }
             throw;
         }
     }
@@ -102,7 +236,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         }
 
         M1Slice6FiniteCampaignLedger? campaignLedger = campaign is null ? null :
-            AdmitCampaignCredentialHandoff(campaign, root, manifestId, manifestSha256, profileId,
+            OpenCampaignCredentialHandoff(campaign, root, manifestId, manifestSha256, profileId,
                 generationId, targetFingerprint, now, expires);
 
         string helperBinary = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
@@ -237,10 +371,31 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             "retry_attempted=false",
             "qualification_request_authority=none") + "\n";
         File.WriteAllText(Path.Combine(outputRoot, "profile-enrollment-summary.txt"), summary, new UTF8Encoding(false));
+        if (campaignLedger is not null)
+        {
+            string evidenceSha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(evidencePath)));
+            if (disposition == "passed-active-verified")
+            {
+                campaignLedger.RecordCredentialEvidenceHandoff(
+                    "wp9-production-profile-enrollment-evidence", evidenceSha256, DateTimeOffset.UtcNow);
+            }
+            else
+            {
+                string reason = disposition switch
+                {
+                    "stopped-owner-cancelled" => "owner-cancelled",
+                    "stopped-existing-target-collision" => "preflight-collision",
+                    "stopped-native-failure" => "native-failure",
+                    _ => "cleanup-ambiguity",
+                };
+                campaignLedger.StopCredentialHandoff(reason,
+                    "wp9-production-profile-enrollment-evidence", evidenceSha256, DateTimeOffset.UtcNow);
+            }
+        }
         return disposition == "passed-active-verified" ? 0 : 73;
     }
 
-    private static M1Slice6FiniteCampaignLedger AdmitCampaignCredentialHandoff(
+    private static M1Slice6FiniteCampaignLedger OpenCampaignCredentialHandoff(
         Wp9CampaignCredentialExecution campaign,
         JsonElement credentialManifest,
         string credentialManifestId,
@@ -249,7 +404,8 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         string generationId,
         string targetFingerprint,
         DateTimeOffset now,
-        DateTimeOffset credentialExpiry)
+        DateTimeOffset credentialExpiry,
+        M1Slice6CampaignState expectedState = M1Slice6CampaignState.CredentialExecutionHandoff)
     {
         string campaignPath = Path.GetFullPath(campaign.ManifestPath);
         string ledgerPath = Path.GetFullPath(campaign.LedgerPath);
@@ -289,14 +445,38 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             authority.GetProperty("attachment_sha256").GetString()!, campaign.ReviewedCandidateCommit,
             credentialManifestId, credentialManifestSha256, profileId, generationId, targetFingerprint);
         M1Slice6FiniteCampaignLedger ledger = new(ledgerPath, identity, campaignExpiry, credentialExpiry, now);
-        if (ledger.Current.State != M1Slice6CampaignState.Ready)
+        if (ledger.Current.State != expectedState)
         {
-            throw new InvalidOperationException("Campaign credential handoff requires a fresh ready ledger.");
+            throw new InvalidOperationException("Campaign credential operation requires its exact durable predecessor.");
         }
-        ledger.RecordIndependentReview(now.AddTicks(1));
-        ledger.AdmitCampaign(now.AddTicks(2));
-        ledger.BeginCredentialExecutionHandoff(now.AddTicks(3));
         return ledger;
+    }
+
+    private static void TryStopCampaignCredentialHandoff(Wp9CampaignCredentialExecution campaign,
+        string credentialManifestPath, string credentialManifestSha256, string outputRoot,
+        string reason, DateTimeOffset now)
+    {
+        try
+        {
+            using JsonDocument credential = JsonDocument.Parse(File.ReadAllBytes(credentialManifestPath));
+            JsonElement profile = credential.RootElement.GetProperty("profile");
+            DateTimeOffset expiry = DateTimeOffset.Parse(
+                credential.RootElement.GetProperty("expires_at_utc").GetString()!,
+                System.Globalization.CultureInfo.InvariantCulture);
+            M1Slice6FiniteCampaignLedger ledger = OpenCampaignCredentialHandoff(campaign,
+                credential.RootElement, credential.RootElement.GetProperty("manifest_id").GetString()!,
+                credentialManifestSha256, profile.GetProperty("access_profile_id").GetString()!,
+                profile.GetProperty("generation_id").GetString()!,
+                profile.GetProperty("target_fingerprint_sha256").GetString()!, now, expiry);
+            string failurePath = Path.Combine(Path.GetFullPath(outputRoot), "profile-enrollment-failure.json");
+            if (!File.Exists(failurePath)) { return; }
+            string failureSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(failurePath)));
+            ledger.StopCredentialHandoff(reason, "wp9-production-profile-enrollment-failure", failureSha, now);
+        }
+        catch
+        {
+            // The original retained failure remains authoritative. Never replace it with a secondary ledger error.
+        }
     }
 
     private static void ValidateCommittedCampaignAuthority(
