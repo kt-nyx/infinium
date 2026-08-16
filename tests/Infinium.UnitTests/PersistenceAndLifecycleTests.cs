@@ -271,7 +271,7 @@ public sealed class PersistenceAndLifecycleTests
 
         command.Parameters["$authorizationId"].Value = "authorization-approved";
         command.Parameters["$policyId"].Value = "openai-responses-o200k-byte-envelope";
-        command.Parameters["$policyVersion"].Value = "v1";
+        command.Parameters["$policyVersion"].Value = "v2";
         Assert.AreEqual(1, command.ExecuteNonQuery());
         command.Parameters.Clear();
         command.CommandText =
@@ -305,7 +305,7 @@ public sealed class PersistenceAndLifecycleTests
         command.Parameters["$requestId"].Value = "request-approved";
         command.Parameters["$clientRequestId"].Value = "client-request-approved";
         command.Parameters["$policyId"].Value = "openai-responses-o200k-byte-envelope";
-        command.Parameters["$policyVersion"].Value = "v1";
+        command.Parameters["$policyVersion"].Value = "v2";
         Assert.AreEqual(1, command.ExecuteNonQuery());
     }
 

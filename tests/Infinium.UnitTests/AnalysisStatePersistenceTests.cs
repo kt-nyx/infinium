@@ -139,7 +139,7 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            ProviderPersistenceDeclarations.SchemaFingerprint,
+            ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint,
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));

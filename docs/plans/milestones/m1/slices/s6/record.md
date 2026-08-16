@@ -8453,3 +8453,16 @@ updates that final consumer to the exact v2 safety-identifier and framed
 message-array request. No helper, UI, readiness, authority lock, API key,
 Credential Manager, production profile, DNS/public network, provider,
 billable, private/archive, or push effect occurred.
+
+Bound candidate `26edecadcd13c0201740f60729673c6ae90ecb53` passed both exact
+ready validators, the combined retained-WP8/campaign contract filter 10/10,
+the expanded focused unit filter 23/23, and the complete committed rehearsal
+1/1. Fresh NonLiveAll passed Contracts 35/35 and StateSurfaces 27/27, then
+stopped at 16/18 in StateTotality. One persistence test expected the
+pre-campaign schema fingerprint instead of the exact post-correction
+fingerprint, and another inserted input-bound policy v1 against the exact v2
+CHECK constraint. No later tranche ran and the fresh root is excluded. The
+bounded correction updates only those two exact persistence consumers. No
+helper, UI, readiness, authority lock, API key, Credential Manager, production
+profile, DNS/public network, provider, billable, private/archive, or push effect
+occurred.
