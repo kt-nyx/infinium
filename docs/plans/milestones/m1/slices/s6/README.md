@@ -3,12 +3,16 @@
 Status: Accepted
 Disposition: Active slice navigation; live authority remains in current state
 
-Last reviewed: 2026-08-15
+Last reviewed: 2026-08-16
 
 Live authorization remains stated only in
 [current project state](../../../../../current-state.md).
 
 - [Accepted Slice 6 plan](plan.md)
+- [Proposed accepted-ready remainder plan](remainder-plan.md)
+- [Proposed remainder authority amendment](m1-slice6-remainder-authority-amendment.v1.json)
+- [Proposed live semantic v2 fixture-authority amendment](../../../../../evaluation/specifications/m1-slice6-live-semantic-v2-amendment.md)
+- [Live semantic authority-conflict investigation](../../../../../research/investigations/RESEARCH-0056-slice6-live-semantic-authority-conflict.md)
 - [Slice 6 provider-profile and implementation-readiness investigation](../../../../../research/investigations/RESEARCH-0054-slice6-openai-profile-and-implementation-readiness-refresh.md)
 - [Copy-paste implementation-orchestrator handoff](orchestrator-handoff.md)
 - [Append-only implementation record](record.md)
@@ -18,6 +22,10 @@ Live authorization remains stated only in
 - [Finite campaign owner authority input](m1-slice6-finite-campaign-owner-authority.v1.json)
 - [Finite campaign authorization](m1-slice6-finite-campaign-authorization.v1.json)
 - [Finite campaign and safety-identifier official snapshot](../../../../../research/investigations/RESEARCH-0055-slice6-finite-campaign-and-safety-identifier-refresh.md)
+
+The proposed remainder documents are navigation and owner-decision inputs
+only. They grant no implementation or external-effect authority unless the
+project owner accepts their exact committed candidate and bound digests.
 
 The project owner accepted the plan and its explicit stateless/cache-off
 ADR-0025 conformance closure on 2026-08-10; no separate ADR is required. WP1

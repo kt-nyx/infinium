@@ -1,0 +1,291 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-remainder-authority-amendment/1.0.0",
+  "amendment_id": "d2dbd25b-a99d-446f-9300-7a8f4ec4bdb7",
+  "status": "proposed-owner-acceptance",
+  "prepared_at_utc": "2026-08-16T00:00:00.0000000Z",
+  "effect_authority": "none-until-owner-acceptance-and-exact-stage-gates",
+  "starting_state": {
+    "branch": "codex/m1-s6",
+    "commit": "313ecfc04a22330c4c5dc52a79aae87d13982a74",
+    "clean": true,
+    "wp1_through_wp8_accepted": true,
+    "campaign_effects_observed": false
+  },
+  "decision": {
+    "accepted_plan_amendment_required": true,
+    "fixture_authority_amendment_required": true,
+    "finite_campaign_successor_required": true,
+    "adr_required": false,
+    "reason": "Accepted architecture is sufficient, but frozen WP10 v1 truth admits no proposal and cannot supply WP11's required exact persisted predecessor."
+  },
+  "bound_documents": [
+    {
+      "path": "docs/plans/milestones/m1/slices/s6/remainder-plan.md",
+      "length_bytes": 41861,
+      "sha256": "ead2047315b2d8671240fd31c712f28753199502ccc48c16ef30d7d18e294c00"
+    },
+    {
+      "path": "docs/evaluation/specifications/m1-slice6-live-semantic-v2-amendment.md",
+      "length_bytes": 19659,
+      "sha256": "ca605741426e14ecf2a1301356c816b48faf93649bedbff8a59afbf761d4cc9b"
+    },
+    {
+      "path": "docs/research/investigations/RESEARCH-0056-slice6-live-semantic-authority-conflict.md",
+      "length_bytes": 9859,
+      "sha256": "ad718ae64075e02340bf9c4376a13c1216f5a6da1a387002a17218159993974c"
+    }
+  ],
+  "frozen_current_preservation": {
+    "required": true,
+    "rule": "preserve-all-five-package-trees-and-all-38-existing-registry-entry-objects-exactly",
+    "campaign_eligible": false,
+    "identities": [
+      "S6-CLAIM-VAL-v1/1.0.0",
+      "LLM-CLAIM-LIVE-VAL/1.0.0",
+      "S6-CANDIDATE-VAL-v3/2.0.0",
+      "LLM-INVESTIGATE-LIVE-VAL/1.0.0",
+      "PROV-LIVE-COMPOSED-VAL/1.0.0"
+    ]
+  },
+  "v2_design_identities": {
+    "source_claim_input": "S6-CLAIM-LIVE-VAL-v2/2.0.0",
+    "source_claim_wrapper": "LLM-CLAIM-LIVE-VAL-v2/2.0.0",
+    "candidate_input": "S6-CANDIDATE-LIVE-VAL-v2/2.0.0",
+    "candidate_wrapper": "LLM-INVESTIGATE-LIVE-VAL-v2/2.0.0",
+    "composed_wrapper": "PROV-LIVE-COMPOSED-VAL-v2/2.0.0",
+    "qualification_package_preserved": "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1/1.0.0",
+    "registry_version": "1.7.0",
+    "registry_entry_count": 43,
+    "registry_path": "fixtures/public/public-fixture-registry.v2.json",
+    "registry_schema_path": "contracts/repository/public-fixture-registry.v2.schema.json",
+    "registry_schema_identity": "infinium.repository.public-fixture-registry/1.7.0",
+    "repository_contracts": {
+      "stage_request": "infinium.repository.m1-slice6-campaign-stage-request/2.0.0",
+      "stage_evidence": "infinium.m1-s6.campaign-stage-evidence/v2",
+      "composed_evidence": "infinium.m1-s6.campaign-composed-evidence/v2",
+      "campaign_authorization": "infinium.repository.m1-slice6-finite-campaign-authorization/2.0.0"
+    },
+    "public_manifest_and_oracle_contracts": {
+      "source_claim_manifest": "infinium.public-fixture.source-claim/2.0.0",
+      "source_claim_oracle": "infinium.evaluation.source-claim-oracle/2.0.0",
+      "candidate_manifest": "infinium.evaluation.candidate-investigation-public-manifest/2.0.0",
+      "candidate_oracle": "infinium.evaluation.candidate-investigation-oracle/2.0.0",
+      "live_source_claim_manifest": "infinium.public-fixture.live-source-claim/2.0.0",
+      "live_source_claim_oracle": "infinium.evaluation.live-source-claim-oracle/2.0.0",
+      "live_candidate_manifest": "infinium.public-fixture.live-candidate-investigation/2.0.0",
+      "live_candidate_oracle": "infinium.evaluation.live-candidate-investigation-oracle/2.0.0",
+      "live_composed_manifest": "infinium.public-fixture.live-composed-provenance/2.0.0",
+      "live_composed_oracle": "infinium.evaluation.live-composed-provenance-oracle/2.0.0"
+    },
+    "auxiliary_file_contracts": {
+      "source_claim_execution_input": "infinium.llm.source-claim-execution-input/v2",
+      "source_claim_context": "infinium.llm.source-claim-context/v2",
+      "source_claim_oracle_provenance": "infinium.evaluation.source-claim-oracle-provenance/v2",
+      "candidate_execution_input": "infinium.llm.candidate-investigation-execution-input/v2",
+      "candidate_context": "infinium.llm.candidate-investigation-context/v2",
+      "candidate_oracle_provenance": "infinium.evaluation.candidate-investigation-oracle-provenance/v2",
+      "partition_history": "infinium.evaluation.fixture-partition-history/2.0.0"
+    },
+    "product_contracts_preserved_unless_real_defect": [
+      "infinium.llm.source-claim-extraction/v1",
+      "infinium.llm.candidate-investigation/v1",
+      "sqlite-schema/6",
+      "storage-contract/1.5.0"
+    ]
+  },
+  "answer_isolation": {
+    "input_authors_may_view_oracle_or_product_output": false,
+    "oracle_authors_may_view_product_output": false,
+    "freeze_before_product_comparison": true,
+    "product_output_may_author_expected_truth": false,
+    "wp10_expected_admitted_proposals": 1,
+    "deleted_body_visible_to_product_or_model": false,
+    "wp11_positive_consumes_exact_persisted_wp10_chain": "acquisition-proposal-admission-admitted-artifact-identity-payload-digest-and-bytes-application-link"
+  },
+  "campaign": {
+    "campaign_id": "infinium.m1-s6.finite-live-campaign/51b9dba6-aca3-41d7-82d1-afd805e33e66",
+    "credential_manifest_id": "infinium.m1-s6.wp9.production-profile-authorization/09b8e309-ead8-441e-8307-5a4a1a2c43d5",
+    "profile_id": "openai-platform-c2f213dbc4d9461c9fa8485050ab324d",
+    "profile_generation_id": "g-cb0c3748ef2b4745b97a9311c89f2b65",
+    "credential_target_fingerprint_sha256": "7c4683448a864da4b7cb96a07cf13db93cff9b1a1eb22ed013250a2975a9c071",
+    "credential_effect_expires_at_utc": "2026-08-31T23:00:00.0000000Z",
+    "campaign_expires_at_utc": "2026-08-31T23:59:00.0000000Z",
+    "credential_enrollments_maximum": 1,
+    "provider_starts_maximum": 3,
+    "sequential_stages": [
+      "WP9",
+      "WP10",
+      "WP11"
+    ],
+    "request_profile": {
+      "provider": "openai",
+      "model": "gpt-5.6-sol",
+      "api": "responses",
+      "service_tier": "default",
+      "reasoning_context": "current_turn",
+      "store": false,
+      "prompt_cache_mode": "explicit-off-with-no-key-or-breakpoint",
+      "provider_tools": false,
+      "conversation_or_previous_response": false,
+      "streaming_background_or_batch": false,
+      "structured_outputs": true
+    },
+    "automatic_retry": false,
+    "manual_retry": false,
+    "alternate_provider_model_or_key": false,
+    "parallel_dispatch": false,
+    "fourth_request": false,
+    "stateless": true,
+    "provider_cache": "off",
+    "limits": {
+      "WP9": {
+        "provider_starts": 1,
+        "dns_resolutions": 1,
+        "credential_reads": 1,
+        "credential_frees": 1,
+        "request_bytes": 16384,
+        "input_tokens": 20480,
+        "output_tokens": 256,
+        "raw_response_bytes": 262144,
+        "deadline_seconds": 60,
+        "maximum_cost_usd_nano": 140000000
+      },
+      "WP10": {
+        "provider_starts": 1,
+        "dns_resolutions": 1,
+        "credential_reads": 1,
+        "credential_frees": 1,
+        "request_bytes": 65536,
+        "input_tokens": 73728,
+        "output_tokens": 4096,
+        "raw_response_bytes": 1048576,
+        "deadline_seconds": 120,
+        "maximum_cost_usd_nano": 600000000
+      },
+      "WP11": {
+        "provider_starts": 1,
+        "dns_resolutions": 1,
+        "credential_reads": 1,
+        "credential_frees": 1,
+        "request_bytes": 65536,
+        "input_tokens": 73728,
+        "output_tokens": 4096,
+        "raw_response_bytes": 1048576,
+        "deadline_seconds": 120,
+        "maximum_cost_usd_nano": 600000000
+      },
+      "aggregate": {
+        "provider_starts": 3,
+        "dns_resolutions": 3,
+        "request_bytes": 147456,
+        "input_tokens": 167936,
+        "output_tokens": 8448,
+        "raw_response_bytes": 2359296,
+        "maximum_cost_usd_nano": 1340000000
+      }
+    },
+    "credential_enrollment_limits": {
+      "helper_launch": 1,
+      "readiness": 1,
+      "authority_lock": 1,
+      "profile_materialization": 1,
+      "normal": {
+        "CredWriteW": 1,
+        "CredReadW": 2,
+        "CredDeleteW": 0,
+        "CredFree": 1,
+        "total": 4
+      },
+      "collision": {
+        "CredWriteW": 0,
+        "CredReadW": 1,
+        "CredDeleteW": 0,
+        "CredFree": 1,
+        "total": 2,
+        "result": "stop-no-write-no-retry"
+      },
+      "only_helper_observes_secret_or_exact_target": true
+    },
+    "cumulative_credential_api_ceilings": {
+      "after_enrollment": {
+        "CredWriteW": 1,
+        "CredReadW": 2,
+        "CredDeleteW": 0,
+        "CredFree": 1,
+        "total": 4
+      },
+      "after_WP9": {
+        "CredWriteW": 1,
+        "CredReadW": 3,
+        "CredDeleteW": 0,
+        "CredFree": 2,
+        "total": 6
+      },
+      "after_WP10": {
+        "CredWriteW": 1,
+        "CredReadW": 4,
+        "CredDeleteW": 0,
+        "CredFree": 3,
+        "total": 8
+      },
+      "after_WP11": {
+        "CredWriteW": 1,
+        "CredReadW": 5,
+        "CredDeleteW": 0,
+        "CredFree": 4,
+        "total": 10
+      }
+    },
+    "stage_authority_transition": {
+      "producer": "coordinator-only",
+      "materialize_after_exact_predecessor_acceptance": true,
+      "commit_exact_manifest_and_canonical_request_before_review": true,
+      "fresh_exact_hash_review_marker_required": true,
+      "coordinator_admission_marker_required": true,
+      "ledger_reservation_occurs_only_after_admission": true,
+      "rejection": "no-admission-no-send-stopped-evidence"
+    },
+    "possible_start_and_settlement": {
+      "full_stage_reservation_before_send": true,
+      "possible_start_latch_before_send": true,
+      "known_or_possible_start_consumes_stage_and_one_dns_allowance": true,
+      "ambiguous_possible_start": "retain-full-unresolved-hold-block-later-stages-no-retry",
+      "pre_start_failure": "release-undispatched",
+      "known_settled_response": "remains-settled-even-if-later-evidence-is-rejected",
+      "reopen": "reconcile-exact-sqlite-settlement-to-terminal-known-settled",
+      "retry_authority": false
+    },
+    "expiry_behavior": {
+      "all_native_credential_effects_begin_strictly_before_credential_expiry": true,
+      "all_provider_effects_begin_strictly_before_campaign_expiry": true,
+      "started_operations_may_finish_retention_settlement_and_adjudication_after_expiry": true,
+      "expiry_creates_retry_authority": false
+    }
+  },
+  "advancement": {
+    "routine_owner_stop_between_WP9_WP10_WP11": false,
+    "requires_machine_gate_acceptance": true,
+    "requires_fresh_independent_review_acceptance": true,
+    "manual_intervention_only": [
+      "one-owner-acceptance-of-exact-planning-candidate",
+      "one-user-api-key-paste-into-helper-owned-masked-modal",
+      "genuine-authority-or-product-conflict",
+      "secret-or-isolation-breach",
+      "ambiguous-possible-provider-start",
+      "expiry-or-unavailable-owner-controlled-resource",
+      "known-started-transport-provider-semantic-or-evidence-failure-not-correctable-offline-without-new-effect"
+    ]
+  },
+  "planning_effects": {
+    "credential_enrollment": false,
+    "credential_manager_access": false,
+    "native_helper_launch": false,
+    "dns_or_public_network": false,
+    "provider_request": false,
+    "billable_cost": false,
+    "private_fixture_or_archive_access": false,
+    "push": false
+  },
+  "execution_evidence": null,
+  "owner_acceptance": null
+}
