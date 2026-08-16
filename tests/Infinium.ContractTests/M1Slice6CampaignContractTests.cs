@@ -88,6 +88,8 @@ public sealed class M1Slice6CampaignContractTests
         StringAssert.Contains(verifier,
             "$normalizedRecordText.Contains('Current authority is correction and non-live reverification only.'");
         StringAssert.Contains(verifier, "'tests/Infinium.UnitTests/Wp9ProductionProfileAuthorizationTests.cs'");
+        StringAssert.Contains(verifier, "'eng/validate-m1-slice6-wp8-prelive.ps1'");
+        StringAssert.Contains(verifier, "'tests/Infinium.ContractTests/Wp8PreLiveReadinessContractTests.cs'");
         Assert.IsTrue(
             verifier.IndexOf("$failures = [System.Collections.Generic.List[string]]::new()", StringComparison.Ordinal)
             < verifier.IndexOf("[string[]]$actualOwnerCloseoutPaths", StringComparison.Ordinal),
