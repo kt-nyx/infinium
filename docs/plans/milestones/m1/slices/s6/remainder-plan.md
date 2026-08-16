@@ -177,12 +177,14 @@ effect and cannot be extended by resumption, evidence creation, or owner
 acceptance after the fact.
 
 The campaign preserves the accepted exact Responses profile: provider OpenAI,
-model `gpt-5.6-sol`, API `responses`, ordinary/default tier, current-turn
-reasoning, `store: false`, explicit cache mode with no cache key or breakpoint,
-no conversation or previous response, no provider tools, no streaming,
-background, Batch, hosted search, caller-selected host/model/tier, or arbitrary
-provider options, and the accepted strict structured-output serializer. R3
-binds its exact canonical fingerprint. It authorizes at most:
+endpoint `https://api.openai.com/v1/responses`, model `gpt-5.6-sol`, service tier
+`default`, reasoning effort `medium`, reasoning context `current_turn`, reasoning
+mode `standard`, strict structured output, `store: false`, `background: false`,
+`stream: false`, `tool_choice: none`, empty `tools`, truncation `disabled`, and
+prompt-cache mode `explicit` with null key and breakpoint. Conversation,
+previous response, prompt template, file/image/audio input, hosted search,
+Batch, caller-selected host/model/tier, and arbitrary provider options are
+absent. R3 binds its exact canonical fingerprint. It authorizes at most:
 
 | Stage | Starts | Request bytes | Input tokens | Output tokens | Raw response bytes | Deadline | Maximum cost |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -393,6 +395,8 @@ package digests, campaign ID
 `infinium.m1-s6.finite-live-campaign/51b9dba6-aca3-41d7-82d1-afd805e33e66`,
 pre-effect credential authorization manifest ID
 `infinium.m1-s6.wp9.production-profile-authorization/09b8e309-ead8-441e-8307-5a4a1a2c43d5`,
+at exact path
+`docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json`,
 profile ID
 `openai-platform-c2f213dbc4d9461c9fa8485050ab324d`, generation ID
 `g-cb0c3748ef2b4745b97a9311c89f2b65`, target fingerprint
@@ -460,8 +464,9 @@ an append-only record entry. No secret value, reversible derivative, raw
 target, or Credential Manager content may enter logs, files, process arguments,
 shell history, Git, or reviewer evidence.
 
-**Seams.** The orchestrator invokes only the accepted helper; only that helper
-may access the exact credential target and secret value. The normal closed
+**Seams.** The orchestrator invokes only the accepted wrapper; the coordinator
+alone launches the helper, and only that helper may access the exact credential
+target and secret value. The normal closed
 sequence is target pre-read, one write, verification read, and free for each
 successful read: CredWriteW 1, CredReadW 2, CredDeleteW 0, CredFree 1, total 4.
 The collision path is CredReadW 1/CredFree 1, performs no write, and stops. The
@@ -470,6 +475,16 @@ are each one. The user performs the sole secret-bearing action. Evidence
 validates profile/generation/target fingerprint, timestamps, result, and
 counter transition. Replay reads sanitized evidence only. Missing, duplicate,
 stale, or mismatched evidence is invalid.
+
+The only authorized wrapper grammar is:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File eng/run-m1-slice6-credential.ps1 -Operation EnrollOrVerifyProfile -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp9-profile
+```
+
+The wrapper invokes the coordinator; the coordinator alone launches the
+one-shot helper. The orchestrator must not invoke the helper executable
+directly or vary the operation, manifest path, or output root.
 
 **Dependencies and automatic advancement.** R3 acceptance, exact clean
 candidate, zero counters, and expiry checks. Accepted machine evidence plus a

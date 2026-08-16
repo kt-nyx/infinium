@@ -21,8 +21,8 @@
   "bound_documents": [
     {
       "path": "docs/plans/milestones/m1/slices/s6/remainder-plan.md",
-      "length_bytes": 41861,
-      "sha256": "ead2047315b2d8671240fd31c712f28753199502ccc48c16ef30d7d18e294c00"
+      "length_bytes": 42717,
+      "sha256": "9be76f755ee4f89a6f64e2a3e7cf8f1b3f163134962be5d2132bb0a76ff645cf"
     },
     {
       "path": "docs/evaluation/specifications/m1-slice6-live-semantic-v2-amendment.md",
@@ -105,6 +105,8 @@
   "campaign": {
     "campaign_id": "infinium.m1-s6.finite-live-campaign/51b9dba6-aca3-41d7-82d1-afd805e33e66",
     "credential_manifest_id": "infinium.m1-s6.wp9.production-profile-authorization/09b8e309-ead8-441e-8307-5a4a1a2c43d5",
+    "credential_manifest_path": "docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json",
+    "credential_execution_command": "powershell -NoProfile -ExecutionPolicy Bypass -File eng/run-m1-slice6-credential.ps1 -Operation EnrollOrVerifyProfile -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp9-profile",
     "profile_id": "openai-platform-c2f213dbc4d9461c9fa8485050ab324d",
     "profile_generation_id": "g-cb0c3748ef2b4745b97a9311c89f2b65",
     "credential_target_fingerprint_sha256": "7c4683448a864da4b7cb96a07cf13db93cff9b1a1eb22ed013250a2975a9c071",
@@ -119,16 +121,30 @@
     ],
     "request_profile": {
       "provider": "openai",
+      "endpoint": "https://api.openai.com/v1/responses",
       "model": "gpt-5.6-sol",
-      "api": "responses",
-      "service_tier": "default",
+      "reasoning_effort": "medium",
       "reasoning_context": "current_turn",
+      "reasoning_mode": "standard",
+      "structured_output_strict": true,
       "store": false,
-      "prompt_cache_mode": "explicit-off-with-no-key-or-breakpoint",
-      "provider_tools": false,
-      "conversation_or_previous_response": false,
-      "streaming_background_or_batch": false,
-      "structured_outputs": true
+      "service_tier": "default",
+      "background": false,
+      "stream": false,
+      "tool_choice": "none",
+      "tools": [],
+      "truncation": "disabled",
+      "prompt_cache_mode": "explicit",
+      "prompt_cache_key": null,
+      "prompt_cache_breakpoint": null,
+      "conversation_id": null,
+      "previous_response_id": null,
+      "prompt_template_id": null,
+      "file_image_audio_input": false,
+      "hosted_search": false,
+      "batch": false,
+      "caller_selected_host_model_or_tier": false,
+      "arbitrary_provider_options": false
     },
     "automatic_retry": false,
     "manual_retry": false,
