@@ -7934,3 +7934,43 @@ Manager, DNS, public-network, provider, billable, profile, private-fixture,
 archive, or later-packet effect occurred.
 
 WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=cf2b31f3cf109f09c47293aeb1cf6afde1ffff0f manifest_id=infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f sha256=fb301a17843496b0452561facdbaa29412c2ba0d44ce4cc7c8bc102a391e88a9 verdicts=security,semantics,diff
+
+## M1 Slice 6 finite-campaign amendment preparation — 2026-08-15
+
+The owner supplied immutable campaign-amendment authority with attachment
+SHA-256
+`c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
+It explicitly authorizes an exact finite three-stage campaign plan amendment
+and pre-effect semantic rollover; it does not claim the prior plan already
+allowed campaign authorization and does not create an owner signature over
+unknown replacement bytes.
+
+The B20 review candidate
+`cf2b31f3cf109f09c47293aeb1cf6afde1ffff0f`, E20 closeout
+`deadb9850fbd832435dcb4672fa93f8bd0a3d8cd`, credential manifest SHA-256
+`fb301a17843496b0452561facdbaa29412c2ba0d44ce4cc7c8bc102a391e88a9`,
+and every older B16/B17/B19/B20 review or owner marker remain append-only
+historical predecessor evidence. None is inherited by campaign
+`infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee`.
+
+The amendment fixes stage order WP9 qualification -> WP10 source claim ->
+WP11 candidate investigation, one possible start each, aggregate calls 3, DNS
+3, request bytes 147456, input tokens 167936, output tokens 8448, raw bytes
+2359296, and reservation 1340000000 nano-USD. Retry, parallel dispatch,
+counter reset, and a fourth call are prohibited. Campaign expiry is
+`2026-08-22T23:59:00.0000000Z`; credential expiry remains
+`2026-08-17T15:25:00.0000000Z`.
+
+The implementation adds a coordinator-owned append-only hash-chained campaign
+ledger, exact field-by-field credential non-broadening comparison, schema and
+standalone validator, stable random product-user safety-identifier state, and
+domain-separated SHA-256 request projection. Product-focused tests passed
+29/29. Campaign schema/validator tests passed 2/2, including 21 exact boundary
+mutations. The deterministic fresh-clone fake-store/literal-loopback rehearsal
+is implemented and awaits execution from the frozen amendment commit so the
+clone contains the exact new surfaces.
+
+At this checkpoint, helper launch/readiness/authority-lock/native/profile/DNS/
+network/provider/billable/API-key counts are all zero, production output roots
+are absent, and no provider-stage request manifest exists. Current authority is
+correction and non-live reverification only.

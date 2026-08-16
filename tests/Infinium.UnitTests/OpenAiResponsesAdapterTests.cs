@@ -19,6 +19,7 @@ public sealed class OpenAiResponsesAdapterTests
         OpenAiResponsesCanonicalSerializer.ValidateExactProfile(first, 256);
         string json = Encoding.UTF8.GetString(first);
         StringAssert.Contains(json, "\"context\":\"current_turn\"");
+        StringAssert.Contains(json, "\"safety_identifier\":\"" + ProviderAdapterTestData.SafetyIdentifier + "\"");
         StringAssert.Contains(json, "\"mode\":\"explicit\"");
         StringAssert.Contains(json, "\"tools\":[]");
         Assert.IsFalse(json.Contains("prompt_cache_key", StringComparison.Ordinal));
@@ -78,7 +79,8 @@ public sealed class OpenAiResponsesAdapterTests
     {
         using JsonDocument schema = JsonDocument.Parse("""{"type":"object","properties":{"expected_answer":{"type":"string"}}}""");
         Assert.ThrowsExactly<InvalidOperationException>(() => OpenAiResponsesCanonicalSerializer.Serialize(new(
-            ProviderOperationKind.TransportQualification, "bounded", "bounded", schema.RootElement.Clone(), 1)));
+            ProviderOperationKind.TransportQualification, "bounded", "bounded", schema.RootElement.Clone(), 1,
+            ProviderAdapterTestData.SafetyIdentifier)));
     }
 
     [TestMethod]
@@ -86,7 +88,8 @@ public sealed class OpenAiResponsesAdapterTests
     {
         using JsonDocument schema = JsonDocument.Parse(ProviderAdapterTestData.OutputSchemaBytes);
         Assert.ThrowsExactly<InvalidOperationException>(() => OpenAiResponsesCanonicalSerializer.Serialize(new(
-            ProviderOperationKind.TransportQualification, "bounded", "bounded", schema.RootElement.Clone(), 4_096)));
+            ProviderOperationKind.TransportQualification, "bounded", "bounded", schema.RootElement.Clone(), 4_096,
+            ProviderAdapterTestData.SafetyIdentifier)));
         using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateProduction();
         Assert.IsTrue(adapter.UsesPerOperationDeadlineOnly);
     }
@@ -165,7 +168,8 @@ public sealed class OpenAiResponsesAdapterTests
         foreach (JsonDocument schema in new[] { unsupported, open })
         {
             Assert.ThrowsExactly<InvalidOperationException>(() => OpenAiResponsesCanonicalSerializer.Serialize(new(
-                ProviderOperationKind.TransportQualification, "bounded", "bounded", schema.RootElement.Clone(), 256)));
+                ProviderOperationKind.TransportQualification, "bounded", "bounded", schema.RootElement.Clone(), 256,
+                ProviderAdapterTestData.SafetyIdentifier)));
         }
     }
 
@@ -179,7 +183,8 @@ public sealed class OpenAiResponsesAdapterTests
             {"properties":{"ok":{"type":"boolean"}},"required":["ok"],"additionalProperties":false,"type":"object"}
             """);
         byte[] Serialize(JsonElement schema) => OpenAiResponsesCanonicalSerializer.Serialize(new(
-            ProviderOperationKind.TransportQualification, "bounded", "bounded", schema.Clone(), 256));
+            ProviderOperationKind.TransportQualification, "bounded", "bounded", schema.Clone(), 256,
+            ProviderAdapterTestData.SafetyIdentifier));
 
         CollectionAssert.AreEqual(Serialize(first.RootElement), Serialize(reordered.RootElement));
     }

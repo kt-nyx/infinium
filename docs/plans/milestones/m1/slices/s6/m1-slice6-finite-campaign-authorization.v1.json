@@ -1,0 +1,191 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-finite-campaign-authorization/1.0.0",
+  "campaign_id": "infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee",
+  "status": "verification-pending",
+  "effect_authority": "none-until-exact-reviewed-campaign-admission",
+  "prepared_at_utc": "2026-08-15T16:00:00.0000000Z",
+  "expires_at_utc": "2026-08-22T23:59:00.0000000Z",
+  "candidate_binding": {
+    "close_ready_implementation_commit": "pending",
+    "verification_candidate_commit": "pending"
+  },
+  "authority_source": {
+    "artifact": "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-owner-authority.v1.json",
+    "attachment_sha256": "c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be",
+    "authority_kind": "owner-accepted-finite-campaign-plan-amendment-and-pre-effect-semantic-rollover",
+    "unknown-future-byte-owner-marker": "prohibited"
+  },
+  "semantic_rollover": {
+    "authorized": true,
+    "pre_effect_only": true,
+    "prior_reviewed_candidate_commit": "cf2b31f3cf109f09c47293aeb1cf6afde1ffff0f",
+    "prior_review_closeout_commit": "deadb9850fbd832435dcb4672fa93f8bd0a3d8cd",
+    "prior_credential_manifest_id": "infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f",
+    "prior_credential_manifest_sha256": "fb301a17843496b0452561facdbaa29412c2ba0d44ce4cc7c8bc102a391e88a9",
+    "credential_envelope_change": "prohibited",
+    "permitted_rollover_fields": [
+      "candidate_binding.close_ready_implementation_commit",
+      "release_build.source_commit",
+      "release_build.build_command",
+      "release_build.coordinator_sha256",
+      "release_build.helper_sha256",
+      "release_build.binary_inventory_file_count",
+      "release_build.binary_inventory_sha256",
+      "prepared_at_utc"
+    ],
+    "zero_effect_proof": {
+      "credential_helper_launch_count": 0,
+      "credential_helper_readiness_count": 0,
+      "credential_authority_lock_count": 0,
+      "credential_manager_call_count": 0,
+      "provider_dispatch_count": 0,
+      "dns_or_public_network_count": 0,
+      "profile_materialization_count": 0,
+      "api_key_observed": false,
+      "production_output_roots_absent": true
+    },
+    "fresh_review_required": true,
+    "prior_review_or_owner_marker_inheritance": "prohibited"
+  },
+  "credential_envelope": {
+    "source_manifest_id": "infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f",
+    "source_manifest_sha256": "fb301a17843496b0452561facdbaa29412c2ba0d44ce4cc7c8bc102a391e88a9",
+    "source_candidate_commit": "cf2b31f3cf109f09c47293aeb1cf6afde1ffff0f",
+    "comparison": "field-by-field-deep-equality-except-exact-candidate-and-release-binding-allowlist",
+    "exact_immutable_fields": [
+      "schema_identity", "manifest_id", "packet_kind", "status", "effect_authority", "expires_at_utc",
+      "predecessor_binding", "owner_authorization", "provider_intent", "official_document_refresh", "profile",
+      "native_boundary", "m1_entry_surface", "future_product_ux", "durable_state", "output", "stop_conditions", "execution"
+    ],
+    "mutable_fields": [
+      "candidate_binding.close_ready_implementation_commit", "release_build.source_commit", "release_build.build_command",
+      "release_build.coordinator_sha256", "release_build.helper_sha256", "release_build.binary_inventory_file_count",
+      "release_build.binary_inventory_sha256"
+    ],
+    "ceilings": "unchanged-or-lower-only",
+    "credential_expires_at_utc": "2026-08-17T15:25:00.0000000Z",
+    "profile_id": "openai-platform-492800995cf046c7815f974e865f9e1d",
+    "generation_id": "g-9c663cb01fb649cba7eff4e26e14274c",
+    "target_fingerprint_sha256": "55ade50556f396dd0ba579632a21581887eeb1e4e44411a0ee8e37f460f09fca"
+  },
+  "safety_identifier": {
+    "state_version": "infinium.product-user-safety-identifier/1.0.0",
+    "seed_generation": "cryptographic-random-32-bytes-create-new-once",
+    "local_state_file": "product-user-safety-identifier.v1.seed",
+    "transmitted_projection": "lowercase-hex-sha256(domain-utf8-nul || seed)",
+    "domain": "infinium.openai.safety-identifier/v1",
+    "projection_length": 64,
+    "stable_for_product_user": true,
+    "raw_seed_transmitted": false,
+    "forbidden_inputs": [
+      "api-key-or-credential-bytes", "credential-target-profile-or-generation", "email-or-account-identifier",
+      "os-user-or-machine-name", "source-content-or-prompt", "file-path-or-mod-name", "advertising-or-telemetry-identifier"
+    ]
+  },
+  "official_document_snapshot": {
+    "record": "docs/research/investigations/RESEARCH-0055-slice6-finite-campaign-and-safety-identifier-refresh.md",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "api": "responses",
+    "structured_outputs": true,
+    "safety_identifier_guidance": "recommended-stable-privacy-preserving-identifier-for-individual-users",
+    "prices_nano_usd_per_token": { "ordinary_input": 5000, "cache_read": 500, "cache_write": 6250, "output": 30000 },
+    "long_context_threshold_tokens": 272000,
+    "long_context_input_multiplier": 2,
+    "long_context_output_multiplier": 1.5,
+    "campaign_below_long_context_threshold": true
+  },
+  "ordered_stages": [
+    {
+      "ordinal": 1,
+      "work_package": "WP9",
+      "operation": "Qualification",
+      "request_manifest": "not-materialized-until-credential-success-independent-acceptance",
+      "predecessor": "credential-profile-active-verified-and-independently-accepted",
+      "maximum_request_bytes": 16384,
+      "maximum_input_tokens": 20480,
+      "maximum_output_tokens": 256,
+      "maximum_raw_response_bytes": 262144,
+      "deadline_milliseconds": 60000,
+      "maximum_provider_calls": 1,
+      "maximum_nano_usd": 140000000
+    },
+    {
+      "ordinal": 2,
+      "work_package": "WP10",
+      "operation": "SourceClaimExtraction",
+      "request_manifest": "not-materialized-until-wp9-live-evidence-independent-acceptance",
+      "predecessor": "wp9-live-evidence-independently-accepted",
+      "maximum_request_bytes": 65536,
+      "maximum_input_tokens": 73728,
+      "maximum_output_tokens": 4096,
+      "maximum_raw_response_bytes": 1048576,
+      "deadline_milliseconds": 120000,
+      "maximum_provider_calls": 1,
+      "maximum_nano_usd": 600000000
+    },
+    {
+      "ordinal": 3,
+      "work_package": "WP11",
+      "operation": "CandidateInvestigation",
+      "request_manifest": "not-materialized-until-wp10-live-evidence-independent-acceptance",
+      "predecessor": "wp10-live-evidence-independently-accepted",
+      "maximum_request_bytes": 65536,
+      "maximum_input_tokens": 73728,
+      "maximum_output_tokens": 4096,
+      "maximum_raw_response_bytes": 1048576,
+      "deadline_milliseconds": 120000,
+      "maximum_provider_calls": 1,
+      "maximum_nano_usd": 600000000
+    }
+  ],
+  "aggregate_limits": {
+    "maximum_provider_calls": 3,
+    "maximum_request_bytes": 147456,
+    "maximum_input_tokens": 167936,
+    "maximum_output_tokens": 8448,
+    "maximum_raw_response_bytes": 2359296,
+    "maximum_nano_usd": 1340000000,
+    "maximum_dns_resolutions": 3,
+    "maximum_credential_calls": {
+      "CredWriteW": 1,
+      "CredReadW": 5,
+      "CredDeleteW": 0,
+      "CredFree": 4,
+      "total": 10
+    },
+    "automatic_retry": false,
+    "parallel_calls": false,
+    "fourth_call": "prohibited",
+    "ambiguous_start": "stop-campaign-retain-hold-no-retry"
+  },
+  "admission": {
+    "review_marker": "M1_S6_CAMPAIGN_REVIEW_ACCEPTANCE candidate_commit=<exact-reviewed-candidate> campaign_id=<campaign_id> sha256=<manifest_sha256> verdicts=security,semantics,diff",
+    "campaign_admission_marker": "M1_S6_CAMPAIGN_ADMISSION authority_sha256=<attachment_sha256> campaign_id=<campaign_id> sha256=<manifest_sha256> close_ready_commit=<close_ready_implementation_commit> expires_at_utc=<expires_at_utc>",
+    "credential_rollover_marker": "WP9_PROFILE_CAMPAIGN_ROLLOVER_ADMISSION campaign_id=<campaign_id> campaign_sha256=<manifest_sha256> manifest_id=<credential_manifest_id> sha256=<credential_manifest_sha256> close_ready_commit=<close_ready_implementation_commit> credential_expires_at_utc=<credential_expires_at_utc>",
+    "review_required_before_owner_admission": true,
+    "exact_manifest_bytes_required": true,
+    "prior_marker_inheritance": false,
+    "credential_expiry_hard_cap_utc": "2026-08-17T15:25:00.0000000Z",
+    "credential_effect_first": true,
+    "provider_stage_materialization_before_credential_acceptance": false
+  },
+  "rehearsal": {
+    "repository": "fresh-temporary-git-clone",
+    "effects": "none",
+    "required_states": ["ready", "reviewed", "campaign-admitted", "credential-execution-handoff", "credential-evidence-handoff"],
+    "required_stop_mutations": [
+      "expired", "dirty-tree", "wrong-candidate", "missing-review", "duplicate-review", "missing-owner", "duplicate-owner",
+      "stale-sha", "broadened-credential-envelope", "nonzero-prior-effect", "stage-swap", "raised-stage-limit",
+      "raised-aggregate-limit", "retry-enabled", "parallel-enabled", "fourth-call-enabled", "provider-packet-materialized-early",
+      "safety-identifier-forbidden-input", "safety-identifier-raw-seed-transmitted"
+    ]
+  },
+  "execution": {
+    "campaign_permitted": false,
+    "credential_helper_launch_permitted": false,
+    "credential_manager_operation_permitted": false,
+    "provider_request_permitted": false,
+    "command": null
+  }
+}

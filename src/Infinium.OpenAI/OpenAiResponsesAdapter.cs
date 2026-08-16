@@ -14,7 +14,8 @@ public sealed record OpenAiResponsesRequest(
     string Instructions,
     string UntrustedInput,
     JsonElement OutputSchema,
-    long MaximumOutputTokens);
+    long MaximumOutputTokens,
+    string SafetyIdentifier);
 
 public sealed record OpenAiRateHeader(string Name, long Value);
 
@@ -219,6 +220,7 @@ public static class OpenAiResponsesCanonicalSerializer
         if (string.IsNullOrWhiteSpace(request.Instructions) || string.IsNullOrWhiteSpace(request.UntrustedInput)
             || request.Instructions.Length > 8_192 || request.UntrustedInput.Length > 48_000
             || request.MaximumOutputTokens <= 0 || request.MaximumOutputTokens > maximumOutputTokens
+            || !ProductUserSafetyIdentifier.IsValidProjection(request.SafetyIdentifier)
             || request.OutputSchema.ValueKind != JsonValueKind.Object)
         {
             throw new InvalidOperationException("The Responses request exceeds its closed context or output bounds.");
@@ -234,6 +236,7 @@ public static class OpenAiResponsesCanonicalSerializer
         {
             writer.WriteStartObject();
             writer.WriteString("model", Model);
+            writer.WriteString("safety_identifier", request.SafetyIdentifier);
             writer.WritePropertyName("reasoning");
             writer.WriteStartObject();
             writer.WriteString("effort", "medium");
@@ -282,11 +285,12 @@ public static class OpenAiResponsesCanonicalSerializer
     {
         using JsonDocument document = JsonDocument.Parse(requestBytes.ToArray());
         JsonElement root = document.RootElement;
-        string[] exactNames = ["model", "reasoning", "text", "store", "service_tier", "background", "stream",
+        string[] exactNames = ["model", "safety_identifier", "reasoning", "text", "store", "service_tier", "background", "stream",
             "tool_choice", "tools", "truncation", "max_output_tokens", "prompt_cache_options", "input"];
         if (root.ValueKind != JsonValueKind.Object
             || !root.EnumerateObject().Select(property => property.Name).SequenceEqual(exactNames, StringComparer.Ordinal)
             || root.GetProperty("model").GetString() != Model
+            || !ProductUserSafetyIdentifier.IsValidProjection(root.GetProperty("safety_identifier").GetString())
             || root.GetProperty("store").GetBoolean()
             || root.GetProperty("service_tier").GetString() != ServiceTier
             || root.GetProperty("background").GetBoolean() || root.GetProperty("stream").GetBoolean()

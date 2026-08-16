@@ -15,6 +15,9 @@ Live authorization remains stated only in
 - [Frozen WP1 acceptance ledger](wp1-acceptance-ledger.v1.json)
 - [WP1 field-to-seam traceability inventory](wp1-contract-traceability.v1.json)
 - [WP9 exact production-profile enrollment authorization](wp9-production-profile-authorization.v1.json)
+- [Finite campaign owner authority input](m1-slice6-finite-campaign-owner-authority.v1.json)
+- [Finite campaign authorization](m1-slice6-finite-campaign-authorization.v1.json)
+- [Finite campaign and safety-identifier official snapshot](../../../../../research/investigations/RESEARCH-0055-slice6-finite-campaign-and-safety-identifier-refresh.md)
 
 The project owner accepted the plan and its explicit stateless/cache-off
 ADR-0025 conformance closure on 2026-08-10; no separate ADR is required. WP1
@@ -71,8 +74,17 @@ The canonical non-incremental Release build pins both informational-version and
 SourceLink revision identities to that exact commit. Two consecutive clean
 builds reproduced the coordinator, helper, and complete 126-file execution
 closure exactly.
-WP9 production-profile manifest `infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f` at SHA-256 `fb301a17843496b0452561facdbaa29412c2ba0d44ce4cc7c8bc102a391e88a9` is independently accepted at exact candidate `cf2b31f3cf109f09c47293aeb1cf6afde1ffff0f` and remains pending exact owner acceptance.
-No execution or effect is authorized: no API-key use, UI launch, live-manifest execution, native Credential Manager operation, DNS or public-network operation, provider request, billable operation, or production-profile materialization/use. No authority is inherited.
+The finite-campaign amendment is in correction and non-live verification. The
+immutable owner authority source is SHA-256
+`c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
+Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee`
+is verification-pending and non-executable. B20 manifest SHA-256
+`fb301a17843496b0452561facdbaa29412c2ba0d44ce4cc7c8bc102a391e88a9`
+and E20 are predecessor evidence only. No API-key use, UI/helper/readiness
+launch, authority lock, live-manifest execution, native Credential Manager
+operation, profile materialization, DNS/public-network operation, provider
+request, or billable effect is authorized or has occurred. No authority is
+inherited.
 The exact current-manifest owner marker committed at `cba787882b854bbe0e471431e51024781a041fbd` remains append-only superseded historical non-executed evidence and is non-authoritative for the replacement manifest.
 The exact B17 review and attached SHA-256
 `7123ee85fec6d238ef8965b8449e7729cd2fb204e525a30558d1ebac53209476`
@@ -81,9 +93,10 @@ non-authoritative for the exact current manifest ID and SHA-256.
 The exact B16 review marker remains append-only superseded historical evidence
 and cannot satisfy the corrected manifest. The exact B17 review marker is
 append-only superseded historical evidence. WP10 and WP11 remain blocked.
-The transport-qualification request manifest is not materialized. Current
-official guidance concerning `safety_identifier` requires a separate authority
-resolution before any such request packet can be prepared. The earlier WP8
+The transport-qualification request manifest is not materialized. Section 19A
+resolves `safety_identifier` through a stable local random seed and transmitted
+domain-separated SHA-256 projection, but request materialization remains
+blocked until credential success is independently accepted. The earlier WP8
 acceptance identities and receipts remain superseded historical evidence.
 
 The four WP8 packets remain non-secret, non-executable templates with pending
@@ -96,6 +109,9 @@ production-profile materialization/use is authorized. The M1 direct helper
 surface prepared by WP9 is a distinct masked, paste-capable native enrollment
 surface, not the future M2 Settings -> Add/Replace API key -> WPF-parented
 helper-owned modal. In both flows the renderer receives or retains no secret.
-WP9 request qualification and WP10-WP11 remain separately authorized work. Only
+The one exact finite campaign conditionally supersedes separate WP9-WP11 owner
+acceptances only after exact review/admission and each predecessor evidence
+gate. Before that bootstrap closes, WP9 credential execution and every provider
+stage remain blocked. Only
 [current project state](../../../../../current-state.md) states the active
 handoff.

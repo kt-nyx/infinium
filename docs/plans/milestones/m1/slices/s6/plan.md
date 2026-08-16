@@ -1033,7 +1033,86 @@ live assertion is required to claim a non-live pass.
 
 **Unblocks.** Owner decision whether to authorize `M1/S6/WP9`.
 
-## 20. `M1/S6/WP9` — Separately authorized live transport qualification
+## 19A. Accepted finite campaign amendment — 2026-08-15
+
+This clause is an explicit, one-campaign amendment to Sections 20–22. It does
+not reinterpret their original separate-authorization language. The immutable
+owner authority input is
+`m1-slice6-finite-campaign-owner-authority.v1.json`, whose source attachment
+SHA-256 is
+`c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
+It authorizes preparation and exact review of one schema-closed campaign and a
+pre-effect semantic rollover. It does not pre-accept unknown future bytes or
+create an owner marker for a replacement credential manifest.
+
+The campaign order is fixed: WP9 qualification, WP10 source-claim extraction,
+then WP11 candidate investigation. Each stage has one possible provider start;
+the campaign maximum is three sequential starts, three DNS resolutions,
+147,456 canonical request bytes, 167,936 locally admitted input tokens, 8,448
+output tokens, 2,359,296 raw response bytes, and 1,340,000,000 reserved
+nano-USD. Automatic retry, parallel dispatch, counter reset, alternate host,
+path, model, credential, or provider, and a fourth request are prohibited. The
+per-stage deadlines and ceilings remain the exact table in Section 5.
+
+The credential envelope remains byte-semantically unchanged. Its expiry stays
+`2026-08-17T15:25:00.0000000Z`; the provider campaign expires at
+`2026-08-22T23:59:00.0000000Z`. An action must begin strictly before its
+applicable expiry. A started operation may retain and adjudicate evidence after
+expiry, but expiry never creates retry authority.
+
+Semantic rollover is permitted only while every credential helper launch,
+readiness, authority-lock, native call, profile materialization, DNS/public
+network, and provider-dispatch count is zero. The exact credential manifest
+may change only its candidate/build binding fields; its credential envelope,
+target/profile/generation, UX, call grammar, durable lifecycle, outputs, stop
+conditions, and expiry must compare field-by-field equal. A ceiling may only
+decrease. Credential rollover closes permanently at the first helper launch,
+readiness observation, authority-lock creation, or native call. Provider
+rollover closes at the durable possible-start latch; a known or possible start
+consumes its stage, retains the full unresolved hold when ambiguous, and may
+never be retried.
+
+The coordinator owns an append-only, hash-chained campaign ledger with exact
+ready, reviewed, admitted, credential-handoff, credential-evidence-accepted,
+stage-reserved, transport-may-have-started, stage-accepted, completed, and
+stopped states. Enrollment plus the three exact request credential reads yield
+the finite native maximum `CredWriteW=1`, `CredReadW=5`, `CredDeleteW=0`,
+`CredFree=4`, total 10, with every successful read paired to its allocation's
+free. Collision, cancel, readiness failure, native ambiguity, provider
+ambiguity, a stale/duplicate marker, or counter/hold inconsistency stops the
+campaign without fallback.
+
+The application creates one stable per-product-user safety seed using 32 bytes
+from the operating-system cryptographic RNG and atomic create-new local state.
+The canonical Responses body carries only lowercase-hex SHA-256 of UTF-8
+`infinium.openai.safety-identifier/v1`, a NUL framing byte, and that seed. No
+credential, target/profile/generation, provider account/email, OS user/machine,
+source/prompt, file/mod, advertising, or telemetry identity may contribute.
+Missing/corrupt state fails closed and may never be silently regenerated after
+possible start.
+
+Bootstrap is exact: freeze the amendment implementation A; materialize the
+campaign manifest C; obtain fresh independent review; append the distinct
+campaign admission derived from the immutable owner authority; then roll the
+B20 credential manifest to A only through a distinct campaign-rollover marker
+after exact zero-effect and non-broadening comparison. This marker is not
+`WP9_PROFILE_OWNER_ACCEPTANCE`. Provider request manifests remain
+unmaterialized until the credential succeeds and its evidence is independently
+accepted. WP10 remains unmaterialized until WP9 live evidence is independently
+accepted, and WP11 remains unmaterialized until WP10 live evidence is
+independently accepted. Semantic-driving bytes freeze at possible start;
+evidence-only corrections may replay retained bytes without another request.
+
+Before any effect, a fresh temporary Git clone must rehearse ready -> reviewed
+-> campaign admitted -> credential execution/evidence handoff -> all three
+fake-store/literal-loopback stages -> composed closeout, plus every expiry,
+identity, duplicate marker, broadened envelope, raised limit, counter reset,
+post-latch rollover, ambiguous-start, safety-state drift/loss, host/path/tool,
+retry, and fourth-call stop. The rehearsal and every verifier mode have zero
+native/provider effect. Finite Layer 6 modes are mutually exclusive. Only an
+exactly reviewed and admitted campaign may reach the real credential dialog.
+
+## 20. `M1/S6/WP9` — Campaign-gated live transport qualification
 
 **Objective.** Send exactly one deliberately tiny request through the final
 production path to qualify transport/profile/capability/price/credential/
@@ -1060,8 +1139,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File eng/run-m1-slice6-credential
 
 After that sub-gate is independently accepted, materialize the distinct
 qualification manifest with the resulting exact profile/generation/revocation
-identity, repeat the candidate/doc/price/capability drift check, and obtain a
-second explicit owner acceptance. The request remains closed until then.
+identity and repeat the candidate/doc/price/capability drift check. Under the
+finite campaign amendment only, exact campaign admission supplies the bounded
+owner authority; the stage still requires fresh exact-byte review and accepted
+predecessor evidence. Outside that campaign, the original separate owner
+acceptance requirement remains unchanged. The request remains closed until
+then.
 
 **Allowed request action.** Only after the sub-gate produces the exact verified
 generation: exactly one direct synchronous request described by its distinct
@@ -1112,8 +1195,9 @@ typed proposal/admission behavior.
 
 **Entry gate.** WP9 accepted; `LLM-CLAIM-LIVE-VAL` inputs and harness-only
 expectations frozen and independently reviewed before product comparison;
-fresh exact candidate/doc/profile/price/capability check; owner explicitly
-accepts the exact WP10 manifest.
+fresh exact candidate/doc/profile/price/capability check; and exact WP10 bytes
+accepted under either the original separate owner acceptance or the admitted
+finite campaign plus its fresh stage review.
 
 **Allowed action.** Exactly one request containing the bounded positive,
 negative/unsupported, conditional/version-scoped, contradiction, and hostile-
@@ -1155,7 +1239,9 @@ three-operation provenance graph and close Slice 6 without another request.
 
 **Entry gate.** WP10 accepted; `LLM-INVESTIGATE-LIVE-VAL` positive/negative and
 `PROV-LIVE-COMPOSED-VAL` expectations frozen/independently reviewed; fresh
-candidate/doc/profile/price/capability check; owner explicitly accepts WP11.
+candidate/doc/profile/price/capability check; and exact WP11 bytes accepted
+under either the original separate owner acceptance or the admitted finite
+campaign plus its fresh stage review.
 
 **Allowed action.** One candidate-investigation request through the exact
 production path, followed by local admission, retained replay, composed

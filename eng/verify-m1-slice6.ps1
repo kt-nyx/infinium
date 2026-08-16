@@ -25,6 +25,14 @@ param(
 
     [switch] $Wp9OwnerAcceptanceCloseout,
 
+    [switch] $M1Slice6CampaignReview,
+
+    [switch] $M1Slice6CampaignReviewCloseout,
+
+    [switch] $M1Slice6CampaignAdmissionCloseout,
+
+    [switch] $Wp9CampaignRolloverCloseout,
+
     [switch] $OwnerTestProcessCleanup,
 
     [switch] $CredentialNativePostEffectAudit
@@ -63,6 +71,10 @@ if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 
     if ($Wp9OwnerAcceptanceCloseout) {
         $arguments += '-Wp9OwnerAcceptanceCloseout'
     }
+    if ($M1Slice6CampaignReview) { $arguments += '-M1Slice6CampaignReview' }
+    if ($M1Slice6CampaignReviewCloseout) { $arguments += '-M1Slice6CampaignReviewCloseout' }
+    if ($M1Slice6CampaignAdmissionCloseout) { $arguments += '-M1Slice6CampaignAdmissionCloseout' }
+    if ($Wp9CampaignRolloverCloseout) { $arguments += '-Wp9CampaignRolloverCloseout' }
     if ($OwnerTestProcessCleanup) {
         $arguments += '-OwnerTestProcessCleanup'
     }
@@ -714,7 +726,11 @@ function Invoke-Layer6ReviewGate(
     [bool] $Wp8PreLiveCloseoutMode = [bool]$Wp8PreLiveCloseout,
     [bool] $Wp9OwnerStopMode = [bool]$Wp9OwnerStopReview,
     [bool] $Wp9ReviewCloseoutMode = [bool]$Wp9ReviewCloseout,
-    [bool] $Wp9OwnerAcceptanceCloseoutMode = [bool]$Wp9OwnerAcceptanceCloseout) {
+    [bool] $Wp9OwnerAcceptanceCloseoutMode = [bool]$Wp9OwnerAcceptanceCloseout,
+    [bool] $CampaignReviewMode = [bool]$M1Slice6CampaignReview,
+    [bool] $CampaignReviewCloseoutMode = [bool]$M1Slice6CampaignReviewCloseout,
+    [bool] $CampaignAdmissionCloseoutMode = [bool]$M1Slice6CampaignAdmissionCloseout,
+    [bool] $CampaignRolloverCloseoutMode = [bool]$Wp9CampaignRolloverCloseout) {
     $baselineHash = Resolve-GitCommit $ReviewBaseline 'BaselineCommit'
     $candidateHash = Resolve-GitCommit $ReviewCandidate 'CandidateCommit'
     & git -C $repoRoot merge-base --is-ancestor $baselineHash $candidateHash
@@ -800,6 +816,54 @@ function Invoke-Layer6ReviewGate(
         'docs/current-state.md',
         'docs/plans/milestones/m1/slices/s6/README.md',
         'docs/plans/milestones/m1/slices/s6/record.md')
+    [string[]]$campaignReviewPaths = @(
+        'contracts/repository/m1-slice6-finite-campaign-authorization.v1.schema.json',
+        'contracts/repository/m1-slice6-finite-campaign-owner-authority.v1.schema.json',
+        'docs/current-state.md',
+        'docs/plans/milestones/m1/slices/s6/README.md',
+        'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json',
+        'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-owner-authority.v1.json',
+        'docs/plans/milestones/m1/slices/s6/plan.md',
+        'docs/plans/milestones/m1/slices/s6/record.md',
+        'docs/research/investigations/RESEARCH-0055-slice6-finite-campaign-and-safety-identifier-refresh.md',
+        'eng/validate-m1-slice6-campaign.ps1',
+        'eng/verify-m1-slice6.ps1',
+        'src/Infinium.Application/Provider/CredentialSemanticRolloverPolicy.cs',
+        'src/Infinium.Domain/Contracts/ProductUserSafetyIdentifier.cs',
+        'src/Infinium.OpenAI/OpenAiResponsesAdapter.cs',
+        'src/Infinium.Persistence/M1Slice6FiniteCampaignLedger.cs',
+        'src/Infinium.Persistence/ProductUserSafetyIdentifierStateStore.cs',
+        'tests/Infinium.ContractTests/M1Slice6CampaignContractTests.cs',
+        'tests/Infinium.IntegrationTests/M1Slice6CampaignRehearsalTests.cs',
+        'tests/Infinium.UnitTests/CredentialSemanticRolloverPolicyTests.cs',
+        'tests/Infinium.UnitTests/M1Slice6FiniteCampaignLedgerTests.cs',
+        'tests/Infinium.UnitTests/OpenAiResponsesAdapterTests.cs',
+        'tests/Infinium.UnitTests/ProductUserSafetyIdentifierTests.cs',
+        'tests/Infinium.UnitTests/ProviderAdapterTestSupport.cs')
+    if ($CampaignReviewMode) {
+        if ($Wp9OwnerStopMode -or $Wp8PreLiveCloseoutMode -or $HandoffCloseout -or $Wp4OwnerReviewHandoff -or
+            $Wp9ReviewCloseoutMode -or $Wp9OwnerAcceptanceCloseoutMode -or $CampaignReviewCloseoutMode -or
+            $CampaignAdmissionCloseoutMode -or $CampaignRolloverCloseoutMode) {
+            throw 'M1Slice6CampaignReview cannot be combined with another Layer6 authority mode.'
+        }
+        $head = (& git -C $repoRoot rev-parse HEAD).Trim()
+        $manifestPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json'
+        $validationJson = @(& (Join-Path $repoRoot 'eng/validate-m1-slice6-campaign.ps1') `
+            -AuthorizationManifest $manifestPath -RequireState Ready) -join "`n"
+        if ($LASTEXITCODE -ne 0 -or ($validationJson | ConvertFrom-Json -Depth 20).disposition -cne 'ready') {
+            throw 'M1Slice6CampaignReview requires the exact ready non-executable campaign manifest.'
+        }
+        $currentText = Get-CandidateText $candidateHash 'docs/current-state.md'
+        if ($baselineHash -cne 'deadb9850fbd832435dcb4672fa93f8bd0a3d8cd' -or $candidateHash -cne $head -or
+            -not $currentText.Contains('finite-campaign amendment implementation, non-live verification', [StringComparison]::Ordinal) -or
+            -not $currentText.Contains('No credential or provider effect is admitted.', [StringComparison]::Ordinal)) {
+            throw 'M1Slice6CampaignReview requires exact E20 ancestry and the exact no-effect campaign correction state.'
+        }
+    }
+    if (($CampaignReviewCloseoutMode -or $CampaignAdmissionCloseoutMode -or $CampaignRolloverCloseoutMode) -and
+        -not ($CampaignReviewMode)) {
+        throw 'The requested campaign closeout mode is not eligible before exact campaign review implementation closes.'
+    }
     if ($Wp9ReviewCloseoutMode) {
         if ($Wp9OwnerStopMode -or $Wp8PreLiveCloseoutMode -or $HandoffCloseout -or $Wp4OwnerReviewHandoff -or $Wp9OwnerAcceptanceCloseoutMode) {
             throw 'Wp9ReviewCloseout cannot be combined with any other Layer6 authority mode.'
@@ -902,6 +966,7 @@ function Invoke-Layer6ReviewGate(
             $isWp9OwnerStopPath = $Wp9OwnerStopMode -and $wp9ExpectedPaths -ccontains $path
             $isWp9ReviewCloseoutPath = $Wp9ReviewCloseoutMode -and $wp9ReviewCloseoutPaths -ccontains $path
             $isWp9OwnerAcceptanceCloseoutPath = $Wp9OwnerAcceptanceCloseoutMode -and $wp9ReviewCloseoutPaths -ccontains $path
+            $isCampaignReviewPath = $CampaignReviewMode -and $campaignReviewPaths -ccontains $path
             $isOwnerTestProcessCleanupPolicy = $OwnerTestProcessCleanup -and
                 $path -ceq 'docs/execution-policy.md'
             $isProtected = (Test-Wp1ProtectedPath $path) -and
@@ -910,6 +975,7 @@ function Invoke-Layer6ReviewGate(
                 -not $isWp9OwnerStopPath -and
                 -not $isWp9ReviewCloseoutPath -and
                 -not $isWp9OwnerAcceptanceCloseoutPath -and
+                -not $isCampaignReviewPath -and
                 -not $isOwnerTestProcessCleanupPolicy
             $isAllowed = (Test-Wp1AllowedPath $path) -or
                 $isHandoffCurrentState -or
@@ -917,6 +983,7 @@ function Invoke-Layer6ReviewGate(
                 $isWp9OwnerStopPath -or
                 $isWp9ReviewCloseoutPath -or
                 $isWp9OwnerAcceptanceCloseoutPath -or
+                $isCampaignReviewPath -or
                 $isOwnerTestProcessCleanupPolicy
             $privateOrArchive = $path -match '(?i)(^|/)(private|legacy|archive)(/|$)' -or
                 $path -match '(?i)independent-slice3-evaluator' -or
@@ -949,6 +1016,14 @@ function Invoke-Layer6ReviewGate(
         if ([string]::Join("`n", $actualOwnerCloseoutPaths) -cne [string]::Join("`n", $wp9ReviewCloseoutPaths) -or
             $wp9CurrentStateDisposition -cne 'exact-wp9-owner-accepted-bounded-effect-state') {
             $failures.Add('Wp9OwnerAcceptanceCloseout requires exactly current-state, Slice 6 README, and append-only record in the exact owner-accepted bounded-effect state.')
+        }
+    }
+    if ($CampaignReviewMode) {
+        [string[]]$actualCampaignPaths = @($changedPaths | ForEach-Object { [string]$_.path })
+        [Array]::Sort($actualCampaignPaths, [StringComparer]::Ordinal)
+        [Array]::Sort($campaignReviewPaths, [StringComparer]::Ordinal)
+        if ([string]::Join("`n", $actualCampaignPaths) -cne [string]::Join("`n", $campaignReviewPaths)) {
+            $failures.Add('M1Slice6CampaignReview requires the exact finite amendment path set and no extra path.')
         }
     }
 
@@ -1174,6 +1249,10 @@ function Invoke-Layer6ReviewGate(
         wp9_owner_stop_review = [bool]$Wp9OwnerStopMode
         wp9_review_closeout = [bool]$Wp9ReviewCloseoutMode
         wp9_owner_acceptance_closeout = [bool]$Wp9OwnerAcceptanceCloseoutMode
+        m1_slice6_campaign_review = [bool]$CampaignReviewMode
+        m1_slice6_campaign_review_closeout = [bool]$CampaignReviewCloseoutMode
+        m1_slice6_campaign_admission_closeout = [bool]$CampaignAdmissionCloseoutMode
+        wp9_campaign_rollover_closeout = [bool]$CampaignRolloverCloseoutMode
         wp9_current_state_disposition = $wp9CurrentStateDisposition
         wp8_current_state_disposition = $wp8CurrentStateDisposition
         owner_test_process_cleanup = [bool]$OwnerTestProcessCleanup
@@ -1844,6 +1923,19 @@ function Invoke-NonLiveAllGate {
     $wp9ReviewBinding = Get-Wp9ReviewBindingForCandidate $head
     $currentStateDisposition = Get-Wp8NonLiveCurrentStateDisposition `
         $currentState $wp8Matrix.acceptance_binding $sliceReadme $recordText $wp9ReviewBinding
+    $campaignManifestPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json'
+    $campaignState = $currentState.Contains('finite-campaign amendment implementation, non-live verification', [StringComparison]::Ordinal) -and
+        $currentState.Contains('No credential or provider effect is admitted.', [StringComparison]::Ordinal) -and
+        $sliceReadme.Contains('Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee`', [StringComparison]::Ordinal) -and
+        $recordText.Contains('Current authority is correction and non-live reverification only.', [StringComparison]::Ordinal)
+    if ($currentStateDisposition -eq 'invalid' -and $campaignState) {
+        $campaignValidationJson = @(& (Join-Path $repoRoot 'eng/validate-m1-slice6-campaign.ps1') `
+            -AuthorizationManifest $campaignManifestPath -RequireState Ready) -join "`n"
+        if ($LASTEXITCODE -ne 0 -or ($campaignValidationJson | ConvertFrom-Json -Depth 20).disposition -cne 'ready') {
+            throw 'NonLiveAll exact finite-campaign state failed its ready campaign validator.'
+        }
+        $currentStateDisposition = 'exact-m1-s6-finite-campaign-review-no-effect-state'
+    }
     if ($currentStateDisposition -eq 'invalid') {
         throw 'NonLiveAll requires either the exact WP8 correction-reverification authority or the exact structured corrected-WP8 no-effect handoff.'
     }
@@ -1894,11 +1986,14 @@ function Invoke-NonLiveAllGate {
     Invoke-SourceClaimSemanticsGate
     Invoke-CandidateSemanticsGate
     Invoke-ProvenanceReplayGate
-    Invoke-Wp8PreLiveValidationGate ($currentStateDisposition -like 'exact-wp9-*-no-effect-state')
+    Invoke-Wp8PreLiveValidationGate ($currentStateDisposition -like 'exact-wp9-*-no-effect-state' -or
+        $currentStateDisposition -eq 'exact-m1-s6-finite-campaign-review-no-effect-state')
 
     $candidate = (& git -C $repoRoot rev-parse HEAD).Trim()
     $baseline = '63e4584f8926227c2a1e12ef31c71a3a88798c7f'
-    if ($currentStateDisposition -eq 'exact-wp9-reviewed-owner-pending-no-effect-state') {
+    if ($currentStateDisposition -eq 'exact-m1-s6-finite-campaign-review-no-effect-state') {
+        Invoke-Layer6ReviewGate 'deadb9850fbd832435dcb4672fa93f8bd0a3d8cd' $candidate $false $false $false $false $true
+    } elseif ($currentStateDisposition -eq 'exact-wp9-reviewed-owner-pending-no-effect-state') {
         Invoke-Layer6ReviewGate ([string]$wp9ReviewBinding.reviewed_candidate_commit) $candidate $false $false $true
     } else {
         Invoke-Layer6ReviewGate $baseline $candidate $false $true $false
