@@ -36,6 +36,35 @@ function Require-CanonicalRepositoryPath([string]$ActualPath, [string]$ExpectedR
     if ((Get-FullPath $ActualPath) -cne $expected) { throw "$Name is not the canonical campaign authority path." }
 }
 
+function Get-GitBlobSha256([string]$Commit,[string]$RelativePath) {
+    $root = (& git rev-parse --show-toplevel).Trim()
+    if ($LASTEXITCODE -ne 0) { throw 'Campaign validation requires a Git worktree.' }
+    $start = [Diagnostics.ProcessStartInfo]::new()
+    $start.FileName = 'git'
+    $start.WorkingDirectory = $root
+    $start.UseShellExecute = $false
+    $start.CreateNoWindow = $true
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    $start.ArgumentList.Add('show')
+    $start.ArgumentList.Add("$Commit`:$RelativePath")
+    $process = [Diagnostics.Process]::Start($start)
+    $bytes = [IO.MemoryStream]::new()
+    try {
+        $process.StandardOutput.BaseStream.CopyTo($bytes)
+        $diagnostic = $process.StandardError.ReadToEnd()
+        $process.WaitForExit()
+        if ($process.ExitCode -ne 0 -or $bytes.Length -eq 0) {
+            throw "The reviewed candidate does not retain the exact campaign manifest path: $diagnostic"
+        }
+        return ConvertTo-LowerHex ([Security.Cryptography.SHA256]::HashData($bytes.ToArray()))
+    }
+    finally {
+        $bytes.Dispose()
+        $process.Dispose()
+    }
+}
+
 function Require-ExactMarkerTransition([string]$Marker,[string]$ExpectedParent,[string]$StatePhrase) {
     $recordRelative = 'docs/plans/milestones/m1/slices/s6/record.md'
     $commits = @(& git log --format=%H --fixed-strings -S $Marker -- $recordRelative)
@@ -338,9 +367,7 @@ if ($reviewCount -eq 1) {
     if ($LASTEXITCODE -ne 0) { throw 'The reviewed campaign candidate does not exist.' }
     & git merge-base --is-ancestor $reviewedCandidate HEAD
     if ($LASTEXITCODE -ne 0) { throw 'The reviewed campaign candidate is not an ancestor of current HEAD.' }
-    $candidateBytes = (& git show ($reviewedCandidate + ':docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json') 2>$null) -join "`n"
-    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($candidateBytes)) { throw 'The reviewed candidate does not retain the exact campaign manifest path.' }
-    $candidateHash = ConvertTo-LowerHex ([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($candidateBytes + "`n")))
+    $candidateHash = Get-GitBlobSha256 $reviewedCandidate 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json'
     if ($candidateHash -cne $manifestSha) { throw 'The review marker candidate does not bind the exact campaign manifest bytes.' }
 }
 if ($admissionCount -eq 1 -and [string]$admissionMatches[0] -cne $reviewedCandidate) { throw 'Campaign admission does not bind the exact reviewed candidate.' }

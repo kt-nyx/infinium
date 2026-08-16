@@ -37,7 +37,7 @@ public sealed class M1Slice6CampaignRehearsalTests
             manifest["status"] = "ready-for-campaign-review";
             manifest["candidate_binding"]!["close_ready_implementation_commit"] = head;
             manifest["candidate_binding"]!["verification_candidate_commit"] = head;
-            File.WriteAllText(manifestPath, manifest.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+            File.WriteAllText(manifestPath, manifest.ToJsonString(IndentedJson) + "\n", new UTF8Encoding(false));
             Run("git", ["add", "--", "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json"], clone);
             Run("git", ["-c", "user.name=Infinium Rehearsal", "-c", "user.email=rehearsal@invalid", "commit", "--quiet", "-m", "rehearsal bind campaign"], clone);
             head = Run("git", ["rev-parse", "HEAD"], clone).Trim();
@@ -256,7 +256,8 @@ public sealed class M1Slice6CampaignRehearsalTests
         string output = Run("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "eng/validate-m1-slice6-campaign.ps1",
             "-AuthorizationManifest", "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json",
             "-RequireState", state], clone);
-        StringAssert.Contains(output, "\"effect_count\":  0");
+        using JsonDocument receipt = JsonDocument.Parse(output);
+        Assert.AreEqual(0, receipt.RootElement.GetProperty("effect_count").GetInt32());
     }
 
     private static void AssertValidatorRejected(string clone, string state)

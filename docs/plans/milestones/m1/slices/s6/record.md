@@ -8049,3 +8049,14 @@ product evidence. The bounded correction makes that overlay commit
 conditional on an actual byte change. The partial focused sequence is
 excluded; no helper, output root, lock, UI, native, network, provider, or
 billable effect occurred.
+
+Replacement binding `c2cfb1dcdaed65be1041023f0ab52f8110cf2c80`
+then passed ready validation and 43/43 focused runtime tests. Its committed
+rehearsal exposed two evidence-harness precision defects before any fake-store
+or literal-loopback stage: a whitespace-sensitive JSON receipt assertion and
+text-mode reconstruction of a reviewed Git blob. The correction parses the
+receipt structurally, writes canonical UTF-8 JSON with a final LF in the
+rehearsal, and hashes the exact committed Git blob bytes through a redirected
+binary stream. Both partial rehearsal attempts are excluded. No production
+output root, lock, helper, UI, native operation, DNS/public network, provider
+request, or billable effect occurred.
