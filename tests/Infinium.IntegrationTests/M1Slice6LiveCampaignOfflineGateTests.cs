@@ -229,7 +229,7 @@ public sealed class M1Slice6LiveCampaignOfflineGateTests
                 new RecoveredSettlementAccounting());
             await Assert.ThrowsExactlyAsync<M1Slice6CampaignKnownSettlementException>(() =>
                 coordinator.ExecuteOneShotAsync(manifestPath, manifestSha,
-                    Path.Combine(temporary, "evidence.json"), start.AddMinutes(5).AddTicks(2),
+                    Path.Combine(temporary, "evidence.json"), start.AddMinutes(8),
                     CancellationToken.None));
             Assert.AreEqual(0, boundary.SendCount);
             Assert.AreEqual(M1Slice6CampaignState.Stopped, ledger.Current.State);
@@ -239,11 +239,94 @@ public sealed class M1Slice6LiveCampaignOfflineGateTests
             Assert.AreEqual(1L, ledger.Current.ProviderCallCount);
             Assert.AreEqual(new M1Slice6CampaignNativeEnvelope(1, 3, 0, 2, 6),
                 ledger.Current.NativeEnvelope);
+            M1Slice6CampaignLedgerEntry settledEntry = ledger.Entries.Single(entry =>
+                entry.State == M1Slice6CampaignState.StageSettled);
+            Assert.IsGreaterThan(settledEntry.StageDeadlineUtc!.Value, settledEntry.RecordedAtUtc);
         }
         finally
         {
             if (Directory.Exists(temporary)) { Directory.Delete(temporary, recursive: true); }
         }
+    }
+
+    [TestMethod]
+    public async Task UnreconciledPossibleStartIsDurablyTerminalForStaleMissingAndNullRecovery()
+    {
+        foreach (string scenario in new[]
+        {
+            "stale-manifest", "missing-recovery", "null-settlement", "recovery-query-fault"
+        })
+        {
+            string temporary = Path.Combine(Path.GetTempPath(), "infinium-campaign-unreconciled-"
+                + scenario + "-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(temporary);
+            try
+            {
+                DateTimeOffset start = DateTimeOffset.Parse("2026-08-15T16:00:00Z",
+                    CultureInfo.InvariantCulture);
+                (M1Slice6FiniteCampaignLedger ledger, string manifestPath, string manifestSha) =
+                    CreatePossibleStartFixture(temporary, start);
+                IM1Slice6CampaignProviderAccounting accounting = scenario switch
+                {
+                    "missing-recovery" => new NoRecoveryAccounting(),
+                    "recovery-query-fault" => new ThrowingRecoveryAccounting(),
+                    _ => new NullRecoveryAccounting(),
+                };
+                if (scenario == "stale-manifest")
+                {
+                    File.AppendAllText(manifestPath, " ");
+                }
+                NeverDispatchBoundary boundary = new();
+                M1Slice6CampaignStageCoordinator coordinator = new(ledger,
+                    new ProductUserSafetyIdentifierStateStore(Path.Combine(temporary, "safety")),
+                    boundary, accounting);
+                await Assert.ThrowsExactlyAsync<InvalidDataException>(() => coordinator.ExecuteOneShotAsync(
+                    manifestPath, manifestSha, Path.Combine(temporary, "evidence.json"),
+                    start.AddMinutes(8), CancellationToken.None));
+                Assert.AreEqual(0, boundary.SendCount, scenario);
+                Assert.AreEqual(M1Slice6CampaignState.Stopped, ledger.Current.State, scenario);
+                Assert.AreEqual("unreconciled-start-hold-retained-no-retry", ledger.Current.Event, scenario);
+                Assert.IsGreaterThan(0L, ledger.Current.ReservedNanoUsd, scenario);
+
+                M1Slice6FiniteCampaignLedger reopened = new(Path.Combine(temporary, "ledger.jsonl"),
+                    ledger.Current.Identity, DateTimeOffset.Parse("2026-08-22T23:59:00Z",
+                        CultureInfo.InvariantCulture), DateTimeOffset.Parse("2026-08-17T15:25:00Z",
+                        CultureInfo.InvariantCulture), start.AddMinutes(9));
+                Assert.AreEqual("unreconciled-start-hold-retained-no-retry", reopened.Current.Event, scenario);
+            }
+            finally
+            {
+                if (Directory.Exists(temporary)) { Directory.Delete(temporary, recursive: true); }
+            }
+        }
+    }
+
+    private static (M1Slice6FiniteCampaignLedger Ledger, string ManifestPath, string ManifestSha)
+        CreatePossibleStartFixture(string temporary, DateTimeOffset start)
+    {
+        string manifestPath = Path.Combine(temporary, "stage.json");
+        File.WriteAllText(manifestPath,
+            "{\"manifest_id\":\"request\",\"stage\":{\"ordinal\":1},\"canonical_request\":{\"sha256\":\""
+            + new string('9', 64) + "\"}}\n", new UTF8Encoding(false));
+        string manifestSha = Sha(File.ReadAllBytes(manifestPath));
+        M1Slice6CampaignIdentity identity = new("infinium.m1-s6.finite-live-campaign/unreconciled",
+            new string('1', 64), new string('2', 64), new string('3', 40),
+            "infinium.m1-s6.wp9/unreconciled", new string('4', 64), "profile", "generation",
+            new string('5', 64));
+        M1Slice6FiniteCampaignLedger ledger = new(Path.Combine(temporary, "ledger.jsonl"), identity,
+            DateTimeOffset.Parse("2026-08-22T23:59:00Z", CultureInfo.InvariantCulture),
+            DateTimeOffset.Parse("2026-08-17T15:25:00Z", CultureInfo.InvariantCulture), start);
+        ledger.RecordIndependentReview(start.AddMinutes(1));
+        ledger.AdmitCampaign(start.AddMinutes(2));
+        ledger.BeginCredentialExecutionHandoff(start.AddMinutes(3));
+        ledger.RecordCredentialEvidenceHandoff("credential", new string('6', 64),
+            new M1Slice6CampaignNativeEnvelope(1, 2, 0, 1, 4), start.AddMinutes(4));
+        ledger.AcceptCredentialEvidence("credential", new string('6', 64), start.AddMinutes(4).AddTicks(1));
+        ledger.ReserveStage(M1Slice6CampaignStage.Qualification,
+            new("request", manifestSha, 3, 10, 1, 100, 100), start.AddMinutes(5));
+        ledger.LatchPossibleStart(M1Slice6CampaignStage.Qualification, new string('a', 64),
+            start.AddMinutes(5).AddTicks(1));
+        return (ledger, manifestPath, manifestSha);
     }
 
     private static byte[] Bound(JsonElement artifacts, string directory, string prefix, string extension)
@@ -356,6 +439,33 @@ public sealed class M1Slice6LiveCampaignOfflineGateTests
         public M1Slice6CampaignRecoveredSettlement? TryRecoverKnownSettlement(M1Slice6CampaignStage stage,
             string canonicalRequestSha256) =>
             stage == M1Slice6CampaignStage.Qualification ? new(10, 1, 100, 90) : null;
+        public M1Slice6CampaignAccountingAdmission Prepare(M1Slice6CampaignStageAuthority authority,
+            M1Slice6CampaignIdentity campaignIdentity, DateTimeOffset now) => throw new AssertFailedException();
+        public void RecordPossibleStart(M1Slice6CampaignAccountingAdmission admission, DateTimeOffset now) =>
+            throw new AssertFailedException();
+        public void ReleaseBeforePossibleStart(M1Slice6CampaignAccountingAdmission admission, DateTimeOffset now) =>
+            throw new AssertFailedException();
+        public M1Slice6CampaignAccountingSettlement PersistSettleAndReplay(
+            M1Slice6CampaignAccountingAdmission admission, M1Slice6CampaignStageAuthority authority,
+            M1Slice6CampaignStageBoundaryResult result) => throw new AssertFailedException();
+    }
+
+    private sealed class NullRecoveryAccounting : NoRecoveryAccounting, IM1Slice6CampaignRecoveryAccounting
+    {
+        public M1Slice6CampaignRecoveredSettlement? TryRecoverKnownSettlement(
+            M1Slice6CampaignStage stage, string canonicalRequestSha256) => null;
+    }
+
+    private sealed class ThrowingRecoveryAccounting : NoRecoveryAccounting,
+        IM1Slice6CampaignRecoveryAccounting
+    {
+        public M1Slice6CampaignRecoveredSettlement? TryRecoverKnownSettlement(
+            M1Slice6CampaignStage stage, string canonicalRequestSha256) =>
+            throw new IOException("synthetic recovery query fault");
+    }
+
+    private class NoRecoveryAccounting : IM1Slice6CampaignProviderAccounting
+    {
         public M1Slice6CampaignAccountingAdmission Prepare(M1Slice6CampaignStageAuthority authority,
             M1Slice6CampaignIdentity campaignIdentity, DateTimeOffset now) => throw new AssertFailedException();
         public void RecordPossibleStart(M1Slice6CampaignAccountingAdmission admission, DateTimeOffset now) =>

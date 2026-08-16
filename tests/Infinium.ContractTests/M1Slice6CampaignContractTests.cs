@@ -39,7 +39,8 @@ public sealed class M1Slice6CampaignContractTests
     [TestMethod]
     public void StandaloneValidatorAcceptsExactDraftAndRejectsEveryBoundaryMutation()
     {
-        Assert.AreEqual(0, RunValidator(TestRepository.Root, null));
+        Assert.AreNotEqual(0, RunValidator(TestRepository.Root, null, requireSuccess: false),
+            "The active correction worktree must not remain executable as the rejected B7 candidate.");
         Action<JsonObject>[] mutations =
         [
             root => root["unexpected"] = true,
@@ -80,6 +81,7 @@ public sealed class M1Slice6CampaignContractTests
         try
         {
             CloneWithCurrentCampaignValidator(temporary);
+            Assert.AreEqual(0, RunValidator(temporary, null));
             foreach (Action<JsonObject> mutation in mutations)
             {
                 Assert.AreNotEqual(0, RunValidator(temporary, mutation), mutation.Method.Name);
@@ -112,7 +114,7 @@ public sealed class M1Slice6CampaignContractTests
 
         string verifier = File.ReadAllText(TestRepository.PathFromRoot("eng", "verify-m1-slice6.ps1"));
         string currentState = File.ReadAllText(TestRepository.PathFromRoot("docs", "current-state.md"));
-        const string stateAuthority = "finite-campaign amendment implementation, non-live verification";
+        const string stateAuthority = "finite-campaign correction and non-live verification";
         StringAssert.Contains(currentState, stateAuthority);
         Assert.IsFalse(currentState.Replace(stateAuthority, "finite-campaign live execution", StringComparison.Ordinal)
             .Contains(stateAuthority, StringComparison.Ordinal));
@@ -128,7 +130,7 @@ public sealed class M1Slice6CampaignContractTests
             "Layer6 must initialize its finding list before any mode-specific path-set finding can be retained.");
     }
 
-    private static int RunValidator(string root, Action<JsonObject>? mutation)
+    private static int RunValidator(string root, Action<JsonObject>? mutation, bool requireSuccess = true)
     {
         string manifest = Path.Combine(root, ManifestRelative.Replace('/', Path.DirectorySeparatorChar));
         string exact = File.ReadAllText(manifest);
@@ -162,7 +164,7 @@ public sealed class M1Slice6CampaignContractTests
             }
             string stdout = process.StandardOutput.ReadToEnd();
             string stderr = process.StandardError.ReadToEnd();
-            if (mutation is null && process.ExitCode != 0)
+            if (requireSuccess && mutation is null && process.ExitCode != 0)
             {
                 throw new InvalidOperationException("Exact campaign validator failed: " + stdout + stderr);
             }
@@ -179,6 +181,8 @@ public sealed class M1Slice6CampaignContractTests
         RunProcess(TestRepository.Root, "git", "-c", "safe.directory=" + TestRepository.Root,
             "-c", "safe.directory=" + Path.Combine(TestRepository.Root, ".git"),
             "clone", "--quiet", "--no-hardlinks", TestRepository.Root, destination);
+        RunProcess(destination, "git", "checkout", "--quiet", "--detach",
+            "0b72c001db0a06c35b330a980090952f62c5613e");
         bool overlayChanged = false;
         foreach (string relative in new[]
         {

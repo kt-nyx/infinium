@@ -413,10 +413,10 @@ public sealed class M1Slice6CampaignRehearsalTests
         {
             AssertStageManifestMutationsRejected(manifestPath, manifestSha, ledger);
             AssertLiveRouteFailsBeforeOutput(clone, manifestPath);
-            await AssertProductionBoundaryFakeRoute(manifestPath, manifestSha, ledger);
             await AssertProductionStageFailuresTerminalize(ledgerPath, ledger, safetyStore,
                 manifestPath, manifestSha, now);
         }
+        await AssertProductionBoundaryFakeRoute(manifestPath, manifestSha, ledger);
         FakeStageBoundary boundary = new(fakeStore);
         string credentialPath = Path.Combine(clone, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp9-production-profile-authorization.v1.json");
@@ -813,15 +813,23 @@ public sealed class M1Slice6CampaignRehearsalTests
             Assert.AreEqual(1L, postStart.Current.ProviderCallCount);
             Assert.AreEqual(M1Slice6CampaignStageLimits.For(M1Slice6CampaignStage.Qualification).MaximumNanoUsd,
                 postStart.Current.ReservedNanoUsd);
-            StringAssert.Contains(postStart.Current.Event, "ambiguous-start-hold-retained-no-retry");
+            Assert.AreEqual("unreconciled-start-hold-retained-no-retry", postStart.Current.Event);
 
             M1Slice6FiniteCampaignLedger knownSettled = await Execute(
                 new KnownSettlementThrowingAccounting(),
                 new FakeStageBoundary(new FakeCredentialStore()), "known-settled-semantic");
             Assert.AreEqual(M1Slice6CampaignState.Stopped, knownSettled.Current.State);
             Assert.AreEqual(0L, knownSettled.Current.ReservedNanoUsd);
+            Assert.AreEqual(10L, knownSettled.Current.ObservedInputTokens);
+            Assert.AreEqual(1L, knownSettled.Current.ObservedOutputTokens);
+            Assert.AreEqual(100L, knownSettled.Current.ObservedRawResponseBytes);
+            Assert.AreEqual(90L, knownSettled.Current.SettledNanoUsd);
             StringAssert.Contains(knownSettled.Current.Event,
                 "semantic-admission-failure-known-settled-no-retry");
+            M1Slice6FiniteCampaignLedger reopenedKnown = new(
+                Path.Combine(temporary, "known-settled-semantic.jsonl"), sourceLedger.Current.Identity,
+                CampaignExpiry, CredentialExpiry, knownSettled.Current.RecordedAtUtc.AddTicks(1));
+            Assert.AreEqual(knownSettled.Current, reopenedKnown.Current);
         }
         finally
         {
@@ -918,6 +926,14 @@ public sealed class M1Slice6CampaignRehearsalTests
         Reject(root => root["semantic_validation"]!["validation_id"] = "invented-host-policy");
         Reject(root => root["semantic_validation"]!["admission_count"] = 0);
         Reject(root => root["semantic_validation"]!.AsObject()["unknown"] = true);
+        Reject(root => root["cumulative_credential_calls"]!["CredWriteW"] = 0);
+        Reject(root => root["cumulative_credential_calls"]!["CredReadW"] =
+            root["cumulative_credential_calls"]!["CredReadW"]!.GetValue<int>() + 1);
+        Reject(root => root["cumulative_credential_calls"]!["CredDeleteW"] = 1);
+        Reject(root => root["cumulative_credential_calls"]!["CredFree"] =
+            root["cumulative_credential_calls"]!["CredFree"]!.GetValue<int>() + 1);
+        Reject(root => root["cumulative_credential_calls"]!["total"] =
+            root["cumulative_credential_calls"]!["total"]!.GetValue<int>() + 1);
         Reject(root => root["cumulative_credential_calls"]!.AsObject()["extra"] = 1);
         Reject(root => root["unknown"] = true);
     }
@@ -1201,11 +1217,27 @@ public sealed class M1Slice6CampaignRehearsalTests
                     assignment.Assignment.AssignmentKind);
                 Assert.AreEqual(ProviderEndpointV2.OpenaiResponses,
                     assignment.Assignment.ProviderRequest.EndpointIdentity);
+                Assert.AreEqual(authority.CanonicalRequestSha256,
+                    Convert.ToHexStringLower(assignment.Assignment.ProviderRequest.RequestFingerprintSha256.Span));
+                CollectionAssert.AreEqual(authority.CanonicalRequest,
+                    assignment.Assignment.ProviderRequest.CanonicalRequestBytes.ToByteArray());
                 Assert.AreEqual(1u, assignment.Assignment.Limits.MaximumDispatchCount);
+                Assert.AreEqual((ulong)authority.Limits.MaximumRequestBytes,
+                    assignment.Assignment.Limits.MaximumRequestBytes);
+                Assert.AreEqual((ulong)authority.Limits.MaximumInputTokens,
+                    assignment.Assignment.Limits.MaximumInputTokens);
+                Assert.AreEqual((ulong)authority.Limits.MaximumOutputTokens,
+                    assignment.Assignment.Limits.MaximumOutputTokens);
+                Assert.AreEqual((ulong)authority.Limits.MaximumRawResponseBytes,
+                    assignment.Assignment.Limits.MaximumResponseBytes);
+                Assert.AreEqual(authority.Limits.MaximumNanoUsd,
+                    assignment.Assignment.Limits.MaximumCalculatedNanoUsd);
+                Assert.AreEqual((ulong)authority.Limits.DeadlineMilliseconds,
+                    assignment.Assignment.Limits.MaximumDuration.Value);
                 Assert.IsTrue(final.DispatchRevalidation.AuthorizedOnce);
                 Assert.AreEqual(DispatchDispositionV2.Authorized,
                     final.DispatchRevalidation.Disposition);
-                Assert.AreEqual(TimeSpan.FromSeconds(60), timeout);
+                Assert.AreEqual(TimeSpan.FromMilliseconds(authority.Limits.DeadlineMilliseconds), timeout);
                 await using ProviderLoopbackServer server = new(ProviderAdapterTestData.CompletedResponse());
                 using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
                 OpenAiResponsesResult response = await adapter.SendOnceAsync(authority.CanonicalRequest,
@@ -1271,6 +1303,10 @@ public sealed class M1Slice6CampaignRehearsalTests
         Assert.AreEqual(1, possibleStarts);
         Assert.AreEqual(1, result.Response.SendCount);
         Assert.AreEqual(1, result.DnsResolutionCount);
+        Assert.AreEqual(1, result.CredentialRead.CredReadW);
+        Assert.AreEqual(1, result.CredentialRead.CredFree);
+        Assert.AreEqual(0, result.CredentialRead.CredWriteW);
+        Assert.AreEqual(0, result.CredentialRead.CredDeleteW);
         Assert.AreEqual(authority.SafetyIdentifierProjection, result.SafetyIdentifierProjection);
     }
 
@@ -1513,7 +1549,8 @@ public sealed class M1Slice6CampaignRehearsalTests
         public M1Slice6CampaignAccountingSettlement PersistSettleAndReplay(
             M1Slice6CampaignAccountingAdmission _, M1Slice6CampaignStageAuthority __,
             M1Slice6CampaignStageBoundaryResult ___) => throw new M1Slice6CampaignKnownSettlementException(
-                "synthetic known settlement", new InvalidDataException("synthetic semantic failure"));
+                "synthetic known settlement", new(10, 1, 100, 90),
+                new InvalidDataException("synthetic semantic failure"));
     }
 
     private sealed class ThrowAfterPossibleStartBoundary(DateTimeOffset possibleStartAt)

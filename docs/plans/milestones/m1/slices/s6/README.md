@@ -132,11 +132,13 @@ pending-source freeze and its binding is excluded. Binding
 `21193145f0d01abb524d98d23ac6faf0c20abc01` is also excluded because its
 complete unfiltered run showed that range-scoped Git pickaxe lookup remained
 attribution-sensitive under concurrency. The corrected finite-campaign
-close-ready source `acb76c0e9754568013fee9597ee5a7d257b19c38` is
-verification-pending. Its exact clean committed four-document binding
-successor is the review candidate, bound for complete non-live verification
-and fresh independent review only. The resulting review candidate is ready for
-review and remains non-executable.
+close-ready source `acb76c0e9754568013fee9597ee5a7d257b19c38` and exact
+four-document binding `0b72c001db0a06c35b330a980090952f62c5613e` are retained
+as rejected review evidence only. Review found incomplete late-settlement
+reconciliation and stage-native tuple proof, and exposed an owner decision:
+the frozen WP10 validation package admits no proposal while WP11 requires an
+admitted WP10 artifact. Current work is correction and non-live verification
+only; no replacement is review-ready or executable.
 No authority is inherited. The
 immutable owner authority source is SHA-256
 `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.

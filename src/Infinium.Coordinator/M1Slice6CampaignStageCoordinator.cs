@@ -62,8 +62,12 @@ public sealed record M1Slice6CampaignSemanticProvenance(
     public static M1Slice6CampaignSemanticProvenance Empty { get; } = new("", "", "", "", "", "", "");
 }
 
-public sealed class M1Slice6CampaignKnownSettlementException(string message, Exception innerException)
-    : IOException(message, innerException);
+public sealed class M1Slice6CampaignKnownSettlementException(
+    string message, M1Slice6CampaignRecoveredSettlement settlement, Exception innerException)
+    : IOException(message, innerException)
+{
+    public M1Slice6CampaignRecoveredSettlement Settlement { get; } = settlement;
+}
 
 public interface IM1Slice6CampaignProviderAccounting
 {
@@ -827,11 +831,33 @@ public static class M1Slice6CampaignStageManifestValidator
     private static string FindMarkerAddition(string repository, string marker, string recordRelative,
         string revision)
     {
-        string historyOutput = revision.Contains("..", StringComparison.Ordinal)
-            ? RunGit(repository, "log", "--format=%H", revision, "--", recordRelative).Output
-            : RunGit(repository, "log", "--format=%H", "--fixed-strings", "-S", marker,
-                revision, "--", recordRelative).Output;
-        string[] history = historyOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        string[] history;
+        if (revision.Contains("..", StringComparison.Ordinal))
+        {
+            history = RunGit(repository, "log", "--format=%H", revision, "--", recordRelative).Output
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        }
+        else
+        {
+            // Git pickaxe (-S) is not deterministic for the retained, long exact marker lines
+            // under concurrent clone/build pressure.  Porcelain blame identifies the commit
+            // currently owning the one exact line in a single snapshot; the 0->1 parent check
+            // below then proves that it was an append rather than later attribution drift.
+            string[] blame = RunGit(repository, "blame", "--line-porcelain", revision,
+                "--", recordRelative).Output.Split('\n');
+            List<string> owners = [];
+            string owner = string.Empty;
+            foreach (string line in blame)
+            {
+                string[] fields = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (fields.Length >= 3 && Hex(fields[0], 40)) { owner = fields[0]; }
+                else if (line.StartsWith('\t') && line[1..] == marker && Hex(owner, 40))
+                {
+                    owners.Add(owner);
+                }
+            }
+            history = owners.Distinct(StringComparer.Ordinal).ToArray();
+        }
         List<string> additions = [];
         foreach (string candidate in history)
         {
@@ -966,8 +992,19 @@ public sealed class M1Slice6CampaignStageCoordinator
                 throw new InvalidDataException(
                     "A possible-start predecessor has a stale stage manifest identity.");
             }
-            M1Slice6CampaignRecoveredSettlement? recovered =
-                recovery.TryRecoverKnownSettlement(ledger.Current.Stage, canonicalRequestSha);
+            M1Slice6CampaignRecoveredSettlement? recovered;
+            try
+            {
+                recovered = recovery.TryRecoverKnownSettlement(ledger.Current.Stage, canonicalRequestSha);
+            }
+            catch (Exception exception)
+            {
+                ledger.StopAfterAmbiguousStart(ledger.Current.Stage,
+                    "unreconciled-start", now);
+                throw new InvalidDataException(
+                    "A possible-start predecessor could not query exact SQLite settlement evidence.",
+                    exception);
+            }
             if (recovered is null)
             {
                 ledger.StopAfterAmbiguousStart(ledger.Current.Stage,
@@ -983,6 +1020,7 @@ public sealed class M1Slice6CampaignStageCoordinator
                 "reconciled-sqlite-settlement", now.AddTicks(1));
             throw new M1Slice6CampaignKnownSettlementException(
                 "The provider response was already settled before restart; execution is terminal with no retry.",
+                recovered,
                 new InvalidOperationException("reconciled-sqlite-settlement"));
         }
         M1Slice6CampaignStageAuthority authority = M1Slice6CampaignStageManifestValidator.LoadAndValidate(
@@ -1024,8 +1062,7 @@ public sealed class M1Slice6CampaignStageCoordinator
             {
                 if (ledger.Current.State == M1Slice6CampaignState.TransportMayHaveStarted)
                 {
-                    ledger.StopAfterAmbiguousStart(authority.Stage, "ambiguous-start",
-                        ledger.Current.RecordedAtUtc.AddTicks(1));
+                    ReconcileOrStop(authority, ledger.Current.RecordedAtUtc.AddTicks(1));
                 }
                 throw;
             }
@@ -1053,7 +1090,7 @@ public sealed class M1Slice6CampaignStageCoordinator
                 || response.RefusalCode is not null || response.IncompleteReason is not null
                 || response.ErrorCode is not null)
             {
-                ledger.StopAfterAmbiguousStart(authority.Stage, "ambiguous-start", result.CompletedAtUtc);
+                ReconcileOrStop(authority, result.CompletedAtUtc);
                 throw new InvalidDataException("The one-shot stage boundary returned ambiguous or broadened transport facts.");
             }
             long input = Required(response.Usage.InputTokens, "input tokens");
@@ -1064,7 +1101,7 @@ public sealed class M1Slice6CampaignStageCoordinator
             if (input > authority.Limits.MaximumInputTokens || output > authority.Limits.MaximumOutputTokens
                 || raw > authority.Limits.MaximumRawResponseBytes || cost > authority.Limits.MaximumNanoUsd)
             {
-                ledger.StopAfterAmbiguousStart(authority.Stage, "settlement-overrun", result.CompletedAtUtc);
+                ReconcileOrStop(authority, result.CompletedAtUtc);
                 throw new InvalidDataException("The observed stage result exceeded its admitted envelope.");
             }
             M1Slice6CampaignAccountingSettlement accountingSettlement;
@@ -1073,13 +1110,15 @@ public sealed class M1Slice6CampaignStageCoordinator
                 accountingSettlement = accounting.PersistSettleAndReplay(
                     accountingAdmission, authority, result);
             }
-            catch (M1Slice6CampaignKnownSettlementException)
+            catch (M1Slice6CampaignKnownSettlementException known)
             {
                 M1Slice6CampaignNativeEnvelope knownNative = new(0, readReceipt.CredReadW,
                     readReceipt.CredDeleteW, readReceipt.CredFree,
                     checked(readReceipt.CredReadW + readReceipt.CredWriteW
                         + readReceipt.CredDeleteW + readReceipt.CredFree));
-                ledger.RecordKnownSettlement(authority.Stage, input, output, raw, cost, knownNative,
+                ledger.RecordKnownSettlement(authority.Stage, known.Settlement.InputTokens,
+                    known.Settlement.OutputTokens, known.Settlement.RawResponseBytes,
+                    known.Settlement.SettledNanoUsd, knownNative,
                     result.CompletedAtUtc);
                 ledger.StopAfterKnownSettlement(authority.Stage,
                     "semantic-admission-failure",
@@ -1089,7 +1128,7 @@ public sealed class M1Slice6CampaignStageCoordinator
             if (accountingSettlement.SettledNanoUsd != cost || accountingSettlement.UnresolvedHold
                 || accountingSettlement.RetryPermitted)
             {
-                ledger.StopAfterAmbiguousStart(authority.Stage, "stage-processing-failure", result.CompletedAtUtc);
+                ReconcileOrStop(authority, result.CompletedAtUtc);
                 throw new InvalidDataException("Authoritative provider accounting did not settle exact usage with no hold and no retry.");
             }
             M1Slice6CampaignNativeEnvelope priorNative = ledger.CurrentNativeEnvelope;
@@ -1251,10 +1290,41 @@ public sealed class M1Slice6CampaignStageCoordinator
             }
             else if (ledger.Current.State == M1Slice6CampaignState.TransportMayHaveStarted)
             {
-                ledger.StopAfterAmbiguousStart(authority.Stage, "stage-processing-failure", stopAt);
+                ReconcileOrStop(authority, stopAt);
             }
             throw;
         }
+    }
+
+    private void ReconcileOrStop(M1Slice6CampaignStageAuthority authority, DateTimeOffset now)
+    {
+        if (ledger.Current.State != M1Slice6CampaignState.TransportMayHaveStarted)
+        {
+            return;
+        }
+        M1Slice6CampaignRecoveredSettlement? recovered = null;
+        if (accounting is IM1Slice6CampaignRecoveryAccounting recovery)
+        {
+            try
+            {
+                recovered = recovery.TryRecoverKnownSettlement(
+                    authority.Stage, authority.CanonicalRequestSha256);
+            }
+            catch (Exception)
+            {
+                // A failed recovery query cannot prove that the dispatch did not happen or that
+                // SQLite did not settle it.  Retain the full hold and terminal no-retry state.
+            }
+        }
+        if (recovered is null)
+        {
+            ledger.StopAfterAmbiguousStart(authority.Stage, "unreconciled-start", now);
+            return;
+        }
+        ledger.RecordKnownSettlement(authority.Stage, recovered.InputTokens, recovered.OutputTokens,
+            recovered.RawResponseBytes, recovered.SettledNanoUsd,
+            new M1Slice6CampaignNativeEnvelope(0, 1, 0, 1, 2), now);
+        ledger.StopAfterKnownSettlement(authority.Stage, "reconciled-sqlite-settlement", now.AddTicks(1));
     }
 
     public void AcceptEvidence(M1Slice6CampaignStage stage, string evidenceId, string evidenceSha256,
@@ -1372,6 +1442,13 @@ internal static class M1Slice6CampaignStageRunner
         {
             throw new InvalidDataException("Campaign stage evidence native vector is not recursively closed.");
         }
+        M1Slice6CampaignNativeEnvelope exactCumulativeNative = stage switch
+        {
+            M1Slice6CampaignStage.Qualification => new(1, 3, 0, 2, 6),
+            M1Slice6CampaignStage.SourceClaimExtraction => new(1, 4, 0, 3, 8),
+            M1Slice6CampaignStage.CandidateInvestigation => new(1, 5, 0, 4, 10),
+            _ => throw new InvalidDataException("Campaign stage evidence has no finite native tuple."),
+        };
         IReadOnlyList<M1Slice6CampaignLedgerEntry> entries = ledger.Entries;
         int reservationIndex = -1;
         for (int index = entries.Count - 1; index >= 0; index--)
@@ -1457,7 +1534,8 @@ internal static class M1Slice6CampaignStageRunner
             || native.GetProperty("CredReadW").GetInt64() != ledger.Current.NativeEnvelope.CredReadW
             || native.GetProperty("CredDeleteW").GetInt64() != ledger.Current.NativeEnvelope.CredDeleteW
             || native.GetProperty("CredFree").GetInt64() != ledger.Current.NativeEnvelope.CredFree
-            || native.GetProperty("total").GetInt64() != ledger.Current.NativeEnvelope.Total)
+            || native.GetProperty("total").GetInt64() != ledger.Current.NativeEnvelope.Total
+            || ledger.Current.NativeEnvelope != exactCumulativeNative)
         {
             throw new InvalidDataException("Campaign stage evidence acceptance has stale or changed bytes.");
         }
@@ -1485,13 +1563,15 @@ internal static class M1Slice6CampaignStageRunner
             throw new InvalidDataException("Campaign stage evidence has no unique exact stage review predecessor.");
         }
         string stageReviewedCandidate = reviewLines[0][reviewPrefix.Length..^reviewSuffix.Length];
+        string stageReviewCommit = M1Slice6CampaignStageManifestValidator.UniqueMarkerCommit(
+            repository, reviewLines[0], stageReviewedCandidate, recordRelative);
         string admissionMarker = $"M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit={stageReviewedCandidate}"
             + $" campaign_id={ledger.Current.Identity.CampaignId} campaign_sha256={campaignManifestSha256}"
             + $" stage_manifest_id={reservation.RequestManifestId} sha256={reservation.RequestManifestSha256}"
             + $" predecessor_evidence_sha256={predecessor.EvidenceSha256}"
             + " expires_at_utc=2026-08-22T23:59:00.0000000Z";
-        string admissionCommit = M1Slice6CampaignStageManifestValidator.FindUniqueMarkerCommit(
-            repository, admissionMarker, recordRelative);
+        string admissionCommit = M1Slice6CampaignStageManifestValidator.UniqueMarkerCommit(
+            repository, admissionMarker, stageReviewCommit, recordRelative);
         _ = M1Slice6CampaignStageManifestValidator.UniqueMarkerCommit(repository, marker,
             admissionCommit, recordRelative);
         ledger.AcceptStageEvidence(stage, evidenceId, evidenceSha, now);

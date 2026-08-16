@@ -8592,3 +8592,31 @@ predecessor range and applies the exact 0-to-1 line test without pickaxe or
 blame attribution. Current authority is correction and non-live reverification
 only. No live, native, credential, provider, network, billable, private, or
 archive effect occurred.
+
+## Campaign settlement, recovery, and semantic-authority correction — 2026-08-16
+
+Close-ready source `acb76c0e9754568013fee9597ee5a7d257b19c38` and bound
+candidate `0b72c001db0a06c35b330a980090952f62c5613e` passed their
+complete non-live floor but were not accepted by terminal review. Review found
+that a known authoritative SQLite settlement recovered after the stage
+deadline could be misclassified as an unresolved hold, some post-possible-start
+paths did not first reconcile SQLite, and stage evidence did not require the
+exact cumulative native tuples. The bounded correction records a known
+settlement even when recovery is late, terminalizes stale/missing/null recovery
+as an exact unreconciled-start full hold with no retry, proves reopen behavior,
+and requires Qualification `W1/R3/D0/F2/T6`, WP10 `W1/R4/D0/F3/T8`, and WP11
+`W1/R5/D0/F4/T10`. The committed rehearsal also exercises the real contained
+production boundary with fake transport for every stage and exact assignment,
+request, limit, deadline, and credential-read/free assertions.
+
+The same review exposed a mandatory owner decision. The exact frozen
+`LLM-CLAIM-LIVE-VAL` input contains only contradictory, hostile-authority, and
+deleted passages, and its frozen eight-case oracle admits zero proposals. WP11
+simultaneously requires an exact admitted WP10 artifact. The implementation
+may not alter that fixture/package/oracle authority or invent an admitted
+artifact from a rejected result. Refreeze, campaign admission, credential
+execution, and all provider stages therefore remain ineligible pending an
+owner choice of separately authorized live semantic input/oracle authority.
+No helper, UI/readiness, authority lock, API key, Credential Manager,
+production profile, DNS/public network, provider, billable, private/archive,
+or push effect occurred.

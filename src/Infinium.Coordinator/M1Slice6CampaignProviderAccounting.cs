@@ -246,6 +246,12 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         {
             throw new M1Slice6CampaignKnownSettlementException(
                 "Authoritative provider response is settled with no retry, but semantic evidence is unreviewable.",
+                new M1Slice6CampaignRecoveredSettlement(
+                    Required(response.Usage.InputTokens, "settled input tokens"),
+                    Required(response.Usage.OutputTokens, "settled output tokens"),
+                    response.RawResponseBytes?.LongLength
+                        ?? throw new InvalidDataException("Settled response bytes are absent."),
+                    exactCost),
                 exception);
         }
         return new(responseId, usageId, settlementId, operation.ReplayEdgeId,

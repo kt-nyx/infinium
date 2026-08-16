@@ -295,7 +295,10 @@ public sealed class M1Slice6FiniteCampaignLedger
             throw new InvalidOperationException("Known settlement has no exact possible-start predecessor.");
         }
         M1Slice6CampaignStageLimits limits = M1Slice6CampaignStageLimits.For(stage);
-        if (now >= Current.StageDeadlineUtc || settledNanoUsd < 0 || settledNanoUsd > Current.ReservedNanoUsd
+        // A durable SQLite settlement remains the authoritative actual even when recovery occurs
+        // after the stage deadline.  The deadline prohibits a new dispatch; it cannot turn a
+        // known, already-settled response back into an unresolved full hold.
+        if (settledNanoUsd < 0 || settledNanoUsd > Current.ReservedNanoUsd
             || observedInputTokens is < 0 || observedInputTokens > limits.MaximumInputTokens
             || observedOutputTokens is < 0 || observedOutputTokens > limits.MaximumOutputTokens
             || observedRawResponseBytes is < 0 || observedRawResponseBytes > limits.MaximumRawResponseBytes)
@@ -393,6 +396,7 @@ public sealed class M1Slice6FiniteCampaignLedger
             "deadline-overrun" => reason,
             "settlement-overrun" => reason,
             "stage-processing-failure" => reason,
+            "unreconciled-start" => reason,
             _ => throw new ArgumentException("Unknown campaign stop reason.", nameof(reason)),
         };
         Append(M1Slice6CampaignState.Stopped, stage, exactReason + "-hold-retained-no-retry", Current.RequestManifestId,
@@ -717,7 +721,8 @@ public sealed class M1Slice6FiniteCampaignLedger
                 && current.EvidenceSha256.Length == 64;
             bool ambiguousTransport = previous.State == M1Slice6CampaignState.TransportMayHaveStarted
                 && current.Event is ("ambiguous-start-hold-retained-no-retry" or "deadline-overrun-hold-retained-no-retry"
-                    or "settlement-overrun-hold-retained-no-retry" or "stage-processing-failure-hold-retained-no-retry")
+                    or "settlement-overrun-hold-retained-no-retry" or "stage-processing-failure-hold-retained-no-retry"
+                    or "unreconciled-start-hold-retained-no-retry")
                 && sameVector;
             bool knownSettled = previous.State == M1Slice6CampaignState.StageSettled
                 && current.Event is ("evidence-write-failure-known-settled-no-retry"
