@@ -74,11 +74,13 @@ The canonical non-incremental Release build pins both informational-version and
 SourceLink revision identities to that exact commit. Two consecutive clean
 builds reproduced the coordinator, helper, and complete 126-file execution
 closure exactly.
-The finite-campaign amendment is in correction and non-live verification. The
+The corrected finite-campaign candidate
+`99707d2e8e3900861cfcc90449d2b22e2a76a294` is bound for complete non-live
+verification and fresh independent review only. The
 immutable owner authority source is SHA-256
 `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
 Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee`
-is verification-pending and non-executable. The first B11 campaign candidate
+is ready for review and remains non-executable. The first B11 campaign candidate
 was rejected because committed review/admission/rollover transitions, schema
 enforcement, the production rollover/ledger route, and durable post-use safety
 identifier state were incomplete. B20 manifest SHA-256
