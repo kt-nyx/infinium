@@ -825,6 +825,7 @@ function Invoke-Layer6ReviewGate(
         'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-owner-authority.v1.json',
         'docs/plans/milestones/m1/slices/s6/plan.md',
         'docs/plans/milestones/m1/slices/s6/record.md',
+        'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json',
         'docs/research/investigations/RESEARCH-0055-slice6-finite-campaign-and-safety-identifier-refresh.md',
         'eng/run-m1-slice6-credential.ps1',
         'eng/validate-m1-slice6-campaign.ps1',

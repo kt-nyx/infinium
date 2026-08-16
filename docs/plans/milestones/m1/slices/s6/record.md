@@ -8101,6 +8101,23 @@ freeze. No output root, helper, readiness, authority lock, UI, API key, native
 Credential Manager, profile, DNS/public network, provider, billable, private,
 archive, or push effect occurred.
 
+Binding `49cc6131e5f8b4ee6ac3774d21e330e1db36cc70` restored the exact
+NonLiveAll campaign phrase, but focused retained-WP8/current-state contracts
+found two more pre-floor seams. The retained-WP8 campaign predicate still
+required superseded verification-pending wording instead of the exact bound
+ready state, and campaign Layer 6 omitted the rolled WP9 credential manifest
+from its exact finite path set. Historical WP9 closeout fixtures also needed to
+detach at the campaign manifest's exact B20 predecessor when current campaign
+bytes have no current matching WP9 review marker. The correction makes the
+bound candidate identity common to current-state and README, retains the exact
+ready campaign validator as the identity authority, adds the missing manifest
+path, and makes the historical fixture state-aware without weakening current
+campaign semantics. Combined retained-WP8 and campaign contracts pass 10/10,
+including exact campaign mode acceptance and rejection of ordinary/WP9 modes.
+The B6 candidate and partial floor are excluded. No helper, readiness,
+authority lock, UI, API key, native Credential Manager, profile, DNS/public
+network, provider, billable, private, archive, or push effect occurred.
+
 Binding `79dfc03a894f2de8c21427eace3e20ca8ac514c8` passed both ready
 validators, focused runtime tests 32/32, campaign contracts 3/3, the committed
 rehearsal 1/1, documentation validation, diff checks, and exact post-bind

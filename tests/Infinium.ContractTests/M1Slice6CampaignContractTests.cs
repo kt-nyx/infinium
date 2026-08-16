@@ -104,6 +104,11 @@ public sealed class M1Slice6CampaignContractTests
             .Contains(authority, StringComparison.Ordinal));
 
         string verifier = File.ReadAllText(TestRepository.PathFromRoot("eng", "verify-m1-slice6.ps1"));
+        string currentState = File.ReadAllText(TestRepository.PathFromRoot("docs", "current-state.md"));
+        const string stateAuthority = "finite-campaign amendment implementation, non-live verification";
+        StringAssert.Contains(currentState, stateAuthority);
+        Assert.IsFalse(currentState.Replace(stateAuthority, "finite-campaign live execution", StringComparison.Ordinal)
+            .Contains(stateAuthority, StringComparison.Ordinal));
         StringAssert.Contains(verifier, "$normalizedRecordText = [regex]::Replace($recordText, '\\s+', ' ')");
         StringAssert.Contains(verifier,
             "$normalizedRecordText.Contains('Current authority is correction and non-live reverification only.'");

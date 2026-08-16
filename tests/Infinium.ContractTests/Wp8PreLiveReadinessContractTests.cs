@@ -1137,7 +1137,21 @@ public sealed class Wp8PreLiveReadinessContractTests
             " verdicts=security,semantics,diff$");
         Assert.IsTrue(matches.Count <= 1, "Current state contains duplicate current-manifest review markers.");
         string head = RunGitOutput(root, "rev-parse", "HEAD").Trim();
-        if (matches.Count == 0) { return head; }
+        if (matches.Count == 0)
+        {
+            string campaignPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+                "m1-slice6-finite-campaign-authorization.v1.json");
+            if (File.Exists(campaignPath))
+            {
+                using JsonDocument campaign = JsonDocument.Parse(File.ReadAllText(campaignPath));
+                string predecessor = campaign.RootElement.GetProperty("semantic_rollover")
+                    .GetProperty("prior_reviewed_candidate_commit").GetString()!;
+                Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(predecessor, "^[0-9a-f]{40}$"));
+                Assert.AreEqual(0, RunGit(root, "merge-base", "--is-ancestor", predecessor, head));
+                return predecessor;
+            }
+            return head;
+        }
         string baseline = matches[0].Groups[1].Value;
         Assert.AreEqual(0, RunGit(root, "merge-base", "--is-ancestor", baseline, head));
         return baseline;
