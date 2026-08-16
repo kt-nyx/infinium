@@ -7974,3 +7974,11 @@ At this checkpoint, helper launch/readiness/authority-lock/native/profile/DNS/
 network/provider/billable/API-key counts are all zero, production output roots
 are absent, and no provider-stage request manifest exists. Current authority is
 correction and non-live reverification only.
+
+The first frozen amendment candidate `8243668` reached the fresh-clone
+rehearsal and stopped before any simulated stage because the test-host SID did
+not own the source Git directory. The correction supplies command-scoped
+`safe.directory` entries for the source worktree and `.git` path; it does not
+change global Git configuration or weaken candidate/clone identity checks.
+That partial rehearsal is excluded from evidence. Every external-effect count
+remained zero.

@@ -27,7 +27,8 @@ public sealed class M1Slice6CampaignRehearsalTests
         Directory.CreateDirectory(temporary);
         try
         {
-            Run("git", ["clone", "--no-hardlinks", "--quiet", TestRepository.Root, clone], TestRepository.Root);
+            Run("git", ["-c", "safe.directory=" + TestRepository.Root, "-c", "safe.directory=" + Path.Combine(TestRepository.Root, ".git"),
+                "clone", "--no-hardlinks", "--quiet", TestRepository.Root, clone], TestRepository.Root);
             string head = Run("git", ["rev-parse", "HEAD"], clone).Trim();
             string closeReady = head;
             string manifestPath = Path.Combine(clone, "docs", "plans", "milestones", "m1", "slices", "s6", "m1-slice6-finite-campaign-authorization.v1.json");
