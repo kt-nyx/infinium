@@ -8154,3 +8154,17 @@ to verification-pending before refreeze. The partial NonLiveAll root is
 excluded. No output beyond that empty gate root, helper, readiness, authority
 lock, UI, API key, native Credential Manager, profile, DNS/public network,
 provider, billable, private, archive, or push effect occurred.
+
+Binding `b0cba7baf91d6f83b554d9643a1bb1b8e9c68980` reproduced the complete
+A8-pinned 126-file Release closure in two explicit and two ordinary clean
+builds. Both ready validators, the retained-WP8 validator, focused unit 26/26,
+focused WP9 integration 6/6, the committed campaign rehearsal 1/1, and
+documentation/diff checks passed. Combined retained-WP8 and campaign authority
+contracts then passed 9/10 and rejected the candidate before the complete
+floor: the exact campaign Layer 6 path set omitted `Directory.Build.targets`
+even though that build-authority surface is part of the finite amendment. The
+bounded correction adds only that path to the exact campaign-review allowlist
+and returns the campaign to verification-pending before refreeze. B8 and all
+partial evidence are excluded. No helper, readiness, authority lock, UI, API
+key, native Credential Manager, profile, DNS/public network, provider,
+billable, private, archive, or push effect occurred.

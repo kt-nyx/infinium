@@ -817,6 +817,7 @@ function Invoke-Layer6ReviewGate(
         'docs/plans/milestones/m1/slices/s6/README.md',
         'docs/plans/milestones/m1/slices/s6/record.md')
     [string[]]$campaignReviewPaths = @(
+        'Directory.Build.targets',
         'contracts/repository/m1-slice6-finite-campaign-authorization.v1.schema.json',
         'contracts/repository/m1-slice6-finite-campaign-owner-authority.v1.schema.json',
         'docs/current-state.md',
