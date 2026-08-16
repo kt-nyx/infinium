@@ -264,6 +264,7 @@ public sealed class Wp8PreLiveReadinessContractTests
             "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
             "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
             "tests/Infinium.UnitTests/ProviderInputBoundPolicyTests.cs",
+            "tests/Infinium.IntegrationTests/packages.lock.json",
         })
         {
             StringAssert.Contains(campaignPaths.Value, requiredPath,

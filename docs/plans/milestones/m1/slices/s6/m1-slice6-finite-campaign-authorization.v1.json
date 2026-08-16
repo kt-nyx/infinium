@@ -1,13 +1,13 @@
 {
   "schema_identity": "infinium.repository.m1-slice6-finite-campaign-authorization/1.0.0",
   "campaign_id": "infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee",
-  "status": "ready-for-campaign-review",
+  "status": "verification-pending",
   "effect_authority": "none-until-exact-reviewed-campaign-admission",
   "prepared_at_utc": "2026-08-15T16:00:00.0000000Z",
   "expires_at_utc": "2026-08-22T23:59:00.0000000Z",
   "candidate_binding": {
-    "close_ready_implementation_commit": "d5ac0ae73177518137a3c2a6d29f60175da49ea5",
-    "review_candidate_resolution": "exact-clean-head-after-four-document-binding"
+    "close_ready_implementation_commit": "pending",
+    "review_candidate_resolution": "pending"
   },
   "authority_source": {
     "artifact": "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-owner-authority.v1.json",

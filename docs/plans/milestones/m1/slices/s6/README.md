@@ -121,12 +121,13 @@ offline gates did not independently reopen the authoritative database,
 artifacts, markers, and WP10-to-WP11 provenance. Binding
 `8b6c1df19cacd6b4fa92c58904bda426773adf4f` is excluded because locked
 restore found the IntegrationTests dependency lock stale after the exact
-PublicFixtures project reference was added. The corrected finite-campaign
-close-ready source `d5ac0ae73177518137a3c2a6d29f60175da49ea5` is
-verification-pending. Its exact clean committed four-document binding
-successor is the review candidate, bound for complete non-live verification
-and fresh independent review only. The resulting review candidate is ready
-for review and remains non-executable. No authority is inherited. The
+PublicFixtures project reference was added. Binding
+`58f9b54e6b22bd4c967d77c954aadd6d465e516f` is excluded because the exact
+finite-campaign retained/Layer6 path equations omitted that newly changed
+lockfile. The finite-campaign replacement is verification-pending until a
+corrected close-ready source and exact clean four-document binding successor
+are committed and completely reverified. It remains non-executable. No
+authority is inherited. The
 immutable owner authority source is SHA-256
 `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
 Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee`
@@ -140,6 +141,8 @@ launch, authority lock, live-manifest execution, native Credential Manager
 operation, profile materialization, DNS/public-network operation, provider
 request, or billable effect is authorized or has occurred. No authority is
 inherited.
+Current authority is correction and non-live reverification only; no
+replacement candidate is bound.
 The exact current-manifest owner marker committed at `cba787882b854bbe0e471431e51024781a041fbd` remains append-only superseded historical non-executed evidence and is non-authoritative for the replacement manifest.
 The exact B17 review and attached SHA-256
 `7123ee85fec6d238ef8965b8449e7729cd2fb204e525a30558d1ebac53209476`

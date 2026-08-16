@@ -8538,3 +8538,18 @@ Current authority is correction and non-live reverification only. No helper,
 UI, readiness, authority lock, API key, Credential Manager, production
 profile, DNS/public network, provider, billable, private/archive, or push
 effect occurred.
+
+## Campaign dependency-lock path-equation correction — 2026-08-16
+
+Corrected source `d5ac0ae73177518137a3c2a6d29f60175da49ea5` and bound
+candidate `58f9b54e6b22bd4c967d77c954aadd6d465e516f` passed both ready
+validators and locked restore. The focused retained-WP8/campaign contract
+filter then stopped at 8/10 because the exact finite-campaign path equations
+did not yet enumerate the newly changed
+`tests/Infinium.IntegrationTests/packages.lock.json`. The Layer 6 gate failed
+closed before any later floor or effect. The bounded correction adds that one
+path to both equations and the mutation-sensitive contract inventory. Current
+authority is correction and non-live reverification only. No helper, UI,
+readiness, authority lock, API key, Credential Manager, production profile,
+DNS/public network, provider, billable, private/archive, or push effect
+occurred.
