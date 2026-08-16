@@ -8292,6 +8292,20 @@ equation. No helper, UI, readiness, authority lock, API key, Credential
 Manager, profile, DNS/public network, provider, billable, private/archive, or
 push effect occurred.
 
+Candidate `6303a4d8da6a56860f638e32a0fb3266c65e88e1` passed fresh
+NonLiveAll with receipt SHA-256
+`10703c3e83d1b3b4ccc81d709a1448e4a6ef36b517b40fb22f8ecbdfe03a044f`,
+the complete category floor, and the unfiltered solution run at 728 passed,
+9 declared private/platform skips, and 0 failed. The common static floor then
+stopped at `dotnet format --verify-no-changes`: only whitespace and import
+ordering in the new campaign stage coordinator and committed rehearsal were
+noncanonical. Dependency, documentation, Analysis, and final Layer 6 commands
+had not yet run. The repository formatter changed exactly those two files; an
+ignore-whitespace audit showed only the expected import reordering beyond
+layout. All B5 receipts are excluded as pre-format evidence. No helper, UI,
+readiness, authority lock, API key, Credential Manager, profile, DNS/public
+network, provider, billable, private/archive, or push effect occurred.
+
 The first fresh NonLiveAll run for
 `3b6a13a3192b54b80d7b80322fb57af4d4a646c3` passed its earlier
 contract, state, budget, integration, and evaluation tranches, then stopped in

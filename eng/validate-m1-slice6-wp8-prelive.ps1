@@ -115,14 +115,19 @@ function Test-Wp8CampaignCorrectionState(
         'Binding `(?<candidate>[0-9a-f]{40})` is excluded by focused committed-rehearsal review because its synthetic close-ready source inherited ready bindings; it is not review-ready or executable\.')
     $nonLiveExcluded = [regex]::Match($state,
         'Binding `(?<candidate>[0-9a-f]{40})` is excluded by NonLiveAll because its credential-recovery source-boundary assertion spanned into a later campaign provider route; it is not review-ready or executable\.')
-    if (-not $excluded.Success -and -not $rehearsalExcluded.Success -and -not $nonLiveExcluded.Success) { return $false }
+    $formatExcluded = [regex]::Match($state,
+        'Binding `(?<candidate>[0-9a-f]{40})` is excluded by the common static floor because two new C# files were not repository-formatted; it is not review-ready or executable\.')
+    if (-not $excluded.Success -and -not $rehearsalExcluded.Success -and
+        -not $nonLiveExcluded.Success -and -not $formatExcluded.Success) { return $false }
     if ($rehearsalExcluded.Success) { $excluded = $rehearsalExcluded }
     if ($nonLiveExcluded.Success) { $excluded = $nonLiveExcluded }
+    if ($formatExcluded.Success) { $excluded = $formatExcluded }
     $candidate = $excluded.Groups['candidate'].Value
     $readmeCorrection =
         $readme.Contains("Binding ``$candidate`` is excluded because terminal review found incomplete production credential-evidence and provider-stage transitions plus a self-referential A/B candidate binding.", [StringComparison]::Ordinal) -or
         $readme.Contains("Binding ``$candidate`` is also excluded because its committed rehearsal inherited ready bindings into the synthetic close-ready source.", [StringComparison]::Ordinal) -or
-        $readme.Contains("Binding ``$candidate`` is excluded because NonLiveAll found that its credential-recovery source-boundary assertion spanned into a later campaign provider route.", [StringComparison]::Ordinal)
+        $readme.Contains("Binding ``$candidate`` is excluded because NonLiveAll found that its credential-recovery source-boundary assertion spanned into a later campaign provider route.", [StringComparison]::Ordinal) -or
+        $readme.Contains("Binding ``$candidate`` is excluded because the common static floor found two unformatted new C# files.", [StringComparison]::Ordinal)
     return (
         $state.Contains('| Current authorized work | `M1/S6` finite-campaign amendment implementation, non-live verification, and correction/reverification only.', [StringComparison]::Ordinal) -and
         $state.Contains('Immutable owner authority source SHA-256 is `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.', [StringComparison]::Ordinal) -and

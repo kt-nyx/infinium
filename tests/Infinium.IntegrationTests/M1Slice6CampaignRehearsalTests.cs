@@ -3,9 +3,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Infinium.Domain.Contracts;
-using Infinium.Coordinator;
 using Infinium.Contracts.Protobuf.Helper.V2;
+using Infinium.Coordinator;
+using Infinium.Domain.Contracts;
 using Infinium.OpenAI;
 using Infinium.Persistence;
 
@@ -183,9 +183,14 @@ public sealed class M1Slice6CampaignRehearsalTests
                 provider_operation_count = 0,
                 billable_operation_count = 0,
                 retry_attempted = false,
-                containment = new { probe_executed = true, excluded_handle_accessible = false,
-                    process_tree_terminated = true, process_tree_survivor_count = 0,
-                    total_contained_process_count = 2 },
+                containment = new
+                {
+                    probe_executed = true,
+                    excluded_handle_accessible = false,
+                    process_tree_terminated = true,
+                    process_tree_survivor_count = 0,
+                    total_contained_process_count = 2
+                },
                 namespace_reuse_blocked = false,
                 namespace_reuse_block_reason = (string?)null,
                 retention = "exact-generation-retained-no-delete-authority",
@@ -467,8 +472,11 @@ public sealed class M1Slice6CampaignRehearsalTests
             schema_identity = "infinium.repository.m1-slice6-campaign-stage-request/1.0.0",
             manifest_id = "infinium.m1-s6.campaign-stage/" + stage,
             status = "reviewed-and-admitted",
-            candidate_binding = new { close_ready_implementation_commit = closeReady,
-                review_candidate_resolution = "exact-clean-committed-two-file-stage-candidate" },
+            candidate_binding = new
+            {
+                close_ready_implementation_commit = closeReady,
+                review_candidate_resolution = "exact-clean-committed-two-file-stage-candidate"
+            },
             campaign_binding = new
             {
                 campaign_id = ledger.Current.Identity.CampaignId,
@@ -494,16 +502,42 @@ public sealed class M1Slice6CampaignRehearsalTests
                 proved_input_tokens = Math.Min(request.LongLength, limits.MaximumInputTokens),
                 maximum_output_tokens = limits.MaximumOutputTokens,
             },
-            transport = new { scheme = "https", host = "api.openai.com", path = "/v1/responses", method = "POST",
-                tool_choice = "none", tool_count = 0, retry_count = 0, parallel = false,
-                maximum_provider_calls = 1, maximum_dns_resolutions = 1 },
-            limits = new { maximum_request_bytes = limits.MaximumRequestBytes, maximum_input_tokens = limits.MaximumInputTokens,
-                maximum_output_tokens = limits.MaximumOutputTokens, maximum_raw_response_bytes = limits.MaximumRawResponseBytes,
-                maximum_nano_usd = limits.MaximumNanoUsd, deadline_milliseconds = limits.DeadlineMilliseconds },
-            safety_identifier = new { projection = safetyIdentifier,
-                state_version = ProductUserSafetyIdentifierStateStore.StateSchema, raw_seed_present = false },
-            execution = new { provider_request_permitted = true, requires_exact_review_marker = true,
-                requires_exact_admission_marker = true, automatic_retry = false, fourth_call_permitted = false },
+            transport = new
+            {
+                scheme = "https",
+                host = "api.openai.com",
+                path = "/v1/responses",
+                method = "POST",
+                tool_choice = "none",
+                tool_count = 0,
+                retry_count = 0,
+                parallel = false,
+                maximum_provider_calls = 1,
+                maximum_dns_resolutions = 1
+            },
+            limits = new
+            {
+                maximum_request_bytes = limits.MaximumRequestBytes,
+                maximum_input_tokens = limits.MaximumInputTokens,
+                maximum_output_tokens = limits.MaximumOutputTokens,
+                maximum_raw_response_bytes = limits.MaximumRawResponseBytes,
+                maximum_nano_usd = limits.MaximumNanoUsd,
+                deadline_milliseconds = limits.DeadlineMilliseconds
+            },
+            safety_identifier = new
+            {
+                projection = safetyIdentifier,
+                state_version = ProductUserSafetyIdentifierStateStore.StateSchema,
+                raw_seed_present = false
+            },
+            execution = new
+            {
+                provider_request_permitted = true,
+                requires_exact_review_marker = true,
+                requires_exact_admission_marker = true,
+                automatic_retry = false,
+                fourth_call_permitted = false
+            },
         };
         string stageText = JsonSerializer.Serialize(manifest, IndentedJson)
             .Replace("\r\n", "\n", StringComparison.Ordinal) + "\n";
@@ -602,8 +636,11 @@ public sealed class M1Slice6CampaignRehearsalTests
                         authority.Limits.MaximumOutputTokens, authority.Limits.MaximumRawResponseBytes,
                         1, authority.Limits.MaximumNanoUsd, authority.Limits.DeadlineMilliseconds),
                     assignment.Assignment.ProviderRequest.RequestId, cancellationToken);
-                response = response with { Usage = response.Usage with
-                    { CalculatedNanoUsd = new(ProviderAvailabilityState.Available, 0) } };
+                response = response with
+                {
+                    Usage = response.Usage with
+                    { CalculatedNanoUsd = new(ProviderAvailabilityState.Available, 0) }
+                };
                 byte[] trace = JsonSerializer.SerializeToUtf8Bytes(new[]
                 {
                     new { Operation = "CredReadW", Result = "success",
@@ -626,13 +663,19 @@ public sealed class M1Slice6CampaignRehearsalTests
                     RawTargetEncodings = CanaryEncodings,
                     ScannedSurfaces = names.Select((name, index) => new
                     {
-                        Name = name, Kind = kinds[index], ByteCount = 1,
-                        SecretMatches = 0, RawTargetMatches = 0,
+                        Name = name,
+                        Kind = kinds[index],
+                        ByteCount = 1,
+                        SecretMatches = 0,
+                        RawTargetMatches = 0,
                     }).ToArray(),
                 });
                 return new HelperProcessReceipt(9001, 0, new string('a', 64),
-                    new HelperReceiptV2 { Outcome = HelperOutcomeV2.Completed,
-                        TransportMayHaveStarted = true }, OpenAiStagedResponseEnvelope.Create(response),
+                    new HelperReceiptV2
+                    {
+                        Outcome = HelperOutcomeV2.Completed,
+                        TransportMayHaveStarted = true
+                    }, OpenAiStagedResponseEnvelope.Create(response),
                     2, 2, 0, 1, 2, 0, true, false, trace, null, canaries,
                     true, false, 2, 2);
             });

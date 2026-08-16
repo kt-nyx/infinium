@@ -81,13 +81,12 @@ transitions plus a self-referential A/B candidate binding. Binding
 committed rehearsal inherited ready bindings into the synthetic close-ready
 source. Binding `3b6a13a3192b54b80d7b80322fb57af4d4a646c3` is excluded because
 NonLiveAll found that its credential-recovery source-boundary assertion spanned
-into a later campaign provider route. The corrected finite-campaign close-ready
-source `175e5899b55474bd1f5a1761cd5086e95d33cb1a` is
-verification-pending. Its exact clean committed four-document binding successor
-is the review candidate, bound for complete non-live verification and fresh
-independent review only. The resulting review candidate is ready for review and
-remains non-executable. It retains the separate credential evidence handoff,
-committed review/admission for every stage manifest, and coordinator-owned
+into a later campaign provider route. Binding
+`6303a4d8da6a56860f638e32a0fb3266c65e88e1` is excluded because the common
+static floor found two unformatted new C# files. Current authority is correction
+and non-live reverification only; no replacement candidate is bound. The
+replacement retains the separate credential evidence handoff, committed
+review/admission for every stage manifest, and coordinator-owned
 successor/limit/safety enforcement through composed no-fourth closeout.
 The
 immutable owner authority source is SHA-256

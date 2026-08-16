@@ -199,19 +199,31 @@ public sealed class M1Slice6CampaignProductionStageBoundary : IM1Slice6CampaignS
             ProtocolFingerprintSha256 = Fingerprint(),
             DispatchRevalidation = new()
             {
-                DispatchId = new() { Value = dispatchId }, AttemptId = new() { Value = attemptId },
-                CoordinatorFencingEpoch = 1, AccessProfileId = new() { Value = profileId },
-                GenerationId = new() { Value = generationId }, RevocationEpoch = 0,
-                ReservationGroupId = new() { Value = reservationId }, CanonicalRequest = canonical.Clone(),
-                AuthorizedOnce = true, Disposition = DispatchDispositionV2.Authorized,
-                AccountIdentityId = new() { Value = "unavailable" }, BillingScopeIdentityId = new() { Value = "unavailable" },
+                DispatchId = new() { Value = dispatchId },
+                AttemptId = new() { Value = attemptId },
+                CoordinatorFencingEpoch = 1,
+                AccessProfileId = new() { Value = profileId },
+                GenerationId = new() { Value = generationId },
+                RevocationEpoch = 0,
+                ReservationGroupId = new() { Value = reservationId },
+                CanonicalRequest = canonical.Clone(),
+                AuthorizedOnce = true,
+                Disposition = DispatchDispositionV2.Authorized,
+                AccountIdentityId = new() { Value = "unavailable" },
+                BillingScopeIdentityId = new() { Value = "unavailable" },
                 EffectiveConfigurationId = "m1-s6-campaign-exact-profile",
                 CapabilitySnapshotId = new() { Value = M1ProviderCatalog.Capability.Identity.Value },
-                PriceSnapshotId = new() { Value = M1ProviderCatalog.Price.Identity.Value }, Settings = settings.Clone(),
-                OutputSchema = outputSchema.Clone(), OperationKind = operation,
-                InputBoundProof = requestValue.InputBoundProof.Clone(), EvaluatedAt = Instant(now.AddTicks(1)),
-                DispatchDeadline = deadline.Clone(), RequestId = requestId, OperationId = new() { Value = operationId },
-                RequestFingerprintSha256 = ByteString.CopyFrom(requestValue.RequestFingerprintSha256.Span), Limits = limits.Clone(),
+                PriceSnapshotId = new() { Value = M1ProviderCatalog.Price.Identity.Value },
+                Settings = settings.Clone(),
+                OutputSchema = outputSchema.Clone(),
+                OperationKind = operation,
+                InputBoundProof = requestValue.InputBoundProof.Clone(),
+                EvaluatedAt = Instant(now.AddTicks(1)),
+                DispatchDeadline = deadline.Clone(),
+                RequestId = requestId,
+                OperationId = new() { Value = operationId },
+                RequestFingerprintSha256 = ByteString.CopyFrom(requestValue.RequestFingerprintSha256.Span),
+                Limits = limits.Clone(),
             },
         };
 
@@ -640,8 +652,11 @@ public static class M1Slice6CampaignStageManifestValidator
     {
         System.Diagnostics.ProcessStartInfo start = new("git")
         {
-            WorkingDirectory = repository, UseShellExecute = false, RedirectStandardOutput = true,
-            RedirectStandardError = true, CreateNoWindow = true,
+            WorkingDirectory = repository,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
         };
         foreach (string argument in arguments) { start.ArgumentList.Add(argument); }
         using System.Diagnostics.Process process = System.Diagnostics.Process.Start(start)
@@ -660,8 +675,11 @@ public static class M1Slice6CampaignStageManifestValidator
     {
         System.Diagnostics.ProcessStartInfo start = new("git")
         {
-            WorkingDirectory = repository, UseShellExecute = false, RedirectStandardOutput = true,
-            RedirectStandardError = true, CreateNoWindow = true,
+            WorkingDirectory = repository,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
         };
         start.ArgumentList.Add("show");
         start.ArgumentList.Add(commit + ":" + relativePath);
