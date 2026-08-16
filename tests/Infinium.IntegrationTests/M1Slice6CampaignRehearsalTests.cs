@@ -96,6 +96,11 @@ public sealed class M1Slice6CampaignRehearsalTests
         {
             if (Directory.Exists(temporary))
             {
+                foreach (string path in Directory.EnumerateFileSystemEntries(temporary, "*", SearchOption.AllDirectories))
+                {
+                    File.SetAttributes(path, FileAttributes.Normal);
+                }
+                File.SetAttributes(temporary, FileAttributes.Normal);
                 Directory.Delete(temporary, recursive: true);
             }
         }

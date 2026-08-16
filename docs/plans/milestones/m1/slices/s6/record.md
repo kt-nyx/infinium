@@ -7982,3 +7982,11 @@ not own the source Git directory. The correction supplies command-scoped
 change global Git configuration or weaken candidate/clone identity checks.
 That partial rehearsal is excluded from evidence. Every external-effect count
 remained zero.
+
+The next frozen candidate `691918f8654785c03e447d3486d577cda9281244`
+passed the complete rehearsal body, including the three one-shot literal
+loopback stages and fourth-call rejection, but the test host then reported the
+run failed while deleting read-only Git object files from the temporary clone.
+The bounded correction normalizes attributes only under the exact generated
+temporary root before recursive deletion. This run is also excluded until its
+cleanup is observed terminal. External effects remained zero.
