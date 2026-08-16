@@ -827,9 +827,11 @@ public static class M1Slice6CampaignStageManifestValidator
     private static string FindMarkerAddition(string repository, string marker, string recordRelative,
         string revision)
     {
-        string[] history = RunGit(repository, "log", "--format=%H", "--fixed-strings", "-S", marker,
-            revision, "--", recordRelative).Output
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        string historyOutput = revision.Contains("..", StringComparison.Ordinal)
+            ? RunGit(repository, "log", "--format=%H", revision, "--", recordRelative).Output
+            : RunGit(repository, "log", "--format=%H", "--fixed-strings", "-S", marker,
+                revision, "--", recordRelative).Output;
+        string[] history = historyOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         List<string> additions = [];
         foreach (string candidate in history)
         {

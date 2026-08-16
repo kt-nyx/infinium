@@ -8579,3 +8579,16 @@ is excluded before verification because its source commit still retained the
 ready campaign manifest instead of the required verification-pending source
 state. No live, native, credential, provider, network, billable, private, or
 archive effect occurred.
+
+Bound candidate `21193145f0d01abb524d98d23ac6faf0c20abc01` passed fresh
+NonLiveAll 363/363, locked restore, pinned Release build, and every focused
+common category. Its complete unfiltered run again failed only the campaign
+rehearsal because range-scoped Git pickaxe lookup returned no exact marker
+addition under the concurrent solution run. Security 19/0, Fault 7/0,
+Evaluation 66/8, Unit 287/1, and Contract 184/0 passed; Integration was 166
+passed/1 skipped/1 failed. All B6 receipts are excluded. The correction now
+enumerates every record-touching commit only within the finite authorized
+predecessor range and applies the exact 0-to-1 line test without pickaxe or
+blame attribution. Current authority is correction and non-live reverification
+only. No live, native, credential, provider, network, billable, private, or
+archive effect occurred.
