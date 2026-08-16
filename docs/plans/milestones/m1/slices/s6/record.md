@@ -8403,3 +8403,15 @@ and makes the static assertion inspect the owning validator. The two affected
 HEAD-sensitive tests then passed 2/2. No helper, UI/readiness, authority lock,
 API key, Credential Manager, production profile, DNS/public network, provider,
 billable, private/archive, or push effect occurred.
+
+Bound candidate `f7257e63fb5269ff5f44e28097c7ce00cd71475b` passed
+campaign Ready and credential Ready with effect counts zero, the focused unit
+filter 22/22, and the complete committed rehearsal 1/1. Its post-bind contract
+filter stopped at 9/10 because the campaign Layer 6 review allowlist still
+omitted the same current provider evidence surfaces already added to the
+retained-WP8 equation. The failed candidate and all partial receipts are
+excluded. The bounded correction adds those exact 27 surfaces to the finite,
+duplicate-free campaign Layer 6 path equation and returns current authority to
+correction/reverification before refreeze. No helper, UI/readiness, authority
+lock, API key, Credential Manager, production profile, DNS/public network,
+provider, billable, private/archive, or push effect occurred.
