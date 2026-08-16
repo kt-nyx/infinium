@@ -56,6 +56,9 @@ executable.
 Binding `aa1c1f582309f39daf57a17922128e068e134d40` is excluded by
 NonLiveAll contract validation because registry and input-bound-v2 consumer
 contracts were stale; it is not review-ready or executable.
+Source `dd4d52c98ab74558c9e9f7006d466a73c3aafcc5` is excluded by focused
+retained-WP8 validation because the exact finite-campaign path equation omitted
+the public fixture registry schema; it is not review-ready or executable.
 Every helper, readiness, authority-lock, native, profile, DNS/network,
 provider, billable, and API-key observation remains zero; production output
 roots remain absent. WP9 credential execution, WP9 request materialization,

@@ -859,6 +859,7 @@ function Invoke-Layer6ReviewGate(
         'contracts/repository/m1-slice6-campaign-composed-evidence.v1.schema.json',
         'contracts/repository/m1-slice6-campaign-stage-evidence.v1.schema.json',
         'contracts/repository/m1-slice6-campaign-stage-request.v1.schema.json',
+        'contracts/repository/public-fixture-registry.v1.schema.json',
         'docs/current-state.md',
         'docs/plans/milestones/m1/slices/s6/README.md',
         'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json',

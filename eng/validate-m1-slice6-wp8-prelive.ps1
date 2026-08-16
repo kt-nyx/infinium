@@ -79,6 +79,7 @@ function Get-Wp8CampaignReviewPaths() {
         'contracts/repository/m1-slice6-campaign-stage-request.v1.schema.json',
         'contracts/repository/m1-slice6-finite-campaign-authorization.v1.schema.json',
         'contracts/repository/m1-slice6-finite-campaign-owner-authority.v1.schema.json',
+        'contracts/repository/public-fixture-registry.v1.schema.json',
         'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json',
         'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-owner-authority.v1.json',
         'docs/plans/milestones/m1/slices/s6/plan.md',
@@ -150,16 +151,19 @@ function Test-Wp8CampaignCorrectionState(
         'Binding `(?<candidate>[0-9a-f]{40})` is excluded by post-bind Layer 6 verification because the exact finite-campaign review path equation omitted current provider evidence surfaces; it is not review-ready or executable\.')
     $contractExcluded = [regex]::Match($state,
         'Binding `(?<candidate>[0-9a-f]{40})` is excluded by NonLiveAll contract validation because registry and input-bound-v2 consumer contracts were stale; it is not review-ready or executable\.')
+    $registryPathExcluded = [regex]::Match($state,
+        'Source `(?<candidate>[0-9a-f]{40})` is excluded by focused retained-WP8 validation because the exact finite-campaign path equation omitted the public fixture registry schema; it is not review-ready or executable\.')
     if (-not $excluded.Success -and -not $rehearsalExcluded.Success -and
         -not $nonLiveExcluded.Success -and -not $formatExcluded.Success -and
         -not $evidenceExcluded.Success -and -not $layer6Excluded.Success -and
-        -not $contractExcluded.Success) { return $false }
+        -not $contractExcluded.Success -and -not $registryPathExcluded.Success) { return $false }
     if ($rehearsalExcluded.Success) { $excluded = $rehearsalExcluded }
     if ($nonLiveExcluded.Success) { $excluded = $nonLiveExcluded }
     if ($formatExcluded.Success) { $excluded = $formatExcluded }
     if ($evidenceExcluded.Success) { $excluded = $evidenceExcluded }
     if ($layer6Excluded.Success) { $excluded = $layer6Excluded }
     if ($contractExcluded.Success) { $excluded = $contractExcluded }
+    if ($registryPathExcluded.Success) { $excluded = $registryPathExcluded }
     $candidate = $excluded.Groups['candidate'].Value
     $readmeCorrection =
         $readme.Contains("Binding ``$candidate`` is excluded because terminal review found incomplete production credential-evidence and provider-stage transitions plus a self-referential A/B candidate binding.", [StringComparison]::Ordinal) -or
@@ -168,7 +172,8 @@ function Test-Wp8CampaignCorrectionState(
         $readme.Contains("Binding ``$candidate`` is excluded because the common static floor found two unformatted new C# files.", [StringComparison]::Ordinal) -or
         $readme.Contains("Binding ``$candidate`` is excluded because terminal review found incomplete authoritative provider persistence, retained semantic evidence, and offline evidence gates.", [StringComparison]::Ordinal) -or
         $readme.Contains("Binding ``$candidate`` is excluded because post-bind Layer 6 verification found that the exact finite-campaign review path equation omitted current provider evidence surfaces.", [StringComparison]::Ordinal) -or
-        $readme.Contains("Binding ``$candidate`` is excluded because NonLiveAll contract validation found stale registry and input-bound-v2 consumer contracts.", [StringComparison]::Ordinal)
+        $readme.Contains("Binding ``$candidate`` is excluded because NonLiveAll contract validation found stale registry and input-bound-v2 consumer contracts.", [StringComparison]::Ordinal) -or
+        $readme.Contains("Source ``$candidate`` is excluded because focused retained-WP8 validation found that the exact finite-campaign path equation omitted the public fixture registry schema.", [StringComparison]::Ordinal)
     return (
         $state.Contains('| Current authorized work | `M1/S6` finite-campaign amendment implementation, non-live verification, and correction/reverification only.', [StringComparison]::Ordinal) -and
         $state.Contains('Immutable owner authority source SHA-256 is `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.', [StringComparison]::Ordinal) -and

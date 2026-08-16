@@ -8430,3 +8430,14 @@ all affected consumers to the exact v2 canonical request. The three failed
 tests then passed 3/3. No helper, UI/readiness, authority lock, API key,
 Credential Manager, production profile, DNS/public network, provider,
 billable, private/archive, or push effect occurred.
+
+Source `dd4d52c98ab74558c9e9f7006d466a73c3aafcc5` passed standalone
+campaign Verification with effect count zero after the registry and input-bound
+consumer correction. Its committed retained-WP8/campaign contract filter
+stopped at 9/10 because the exact finite-campaign path equation included the
+public registry instance but omitted its newly changed closed schema. The
+source is excluded before binding. The bounded correction adds that one exact
+schema path to both retained-WP8 and campaign Layer 6 equations and makes its
+presence mutation-sensitive in the contract. No helper, UI, readiness,
+authority lock, API key, Credential Manager, production profile, DNS/public
+network, provider, billable, private/archive, or push effect occurred.

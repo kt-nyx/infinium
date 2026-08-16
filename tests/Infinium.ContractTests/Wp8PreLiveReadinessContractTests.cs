@@ -252,6 +252,7 @@ public sealed class Wp8PreLiveReadinessContractTests
         {
             "contracts/json-schema/provider-operation.v1.schema.json",
             "contracts/json-schema/provider-response.v1.schema.json",
+            "contracts/repository/public-fixture-registry.v1.schema.json",
             "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/public-manifest.json",
             "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/public-manifest.json",
             "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json",

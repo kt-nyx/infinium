@@ -92,7 +92,10 @@ Layer 6 verification found that the exact finite-campaign review path equation
 omitted current provider evidence surfaces. The corrected finite-campaign
 binding `aa1c1f582309f39daf57a17922128e068e134d40` is excluded because
 NonLiveAll contract validation found stale registry and input-bound-v2 consumer
-contracts. The finite-campaign implementation is under correction and non-live
+contracts. Source `dd4d52c98ab74558c9e9f7006d466a73c3aafcc5` is excluded
+because focused retained-WP8 validation found that the exact finite-campaign
+path equation omitted the public fixture registry schema. The finite-campaign
+implementation is under correction and non-live
 reverification only. Its separate credential-evidence handoff, all three stage
 review/admission transitions, and composed no-fourth closeout are exercised as
 committed transitions only in a disposable synthetic temp-clone rehearsal.
