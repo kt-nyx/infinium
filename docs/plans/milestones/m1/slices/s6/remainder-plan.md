@@ -136,7 +136,15 @@ Repository campaign contracts make one coordinated clean break:
 - `infinium.repository.m1-slice6-campaign-stage-request/2.0.0`;
 - `infinium.m1-s6.campaign-stage-evidence/v2`;
 - `infinium.m1-s6.campaign-composed-evidence/v2`; and
-- `infinium.repository.m1-slice6-finite-campaign-authorization/2.0.0`.
+- `infinium.repository.m1-slice6-finite-campaign-authorization/2.0.0`;
+- `infinium.repository.wp9-production-profile-authorization/2.0.0`.
+
+The last identity is defined by
+`contracts/repository/wp9-production-profile-authorization.v2.schema.json` and
+validates only successor manifest
+`docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json`.
+The existing v1 manifest and hard-coded v1 schema remain unchanged and have no
+successor-campaign authority.
 
 The product contracts `infinium.llm.source-claim-extraction/v1` and
 `infinium.llm.candidate-investigation/v1`, SQLite schema 6, and storage contract
@@ -278,7 +286,7 @@ the immutable starting commit.
 all ten exact public manifest/oracle schemas and seven auxiliary-file schemas
 named by the fixture-authority amendment, independent oracle files, registry
 `fixtures/public/public-fixture-registry.v2.json` plus exact schema identity
-`infinium.repository.public-fixture-registry/1.7.0`, all four repository
+`infinium.repository.public-fixture-registry/1.7.0`, all five repository
 campaign schemas v2, repository schema registration, fixture reader/resealer
 support, exact hash inventory, and an append-only R1 record entry. R1 owns the
 contract definitions and registry; R2 owns production consumer integration.
@@ -340,7 +348,8 @@ campaign evidence model.
 **Outputs and owned contracts.** Updated package consumers, stage coordinator,
 request materialization, semantic admission, evidence acquisition, SQLite
 persistence, reload/replay, stage-evidence v2, composed-evidence v2, campaign
-authorization v2 handling, scripts/templates/tests/docs, and non-live evidence.
+authorization v2 and production-profile-authorization v2 handling,
+scripts/templates/tests/docs, and non-live evidence.
 Remove any fixture-specific production literal: the WP11 positive must be
 opened from the exact persisted WP10 acquisition, proposal, admission,
 admitted-artifact identity and payload digest/bytes, and application chain.
@@ -420,6 +429,9 @@ pre-effect credential authorization manifest ID
 `infinium.m1-s6.wp9.production-profile-authorization/09b8e309-ead8-441e-8307-5a4a1a2c43d5`,
 at exact path
 `docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json`,
+validated by
+`contracts/repository/wp9-production-profile-authorization.v2.schema.json`
+identity `infinium.repository.wp9-production-profile-authorization/2.0.0`,
 profile ID
 `openai-platform-c2f213dbc4d9461c9fa8485050ab324d`, generation ID
 `g-cb0c3748ef2b4745b97a9311c89f2b65`, target fingerprint
@@ -453,7 +465,8 @@ WP9/WP10/WP11 success evidence before its stage.
 
 **Verification.** Focused corrections first. Then exactly one complete clean
 common floor for the coherent candidate, strict campaign/schema validation,
-hash recomputation, tracked-secret scans, v1 preservation, v2 registry closure,
+hash recomputation, tracked-secret scans, v1 preservation, exact credential-
+manifest v2 schema validation, v2 registry closure,
 zero-effect-counter proof, safety-identifier generation/projection/use-latch/
 reopen/invalid-state tests, expiry arithmetic, branch/commit ancestry, and
 clean-worktree check. If a must-fix changes a bound byte, rerun only affected

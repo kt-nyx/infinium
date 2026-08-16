@@ -21,13 +21,13 @@
   "bound_documents": [
     {
       "path": "docs/plans/milestones/m1/slices/s6/remainder-plan.md",
-      "length_bytes": 44427,
-      "sha256": "0942854c7404b9d136e55ab93c65698f941f23341ad6588a23aa2be2a444505c"
+      "length_bytes": 45085,
+      "sha256": "135bd2a524bbd06190af7f64ffa1d57baa568e0f193f562a83ee5706f1a0c1ea"
     },
     {
       "path": "docs/evaluation/specifications/m1-slice6-live-semantic-v2-amendment.md",
-      "length_bytes": 19659,
-      "sha256": "ca605741426e14ecf2a1301356c816b48faf93649bedbff8a59afbf761d4cc9b"
+      "length_bytes": 20022,
+      "sha256": "4c4e2c2b249a370874e3731e301b95ab75200c0e1d471bc41083d36387f57657"
     },
     {
       "path": "docs/research/investigations/RESEARCH-0056-slice6-live-semantic-authority-conflict.md",
@@ -63,7 +63,8 @@
       "stage_request": "infinium.repository.m1-slice6-campaign-stage-request/2.0.0",
       "stage_evidence": "infinium.m1-s6.campaign-stage-evidence/v2",
       "composed_evidence": "infinium.m1-s6.campaign-composed-evidence/v2",
-      "campaign_authorization": "infinium.repository.m1-slice6-finite-campaign-authorization/2.0.0"
+      "campaign_authorization": "infinium.repository.m1-slice6-finite-campaign-authorization/2.0.0",
+      "credential_authorization": "infinium.repository.wp9-production-profile-authorization/2.0.0"
     },
     "public_manifest_and_oracle_contracts": {
       "source_claim_manifest": "infinium.public-fixture.source-claim/2.0.0",
@@ -106,6 +107,9 @@
     "campaign_id": "infinium.m1-s6.finite-live-campaign/51b9dba6-aca3-41d7-82d1-afd805e33e66",
     "credential_manifest_id": "infinium.m1-s6.wp9.production-profile-authorization/09b8e309-ead8-441e-8307-5a4a1a2c43d5",
     "credential_manifest_path": "docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json",
+    "credential_manifest_schema_path": "contracts/repository/wp9-production-profile-authorization.v2.schema.json",
+    "credential_manifest_schema_identity": "infinium.repository.wp9-production-profile-authorization/2.0.0",
+    "credential_v1_manifest_and_schema_preserved_unchanged": true,
     "credential_execution_command": "powershell -NoProfile -ExecutionPolicy Bypass -File eng/run-m1-slice6-credential.ps1 -Operation EnrollOrVerifyProfile -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp9-profile",
     "profile_id": "openai-platform-c2f213dbc4d9461c9fa8485050ab324d",
     "profile_generation_id": "g-cb0c3748ef2b4745b97a9311c89f2b65",

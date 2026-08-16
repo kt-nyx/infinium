@@ -293,7 +293,7 @@ Every auxiliary v2 package file is also closed before implementation:
 | Candidate `oracle-provenance.v2.json` | `contracts/repository/candidate-investigation-oracle-provenance.v2.schema.json` | `infinium.evaluation.candidate-investigation-oracle-provenance/v2` |
 | Both `partition-history.v2.json` files | `contracts/repository/public-fixture-partition-history.v2.schema.json` | `infinium.evaluation.fixture-partition-history/2.0.0` |
 
-R1 also owns and registers these four coordinated repository campaign schema
+R1 also owns and registers these five coordinated repository campaign schema
 successors:
 
 - `contracts/repository/m1-slice6-campaign-stage-request.v2.schema.json` —
@@ -303,7 +303,13 @@ successors:
 - `contracts/repository/m1-slice6-campaign-composed-evidence.v2.schema.json` —
   `infinium.m1-s6.campaign-composed-evidence/v2`;
 - `contracts/repository/m1-slice6-finite-campaign-authorization.v2.schema.json`
-  — `infinium.repository.m1-slice6-finite-campaign-authorization/2.0.0`.
+  — `infinium.repository.m1-slice6-finite-campaign-authorization/2.0.0`;
+- `contracts/repository/wp9-production-profile-authorization.v2.schema.json` —
+  `infinium.repository.wp9-production-profile-authorization/2.0.0`.
+
+The existing `wp9-production-profile-authorization.v1.json` and
+`contracts/repository/wp9-production-profile-authorization.v1.schema.json`
+remain unchanged and cannot validate or authorize the successor manifest.
 
 R1 additionally owns
 `contracts/repository/public-fixture-registry.v2.schema.json` with identity
