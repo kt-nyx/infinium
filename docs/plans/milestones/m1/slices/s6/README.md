@@ -110,9 +110,12 @@ found two persistence fixtures retaining the pre-campaign schema fingerprint
 and input-bound policy version. Source
 `3a078804c70677b016f90a7214966693ea3d90a5` is excluded because focused
 retained-WP8 validation found that the exact finite-campaign path equation
-omitted the changed persistence-state contract test. Current authority is correction and non-live
-reverification only; no replacement candidate is bound. No authority is
-inherited. The
+omitted the changed persistence-state contract test. The corrected finite-
+campaign close-ready source `3a66a2258009cb02bf7de85d5f6cc6b171ba06b6`
+is verification-pending. Its exact clean committed four-document binding
+successor is the review candidate, bound for complete non-live verification and
+fresh independent review only. The resulting review candidate is ready for
+review and remains non-executable. No authority is inherited. The
 immutable owner authority source is SHA-256
 `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
 Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee`
