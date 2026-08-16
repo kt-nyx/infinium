@@ -7932,3 +7932,5 @@ remains append-only superseded historical non-executed evidence and grants no
 authority for this replacement. No helper launch, UI, API-key, Credential
 Manager, DNS, public-network, provider, billable, profile, private-fixture,
 archive, or later-packet effect occurred.
+
+WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=cf2b31f3cf109f09c47293aeb1cf6afde1ffff0f manifest_id=infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f sha256=fb301a17843496b0452561facdbaa29412c2ba0d44ce4cc7c8bc102a391e88a9 verdicts=security,semantics,diff
