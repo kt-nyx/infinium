@@ -244,6 +244,28 @@ public sealed class Wp8PreLiveReadinessContractTests
         Assert.IsFalse(function.Value.Contains("Invoke-CredentialNativeRecoveryGate", StringComparison.Ordinal));
         Assert.IsFalse(function.Value.Contains("run-m1-slice6-live", StringComparison.Ordinal));
         Assert.IsFalse(function.Value.Contains("run-m1-slice6-credential", StringComparison.Ordinal));
+        System.Text.RegularExpressions.Match campaignPaths = System.Text.RegularExpressions.Regex.Match(script,
+            @"(?ms)^function Get-Wp8CampaignReviewPaths\(\) \{.*?^\}");
+        Assert.IsTrue(campaignPaths.Success, "Finite-campaign retained path equation was not found.");
+        foreach (string requiredPath in new[]
+        {
+            "contracts/json-schema/provider-operation.v1.schema.json",
+            "contracts/json-schema/provider-response.v1.schema.json",
+            "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/public-manifest.json",
+            "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/public-manifest.json",
+            "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json",
+            "fixtures/public/public-fixture-registry.v1.json",
+            "src/Infinium.Application/Provider/OpenAiResponsesInputBoundPolicy.cs",
+            "src/Infinium.Coordinator/M1Slice6CampaignProviderAccounting.cs",
+            "src/Infinium.Coordinator/M1Slice6CampaignSemanticAdmission.cs",
+            "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+            "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
+            "tests/Infinium.UnitTests/ProviderInputBoundPolicyTests.cs",
+        })
+        {
+            StringAssert.Contains(campaignPaths.Value, requiredPath,
+                $"Finite-campaign retained path equation omitted {requiredPath}.");
+        }
         Assert.AreNotEqual(0, RunLayer6Mode(root, null),
             "Ordinary Layer6 unexpectedly unprotected the WP8 current-state path.");
         Assert.AreNotEqual(0, RunLayer6Mode(root, "wp8"),

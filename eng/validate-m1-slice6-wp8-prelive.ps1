@@ -71,6 +71,9 @@ function Get-Wp8Wp9OwnerStopPaths() {
 
 function Get-Wp8CampaignReviewPaths() {
     return @(Get-Wp8Wp9OwnerStopPaths) + @(
+        'contracts/json-schema/README.md',
+        'contracts/json-schema/provider-operation.v1.schema.json',
+        'contracts/json-schema/provider-response.v1.schema.json',
         'contracts/repository/m1-slice6-campaign-composed-evidence.v1.schema.json',
         'contracts/repository/m1-slice6-campaign-stage-evidence.v1.schema.json',
         'contracts/repository/m1-slice6-campaign-stage-request.v1.schema.json',
@@ -82,19 +85,43 @@ function Get-Wp8CampaignReviewPaths() {
         'docs/research/investigations/RESEARCH-0055-slice6-finite-campaign-and-safety-identifier-refresh.md',
         'eng/run-m1-slice6-live.ps1',
         'eng/validate-m1-slice6-campaign.ps1',
-        'src/Infinium.Coordinator/M1Slice6CampaignStageCoordinator.cs',
+        'fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/oracle.v1.json',
+        'fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/public-manifest.json',
+        'fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/oracle.v1.json',
+        'fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/public-manifest.json',
+        'fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/oracle.v1.json',
+        'fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json',
+        'fixtures/public/public-fixture-registry.v1.json',
         'src/Infinium.Application/Provider/CredentialSemanticRolloverPolicy.cs',
+        'src/Infinium.Application/Provider/OpenAiResponsesInputBoundPolicy.cs',
+        'src/Infinium.Application/Provider/ProviderContractFactories.cs',
+        'src/Infinium.Application/Runtime/HelperExecutionSemanticsV2.cs',
+        'src/Infinium.Application/Runtime/HelperProtocolV2Codec.cs',
+        'src/Infinium.Coordinator/CredentialNativeQualificationRunner.cs',
+        'src/Infinium.Coordinator/M1Slice6CampaignProviderAccounting.cs',
+        'src/Infinium.Coordinator/M1Slice6CampaignSemanticAdmission.cs',
+        'src/Infinium.Coordinator/M1Slice6CampaignStageCoordinator.cs',
         'src/Infinium.Domain/Contracts/ProductUserSafetyIdentifier.cs',
+        'src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs',
         'src/Infinium.OpenAI/OpenAiResponsesAdapter.cs',
+        'src/Infinium.Persistence/AuthoritativeStore.Migrations.cs',
         'src/Infinium.Persistence/M1Slice6FiniteCampaignLedger.cs',
         'src/Infinium.Persistence/ProductUserSafetyIdentifierStateStore.cs',
+        'src/Infinium.Persistence/ProviderPersistenceDeclarations.cs',
         'tests/Infinium.ContractTests/M1Slice6CampaignContractTests.cs',
+        'tests/Infinium.ContractTests/ProviderContractJsonCodecTests.cs',
+        'tests/Infinium.EvaluationTests/ProviderBudgetEvaluationTests.cs',
         'tests/Infinium.IntegrationTests/M1Slice6CampaignRehearsalTests.cs',
+        'tests/Infinium.IntegrationTests/ProviderBudgetIntegrationTests.cs',
         'tests/Infinium.UnitTests/CredentialSemanticRolloverPolicyTests.cs',
+        'tests/Infinium.UnitTests/HelperTestFrames.cs',
         'tests/Infinium.UnitTests/M1Slice6FiniteCampaignLedgerTests.cs',
         'tests/Infinium.UnitTests/OpenAiResponsesAdapterTests.cs',
+        'tests/Infinium.UnitTests/PersistenceAndLifecycleTests.cs',
         'tests/Infinium.UnitTests/ProductUserSafetyIdentifierTests.cs',
-        'tests/Infinium.UnitTests/ProviderAdapterTestSupport.cs')
+        'tests/Infinium.UnitTests/ProviderAdapterTestSupport.cs',
+        'tests/Infinium.UnitTests/ProviderContractTests.cs',
+        'tests/Infinium.UnitTests/ProviderInputBoundPolicyTests.cs')
 }
 
 function Test-Wp8CampaignCorrectionState(
@@ -117,17 +144,22 @@ function Test-Wp8CampaignCorrectionState(
         'Binding `(?<candidate>[0-9a-f]{40})` is excluded by NonLiveAll because its credential-recovery source-boundary assertion spanned into a later campaign provider route; it is not review-ready or executable\.')
     $formatExcluded = [regex]::Match($state,
         'Binding `(?<candidate>[0-9a-f]{40})` is excluded by the common static floor because two new C# files were not repository-formatted; it is not review-ready or executable\.')
+    $evidenceExcluded = [regex]::Match($state,
+        'Binding `(?<candidate>[0-9a-f]{40})` is excluded by terminal review because authoritative provider persistence, retained semantic evidence, and offline evidence gates were incomplete; it is not review-ready or executable\.')
     if (-not $excluded.Success -and -not $rehearsalExcluded.Success -and
-        -not $nonLiveExcluded.Success -and -not $formatExcluded.Success) { return $false }
+        -not $nonLiveExcluded.Success -and -not $formatExcluded.Success -and
+        -not $evidenceExcluded.Success) { return $false }
     if ($rehearsalExcluded.Success) { $excluded = $rehearsalExcluded }
     if ($nonLiveExcluded.Success) { $excluded = $nonLiveExcluded }
     if ($formatExcluded.Success) { $excluded = $formatExcluded }
+    if ($evidenceExcluded.Success) { $excluded = $evidenceExcluded }
     $candidate = $excluded.Groups['candidate'].Value
     $readmeCorrection =
         $readme.Contains("Binding ``$candidate`` is excluded because terminal review found incomplete production credential-evidence and provider-stage transitions plus a self-referential A/B candidate binding.", [StringComparison]::Ordinal) -or
         $readme.Contains("Binding ``$candidate`` is also excluded because its committed rehearsal inherited ready bindings into the synthetic close-ready source.", [StringComparison]::Ordinal) -or
         $readme.Contains("Binding ``$candidate`` is excluded because NonLiveAll found that its credential-recovery source-boundary assertion spanned into a later campaign provider route.", [StringComparison]::Ordinal) -or
-        $readme.Contains("Binding ``$candidate`` is excluded because the common static floor found two unformatted new C# files.", [StringComparison]::Ordinal)
+        $readme.Contains("Binding ``$candidate`` is excluded because the common static floor found two unformatted new C# files.", [StringComparison]::Ordinal) -or
+        $readme.Contains("Binding ``$candidate`` is excluded because terminal review found incomplete authoritative provider persistence, retained semantic evidence, and offline evidence gates.", [StringComparison]::Ordinal)
     return (
         $state.Contains('| Current authorized work | `M1/S6` finite-campaign amendment implementation, non-live verification, and correction/reverification only.', [StringComparison]::Ordinal) -and
         $state.Contains('Immutable owner authority source SHA-256 is `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.', [StringComparison]::Ordinal) -and

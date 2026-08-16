@@ -45,6 +45,10 @@ unknown replacement bytes. Current authority is bounded correction and
 non-live reverification only. A later fresh review is required after the
 replacement close-ready source and exact four-document bound review candidate
 are frozen; neither candidate exists during this correction state.
+Binding `cfb11302d2011a0edc18aed6891ec1efff681713` is excluded by terminal
+review because authoritative provider persistence, retained semantic evidence,
+and offline evidence gates were incomplete; it is not review-ready or
+executable.
 Every helper, readiness, authority-lock, native, profile, DNS/network,
 provider, billable, and API-key observation remains zero; production output
 roots remain absent. WP9 credential execution, WP9 request materialization,

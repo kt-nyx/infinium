@@ -8376,3 +8376,18 @@ authority is correction and non-live reverification only. No campaign marker,
 credential helper, UI/readiness, authority lock, API key, Credential Manager,
 production profile, DNS/public network, provider, billable, private/archive,
 or push effect occurred.
+
+Verification source `87bbc6925f8e226522946828747add683041d776`
+passed standalone campaign Verification with manifest SHA-256
+`67dc6f47328c4ee3a5c35ab8eb2a8cf1f09f9ee8caf1bcaa73ed4d15d1c0460d`
+and effect count zero. Its committed retained-WP8/campaign contract rerun
+passed 9/10 and stopped because the historical WP8 finite-campaign path
+equation did not yet enumerate the newly added canonical provider schemas,
+public validation packages, authoritative SQLite/semantic coordinators, and
+their exact tests. The implementation itself remained non-executable. The
+bounded correction extends only that finite path equation, makes the required
+production surfaces mutation-sensitive in the contract, and adds the exact B6
+terminal-review exclusion to current authority documentation. No helper, UI,
+readiness, authority lock, API key, Credential Manager, production profile,
+DNS/public network, provider, billable, private/archive, or push effect
+occurred.

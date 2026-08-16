@@ -83,7 +83,10 @@ source. Binding `3b6a13a3192b54b80d7b80322fb57af4d4a646c3` is excluded because
 NonLiveAll found that its credential-recovery source-boundary assertion spanned
 into a later campaign provider route. Binding
 `6303a4d8da6a56860f638e32a0fb3266c65e88e1` is excluded because the common
-static floor found two unformatted new C# files. The finite-campaign
+static floor found two unformatted new C# files. Binding
+`cfb11302d2011a0edc18aed6891ec1efff681713` is excluded because terminal
+review found incomplete authoritative provider persistence, retained semantic
+evidence, and offline evidence gates. The finite-campaign
 implementation is under correction, non-live reverification, and fresh review
 only. Its separate credential-evidence handoff, all three stage
 review/admission transitions, and composed no-fourth closeout are exercised as
