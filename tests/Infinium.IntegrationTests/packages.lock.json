@@ -571,6 +571,12 @@
           "SQLitePCLRaw.bundle_e_sqlite3": "[3.0.5, )"
         }
       },
+      "infinium.publicfixtures": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Application": "[1.0.0, )"
+        }
+      },
       "infinium.unittests": {
         "type": "Project",
         "dependencies": {

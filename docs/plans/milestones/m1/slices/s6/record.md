@@ -8517,3 +8517,24 @@ non-live correction facts, not final verification receipts. Current authority
 is correction and non-live reverification only. No helper, UI/readiness,
 authority lock, API key, Credential Manager, production profile, DNS/public
 network, provider, billable, private/archive, or push effect occurred.
+
+## Campaign dependency-lock correction — 2026-08-16
+
+Close-ready source `89312e962b24b069755831a7c8283abf5022dd1f` and its exact
+four-document binding successor
+`8b6c1df19cacd6b4fa92c58904bda426773adf4f` passed both ready
+validators, retained-WP8 validation, focused contracts 10/10, focused units
+22/22, recovery and frozen-oracle integration 2/2, the committed campaign
+rehearsal 1/1, and fresh NonLiveAll 363/363 with zero skips or effects. The
+complete common floor then failed its first locked restore with `NU1004`
+because `tests/Infinium.IntegrationTests/packages.lock.json` did not yet retain
+the newly added exact `Infinium.PublicFixtures` project reference. The
+subsequent build therefore failed. Unit 264 passed/1 skipped and Contract 156
+passed were invoked by the same continued shell against predecessor build
+outputs and are excluded with the failed tranche. The correction regenerates
+only that deterministic dependency lock plus these truthful authority
+surfaces. The prior NonLiveAll receipt is diagnostic, not final evidence.
+Current authority is correction and non-live reverification only. No helper,
+UI, readiness, authority lock, API key, Credential Manager, production
+profile, DNS/public network, provider, billable, private/archive, or push
+effect occurred.
