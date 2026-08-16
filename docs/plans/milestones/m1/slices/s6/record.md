@@ -8553,3 +8553,23 @@ authority is correction and non-live reverification only. No helper, UI,
 readiness, authority lock, API key, Credential Manager, production profile,
 DNS/public network, provider, billable, private/archive, or push effect
 occurred.
+
+## Campaign stage-marker transition correction — 2026-08-16
+
+Close-ready source `18eb46b641410f3ca3879d297190a8dd9104a72b` and bound
+candidate `7b717d9b09acc863aab977e9d3abd788c2b9ae46` passed both ready
+validators, retained-WP8 validation, focused contracts 10/10, focused units
+22/22, recovery and frozen-oracle integration 2/2, the committed campaign
+rehearsal 1/1, fresh NonLiveAll 363/363, locked restore, Release build, and
+every focused common category with zero failures. The complete unfiltered run
+then failed one campaign rehearsal because stage-marker discovery depended on
+Git attribution after later append-only record rewrites. Its totals were
+Security 19/0, Fault 7/0, Evaluation 66/8, Unit 287/1, Contract 184/0, and
+Integration 166 passed/1 skipped/1 failed. All B3 receipts are excluded. The
+bounded correction finds the exact marker line's committed 0-to-1 transition
+within the authorized predecessor range, requires the exact parent, three-path
+append-only transition, and a single exact line at current HEAD. Current
+authority is correction and non-live reverification only. No helper,
+UI/readiness, authority lock, API key, Credential Manager, production profile,
+DNS/public network, provider, billable, private/archive, or push effect
+occurred.

@@ -124,11 +124,13 @@ restore found the IntegrationTests dependency lock stale after the exact
 PublicFixtures project reference was added. Binding
 `58f9b54e6b22bd4c967d77c954aadd6d465e516f` is excluded because the exact
 finite-campaign retained/Layer6 path equations omitted that newly changed
-lockfile. The corrected finite-campaign close-ready source
-`18eb46b641410f3ca3879d297190a8dd9104a72b` is verification-pending. Its
-exact clean committed four-document binding successor is the review candidate,
-bound for complete non-live verification and fresh independent review only.
-The resulting review candidate is ready for review and remains non-executable.
+lockfile. Binding `7b717d9b09acc863aab977e9d3abd788c2b9ae46` is excluded
+because its complete unfiltered run exposed attribution-sensitive stage-marker
+commit discovery after append-only record rewrites. The corrected close-ready
+source is verification-pending. Its exact clean committed four-document
+binding successor will be the review candidate, bound for complete non-live
+verification and fresh independent review only. No current candidate is ready
+for review or execution.
 No authority is inherited. The
 immutable owner authority source is SHA-256
 `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.

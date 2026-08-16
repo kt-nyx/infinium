@@ -775,13 +775,22 @@ public static class M1Slice6CampaignStageManifestValidator
     internal static string UniqueMarkerCommit(string repository, string marker, string expectedParent,
         string recordRelative)
     {
-        string[] commits = RunGit(repository, "log", "--format=%H", "--fixed-strings", "-S", marker,
-            "--", recordRelative).Output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        if (commits.Length != 1) { throw new InvalidDataException("A stage marker has no unique committed transition."); }
-        string commit = commits[0];
-        if (RunGit(repository, "rev-parse", commit + "^").Output.Trim() != expectedParent)
+        string commit = FindMarkerAddition(repository, marker, recordRelative, expectedParent + "..HEAD");
+        string actualParent = RunGit(repository, "rev-parse", commit + "^").Output.Trim();
+        if (actualParent != expectedParent)
         {
-            throw new InvalidDataException("A stage marker transition has a stale predecessor.");
+            throw new InvalidDataException("A stage marker transition has a stale predecessor: "
+                + actualParent + " != " + expectedParent);
+        }
+        string[] predecessorLines = GitRecordLines(repository, expectedParent, recordRelative);
+        string[] transitionLines = GitRecordLines(repository, commit, recordRelative);
+        string[] headLines = GitRecordLines(repository, "HEAD", recordRelative);
+        int predecessorMatches = Array.FindAll(predecessorLines, line => line == marker).Length;
+        int transitionMatches = Array.FindAll(transitionLines, line => line == marker).Length;
+        int headMatches = Array.FindAll(headLines, line => line == marker).Length;
+        if (predecessorMatches != 0 || transitionMatches != 1 || headMatches != 1)
+        {
+            throw new InvalidDataException($"A stage marker is absent, duplicated, or present before its transition ({predecessorMatches}/{transitionMatches}/{headMatches}).");
         }
         string[] changed = RunGit(repository, "-c", "core.quotePath=false", "diff", "--name-only",
             expectedParent, commit, "--").Output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
@@ -807,14 +816,45 @@ public static class M1Slice6CampaignStageManifestValidator
 
     internal static string FindUniqueMarkerCommit(string repository, string marker, string recordRelative)
     {
-        string[] commits = RunGit(repository, "log", "--format=%H", "--fixed-strings", "-S", marker,
-            "--", recordRelative).Output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        if (commits.Length != 1)
+        string[] lines = GitRecordLines(repository, "HEAD", recordRelative);
+        if (Array.FindAll(lines, line => line == marker).Length != 1)
         {
             throw new InvalidDataException("A campaign marker has no unique committed transition.");
         }
-        return commits[0];
+        return FindMarkerAddition(repository, marker, recordRelative, "HEAD");
     }
+
+    private static string FindMarkerAddition(string repository, string marker, string recordRelative,
+        string revision)
+    {
+        string[] history = RunGit(repository, "log", "--format=%H", "--fixed-strings", "-S", marker,
+            revision, "--", recordRelative).Output
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        List<string> additions = [];
+        foreach (string candidate in history)
+        {
+            string[] ancestry = RunGit(repository, "rev-list", "--parents", "-n", "1", candidate).Output
+                .Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (ancestry.Length != 2) { continue; }
+            string parent = ancestry[1];
+            if (string.IsNullOrWhiteSpace(RunGit(repository, "ls-tree", "--name-only", parent,
+                "--", recordRelative).Output)) { continue; }
+            int candidateMatches = Array.FindAll(GitRecordLines(repository, candidate, recordRelative),
+                line => line == marker).Length;
+            int parentMatches = Array.FindAll(GitRecordLines(repository, parent, recordRelative),
+                line => line == marker).Length;
+            if (candidateMatches == 1 && parentMatches == 0) { additions.Add(candidate); }
+        }
+        if (additions.Count != 1 || !Hex(additions[0], 40))
+        {
+            throw new InvalidDataException("A campaign marker has no unique exact-line addition commit.");
+        }
+        return additions[0];
+    }
+
+    private static string[] GitRecordLines(string repository, string commit, string recordRelative)
+        => RunGit(repository, "show", commit + ":" + recordRelative).Output
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
     internal static string FindRepositoryRoot(string path)
     {

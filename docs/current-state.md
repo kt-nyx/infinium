@@ -231,9 +231,13 @@ credential-evidence acceptance, production stage orchestration, successor
 equations, and mutation proof remained incomplete. Binding
 `876130e6a030b3228c151e030a6914cc2f156c04` was then excluded because its
 committed rehearsal inherited ready bindings into the synthetic source A.
-Current authority is correction and non-live reverification of the
-finite-campaign implementation only; fresh review follows a new exact bound
-candidate. The separately committed zero-effect
+Binding `7b717d9b09acc863aab977e9d3abd788c2b9ae46` is also excluded:
+its complete unfiltered run exposed attribution-sensitive stage-marker commit
+discovery after later append-only record rewrites. The correction resolves
+marker authority from the exact committed line-addition transition and exact
+predecessor instead of attribution heuristics. Current authority is correction
+and non-live reverification of the finite-campaign implementation only; fresh
+review follows a new exact bound candidate. The separately committed zero-effect
 credential handoff and review/admission transitions for all three exact stage
 manifests exist only inside the disposable committed temp-clone rehearsal.
 They are synthetic proof of the production validators and coordinator state
