@@ -8100,3 +8100,17 @@ omitted field and returns the campaign to verification-pending before the next
 freeze. No output root, helper, readiness, authority lock, UI, API key, native
 Credential Manager, profile, DNS/public network, provider, billable, private,
 archive, or push effect occurred.
+
+Binding `79dfc03a894f2de8c21427eace3e20ca8ac514c8` passed both ready
+validators, focused runtime tests 32/32, campaign contracts 3/3, the committed
+rehearsal 1/1, documentation validation, diff checks, and exact post-bind
+126-file Release closure reproduction. Its first fresh NonLiveAll root then
+stopped before the first child gate because the bound current-state narrative
+did not contain the verifier's exact finite-campaign predicate phrase and fell
+through to the retained-WP8 rejection. The existing state-aware contract
+already requires that exact phrase and rejects other Layer 6 modes; this
+correction makes the current authority sentence exact and returns the manifest
+to verification-pending before refreeze. The partial NonLiveAll root is
+excluded. No output beyond that empty gate root, helper, readiness, authority
+lock, UI, API key, native Credential Manager, profile, DNS/public network,
+provider, billable, private, archive, or push effect occurred.
