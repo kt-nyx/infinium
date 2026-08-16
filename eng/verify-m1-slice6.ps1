@@ -839,7 +839,8 @@ function Invoke-Layer6ReviewGate(
         'tests/Infinium.UnitTests/M1Slice6FiniteCampaignLedgerTests.cs',
         'tests/Infinium.UnitTests/OpenAiResponsesAdapterTests.cs',
         'tests/Infinium.UnitTests/ProductUserSafetyIdentifierTests.cs',
-        'tests/Infinium.UnitTests/ProviderAdapterTestSupport.cs')
+        'tests/Infinium.UnitTests/ProviderAdapterTestSupport.cs',
+        'tests/Infinium.UnitTests/Wp9ProductionProfileAuthorizationTests.cs')
     if ($CampaignReviewMode) {
         if ($Wp9OwnerStopMode -or $Wp8PreLiveCloseoutMode -or $HandoffCloseout -or $Wp4OwnerReviewHandoff -or
             $Wp9ReviewCloseoutMode -or $Wp9OwnerAcceptanceCloseoutMode -or $CampaignReviewCloseoutMode -or
@@ -893,6 +894,7 @@ function Invoke-Layer6ReviewGate(
         & git -C $repoRoot diff --quiet $baselineHash $candidateHash -- 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
         if ($LASTEXITCODE -ne 0) { throw 'Wp9ReviewCloseout forbids manifest drift after independent review.' }
     }
+    $failures = [System.Collections.Generic.List[string]]::new()
     if ($Wp9OwnerAcceptanceCloseoutMode) {
         if ($Wp9OwnerStopMode -or $Wp8PreLiveCloseoutMode -or $HandoffCloseout -or
             $Wp4OwnerReviewHandoff -or $Wp9ReviewCloseoutMode) {
@@ -1148,7 +1150,6 @@ function Invoke-Layer6ReviewGate(
         archive_access_permitted = $false
     })
 
-    $failures = [System.Collections.Generic.List[string]]::new()
     foreach ($failure in $pathFailures) {
         $failures.Add("Changed path is outside Slice 6 authority or protected: $($failure.path)")
     }

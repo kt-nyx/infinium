@@ -87,6 +87,11 @@ public sealed class M1Slice6CampaignContractTests
         StringAssert.Contains(verifier, "$normalizedRecordText = [regex]::Replace($recordText, '\\s+', ' ')");
         StringAssert.Contains(verifier,
             "$normalizedRecordText.Contains('Current authority is correction and non-live reverification only.'");
+        StringAssert.Contains(verifier, "'tests/Infinium.UnitTests/Wp9ProductionProfileAuthorizationTests.cs'");
+        Assert.IsTrue(
+            verifier.IndexOf("$failures = [System.Collections.Generic.List[string]]::new()", StringComparison.Ordinal)
+            < verifier.IndexOf("[string[]]$actualOwnerCloseoutPaths", StringComparison.Ordinal),
+            "Layer6 must initialize its finding list before any mode-specific path-set finding can be retained.");
     }
 
     private static int RunValidator(Action<JsonObject>? mutation)
