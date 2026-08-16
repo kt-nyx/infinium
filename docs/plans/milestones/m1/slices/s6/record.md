@@ -8086,3 +8086,17 @@ that stopped run is excluded. Current authority is correction and non-live
 reverification only. All helper, readiness, authority-lock, API-key, native
 Credential Manager, profile, DNS/public-network, provider, billable, private,
 archive, and push effects remain zero.
+
+Binding `0ab6835ee096032f763e766484cc9178199ce635` reproduced the exact
+A4-pinned 126-file Release closure and passed campaign ready validation. The
+focused WP9 authorization tests then rejected it because the credential
+manifest's `candidate_binding.close_ready_implementation_commit` remained at
+the superseded A3 identity while its source commit, build command, and binary
+hashes correctly bound A4. Focused runtime results were therefore 24/26;
+campaign contracts remained 3/3; and the committed rehearsal stopped at that
+same fail-closed validator before any fake-store or literal-loopback stage.
+The binding and its partial checks are excluded. This correction updates the
+omitted field and returns the campaign to verification-pending before the next
+freeze. No output root, helper, readiness, authority lock, UI, API key, native
+Credential Manager, profile, DNS/public network, provider, billable, private,
+archive, or push effect occurred.

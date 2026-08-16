@@ -7,7 +7,7 @@
   "prepared_at_utc": "2026-08-15T15:25:00.0000000Z",
   "expires_at_utc": "2026-08-17T15:25:00.0000000Z",
   "candidate_binding": {
-    "close_ready_implementation_commit": "38030a7ac2238c0d095942873b6425299040aaa7",
+    "close_ready_implementation_commit": "b58cb2cee5695e6402c98e69001ecf157dbdbfa2",
     "accepted_wp8_verification_commit": "cc14bf60f78c80280cb6eafe60fddaf2bc764d06",
     "accepted_wp8_evidence_commit": "baef115cdd43fa38d0a352c15f8ba44cbfa35312",
     "accepted_wp8_non_live_all_sha256": "52aa77325a2226505c35b1fba6d9d0fe2b6354022a6c85f6652211d609c529ad",
