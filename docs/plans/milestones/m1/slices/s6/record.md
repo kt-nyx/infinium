@@ -8573,3 +8573,9 @@ authority is correction and non-live reverification only. No helper,
 UI/readiness, authority lock, API key, Credential Manager, production profile,
 DNS/public network, provider, billable, private/archive, or push effect
 occurred.
+
+The first marker-correction binding `3169575bf2b6dac461e43af33b6b89eeb17930a1`
+is excluded before verification because its source commit still retained the
+ready campaign manifest instead of the required verification-pending source
+state. No live, native, credential, provider, network, billable, private, or
+archive effect occurred.

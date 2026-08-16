@@ -127,11 +127,10 @@ finite-campaign retained/Layer6 path equations omitted that newly changed
 lockfile. Binding `7b717d9b09acc863aab977e9d3abd788c2b9ae46` is excluded
 because its complete unfiltered run exposed attribution-sensitive stage-marker
 commit discovery after append-only record rewrites. The corrected close-ready
-source `f8069f2d540f85718bde6ad58885b62a51b8222c` is
-verification-pending. Its exact clean committed four-document
-binding successor will be the review candidate, bound for complete non-live
-verification and fresh independent review only. No current candidate is ready
-for review or execution.
+source attempt `f8069f2d540f85718bde6ad58885b62a51b8222c` was not a valid
+pending-source freeze and its binding is excluded. Current authority is
+correction and non-live reverification only. No current candidate is ready for
+review or execution.
 No authority is inherited. The
 immutable owner authority source is SHA-256
 `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
