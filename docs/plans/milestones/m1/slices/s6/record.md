@@ -8478,3 +8478,14 @@ finite equations and makes its presence mutation-sensitive. No helper, UI,
 readiness, authority lock, API key, Credential Manager, production profile,
 DNS/public network, provider, billable, private/archive, or push effect
 occurred.
+
+Bound candidate `ff5c18024bf1265ced69bb36f45ecf1d0843ab50` passed both exact
+ready validators, focused unit tests 25/25, and the complete committed rehearsal
+1/1. Its committed retained-WP8/campaign contract filter stopped at 9/10 before
+NonLiveAll because README line wrapping split the exact `finite-campaign`
+review-state token into `finite- campaign` after whitespace normalization. The
+exact finite path set otherwise matched 88/88. The candidate and all focused
+receipts are excluded. The correction preserves the exact token unbroken in
+the next binding. No helper, UI, readiness, authority lock, API key, Credential
+Manager, production profile, DNS/public network, provider, billable,
+private/archive, or push effect occurred.
