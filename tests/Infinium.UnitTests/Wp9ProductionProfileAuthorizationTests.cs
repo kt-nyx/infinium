@@ -163,9 +163,27 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         StringAssert.Contains(manifest, "bin/Release/net10.0/Infinium.Coordinator.exe");
         using JsonDocument manifestDocument = JsonDocument.Parse(manifest);
         string sourceCommit = manifestDocument.RootElement.GetProperty("release_build").GetProperty("source_commit").GetString()!;
+        string expectedSourceCommit = sourceCommit;
+        string currentState = File.ReadAllText(Path.Combine(root, "docs", "current-state.md"));
+        if (currentState.Contains("`M1/S6` finite-campaign amendment implementation, non-live verification, exact manifest materialization, and fresh review only.", StringComparison.Ordinal)
+            && currentState.Contains("No credential or provider effect is admitted.", StringComparison.Ordinal))
+        {
+            string campaignPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+                "m1-slice6-finite-campaign-authorization.v1.json");
+            using JsonDocument campaign = JsonDocument.Parse(File.ReadAllText(campaignPath));
+            Assert.AreEqual("ready-for-campaign-review", campaign.RootElement.GetProperty("status").GetString());
+            Assert.AreEqual("c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be",
+                campaign.RootElement.GetProperty("authority_source").GetProperty("attachment_sha256").GetString());
+            expectedSourceCommit = campaign.RootElement.GetProperty("candidate_binding")
+                .GetProperty("close_ready_implementation_commit").GetString()!;
+            Assert.IsFalse(string.Equals(sourceCommit, expectedSourceCommit, StringComparison.Ordinal),
+                "The historical credential closure must remain distinct until exact reviewed campaign rollover.");
+            StringAssert.Contains(runner, "(Get-Wp9Sha256 $coordinator) -cne [string]$m.release_build.coordinator_sha256");
+            StringAssert.Contains(runner, "$inventory.sha256 -cne [string]$m.release_build.binary_inventory_sha256");
+        }
         string sourceLink = File.ReadAllText(Path.Combine(root, "src", "Infinium.Coordinator", "obj", "Release", "net10.0",
             "Infinium.Coordinator.sourcelink.json"));
-        if (sourceCommit != new string('0', 40)) { StringAssert.Contains(sourceLink, sourceCommit); }
+        if (expectedSourceCommit != new string('0', 40)) { StringAssert.Contains(sourceLink, expectedSourceCommit); }
         string directory = Path.Combine(Path.GetTempPath(), "infinium-wp9-binaries-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(directory, "CredentialHelper"));
         try
