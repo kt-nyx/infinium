@@ -864,7 +864,7 @@ elseif ($verificationCandidateCommit -match '^[0-9a-f]{40}$') {
         $requiredCampaignState = if ($postVerificationDisposition -eq 'exact-m1-s6-finite-campaign-review-no-effect-state') {
             'Ready'
         } else { 'Verification' }
-        $requiredCampaignDisposition = if ($requiredCampaignState -eq 'Ready') { 'ready' } else { 'verification-pending' }
+        $requiredCampaignDisposition = if ($requiredCampaignState -eq 'Ready') { 'ready' } else { 'verification' }
         $campaignValidationJson = @(& (Join-Path $repoRoot 'eng/validate-m1-slice6-campaign.ps1') `
             -AuthorizationManifest (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json') `
             -RequireState $requiredCampaignState) -join "`n"

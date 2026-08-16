@@ -8269,3 +8269,13 @@ PowerShell parsing, strict JSON parsing, diff whitespace checks, and literal
 secret/raw-target scans pass with zero matches. No helper, UI, readiness,
 authority lock, API key, Credential Manager, production profile, DNS/public
 network, provider, billable, private/archive, or push effect occurred.
+
+Source freeze `84002d95cebd01a7b3a10a5638f4dafa24cbc749` passed the exact
+correction-state and Layer 6 path predicates but its committed contract rerun
+reported 9/10 because the retained validator expected the noncanonical receipt
+word `verification-pending`; the campaign validator truthfully emits
+`verification`. The source is superseded before binding. The bounded correction
+changes only that receipt literal and retains the finding append-only. No
+helper, UI, readiness, authority lock, API key, Credential Manager, profile,
+DNS/public network, provider, billable, private/archive, or push effect
+occurred.
