@@ -7983,6 +7983,14 @@ change global Git configuration or weaken candidate/clone identity checks.
 That partial rehearsal is excluded from evidence. Every external-effect count
 remained zero.
 
+Campaign binding `94d00dc6a6df605fa1674630ecb7553b601857cf`
+passed Windows PowerShell validation, but direct Layer 6 correctly stopped
+before diff review because PowerShell 7 parsed ISO timestamps as `DateTime`
+objects while the validator compared them directly with strings. The bounded
+correction canonicalizes either representation to seven-fraction UTC text.
+The bound manifest is returned to verification-pending and `94d00dc` is
+excluded. No helper, native, network, or provider effect occurred.
+
 The next frozen candidate `691918f8654785c03e447d3486d577cda9281244`
 passed the complete rehearsal body, including the three one-shot literal
 loopback stages and fourth-call rejection, but the test host then reported the

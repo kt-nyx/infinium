@@ -28,6 +28,11 @@ function Get-Sha256([string]$PathValue) {
     finally { $stream.Dispose() }
 }
 
+function Get-ExactUtcText($Value) {
+    if ($Value -is [datetime]) { return $Value.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ', [Globalization.CultureInfo]::InvariantCulture) }
+    return [string]$Value
+}
+
 function Require-ExactProperties($Value, [string[]]$Names, [string]$PathValue) {
     if ($null -eq $Value) { throw "$PathValue is absent." }
     $actual = @($Value.PSObject.Properties.Name)
@@ -102,8 +107,8 @@ if ($authority.schema_identity -cne 'infinium.repository.m1-slice6-finite-campai
     $authority.authority.accepted_plan_amendment -cne 'exact-finite-three-stage-m1-slice6-live-campaign' -or
     $authority.authority.semantic_rollover -cne 'pre-effect-only-field-by-field-non-broadening' -or
     $authority.authority.credential_envelope -cne 'unchanged' -or
-    $authority.authority.campaign_expires_at_utc -cne '2026-08-22T23:59:00.0000000Z' -or
-    $authority.authority.credential_expires_at_utc -cne '2026-08-17T15:25:00.0000000Z' -or
+    (Get-ExactUtcText $authority.authority.campaign_expires_at_utc) -cne '2026-08-22T23:59:00.0000000Z' -or
+    (Get-ExactUtcText $authority.authority.credential_expires_at_utc) -cne '2026-08-17T15:25:00.0000000Z' -or
     [int]$authority.authority.maximum_sequential_provider_calls -ne 3 -or
     $authority.authority.retry -cne 'prohibited' -or $authority.authority.fourth_call -cne 'prohibited' -or
     [bool]$authority.derivation.future_campaign_bytes_preaccepted -or -not [bool]$authority.derivation.fresh_independent_review_required -or
@@ -117,14 +122,14 @@ if ($authority.schema_identity -cne 'infinium.repository.m1-slice6-finite-campai
 Require-ExactProperties $manifest @('schema_identity','campaign_id','status','effect_authority','prepared_at_utc','expires_at_utc','candidate_binding','authority_source','semantic_rollover','credential_envelope','safety_identifier','official_document_snapshot','ordered_stages','aggregate_limits','admission','rehearsal','execution') 'campaign'
 if ($manifest.schema_identity -cne 'infinium.repository.m1-slice6-finite-campaign-authorization/1.0.0' -or $manifest.campaign_id -cne 'infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee') { throw 'Campaign identity is not exact.' }
 if ($manifest.effect_authority -cne 'none-until-exact-reviewed-campaign-admission') { throw 'Campaign effect authority was broadened.' }
-if ($manifest.expires_at_utc -cne '2026-08-22T23:59:00.0000000Z') { throw 'Campaign expiry is not exact.' }
+if ((Get-ExactUtcText $manifest.expires_at_utc) -cne '2026-08-22T23:59:00.0000000Z') { throw 'Campaign expiry is not exact.' }
 if ($manifest.authority_source.attachment_sha256 -cne 'c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be' -or $authority.source_attachment_sha256 -cne $manifest.authority_source.attachment_sha256) { throw 'Immutable attachment authority is stale.' }
 Require-ZeroEffects $manifest.semantic_rollover.zero_effect_proof
 Require-ExactProperties $manifest.credential_envelope @('source_manifest_id','source_manifest_sha256','source_candidate_commit','comparison','exact_immutable_fields','mutable_fields','ceilings','credential_expires_at_utc','profile_id','generation_id','target_fingerprint_sha256') 'credential_envelope'
 if ($manifest.credential_envelope.source_manifest_id -cne 'infinium.m1-s6.wp9.production-profile-authorization/ded946a6-e1b8-4c8e-95eb-5ef59619804f' -or
     $manifest.credential_envelope.source_manifest_sha256 -cne 'fb301a17843496b0452561facdbaa29412c2ba0d44ce4cc7c8bc102a391e88a9' -or
     $manifest.credential_envelope.source_candidate_commit -cne 'cf2b31f3cf109f09c47293aeb1cf6afde1ffff0f' -or
-    $manifest.credential_envelope.credential_expires_at_utc -cne '2026-08-17T15:25:00.0000000Z' -or
+    (Get-ExactUtcText $manifest.credential_envelope.credential_expires_at_utc) -cne '2026-08-17T15:25:00.0000000Z' -or
     $manifest.credential_envelope.profile_id -cne 'openai-platform-492800995cf046c7815f974e865f9e1d' -or
     $manifest.credential_envelope.generation_id -cne 'g-9c663cb01fb649cba7eff4e26e14274c' -or
     $manifest.credential_envelope.target_fingerprint_sha256 -cne '55ade50556f396dd0ba579632a21581887eeb1e4e44411a0ee8e37f460f09fca') {
@@ -179,7 +184,7 @@ $manifestSha = Get-Sha256 $manifestPath
 $recordText = if (Test-Path -LiteralPath (Get-FullPath $RecordPath)) { Get-Content -LiteralPath (Get-FullPath $RecordPath) -Raw } else { '' }
 $currentHead = (& git rev-parse HEAD).Trim()
 $reviewMarker = 'M1_S6_CAMPAIGN_REVIEW_ACCEPTANCE candidate_commit=' + $currentHead + ' campaign_id=' + $manifest.campaign_id + ' sha256=' + $manifestSha + ' verdicts=security,semantics,diff'
-$admissionMarker = 'M1_S6_CAMPAIGN_ADMISSION authority_sha256=' + $manifest.authority_source.attachment_sha256 + ' campaign_id=' + $manifest.campaign_id + ' sha256=' + $manifestSha + ' close_ready_commit=' + $manifest.candidate_binding.close_ready_implementation_commit + ' expires_at_utc=' + $manifest.expires_at_utc
+$admissionMarker = 'M1_S6_CAMPAIGN_ADMISSION authority_sha256=' + $manifest.authority_source.attachment_sha256 + ' campaign_id=' + $manifest.campaign_id + ' sha256=' + $manifestSha + ' close_ready_commit=' + $manifest.candidate_binding.close_ready_implementation_commit + ' expires_at_utc=' + (Get-ExactUtcText $manifest.expires_at_utc)
 $reviewCount = ([regex]::Matches($recordText, [regex]::Escape($reviewMarker))).Count
 $admissionCount = ([regex]::Matches($recordText, [regex]::Escape($admissionMarker))).Count
 if ($rank[$RequireState] -ge 2 -and $reviewCount -ne 1) { throw 'The exact campaign review marker is absent or duplicated.' }
