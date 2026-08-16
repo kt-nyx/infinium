@@ -76,12 +76,15 @@ builds reproduced the coordinator, helper, and complete 126-file execution
 closure exactly.
 Binding `a9c497691a16b9c9639ba6422941b3e9b9e52256` is excluded because terminal
 review found incomplete production credential-evidence and provider-stage
-transitions plus a self-referential A/B candidate binding. Current authority is
-correction and non-live reverification only; no replacement candidate is bound.
-The correction requires a distinct close-ready source and exact four-document
-review candidate, separate credential evidence handoff/acceptance, exact
-committed review/admission for every stage manifest, and coordinator-owned
-successor/limit/safety enforcement through composed no-fourth closeout.
+transitions plus a self-referential A/B candidate binding. The corrected
+finite-campaign close-ready source `919544c7eaa80ca7b417c93ec71cb0800592f504`
+is verification-pending. Its exact clean committed four-document binding
+successor is the review candidate, bound for complete non-live verification and
+fresh independent review only. The resulting review candidate is ready for
+review and remains non-executable. It contains the separate credential evidence
+handoff/acceptance, exact committed review/admission for every stage manifest,
+and coordinator-owned successor/limit/safety enforcement through composed
+no-fourth closeout.
 The
 immutable owner authority source is SHA-256
 `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
