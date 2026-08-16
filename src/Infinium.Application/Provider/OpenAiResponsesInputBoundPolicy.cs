@@ -26,7 +26,7 @@ public sealed record ProviderInputBoundEvidence(
 public static class OpenAiResponsesInputBoundPolicy
 {
     public const string PolicyId = "openai-responses-o200k-byte-envelope";
-    public const string PolicyVersion = "v1";
+    public const string PolicyVersion = "v2";
     public const string PolicyIdentity = PolicyId + "/" + PolicyVersion;
     public const string Model = "gpt-5.6-sol";
     public const string EncodingName = "o200k_base";
@@ -136,11 +136,16 @@ public static class OpenAiResponsesInputBoundPolicy
             JsonElement root = document.RootElement;
             RequireObjectProperties(root, "request",
             [
-                "model", "reasoning", "text", "store", "service_tier", "background", "stream",
+                "model", "safety_identifier", "reasoning", "text", "store", "service_tier", "background", "stream",
                 "tool_choice", "tools", "truncation", "max_output_tokens", "prompt_cache_options",
-                "instructions", "input",
+                "input",
             ]);
             RequireString(root, "model", Model);
+            string? safetyIdentifier = root.GetProperty("safety_identifier").GetString();
+            if (!ProductUserSafetyIdentifier.IsValidProjection(safetyIdentifier))
+            {
+                throw new InvalidDataException("The canonical request requires one valid safety_identifier projection.");
+            }
             RequireBoolean(root, "store", false);
             RequireString(root, "service_tier", "default");
             RequireBoolean(root, "background", false);
@@ -157,8 +162,7 @@ public static class OpenAiResponsesInputBoundPolicy
             {
                 throw new InvalidDataException("Canonical request max_output_tokens must equal the admitted operation limit.");
             }
-            RequireStringValue(root.GetProperty("instructions"), "instructions");
-            RequireStringValue(root.GetProperty("input"), "input");
+            ValidateInputMessages(root.GetProperty("input"));
 
             JsonElement reasoning = root.GetProperty("reasoning");
             RequireObjectProperties(reasoning, "reasoning", ["effort", "context", "mode"]);
@@ -191,6 +195,42 @@ public static class OpenAiResponsesInputBoundPolicy
                 _ => throw new InvalidDataException("Input-bound policy operation kind is not supported."),
             };
             RequireString(format, "name", expectedName);
+        }
+    }
+
+    private static void ValidateInputMessages(JsonElement input)
+    {
+        if (input.ValueKind != JsonValueKind.Array || input.GetArrayLength() != 2)
+        {
+            throw new InvalidDataException("The closed request requires exactly one developer and one user message.");
+        }
+        JsonElement[] messages = input.EnumerateArray().ToArray();
+        ValidateMessage(messages[0], "developer", requireUntrustedFraming: false);
+        ValidateMessage(messages[1], "user", requireUntrustedFraming: true);
+    }
+
+    private static void ValidateMessage(JsonElement message, string role, bool requireUntrustedFraming)
+    {
+        const string untrustedPrefix = "BEGIN_UNTRUSTED_EVIDENCE\n";
+        const string untrustedSuffix = "\nEND_UNTRUSTED_EVIDENCE";
+        RequireObjectProperties(message, role + " message", ["role", "content"]);
+        RequireString(message, "role", role);
+        JsonElement content = message.GetProperty("content");
+        if (content.ValueKind != JsonValueKind.Array || content.GetArrayLength() != 1)
+        {
+            throw new InvalidDataException($"The {role} message requires one input_text content item.");
+        }
+        JsonElement item = content[0];
+        RequireObjectProperties(item, role + " content", ["type", "text"]);
+        RequireString(item, "type", "input_text");
+        string? text = item.GetProperty("text").GetString();
+        if (string.IsNullOrEmpty(text)
+            || !requireUntrustedFraming && text.Length > 8_192
+            || requireUntrustedFraming && (!text.StartsWith(untrustedPrefix, StringComparison.Ordinal)
+                || !text.EndsWith(untrustedSuffix, StringComparison.Ordinal)
+                || text.Length - untrustedPrefix.Length - untrustedSuffix.Length is < 1 or > 48_000))
+        {
+            throw new InvalidDataException($"The {role} message text is empty or outside its exact evidence framing.");
         }
     }
 

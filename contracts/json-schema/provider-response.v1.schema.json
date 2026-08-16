@@ -53,7 +53,7 @@
   ],
   "$defs": {
     "factAvailability":{"enum":["available","unavailable","unsupported","not-applicable"]},
-    "provedInputBoundProof":{"type":"object","additionalProperties":false,"required":["policy_id","policy_version","status"],"properties":{"policy_id":{"const":"openai-responses-o200k-byte-envelope"},"policy_version":{"const":"v1"},"status":{"const":"proved"}}},
+    "provedInputBoundProof":{"type":"object","additionalProperties":false,"required":["policy_id","policy_version","status"],"properties":{"policy_id":{"const":"openai-responses-o200k-byte-envelope"},"policy_version":{"const":"v2"},"status":{"const":"proved"}}},
     "nonSuccessState":{"enum":["rejected","abstained","unavailable","unsupported"]},
     "dispatchedUsage":{"allOf":[{"$ref":"provider-operation.v1.schema.json#/$defs/usage"},{"properties":{"availability":{"const":"available"},"dispatch_count":{"properties":{"availability":{"const":"available"},"value":{"minimum":1,"maximum":2}},"required":["availability","value"]}}}]},
     "completeReceiptUsage":{"allOf":[{"$ref":"#/$defs/dispatchedUsage"},{"properties":{"receipt_state":{"const":"complete"}}}]},

@@ -154,7 +154,7 @@ public static class ProviderContractFactories
             usage.DispatchCount, usage.InputTokens, usage.OutputTokens, usage.ReasoningTokens,
             usage.CacheReadTokens, usage.CacheWriteTokens, usage.CalculatedNanoUsd, reserved,
             projection.UnresolvedHold, projection.ReplayState, gaps, false, false,
-            "openai-responses-o200k-byte-envelope", "v1", liveAuthorizationId);
+            "openai-responses-o200k-byte-envelope", "v2", liveAuthorizationId);
         ProviderOperationContractInvariants.Validate(result);
         return result;
     }

@@ -3,7 +3,7 @@
   "$id": "https://infinium.invalid/contracts/repository/m1-slice6-campaign-stage-request.v1.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_identity", "manifest_id", "status", "candidate_binding", "campaign_binding", "stage", "predecessor_evidence", "canonical_request", "transport", "limits", "safety_identifier", "execution"],
+  "required": ["schema_identity", "manifest_id", "status", "candidate_binding", "campaign_binding", "stage", "predecessor_evidence", "canonical_request", "transport", "limits", "safety_identifier", "validation_package", "execution"],
   "properties": {
     "schema_identity": { "const": "infinium.repository.m1-slice6-campaign-stage-request/1.0.0" },
     "manifest_id": { "$ref": "#/$defs/id" },
@@ -47,13 +47,16 @@
     },
     "canonical_request": {
       "type": "object", "additionalProperties": false,
-      "required": ["path", "sha256", "bytes", "input_bound_policy_id", "input_bound_policy_version", "proved_input_tokens", "maximum_output_tokens"],
+      "required": ["path", "sha256", "bytes", "input_bound_policy_id", "input_bound_policy_version", "o200k_token_count", "token_ids_sha256", "structural_allowance_tokens", "proved_input_tokens", "maximum_output_tokens"],
       "properties": {
         "path": { "type": "string", "pattern": "^[A-Za-z0-9._/-]{1,240}$" },
         "sha256": { "$ref": "#/$defs/sha64" },
         "bytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
         "input_bound_policy_id": { "const": "openai-responses-o200k-byte-envelope" },
-        "input_bound_policy_version": { "const": "v1" },
+        "input_bound_policy_version": { "const": "v2" },
+        "o200k_token_count": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "token_ids_sha256": { "$ref": "#/$defs/sha64" },
+        "structural_allowance_tokens": { "enum": [4096, 8192] },
         "proved_input_tokens": { "type": "integer", "minimum": 0, "maximum": 73728 },
         "maximum_output_tokens": { "type": "integer", "minimum": 1, "maximum": 4096 }
       }
@@ -90,6 +93,18 @@
         "raw_seed_present": { "const": false }
       }
     },
+    "validation_package": {
+      "type": "object", "additionalProperties": false,
+      "required": ["package_id", "manifest_path", "manifest_sha256", "oracle_path", "oracle_sha256", "semantic_use"],
+      "properties": {
+        "package_id": { "enum": ["M1-PLAT-PROVIDER-CAPABILITY-VAL-v1", "LLM-CLAIM-LIVE-VAL", "LLM-INVESTIGATE-LIVE-VAL"] },
+        "manifest_path": { "type": "string", "pattern": "^fixtures/public/[A-Za-z0-9._/-]{1,220}$" },
+        "manifest_sha256": { "$ref": "#/$defs/sha64" },
+        "oracle_path": { "type": "string", "pattern": "^fixtures/public/[A-Za-z0-9._/-]{1,220}$" },
+        "oracle_sha256": { "$ref": "#/$defs/sha64" },
+        "semantic_use": { "type": "boolean" }
+      }
+    },
     "execution": {
       "type": "object", "additionalProperties": false,
       "required": ["provider_request_permitted", "requires_exact_review_marker", "requires_exact_admission_marker", "automatic_retry", "fourth_call_permitted"],
@@ -105,8 +120,27 @@
   "allOf": [
     {
       "if": { "properties": { "status": { "const": "verification-pending" } }, "required": ["status"] },
-      "then": { "properties": { "execution": { "properties": { "provider_request_permitted": { "const": false } } } } },
-      "else": { "properties": { "candidate_binding": { "properties": { "close_ready_implementation_commit": { "$ref": "#/$defs/sha40" }, "review_candidate_resolution": { "const": "exact-clean-committed-two-file-stage-candidate" } } } } }
+      "then": { "properties": { "candidate_binding": { "properties": { "close_ready_implementation_commit": { "const": "pending" }, "review_candidate_resolution": { "const": "pending" } } }, "execution": { "properties": { "provider_request_permitted": { "const": false } } } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "ready-for-independent-review" } }, "required": ["status"] },
+      "then": { "properties": { "candidate_binding": { "properties": { "close_ready_implementation_commit": { "$ref": "#/$defs/sha40" }, "review_candidate_resolution": { "const": "exact-clean-committed-two-file-stage-candidate" } } }, "execution": { "properties": { "provider_request_permitted": { "const": false } } } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "reviewed-and-admitted" } }, "required": ["status"] },
+      "then": { "properties": { "candidate_binding": { "properties": { "close_ready_implementation_commit": { "$ref": "#/$defs/sha40" }, "review_candidate_resolution": { "const": "exact-clean-committed-two-file-stage-candidate" } } }, "execution": { "properties": { "provider_request_permitted": { "const": true } } } } }
+    },
+    {
+      "if": { "properties": { "stage": { "properties": { "operation": { "const": "Qualification" } }, "required": ["operation"] } }, "required": ["stage"] },
+      "then": { "properties": { "validation_package": { "properties": { "package_id": { "const": "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1" }, "semantic_use": { "const": false } } } } }
+    },
+    {
+      "if": { "properties": { "stage": { "properties": { "operation": { "const": "SourceClaimExtraction" } }, "required": ["operation"] } }, "required": ["stage"] },
+      "then": { "properties": { "validation_package": { "properties": { "package_id": { "const": "LLM-CLAIM-LIVE-VAL" }, "semantic_use": { "const": true } } } } }
+    },
+    {
+      "if": { "properties": { "stage": { "properties": { "operation": { "const": "CandidateInvestigation" } }, "required": ["operation"] } }, "required": ["stage"] },
+      "then": { "properties": { "validation_package": { "properties": { "package_id": { "const": "LLM-INVESTIGATE-LIVE-VAL" }, "semantic_use": { "const": true } } } } }
     }
   ],
   "$defs": {

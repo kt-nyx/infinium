@@ -6,25 +6,39 @@
   "required": [
     "schema", "status", "campaign_id", "campaign_manifest_sha256", "stage_manifest_id",
     "stage_manifest_sha256", "stage", "canonical_request_sha256", "predecessor_evidence_id",
-    "predecessor_evidence_sha256", "safety_identifier_projection", "provider_state",
-    "provider_send_count", "dns_resolution_count", "retry_permitted", "input_tokens",
-    "output_tokens", "raw_response_bytes", "calculated_nano_usd", "credential_reads",
-    "credential_frees", "credential_writes", "credential_deletes", "cumulative_credential_calls",
-    "retained_response_sha256"
+    "predecessor_evidence_sha256", "safety_identifier_projection", "provider_state", "http_status",
+    "provider_response_id", "client_request_id", "provider_request_id", "requested_model",
+    "returned_model", "requested_service_tier", "returned_service_tier", "reasoning_context",
+    "reasoning_mode", "prompt_cache_mode", "provider_send_count", "dns_resolution_count",
+    "retry_permitted", "input_tokens", "output_tokens", "raw_response_bytes", "calculated_nano_usd",
+    "usage", "rate_facts", "credential_reads", "credential_frees", "credential_writes",
+    "credential_deletes", "cumulative_credential_calls", "retained_artifacts",
+    "authoritative_persistence", "validation_package", "semantic_validation"
   ],
   "properties": {
     "schema": { "const": "infinium.m1-s6.campaign-stage-evidence/v1" },
     "status": { "const": "independent-review-pending" },
-    "campaign_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "campaign_id": { "$ref": "#/$defs/id" },
     "campaign_manifest_sha256": { "$ref": "#/$defs/sha256" },
-    "stage_manifest_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "stage_manifest_id": { "$ref": "#/$defs/id" },
     "stage_manifest_sha256": { "$ref": "#/$defs/sha256" },
     "stage": { "enum": ["Qualification", "SourceClaimExtraction", "CandidateInvestigation"] },
     "canonical_request_sha256": { "$ref": "#/$defs/sha256" },
-    "predecessor_evidence_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "predecessor_evidence_id": { "$ref": "#/$defs/id" },
     "predecessor_evidence_sha256": { "$ref": "#/$defs/sha256" },
     "safety_identifier_projection": { "$ref": "#/$defs/sha256" },
     "provider_state": { "const": "Completed" },
+    "http_status": { "type": "integer", "minimum": 200, "maximum": 299 },
+    "provider_response_id": { "$ref": "#/$defs/id" },
+    "client_request_id": { "$ref": "#/$defs/id" },
+    "provider_request_id": { "$ref": "#/$defs/id" },
+    "requested_model": { "const": "gpt-5.6-sol" },
+    "returned_model": { "const": "gpt-5.6-sol" },
+    "requested_service_tier": { "const": "default" },
+    "returned_service_tier": { "const": "default" },
+    "reasoning_context": { "const": "current_turn" },
+    "reasoning_mode": { "const": "standard" },
+    "prompt_cache_mode": { "const": "explicit" },
     "provider_send_count": { "const": 1 },
     "dns_resolution_count": { "const": 1 },
     "retry_permitted": { "const": false },
@@ -32,37 +46,69 @@
     "output_tokens": { "type": "integer", "minimum": 0, "maximum": 4096 },
     "raw_response_bytes": { "type": "integer", "minimum": 1, "maximum": 1048576 },
     "calculated_nano_usd": { "type": "integer", "minimum": 0, "maximum": 600000000 },
-    "credential_reads": { "const": 1 }, "credential_frees": { "const": 1 },
-    "credential_writes": { "const": 0 }, "credential_deletes": { "const": 0 },
-    "cumulative_credential_calls": {
-      "type": "object", "additionalProperties": false,
-      "required": ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree", "total"],
-      "properties": {
-        "CredWriteW": { "const": 1 }, "CredReadW": { "type": "integer", "minimum": 3, "maximum": 5 },
-        "CredDeleteW": { "const": 0 }, "CredFree": { "type": "integer", "minimum": 2, "maximum": 4 },
-        "total": { "type": "integer", "minimum": 6, "maximum": 10 }
-      }
-    },
-    "retained_response_sha256": { "$ref": "#/$defs/sha256" }
+    "usage": { "$ref": "#/$defs/usage" },
+    "rate_facts": { "type": "array", "maxItems": 32, "items": { "$ref": "#/$defs/rateFact" } },
+    "credential_reads": { "const": 1 },
+    "credential_frees": { "const": 1 },
+    "credential_writes": { "const": 0 },
+    "credential_deletes": { "const": 0 },
+    "cumulative_credential_calls": { "$ref": "#/$defs/native" },
+    "retained_artifacts": { "$ref": "#/$defs/artifacts" },
+    "authoritative_persistence": { "$ref": "#/$defs/persistence" },
+    "validation_package": { "$ref": "#/$defs/validationPackage" },
+    "semantic_validation": { "$ref": "#/$defs/semanticValidation" }
   },
   "allOf": [
     {
       "if": { "properties": { "stage": { "const": "Qualification" } }, "required": ["stage"] },
-      "then": { "properties": { "cumulative_credential_calls": { "$ref": "#/$defs/nativeQualification" } } }
+      "then": {
+        "properties": {
+          "validation_package": { "properties": { "package_id": { "const": "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1" }, "semantic_use": { "const": false } } },
+          "semantic_validation": { "properties": { "validation_id": { "const": "qualification-nonsemantic" }, "disposition": { "const": "not-applicable" }, "proposal_count": { "const": 0 }, "admission_count": { "const": 0 }, "result_sha256": { "const": "0000000000000000000000000000000000000000000000000000000000000000" } } }
+        }
+      }
     },
     {
       "if": { "properties": { "stage": { "const": "SourceClaimExtraction" } }, "required": ["stage"] },
-      "then": { "properties": { "cumulative_credential_calls": { "$ref": "#/$defs/nativeSourceClaim" } } }
+      "then": {
+        "properties": {
+          "validation_package": { "properties": { "package_id": { "const": "LLM-CLAIM-LIVE-VAL" }, "semantic_use": { "const": true } } },
+          "semantic_validation": { "properties": { "validation_id": { "const": "infinium.host.source-claim-admission/v1" }, "proposal_count": { "const": 1 }, "admission_count": { "const": 1 } } }
+        }
+      }
     },
     {
       "if": { "properties": { "stage": { "const": "CandidateInvestigation" } }, "required": ["stage"] },
-      "then": { "properties": { "cumulative_credential_calls": { "$ref": "#/$defs/nativeCandidate" } } }
+      "then": {
+        "properties": {
+          "validation_package": { "properties": { "package_id": { "const": "LLM-INVESTIGATE-LIVE-VAL" }, "semantic_use": { "const": true } } },
+          "semantic_validation": { "properties": { "validation_id": { "const": "infinium.host.candidate-investigation-admission/v1" }, "proposal_count": { "const": 1 }, "admission_count": { "const": 1 } } }
+        }
+      }
     }
   ],
   "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256 },
     "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-    "nativeQualification": { "type": "object", "additionalProperties": false, "required": ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree", "total"], "properties": { "CredWriteW": { "const": 1 }, "CredReadW": { "const": 3 }, "CredDeleteW": { "const": 0 }, "CredFree": { "const": 2 }, "total": { "const": 6 } } },
-    "nativeSourceClaim": { "type": "object", "additionalProperties": false, "required": ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree", "total"], "properties": { "CredWriteW": { "const": 1 }, "CredReadW": { "const": 4 }, "CredDeleteW": { "const": 0 }, "CredFree": { "const": 3 }, "total": { "const": 8 } } },
-    "nativeCandidate": { "type": "object", "additionalProperties": false, "required": ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree", "total"], "properties": { "CredWriteW": { "const": 1 }, "CredReadW": { "const": 5 }, "CredDeleteW": { "const": 0 }, "CredFree": { "const": 4 }, "total": { "const": 10 } } }
+    "quantity": { "type": "object", "additionalProperties": false, "required": ["Availability", "Value"], "properties": { "Availability": { "enum": ["Available", "Unavailable", 1, 2] }, "Value": { "type": ["integer", "null"], "minimum": 0 } } },
+    "usage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["Availability", "DispatchCount", "InputTokens", "OutputTokens", "TotalTokens", "ReasoningTokens", "CacheReadTokens", "CacheWriteTokens", "PricedToolCalls", "CalculatedNanoUsd", "BillingAvailability", "RateAvailability", "CreditAvailability", "ReceiptState"],
+      "properties": {
+        "Availability": { "enum": ["Available", 1] }, "DispatchCount": { "$ref": "#/$defs/quantity" },
+        "InputTokens": { "$ref": "#/$defs/quantity" }, "OutputTokens": { "$ref": "#/$defs/quantity" },
+        "TotalTokens": { "$ref": "#/$defs/quantity" }, "ReasoningTokens": { "$ref": "#/$defs/quantity" },
+        "CacheReadTokens": { "$ref": "#/$defs/quantity" }, "CacheWriteTokens": { "$ref": "#/$defs/quantity" },
+        "PricedToolCalls": { "$ref": "#/$defs/quantity" }, "CalculatedNanoUsd": { "$ref": "#/$defs/quantity" },
+        "BillingAvailability": { "type": ["string", "integer"] }, "RateAvailability": { "type": ["string", "integer"] },
+        "CreditAvailability": { "type": ["string", "integer"] }, "ReceiptState": { "type": ["string", "integer"] }
+      }
+    },
+    "rateFact": { "type": "object", "additionalProperties": false, "required": ["name", "value"], "properties": { "name": { "$ref": "#/$defs/id" }, "value": { "type": "integer", "minimum": 0 } } },
+    "native": { "type": "object", "additionalProperties": false, "required": ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree", "total"], "properties": { "CredWriteW": { "const": 1 }, "CredReadW": { "type": "integer", "minimum": 3, "maximum": 5 }, "CredDeleteW": { "const": 0 }, "CredFree": { "type": "integer", "minimum": 2, "maximum": 4 }, "total": { "type": "integer", "minimum": 6, "maximum": 10 } } },
+    "artifacts": { "type": "object", "additionalProperties": false, "required": ["canonical_request_path", "canonical_request_sha256", "raw_response_path", "raw_response_sha256", "response_headers_path", "response_headers_sha256", "native_trace_path", "native_trace_sha256", "canary_evidence_path", "canary_evidence_sha256"], "properties": { "canonical_request_path": { "$ref": "#/$defs/id" }, "canonical_request_sha256": { "$ref": "#/$defs/sha256" }, "raw_response_path": { "$ref": "#/$defs/id" }, "raw_response_sha256": { "$ref": "#/$defs/sha256" }, "response_headers_path": { "$ref": "#/$defs/id" }, "response_headers_sha256": { "$ref": "#/$defs/sha256" }, "native_trace_path": { "$ref": "#/$defs/id" }, "native_trace_sha256": { "$ref": "#/$defs/sha256" }, "canary_evidence_path": { "$ref": "#/$defs/id" }, "canary_evidence_sha256": { "$ref": "#/$defs/sha256" } } },
+    "persistence": { "type": "object", "additionalProperties": false, "required": ["authorization_id", "operation_id", "attempt_id", "request_id", "reservation_id", "dispatch_fence_id", "response_id", "usage_entry_id", "settlement_id", "replay_edge_id", "raw_response_sha256", "response_headers_sha256", "unresolved_hold", "retry_permitted"], "properties": { "authorization_id": { "$ref": "#/$defs/id" }, "operation_id": { "$ref": "#/$defs/id" }, "attempt_id": { "$ref": "#/$defs/id" }, "request_id": { "$ref": "#/$defs/id" }, "reservation_id": { "$ref": "#/$defs/id" }, "dispatch_fence_id": { "$ref": "#/$defs/id" }, "response_id": { "$ref": "#/$defs/id" }, "usage_entry_id": { "$ref": "#/$defs/id" }, "settlement_id": { "$ref": "#/$defs/id" }, "replay_edge_id": { "$ref": "#/$defs/id" }, "raw_response_sha256": { "$ref": "#/$defs/sha256" }, "response_headers_sha256": { "$ref": "#/$defs/sha256" }, "unresolved_hold": { "const": false }, "retry_permitted": { "const": false } } },
+    "validationPackage": { "type": "object", "additionalProperties": false, "required": ["package_id", "manifest_path", "manifest_sha256", "oracle_path", "oracle_sha256", "semantic_use"], "properties": { "package_id": { "$ref": "#/$defs/id" }, "manifest_path": { "$ref": "#/$defs/id" }, "manifest_sha256": { "$ref": "#/$defs/sha256" }, "oracle_path": { "$ref": "#/$defs/id" }, "oracle_sha256": { "$ref": "#/$defs/sha256" }, "semantic_use": { "type": "boolean" } } },
+    "semanticValidation": { "type": "object", "additionalProperties": false, "required": ["validation_id", "disposition", "proposal_count", "admission_count", "result_sha256"], "properties": { "validation_id": { "$ref": "#/$defs/id" }, "disposition": { "enum": ["not-applicable", "accepted", "accepted-conditional", "accepted-conditional-applicability"] }, "proposal_count": { "type": "integer", "minimum": 0, "maximum": 64 }, "admission_count": { "type": "integer", "minimum": 0, "maximum": 64 }, "result_sha256": { "$ref": "#/$defs/sha256" } } }
   }
 }

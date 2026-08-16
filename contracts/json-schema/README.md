@@ -54,7 +54,7 @@ fingerprint and do not reinterpret or replace the Slice 5 v1 bytes. All nine
 contracts are closed at every declared object boundary and contain no
 credential target, secret byte, authorization-header, or raw-header field.
 Provider execution and operation carry the accepted versioned local input-bound
-policy `openai-responses-o200k-byte-envelope/v1`. This maturity transition does
+policy `openai-responses-o200k-byte-envelope/v2`. This maturity transition does
 not authorize provider dispatch, credentials, or later-package execution and
 does not change or reinterpret frozen Slice 5 v1 bytes.
 

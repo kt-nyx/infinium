@@ -1,0 +1,22 @@
+{
+  "schema_identity": "infinium.public-fixture.live-provider-provenance/1.0.0",
+  "package_identity": "PROV-LIVE-COMPOSED-VAL",
+  "package_version": "1.0.0",
+  "partition": "validation",
+  "status": "oracle-frozen-pre-live-comparison",
+  "operation": "ComposedProvenance",
+  "product_input": {
+    "qualification_semantic_use": false,
+    "source_claim_package": "LLM-CLAIM-LIVE-VAL",
+    "candidate_investigation_package": "LLM-INVESTIGATE-LIVE-VAL"
+  },
+  "oracle": {
+    "path": "oracle.v1.json",
+    "authoring": "independent-pre-response",
+    "product_visible": false
+  },
+  "answer_free_product_input": true,
+  "network_required_for_oracle": false,
+  "provider_call_count": 0,
+  "semantic_use": true
+}

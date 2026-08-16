@@ -6,7 +6,7 @@ public static class ProviderOperationContractInvariants
     public const long MaximumLocallyAdmittedInputTokens = 73_728;
     public const string LocalInputBoundProofStatus = "proved";
     public const string LocalInputBoundPolicyId = "openai-responses-o200k-byte-envelope";
-    public const string LocalInputBoundPolicyVersion = "v1";
+    public const string LocalInputBoundPolicyVersion = "v2";
     public const string UnresolvedInputBoundPolicyId = "unresolved-openai-responses-framing";
     public const string UnresolvedInputBoundPolicyVersion = "authority-required";
 

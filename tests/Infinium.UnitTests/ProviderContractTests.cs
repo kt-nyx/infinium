@@ -254,7 +254,7 @@ public sealed class ProviderContractTests
             ReplayEdgeId = Id("replay-1"),
             LiveAuthorizationId = authorizationId,
             AcceptedInputBoundPolicyId = "openai-responses-o200k-byte-envelope",
-            AcceptedInputBoundPolicyVersion = "v1",
+            AcceptedInputBoundPolicyVersion = "v2",
         };
         ProviderOperationContractInvariants.Validate(output with { ProviderOperations = [live] });
         Assert.ThrowsExactly<InvalidOperationException>(() =>
@@ -277,7 +277,7 @@ public sealed class ProviderContractTests
             ReservedNanoUsd = Q(10),
             ReplayState = "retained-response",
             AcceptedInputBoundPolicyId = "openai-responses-o200k-byte-envelope",
-            AcceptedInputBoundPolicyVersion = "v1",
+            AcceptedInputBoundPolicyVersion = "v2",
             LiveAuthorizationId = authorizationId,
         });
         Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(cli with
@@ -285,7 +285,7 @@ public sealed class ProviderContractTests
             ProviderState = "live",
             ReplayState = "retained-response",
             AcceptedInputBoundPolicyId = "openai-responses-o200k-byte-envelope",
-            AcceptedInputBoundPolicyVersion = "v1",
+            AcceptedInputBoundPolicyVersion = "v2",
             LiveAuthorizationId = authorizationId,
         }));
     }

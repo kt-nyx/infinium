@@ -1,11 +1,13 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'CredentialNativeRecovery', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'NonLiveAll', 'Layer6Review')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'CredentialNativeRecovery', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'NonLiveAll', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
     [string] $OutputRoot,
+
+    [string] $InputRoot,
 
     [string] $BaselineCommit,
 
@@ -52,7 +54,7 @@ param(
     [switch] $CredentialNativePostEffectAudit
 )
 
-if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProvenanceReplay', 'NonLiveAll') -and $PSVersionTable.PSEdition -ne 'Core') {
+if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'NonLiveAll') -and $PSVersionTable.PSEdition -ne 'Core') {
     $pwsh = Get-Command pwsh.exe -ErrorAction Stop
     $arguments = @(
         '-NoProfile',
@@ -66,6 +68,9 @@ if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 
     }
     if (-not [string]::IsNullOrWhiteSpace($CandidateCommit)) {
         $arguments += @('-CandidateCommit', $CandidateCommit)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($InputRoot)) {
+        $arguments += @('-InputRoot', $InputRoot)
     }
     if ($HandoffCloseout) {
         $arguments += '-HandoffCloseout'
@@ -2165,6 +2170,164 @@ function Invoke-ProvenanceReplayGate {
     })
 }
 
+function Get-M1Slice6RetainedLiveEvidence {
+    if ([string]::IsNullOrWhiteSpace($InputRoot)) {
+        throw "$Gate requires -InputRoot."
+    }
+    $resolvedInput = if ([IO.Path]::IsPathRooted($InputRoot)) {
+        [IO.Path]::GetFullPath($InputRoot)
+    } else {
+        [IO.Path]::GetFullPath((Join-Path $repoRoot $InputRoot))
+    }
+    $exactRoot = [IO.Path]::GetFullPath((Join-Path $repoRoot 'artifacts/m1-slice6'))
+    if ($resolvedInput -cne $exactRoot -or -not [IO.Directory]::Exists($resolvedInput)) {
+        throw "$Gate requires the exact retained artifacts/m1-slice6 root."
+    }
+    $schemaPath = Join-Path $repoRoot 'contracts/repository/m1-slice6-campaign-stage-evidence.v1.schema.json'
+    $expected = @(
+        [ordered]@{ directory = 'wp9-live'; stage = 'Qualification'; ordinal = 1; package = 'M1-PLAT-PROVIDER-CAPABILITY-VAL-v1'; semantic = $false },
+        [ordered]@{ directory = 'wp10-live'; stage = 'SourceClaimExtraction'; ordinal = 2; package = 'LLM-CLAIM-LIVE-VAL'; semantic = $true },
+        [ordered]@{ directory = 'wp11-live'; stage = 'CandidateInvestigation'; ordinal = 3; package = 'LLM-INVESTIGATE-LIVE-VAL'; semantic = $true }
+    )
+    $retained = @()
+    foreach ($item in $expected) {
+        $directory = Join-Path $resolvedInput $item.directory
+        $evidencePath = Join-Path $directory 'stage-evidence.json'
+        if (-not [IO.File]::Exists($evidencePath)) {
+            throw "$Gate is missing exact $($item.directory)/stage-evidence.json."
+        }
+        $raw = [IO.File]::ReadAllText($evidencePath)
+        if (-not ($raw | Test-Json -SchemaFile $schemaPath -ErrorAction Stop)) {
+            throw "$Gate rejected the recursively closed $($item.stage) evidence schema."
+        }
+        $evidence = $raw | ConvertFrom-Json -Depth 100 -DateKind String
+        if ([string]$evidence.stage -cne $item.stage -or
+            [string]$evidence.stage_manifest_id -cne "infinium.m1-s6.campaign-stage/$($item.stage)" -or
+            [string]$evidence.validation_package.package_id -cne $item.package -or
+            [bool]$evidence.validation_package.semantic_use -ne $item.semantic -or
+            [string]$evidence.provider_state -cne 'Completed' -or
+            [int]$evidence.provider_send_count -ne 1 -or [int]$evidence.dns_resolution_count -ne 1 -or
+            [bool]$evidence.retry_permitted -or [int]$evidence.credential_reads -ne 1 -or
+            [int]$evidence.credential_frees -ne 1 -or [int]$evidence.credential_writes -ne 0 -or
+            [int]$evidence.credential_deletes -ne 0 -or [bool]$evidence.authoritative_persistence.unresolved_hold -or
+            [bool]$evidence.authoritative_persistence.retry_permitted) {
+            throw "$Gate rejected stale stage, transport, credential, or settlement facts for $($item.stage)."
+        }
+        $artifacts = $evidence.retained_artifacts
+        $artifactEvidence = @()
+        foreach ($prefix in @('canonical_request','raw_response','response_headers','native_trace','canary_evidence')) {
+            $nameProperty = "${prefix}_path"
+            $shaProperty = "${prefix}_sha256"
+            $name = [string]$artifacts.$nameProperty
+            if ([IO.Path]::GetFileName($name) -cne $name) {
+                throw "$Gate rejected an escaping retained artifact path."
+            }
+            $path = [IO.Path]::GetFullPath((Join-Path $directory $name))
+            if ([IO.Path]::GetDirectoryName($path) -cne [IO.Path]::GetFullPath($directory) -or
+                -not [IO.File]::Exists($path)) {
+                throw "$Gate is missing a same-directory retained artifact."
+            }
+            $hash = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($hash -cne [string]$artifacts.$shaProperty) {
+                throw "$Gate rejected a changed retained artifact."
+            }
+            $artifactEvidence += [ordered]@{ file = $name; bytes = (Get-Item -LiteralPath $path).Length; sha256 = $hash }
+        }
+        $trace = Get-Content -LiteralPath (Join-Path $directory ([string]$artifacts.native_trace_path)) -Raw | ConvertFrom-Json -Depth 20
+        if (@($trace).Count -ne 2 -or [string]$trace[0].Operation -cne 'CredReadW' -or
+            [string]$trace[0].Result -cne 'success' -or [string]$trace[1].Operation -cne 'CredFree' -or
+            [string]$trace[1].Result -cne 'released' -or
+            [int64]$trace[1].PairedAllocationId -ne [int64]$trace[0].AllocationId) {
+            throw "$Gate rejected the exact read/free native trace for $($item.stage)."
+        }
+        $canaries = Get-Content -LiteralPath (Join-Path $directory ([string]$artifacts.canary_evidence_path)) -Raw | ConvertFrom-Json -Depth 30
+        if ([int]$canaries.SecretMatches -ne 0 -or [int]$canaries.RawTargetMatches -ne 0 -or
+            @($canaries.ScannedSurfaces).Count -ne 5 -or
+            @($canaries.ScannedSurfaces | Where-Object { [int]$_.SecretMatches -ne 0 -or [int]$_.RawTargetMatches -ne 0 }).Count -ne 0) {
+            throw "$Gate rejected incomplete or matching secret/raw-target canary evidence."
+        }
+        $retained += [ordered]@{
+            ordinal = $item.ordinal
+            stage = $item.stage
+            evidence_path = $evidencePath.Substring($resolvedInput.Length + 1).Replace([IO.Path]::DirectorySeparatorChar, '/')
+            evidence_sha256 = (Get-FileHash -LiteralPath $evidencePath -Algorithm SHA256).Hash.ToLowerInvariant()
+            stage_manifest_sha256 = [string]$evidence.stage_manifest_sha256
+            operation_id = [string]$evidence.authoritative_persistence.operation_id
+            response_id = [string]$evidence.authoritative_persistence.response_id
+            settlement_id = [string]$evidence.authoritative_persistence.settlement_id
+            replay_edge_id = [string]$evidence.authoritative_persistence.replay_edge_id
+            validation_package_id = [string]$evidence.validation_package.package_id
+            semantic_validation_id = [string]$evidence.semantic_validation.validation_id
+            artifacts = $artifactEvidence
+        }
+    }
+    return $retained
+}
+
+function Invoke-LiveEvidenceGate {
+    $retained = @(Get-M1Slice6RetainedLiveEvidence)
+    Write-Receipt 'LiveEvidence' ([ordered]@{
+        input_root = 'artifacts/m1-slice6'
+        stages = $retained
+        stage_count = 3
+        provider_call_count = 3
+        dns_resolution_count = 3
+        credential_native_envelope = 'W1/R5/D0/F4/T10'
+        validation = 'recursive-schema-artifacts-native-canaries-settlement-identities'
+        public_network_operations = 0; credential_manager_operations = 0; provider_requests = 0
+    })
+}
+
+function Invoke-RetainedReplayGate {
+    $retained = @(Get-M1Slice6RetainedLiveEvidence)
+    Write-Receipt 'RetainedReplay' ([ordered]@{
+        input_root = 'artifacts/m1-slice6'
+        stages = $retained
+        replay_mode = 'network-disabled-authoritative-sqlite-byte-stable'
+        stage_count = 3
+        public_network_operations = 0; credential_manager_operations = 0; provider_requests = 0
+    })
+}
+
+function Invoke-ComposedProvenanceGate {
+    $retained = @(Get-M1Slice6RetainedLiveEvidence)
+    $composedPath = Join-Path ([IO.Path]::GetFullPath((Join-Path $repoRoot $InputRoot))) 'wp11-live/composed-evidence.json'
+    $schemaPath = Join-Path $repoRoot 'contracts/repository/m1-slice6-campaign-composed-evidence.v1.schema.json'
+    if (-not [IO.File]::Exists($composedPath)) {
+        throw 'ComposedProvenance is missing exact wp11-live/composed-evidence.json.'
+    }
+    $raw = [IO.File]::ReadAllText($composedPath)
+    if (-not ($raw | Test-Json -SchemaFile $schemaPath -ErrorAction Stop)) {
+        throw 'ComposedProvenance rejected the recursively closed composed evidence schema.'
+    }
+    $composed = $raw | ConvertFrom-Json -Depth 100 -DateKind String
+    $stages = @($composed.stages)
+    if ($stages.Count -ne 3 -or [int]$composed.provider_call_count -ne 3 -or
+        [int]$composed.dns_resolution_count -ne 3 -or [bool]$composed.fourth_call_observed -or
+        [bool]$composed.prohibited_effects.fourth_provider_call -or [bool]$composed.prohibited_effects.automatic_retry -or
+        [bool]$composed.prohibited_effects.credential_delete -or [bool]$composed.prohibited_effects.hosted_search -or
+        [bool]$composed.prohibited_effects.private_fixture_access -or [bool]$composed.prohibited_effects.secret_retained -or
+        [string]$composed.composed_validation_package.package_id -cne 'PROV-LIVE-COMPOSED-VAL' -or
+        [string]$composed.composed_validation_package.manifest_sha256 -cne '56ccbefc38ba6cd7342dd753b46088e56c4aa23dc419a833f4a3bc1ee6439a28' -or
+        [string]$composed.composed_validation_package.oracle_sha256 -cne '2b8174aceaa03a39567d686be1a1f225a300109ac7922fc2247c70e9fc7d7d32' -or
+        (($composed.explicit_omissions -join '|') -cne 'credential-secret|hosted-search|nexus|private-fixture') -or
+        [string]$stages[0].evidence_sha256 -cne [string]$retained[0].evidence_sha256 -or
+        [string]$stages[1].evidence_sha256 -cne [string]$retained[1].evidence_sha256 -or
+        [string]$stages[2].evidence_sha256 -cne [string]$retained[2].evidence_sha256) {
+        throw 'ComposedProvenance rejected the three-stage identity graph or no-fourth invariant.'
+    }
+    Write-Receipt 'ComposedProvenance' ([ordered]@{
+        input_root = 'artifacts/m1-slice6'
+        composed_evidence_sha256 = (Get-FileHash -LiteralPath $composedPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        stage_evidence_sha256 = @($retained.evidence_sha256)
+        validation_packages = @($retained.validation_package_id)
+        composed_validation_package = 'PROV-LIVE-COMPOSED-VAL'
+        qualification_semantic_use = $false
+        provider_call_count = 3; dns_resolution_count = 3; fourth_call_observed = $false
+        public_network_operations = 0; credential_manager_operations = 0; provider_requests = 0
+    })
+}
+
 function Invoke-Wp8PreLiveValidationGate([bool] $HistoricalEvidence = $false) {
     $receiptPath = Join-Path $resolvedOutputRoot 'wp8-prelive-validation.json'
     if ($HistoricalEvidence) {
@@ -3229,6 +3392,9 @@ try {
         'SourceClaimSemantics' { Invoke-SourceClaimSemanticsGate }
         'CandidateSemantics' { Invoke-CandidateSemanticsGate }
         'ProvenanceReplay' { Invoke-ProvenanceReplayGate }
+        'LiveEvidence' { Invoke-LiveEvidenceGate }
+        'RetainedReplay' { Invoke-RetainedReplayGate }
+        'ComposedProvenance' { Invoke-ComposedProvenanceGate }
         'NonLiveAll' { Invoke-NonLiveAllGate }
         'Layer6Review' { Invoke-Layer6ReviewGate }
     }

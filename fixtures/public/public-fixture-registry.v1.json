@@ -2,7 +2,7 @@
   "schema_identity": "infinium.repository.public-fixture-registry/1.6.0",
   "registry_version": "1.6.0",
   "status": "current",
-  "package_count": 35,
+  "package_count": 38,
   "packages": [
     {
       "package_identity": "S6-CANDIDATE-DEV-v1",
@@ -61,6 +61,36 @@
       "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1/public-manifest.json",
       "authority_bytes": 1320,
       "authority_sha256": "0f95265340873dc4abb083c6f857db9e8786c6e1ba36da385f07c876afe1c13f"
+    },
+    {
+      "package_identity": "LLM-CLAIM-LIVE-VAL",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL",
+      "authority_file": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/public-manifest.json",
+      "authority_bytes": 939,
+      "authority_sha256": "d158ca537cfe72a4ff6c61d6f4bdc2d35270344f02150632d8c408796a65ed99",
+      "authority_status": "oracle-frozen-pre-live-comparison"
+    },
+    {
+      "package_identity": "LLM-INVESTIGATE-LIVE-VAL",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL",
+      "authority_file": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/public-manifest.json",
+      "authority_bytes": 977,
+      "authority_sha256": "57efeb5022a8d9429c1c7f6dc42f630318a877b3d7b7590d2cebbd8060e74db1",
+      "authority_status": "oracle-frozen-pre-live-comparison"
+    },
+    {
+      "package_identity": "PROV-LIVE-COMPOSED-VAL",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL",
+      "authority_file": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json",
+      "authority_bytes": 710,
+      "authority_sha256": "56ccbe21deca47243c577d30b6467ae645e9ede93b4475c45f474115c37fdb69",
+      "authority_status": "oracle-frozen-pre-live-comparison"
     },
     {
       "package_identity": "M1-PLAT-PROVIDER-CAPABILITY-DEV-v1",

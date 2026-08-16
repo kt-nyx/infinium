@@ -93,7 +93,7 @@ public static class HelperTestFrames
             InputBoundProof = new InputBoundProofV2
             {
                 PolicyId = "openai-responses-o200k-byte-envelope",
-                PolicyVersion = "v1",
+                PolicyVersion = "v2",
                 Status = InputBoundProofStatusV2.Proved,
             },
             RequestId = "request-1",
@@ -147,7 +147,7 @@ public static class HelperTestFrames
             InputBoundProof = new InputBoundProofV2
             {
                 PolicyId = "openai-responses-o200k-byte-envelope",
-                PolicyVersion = "v1",
+                PolicyVersion = "v2",
                 Status = InputBoundProofStatusV2.Proved,
             },
             EvaluatedAt = InstantAt(2),

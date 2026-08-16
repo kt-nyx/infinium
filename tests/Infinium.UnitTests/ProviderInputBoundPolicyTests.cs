@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Infinium.Application.Provider;
 using Infinium.Domain.Contracts;
+using Infinium.OpenAI;
 using Microsoft.ML.Tokenizers;
 
 namespace Infinium.Tests;
@@ -54,25 +55,30 @@ public sealed class ProviderInputBoundPolicyTests
         byte[] request = Request(ProviderOperationKind.TransportQualification, 256, "hello");
         ProviderInputBoundEvidence evidence = OpenAiResponsesInputBoundPolicy.Prove(
             ProviderOperationKind.TransportQualification, request, QualificationLimits);
-        Assert.AreEqual(502, request.Length);
-        Assert.AreEqual(120, evidence.O200kTokenCount);
-        Assert.AreEqual("26d04987ee43cb1ff581ccb32de900419515c4c8f99019e135cc0c44a2740a57", evidence.CanonicalRequestFingerprint.Value);
-        Assert.AreEqual("7af38412f5fb1630d984e59a252e6b5fba06f38ca94e800a6838cec05048cd52", evidence.TokenIdsFingerprint.Value);
+        Assert.AreEqual(802, request.Length);
+        Assert.AreEqual(225, evidence.O200kTokenCount);
+        Assert.AreEqual("fca9da0a42a8eeafe1495b2d99c37f06b5e872e322898ab0265449771ecbc792", evidence.CanonicalRequestFingerprint.Value);
+        Assert.AreEqual("2e58d6aa9f58450ec1a85c446528241406371a2b242c37aec484122a6b3ce20c", evidence.TokenIdsFingerprint.Value);
     }
 
     [TestMethod]
     [TestCategory("Unit")]
-    public void LocalByteEnvelopeAcceptsExactCeilingsAndRejectsOneOver()
+    public void LocalByteEnvelopeRejectsManifestUnderstatementOfExactRequestAndConservativeInputProof()
     {
-        byte[] qualification = RequestAtExactLength(
-            ProviderOperationKind.TransportQualification, 256, 16_384);
+        byte[] qualification = Request(ProviderOperationKind.TransportQualification, 256, "bounded");
         ProviderInputBoundEvidence qualificationEvidence = OpenAiResponsesInputBoundPolicy.Prove(
             ProviderOperationKind.TransportQualification, qualification, QualificationLimits);
-        Assert.AreEqual(20_480, qualificationEvidence.ConservativeInputTokenUpperBound);
+        Assert.AreEqual(qualification.Length + 4_096,
+            qualificationEvidence.ConservativeInputTokenUpperBound);
         Assert.ThrowsExactly<InvalidDataException>(() => OpenAiResponsesInputBoundPolicy.Prove(
-            ProviderOperationKind.TransportQualification,
-            qualification.Concat(new byte[] { 0x20 }).ToArray(),
-            QualificationLimits));
+            ProviderOperationKind.TransportQualification, qualification,
+            QualificationLimits with { MaximumRequestBytes = qualification.Length - 1 }));
+        Assert.ThrowsExactly<InvalidDataException>(() => OpenAiResponsesInputBoundPolicy.Prove(
+            ProviderOperationKind.TransportQualification, qualification,
+            QualificationLimits with
+            {
+                MaximumInputTokens = qualificationEvidence.ConservativeInputTokenUpperBound - 1,
+            }));
 
         foreach (ProviderOperationKind kind in new[]
         {
@@ -80,11 +86,16 @@ public sealed class ProviderInputBoundPolicyTests
             ProviderOperationKind.CandidateInvestigation,
         })
         {
-            byte[] semantic = RequestAtExactLength(kind, 4_096, 65_536);
+            byte[] semantic = Request(kind, 4_096, new string('x', 48_000));
             ProviderInputBoundEvidence evidence = OpenAiResponsesInputBoundPolicy.Prove(kind, semantic, SemanticLimits);
-            Assert.AreEqual(73_728, evidence.ConservativeInputTokenUpperBound);
+            Assert.AreEqual(semantic.Length + 8_192, evidence.ConservativeInputTokenUpperBound);
             Assert.ThrowsExactly<InvalidDataException>(() => OpenAiResponsesInputBoundPolicy.Prove(
-                kind, semantic.Concat(new byte[] { 0x20 }).ToArray(), SemanticLimits));
+                kind, semantic, SemanticLimits with { MaximumRequestBytes = semantic.Length - 1 }));
+            Assert.ThrowsExactly<InvalidDataException>(() => OpenAiResponsesInputBoundPolicy.Prove(
+                kind, semantic, SemanticLimits with
+                {
+                    MaximumInputTokens = evidence.ConservativeInputTokenUpperBound - 1,
+                }));
         }
     }
 
@@ -123,7 +134,7 @@ public sealed class ProviderInputBoundPolicyTests
     public void LocalByteEnvelopePinsPolicyModelEncodingVocabularyAndOfflineResource()
     {
         StringAssert.Matches(OpenAiResponsesInputBoundPolicy.PolicyIdentity,
-            new System.Text.RegularExpressions.Regex("^openai-responses-o200k-byte-envelope/v1$"));
+            new System.Text.RegularExpressions.Regex("^openai-responses-o200k-byte-envelope/v2$"));
         StringAssert.Contains(OpenAiResponsesInputBoundPolicy.TokenizerPackageIdentity, "/2.0.0");
         StringAssert.Contains(OpenAiResponsesInputBoundPolicy.VocabularyPackageIdentity, "/2.0.0");
         _ = TiktokenTokenizer.CreateForEncoding(OpenAiResponsesInputBoundPolicy.EncodingName);
@@ -137,7 +148,7 @@ public sealed class ProviderInputBoundPolicyTests
             ProviderInputBoundProofState.Proved);
         OpenAiResponsesInputBoundPolicy.ValidateProofIdentity(accepted);
         Assert.ThrowsExactly<InvalidDataException>(() =>
-            OpenAiResponsesInputBoundPolicy.ValidateProofIdentity(accepted with { PolicyVersion = "v2" }));
+            OpenAiResponsesInputBoundPolicy.ValidateProofIdentity(accepted with { PolicyVersion = "v3" }));
 
         byte[] request = Request(ProviderOperationKind.TransportQualification, 256, "hello");
         string text = Encoding.UTF8.GetString(request).Replace("gpt-5.6-sol", "gpt-5.6-terra", StringComparison.Ordinal);
@@ -206,60 +217,15 @@ public sealed class ProviderInputBoundPolicyTests
         Assert.AreEqual(expectedContentHash, package.GetProperty("contentHash").GetString(), packageId);
     }
 
-    private static byte[] RequestAtExactLength(ProviderOperationKind kind, long maximumOutputTokens, int targetBytes)
-    {
-        byte[] empty = Request(kind, maximumOutputTokens, "x");
-        int padding = targetBytes - empty.Length + 1;
-        Assert.IsGreaterThanOrEqualTo(1, padding);
-        byte[] result = Request(kind, maximumOutputTokens, new string('x', padding));
-        Assert.AreEqual(targetBytes, result.Length);
-        return result;
-    }
-
     private static byte[] Request(ProviderOperationKind kind, long maximumOutputTokens, string input)
     {
-        string name = kind switch
-        {
-            ProviderOperationKind.TransportQualification => "transport_qualification",
-            ProviderOperationKind.SourceClaimExtraction => "source_claim_extraction",
-            ProviderOperationKind.CandidateInvestigation => "candidate_investigation",
-            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
-        };
-        Dictionary<string, object?> request = new(StringComparer.Ordinal)
-        {
-            ["model"] = "gpt-5.6-sol",
-            ["reasoning"] = new Dictionary<string, object?>
-            {
-                ["effort"] = "medium",
-                ["context"] = "current_turn",
-                ["mode"] = "standard",
-            },
-            ["text"] = new Dictionary<string, object?>
-            {
-                ["format"] = new Dictionary<string, object?>
-                {
-                    ["type"] = "json_schema",
-                    ["name"] = name,
-                    ["strict"] = true,
-                    ["schema"] = new Dictionary<string, object?>
-                    {
-                        ["type"] = "object",
-                        ["additionalProperties"] = false,
-                    },
-                },
-            },
-            ["store"] = false,
-            ["service_tier"] = "default",
-            ["background"] = false,
-            ["stream"] = false,
-            ["tool_choice"] = "none",
-            ["tools"] = Array.Empty<object>(),
-            ["truncation"] = "disabled",
-            ["max_output_tokens"] = maximumOutputTokens,
-            ["prompt_cache_options"] = new Dictionary<string, object?> { ["mode"] = "explicit" },
-            ["instructions"] = "Infinium closed M1 instruction",
-            ["input"] = input,
-        };
-        return JsonSerializer.SerializeToUtf8Bytes(request);
+        using JsonDocument schema = JsonDocument.Parse(ProviderAdapterTestData.OutputSchemaBytes);
+        return OpenAiResponsesCanonicalSerializer.Serialize(new(
+            kind,
+            "Infinium closed M1 instruction",
+            input,
+            schema.RootElement.Clone(),
+            maximumOutputTokens,
+            ProviderAdapterTestData.SafetyIdentifier));
     }
 }

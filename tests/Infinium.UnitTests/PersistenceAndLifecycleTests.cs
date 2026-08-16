@@ -1150,7 +1150,7 @@ public sealed class PersistenceAndLifecycleTests
               'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
               'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
               'capability-1','price-1','dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
-              'openai-responses-o200k-byte-envelope','v1','proved',1,65536,73728,4096,1048576,1,600000000,120000,
+              'openai-responses-o200k-byte-envelope','v2','proved',1,65536,73728,4096,1048576,1,600000000,120000,
               '2026-08-10T00:02:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO analysis_candidates VALUES(
               'candidate-future','decision-future','run-1','mandatory-evidence','present','closure-1','payload-1',
@@ -1238,7 +1238,7 @@ public sealed class PersistenceAndLifecycleTests
               'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
               'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
               'capability-1','price-1','dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
-              'openai-responses-o200k-byte-envelope','v1','proved',1,65536,73728,4096,1048576,1,600000000,120000,
+              'openai-responses-o200k-byte-envelope','v2','proved',1,65536,73728,4096,1048576,1,600000000,120000,
               '2026-08-10T00:02:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_responses(
               response_record_id,availability,usage_availability,authorization_id,operation_id,owner_kind,owner_id,request_id,
@@ -1423,7 +1423,7 @@ public sealed class PersistenceAndLifecycleTests
               profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
               effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
               output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
-              price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v1','proved',coordinator_fencing_epoch,
+              price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v2','proved',coordinator_fencing_epoch,
               maximum_request_bytes,20,10,maximum_raw_response_bytes,maximum_dispatch_count,200,deadline_milliseconds,
               dispatch_deadline_utc,confirmed_at
             FROM provider_operation_blocks WHERE operation_id='operation-restore';
@@ -1906,7 +1906,7 @@ public sealed class PersistenceAndLifecycleTests
                   profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
                   effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
                   output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
-                  price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v1','proved',coordinator_fencing_epoch,
+                  price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v2','proved',coordinator_fencing_epoch,
                   maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,
                   maximum_dispatch_count,maximum_calculated_nano_usd,1,$deadline,$confirmed
                 FROM provider_operation_blocks WHERE operation_id='operation-restore';
@@ -3153,7 +3153,7 @@ public sealed class PersistenceAndLifecycleTests
               profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
               effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
               output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
-              price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v1','proved',coordinator_fencing_epoch,
+              price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v2','proved',coordinator_fencing_epoch,
               maximum_request_bytes,20,10,maximum_raw_response_bytes,maximum_dispatch_count,200,deadline_milliseconds,
               dispatch_deadline_utc,confirmed_at
             FROM provider_operation_blocks WHERE operation_id='operation-restore';

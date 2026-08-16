@@ -194,6 +194,9 @@ public sealed partial class AuthoritativeStore
                     INSERT INTO store_metadata(key,value)
                     VALUES ('wp7_schema_extension_id','M1-S6-WP7-0006H')
                     ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+                    INSERT INTO store_metadata(key,value)
+                    VALUES ('wp9_campaign_input_bound_correction_id','M1-S6-WP9-0006I')
+                    ON CONFLICT(key) DO UPDATE SET value=excluded.value;
                     INSERT INTO migration_history(
                         migration_id, from_version, to_version, applied_at, sqlite_source_id)
                     VALUES ('M1-S6-0006', 5, 6, $now, $sqlite_source);
@@ -215,6 +218,7 @@ public sealed partial class AuthoritativeStore
                 ApplyWp6Schema6CorrectionIfRequired();
                 ApplyWp6ActiveContractCorrectionIfRequired();
                 ApplyWp7Schema6ExtensionIfRequired();
+                ApplyWp9CampaignInputBoundCorrectionIfRequired();
             }
         }
     }
@@ -273,6 +277,7 @@ public sealed partial class AuthoritativeStore
             "554129523ac64ce52ee4d24e90644dbaa167c0d98602f1c2d0f25ad271ec0581";
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint
@@ -392,6 +397,7 @@ public sealed partial class AuthoritativeStore
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint
@@ -438,6 +444,7 @@ public sealed partial class AuthoritativeStore
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint)
@@ -499,6 +506,7 @@ public sealed partial class AuthoritativeStore
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint)
         {
@@ -548,6 +556,7 @@ public sealed partial class AuthoritativeStore
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
@@ -640,7 +649,8 @@ public sealed partial class AuthoritativeStore
     private void ApplyWp7Schema6ExtensionIfRequired()
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
-        if (actualFingerprint == ProviderPersistenceDeclarations.SchemaFingerprint)
+        if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
             declared.CommandText =
@@ -677,6 +687,101 @@ public sealed partial class AuthoritativeStore
             transaction,
             ("$fingerprint", upgradedFingerprint));
         transaction.Commit();
+    }
+
+    private void ApplyWp9CampaignInputBoundCorrectionIfRequired()
+    {
+        string actualFingerprint = ComputeSchemaFingerprint(connection);
+        if (actualFingerprint == ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint)
+        {
+            using SqliteCommand declared = connection.CreateCommand();
+            declared.CommandText =
+                "SELECT COUNT(*) FROM store_metadata WHERE key='wp9_campaign_input_bound_correction_id' AND value='M1-S6-WP9-0006I';";
+            if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The current WP9 campaign input-bound correction fingerprint lacks its exact provenance.");
+            }
+            return;
+        }
+        if (actualFingerprint != ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSourceSchemaFingerprint)
+        {
+            throw new InvalidOperationException(
+                $"Schema 6 does not match the exact WP9 campaign input-bound correction source ({actualFingerprint}).");
+        }
+
+        using (SqliteCommand state = connection.CreateCommand())
+        {
+            state.CommandText =
+                "SELECT (SELECT COUNT(*) FROM provider_operation_authorizations) + (SELECT COUNT(*) FROM provider_requests);";
+            if (Convert.ToInt64(state.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 0)
+            {
+                throw new InvalidOperationException(
+                    "The accepted schema-6 store contains provider execution state and cannot receive the clean-break WP9 input-bound correction automatically.");
+            }
+        }
+
+        List<(string Name, string Sql)> triggers = [];
+        using (SqliteCommand command = connection.CreateCommand())
+        {
+            command.CommandText =
+                "SELECT name,sql FROM sqlite_schema WHERE type='trigger' AND tbl_name IN ('provider_operation_authorizations','provider_requests') ORDER BY name;";
+            using SqliteDataReader reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                triggers.Add((reader.GetString(0), reader.GetString(1)));
+            }
+        }
+
+        static string UpgradePolicy(string sql) => sql.Replace(
+            "input_bound_policy_version = 'v1'",
+            "input_bound_policy_version = 'v2'",
+            StringComparison.Ordinal).Replace(
+            "input_bound_policy_version <> 'v1'",
+            "input_bound_policy_version <> 'v2'",
+            StringComparison.Ordinal);
+
+        Execute("PRAGMA foreign_keys=OFF; PRAGMA legacy_alter_table=ON;", null);
+        try
+        {
+            using SqliteTransaction transaction = BeginTransaction();
+            Execute(
+                "ALTER TABLE provider_requests RENAME TO provider_requests_wp9; "
+                + "ALTER TABLE provider_operation_authorizations RENAME TO provider_operation_authorizations_wp9;",
+                transaction);
+            Execute(UpgradePolicy(ExtractSchemaStatement(
+                SchemaV6, "CREATE TABLE " + "provider_operation_authorizations(")), transaction);
+            Execute(UpgradePolicy(ExtractSchemaStatement(
+                SchemaV6, "CREATE TABLE " + "provider_requests(")), transaction);
+            Execute(
+                "DROP TABLE provider_requests_wp9; DROP TABLE provider_operation_authorizations_wp9; "
+                + "CREATE UNIQUE INDEX idx_provider_request_fingerprint ON provider_requests(request_fingerprint);",
+                transaction);
+            foreach ((string _, string sql) in triggers)
+            {
+                Execute(UpgradePolicy(sql), transaction);
+            }
+
+            string upgradedFingerprint = ComputeSchemaFingerprint(connection, transaction);
+            if (upgradedFingerprint != ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint)
+            {
+                throw new InvalidOperationException(
+                    $"The bounded WP9 campaign input-bound correction did not converge on its declared fingerprint ({upgradedFingerprint}).");
+            }
+            Execute(
+                """
+                UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint';
+                INSERT INTO store_metadata(key,value) VALUES('wp9_campaign_input_bound_correction_id','M1-S6-WP9-0006I')
+                  ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+                """,
+                transaction,
+                ("$fingerprint", upgradedFingerprint));
+            transaction.Commit();
+        }
+        finally
+        {
+            Execute("PRAGMA legacy_alter_table=OFF; PRAGMA foreign_keys=ON;", null);
+        }
     }
 
     private static string ExtractSchemaStatement(string schema, string marker)
@@ -2481,7 +2586,7 @@ public sealed partial class AuthoritativeStore
         CREATE TRIGGER provider_authority_release_required
         BEFORE INSERT ON provider_operation_authorizations
         WHEN NEW.input_bound_policy_id <> 'openai-responses-o200k-byte-envelope'
-          OR NEW.input_bound_policy_version <> 'v1' OR NEW.input_bound_proof_status <> 'proved'
+          OR NEW.input_bound_policy_version <> 'v2' OR NEW.input_bound_proof_status <> 'proved'
         BEGIN SELECT RAISE(ABORT, 'provider dispatch requires the exact accepted repository-local input-bound proof'); END;
 
         DROP TRIGGER provider_reservation_scope_items_append_only_update;
@@ -3097,7 +3202,7 @@ public sealed partial class AuthoritativeStore
             price_snapshot_id TEXT NOT NULL REFERENCES provider_price_snapshots(price_snapshot_id) ON DELETE RESTRICT,
             settings_fingerprint TEXT NOT NULL,
             input_bound_policy_id TEXT NOT NULL CHECK(input_bound_policy_id = 'openai-responses-o200k-byte-envelope'),
-            input_bound_policy_version TEXT NOT NULL CHECK(input_bound_policy_version = 'v1'),
+            input_bound_policy_version TEXT NOT NULL CHECK(input_bound_policy_version = 'v2'),
             input_bound_proof_status TEXT NOT NULL CHECK(input_bound_proof_status = 'proved'),
             coordinator_fencing_epoch INTEGER NOT NULL CHECK(coordinator_fencing_epoch > 0),
             maximum_request_bytes INTEGER NOT NULL CHECK(maximum_request_bytes > 0),
@@ -3276,7 +3381,7 @@ public sealed partial class AuthoritativeStore
             settings_fingerprint TEXT NOT NULL,
             output_schema_fingerprint TEXT NOT NULL,
             input_bound_policy_id TEXT NOT NULL CHECK(input_bound_policy_id = 'openai-responses-o200k-byte-envelope'),
-            input_bound_policy_version TEXT NOT NULL CHECK(input_bound_policy_version = 'v1'),
+            input_bound_policy_version TEXT NOT NULL CHECK(input_bound_policy_version = 'v2'),
             input_bound_proof_status TEXT NOT NULL CHECK(input_bound_proof_status = 'proved'),
             payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             payload_fingerprint TEXT NOT NULL CHECK(length(payload_fingerprint) = 64),

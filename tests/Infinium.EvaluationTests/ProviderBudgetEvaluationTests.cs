@@ -363,7 +363,7 @@ public sealed class ProviderBudgetEvaluationTests
           profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
           effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
           output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
-          price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v1','proved',coordinator_fencing_epoch,
+          price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v2','proved',coordinator_fencing_epoch,
           maximum_request_bytes,20,10,maximum_raw_response_bytes,maximum_dispatch_count,400000,deadline_milliseconds,
           dispatch_deadline_utc,confirmed_at
         FROM provider_operation_blocks WHERE operation_id='operation-restore';

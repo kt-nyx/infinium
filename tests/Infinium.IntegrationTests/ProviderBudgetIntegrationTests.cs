@@ -126,7 +126,7 @@ public sealed class ProviderBudgetIntegrationTests
         assignment.Assignment.ProviderRequest.CanonicalRequest.SizeBytes = 1024;
         assignment.Assignment.ProviderRequest.RequestFingerprintSha256 = requestDigest;
         assignment.Assignment.ProviderRequest.InputBoundProof.PolicyId = "openai-responses-o200k-byte-envelope";
-        assignment.Assignment.ProviderRequest.InputBoundProof.PolicyVersion = "v1";
+        assignment.Assignment.ProviderRequest.InputBoundProof.PolicyVersion = "v2";
         assignment.Assignment.ProviderRequest.ConfirmedAt = Instant(BaseTime.AddSeconds(1));
         assignment.Assignment.ProviderRequest.DispatchDeadline = Instant(BaseTime.AddMinutes(2));
         assignment.Assignment.Settings.Value = ByteString.CopyFrom(Convert.FromHexString(new string('9', 64)));
@@ -2004,7 +2004,7 @@ public sealed class ProviderBudgetIntegrationTests
           profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
           effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
           output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
-          price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v1','proved',coordinator_fencing_epoch,
+          price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v2','proved',coordinator_fencing_epoch,
           maximum_request_bytes,20,10,maximum_raw_response_bytes,maximum_dispatch_count,400000,deadline_milliseconds,
           dispatch_deadline_utc,confirmed_at
         FROM provider_operation_blocks WHERE operation_id='operation-restore';

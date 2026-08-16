@@ -108,6 +108,10 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             ? ledger.Entries[^2]
             : throw new InvalidDataException("Credential evidence has no exact execution handoff predecessor.");
         JsonElement containment = root.GetProperty("containment");
+        ValidateAcceptedCampaignCredentialArtifacts(root, profile.GetProperty("target_fingerprint_sha256").GetString()!);
+        DateTimeOffset completedAt = DateTimeOffset.Parse(root.GetProperty("completed_at_utc").GetString()!,
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal);
         if (!root.EnumerateObject().Select(property => property.Name).SequenceEqual(exactProperties,
                 StringComparer.Ordinal)
             || !containment.EnumerateObject().Select(property => property.Name).SequenceEqual(
@@ -129,6 +133,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             || root.GetProperty("verification_state").GetString() != "available"
             || root.GetProperty("native_credential_operation_count").GetInt32() != 4
             || root.GetProperty("network_operation_count").GetInt32() != 0
+            || root.GetProperty("listener_count").GetInt32() != 0
             || root.GetProperty("provider_operation_count").GetInt32() != 0
             || root.GetProperty("billable_operation_count").GetInt32() != 0
             || root.GetProperty("retry_attempted").GetBoolean()
@@ -140,6 +145,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             || root.GetProperty("namespace_reuse_blocked").GetBoolean()
             || root.GetProperty("namespace_reuse_block_reason").ValueKind != JsonValueKind.Null
             || root.GetProperty("retention").GetString() != "exact-generation-retained-no-delete-authority"
+            || completedAt.Offset != TimeSpan.Zero || completedAt > now || completedAt > expiry
             || ledger.Current.EvidenceSha256 != evidenceSha)
         {
             throw new InvalidDataException("Credential evidence is not the exact independently reviewable success handoff.");
@@ -170,6 +176,104 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             rolloverCommit, recordRelative);
         ledger.AcceptCredentialEvidence(evidenceId, evidenceSha,
             now);
+    }
+
+    private static void ValidateAcceptedCampaignCredentialArtifacts(JsonElement root, string targetFingerprint)
+    {
+        JsonElement traceValue = root.GetProperty("native_call_trace");
+        if (traceValue.ValueKind != JsonValueKind.Array || traceValue.GetArrayLength() != 4)
+        {
+            throw new InvalidDataException("Accepted credential evidence omitted the exact four-call native trace.");
+        }
+        JsonElement[] trace = traceValue.EnumerateArray().ToArray();
+        string[] operations = ["CredReadW", "CredWriteW", "CredReadW", "CredFree"];
+        string[] results = ["ERROR_NOT_FOUND", "success", "success", "released"];
+        for (int index = 0; index < trace.Length; index++)
+        {
+            string[] exactNames = ["Sequence", "Operation", "TargetFingerprintSha256", "Scenario",
+                "Result", "AllocationId", "PairedAllocationId"];
+            if (!trace[index].EnumerateObject().Select(property => property.Name)
+                    .SequenceEqual(exactNames, StringComparer.Ordinal)
+                || trace[index].GetProperty("Sequence").GetInt32() != index + 1
+                || trace[index].GetProperty("Operation").GetString() != operations[index]
+                || trace[index].GetProperty("Result").GetString() != results[index]
+                || trace[index].GetProperty("TargetFingerprintSha256").GetString() != targetFingerprint
+                || trace[index].GetProperty("Scenario").GetString()
+                    != "wp9-production-profile/enroll-and-verify")
+            {
+                throw new InvalidDataException("Accepted credential evidence changed its native operation, result, target, order, or scenario.");
+            }
+        }
+        ValidateExactFreePairing(trace, targetFingerprint);
+
+        JsonElement entry = root.GetProperty("entry_evidence");
+        if (entry.ValueKind != JsonValueKind.Object)
+        {
+            throw new InvalidDataException("Accepted credential evidence omitted its entry readiness and cleanup evidence.");
+        }
+        CredentialNativeQualificationSupervisor.ValidateWp9ProductionEntryEvidence(
+            entry.GetRawText(), "submitted");
+        ValidateEntryElement(entry, "submitted");
+        ValidateCanaryElement(root.GetProperty("canaries"));
+    }
+
+    private static void ValidateCanaryElement(JsonElement canary)
+    {
+        string[] rootNames = ["SecretMatches", "RawTargetMatches", "RawTargetEncodings", "ScannedSurfaces"];
+        if (canary.ValueKind != JsonValueKind.Object
+            || !canary.EnumerateObject().Select(property => property.Name)
+                .SequenceEqual(rootNames, StringComparer.Ordinal)
+            || canary.GetProperty("SecretMatches").GetInt32() != 0
+            || canary.GetProperty("RawTargetMatches").GetInt32() != 0
+            || !canary.GetProperty("RawTargetEncodings").EnumerateArray().Select(item => item.GetString())
+                .SequenceEqual(["utf-8", "utf-16le"], StringComparer.Ordinal))
+        {
+            throw new InvalidDataException("Accepted credential evidence retained a secret/raw-target canary or malformed encoding inventory.");
+        }
+        JsonElement[] surfaces = canary.GetProperty("ScannedSurfaces").EnumerateArray().ToArray();
+        string[] expectedNames = ["private protocol request", "private protocol response", "native call trace",
+            "process command line", "process environment names"];
+        string[] expectedKinds = ["private-pipe-bytes", "private-pipe-bytes", "canonical-trace-bytes",
+            "captured-text", "captured-text"];
+        if (surfaces.Length != expectedNames.Length)
+        {
+            throw new InvalidDataException("Accepted credential evidence has an incomplete canary surface inventory.");
+        }
+        for (int index = 0; index < surfaces.Length; index++)
+        {
+            string[] names = ["Name", "Kind", "ByteCount", "SecretMatches", "RawTargetMatches"];
+            if (!surfaces[index].EnumerateObject().Select(property => property.Name)
+                    .SequenceEqual(names, StringComparer.Ordinal)
+                || surfaces[index].GetProperty("Name").GetString() != expectedNames[index]
+                || surfaces[index].GetProperty("Kind").GetString() != expectedKinds[index]
+                || surfaces[index].GetProperty("ByteCount").GetInt64() <= 0
+                || surfaces[index].GetProperty("SecretMatches").GetInt32() != 0
+                || surfaces[index].GetProperty("RawTargetMatches").GetInt32() != 0)
+            {
+                throw new InvalidDataException("Accepted credential canary evidence is stale, vacuous, duplicated, or nonzero.");
+            }
+        }
+    }
+
+    private static void ValidateEntryElement(JsonElement value, string terminalState)
+    {
+        if (value.GetProperty("Surface").GetString() != "wp9-distinct-helper-owned-native-masked-paste-surface"
+            || value.GetProperty("TerminalState").GetString() != terminalState
+            || !value.GetProperty("Masked").GetBoolean() || !value.GetProperty("PastePermitted").GetBoolean()
+            || !value.GetProperty("HelperOwned").GetBoolean() || value.GetProperty("RendererReceivedSecret").GetBoolean()
+            || !value.GetProperty("InitiallyBlank").GetBoolean() || !value.GetProperty("Ready").GetBoolean()
+            || !value.GetProperty("HelperProcessOwned").GetBoolean() || !value.GetProperty("SameSession").GetBoolean()
+            || !value.GetProperty("InputDesktopAvailable").GetBoolean() || !value.GetProperty("NotCloaked").GetBoolean()
+            || !value.GetProperty("OnMonitor").GetBoolean() || !value.GetProperty("Enabled").GetBoolean()
+            || !value.GetProperty("Focused").GetBoolean() || !value.GetProperty("Foreground").GetBoolean()
+            || !value.GetProperty("Active").GetBoolean() || value.GetProperty("ReadinessChecks").GetInt32() < 1
+            || value.GetProperty("MessagePumpIterations").GetInt32() < 1
+            || !value.GetProperty("WindowDestroyed").GetBoolean() || !value.GetProperty("BufferCleared").GetBoolean()
+            || !value.GetProperty("NativeEditEmptyVerified").GetBoolean()
+            || !value.GetProperty("ThreadJoined").GetBoolean())
+        {
+            throw new InvalidDataException("Accepted credential entry evidence omitted exact readiness, ownership, masking, action, or cleanup facts.");
+        }
     }
 
     internal static async Task<int> RunAsync(
@@ -638,59 +742,13 @@ internal static class Wp9ProductionProfileEnrollmentRunner
     {
         using JsonDocument canary = JsonDocument.Parse(receipt.NativeCanaryEvidenceBytes
             ?? throw new InvalidDataException("WP9 production enrollment omitted canary evidence."));
-        if (canary.RootElement.GetProperty("SecretMatches").GetInt32() != 0
-            || canary.RootElement.GetProperty("RawTargetMatches").GetInt32() != 0
-            || string.Join('|', canary.RootElement.GetProperty("RawTargetEncodings").EnumerateArray()
-                .Select(item => item.GetString())) != "utf-8|utf-16le")
-        {
-            throw new InvalidDataException("WP9 production enrollment retained a secret or raw target canary.");
-        }
-        JsonElement[] surfaces = canary.RootElement.GetProperty("ScannedSurfaces").EnumerateArray().ToArray();
-        string[] expectedSurfaces =
-        [
-            "private protocol request|private-pipe-bytes",
-            "private protocol response|private-pipe-bytes",
-            "native call trace|canonical-trace-bytes",
-            "process command line|captured-text",
-            "process environment names|captured-text",
-        ];
-        string[] actualSurfaces = surfaces.Select(item =>
-            $"{item.GetProperty("Name").GetString()}|{item.GetProperty("Kind").GetString()}").ToArray();
-        if (!actualSurfaces.SequenceEqual(expectedSurfaces)
-            || surfaces.Any(item => item.GetProperty("ByteCount").GetInt64() <= 0
-                || item.GetProperty("SecretMatches").GetInt32() != 0
-                || item.GetProperty("RawTargetMatches").GetInt32() != 0))
-        {
-            throw new InvalidDataException("WP9 production enrollment canary surface inventory is incomplete or nonzero.");
-        }
+        ValidateCanaryElement(canary.RootElement);
         byte[] entryBytes = receipt.NativeEntryCleanupBytes
             ?? throw new InvalidDataException("WP9 production enrollment omitted entry cleanup evidence.");
         string entryJson = System.Text.Encoding.UTF8.GetString(entryBytes);
         CredentialNativeQualificationSupervisor.ValidateWp9ProductionEntryEvidence(entryJson, terminalState);
         using JsonDocument entry = JsonDocument.Parse(entryBytes);
-        JsonElement value = entry.RootElement;
-        if (value.GetProperty("Surface").GetString() != "wp9-distinct-helper-owned-native-masked-paste-surface"
-            || value.GetProperty("TerminalState").GetString() != terminalState
-            || !value.GetProperty("Masked").GetBoolean() || !value.GetProperty("PastePermitted").GetBoolean()
-            || !value.GetProperty("HelperOwned").GetBoolean() || value.GetProperty("RendererReceivedSecret").GetBoolean()
-            || !value.GetProperty("InitiallyBlank").GetBoolean() || !value.GetProperty("Ready").GetBoolean()
-            || !value.GetProperty("HelperProcessOwned").GetBoolean()
-            || !value.GetProperty("SameSession").GetBoolean()
-            || !value.GetProperty("InputDesktopAvailable").GetBoolean()
-            || !value.GetProperty("NotCloaked").GetBoolean()
-            || !value.GetProperty("OnMonitor").GetBoolean()
-            || !value.GetProperty("Enabled").GetBoolean()
-            || !value.GetProperty("Focused").GetBoolean()
-            || !value.GetProperty("Foreground").GetBoolean()
-            || !value.GetProperty("Active").GetBoolean()
-            || value.GetProperty("ReadinessChecks").GetInt32() < 1
-            || value.GetProperty("MessagePumpIterations").GetInt32() < 1
-            || !value.GetProperty("WindowDestroyed").GetBoolean() || !value.GetProperty("BufferCleared").GetBoolean()
-            || !value.GetProperty("NativeEditEmptyVerified").GetBoolean()
-            || !value.GetProperty("ThreadJoined").GetBoolean())
-        {
-            throw new InvalidDataException("WP9 production entry readiness, ownership, masking, or cleanup evidence is incomplete.");
-        }
+        ValidateEntryElement(entry.RootElement, terminalState);
     }
 
     private static string FreePairing(byte[]? traceBytes)

@@ -144,7 +144,7 @@ public static class HelperExecutionSemanticsV2
     private static readonly InputBoundProofV2 AcceptedProof = new()
     {
         PolicyId = "openai-responses-o200k-byte-envelope",
-        PolicyVersion = "v1",
+        PolicyVersion = "v2",
         Status = InputBoundProofStatusV2.Proved,
     };
 

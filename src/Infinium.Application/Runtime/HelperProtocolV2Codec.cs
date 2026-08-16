@@ -722,7 +722,7 @@ public static class HelperProtocolV2Codec
     private static bool IsAcceptedInputProof(InputBoundProofV2? proof) =>
         proof is not null
         && proof.PolicyId == "openai-responses-o200k-byte-envelope"
-        && proof.PolicyVersion == "v1"
+        && proof.PolicyVersion == "v2"
         && proof.Status == InputBoundProofStatusV2.Proved;
 
     private static void ValidateSubject<T>(

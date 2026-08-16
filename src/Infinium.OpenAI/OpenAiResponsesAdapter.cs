@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Buffers.Text;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -46,6 +47,7 @@ public static class OpenAiStagedResponseEnvelope
             error_code = result.ErrorCode,
             requested_output_schema = result.RequestedOutputSchemaBytes,
             usage = result.Usage,
+            dns_resolution_count = result.DnsResolutionCount,
             headers = sanitizedHeaders.Select(item => new { name = item.Name, value = item.Value }).ToArray(),
         });
         byte[] envelope = new byte[checked(Magic.Length + 8 + raw.Length + headers.Length)];
@@ -113,7 +115,8 @@ public static class OpenAiStagedResponseEnvelope
                 ? schemaValue.GetBytesFromBase64()
                 : [];
             return OpenAiResponsesResponseCodec.Replay(
-                raw, status, clientRequestId, ProviderRequestId(headerReceipt), rateHeaders, retainedSchema);
+                raw, status, clientRequestId, ProviderRequestId(headerReceipt), rateHeaders, retainedSchema) with
+            { DnsResolutionCount = retained.RootElement.GetProperty("dns_resolution_count").GetInt32() };
         }
         using JsonDocument document = JsonDocument.Parse(headerReceipt.ToArray());
         JsonElement root = document.RootElement;
@@ -131,6 +134,7 @@ public static class OpenAiStagedResponseEnvelope
         {
             RequestedOutputSchemaBytes = root.TryGetProperty("requested_output_schema", out JsonElement schema)
                 && schema.ValueKind == JsonValueKind.String ? schema.GetBytesFromBase64() : [],
+            DnsResolutionCount = root.GetProperty("dns_resolution_count").GetInt32(),
         };
     }
 
@@ -162,6 +166,7 @@ public sealed record OpenAiResponsesResult(
     int SendCount)
 {
     public byte[]? RequestedOutputSchemaBytes { get; init; }
+    public int DnsResolutionCount { get; init; }
 
     public byte[] ToSecretFreeDiagnosticBytes() => JsonSerializer.SerializeToUtf8Bytes(new
     {
@@ -198,7 +203,7 @@ public static class OpenAiResponsesCanonicalSerializer
     public const string ServiceTier = "default";
     public const string EndpointPath = "/v1/responses";
     public const string InputBoundPolicyId = "openai-responses-o200k-byte-envelope";
-    public const string InputBoundPolicyVersion = "v1";
+    public const string InputBoundPolicyVersion = "v2";
 
     private static readonly JsonWriterOptions WriterOptions = new()
     {
@@ -436,6 +441,7 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
     private readonly HttpClient client;
     private readonly Uri endpoint;
     private readonly bool ownsClient;
+    private readonly ProductionTransportObservation? productionObservation;
     private int consumed;
     public bool UsesPerOperationDeadlineOnly => client.Timeout == Timeout.InfiniteTimeSpan;
     public static bool ProxyFallbackEnabled => false;
@@ -443,16 +449,19 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
     public static bool RetriesEnabled => false;
     public static bool ProviderToolsEnabled => false;
 
-    private OpenAiResponsesAdapter(HttpClient client, Uri endpoint, bool ownsClient)
+    private OpenAiResponsesAdapter(HttpClient client, Uri endpoint, bool ownsClient,
+        ProductionTransportObservation? productionObservation = null)
     {
         this.client = client;
         this.endpoint = endpoint;
         this.ownsClient = ownsClient;
+        this.productionObservation = productionObservation;
         client.Timeout = Timeout.InfiniteTimeSpan;
     }
 
     public static OpenAiResponsesAdapter CreateProduction()
     {
+        ProductionTransportObservation observation = new();
         SocketsHttpHandler handler = new()
         {
             AllowAutoRedirect = false,
@@ -461,8 +470,9 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
             UseProxy = false,
             MaxConnectionsPerServer = 1,
             PooledConnectionLifetime = TimeSpan.Zero,
+            ConnectCallback = observation.ConnectOnceAsync,
         };
-        return new(new HttpClient(handler, disposeHandler: true), ProductionEndpoint, ownsClient: true);
+        return new(new HttpClient(handler, disposeHandler: true), ProductionEndpoint, ownsClient: true, observation);
     }
 
     public static OpenAiResponsesAdapter CreateDeterministicLoopback(Uri endpoint)
@@ -532,33 +542,79 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
                 if (ContainsSecretEcho(response, [], secret.Span))
                 {
                     return Failure(ProviderResponseState.Unknown, (int)response.StatusCode, true,
-                        "security_secret_echo", [], clientRequestId, null, sendCount: 1);
+                        "security_secret_echo", [], clientRequestId, null, sendCount: 1) with
+                    { DnsResolutionCount = DnsResolutionCount() };
                 }
                 IReadOnlyList<OpenAiRateHeader> oversizedRateHeaders = CaptureHeaders(response);
                 return Failure(ProviderResponseState.Oversized, (int)response.StatusCode, true, "response_too_large",
                     oversizedRateHeaders, clientRequestId, ProviderRequestId(response), sendCount: 1) with
-                { RequestedOutputSchemaBytes = OpenAiResponsesCanonicalSerializer.OutputSchemaBytes(canonicalRequest.Span) };
+                {
+                    RequestedOutputSchemaBytes = OpenAiResponsesCanonicalSerializer.OutputSchemaBytes(canonicalRequest.Span),
+                    DnsResolutionCount = DnsResolutionCount(),
+                };
             }
 
             if (ContainsSecretEcho(response, raw, secret.Span))
             {
                 CryptographicOperations.ZeroMemory(raw);
                 return Failure(ProviderResponseState.Unknown, (int)response.StatusCode, true,
-                    "security_secret_echo", [], clientRequestId, null, sendCount: 1);
+                    "security_secret_echo", [], clientRequestId, null, sendCount: 1) with
+                { DnsResolutionCount = DnsResolutionCount() };
             }
 
             IReadOnlyList<OpenAiRateHeader> rateHeaders = CaptureHeaders(response);
             return OpenAiResponsesResponseCodec.Parse(raw, (int)response.StatusCode, clientRequestId,
                 ProviderRequestId(response), rateHeaders,
-                OpenAiResponsesCanonicalSerializer.OutputSchemaBytes(canonicalRequest.Span));
+                OpenAiResponsesCanonicalSerializer.OutputSchemaBytes(canonicalRequest.Span)) with
+            { DnsResolutionCount = DnsResolutionCount() };
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return Failure(ProviderResponseState.Unknown, null, true, "deadline_ambiguous", [], clientRequestId, null, 1);
+            return Failure(ProviderResponseState.Unknown, null, true, "deadline_ambiguous", [], clientRequestId, null, 1)
+                with
+            { DnsResolutionCount = DnsResolutionCount() };
         }
         catch (HttpRequestException)
         {
-            return Failure(ProviderResponseState.Unknown, null, true, "transport_ambiguous", [], clientRequestId, null, 1);
+            return Failure(ProviderResponseState.Unknown, null, true, "transport_ambiguous", [], clientRequestId, null, 1)
+                with
+            { DnsResolutionCount = DnsResolutionCount() };
+        }
+    }
+
+    private int DnsResolutionCount() => productionObservation?.DnsResolutionCount ?? 0;
+
+    private sealed class ProductionTransportObservation
+    {
+        private int dnsResolutionCount;
+        internal int DnsResolutionCount => Volatile.Read(ref dnsResolutionCount);
+
+        internal async ValueTask<Stream> ConnectOnceAsync(
+            SocketsHttpConnectionContext context, CancellationToken cancellationToken)
+        {
+            if (Interlocked.Increment(ref dnsResolutionCount) != 1)
+            {
+                throw new HttpRequestException("The one-shot production transport attempted a second DNS resolution.");
+            }
+            IPAddress[] addresses = await Dns.GetHostAddressesAsync(
+                context.DnsEndPoint.Host, cancellationToken).ConfigureAwait(false);
+            Exception? last = null;
+            foreach (IPAddress address in addresses)
+            {
+                Socket socket = new(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+                try
+                {
+                    await socket.ConnectAsync(address, context.DnsEndPoint.Port, cancellationToken).ConfigureAwait(false);
+                    return new NetworkStream(socket, ownsSocket: true);
+                }
+                catch (Exception error) when (error is SocketException or OperationCanceledException)
+                {
+                    last = error;
+                    socket.Dispose();
+                    if (error is OperationCanceledException) { throw; }
+                }
+            }
+            throw new HttpRequestException("The exact production DNS resolution returned no reachable address.", last);
         }
     }
 

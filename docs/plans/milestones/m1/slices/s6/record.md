@@ -8333,3 +8333,46 @@ typed `pending` before committing its distinct exact four-document successor.
 The bound candidate and all pre-floor receipts are excluded. No helper, UI,
 readiness, authority lock, API key, Credential Manager, profile, DNS/public
 network, provider, billable, private/archive, or push effect occurred.
+
+Bound candidate `cfb11302d2011a0edc18aed6891ec1efff681713` was not
+accepted. Fresh security and authority/semantics review found that a terminal
+provider-stage failure could remain reserved after possible start; canonical
+request proof was not derived from the exact serialized bytes; credential and
+stage evidence validation was not recursively total; retained replay omitted
+the exact raw response, headers, request/response identities, and semantic
+validation bindings; the three public semantic packages and the `LiveEvidence`,
+`RetainedReplay`, and `ComposedProvenance` gates were absent; and the campaign
+used a parallel JSONL-only accounting surface instead of the accepted
+authoritative SQLite provider graph. The same reviews also found incomplete
+stage-state, expiry, account/billing, DNS/send/native-trace, WP10/WP11 semantic
+admission, and composed no-fourth bindings. B6 and every partial receipt from
+it are excluded.
+
+The correction replaces the input-bound proof with a versioned exact-canonical-
+bytes proof, binds account and billing identities, persists operation,
+reservation, staged response, exact raw response and headers, usage,
+settlement, replay, source-claim admission, candidate admission, and composed
+provenance in the authoritative SQLite store, and terminalizes every known
+pre-start failure or possible-start ambiguity with the full reserved hold and
+no retry. Closed stage and composed schemas now bind exact request, response,
+native trace, canary, SQLite, semantic-package, predecessor, aggregate, and
+no-fourth facts. Frozen public packages for `LLM-CLAIM-LIVE-VAL`,
+`LLM-INVESTIGATE-LIVE-VAL`, and `PROV-LIVE-COMPOSED-VAL` are registered with
+deterministic oracles, and the three exact offline gates validate retained
+bytes without provider access. Qualification remains explicitly non-semantic.
+
+The committed temporary-clone rehearsal exercises the production campaign
+validator, exact committed review/admission/rollover and stage transitions,
+fake credential store, three literal-loopback provider stages, authoritative
+SQLite persistence and network-disabled replay, all three semantic packages,
+all three offline gates, composed provenance, and no-fourth rejection. Its
+mutations reject altered provider send count, raw-response sidecar, composed
+evidence identity, nested or stale manifest/evidence fields, raised limits,
+retry/parallel/fourth behavior, expiry, safety drift, and illegal ledger
+successors. The latest pre-freeze build passed with zero warnings and errors;
+the focused finite-ledger, safety-identifier, and canonical-input-proof unit
+filter passed 22/22; and the complete committed rehearsal passed 1/1. Current
+authority is correction and non-live reverification only. No campaign marker,
+credential helper, UI/readiness, authority lock, API key, Credential Manager,
+production profile, DNS/public network, provider, billable, private/archive,
+or push effect occurred.

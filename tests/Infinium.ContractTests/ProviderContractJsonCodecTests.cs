@@ -886,7 +886,7 @@ public sealed class ProviderContractJsonCodecTests
             InputBoundProof = new V2InputBoundProof
             {
                 PolicyId = "openai-responses-o200k-byte-envelope",
-                PolicyVersion = "v1",
+                PolicyVersion = "v2",
                 Status = V2InputBoundProofStatus.Proved,
             },
         };
@@ -991,7 +991,7 @@ public sealed class ProviderContractJsonCodecTests
                 InputBoundProof = new V2InputBoundProof
                 {
                     PolicyId = "openai-responses-o200k-byte-envelope",
-                    PolicyVersion = "v1",
+                    PolicyVersion = "v2",
                     Status = V2InputBoundProofStatus.Proved,
                 },
                 NonSecretReceipt = Digest(),
@@ -1168,7 +1168,7 @@ public sealed class ProviderContractJsonCodecTests
                 InputBoundProof = new V2InputBoundProof
                 {
                     PolicyId = "openai-responses-o200k-byte-envelope",
-                    PolicyVersion = "v1",
+                    PolicyVersion = "v2",
                     Status = V2InputBoundProofStatus.Proved,
                 },
                 DispatchDeadline = FutureInstant(),

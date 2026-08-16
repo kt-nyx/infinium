@@ -1559,7 +1559,7 @@ internal static class CredentialNativeQualificationRunner
                       profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
                       effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
                       output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
-                      price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v1','proved',
+                      price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v2','proved',
                       coordinator_fencing_epoch,maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,
                       maximum_raw_response_bytes,maximum_dispatch_count,maximum_calculated_nano_usd,deadline_milliseconds,
                       dispatch_deadline_utc,confirmed_at FROM provider_operation_blocks WHERE operation_id='wp4-operation';
@@ -1569,7 +1569,7 @@ internal static class CredentialNativeQualificationRunner
                       canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,input_bound_policy_id,
                       input_bound_policy_version,input_bound_proof_status,payload_id,payload_fingerprint,payload_bytes,created_at)
                     VALUES('wp4-request','wp4-client-request','wp4-operation','wp4-provider-attempt',$requestHash,$requestHash,
-                      $settingsHash,$schemaHash,'openai-responses-o200k-byte-envelope','v1','proved','wp4-payload',$requestHash,@requestBytes,$now);
+                      $settingsHash,$schemaHash,'openai-responses-o200k-byte-envelope','v2','proved','wp4-payload',$requestHash,@requestBytes,$now);
                     """;
                 command.Parameters.AddWithValue("@requestBytes", canonicalRequest.Length);
                 _ = command.ExecuteNonQuery();
@@ -1627,7 +1627,7 @@ internal static class CredentialNativeQualificationRunner
                         ReservationGroupId = new() { Value = reservationId },
                         DispatchDeadline = Instant(deadline),
                         EndpointIdentity = ProviderEndpointV2.OpenaiResponses,
-                        InputBoundProof = new() { PolicyId = "openai-responses-o200k-byte-envelope", PolicyVersion = "v1", Status = InputBoundProofStatusV2.Proved },
+                        InputBoundProof = new() { PolicyId = "openai-responses-o200k-byte-envelope", PolicyVersion = "v2", Status = InputBoundProofStatusV2.Proved },
                         RequestId = requestId,
                         ConfirmedAt = Instant(now),
                         RequestFingerprintSha256 = ByteString.CopyFrom(Convert.FromHexString(requestHash)),

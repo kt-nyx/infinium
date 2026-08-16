@@ -21,6 +21,9 @@ public static class ProviderPersistenceDeclarations
     public const string Wp6ActiveContractCorrectionSourceSchemaFingerprint = "a9c58c7e3f374b77a623b751547353a356b2132f24f353ca2356a4268f13b51d";
     public const string Wp7ExtensionMigrationId = "M1-S6-WP7-0006H";
     public const string Wp7ExtensionSourceSchemaFingerprint = "0c831ead2dc177f3d4367b8fef12b0bbad2d17aa7d83203b6e2caf6c8b978ef5";
+    public const string Wp9CampaignInputBoundCorrectionMigrationId = "M1-S6-WP9-0006I";
+    public const string Wp9CampaignInputBoundCorrectionSourceSchemaFingerprint = SchemaFingerprint;
+    public const string Wp9CampaignInputBoundCorrectionSchemaFingerprint = "f138afbdd4737400370473f6caa9ae44324f3f8eb04a5bac150f1ab2a01d08b7";
     public const int SourceSchemaVersion = 5;
     public const string SourceStorageContractVersion = "1.4.0";
     public const string SourceSchemaFingerprint = "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d";

@@ -15,6 +15,7 @@ public sealed class ProductUserSafetyIdentifierStateStore
     public const string UseLatchSchema = "infinium.product-user-safety-identifier-use/v1";
     private readonly string statePath;
     private readonly string useLatchPath;
+    public string ProductStateRoot => Path.GetDirectoryName(statePath)!;
 
     public ProductUserSafetyIdentifierStateStore(string productStateRoot)
     {

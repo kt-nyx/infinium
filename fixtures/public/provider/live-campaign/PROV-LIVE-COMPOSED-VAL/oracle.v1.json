@@ -1,0 +1,21 @@
+{
+  "schema_identity": "infinium.evaluation.live-composed-provenance-oracle/1.0.0",
+  "package_identity": "PROV-LIVE-COMPOSED-VAL",
+  "required_stage_order": ["Qualification", "SourceClaimExtraction", "CandidateInvestigation"],
+  "required_identity_classes": [
+    "campaign-authorization",
+    "credential-generation",
+    "stage-authorization",
+    "canonical-request",
+    "retained-response",
+    "usage-entry",
+    "settlement",
+    "stage-evidence",
+    "semantic-validation-package"
+  ],
+  "required_explicit_omissions": ["credential-secret", "hosted-search", "nexus", "private-fixture"],
+  "qualification_semantic_use": false,
+  "maximum_provider_calls": 3,
+  "fourth_call_permitted": false,
+  "frozen_before_live_response": true
+}

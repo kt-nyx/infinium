@@ -360,7 +360,14 @@ public sealed class M1Slice6FiniteCampaignLedger
             throw new InvalidOperationException("Only the current possible-start stage may stop ambiguously.");
         }
 
-        string exactReason = reason switch { "ambiguous-start" => reason, "deadline-overrun" => reason, "settlement-overrun" => reason, _ => throw new ArgumentException("Unknown campaign stop reason.", nameof(reason)) };
+        string exactReason = reason switch
+        {
+            "ambiguous-start" => reason,
+            "deadline-overrun" => reason,
+            "settlement-overrun" => reason,
+            "stage-processing-failure" => reason,
+            _ => throw new ArgumentException("Unknown campaign stop reason.", nameof(reason)),
+        };
         Append(M1Slice6CampaignState.Stopped, stage, exactReason + "-hold-retained-no-retry", Current.RequestManifestId,
             Current.RequestManifestSha256, "", "", Current.ProviderCallCount, Current.DnsResolutionCount,
             Current.AggregateRequestBytes, Current.AggregateInputTokens, Current.AggregateOutputTokens,
@@ -372,7 +379,8 @@ public sealed class M1Slice6FiniteCampaignLedger
     public void StopBeforePossibleStart(M1Slice6CampaignStage stage, string reason, DateTimeOffset now)
     {
         if (Current.State != M1Slice6CampaignState.StageReserved || Current.Stage != stage
-            || reason is not ("safety-state-missing" or "safety-state-corrupt" or "safety-projection-drift"))
+            || reason is not ("safety-state-missing" or "safety-state-corrupt" or "safety-projection-drift"
+                or "stage-prestart-failure"))
         {
             throw new InvalidOperationException("Only an exact reserved stage may stop before possible start.");
         }
@@ -641,13 +649,14 @@ public sealed class M1Slice6FiniteCampaignLedger
                 && current.EvidenceSha256.Length == 64;
             bool ambiguousTransport = previous.State == M1Slice6CampaignState.TransportMayHaveStarted
                 && current.Event is ("ambiguous-start-hold-retained-no-retry" or "deadline-overrun-hold-retained-no-retry"
-                    or "settlement-overrun-hold-retained-no-retry") && sameVector;
+                    or "settlement-overrun-hold-retained-no-retry" or "stage-processing-failure-hold-retained-no-retry")
+                && sameVector;
             bool preEffectTerminal = current.Event is ("campaign-expired-before-admission-terminal-stop"
                 or "credential-expired-before-handoff-terminal-stop"
                 or "campaign-expired-before-stage-reservation-terminal-stop"
                 or "campaign-expired-before-possible-start-terminal-stop"
                 or "safety-state-missing-terminal-stop" or "safety-state-corrupt-terminal-stop"
-                or "safety-projection-drift-terminal-stop") && sameVector;
+                or "safety-projection-drift-terminal-stop" or "stage-prestart-failure-terminal-stop") && sameVector;
             return credentialTerminal || ambiguousTransport || preEffectTerminal;
         }
         return false;
