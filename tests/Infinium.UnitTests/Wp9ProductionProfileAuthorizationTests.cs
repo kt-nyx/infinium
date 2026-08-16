@@ -154,10 +154,15 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         StringAssert.Contains(runner, "Get-Wp9BinaryInventory");
         StringAssert.Contains(runner, "binary_inventory_file_count");
         StringAssert.Contains(runner, "binary_inventory_sha256");
+        string buildTargets = File.ReadAllText(TestRepository.PathFromRoot("Directory.Build.targets"));
+        StringAssert.Contains(buildTargets, "InfiniumWp9ManifestPath");
+        StringAssert.Contains(buildTargets, "InfiniumManifestSourceRevisionId");
+        StringAssert.Contains(buildTargets, "InfiniumCanonicalSourceRevisionId");
+        StringAssert.Contains(buildTargets, "^[0-9a-f]{40}$");
+        StringAssert.Contains(buildTargets, "<SourceRevisionId>$(InfiniumCanonicalSourceRevisionId)</SourceRevisionId>");
+        StringAssert.Contains(buildTargets, "RevisionId=\"$(InfiniumCanonicalSourceRevisionId)\"");
         StringAssert.Contains(runner, "SourceRevisionId=$closeReady");
-        string buildTargets = File.ReadAllText(Path.Combine(root, "Directory.Build.targets"));
         StringAssert.Contains(buildTargets, "AfterTargets=\"InitializeSourceControlInformationFromSourceControlManager\"");
-        StringAssert.Contains(buildTargets, "RevisionId=\"$(SourceRevisionId)\"");
         string manifest = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp9-production-profile-authorization.v1.json"));
         StringAssert.Contains(manifest, "bin/Release/net10.0/Infinium.Coordinator.exe");
@@ -165,7 +170,7 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         string sourceCommit = manifestDocument.RootElement.GetProperty("release_build").GetProperty("source_commit").GetString()!;
         string expectedSourceCommit = sourceCommit;
         string currentState = File.ReadAllText(Path.Combine(root, "docs", "current-state.md"));
-        if (currentState.Contains("`M1/S6` finite-campaign amendment implementation, non-live verification, exact manifest materialization, and fresh review only.", StringComparison.Ordinal)
+        if (currentState.Contains("`M1/S6` finite-campaign amendment implementation, non-live verification, and fresh review only.", StringComparison.Ordinal)
             && currentState.Contains("No credential or provider effect is admitted.", StringComparison.Ordinal))
         {
             string campaignPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",

@@ -1,9 +1,20 @@
 <Project>
-  <Target Name="PinExplicitSourceRevisionInSourceRoots"
+  <PropertyGroup>
+    <InfiniumWp9ManifestPath>$(MSBuildThisFileDirectory)docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json</InfiniumWp9ManifestPath>
+    <InfiniumWp9ManifestText Condition="Exists('$(InfiniumWp9ManifestPath)')">$([System.IO.File]::ReadAllText('$(InfiniumWp9ManifestPath)'))</InfiniumWp9ManifestText>
+    <InfiniumManifestSourceRevisionId Condition="'$(InfiniumWp9ManifestText)' != ''">$([System.Text.RegularExpressions.Regex]::Match($(InfiniumWp9ManifestText), '&quot;source_commit&quot;\s*:\s*&quot;([0-9a-f]{40})&quot;').Groups[1].Value)</InfiniumManifestSourceRevisionId>
+    <InfiniumCanonicalSourceRevisionId Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(SourceRevisionId)', '^[0-9a-f]{40}$'))">$(SourceRevisionId)</InfiniumCanonicalSourceRevisionId>
+    <InfiniumCanonicalSourceRevisionId Condition="'$(InfiniumCanonicalSourceRevisionId)' == '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(InfiniumManifestSourceRevisionId)', '^[0-9a-f]{40}$'))">$(InfiniumManifestSourceRevisionId)</InfiniumCanonicalSourceRevisionId>
+  </PropertyGroup>
+
+  <Target Name="PinCanonicalSourceRevisionInSourceRoots"
           AfterTargets="InitializeSourceControlInformationFromSourceControlManager"
-          Condition="'$(SourceRevisionId)' != ''">
+          Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(InfiniumCanonicalSourceRevisionId)', '^[0-9a-f]{40}$'))">
+    <PropertyGroup>
+      <SourceRevisionId>$(InfiniumCanonicalSourceRevisionId)</SourceRevisionId>
+    </PropertyGroup>
     <ItemGroup>
-      <SourceRoot Update="@(SourceRoot)" RevisionId="$(SourceRevisionId)" />
+      <SourceRoot Update="@(SourceRoot)" RevisionId="$(InfiniumCanonicalSourceRevisionId)" />
     </ItemGroup>
   </Target>
 </Project>

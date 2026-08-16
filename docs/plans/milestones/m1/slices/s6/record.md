@@ -8101,6 +8101,29 @@ freeze. No output root, helper, readiness, authority lock, UI, API key, native
 Credential Manager, profile, DNS/public network, provider, billable, private,
 archive, or push effect occurred.
 
+Binding `6c701fd417f7c25bf8d310bc4ef5a2cb98758d9c` passed exact ready,
+credential, retained-WP8, focused runtime, combined authority, documentation,
+committed rehearsal, and fresh NonLiveAll gates. NonLiveAll passed 363/363
+focused tests across 11 evidence groups and retained exact zero-effect child
+receipts. The common floor then passed restore, build, Unit 262 passed/1
+environmental symlink skip, and Contract 156 passed. Integration stopped
+136/137 solely because the exact ordinary plan build stamped the current
+binding commit while the manifest correctly bound the earlier close-ready
+source commit; the rehearsal rejected the changed coordinator/helper bytes
+before its simulated route.
+
+The correction derives a canonical 40-hex source revision from the exact bound
+WP9 manifest whenever no explicit freeze revision is supplied, then applies it
+to both `SourceRevisionId` and every SourceRoot revision after source-control
+initialization. An explicit A-freeze revision remains authoritative when
+provided. Static tests bind the manifest source, 40-hex guard, property, and
+SourceRoot update. A clean ordinary build against B7 reproduced its manifest's
+coordinator and helper hashes exactly, and the affected authorization tests
+passed 10/10. B7 NonLiveAll and partial common-floor evidence are excluded from
+the replacement acceptance set. No helper, readiness, authority lock, UI, API
+key, native Credential Manager, profile, DNS/public network, provider,
+billable, private, archive, or push effect occurred.
+
 Binding `49cc6131e5f8b4ee6ac3774d21e330e1db36cc70` restored the exact
 NonLiveAll campaign phrase, but focused retained-WP8/current-state contracts
 found two more pre-floor seams. The retained-WP8 campaign predicate still
