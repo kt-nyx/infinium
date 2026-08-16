@@ -8489,3 +8489,31 @@ receipts are excluded. The correction preserves the exact token unbroken in
 the next binding. No helper, UI, readiness, authority lock, API key, Credential
 Manager, production profile, DNS/public network, provider, billable,
 private/archive, or push effect occurred.
+
+Bound candidate `c3166811e57c23c84575689a29f31f9f4e3de1b8` is not
+accepted. Fresh terminal authority and security review found that production
+stage execution did not yet require the exact accepted WP9 credential
+projection, the frozen WP10/WP11 packages were not executed over exact bound
+product inputs, WP11 could construct a parallel semantic graph, known SQLite
+settlement and campaign-ledger terminality could diverge across a crash, and
+the three offline gates did not independently reopen and validate exact
+ledger/SQLite/artifact/marker/semantic evidence. All B10 receipts are excluded.
+
+The bounded correction removes production enrollment synthesis, requires the
+exact active-verified profile/generation/account/billing projection, binds
+canonical request bytes to exact product input and answer-free template bytes,
+executes the frozen WP10/WP11 deterministic product oracles, and requires WP11
+to consume the persisted admitted WP10 artifact/application link. Provider
+results are persisted and replayed from authoritative SQLite; a post-settlement
+restart converges to known-settled/no-retry without redispatch, while only true
+possible-start ambiguity retains the full hold. Independent C# offline gates
+now reopen credential evidence, the hash-chained campaign ledger, SQLite
+operation/reservation/raw/header/usage/settlement/replay, native/canary
+artifacts, exact stage/composed markers, and semantic crosslinks. The committed
+temporary-clone rehearsal passes the full fake-store/literal-loopback sequence
+and rejects evidence, canary, ledger, SQLite-absence, marker, composed, expiry,
+identity, retry, parallel, safety-state, and fourth-call mutations. These are
+non-live correction facts, not final verification receipts. Current authority
+is correction and non-live reverification only. No helper, UI/readiness,
+authority lock, API key, Credential Manager, production profile, DNS/public
+network, provider, billable, private/archive, or push effect occurred.

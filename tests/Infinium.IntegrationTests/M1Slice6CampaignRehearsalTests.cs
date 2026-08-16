@@ -169,7 +169,15 @@ public sealed class M1Slice6CampaignRehearsalTests
             AssertValidatorRejected(clone, "Admitted");
             File.WriteAllText(recordPath, admittedRecord);
 
-            string stateRoot = Path.Combine(temporary, "product-state");
+            string stateRoot = Path.GetFullPath(Path.Combine(clone,
+                credential["durable_state"]!["product_state_root_relative"]!.GetValue<string>()
+                    .Replace('/', Path.DirectorySeparatorChar)));
+            Directory.CreateDirectory(Path.GetDirectoryName(stateRoot)!);
+            EnsureVerifiedCredential(stateRoot,
+                credential["profile"]!["access_profile_id"]!.GetValue<string>(),
+                credential["profile"]!["generation_id"]!.GetValue<string>(),
+                credential["provider_intent"]!["account_identity_id"]!.GetValue<string>(),
+                credential["provider_intent"]!["billing_scope_identity_id"]!.GetValue<string>(), Start);
             ProductUserSafetyIdentifierStateStore safetyStore = new(stateRoot);
             string safetyIdentifier = safetyStore.GetOrCreateProjection();
             M1Slice6CampaignIdentity identity = new(CampaignId, sha,
@@ -182,12 +190,15 @@ public sealed class M1Slice6CampaignRehearsalTests
             FakeCredentialStore fakeStore = new();
             fakeStore.EnrollAndVerify();
 
-            string ledgerPath = Path.Combine(temporary, "campaign", "ledger.jsonl");
+            string ledgerPath = Path.Combine(clone, "artifacts", "m1-slice6", "campaign-ledger.jsonl");
+            Directory.CreateDirectory(Path.GetDirectoryName(ledgerPath)!);
             M1Slice6FiniteCampaignLedger ledger = new(ledgerPath, identity, CampaignExpiry, CredentialExpiry, Start);
             ledger.RecordIndependentReview(Start.AddMinutes(1));
             ledger.AdmitCampaign(Start.AddMinutes(2));
             ledger.BeginCredentialExecutionHandoff(Start.AddMinutes(3));
-            string credentialEvidencePath = Path.Combine(temporary, "credential-evidence.json");
+            string credentialEvidencePath = Path.Combine(clone, "artifacts", "m1-slice6", "wp9-live",
+                "credential-evidence.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(credentialEvidencePath)!);
             object[] credentialTrace =
             [
                 new { Sequence = 1, Operation = "CredReadW",
@@ -311,7 +322,8 @@ public sealed class M1Slice6CampaignRehearsalTests
             string credentialEvidenceSha = Convert.ToHexStringLower(
                 SHA256.HashData(File.ReadAllBytes(credentialEvidencePath)));
             ledger.RecordCredentialEvidenceHandoff("wp9-production-profile-enrollment-evidence",
-                credentialEvidenceSha, Start.AddMinutes(4));
+                credentialEvidenceSha, new M1Slice6CampaignNativeEnvelope(1, 2, 0, 1, 4),
+                Start.AddMinutes(4));
             string credentialEvidenceMarker = "M1_S6_CAMPAIGN_CREDENTIAL_EVIDENCE_ACCEPTANCE campaign_id="
                 + CampaignId + " campaign_sha256=" + sha + " manifest_id=" + identity.CredentialManifestId
                 + " manifest_sha256=" + credentialSha
@@ -409,7 +421,27 @@ public sealed class M1Slice6CampaignRehearsalTests
         string credentialPath = Path.Combine(clone, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp9-production-profile-authorization.v1.json");
         string credentialSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(credentialPath)));
-        string authoritativeRoot = Path.Combine(Path.GetDirectoryName(ledgerPath)!, "authoritative-provider-state");
+        using JsonDocument credentialManifest = JsonDocument.Parse(File.ReadAllBytes(credentialPath));
+        JsonElement credentialRoot = credentialManifest.RootElement;
+        JsonElement credentialProfile = credentialRoot.GetProperty("profile");
+        JsonElement providerIntent = credentialRoot.GetProperty("provider_intent");
+        string authoritativeRoot = Path.GetFullPath(Path.Combine(clone,
+            credentialRoot.GetProperty("durable_state").GetProperty("product_state_root_relative")
+                .GetString()!.Replace('/', Path.DirectorySeparatorChar)));
+        if (stage == M1Slice6CampaignStage.Qualification)
+        {
+            AssertCredentialProjectionPrerequisites(Path.Combine(Path.GetDirectoryName(ledgerPath)!,
+                    "credential-prerequisite-mutations"), credentialPath, credentialSha,
+                credentialProfile.GetProperty("access_profile_id").GetString()!,
+                credentialProfile.GetProperty("generation_id").GetString()!,
+                providerIntent.GetProperty("account_identity_id").GetString()!,
+                providerIntent.GetProperty("billing_scope_identity_id").GetString()!, now);
+        }
+        EnsureVerifiedCredential(authoritativeRoot,
+            credentialProfile.GetProperty("access_profile_id").GetString()!,
+            credentialProfile.GetProperty("generation_id").GetString()!,
+            providerIntent.GetProperty("account_identity_id").GetString()!,
+            providerIntent.GetProperty("billing_scope_identity_id").GetString()!, now);
         using M1Slice6CampaignSqliteProviderAccounting accounting = new(
             authoritativeRoot, credentialPath, credentialSha, now);
         M1Slice6CampaignStageCoordinator coordinator = new(ledger, safetyStore, boundary, accounting);
@@ -477,7 +509,7 @@ public sealed class M1Slice6CampaignRehearsalTests
                         manifest_path = "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json",
                         manifest_sha256 = "da6b6b05456a2ed956393c3a0f7c7d470a947adba8e991cae72e9dd7f28250c8",
                         oracle_path = "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/oracle.v1.json",
-                        oracle_sha256 = "2b8174aceaa03a39567d686be1a1f225a300109ac7922fc2247c70e9fc7d7d32",
+                        oracle_sha256 = "2b8174e58cfdda414883aff245b8f9087647d05a9d4ca6c11e7b0ac076634f8e",
                         semantic_use = true,
                     },
                     explicit_omissions = ExplicitComposedOmissions,
@@ -554,22 +586,104 @@ public sealed class M1Slice6CampaignRehearsalTests
                 M1Slice6CampaignStageRunner.CompleteComposedEvidence(campaignPath, campaignSha256,
                     accepted.Current.Identity.VerificationCandidateCommit, credentialPath, credentialSha,
                     ledgerPath, composedPath, recordPath, now.AddSeconds(4));
+                accounting.Dispose();
                 AssertOfflineGate(clone, "LiveEvidence");
                 AssertOfflineGate(clone, "RetainedReplay");
                 AssertOfflineGate(clone, "ComposedProvenance");
                 AssertOfflineGateMutationsRejected(clone);
+                AssertOfflineGateRejected(clone, "LiveEvidence",
+                    TestRepository.PathFromRoot("tests", "Infinium.UnitTests", "Infinium.UnitTests.csproj"));
             }
             finally { }
         }
         return new(ledgerPath, identity, CampaignExpiry, CredentialExpiry, now.AddSeconds(5));
     }
 
+    private static void EnsureVerifiedCredential(string stateRoot, string profileId,
+        string generationId, string accountIdentityId, string billingScopeIdentityId,
+        DateTimeOffset now)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(stateRoot))!);
+        using AuthoritativeStore store = new(new StoragePaths(stateRoot));
+        store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, now.AddTicks(-5));
+        try
+        {
+            CredentialProfileProjection current = store.GetCredentialProfile(profileId);
+            if (current.GenerationId != generationId || current.LifecycleState != "active-verified"
+                || current.VerificationState != "available"
+                || current.AccountIdentityId != accountIdentityId
+                || current.BillingScopeIdentityId != billingScopeIdentityId)
+            {
+                throw new InvalidDataException("The rehearsed credential projection drifted from its exact accepted identity.");
+            }
+            return;
+        }
+        catch (KeyNotFoundException)
+        {
+            _ = store.BeginCredentialEnrollment(profileId, generationId, "Synthetic campaign rehearsal",
+                now.AddTicks(-4), accountIdentityId, billingScopeIdentityId);
+            _ = store.ApplyCredentialTransition(new("rehearsal-enroll", profileId, generationId,
+                "enroll", "pending-enrollment", "active-unverified", "active-unverified",
+                M1ProviderCatalog.Capability.Identity.Value, accountIdentityId, billingScopeIdentityId,
+                now.AddTicks(-3), now.AddTicks(-2)));
+            CredentialProfileProjection verified = store.ApplyCredentialTransition(new(
+                "rehearsal-verify", profileId, generationId, "verify", "active-unverified",
+                "active-verified", "active-verified", M1ProviderCatalog.Capability.Identity.Value,
+                accountIdentityId, billingScopeIdentityId, now.AddTicks(-1), now));
+            if (verified.LifecycleState != "active-verified" || verified.VerificationState != "available")
+            {
+                throw new InvalidDataException("Synthetic campaign rehearsal did not create an exact verified predecessor.");
+            }
+        }
+    }
+
+    private static void AssertCredentialProjectionPrerequisites(string root, string credentialPath,
+        string credentialSha, string profileId, string generationId, string accountIdentityId,
+        string billingScopeIdentityId, DateTimeOffset now)
+    {
+        Directory.CreateDirectory(root);
+        string missing = Path.Combine(root, "missing");
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            new M1Slice6CampaignSqliteProviderAccounting(missing, credentialPath, credentialSha, now));
+
+        string wrong = Path.Combine(root, "wrong-generation");
+        EnsureVerifiedCredential(wrong, profileId, generationId + "-wrong", accountIdentityId,
+            billingScopeIdentityId, now);
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            new M1Slice6CampaignSqliteProviderAccounting(wrong, credentialPath, credentialSha, now));
+
+        string recovery = Path.Combine(root, "recovery-required");
+        EnsureVerifiedCredential(recovery, profileId, generationId, accountIdentityId,
+            billingScopeIdentityId, now);
+        using (AuthoritativeStore store = new(new StoragePaths(recovery)))
+        {
+            CredentialProfileProjection blocked = store.ApplyCredentialTransition(new(
+                "rehearsal-recovery-block", profileId, generationId, "recover", "active-verified",
+                "recovery-required", "recovery-required", M1ProviderCatalog.Capability.Identity.Value,
+                accountIdentityId, billingScopeIdentityId, now.AddTicks(1), now.AddTicks(2),
+                SecureStoreUnavailable: true));
+            Assert.AreEqual("recovery-required", blocked.LifecycleState);
+        }
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            new M1Slice6CampaignSqliteProviderAccounting(recovery, credentialPath, credentialSha, now));
+    }
+
     private static void AssertOfflineGate(string clone, string gate)
     {
         string outputRoot = Path.Combine(clone, "artifacts", "m1-slice6", "wp11-review");
-        _ = Run("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
-            "eng/verify-m1-slice6.ps1", "-Gate", gate, "-InputRoot", "artifacts/m1-slice6",
-            "-OutputRoot", outputRoot], clone);
+        string? prior = Environment.GetEnvironmentVariable("INFINIUM_CAMPAIGN_OFFLINE_TEST_PROJECT");
+        try
+        {
+            Environment.SetEnvironmentVariable("INFINIUM_CAMPAIGN_OFFLINE_TEST_PROJECT",
+                TestRepository.PathFromRoot("tests", "Infinium.IntegrationTests", "Infinium.IntegrationTests.csproj"));
+            _ = Run("pwsh", ["-NoProfile", "-File",
+                "eng/verify-m1-slice6.ps1", "-Gate", gate, "-InputRoot", "artifacts/m1-slice6",
+                "-OutputRoot", outputRoot], clone);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("INFINIUM_CAMPAIGN_OFFLINE_TEST_PROJECT", prior);
+        }
         string receipt = Path.Combine(outputRoot, gate.ToLowerInvariant() + ".json");
         Assert.IsTrue(File.Exists(receipt), gate);
         using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(receipt));
@@ -595,6 +709,49 @@ public sealed class M1Slice6CampaignRehearsalTests
         File.AppendAllText(canaryPath, " ");
         AssertOfflineGateRejected(clone, "RetainedReplay");
         File.WriteAllBytes(canaryPath, exactCanary);
+
+        string credentialPath = Path.Combine(clone, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp9-production-profile-authorization.v1.json");
+        JsonObject credential = JsonNode.Parse(File.ReadAllBytes(credentialPath))!.AsObject();
+        string stateRoot = Path.GetFullPath(Path.Combine(clone,
+            credential["durable_state"]!["product_state_root_relative"]!.GetValue<string>()
+                .Replace('/', Path.DirectorySeparatorChar)));
+        string databasePath = Path.Combine(stateRoot, "data", "infinium.sqlite3");
+        string[] databaseFiles = [databasePath, databasePath + "-wal", databasePath + "-shm"];
+        List<(string Source, string Retained)> retainedDatabaseFiles = [];
+        foreach (string databaseFile in databaseFiles.Where(File.Exists))
+        {
+            string retained = databaseFile + ".offline-mutation-retained";
+            File.Move(databaseFile, retained);
+            retainedDatabaseFiles.Add((databaseFile, retained));
+        }
+        try
+        {
+            AssertOfflineGateRejected(clone, "RetainedReplay");
+        }
+        finally
+        {
+            foreach (string generated in databaseFiles)
+            {
+                if (File.Exists(generated)) { File.Delete(generated); }
+            }
+            foreach ((string source, string retained) in retainedDatabaseFiles)
+            {
+                File.Move(retained, source);
+            }
+        }
+
+        string recordPath = Path.Combine(clone, "docs", "plans", "milestones", "m1", "slices", "s6", "record.md");
+        byte[] exactRecord = File.ReadAllBytes(recordPath);
+        string record = File.ReadAllText(recordPath);
+        string currentStageMarker = record.Split(["\r\n", "\n"], StringSplitOptions.None).Single(line =>
+            line.StartsWith("M1_S6_CAMPAIGN_STAGE_EVIDENCE_ACCEPTANCE", StringComparison.Ordinal)
+            && line.Contains("stage_manifest_id=infinium.m1-s6.campaign-stage/SourceClaimExtraction",
+                StringComparison.Ordinal));
+        File.WriteAllText(recordPath, record.Replace(currentStageMarker, "",
+            StringComparison.Ordinal), new UTF8Encoding(false));
+        AssertOfflineGateRejected(clone, "LiveEvidence");
+        File.WriteAllBytes(recordPath, exactRecord);
 
         string composedPath = Path.Combine(clone, "artifacts", "m1-slice6", "wp11-live", "composed-evidence.json");
         byte[] exactComposed = File.ReadAllBytes(composedPath);
@@ -629,9 +786,16 @@ public sealed class M1Slice6CampaignRehearsalTests
                     CampaignExpiry, CredentialExpiry, now);
                 M1Slice6CampaignStageCoordinator coordinator = new(ledger,
                     new ProductUserSafetyIdentifierStateStore(safetyRoot), boundary, accounting);
-                await Assert.ThrowsExactlyAsync<InvalidDataException>(() => coordinator.ExecuteOneShotAsync(
-                    manifestPath, manifestSha, Path.Combine(temporary, suffix + "-evidence.json"),
-                    now.AddTicks(1), CancellationToken.None));
+                Exception? failure = null;
+                try
+                {
+                    await coordinator.ExecuteOneShotAsync(manifestPath, manifestSha,
+                        Path.Combine(temporary, suffix + "-evidence.json"),
+                        now.AddTicks(1), CancellationToken.None);
+                }
+                catch (Exception exception) { failure = exception; }
+                Assert.IsTrue(failure is InvalidDataException or M1Slice6CampaignKnownSettlementException,
+                    "The synthetic terminal path must fail through a typed bounded exception.");
                 return ledger;
             }
 
@@ -650,6 +814,14 @@ public sealed class M1Slice6CampaignRehearsalTests
             Assert.AreEqual(M1Slice6CampaignStageLimits.For(M1Slice6CampaignStage.Qualification).MaximumNanoUsd,
                 postStart.Current.ReservedNanoUsd);
             StringAssert.Contains(postStart.Current.Event, "ambiguous-start-hold-retained-no-retry");
+
+            M1Slice6FiniteCampaignLedger knownSettled = await Execute(
+                new KnownSettlementThrowingAccounting(),
+                new FakeStageBoundary(new FakeCredentialStore()), "known-settled-semantic");
+            Assert.AreEqual(M1Slice6CampaignState.Stopped, knownSettled.Current.State);
+            Assert.AreEqual(0L, knownSettled.Current.ReservedNanoUsd);
+            StringAssert.Contains(knownSettled.Current.Event,
+                "semantic-admission-failure-known-settled-no-retry");
         }
         finally
         {
@@ -657,23 +829,25 @@ public sealed class M1Slice6CampaignRehearsalTests
         }
     }
 
-    private static void AssertOfflineGateRejected(string clone, string gate)
+    private static void AssertOfflineGateRejected(string clone, string gate, string? project = null)
     {
         ProcessStartInfo start = new()
         {
-            FileName = "powershell",
+            FileName = "pwsh",
             WorkingDirectory = clone,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             CreateNoWindow = true,
         };
-        foreach (string argument in new[] { "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        foreach (string argument in new[] { "-NoProfile", "-File",
             "eng/verify-m1-slice6.ps1", "-Gate", gate, "-InputRoot", "artifacts/m1-slice6",
             "-OutputRoot", "artifacts/m1-slice6/wp11-review" })
         {
             start.ArgumentList.Add(argument);
         }
+        start.Environment["INFINIUM_CAMPAIGN_OFFLINE_TEST_PROJECT"] = project ??
+            TestRepository.PathFromRoot("tests", "Infinium.IntegrationTests", "Infinium.IntegrationTests.csproj");
         using Process process = Process.Start(start)!;
         process.WaitForExit(60_000);
         Assert.IsTrue(process.HasExited, gate);
@@ -773,9 +947,13 @@ public sealed class M1Slice6CampaignRehearsalTests
         Reject(root => root["limits"]!["maximum_nano_usd"] = 140_000_001);
         Reject(root => root["campaign_binding"]!["campaign_manifest_sha256"] = new string('0', 64));
         Reject(root => root["predecessor_evidence"]!["evidence_sha256"] = new string('0', 64));
+        Reject(root => root["canonical_request"]!["campaign_input_sha256"] = new string('0', 64));
+        Reject(root => root["canonical_request"]!["request_template_sha256"] = new string('0', 64));
         Reject(root => root["safety_identifier"]!["projection"] = "raw-user@example.invalid");
         Reject(root => root["validation_package"]!["package_id"] = "LLM-INVENTED-LIVE-VAL");
         Reject(root => root["validation_package"]!["oracle_sha256"] = new string('0', 64));
+        Reject(root => root["validation_package"]!["product_input_sha256"] = new string('0', 64));
+        Reject(root => root["validation_package"]!["predecessor_manifest_sha256"] = new string('0', 64));
         Reject(root => root["validation_package"]!["semantic_use"] =
             !root["validation_package"]!["semantic_use"]!.GetValue<bool>());
         Reject(root => root["validation_package"]!.AsObject()["unknown"] = true);
@@ -801,6 +979,8 @@ public sealed class M1Slice6CampaignRehearsalTests
             new ProviderFiniteLimitsContract(limits.MaximumRequestBytes, limits.MaximumInputTokens,
                 limits.MaximumOutputTokens, limits.MaximumRawResponseBytes, 1,
                 limits.MaximumNanoUsd, limits.DeadlineMilliseconds));
+        (long campaignInputBytes, string campaignInputSha256, string requestTemplateSha256) =
+            M1Slice6CampaignSemanticAdmission.BindCanonicalInputAndTemplate(request);
         string requestName = (int)stage + "-request.json";
         string requestPath = Path.Combine(directory, requestName);
         File.WriteAllBytes(requestPath, request);
@@ -836,6 +1016,9 @@ public sealed class M1Slice6CampaignRehearsalTests
                 path = requestName,
                 sha256 = Convert.ToHexStringLower(SHA256.HashData(request)),
                 bytes = request.LongLength,
+                campaign_input_bytes = campaignInputBytes,
+                campaign_input_sha256 = campaignInputSha256,
+                request_template_sha256 = requestTemplateSha256,
                 input_bound_policy_id = OpenAiResponsesCanonicalSerializer.InputBoundPolicyId,
                 input_bound_policy_version = OpenAiResponsesCanonicalSerializer.InputBoundPolicyVersion,
                 o200k_token_count = proof.O200kTokenCount,
@@ -921,8 +1104,15 @@ public sealed class M1Slice6CampaignRehearsalTests
             ["package_id"] = "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1",
             ["manifest_path"] = "fixtures/public/platform/provider-budget/capability-val/public-manifest.json",
             ["manifest_sha256"] = "3fa9f56a2ad1f815638ed7f4ce198b499cc072604e2a29b3bf5e418d6d33389c",
+            ["product_input_path"] = "fixtures/public/platform/provider-budget/capability-val/input.json",
+            ["product_input_bytes"] = 190,
+            ["product_input_sha256"] = "c9cb054a578a244bca1a1d77bcc2ca7f2898ada42f4250da88588ddf6472b55a",
+            ["predecessor_manifest_path"] = "fixtures/public/platform/provider-budget/capability-val/public-manifest.json",
+            ["predecessor_manifest_bytes"] = 526,
+            ["predecessor_manifest_sha256"] = "3fa9f56a2ad1f815638ed7f4ce198b499cc072604e2a29b3bf5e418d6d33389c",
             ["oracle_path"] = "fixtures/public/platform/provider-budget/capability-val/oracle.json",
             ["oracle_sha256"] = "7ce656a0d056239cedcbfc75ec44b21ca7be79946da2613a109dfd233f6b8bda",
+            ["deterministic_oracle_result_sha256"] = new string('0', 64),
             ["semantic_use"] = false,
         },
         M1Slice6CampaignStage.SourceClaimExtraction => new()
@@ -930,8 +1120,15 @@ public sealed class M1Slice6CampaignRehearsalTests
             ["package_id"] = "LLM-CLAIM-LIVE-VAL",
             ["manifest_path"] = "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/public-manifest.json",
             ["manifest_sha256"] = "83a63ba290966f27f7f6ddc581f63f7e2cb7b4d745f6958177f17043f220b3e6",
+            ["product_input_path"] = "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1/execution-input.v1.json",
+            ["product_input_bytes"] = 1767,
+            ["product_input_sha256"] = "77cffbebbc940357e1f8b39a9fd054c50e6c1a25c9e24c7b564f37867b95469c",
+            ["predecessor_manifest_path"] = "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1/public-manifest.json",
+            ["predecessor_manifest_bytes"] = 1320,
+            ["predecessor_manifest_sha256"] = "0f95265340873dc4abb083c6f857db9e8786c6e1ba36da385f07c876afe1c13f",
             ["oracle_path"] = "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/oracle.v1.json",
             ["oracle_sha256"] = "d917aed55912b0d6c82f8d19c772c6c504b9edcd3b1d3dcf9082da0f7a52e9eb",
+            ["deterministic_oracle_result_sha256"] = "122aa491aca8fdb23e2ca9405bd0651b2c69c4e372fbc378584ce779520f0c3c",
             ["semantic_use"] = true,
         },
         _ => new()
@@ -939,8 +1136,15 @@ public sealed class M1Slice6CampaignRehearsalTests
             ["package_id"] = "LLM-INVESTIGATE-LIVE-VAL",
             ["manifest_path"] = "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/public-manifest.json",
             ["manifest_sha256"] = "486181221a67311ca14e5454451f40012465535e0f09e999561a58ed5110a135",
+            ["product_input_path"] = "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/execution-input.v1.json",
+            ["product_input_bytes"] = 12403,
+            ["product_input_sha256"] = "99029f0834e03e72bbba69ad4991a7ca22c441ce4888cfcfac31e7ca7e74fbe7",
+            ["predecessor_manifest_path"] = "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/public-manifest.json",
+            ["predecessor_manifest_bytes"] = 2035,
+            ["predecessor_manifest_sha256"] = "b42dff12144f192c1e7a913a3a99433398f0f2d41148a3353f7aa9cf89154323",
             ["oracle_path"] = "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/oracle.v1.json",
             ["oracle_sha256"] = "3f6db5e3618d8d0b5d35f2e79c203ef5bcd1bac8166e5cae417e7b5ac2e3348a",
+            ["deterministic_oracle_result_sha256"] = "bb5ac6574182a5335f445d75df88e4e9514794da5756c0657f27b741711bdb14",
             ["semantic_use"] = true,
         },
     };
@@ -1264,6 +1468,7 @@ public sealed class M1Slice6CampaignRehearsalTests
         }
 
         public void RecordPossibleStart(M1Slice6CampaignAccountingAdmission _, DateTimeOffset __) { }
+        public void ReleaseBeforePossibleStart(M1Slice6CampaignAccountingAdmission _, DateTimeOffset __) { }
 
         public M1Slice6CampaignAccountingSettlement PersistSettleAndReplay(
             M1Slice6CampaignAccountingAdmission admission, M1Slice6CampaignStageAuthority authority,
@@ -1279,7 +1484,8 @@ public sealed class M1Slice6CampaignRehearsalTests
                 authority.Stage == M1Slice6CampaignStage.Qualification ? 0 : 1,
                 authority.Stage == M1Slice6CampaignStage.Qualification ? 0 : 1,
                 authority.Stage == M1Slice6CampaignStage.Qualification
-                    ? new string('0', 64) : Convert.ToHexStringLower(SHA256.HashData(result.Response.RawResponseBytes!)));
+                    ? new string('0', 64) : Convert.ToHexStringLower(SHA256.HashData(result.Response.RawResponseBytes!)),
+                M1Slice6CampaignSemanticProvenance.Empty);
     }
 
     private sealed class ThrowingPrepareAccounting : IM1Slice6CampaignProviderAccounting
@@ -1289,9 +1495,25 @@ public sealed class M1Slice6CampaignRehearsalTests
             throw new InvalidDataException("synthetic prestart accounting failure");
         public void RecordPossibleStart(M1Slice6CampaignAccountingAdmission _, DateTimeOffset __) =>
             throw new InvalidOperationException();
+        public void ReleaseBeforePossibleStart(M1Slice6CampaignAccountingAdmission _, DateTimeOffset __) { }
         public M1Slice6CampaignAccountingSettlement PersistSettleAndReplay(
             M1Slice6CampaignAccountingAdmission _, M1Slice6CampaignStageAuthority __,
             M1Slice6CampaignStageBoundaryResult ___) => throw new InvalidOperationException();
+    }
+
+    private sealed class KnownSettlementThrowingAccounting : IM1Slice6CampaignProviderAccounting
+    {
+        private readonly FakeProviderAccounting inner = new();
+        public M1Slice6CampaignAccountingAdmission Prepare(M1Slice6CampaignStageAuthority authority,
+            M1Slice6CampaignIdentity identity, DateTimeOffset now) => inner.Prepare(authority, identity, now);
+        public void RecordPossibleStart(M1Slice6CampaignAccountingAdmission admission, DateTimeOffset now) =>
+            inner.RecordPossibleStart(admission, now);
+        public void ReleaseBeforePossibleStart(M1Slice6CampaignAccountingAdmission admission, DateTimeOffset now) =>
+            inner.ReleaseBeforePossibleStart(admission, now);
+        public M1Slice6CampaignAccountingSettlement PersistSettleAndReplay(
+            M1Slice6CampaignAccountingAdmission _, M1Slice6CampaignStageAuthority __,
+            M1Slice6CampaignStageBoundaryResult ___) => throw new M1Slice6CampaignKnownSettlementException(
+                "synthetic known settlement", new InvalidDataException("synthetic semantic failure"));
     }
 
     private sealed class ThrowAfterPossibleStartBoundary(DateTimeOffset possibleStartAt)
@@ -1347,14 +1569,13 @@ public sealed class M1Slice6CampaignRehearsalTests
                     ["m1s6-campaign-participant-a", "m1s6-campaign-participant-b"],
                     ["source", "candidate"], ["m1s6-campaign-causal-path"],
                     "m1s6-campaign-dependency-closure", [evidence]),
-                new("m1s6-campaign-context-negative", "m1s6-campaign-candidate-negative",
-                    "m1s6-campaign-hypothesis-negative",
-                    "An unrelated candidate has no supporting retained evidence.",
-                    ["m1s6-campaign-participant-c"], ["unrelated"],
-                    ["m1s6-campaign-negative-path"], "m1s6-campaign-negative-closure",
-                    [evidence with { EvidenceId = "m1s6-campaign-evidence-negative",
-                        EvidenceApplicationLinkId = "m1s6-campaign-evidence-application-negative",
-                        Relationship = "neutral" }]),
+                new("m1s6-campaign-context-control", "m1s6-campaign-candidate-control",
+                    "m1s6-campaign-hypothesis-control",
+                    "The exact admitted source artifact is retained as a bounded control context.",
+                    ["m1s6-campaign-participant-control"], ["control"],
+                    ["m1s6-campaign-control-path"], "m1s6-campaign-control-closure",
+                    [evidence with { EvidenceId = "m1s6-campaign-evidence-control",
+                        EvidenceApplicationLinkId = "m1s6-campaign-evidence-application-control" }]),
             ]);
         return JsonSerializer.Serialize(candidate, SourceClaimContextMinimizer.JsonOptions);
     }

@@ -481,7 +481,8 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             if (disposition == "passed-active-verified")
             {
                 campaignLedger.RecordCredentialEvidenceHandoff(
-                    "wp9-production-profile-enrollment-evidence", evidenceSha256, DateTimeOffset.UtcNow);
+                    "wp9-production-profile-enrollment-evidence", evidenceSha256,
+                    new M1Slice6CampaignNativeEnvelope(1, 2, 0, 1, 4), DateTimeOffset.UtcNow);
             }
             else
             {

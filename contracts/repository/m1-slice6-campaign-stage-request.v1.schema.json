@@ -47,11 +47,14 @@
     },
     "canonical_request": {
       "type": "object", "additionalProperties": false,
-      "required": ["path", "sha256", "bytes", "input_bound_policy_id", "input_bound_policy_version", "o200k_token_count", "token_ids_sha256", "structural_allowance_tokens", "proved_input_tokens", "maximum_output_tokens"],
+      "required": ["path", "sha256", "bytes", "campaign_input_bytes", "campaign_input_sha256", "request_template_sha256", "input_bound_policy_id", "input_bound_policy_version", "o200k_token_count", "token_ids_sha256", "structural_allowance_tokens", "proved_input_tokens", "maximum_output_tokens"],
       "properties": {
         "path": { "type": "string", "pattern": "^[A-Za-z0-9._/-]{1,240}$" },
         "sha256": { "$ref": "#/$defs/sha64" },
         "bytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "campaign_input_bytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "campaign_input_sha256": { "$ref": "#/$defs/sha64" },
+        "request_template_sha256": { "$ref": "#/$defs/sha64" },
         "input_bound_policy_id": { "const": "openai-responses-o200k-byte-envelope" },
         "input_bound_policy_version": { "const": "v2" },
         "o200k_token_count": { "type": "integer", "minimum": 1, "maximum": 65536 },
@@ -95,13 +98,20 @@
     },
     "validation_package": {
       "type": "object", "additionalProperties": false,
-      "required": ["package_id", "manifest_path", "manifest_sha256", "oracle_path", "oracle_sha256", "semantic_use"],
+      "required": ["package_id", "manifest_path", "manifest_sha256", "product_input_path", "product_input_bytes", "product_input_sha256", "predecessor_manifest_path", "predecessor_manifest_bytes", "predecessor_manifest_sha256", "oracle_path", "oracle_sha256", "deterministic_oracle_result_sha256", "semantic_use"],
       "properties": {
         "package_id": { "enum": ["M1-PLAT-PROVIDER-CAPABILITY-VAL-v1", "LLM-CLAIM-LIVE-VAL", "LLM-INVESTIGATE-LIVE-VAL"] },
         "manifest_path": { "type": "string", "pattern": "^fixtures/public/[A-Za-z0-9._/-]{1,220}$" },
         "manifest_sha256": { "$ref": "#/$defs/sha64" },
+        "product_input_path": { "type": "string", "pattern": "^fixtures/public/[A-Za-z0-9._/-]{1,220}$" },
+        "product_input_bytes": { "type": "integer", "minimum": 1, "maximum": 262144 },
+        "product_input_sha256": { "$ref": "#/$defs/sha64" },
+        "predecessor_manifest_path": { "type": "string", "pattern": "^fixtures/public/[A-Za-z0-9._/-]{1,220}$" },
+        "predecessor_manifest_bytes": { "type": "integer", "minimum": 1, "maximum": 262144 },
+        "predecessor_manifest_sha256": { "$ref": "#/$defs/sha64" },
         "oracle_path": { "type": "string", "pattern": "^fixtures/public/[A-Za-z0-9._/-]{1,220}$" },
         "oracle_sha256": { "$ref": "#/$defs/sha64" },
+        "deterministic_oracle_result_sha256": { "$ref": "#/$defs/sha64" },
         "semantic_use": { "type": "boolean" }
       }
     },

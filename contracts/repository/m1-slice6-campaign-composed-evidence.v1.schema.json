@@ -32,13 +32,13 @@
     },
     "composed_validation_package": {
       "allOf": [
-        { "$ref": "#/$defs/validationPackage" },
+        { "$ref": "#/$defs/composedValidationPackage" },
         { "properties": {
           "package_id": { "const": "PROV-LIVE-COMPOSED-VAL" },
           "manifest_path": { "const": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json" },
           "manifest_sha256": { "const": "da6b6b05456a2ed956393c3a0f7c7d470a947adba8e991cae72e9dd7f28250c8" },
           "oracle_path": { "const": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/oracle.v1.json" },
-          "oracle_sha256": { "const": "2b8174aceaa03a39567d686be1a1f225a300109ac7922fc2247c70e9fc7d7d32" },
+          "oracle_sha256": { "const": "2b8174e58cfdda414883aff245b8f9087647d05a9d4ca6c11e7b0ac076634f8e" },
           "semantic_use": { "const": true }
         } }
       ]
@@ -82,7 +82,7 @@
   "$defs": {
     "id": { "type": "string", "minLength": 1, "maxLength": 256 },
     "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-    "validationPackage": {
+    "composedValidationPackage": {
       "type": "object", "additionalProperties": false,
       "required": ["package_id", "manifest_path", "manifest_sha256", "oracle_path", "oracle_sha256", "semantic_use"],
       "properties": {
@@ -91,15 +91,31 @@
         "oracle_sha256": { "$ref": "#/$defs/sha256" }, "semantic_use": { "type": "boolean" }
       }
     },
+    "validationPackage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["package_id", "manifest_path", "manifest_sha256", "product_input_path", "product_input_bytes", "product_input_sha256", "predecessor_manifest_path", "predecessor_manifest_bytes", "predecessor_manifest_sha256", "oracle_path", "oracle_sha256", "deterministic_oracle_result_sha256", "semantic_use"],
+      "properties": {
+        "package_id": { "$ref": "#/$defs/id" }, "manifest_path": { "$ref": "#/$defs/id" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" }, "product_input_path": { "$ref": "#/$defs/id" }, "product_input_bytes": { "type": "integer", "minimum": 1, "maximum": 262144 }, "product_input_sha256": { "$ref": "#/$defs/sha256" }, "predecessor_manifest_path": { "$ref": "#/$defs/id" }, "predecessor_manifest_bytes": { "type": "integer", "minimum": 1, "maximum": 262144 }, "predecessor_manifest_sha256": { "$ref": "#/$defs/sha256" }, "oracle_path": { "$ref": "#/$defs/id" },
+        "oracle_sha256": { "$ref": "#/$defs/sha256" }, "deterministic_oracle_result_sha256": { "$ref": "#/$defs/sha256" }, "semantic_use": { "type": "boolean" }
+      }
+    },
     "semanticValidation": {
       "type": "object", "additionalProperties": false,
-      "required": ["validation_id", "disposition", "proposal_count", "admission_count", "result_sha256"],
+      "required": ["validation_id", "disposition", "proposal_count", "admission_count", "result_sha256", "source_acquisition_id", "source_admission_id", "admitted_artifact_id", "source_application_link_id", "evidence_application_link_id", "candidate_id", "hypothesis_id"],
       "properties": {
         "validation_id": { "$ref": "#/$defs/id" },
         "disposition": { "enum": ["not-applicable", "accepted", "accepted-conditional", "accepted-conditional-applicability"] },
         "proposal_count": { "type": "integer", "minimum": 0, "maximum": 1 },
         "admission_count": { "type": "integer", "minimum": 0, "maximum": 1 },
-        "result_sha256": { "$ref": "#/$defs/sha256" }
+        "result_sha256": { "$ref": "#/$defs/sha256" },
+        "source_acquisition_id": { "type": "string", "maxLength": 256 },
+        "source_admission_id": { "type": "string", "maxLength": 256 },
+        "admitted_artifact_id": { "type": "string", "maxLength": 256 },
+        "source_application_link_id": { "type": "string", "maxLength": 256 },
+        "evidence_application_link_id": { "type": "string", "maxLength": 256 },
+        "candidate_id": { "type": "string", "maxLength": 256 },
+        "hypothesis_id": { "type": "string", "maxLength": 256 }
       }
     },
     "stage": {

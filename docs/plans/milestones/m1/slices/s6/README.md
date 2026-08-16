@@ -113,11 +113,15 @@ retained-WP8 validation found that the exact finite-campaign path equation
 omitted the changed persistence-state contract test. Binding
 `ff5c18024bf1265ced69bb36f45ecf1d0843ab50` is excluded because README
 formatting split the exact `finite-campaign` review-state token.
-The corrected finite-campaign close-ready source `b86fa5bc467cc035847934ceec95f9c2b5203cbd`
-is verification-pending. Its exact clean committed four-document binding
-successor is the review candidate, bound for complete non-live verification and
-fresh independent review only. The resulting review candidate is ready for
-review and remains non-executable. No authority is inherited. The
+Binding `c3166811e57c23c84575689a29f31f9f4e3de1b8` is excluded because
+fresh terminal review found that the production stage path could fabricate a
+credential predecessor, semantic packages were not executed over exact bound
+inputs, post-settlement campaign/SQLite recovery was incomplete, and the
+offline gates did not independently reopen the authoritative database,
+artifacts, markers, and WP10-to-WP11 provenance. The finite-campaign
+replacement is verification-pending until a new close-ready source and exact
+clean four-document binding successor are committed and completely reverified.
+It remains non-executable. No authority is inherited. The
 immutable owner authority source is SHA-256
 `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
 Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee`

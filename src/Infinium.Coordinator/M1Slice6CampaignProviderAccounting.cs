@@ -13,7 +13,8 @@ namespace Infinium.Coordinator;
 /// The append-only campaign JSONL remains effect/admission authority; it is not a substitute
 /// for durable operation, reservation, response, usage, settlement, and replay persistence.
 /// </summary>
-public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6CampaignProviderAccounting, IDisposable
+public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6CampaignProviderAccounting,
+    IM1Slice6CampaignRecoveryAccounting, IDisposable
 {
     private readonly AuthoritativeStore store;
     private readonly ProviderAccountingCoordinator accounting;
@@ -47,8 +48,16 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         }
         store = new(new StoragePaths(Path.GetFullPath(stateRoot)));
         accounting = new(store);
-        accounting.PublishExactCatalog(now);
-        EnsureVerifiedCredential(profile.GetProperty("display_label").GetString()!, now);
+        try
+        {
+            accounting.PublishExactCatalog(now);
+            RequireVerifiedCredential();
+        }
+        catch
+        {
+            store.Dispose();
+            throw;
+        }
     }
 
     public M1Slice6CampaignAccountingAdmission Prepare(M1Slice6CampaignStageAuthority authority,
@@ -76,6 +85,7 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         CoordinatorAuthority coordinator = store.AcquireCoordinatorAuthorityAfterProcessExclusion(
             "m1-s6-finite-campaign", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(10));
         DateTimeOffset deadline = now.AddMilliseconds(authority.Limits.DeadlineMilliseconds);
+        M1Slice6CampaignSemanticAdmission.PreparePrerequisites(store, authority, now);
         SeedOperationGraph(authority, prefix, ownerKind, ownerId, operationId, attemptId,
             requestId, authorizationId, coordinator.FencingEpoch, deadline, now);
         ProviderFiniteLimitsContract finiteLimits = new(
@@ -112,16 +122,38 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
                 kind is "analysis-run" or "provider-profile" or "provider-account" or "billing-scope" or "global"
                     ? campaignLimit : vector)).ToArray();
         accounting.ConfigureLimits(coordinator.FencingEpoch, scopes, now);
-        _ = accounting.Reserve(coordinator.FencingEpoch, new(reservationId, operationId, attemptId,
-            requestId, vector, scopes, deadline, now.AddTicks(1)));
-        ProviderDispatchGateReceipt gate = accounting.FinalGate(new(dispatchFenceId, authorizationId,
-            operationId, reservationId, attemptId, requestId, profileId, generationId, 0,
-            coordinator.FencingEpoch, now.AddTicks(2)));
-        if (!gate.Authorized || gate.DecisionReason != "exact-final-gate-authorized"
-            || gate.ReservationId != reservationId || gate.CoordinatorFencingEpoch != coordinator.FencingEpoch
-            || gate.Deadline != deadline)
+        bool reserved = false;
+        ProviderDispatchGateReceipt gate;
+        try
         {
-            throw new InvalidDataException("Authoritative SQLite final gate did not admit the exact one-shot stage.");
+            _ = accounting.Reserve(coordinator.FencingEpoch, new(reservationId, operationId, attemptId,
+                requestId, vector, scopes, deadline, now.AddTicks(1)));
+            reserved = true;
+            gate = accounting.FinalGate(new(dispatchFenceId, authorizationId,
+                operationId, reservationId, attemptId, requestId, profileId, generationId, 0,
+                coordinator.FencingEpoch, now.AddTicks(2)));
+            if (!gate.Authorized || gate.DecisionReason != "exact-final-gate-authorized"
+                || gate.ReservationId != reservationId || gate.CoordinatorFencingEpoch != coordinator.FencingEpoch
+                || gate.Deadline != deadline)
+            {
+                throw new InvalidDataException("Authoritative SQLite final gate did not admit the exact one-shot stage.");
+            }
+        }
+        catch
+        {
+            if (reserved)
+            {
+                ProviderBudgetSettlementReceipt released = accounting.Settle(new(
+                    "m1s6-campaign-prepare-release-" + reservationId, reservationId,
+                    ProviderBudgetEventKind.ReleasedUndispatched, null, null, now.AddTicks(3)));
+                if (released.Released != vector || released.Settled != ProviderBudgetVectorContract.Zero
+                    || released.Unresolved != ProviderBudgetVectorContract.Zero || released.RetryPermitted)
+                {
+                    throw new InvalidDataException(
+                        "Authoritative prepare failure did not converge to released-undispatched.");
+                }
+            }
+            throw;
         }
         reservations.Add(reservationId, vector);
         return new(authorizationId, operationId, attemptId, requestId, reservationId,
@@ -137,6 +169,22 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         }
         store.RecordProviderTransportStart(admission.OperationId, admission.AttemptId,
             admission.RequestId, admission.DispatchFenceId, ambiguous: false, now);
+    }
+
+    public void ReleaseBeforePossibleStart(M1Slice6CampaignAccountingAdmission admission, DateTimeOffset now)
+    {
+        if (!reservations.Remove(admission.ReservationId, out ProviderBudgetVectorContract? reserved))
+        {
+            throw new InvalidDataException("Authoritative prestart release lacks its exact reservation.");
+        }
+        ProviderBudgetSettlementReceipt released = accounting.Settle(new(
+            "m1s6-campaign-prestart-release-" + admission.ReservationId,
+            admission.ReservationId, ProviderBudgetEventKind.ReleasedUndispatched, null, null, now));
+        if (released.Released != reserved || released.Settled != ProviderBudgetVectorContract.Zero
+            || released.Unresolved != ProviderBudgetVectorContract.Zero || released.RetryPermitted)
+        {
+            throw new InvalidDataException("Authoritative prestart reservation was not exactly released-undispatched.");
+        }
     }
 
     public M1Slice6CampaignAccountingSettlement PersistSettleAndReplay(
@@ -188,19 +236,79 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         {
             throw new InvalidDataException("Authoritative SQLite replay or settlement differs from exact retained stage evidence.");
         }
-        M1Slice6CampaignSemanticAdmissionReceipt semantic = M1Slice6CampaignSemanticAdmission.Admit(
-            store, authority, admission, response, result.CompletedAtUtc.AddTicks(2));
+        M1Slice6CampaignSemanticAdmissionReceipt semantic;
+        try
+        {
+            semantic = M1Slice6CampaignSemanticAdmission.Admit(
+                store, authority, admission, response, result.CompletedAtUtc.AddTicks(2));
+        }
+        catch (Exception exception) when (exception is InvalidDataException or InvalidOperationException)
+        {
+            throw new M1Slice6CampaignKnownSettlementException(
+                "Authoritative provider response is settled with no retry, but semantic evidence is unreviewable.",
+                exception);
+        }
         return new(responseId, usageId, settlementId, operation.ReplayEdgeId,
             Convert.ToHexStringLower(SHA256.HashData(response.RawResponseBytes)),
             Convert.ToHexStringLower(SHA256.HashData(result.ResponseHeadersBytes)),
             exactCost, operation.UnresolvedHold, settled.RetryPermitted,
             semantic.ValidationId, semantic.Disposition, semantic.ProposalCount,
-            semantic.AdmissionCount, semantic.ResultSha256);
+            semantic.AdmissionCount, semantic.ResultSha256, semantic.Provenance);
     }
 
     public void Dispose() => store.Dispose();
 
-    private void EnsureVerifiedCredential(string displayLabel, DateTimeOffset now)
+    public M1Slice6CampaignRecoveredSettlement? TryRecoverKnownSettlement(
+        M1Slice6CampaignStage stage, string canonicalRequestSha256)
+    {
+        string operationId = "m1s6-campaign-stage-" + (int)stage + "-operation";
+        ProviderOperationReadModel operation;
+        try
+        {
+            operation = store.ReadProviderOperation(operationId);
+        }
+        catch (KeyNotFoundException)
+        {
+            return null;
+        }
+        if (operation.State != ProviderOperationState.Settled || operation.UnresolvedHold
+            || operation.SettlementId is null || operation.RawResponseBytes is null
+            || operation.ResponseHeadersBytes is null
+            || operation.AuthorizationId != "m1s6-campaign-stage-" + (int)stage + "-authorization"
+            || operation.OperationKind != stage switch
+            {
+                M1Slice6CampaignStage.Qualification => "transport-qualification",
+                M1Slice6CampaignStage.SourceClaimExtraction => "source-claim-extraction",
+                M1Slice6CampaignStage.CandidateInvestigation => "candidate-investigation",
+                _ => string.Empty,
+            })
+        {
+            return null;
+        }
+        using (SqliteConnection connection = new($"Data Source={store.Paths.Database};Mode=ReadOnly;Pooling=False"))
+        {
+            connection.Open();
+            using SqliteCommand request = connection.CreateCommand();
+            request.CommandText =
+                "SELECT canonical_request_fingerprint FROM provider_requests WHERE operation_id=$operation;";
+            request.Parameters.AddWithValue("$operation", operationId);
+            if (request.ExecuteScalar() is not string retainedRequest
+                || retainedRequest != canonicalRequestSha256)
+            {
+                return null;
+            }
+        }
+        OpenAiResponsesResult replay = accounting.Replay(new(new OpaqueId(operationId),
+            new OpaqueId(operation.ResponseId), NetworkPermitted: false));
+        return new(
+            Required(replay.Usage.InputTokens, "recovered input tokens"),
+            Required(replay.Usage.OutputTokens, "recovered output tokens"),
+            replay.RawResponseBytes?.LongLength
+                ?? throw new InvalidDataException("Recovered settlement omitted raw response bytes."),
+            Required(replay.Usage.CalculatedNanoUsd, "recovered calculated cost"));
+    }
+
+    private void RequireVerifiedCredential()
     {
         try
         {
@@ -213,21 +321,11 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
             }
             return;
         }
-        catch (KeyNotFoundException) { }
-
-        _ = store.BeginCredentialEnrollment(profileId, generationId, displayLabel, now,
-            accountIdentityId, billingScopeIdentityId);
-        _ = store.ApplyCredentialTransition(new("m1s6-campaign-enroll", profileId, generationId,
-            "enroll", "pending-enrollment", "active-unverified", "active-unverified",
-            M1ProviderCatalog.Capability.Identity.Value, accountIdentityId, billingScopeIdentityId,
-            now.AddTicks(1), now.AddTicks(2)));
-        CredentialProfileProjection verified = store.ApplyCredentialTransition(new(
-            "m1s6-campaign-verify", profileId, generationId, "verify", "active-unverified",
-            "active-verified", "active-verified", M1ProviderCatalog.Capability.Identity.Value,
-            accountIdentityId, billingScopeIdentityId, now.AddTicks(3), now.AddTicks(4)));
-        if (verified.LifecycleState != "active-verified" || verified.VerificationState != "available")
+        catch (KeyNotFoundException exception)
         {
-            throw new InvalidDataException("Authoritative SQLite credential projection did not reach active-verified.");
+            throw new InvalidDataException(
+                "The exact WP9 product-state database has no accepted credential profile; campaign execution cannot fabricate enrollment or verification.",
+                exception);
         }
     }
 

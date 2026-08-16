@@ -880,6 +880,7 @@ function Invoke-Layer6ReviewGate(
         'fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/oracle.v1.json',
         'fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json',
         'fixtures/public/public-fixture-registry.v1.json',
+        'fixtures/tooling/Infinium.PublicFixtures/LiveCampaignValidationPackageVerifier.cs',
         'src/Infinium.Application/Provider/CredentialSemanticRolloverPolicy.cs',
         'src/Infinium.Application/Provider/OpenAiResponsesInputBoundPolicy.cs',
         'src/Infinium.Application/Provider/ProviderContractFactories.cs',
@@ -905,7 +906,9 @@ function Invoke-Layer6ReviewGate(
         'tests/Infinium.ContractTests/ProviderContractJsonCodecTests.cs',
         'tests/Infinium.EvaluationTests/ProviderBudgetEvaluationTests.cs',
         'tests/Infinium.ContractTests/Wp8PreLiveReadinessContractTests.cs',
+        'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj',
         'tests/Infinium.IntegrationTests/M1Slice6CampaignRehearsalTests.cs',
+        'tests/Infinium.IntegrationTests/M1Slice6LiveCampaignOfflineGateTests.cs',
         'tests/Infinium.IntegrationTests/ProviderBudgetIntegrationTests.cs',
         'tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs',
         'tests/Infinium.UnitTests/CredentialSemanticRolloverPolicyTests.cs',
@@ -2293,8 +2296,86 @@ function Get-M1Slice6RetainedLiveEvidence {
     return $retained
 }
 
+function Invoke-M1Slice6CampaignCSharpOfflineValidation {
+    if ([string]::IsNullOrWhiteSpace($InputRoot)) {
+        throw "$Gate requires -InputRoot for the recursive C# offline validation gate."
+    }
+    $resolvedInput = if ([IO.Path]::IsPathRooted($InputRoot)) {
+        [IO.Path]::GetFullPath($InputRoot)
+    } else {
+        [IO.Path]::GetFullPath((Join-Path $repoRoot $InputRoot))
+    }
+    $project = if ([string]::IsNullOrWhiteSpace($env:INFINIUM_CAMPAIGN_OFFLINE_TEST_PROJECT)) {
+        Join-Path $repoRoot 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj'
+    } else {
+        $externalProject = [IO.Path]::GetFullPath($env:INFINIUM_CAMPAIGN_OFFLINE_TEST_PROJECT)
+        $externalRoot = (& git -C (Split-Path -Parent $externalProject) rev-parse --show-toplevel).Trim()
+        if ($LASTEXITCODE -ne 0) {
+            throw "$Gate external campaign validation project is not in a Git worktree."
+        }
+        $externalRoot = [IO.Path]::GetFullPath($externalRoot)
+        $canonicalExternalProject = [IO.Path]::GetFullPath((Join-Path $externalRoot `
+            'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj'))
+        if ($externalProject -cne $canonicalExternalProject) {
+            throw "$Gate external campaign validation project is not the canonical integration-test project."
+        }
+        $externalStatus = @(& git -C $externalRoot status --porcelain=v1 --untracked-files=all)
+        if ($LASTEXITCODE -ne 0 -or $externalStatus.Count -ne 0) {
+            throw "$Gate external campaign validation worktree must be exact and clean."
+        }
+        $externalManifestPath = Join-Path $externalRoot `
+            'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json'
+        $externalManifest = Get-Content -LiteralPath $externalManifestPath -Raw | ConvertFrom-Json -Depth 100
+        $externalCloseReady = [string]$externalManifest.candidate_binding.close_ready_implementation_commit
+        $externalHead = (& git -C $externalRoot rev-parse HEAD).Trim()
+        & git -C $externalRoot merge-base --is-ancestor $externalCloseReady $externalHead
+        $externalAncestorExit = $LASTEXITCODE
+        if ($externalManifest.status -cne 'ready-for-campaign-review' -or
+            $externalCloseReady -notmatch '^[0-9a-f]{40}$' -or
+            $externalAncestorExit -ne 0) {
+            throw "$Gate external campaign validation project is not an exact bound review candidate."
+        }
+        [string[]]$expectedBindingPaths = @(
+            'docs/current-state.md',
+            'docs/plans/milestones/m1/slices/s6/README.md',
+            'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json',
+            'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
+        )
+        [string[]]$actualBindingPaths = @(& git -C $externalRoot diff --name-only `
+            "$externalCloseReady..$externalHead")
+        [Array]::Sort($expectedBindingPaths, [StringComparer]::Ordinal)
+        [Array]::Sort($actualBindingPaths, [StringComparer]::Ordinal)
+        if ([string]::Join("`n", $actualBindingPaths) -cne [string]::Join("`n", $expectedBindingPaths)) {
+            throw "$Gate external campaign validation candidate differs from its source outside the exact four binding documents."
+        }
+        $externalProject
+    }
+    if (-not [IO.File]::Exists($project)) {
+        throw "$Gate cannot locate the exact campaign offline validation project."
+    }
+    $priorInput = $env:INFINIUM_CAMPAIGN_OFFLINE_INPUT_ROOT
+    try {
+        $env:INFINIUM_CAMPAIGN_OFFLINE_INPUT_ROOT = $resolvedInput
+        $output = @(& dotnet test $project --configuration Release --no-build `
+            --filter 'FullyQualifiedName~MaterializedCampaignArtifactsReopenThroughLedgerSqliteReplayAndSemanticCrosslinks' `
+            --logger 'console;verbosity=minimal' 2>&1)
+        if ($LASTEXITCODE -ne 0 -or ($output -join "`n") -notmatch '(?m)^\s*Passed!\s+-\s+Failed:\s+0,\s+Passed:\s+1,') {
+            throw "$Gate recursive C# ledger/SQLite/replay/semantic validation failed.`n$($output -join "`n")"
+        }
+        return [ordered]@{
+            project = [IO.Path]::GetFileName($project)
+            test = 'MaterializedCampaignArtifactsReopenThroughLedgerSqliteReplayAndSemanticCrosslinks'
+            result = 'passed'
+        }
+    }
+    finally {
+        $env:INFINIUM_CAMPAIGN_OFFLINE_INPUT_ROOT = $priorInput
+    }
+}
+
 function Invoke-LiveEvidenceGate {
     $retained = @(Get-M1Slice6RetainedLiveEvidence)
+    $recursive = Invoke-M1Slice6CampaignCSharpOfflineValidation
     Write-Receipt 'LiveEvidence' ([ordered]@{
         input_root = 'artifacts/m1-slice6'
         stages = $retained
@@ -2303,16 +2384,19 @@ function Invoke-LiveEvidenceGate {
         dns_resolution_count = 3
         credential_native_envelope = 'W1/R5/D0/F4/T10'
         validation = 'recursive-schema-artifacts-native-canaries-settlement-identities'
+        recursive_product_validation = $recursive
         public_network_operations = 0; credential_manager_operations = 0; provider_requests = 0
     })
 }
 
 function Invoke-RetainedReplayGate {
     $retained = @(Get-M1Slice6RetainedLiveEvidence)
+    $recursive = Invoke-M1Slice6CampaignCSharpOfflineValidation
     Write-Receipt 'RetainedReplay' ([ordered]@{
         input_root = 'artifacts/m1-slice6'
         stages = $retained
         replay_mode = 'network-disabled-authoritative-sqlite-byte-stable'
+        recursive_product_validation = $recursive
         stage_count = 3
         public_network_operations = 0; credential_manager_operations = 0; provider_requests = 0
     })
@@ -2320,6 +2404,7 @@ function Invoke-RetainedReplayGate {
 
 function Invoke-ComposedProvenanceGate {
     $retained = @(Get-M1Slice6RetainedLiveEvidence)
+    $recursive = Invoke-M1Slice6CampaignCSharpOfflineValidation
     $composedPath = Join-Path ([IO.Path]::GetFullPath((Join-Path $repoRoot $InputRoot))) 'wp11-live/composed-evidence.json'
     $schemaPath = Join-Path $repoRoot 'contracts/repository/m1-slice6-campaign-composed-evidence.v1.schema.json'
     if (-not [IO.File]::Exists($composedPath)) {
@@ -2338,7 +2423,7 @@ function Invoke-ComposedProvenanceGate {
         [bool]$composed.prohibited_effects.private_fixture_access -or [bool]$composed.prohibited_effects.secret_retained -or
         [string]$composed.composed_validation_package.package_id -cne 'PROV-LIVE-COMPOSED-VAL' -or
         [string]$composed.composed_validation_package.manifest_sha256 -cne 'da6b6b05456a2ed956393c3a0f7c7d470a947adba8e991cae72e9dd7f28250c8' -or
-        [string]$composed.composed_validation_package.oracle_sha256 -cne '2b8174aceaa03a39567d686be1a1f225a300109ac7922fc2247c70e9fc7d7d32' -or
+        [string]$composed.composed_validation_package.oracle_sha256 -cne '2b8174e58cfdda414883aff245b8f9087647d05a9d4ca6c11e7b0ac076634f8e' -or
         (($composed.explicit_omissions -join '|') -cne 'credential-secret|hosted-search|nexus|private-fixture') -or
         [string]$stages[0].evidence_sha256 -cne [string]$retained[0].evidence_sha256 -or
         [string]$stages[1].evidence_sha256 -cne [string]$retained[1].evidence_sha256 -or
@@ -2352,6 +2437,7 @@ function Invoke-ComposedProvenanceGate {
         validation_packages = @($retained.validation_package_id)
         composed_validation_package = 'PROV-LIVE-COMPOSED-VAL'
         qualification_semantic_use = $false
+        recursive_product_validation = $recursive
         provider_call_count = 3; dns_resolution_count = 3; fourth_call_observed = $false
         public_network_operations = 0; credential_manager_operations = 0; provider_requests = 0
     })

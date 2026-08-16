@@ -9,7 +9,7 @@ namespace Infinium.Persistence;
 public enum M1Slice6CampaignState
 {
     Ready, Reviewed, Admitted, CredentialExecutionHandoff, CredentialEvidenceHandoff,
-    CredentialEvidenceAccepted, StageReserved, TransportMayHaveStarted, StageEvidenceHandoff,
+    CredentialEvidenceAccepted, StageReserved, TransportMayHaveStarted, StageSettled, StageEvidenceHandoff,
     StageAccepted, Completed, Stopped,
 }
 
@@ -54,7 +54,10 @@ public sealed record M1Slice6CampaignLedgerEntry(
     long AggregateRawResponseBytes, long ReservedNanoUsd, long SettledNanoUsd,
     long ObservedInputTokens, long ObservedOutputTokens, long ObservedRawResponseBytes,
     DateTimeOffset? StageDeadlineUtc, bool PossibleStartLatched, string SafetyIdentifierProjection,
-    string PreviousHash, string EventHash, DateTimeOffset RecordedAtUtc);
+    string PreviousHash, string EventHash, DateTimeOffset RecordedAtUtc)
+{
+    public M1Slice6CampaignNativeEnvelope NativeEnvelope { get; init; } = new(0, 0, 0, 0, 0);
+}
 
 /// <summary>Coordinator-owned append-only exact-identity campaign authority/effect ledger.</summary>
 public sealed class M1Slice6FiniteCampaignLedger
@@ -109,23 +112,7 @@ public sealed class M1Slice6FiniteCampaignLedger
 
     public IReadOnlyList<M1Slice6CampaignLedgerEntry> Entries => entries.AsReadOnly();
     public M1Slice6CampaignLedgerEntry Current => entries[^1];
-    public M1Slice6CampaignNativeEnvelope CurrentNativeEnvelope
-    {
-        get
-        {
-            if (Current.State is M1Slice6CampaignState.Ready or M1Slice6CampaignState.Reviewed
-                or M1Slice6CampaignState.Admitted or M1Slice6CampaignState.CredentialExecutionHandoff)
-            {
-                return new(0, 0, 0, 0, 0);
-            }
-            if (Current.State == M1Slice6CampaignState.Stopped && Current.Stage == M1Slice6CampaignStage.None)
-            {
-                throw new InvalidOperationException("A terminal credential path has no fabricated cumulative native envelope.");
-            }
-            long calls = Current.ProviderCallCount;
-            return new(1, checked(2 + calls), 0, checked(1 + calls), checked(4 + 2 * calls));
-        }
-    }
+    public M1Slice6CampaignNativeEnvelope CurrentNativeEnvelope => Current.NativeEnvelope;
 
     public void RecordIndependentReview(DateTimeOffset now) =>
         Transition(M1Slice6CampaignState.Ready, M1Slice6CampaignState.Reviewed, "independent-review-accepted", now);
@@ -153,7 +140,8 @@ public sealed class M1Slice6FiniteCampaignLedger
             "credential-execution-handoff", now);
     }
 
-    public void RecordCredentialEvidenceHandoff(string evidenceId, string evidenceSha256, DateTimeOffset now)
+    public void RecordCredentialEvidenceHandoff(string evidenceId, string evidenceSha256,
+        M1Slice6CampaignNativeEnvelope nativeEnvelope, DateTimeOffset now)
     {
         RequireMonotonicClock(now);
         if (Current.State != M1Slice6CampaignState.CredentialExecutionHandoff)
@@ -166,7 +154,7 @@ public sealed class M1Slice6FiniteCampaignLedger
             Current.AggregateInputTokens, Current.AggregateOutputTokens, Current.AggregateRawResponseBytes,
             Current.ReservedNanoUsd, Current.SettledNanoUsd, null, Current.PossibleStartLatched,
             Current.SafetyIdentifierProjection, Current.ObservedInputTokens, Current.ObservedOutputTokens,
-            Current.ObservedRawResponseBytes, now);
+            Current.ObservedRawResponseBytes, now, ValidateNativeEnvelope(nativeEnvelope, credential: true));
     }
 
     public void AcceptCredentialEvidence(string evidenceId, string evidenceSha256, DateTimeOffset now)
@@ -252,7 +240,7 @@ public sealed class M1Slice6FiniteCampaignLedger
         RequireMonotonicClock(now);
         if (now >= campaignExpiresAtUtc)
         {
-            StopBeforeEffect("campaign-expired-before-possible-start", now);
+            StopBeforePossibleStart(stage, "campaign-expired-before-possible-start", now);
             throw new InvalidOperationException("Possible start expired and is terminally stopped.");
         }
         if (Current.State != M1Slice6CampaignState.StageReserved || Current.Stage != stage
@@ -274,31 +262,54 @@ public sealed class M1Slice6FiniteCampaignLedger
 
     public void RecordStageEvidenceHandoff(M1Slice6CampaignStage stage, string evidenceId, string evidenceSha256,
         long observedInputTokens, long observedOutputTokens, long observedRawResponseBytes,
-        long settledNanoUsd, DateTimeOffset now)
+        long settledNanoUsd, M1Slice6CampaignNativeEnvelope stageNativeTrace, DateTimeOffset now)
     {
-        if (Current.State != M1Slice6CampaignState.TransportMayHaveStarted || Current.Stage != stage
+        if (Current.State != M1Slice6CampaignState.StageSettled || Current.Stage != stage
             || !Current.PossibleStartLatched || Current.StageDeadlineUtc is null)
         {
-            throw new InvalidOperationException("Stage evidence has a stale possible-start predecessor.");
-        }
-        if (now >= Current.StageDeadlineUtc)
-        {
-            StopAfterAmbiguousStart(stage, "deadline-overrun", now);
-            throw new InvalidOperationException("Stage evidence exceeded its immutable deadline; the full hold remains.");
-        }
-        if (settledNanoUsd < 0 || settledNanoUsd > Current.ReservedNanoUsd)
-        {
-            StopAfterAmbiguousStart(stage, "settlement-overrun", now);
-            throw new InvalidOperationException("Stage settlement exceeded its reservation; the full hold remains.");
+            throw new InvalidOperationException("Stage evidence has no exact known-settled predecessor.");
         }
         M1Slice6CampaignStageLimits limits = M1Slice6CampaignStageLimits.For(stage);
         if (observedInputTokens is < 0 || observedInputTokens > limits.MaximumInputTokens
             || observedOutputTokens is < 0 || observedOutputTokens > limits.MaximumOutputTokens
+            || observedRawResponseBytes is < 0 || observedRawResponseBytes > limits.MaximumRawResponseBytes
+            || settledNanoUsd < 0 || stageNativeTrace != new M1Slice6CampaignNativeEnvelope(0, 1, 0, 1, 2))
+        {
+            throw new InvalidOperationException("Stage evidence differs from its known-settled finite result.");
+        }
+        Append(M1Slice6CampaignState.StageEvidenceHandoff, stage, "stage-evidence-handoff", Current.RequestManifestId,
+            Current.RequestManifestSha256, RequireIdentity(evidenceId), RequireHex(evidenceSha256, 64),
+            Current.ProviderCallCount, Current.DnsResolutionCount, Current.AggregateRequestBytes,
+            Current.AggregateInputTokens, Current.AggregateOutputTokens, Current.AggregateRawResponseBytes,
+            0, Current.SettledNanoUsd, Current.StageDeadlineUtc, true, Current.SafetyIdentifierProjection,
+            Current.ObservedInputTokens, Current.ObservedOutputTokens, Current.ObservedRawResponseBytes, now);
+    }
+
+    public void RecordKnownSettlement(M1Slice6CampaignStage stage, long observedInputTokens,
+        long observedOutputTokens, long observedRawResponseBytes, long settledNanoUsd,
+        M1Slice6CampaignNativeEnvelope stageNativeTrace, DateTimeOffset now)
+    {
+        if (Current.State != M1Slice6CampaignState.TransportMayHaveStarted || Current.Stage != stage
+            || !Current.PossibleStartLatched || Current.StageDeadlineUtc is null)
+        {
+            throw new InvalidOperationException("Known settlement has no exact possible-start predecessor.");
+        }
+        M1Slice6CampaignStageLimits limits = M1Slice6CampaignStageLimits.For(stage);
+        if (now >= Current.StageDeadlineUtc || settledNanoUsd < 0 || settledNanoUsd > Current.ReservedNanoUsd
+            || observedInputTokens is < 0 || observedInputTokens > limits.MaximumInputTokens
+            || observedOutputTokens is < 0 || observedOutputTokens > limits.MaximumOutputTokens
             || observedRawResponseBytes is < 0 || observedRawResponseBytes > limits.MaximumRawResponseBytes)
         {
             StopAfterAmbiguousStart(stage, "settlement-overrun", now);
-            throw new InvalidOperationException("Observed stage usage exceeded its admitted finite envelope.");
+            throw new InvalidOperationException("Known settlement exceeded its exact stage envelope.");
         }
+        M1Slice6CampaignNativeEnvelope exactStage = ValidateNativeEnvelope(stageNativeTrace, credential: false);
+        M1Slice6CampaignNativeEnvelope cumulative = new(
+            checked(Current.NativeEnvelope.CredWriteW + exactStage.CredWriteW),
+            checked(Current.NativeEnvelope.CredReadW + exactStage.CredReadW),
+            checked(Current.NativeEnvelope.CredDeleteW + exactStage.CredDeleteW),
+            checked(Current.NativeEnvelope.CredFree + exactStage.CredFree),
+            checked(Current.NativeEnvelope.Total + exactStage.Total));
         long aggregate = checked(Current.SettledNanoUsd + settledNanoUsd);
         long aggregateInput = checked(Current.ObservedInputTokens + observedInputTokens);
         long aggregateOutput = checked(Current.ObservedOutputTokens + observedOutputTokens);
@@ -307,14 +318,30 @@ public sealed class M1Slice6FiniteCampaignLedger
             || aggregateOutput > AggregateMaximumOutputTokens || aggregateRaw > AggregateMaximumRawResponseBytes)
         {
             StopAfterAmbiguousStart(stage, "settlement-overrun", now);
-            throw new InvalidOperationException("Observed campaign usage exceeded its atomic aggregate envelope.");
+            throw new InvalidOperationException("Known settlement exceeded the atomic campaign envelope.");
         }
-        Append(M1Slice6CampaignState.StageEvidenceHandoff, stage, "stage-evidence-handoff", Current.RequestManifestId,
-            Current.RequestManifestSha256, RequireIdentity(evidenceId), RequireHex(evidenceSha256, 64),
-            Current.ProviderCallCount, Current.DnsResolutionCount, Current.AggregateRequestBytes,
-            Current.AggregateInputTokens, Current.AggregateOutputTokens, Current.AggregateRawResponseBytes,
-            Current.ReservedNanoUsd, aggregate, Current.StageDeadlineUtc, true, Current.SafetyIdentifierProjection,
-            aggregateInput, aggregateOutput, aggregateRaw, now);
+        Append(M1Slice6CampaignState.StageSettled, stage, "stage-known-settled-no-retry",
+            Current.RequestManifestId, Current.RequestManifestSha256, "", "", Current.ProviderCallCount,
+            Current.DnsResolutionCount, Current.AggregateRequestBytes, Current.AggregateInputTokens,
+            Current.AggregateOutputTokens, Current.AggregateRawResponseBytes, 0, aggregate,
+            Current.StageDeadlineUtc, true, Current.SafetyIdentifierProjection, aggregateInput,
+            aggregateOutput, aggregateRaw, now, cumulative);
+    }
+
+    public void StopAfterKnownSettlement(M1Slice6CampaignStage stage, string reason, DateTimeOffset now)
+    {
+        if (Current.State != M1Slice6CampaignState.StageSettled || Current.Stage != stage
+            || reason is not ("evidence-write-failure" or "evidence-serialization-failure"
+                or "semantic-admission-failure" or "reconciled-sqlite-settlement"))
+        {
+            throw new InvalidOperationException("Only a known-settled stage may stop as evidence-unreviewable.");
+        }
+        Append(M1Slice6CampaignState.Stopped, stage, reason + "-known-settled-no-retry",
+            Current.RequestManifestId, Current.RequestManifestSha256, "", "", Current.ProviderCallCount,
+            Current.DnsResolutionCount, Current.AggregateRequestBytes, Current.AggregateInputTokens,
+            Current.AggregateOutputTokens, Current.AggregateRawResponseBytes, 0, Current.SettledNanoUsd,
+            Current.StageDeadlineUtc, true, Current.SafetyIdentifierProjection, Current.ObservedInputTokens,
+            Current.ObservedOutputTokens, Current.ObservedRawResponseBytes, now);
     }
 
     public void AcceptStageEvidence(M1Slice6CampaignStage stage, string evidenceId, string evidenceSha256,
@@ -380,11 +407,17 @@ public sealed class M1Slice6FiniteCampaignLedger
     {
         if (Current.State != M1Slice6CampaignState.StageReserved || Current.Stage != stage
             || reason is not ("safety-state-missing" or "safety-state-corrupt" or "safety-projection-drift"
-                or "stage-prestart-failure"))
+                or "stage-prestart-failure" or "campaign-expired-before-possible-start"))
         {
             throw new InvalidOperationException("Only an exact reserved stage may stop before possible start.");
         }
-        StopBeforeEffect(reason, now);
+        Append(M1Slice6CampaignState.Stopped, stage, reason + "-released-undispatched-terminal-stop",
+            Current.RequestManifestId, Current.RequestManifestSha256, Current.EvidenceId,
+            Current.EvidenceSha256, Current.ProviderCallCount, Current.DnsResolutionCount,
+            Current.AggregateRequestBytes, Current.AggregateInputTokens, Current.AggregateOutputTokens,
+            Current.AggregateRawResponseBytes, 0, Current.SettledNanoUsd, Current.StageDeadlineUtc,
+            Current.PossibleStartLatched, Current.SafetyIdentifierProjection, Current.ObservedInputTokens,
+            Current.ObservedOutputTokens, Current.ObservedRawResponseBytes, now);
     }
 
     private void Transition(M1Slice6CampaignState from, M1Slice6CampaignState to, string eventName, DateTimeOffset now)
@@ -428,7 +461,8 @@ public sealed class M1Slice6FiniteCampaignLedger
         string requestId, string requestSha, string evidenceId, string evidenceSha, long calls, long dns,
         long requestBytes, long inputTokens, long outputTokens, long rawBytes, long reserved, long settled,
         DateTimeOffset? stageDeadline, bool latched, string safetyProjection, long observedInput,
-        long observedOutput, long observedRaw, DateTimeOffset now)
+        long observedOutput, long observedRaw, DateTimeOffset now,
+        M1Slice6CampaignNativeEnvelope? nativeEnvelope = null)
     {
         lock (gate)
         {
@@ -440,7 +474,7 @@ public sealed class M1Slice6FiniteCampaignLedger
             }
             AppendUnlocked(state, stage, eventName, requestId, requestSha, evidenceId, evidenceSha, calls, dns,
                 requestBytes, inputTokens, outputTokens, rawBytes, reserved, settled, observedInput, observedOutput,
-                observedRaw, stageDeadline, latched, safetyProjection, now);
+                observedRaw, stageDeadline, latched, safetyProjection, now, nativeEnvelope);
         }
     }
 
@@ -448,20 +482,27 @@ public sealed class M1Slice6FiniteCampaignLedger
         string requestId, string requestSha, string evidenceId, string evidenceSha, long calls, long dns,
         long requestBytes, long inputTokens, long outputTokens, long rawBytes, long reserved, long settled,
         long observedInput, long observedOutput, long observedRaw, DateTimeOffset? stageDeadline, bool latched,
-        string safetyProjection, DateTimeOffset now)
+        string safetyProjection, DateTimeOffset now,
+        M1Slice6CampaignNativeEnvelope? nativeEnvelope = null)
     {
         RequireMonotonicClock(now);
         string previous = entries.Count == 0 ? new string('0', 64) : entries[^1].EventHash;
         long sequence = entries.Count + 1;
         DateTimeOffset utc = RequireUtc(now, nameof(now));
+        M1Slice6CampaignNativeEnvelope effectiveNative = nativeEnvelope ?? (entries.Count == 0
+            ? new(0, 0, 0, 0, 0) : entries[^1].NativeEnvelope);
         string material = Material(sequence, identity, state, stage, eventName, requestId, requestSha, evidenceId,
             evidenceSha, calls, dns, requestBytes, inputTokens, outputTokens, rawBytes, reserved, settled,
-            observedInput, observedOutput, observedRaw, stageDeadline, latched, safetyProjection, previous, utc);
+            observedInput, observedOutput, observedRaw, stageDeadline, latched, safetyProjection,
+            effectiveNative, previous, utc);
         string hash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(material)));
         M1Slice6CampaignLedgerEntry entry = new(sequence, identity, state, stage, eventName, requestId,
             requestSha, evidenceId, evidenceSha, calls, dns, requestBytes, inputTokens, outputTokens, rawBytes,
             reserved, settled, observedInput, observedOutput, observedRaw, stageDeadline, latched,
-            safetyProjection, previous, hash, utc);
+            safetyProjection, previous, hash, utc)
+        {
+            NativeEnvelope = effectiveNative,
+        };
         if (!IsLegalSuccessor(entries.LastOrDefault(), entry))
         {
             throw new InvalidOperationException("The campaign ledger transition violates its exact successor equation.");
@@ -495,7 +536,7 @@ public sealed class M1Slice6FiniteCampaignLedger
                 entry.AggregateOutputTokens, entry.AggregateRawResponseBytes, entry.ReservedNanoUsd,
                 entry.SettledNanoUsd, entry.ObservedInputTokens, entry.ObservedOutputTokens,
                 entry.ObservedRawResponseBytes, entry.StageDeadlineUtc, entry.PossibleStartLatched,
-                entry.SafetyIdentifierProjection, previous, entry.RecordedAtUtc))));
+                entry.SafetyIdentifierProjection, entry.NativeEnvelope, previous, entry.RecordedAtUtc))));
             if (entry.Sequence != result.Count + 1 || entry.Identity != identity || entry.PreviousHash != previous
                 || entry.EventHash != expected || entry.ProviderCallCount is < 0 or > AggregateMaximumProviderCalls
                 || entry.DnsResolutionCount is < 0 or > AggregateMaximumDnsResolutions
@@ -506,6 +547,13 @@ public sealed class M1Slice6FiniteCampaignLedger
                 || entry.ReservedNanoUsd < 0 || entry.SettledNanoUsd < 0
                 || checked(entry.ReservedNanoUsd + entry.SettledNanoUsd) > AggregateMaximumNanoUsd
                 || entry.ObservedInputTokens is < 0 or > AggregateMaximumInputTokens
+                || entry.NativeEnvelope.CredWriteW is < 0 or > 1
+                || entry.NativeEnvelope.CredReadW is < 0 or > 5
+                || entry.NativeEnvelope.CredDeleteW != 0
+                || entry.NativeEnvelope.CredFree is < 0 or > 4
+                || entry.NativeEnvelope.Total != entry.NativeEnvelope.CredWriteW
+                    + entry.NativeEnvelope.CredReadW + entry.NativeEnvelope.CredDeleteW
+                    + entry.NativeEnvelope.CredFree
                 || entry.ObservedOutputTokens is < 0 or > AggregateMaximumOutputTokens
                 || entry.ObservedRawResponseBytes is < 0 or > AggregateMaximumRawResponseBytes
                 || !IsOptionalIdentity(entry.RequestManifestId) || !IsOptionalHex(entry.RequestManifestSha256)
@@ -536,7 +584,8 @@ public sealed class M1Slice6FiniteCampaignLedger
                 && current.SettledNanoUsd == 0 && current.ObservedInputTokens == 0
                 && current.ObservedOutputTokens == 0 && current.ObservedRawResponseBytes == 0
                 && current.StageDeadlineUtc is null && !current.PossibleStartLatched
-                && current.SafetyIdentifierProjection.Length == 0;
+                && current.SafetyIdentifierProjection.Length == 0
+                && current.NativeEnvelope == new M1Slice6CampaignNativeEnvelope(0, 0, 0, 0, 0);
         }
         bool sameVector = SameVector(previous, current);
         if ((previous.State, current.State, current.Event) is
@@ -553,7 +602,9 @@ public sealed class M1Slice6FiniteCampaignLedger
             && current.State == M1Slice6CampaignState.CredentialEvidenceHandoff
             && current.Event == "credential-evidence-handoff")
         {
-            return SameVector(previous, current, ignoreEvidence: true) && current.Stage == M1Slice6CampaignStage.None
+            return SameVector(previous, current, ignoreEvidence: true, ignoreNative: true)
+                && current.NativeEnvelope == new M1Slice6CampaignNativeEnvelope(1, 2, 0, 1, 4)
+                && current.Stage == M1Slice6CampaignStage.None
                 && current.RequestManifestId.Length == 0 && current.RequestManifestSha256.Length == 0
                 && current.EvidenceId.Length > 0 && current.EvidenceSha256.Length == 64;
         }
@@ -602,12 +653,20 @@ public sealed class M1Slice6FiniteCampaignLedger
                     || previous.SafetyIdentifierProjection == current.SafetyIdentifierProjection);
         }
         if (previous.State == M1Slice6CampaignState.TransportMayHaveStarted
-            && current.State == M1Slice6CampaignState.StageEvidenceHandoff
-            && current.Event == "stage-evidence-handoff")
+            && current.State == M1Slice6CampaignState.StageSettled
+            && current.Event == "stage-known-settled-no-retry")
         {
             M1Slice6CampaignStageLimits limits = M1Slice6CampaignStageLimits.For(current.Stage);
-            return SameReservationVector(previous, current, ignoreEvidence: true)
-                && current.EvidenceId.Length > 0 && current.EvidenceSha256.Length == 64
+            M1Slice6CampaignNativeEnvelope expectedNative = new(previous.NativeEnvelope.CredWriteW,
+                previous.NativeEnvelope.CredReadW + 1, previous.NativeEnvelope.CredDeleteW,
+                previous.NativeEnvelope.CredFree + 1, previous.NativeEnvelope.Total + 2);
+            return previous.Stage == current.Stage && previous.RequestManifestId == current.RequestManifestId
+                && previous.RequestManifestSha256 == current.RequestManifestSha256
+                && current.EvidenceId.Length == 0 && current.EvidenceSha256.Length == 0
+                && previous.ProviderCallCount == current.ProviderCallCount
+                && previous.DnsResolutionCount == current.DnsResolutionCount
+                && SameAggregate(previous, current) && current.ReservedNanoUsd == 0
+                && current.NativeEnvelope == expectedNative
                 && current.SettledNanoUsd >= previous.SettledNanoUsd
                 && current.SettledNanoUsd - previous.SettledNanoUsd <= previous.ReservedNanoUsd
                 && current.ObservedInputTokens >= previous.ObservedInputTokens
@@ -616,6 +675,15 @@ public sealed class M1Slice6FiniteCampaignLedger
                 && current.ObservedOutputTokens - previous.ObservedOutputTokens <= limits.MaximumOutputTokens
                 && current.ObservedRawResponseBytes >= previous.ObservedRawResponseBytes
                 && current.ObservedRawResponseBytes - previous.ObservedRawResponseBytes <= limits.MaximumRawResponseBytes;
+        }
+        if (previous.State == M1Slice6CampaignState.StageSettled
+            && current.State == M1Slice6CampaignState.StageEvidenceHandoff
+            && current.Event == "stage-evidence-handoff")
+        {
+            return SameReservationVector(previous, current, ignoreEvidence: true)
+                && current.EvidenceId.Length > 0 && current.EvidenceSha256.Length == 64
+                && current.ReservedNanoUsd == 0 && current.SettledNanoUsd == previous.SettledNanoUsd
+                && SameObserved(previous, current);
         }
         if (previous.State == M1Slice6CampaignState.StageEvidenceHandoff
             && current.State == M1Slice6CampaignState.StageAccepted
@@ -651,19 +719,31 @@ public sealed class M1Slice6FiniteCampaignLedger
                 && current.Event is ("ambiguous-start-hold-retained-no-retry" or "deadline-overrun-hold-retained-no-retry"
                     or "settlement-overrun-hold-retained-no-retry" or "stage-processing-failure-hold-retained-no-retry")
                 && sameVector;
+            bool knownSettled = previous.State == M1Slice6CampaignState.StageSettled
+                && current.Event is ("evidence-write-failure-known-settled-no-retry"
+                    or "evidence-serialization-failure-known-settled-no-retry"
+                    or "semantic-admission-failure-known-settled-no-retry"
+                    or "reconciled-sqlite-settlement-known-settled-no-retry")
+                && sameVector && current.ReservedNanoUsd == 0;
             bool preEffectTerminal = current.Event is ("campaign-expired-before-admission-terminal-stop"
                 or "credential-expired-before-handoff-terminal-stop"
-                or "campaign-expired-before-stage-reservation-terminal-stop"
-                or "campaign-expired-before-possible-start-terminal-stop"
-                or "safety-state-missing-terminal-stop" or "safety-state-corrupt-terminal-stop"
-                or "safety-projection-drift-terminal-stop" or "stage-prestart-failure-terminal-stop") && sameVector;
-            return credentialTerminal || ambiguousTransport || preEffectTerminal;
+                or "campaign-expired-before-stage-reservation-terminal-stop") && sameVector;
+            bool releasedUndispatched = current.Event is ("campaign-expired-before-possible-start-released-undispatched-terminal-stop"
+                or "safety-state-missing-released-undispatched-terminal-stop"
+                or "safety-state-corrupt-released-undispatched-terminal-stop"
+                or "safety-projection-drift-released-undispatched-terminal-stop"
+                or "stage-prestart-failure-released-undispatched-terminal-stop")
+                && previous.State == M1Slice6CampaignState.StageReserved
+                && SameReservationVector(previous, current, ignoreReserved: true)
+                && current.ReservedNanoUsd == 0;
+            return credentialTerminal || ambiguousTransport || knownSettled || preEffectTerminal
+                || releasedUndispatched;
         }
         return false;
     }
 
     private static bool SameVector(M1Slice6CampaignLedgerEntry previous, M1Slice6CampaignLedgerEntry current,
-        bool ignoreEvidence = false) => previous.RequestManifestId == current.RequestManifestId
+        bool ignoreEvidence = false, bool ignoreNative = false) => previous.RequestManifestId == current.RequestManifestId
         && previous.RequestManifestSha256 == current.RequestManifestSha256
         && (ignoreEvidence || previous.EvidenceId == current.EvidenceId && previous.EvidenceSha256 == current.EvidenceSha256)
         && previous.ProviderCallCount == current.ProviderCallCount && previous.DnsResolutionCount == current.DnsResolutionCount
@@ -671,7 +751,8 @@ public sealed class M1Slice6FiniteCampaignLedger
         && previous.SettledNanoUsd == current.SettledNanoUsd && SameObserved(previous, current)
         && previous.StageDeadlineUtc == current.StageDeadlineUtc
         && previous.PossibleStartLatched == current.PossibleStartLatched
-        && previous.SafetyIdentifierProjection == current.SafetyIdentifierProjection;
+        && previous.SafetyIdentifierProjection == current.SafetyIdentifierProjection
+        && (ignoreNative || previous.NativeEnvelope == current.NativeEnvelope);
 
     private static bool SameAggregate(M1Slice6CampaignLedgerEntry previous, M1Slice6CampaignLedgerEntry current) =>
         previous.AggregateRequestBytes == current.AggregateRequestBytes
@@ -686,7 +767,7 @@ public sealed class M1Slice6FiniteCampaignLedger
 
     private static bool SameReservationVector(M1Slice6CampaignLedgerEntry previous, M1Slice6CampaignLedgerEntry current,
         bool ignoreEvidence = false, bool ignoreCounters = false, bool ignoreReserved = false,
-        bool ignoreLatchAndSafety = false) => previous.Stage == current.Stage
+        bool ignoreLatchAndSafety = false, bool ignoreNative = false) => previous.Stage == current.Stage
         && previous.RequestManifestId == current.RequestManifestId
         && previous.RequestManifestSha256 == current.RequestManifestSha256
         && (ignoreEvidence || previous.EvidenceId == current.EvidenceId && previous.EvidenceSha256 == current.EvidenceSha256)
@@ -695,23 +776,40 @@ public sealed class M1Slice6FiniteCampaignLedger
         && SameAggregate(previous, current) && (ignoreReserved || previous.ReservedNanoUsd == current.ReservedNanoUsd)
         && previous.StageDeadlineUtc == current.StageDeadlineUtc
         && (ignoreLatchAndSafety || previous.PossibleStartLatched == current.PossibleStartLatched
-            && previous.SafetyIdentifierProjection == current.SafetyIdentifierProjection);
+            && previous.SafetyIdentifierProjection == current.SafetyIdentifierProjection)
+        && (ignoreNative || previous.NativeEnvelope == current.NativeEnvelope);
 
     private static string Material(long sequence, M1Slice6CampaignIdentity id, M1Slice6CampaignState state,
         M1Slice6CampaignStage stage, string eventName, string requestId, string requestSha, string evidenceId,
         string evidenceSha, long calls, long dns, long requestBytes, long inputTokens, long outputTokens,
         long rawBytes, long reserved, long settled, long observedInput, long observedOutput, long observedRaw,
-        DateTimeOffset? deadline, bool latched, string safety,
+        DateTimeOffset? deadline, bool latched, string safety, M1Slice6CampaignNativeEnvelope native,
         string previous, DateTimeOffset recorded) => string.Join('|', sequence, JsonSerializer.Serialize(id, JsonOptions),
             state, stage, eventName, requestId, requestSha, evidenceId, evidenceSha, calls, dns, requestBytes,
             inputTokens, outputTokens, rawBytes, reserved, settled, observedInput, observedOutput, observedRaw,
             deadline?.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture) ?? "",
-            latched, safety, previous, recorded.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+            latched, safety, native.CredWriteW, native.CredReadW, native.CredDeleteW, native.CredFree,
+            native.Total, previous, recorded.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture));
 
     private static bool IsOptionalIdentity(string value) => value.Length == 0 || value.Length <= 200
         && value.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-' or '/' or ':' or '_');
     private static bool IsOptionalHex(string value) => value.Length == 0 || value.Length == 64
         && value.All(c => c is >= '0' and <= '9' or >= 'a' and <= 'f');
+
+    private static M1Slice6CampaignNativeEnvelope ValidateNativeEnvelope(
+        M1Slice6CampaignNativeEnvelope value, bool credential)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        M1Slice6CampaignNativeEnvelope expected = credential
+            ? new(1, 2, 0, 1, 4)
+            : new(0, 1, 0, 1, 2);
+        if (value != expected)
+        {
+            throw new InvalidDataException(
+                "The retained native operation trace does not match its exact campaign phase.");
+        }
+        return value;
+    }
 
     private static M1Slice6CampaignIdentity ValidateIdentity(M1Slice6CampaignIdentity value) => new(
         RequireIdentity(value.CampaignId), RequireHex(value.CampaignManifestSha256, 64),

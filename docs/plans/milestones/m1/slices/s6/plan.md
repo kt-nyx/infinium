@@ -1075,13 +1075,25 @@ never be retried.
 The coordinator owns an append-only, hash-chained campaign ledger with exact
 ready, reviewed, admitted, credential-handoff, credential-evidence-handoff,
 credential-evidence-accepted, stage-reserved, transport-may-have-started,
-stage-evidence-handoff, stage-accepted, completed, and
+stage-settled, stage-evidence-handoff, stage-accepted, completed, and
 stopped states. Enrollment plus the three exact request credential reads yield
 the finite native maximum `CredWriteW=1`, `CredReadW=5`, `CredDeleteW=0`,
 `CredFree=4`, total 10, with every successful read paired to its allocation's
 free. Collision, cancel, readiness failure, native ambiguity, provider
 ambiguity, a stale/duplicate marker, or counter/hold inconsistency stops the
 campaign without fallback.
+
+Provider execution opens only the exact WP9 authoritative product-state
+database and requires its already accepted active-verified profile,
+generation, account, billing scope, capability, and price identities. It may
+never fabricate enrollment, verification, or a replacement projection. Each
+stage persists its operation, reservation, canonical request, raw response,
+headers, usage, settlement, and network-disabled replay through the accepted
+SQLite provider-accounting graph. A pre-start failure is released
+undispatched. A known settled response remains settled with zero retry even if
+later semantic or sidecar evidence cannot be reviewed; reopening reconciles
+that exact SQLite settlement into a terminal known-settled ledger state. Only
+a genuinely unknown possible start retains the full unresolved hold.
 
 The application creates one stable per-product-user safety seed using 32 bytes
 from the operating-system cryptographic RNG and atomic create-new local state.
@@ -1124,6 +1136,19 @@ post-latch rollover, ambiguous-start, safety-state drift/loss, host/path/tool,
 retry, and fourth-call stop. The rehearsal and every verifier mode have zero
 native/provider effect. Finite Layer 6 modes are mutually exclusive. Only an
 exactly reviewed and admitted campaign may reach the real credential dialog.
+
+The rehearsal and the `LiveEvidence`, `RetainedReplay`, and
+`ComposedProvenance` gates execute the exact frozen WP10/WP11 public validation
+package inputs and deterministic product oracles. Canonical Responses bytes
+bind both the exact product input and an answer-free request-template hash.
+WP11 must consume the exact admitted WP10 artifact and persisted application
+link; it may not synthesize a parallel source graph. Offline validation opens
+the hash-chained ledger and authoritative SQLite store independently, replays
+the exact retained raw response and headers with network disabled, validates
+native/canary evidence and stage/composed markers, and binds the resulting
+semantic application, evidence, candidate, and hypothesis identities. The
+active repository does not materialize stage manifests or markers during this
+non-live rehearsal.
 
 ## 20. `M1/S6/WP9` — Campaign-gated live transport qualification
 
