@@ -8441,3 +8441,15 @@ schema path to both retained-WP8 and campaign Layer 6 equations and makes its
 presence mutation-sensitive in the contract. No helper, UI, readiness,
 authority lock, API key, Credential Manager, production profile, DNS/public
 network, provider, billable, private/archive, or push effect occurred.
+
+Bound candidate `0da49dab6146ec34b71338df894cc36090677d3a` passed both exact
+ready validators, the combined retained-WP8/campaign contract filter 10/10,
+the focused finite-ledger/safety/input-bound unit filter 22/22, and the complete
+committed rehearsal 1/1. Fresh NonLiveAll passed its 35-test contract tranche
+and then stopped at 26/27 in its unit tranche because one provider application
+contract fixture still supplied the superseded pre-v2 canonical request shape.
+No later tranche ran and the fresh root is excluded. The bounded correction
+updates that final consumer to the exact v2 safety-identifier and framed
+message-array request. No helper, UI, readiness, authority lock, API key,
+Credential Manager, production profile, DNS/public network, provider,
+billable, private/archive, or push effect occurred.
