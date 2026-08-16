@@ -262,6 +262,7 @@ public sealed class Wp8PreLiveReadinessContractTests
             "src/Infinium.Coordinator/M1Slice6CampaignSemanticAdmission.cs",
             "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
             "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
+            "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
             "tests/Infinium.UnitTests/ProviderInputBoundPolicyTests.cs",
         })
         {

@@ -107,7 +107,10 @@ is excluded because NonLiveAll found one unit contract fixture retaining the
 superseded pre-v2 canonical request shape. Binding
 `26edecadcd13c0201740f60729673c6ae90ecb53` is excluded because NonLiveAll
 found two persistence fixtures retaining the pre-campaign schema fingerprint
-and input-bound policy version. Current authority is correction and non-live
+and input-bound policy version. Source
+`3a078804c70677b016f90a7214966693ea3d90a5` is excluded because focused
+retained-WP8 validation found that the exact finite-campaign path equation
+omitted the changed persistence-state contract test. Current authority is correction and non-live
 reverification only; no replacement candidate is bound. No authority is
 inherited. The
 immutable owner authority source is SHA-256

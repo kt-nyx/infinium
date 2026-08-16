@@ -8466,3 +8466,15 @@ bounded correction updates only those two exact persistence consumers. No
 helper, UI, readiness, authority lock, API key, Credential Manager, production
 profile, DNS/public network, provider, billable, private/archive, or push effect
 occurred.
+
+Source `3a078804c70677b016f90a7214966693ea3d90a5` passed the two
+corrected persistence tests 2/2 and standalone campaign Verification with
+effect count zero. Its committed retained-WP8/campaign contract filter stopped
+at 9/10 because the finite amendment path equation included the persistence
+implementation and lifecycle tests but omitted the newly changed
+`AnalysisStatePersistenceTests.cs` contract consumer. The source is excluded
+before binding. The bounded correction adds that one exact test path to both
+finite equations and makes its presence mutation-sensitive. No helper, UI,
+readiness, authority lock, API key, Credential Manager, production profile,
+DNS/public network, provider, billable, private/archive, or push effect
+occurred.

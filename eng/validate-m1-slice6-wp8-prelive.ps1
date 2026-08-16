@@ -114,6 +114,7 @@ function Get-Wp8CampaignReviewPaths() {
         'tests/Infinium.EvaluationTests/ProviderBudgetEvaluationTests.cs',
         'tests/Infinium.IntegrationTests/M1Slice6CampaignRehearsalTests.cs',
         'tests/Infinium.IntegrationTests/ProviderBudgetIntegrationTests.cs',
+        'tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs',
         'tests/Infinium.UnitTests/CredentialSemanticRolloverPolicyTests.cs',
         'tests/Infinium.UnitTests/HelperTestFrames.cs',
         'tests/Infinium.UnitTests/M1Slice6FiniteCampaignLedgerTests.cs',

@@ -65,6 +65,10 @@ request shape; it is not review-ready or executable.
 Binding `26edecadcd13c0201740f60729673c6ae90ecb53` is excluded by NonLiveAll
 because two persistence fixtures retained the pre-campaign schema fingerprint
 and input-bound policy version; it is not review-ready or executable.
+Source `3a078804c70677b016f90a7214966693ea3d90a5` is excluded by focused
+retained-WP8 validation because the exact finite-campaign path equation omitted
+the changed persistence-state contract test; it is not review-ready or
+executable.
 Every helper, readiness, authority-lock, native, profile, DNS/network,
 provider, billable, and API-key observation remains zero; production output
 roots remain absent. WP9 credential execution, WP9 request materialization,
