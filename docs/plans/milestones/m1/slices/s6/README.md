@@ -79,14 +79,13 @@ review found incomplete production credential-evidence and provider-stage
 transitions plus a self-referential A/B candidate binding. Binding
 `876130e6a030b3228c151e030a6914cc2f156c04` is also excluded because its
 committed rehearsal inherited ready bindings into the synthetic close-ready
-source. The corrected finite-campaign close-ready source
-`a097d564ff0714ff565e5e7d2d6b2a910c2831e1` is verification-pending. Its
-exact clean committed four-document binding successor is the review candidate,
-bound for complete non-live verification and fresh independent review only.
-The resulting review candidate is ready for review and remains non-executable.
-It retains the separate credential evidence handoff, committed review/admission
-for every stage manifest, and coordinator-owned successor/limit/safety
-enforcement through composed no-fourth closeout.
+source. Binding `3b6a13a3192b54b80d7b80322fb57af4d4a646c3` is excluded because
+NonLiveAll found that its credential-recovery source-boundary assertion spanned
+into a later campaign provider route. Current authority is correction and
+non-live reverification only; no replacement candidate is bound. The
+replacement retains the separate credential evidence handoff, committed
+review/admission for every stage manifest, and coordinator-owned
+successor/limit/safety enforcement through composed no-fourth closeout.
 The
 immutable owner authority source is SHA-256
 `c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.

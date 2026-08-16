@@ -395,7 +395,7 @@ public sealed class CredentialNativeAuthorizationTests
 
         string program = File.ReadAllText(Path.Combine(root, "src", "Infinium.CredentialHelper", "Program.cs"));
         int recovery = program.IndexOf("--credential-native-recovery", StringComparison.Ordinal);
-        int qualification = program.IndexOf("--credential-native-request-handle", StringComparison.Ordinal);
+        int qualification = program.IndexOf("--credential-native-qualification", recovery + 1, StringComparison.Ordinal);
         Assert.IsGreaterThanOrEqualTo(0, recovery);
         Assert.IsGreaterThan(recovery, qualification);
         string recoveryBranch = program[recovery..qualification];

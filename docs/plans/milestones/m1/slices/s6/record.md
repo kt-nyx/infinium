@@ -8292,6 +8292,20 @@ equation. No helper, UI, readiness, authority lock, API key, Credential
 Manager, profile, DNS/public network, provider, billable, private/archive, or
 push effect occurred.
 
+The first fresh NonLiveAll run for
+`3b6a13a3192b54b80d7b80322fb57af4d4a646c3` passed its earlier
+contract, state, budget, integration, and evaluation tranches, then stopped in
+CredentialSynthetic at 48/49. The failing static assertion delimited the
+credential-recovery route from `--credential-native-recovery` all the way to
+the much later legacy request-handle route; the newly added campaign provider
+route therefore appeared inside that textual slice even though the recovery
+branch ends immediately before `--credential-native-qualification`. The
+bounded correction uses that immediate production route boundary and adds the
+changed security test to the exact campaign Layer 6 path set. The partial
+NonLiveAll root and all its receipts are excluded. No recovery, helper, UI,
+readiness, authority lock, API key, Credential Manager, profile, DNS/public
+network, provider, billable, private/archive, or push effect occurred.
+
 Bound candidate `876130e6a030b3228c151e030a6914cc2f156c04`
 passed campaign Ready, credential Ready, retained-WP8, and campaign Layer 6
 validation with effect count zero. Its exact focused unit filter passed 45/45.

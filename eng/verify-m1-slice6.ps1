@@ -879,6 +879,7 @@ function Invoke-Layer6ReviewGate(
         'tests/Infinium.ContractTests/Wp8PreLiveReadinessContractTests.cs',
         'tests/Infinium.IntegrationTests/M1Slice6CampaignRehearsalTests.cs',
         'tests/Infinium.UnitTests/CredentialSemanticRolloverPolicyTests.cs',
+        'tests/Infinium.UnitTests/CredentialNativeAuthorizationTests.cs',
         'tests/Infinium.UnitTests/M1Slice6FiniteCampaignLedgerTests.cs',
         'tests/Infinium.UnitTests/OpenAiResponsesAdapterTests.cs',
         'tests/Infinium.UnitTests/ProductUserSafetyIdentifierTests.cs',
