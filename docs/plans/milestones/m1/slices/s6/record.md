@@ -8060,3 +8060,29 @@ rehearsal, and hashes the exact committed Git blob bytes through a redirected
 binary stream. Both partial rehearsal attempts are excluded. No production
 output root, lock, helper, UI, native operation, DNS/public network, provider
 request, or billable effect occurred.
+
+Replacement binding `755899c1396b360e1640a4052981069918dda4a6`
+then exposed three final deterministic rehearsal-harness precision defects.
+The validator's exact Git-blob mismatch lacked the two non-secret hashes needed
+to diagnose byte reconstruction; the credential-rollover Layer 6 predicate
+parsed the credential expiry as a `DateTime` instead of preserving its exact
+JSON string; and the committed transition receipt assertion depended on JSON
+whitespace rather than its closed value. The bounded correction retains both
+hashes on mismatch, uses string-preserving JSON parsing for the rollover marker,
+and parses the receipt structurally. It also writes the temp-clone fixture with
+canonical LF bytes and overlays the exact current verifier surfaces before its
+conditional bind commit, so a clean frozen candidate remains byte-identical.
+
+After restoring the exact Release closure pinned to
+`38030a7ac2238c0d095942873b6425299040aaa7`, the committed fresh-clone
+rehearsal passed 1/1 in 38 seconds. It exercised committed review, admission,
+and credential-rollover successors with exact Layer 6 receipts; the contained
+PowerShell runner-to-Coordinator admission-only route; fake credential-store
+evidence; stable safety-identifier state; three exact committed stage
+manifests; three literal-loopback adapter calls; the no-fourth-call rule; and
+the required mutations. An earlier ordinary Integration build changed the
+Release SourceRevisionId and was correctly rejected by binary-closure binding;
+that stopped run is excluded. Current authority is correction and non-live
+reverification only. All helper, readiness, authority-lock, API-key, native
+Credential Manager, profile, DNS/public-network, provider, billable, private,
+archive, and push effects remain zero.

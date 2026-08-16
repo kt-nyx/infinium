@@ -32,13 +32,19 @@ public sealed class M1Slice6CampaignRehearsalTests
                 "clone", "--no-hardlinks", "--quiet", TestRepository.Root, clone], TestRepository.Root);
             string head = Run("git", ["rev-parse", "HEAD"], clone).Trim();
             string closeReady = head;
+            File.Copy(TestRepository.PathFromRoot("eng", "validate-m1-slice6-campaign.ps1"),
+                Path.Combine(clone, "eng", "validate-m1-slice6-campaign.ps1"), overwrite: true);
+            File.Copy(TestRepository.PathFromRoot("eng", "verify-m1-slice6.ps1"),
+                Path.Combine(clone, "eng", "verify-m1-slice6.ps1"), overwrite: true);
             string manifestPath = Path.Combine(clone, "docs", "plans", "milestones", "m1", "slices", "s6", "m1-slice6-finite-campaign-authorization.v1.json");
             JsonObject manifest = JsonNode.Parse(File.ReadAllText(manifestPath))!.AsObject();
             manifest["status"] = "ready-for-campaign-review";
             manifest["candidate_binding"]!["close_ready_implementation_commit"] = head;
             manifest["candidate_binding"]!["verification_candidate_commit"] = head;
-            File.WriteAllText(manifestPath, manifest.ToJsonString(IndentedJson) + "\n", new UTF8Encoding(false));
-            Run("git", ["add", "--", "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json"], clone);
+            string manifestText = manifest.ToJsonString(IndentedJson).Replace("\r\n", "\n", StringComparison.Ordinal);
+            File.WriteAllText(manifestPath, manifestText + "\n", new UTF8Encoding(false));
+            Run("git", ["add", "--", "eng/validate-m1-slice6-campaign.ps1", "eng/verify-m1-slice6.ps1",
+                "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json"], clone);
             Run("git", ["-c", "user.name=Infinium Rehearsal", "-c", "user.email=rehearsal@invalid", "commit", "--quiet", "-m", "rehearsal bind campaign"], clone);
             head = Run("git", ["rev-parse", "HEAD"], clone).Trim();
             string reviewedCandidate = head;
@@ -305,9 +311,10 @@ public sealed class M1Slice6CampaignRehearsalTests
         string output = Path.Combine(Path.GetTempPath(), "infinium-campaign-layer6-" + Guid.NewGuid().ToString("N"));
         try
         {
-            string receipt = Run("pwsh", ["-NoProfile", "-File", "eng/verify-m1-slice6.ps1", "-Gate", "Layer6Review",
+            Run("pwsh", ["-NoProfile", "-File", "eng/verify-m1-slice6.ps1", "-Gate", "Layer6Review",
                 "-BaselineCommit", baseline, "-CandidateCommit", candidate, "-OutputRoot", output, mode], clone);
-            StringAssert.Contains(receipt, "Layer6Review");
+            using JsonDocument receipt = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "layer6review.json")));
+            Assert.AreEqual("Layer6Review", receipt.RootElement.GetProperty("gate").GetString());
         }
         finally
         {

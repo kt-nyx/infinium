@@ -919,7 +919,7 @@ function Invoke-Layer6ReviewGate(
         if ($CampaignRolloverCloseoutMode) {
             $campaignManifest = Get-CandidateText $candidateHash 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json' | ConvertFrom-Json -Depth 100
             $credentialManifestPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
-            $credentialManifest = Get-CandidateText $candidateHash 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json' | ConvertFrom-Json -Depth 100
+            $credentialManifest = Get-CandidateText $candidateHash 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json' | ConvertFrom-Json -Depth 100 -DateKind String
             $credentialSha = (Get-FileHash -LiteralPath $credentialManifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
             $rollover = 'WP9_PROFILE_CAMPAIGN_ROLLOVER_ADMISSION campaign_candidate_commit=' + [string]$campaignReceipt.reviewed_candidate_commit +
                 ' authority_sha256=' + [string]$campaignManifest.authority_source.attachment_sha256 +

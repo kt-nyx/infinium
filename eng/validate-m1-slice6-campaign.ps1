@@ -368,7 +368,9 @@ if ($reviewCount -eq 1) {
     & git merge-base --is-ancestor $reviewedCandidate HEAD
     if ($LASTEXITCODE -ne 0) { throw 'The reviewed campaign candidate is not an ancestor of current HEAD.' }
     $candidateHash = Get-GitBlobSha256 $reviewedCandidate 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json'
-    if ($candidateHash -cne $manifestSha) { throw 'The review marker candidate does not bind the exact campaign manifest bytes.' }
+    if ($candidateHash -cne $manifestSha) {
+        throw "The review marker candidate does not bind the exact campaign manifest bytes (candidate=$candidateHash current=$manifestSha)."
+    }
 }
 if ($admissionCount -eq 1 -and [string]$admissionMatches[0] -cne $reviewedCandidate) { throw 'Campaign admission does not bind the exact reviewed candidate.' }
 if ($rank[$RequireState] -ge 3 -and $NowUtc.ToUniversalTime() -ge ([datetime]$manifest.expires_at_utc).ToUniversalTime()) { throw 'Campaign admission is expired.' }
