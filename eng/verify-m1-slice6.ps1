@@ -1918,6 +1918,7 @@ function Invoke-NonLiveAllGate {
     $currentState = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/current-state.md') -Raw
     $sliceReadme = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/README.md') -Raw
     $recordText = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/record.md') -Raw
+    $normalizedRecordText = [regex]::Replace($recordText, '\s+', ' ')
     $wp8Matrix = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp8-case-requirement-matrix.v1.json') -Raw | ConvertFrom-Json -Depth 100
     $head = (& git -C $repoRoot rev-parse HEAD).Trim()
     $wp9ReviewBinding = Get-Wp9ReviewBindingForCandidate $head
@@ -1927,7 +1928,7 @@ function Invoke-NonLiveAllGate {
     $campaignState = $currentState.Contains('finite-campaign amendment implementation, non-live verification', [StringComparison]::Ordinal) -and
         $currentState.Contains('No credential or provider effect is admitted.', [StringComparison]::Ordinal) -and
         $sliceReadme.Contains('Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee`', [StringComparison]::Ordinal) -and
-        $recordText.Contains('Current authority is correction and non-live reverification only.', [StringComparison]::Ordinal)
+        $normalizedRecordText.Contains('Current authority is correction and non-live reverification only.', [StringComparison]::Ordinal)
     if ($currentStateDisposition -eq 'invalid' -and $campaignState) {
         $campaignValidationJson = @(& (Join-Path $repoRoot 'eng/validate-m1-slice6-campaign.ps1') `
             -AuthorizationManifest $campaignManifestPath -RequireState Ready) -join "`n"

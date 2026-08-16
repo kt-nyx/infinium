@@ -72,6 +72,23 @@ public sealed class M1Slice6CampaignContractTests
         }
     }
 
+    [TestMethod]
+    public void NonLiveAllCampaignStateRecognizesOnlyExactWhitespaceNormalizedRecordAuthority()
+    {
+        string record = File.ReadAllText(TestRepository.PathFromRoot(
+            "docs", "plans", "milestones", "m1", "slices", "s6", "record.md"));
+        string normalized = System.Text.RegularExpressions.Regex.Replace(record, @"\s+", " ");
+        const string authority = "Current authority is correction and non-live reverification only.";
+        StringAssert.Contains(normalized, authority);
+        Assert.IsFalse(normalized.Replace(authority, "Current authority is live execution.", StringComparison.Ordinal)
+            .Contains(authority, StringComparison.Ordinal));
+
+        string verifier = File.ReadAllText(TestRepository.PathFromRoot("eng", "verify-m1-slice6.ps1"));
+        StringAssert.Contains(verifier, "$normalizedRecordText = [regex]::Replace($recordText, '\\s+', ' ')");
+        StringAssert.Contains(verifier,
+            "$normalizedRecordText.Contains('Current authority is correction and non-live reverification only.'");
+    }
+
     private static int RunValidator(Action<JsonObject>? mutation)
     {
         string? temporary = null;
