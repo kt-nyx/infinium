@@ -4,8 +4,10 @@
   "acquisition_run_id": "wp10-acquisition-live-val-v2",
   "source_revision_id": "relay-guidance-revision-4",
   "selection_policy": "retained-text-with-deletion-audit-in-declared-order/v2",
-  "retained_passage_ids": ["relay-activation-rule", "relay-observation-note", "relay-signature-gate", "relay-revision-three-rule", "relay-conflict-enable", "relay-conflict-disable", "relay-untrusted-note", "relay-underdetermined-note"],
+  "applicability_fact_ids": ["relay-activation-mark-presence"],
+  "applicability_fact_sha256": ["38ebdf04f55dea7e37f881e0f2e992176dcd593400a8b2f453208d7e247e6f48"],
+  "retained_passage_ids": ["relay-activation-rule", "relay-observation-note", "relay-retention-record-gate", "relay-revision-three-rule", "relay-buffer-acknowledgements", "relay-does-not-buffer-acknowledgements", "relay-untrusted-note", "relay-underdetermined-note"],
   "audit_only_passage_ids": ["relay-withdrawn-note"],
-  "text_sha256": ["09b6e7649ed3e8ce0abe09911bf635144876b804901a61a7eefc0bf081ece236", "07026c83402e715675d6d9884c15f4dd57f04dd1fdca13b216795ebd7124090b", "a3d48fb0e3b186358f91cc0bc65431ba7e098f2391496cd52437b53f5dd99af8", "8b917a8544a77fecb0a1d0beaec513c3f876346ce91d3112929aa66d1254d623", "13e8dc750e6d6a1cd57575c5784680a6ccd062b45c6b6b64d130fca9d6c815e1", "644d255f9cf089b658c8dc7ffdd443d105377a0bfb1bb8cc4dfb8140fe5ac528", "f7a86379722948fc681496dac20be4f49712ac3607689a0b865873b5e7e0fc88", "6dd7bed88214934c7841203fba078f397e58b1941b86d53c33c689e461e99380"],
+  "text_sha256": ["09b6e7649ed3e8ce0abe09911bf635144876b804901a61a7eefc0bf081ece236", "07026c83402e715675d6d9884c15f4dd57f04dd1fdca13b216795ebd7124090b", "db3b9ad273232f02e3dcc68ca686fe589f19e8263e130a8b554fc983043e70b0", "8b917a8544a77fecb0a1d0beaec513c3f876346ce91d3112929aa66d1254d623", "27301762e2a05d8baff50ca6f4d4e66b5faf030073da44721ca970db6d8db6c1", "8340d24fb5ce8aa30589a046ebe8ed04c85609885572daa328bf207f22326e56", "f7a86379722948fc681496dac20be4f49712ac3607689a0b865873b5e7e0fc88", "6dd7bed88214934c7841203fba078f397e58b1941b86d53c33c689e461e99380"],
   "audit_text_sha256": ["21b8d8efbbf71c0bdfee4e77027a433ae031a0e594646be89188908622b30ab7"]
 }
