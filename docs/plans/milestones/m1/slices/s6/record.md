@@ -8669,3 +8669,100 @@ sibling archives remain out of scope unless the owner explicitly selects one.
 No helper, UI/readiness, authority lock, API key, Credential Manager,
 production profile, DNS/public network, provider, billable, private/archive,
 or push effect occurred.
+
+## R1 live-semantic v2 authority acceptance and R2 handoff — 2026-08-17
+
+R1 is accepted at exact candidate
+`fcd17cd6db98019fc9e5253d5167d2487862671c`. The accepted chain separates
+answer-free input authorship (`5dee991eb71b01ae5e4bcbad8ca353ed568c288f`)
+from oracle/provenance authorship
+(`d6f5ed61cac596e420b929344ad4c7e01816b661`) before package integration and
+review. Product output was not observed while authoring oracles. The integrated
+authority, verification, lifecycle, and routing commits are
+`854b0c6f414397bb08e37500766f3119c1df3350`,
+`6a1f0774fdfc3b4efa2e44f88d3df67e48393ffe`,
+`23c1982e0f73007fc5b52d77eeee98fc4c4cc698`,
+`4c5ca9477f36529cf6a12f5e096ea3679edd96ad`, and the accepted candidate.
+
+The exact immutable-baseline-to-candidate surface is 62 paths: 23 v2 schemas
+under `contracts/repository/`; five v2 package roots containing the 18 frozen
+files listed below; additive `fixtures/public/public-fixture-registry.v2.json`;
+`fixtures/tooling/Infinium.PublicFixtures/LiveSemanticV2AuthorityVerifier.cs`;
+the tooling README and v2-only resealer; four Contract test files; the two
+Slice 6 verification scripts; and the accepted authority/navigation inputs
+`docs/current-state.md`, `docs/execution-policy.md`, the Slice 6 README,
+remainder plan, remainder authority amendment, orchestrator handoff, record,
+live-semantic amendment, semantic fixture catalog, and RESEARCH-0056 plus its
+investigation index. The planning-base-to-candidate R1 enforcement equation is
+the exact duplicate-free 57-path subset bound by both validators. No `src/`,
+private, archive, credential, native, live-stage, or artifact-output path is in
+that candidate equation.
+
+The frozen v2 authority byte ledger is:
+
+| File | Bytes | SHA-256 |
+|---|---:|---|
+| `fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/context-manifest.v2.json` | 891 | `af4e8d97c482b4665634c438a1d9f973ce8ad2a69123f019a350ff03f7cc9375` |
+| `fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/execution-input.v2.json` | 3335 | `d9d84af1a0a4e8c86100928fd6737482b51a96fd7d1c461cd30ecc81cd29eeb6` |
+| `fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/oracle-provenance.v2.json` | 1636 | `e821ceb5780e4ad526b48ca04d349fe69b175e21ac29824e865667cae963b82c` |
+| `fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/oracle.v2.json` | 4930 | `b72a319e70437968989ac73866f9c57326bed3f3b555ee21ff59de0861d6c0f6` |
+| `fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/partition-history.v2.json` | 789 | `cb3f2064271806a7a5db61e9b004139efceddf760726f5f3f55173f132ef0ca4` |
+| `fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/public-manifest.json` | 1714 | `c607ca873edb888502c9511ee5d9663b87247565d88b302edf3de55fb2750942` |
+| `fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/context-manifest.v2.json` | 1415 | `96d1c98d8ba3d817006de1e7972eaaeef33b6c47942d643a22c2cbb3ff8f2ffc` |
+| `fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/execution-input.v2.json` | 4144 | `bcbcc804eee7ea51fc00b6daa33d688078dcb1e8ddc53349a0ec673b77a5e789` |
+| `fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/oracle-provenance.v2.json` | 1569 | `712a32ef7deee27815937e0b08eeb4ca82502fc28fa26fc677e43d68c73385f5` |
+| `fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/oracle.v2.json` | 5292 | `e245320022d3e2c21424ca954b7ba8b4368fcb39ddcb9d4f6f053d7c60bab217` |
+| `fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/partition-history.v2.json` | 805 | `3ee378eb45b40eb2578991ecf62576ba5f69d017c51321f15850de508efa14a6` |
+| `fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/public-manifest.json` | 1684 | `926963ca067da52ec8d6d7ecdd824df3cb2e2efed6dd12fe3418f3e63b29b4b7` |
+| `fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/oracle.v2.json` | 2398 | `76a631ffa02eeff301c240588d1507e3fe3cc2fe13f19aa597aecb8d2ddb3e14` |
+| `fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/public-manifest.json` | 1126 | `1231c98875c3ba3ca0ce3b60773e566c791b4a313c1fd691233be1a1bc60ba09` |
+| `fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/oracle.v2.json` | 3371 | `52f13b89f0c0cab2dc91c72e3986b8bc358e41a5ab5253ea1e8fab3b19230e3a` |
+| `fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/public-manifest.json` | 1185 | `f531447c5d7a1a3efc45b0787b319e3467d35197fbfea85436e3e003a789bb50` |
+| `fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL-v2/oracle.v2.json` | 4173 | `e85cb6a9ead7c6ecb1a09b677fb8d6b12b3c29f022f6ea03cd8b6812c073e1d2` |
+| `fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL-v2/public-manifest.json` | 2346 | `61368c3b8da3808724d64e796b85a3b26043ca4ef1a2e3ad1dd441daf2405be8` |
+
+The registry contains exactly 43 rows: the first 38 remain semantically and
+physically bound to registry v1, followed by the five exact v2 manifests. The
+verifier additionally closes the exact 18-file inventory and SHA-256 of all
+five frozen v1 trees, rejects tracked or untracked additions, enforces all 23
+schema identities and recursively closed vocabulary, and validates the full
+input/oracle/provenance/history/live-wrapper/composed semantic joins. The
+required matrix has exactly one admitted WP10 proposal/artifact/application;
+WP11 positive context A consumes that persisted chain, context B remains an
+independently hosted abstention counterpart, and composed validation requires
+qualification -> WP10 -> WP11 with retained responses, no canned transcript,
+offline replay, zero composed provider calls, and no fourth call.
+
+Focused R1 authority contracts passed 9/9. All 23 schemas loaded through the
+active validator; independent closure scans found 163 closed object nodes,
+zero open or bare-object schemas, and zero unsupported tuple keywords. The
+v2-only resealer reported `differences=0`, `v1_writes=0`, five manifests, and
+43 registry rows. Final Contract verification passed 160/160. The final
+actual-candidate `NonLiveAll` receipt at
+`artifacts/m1-slice6/r1-final-nonliveall-fcd17cd/nonliveall.json` is 20,320
+bytes with SHA-256
+`38d7dc84a7d4c05945ee937aaa3559a01a46deaa8fde3d523a4657805272ab7c`;
+it records 364/364 focused tests, baseline
+`313ecfc04a22330c4c5dc52a79aae87d13982a74`, candidate
+`fcd17cd6db98019fc9e5253d5167d2487862671c`, and zero external effects. Its
+2,090-byte ordinary Layer 6 receipt has SHA-256
+`9bcdadf4e57cc453306570474260783a49b9ba4cf76a3d1a9dabbe6c79a38071`.
+
+Fresh input, oracle/provenance, schema, fixture, and security/effect reviews all
+returned `ACCEPT` after ordinary correction cycles. The common floor is green
+for restore, Release build, Contract, Evaluation, Security, Fault, formatting,
+dependency manifests, documentation, architecture/pipeline, and retained
+non-live gates. Its only two failures are explicitly transferred to R2: the
+unit ledger contract still expects the superseded late-settlement exception,
+and the committed offline rehearsal still expects the pre-R1 four-document
+authority transition. Both are product/persistence/rehearsal consumer seams
+owned by R2, not R1 fixture-authority defects.
+
+R1 acceptance automatically opens R2 for the complete effect-free WP10-to-WP11
+product, persistence, replay, provenance, recovery, invalid-state, and offline
+rehearsal integration. This append changes the three pre-closeout authority
+document hashes, so the narrow R1 candidate predicate intentionally no longer
+matches later states. R2 must bind its own explicit current state. No helper,
+UI/readiness, authority lock, API key, Credential Manager, production profile,
+DNS/public network, provider, billable, private/archive, or push effect
+occurred.

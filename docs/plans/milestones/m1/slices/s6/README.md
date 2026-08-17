@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active slice navigation; live authority remains in current state
 
-Last reviewed: 2026-08-16
+Last reviewed: 2026-08-17
 
 Live authorization remains stated only in
 [current project state](../../../../../current-state.md).
@@ -30,6 +30,17 @@ is recorded in [current project state](../../../../../current-state.md) and the
 [append-only implementation record](record.md). The current
 [implementation-orchestrator handoff](orchestrator-handoff.md) explains the
 R1-R7 to WP9-WP11 mapping and requires user-facing conceptual reports.
+
+R1 is independently accepted at exact candidate
+`fcd17cd6db98019fc9e5253d5167d2487862671c`. It freezes five answer-isolated
+live-semantic v2 packages, 23 closed repository schemas, additive registry v2,
+strict read-only verification, and a v2-only resealer while preserving every
+frozen v1 byte. The final actual-candidate NonLiveAll receipt has SHA-256
+`38d7dc84a7d4c05945ee937aaa3559a01a46deaa8fde3d523a4657805272ab7c` and its
+ordinary Layer 6 receipt has SHA-256
+`9bcdadf4e57cc453306570474260783a49b9ba4cf76a3d1a9dabbe6c79a38071`.
+R2 is now active for effect-free WP10-to-WP11 product, persistence, replay,
+provenance, recovery, and offline rehearsal integration.
 
 Historical material must not be accumulated in a new in-repository archive.
 Any future archival move requires a separate owner-authorized transfer into an
