@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'CredentialNativeRecovery', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'NonLiveAll', 'Layer6Review')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'CredentialNativeRecovery', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'LiveSemanticV2Authority', 'NonLiveAll', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -54,7 +54,7 @@ param(
     [switch] $CredentialNativePostEffectAudit
 )
 
-if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'NonLiveAll') -and $PSVersionTable.PSEdition -ne 'Core') {
+if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'LiveSemanticV2Authority', 'NonLiveAll') -and $PSVersionTable.PSEdition -ne 'Core') {
     $pwsh = Get-Command pwsh.exe -ErrorAction Stop
     $arguments = @(
         '-NoProfile',
@@ -1692,6 +1692,48 @@ function Invoke-ContractsGate {
         answer_free_example_count = 9
         slice5_v1_byte_compatibility = 'unchanged-from-6ac66e7d79c63a231bbbf22209015a894cd4bd6d'
         forbidden_field_scan = 'passed'
+    })
+}
+
+function Invoke-LiveSemanticV2AuthorityGate {
+    $preservedPaths = @(
+        'fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1/',
+        'fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/',
+        'fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/',
+        'fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/',
+        'fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/',
+        'fixtures/public/public-fixture-registry.v1.json',
+        'contracts/repository/public-fixture-registry.v1.schema.json'
+    )
+    & git diff --quiet 5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98 -- @preservedPaths
+    if ($LASTEXITCODE -ne 0) {
+        throw 'LiveSemanticV2Authority rejected modified frozen v1 fixture or registry bytes.'
+    }
+
+    & node 'fixtures/tooling/reseal-live-semantic-v2.mjs' '--check'
+    if ($LASTEXITCODE -ne 0) {
+        throw 'LiveSemanticV2Authority rejected stale v2 manifest or registry seals.'
+    }
+
+    Invoke-DotnetTest `
+        'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' `
+        'FullyQualifiedName~LiveSemanticV2AuthorityContractTests'
+
+    $registryPath = Join-Path $repoRoot 'fixtures/public/public-fixture-registry.v2.json'
+    $registry = Get-Content -Raw -LiteralPath $registryPath | ConvertFrom-Json
+    Write-Receipt 'LiveSemanticV2Authority' ([ordered]@{
+        registry_identity = $registry.schema_identity
+        registry_version = $registry.registry_version
+        package_count = [int]$registry.package_count
+        preserved_registry_entry_count = 38
+        appended_v2_package_count = 5
+        schema_count = 23
+        resealer_mode = 'check-only'
+        registry_sha256 = (Get-FileHash -LiteralPath $registryPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        product_comparison = 'absent'
+        provider_requests = 0
+        credential_operations = 0
+        frozen_v1_authority = 'unchanged-from-5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98'
     })
 }
 
@@ -3511,6 +3553,7 @@ try {
         'LiveEvidence' { Invoke-LiveEvidenceGate }
         'RetainedReplay' { Invoke-RetainedReplayGate }
         'ComposedProvenance' { Invoke-ComposedProvenanceGate }
+        'LiveSemanticV2Authority' { Invoke-LiveSemanticV2AuthorityGate }
         'NonLiveAll' { Invoke-NonLiveAllGate }
         'Layer6Review' { Invoke-Layer6ReviewGate }
     }

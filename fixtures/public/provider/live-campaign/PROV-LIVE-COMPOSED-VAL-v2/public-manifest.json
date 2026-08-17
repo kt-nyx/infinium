@@ -1,0 +1,68 @@
+{
+  "schema_identity": "infinium.public-fixture.live-composed-provenance/2.0.0",
+  "package_identity": "PROV-LIVE-COMPOSED-VAL-v2",
+  "package_version": "2.0.0",
+  "partition": "validation",
+  "status": "oracle-frozen-pre-live-comparison",
+  "operation": "ComposedProvenanceValidation",
+  "semantic_use": true,
+  "provider_call_count": 0,
+  "qualification": {
+    "package_identity": "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1",
+    "package_version": "1.0.0",
+    "semantic_use": false,
+    "manifest_path": "fixtures/public/platform/provider-budget/capability-val/public-manifest.json",
+    "manifest_bytes": 526,
+    "manifest_sha256": "3fa9f56a2ad1f815638ed7f4ce198b499cc072604e2a29b3bf5e418d6d33389c"
+  },
+  "stage_wrappers": [
+    {
+      "stage": "WP10",
+      "package_identity": "LLM-CLAIM-LIVE-VAL-v2",
+      "package_version": "2.0.0",
+      "semantic_use": true,
+      "manifest_path": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/public-manifest.json",
+      "manifest_bytes": 1126,
+      "manifest_sha256": "1231c98875c3ba3ca0ce3b60773e566c791b4a313c1fd691233be1a1bc60ba09"
+    },
+    {
+      "stage": "WP11",
+      "package_identity": "LLM-INVESTIGATE-LIVE-VAL-v2",
+      "package_version": "2.0.0",
+      "semantic_use": true,
+      "manifest_path": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/public-manifest.json",
+      "manifest_bytes": 1185,
+      "manifest_sha256": "f531447c5d7a1a3efc45b0787b319e3467d35197fbfea85436e3e003a789bb50"
+    }
+  ],
+  "oracle": {
+    "path": "oracle.v2.json",
+    "bytes": 4173,
+    "sha256": "e85cb6a9ead7c6ecb1a09b677fb8d6b12b3c29f022f6ea03cd8b6812c073e1d2",
+    "schema_identity": "infinium.evaluation.live-composed-provenance-oracle/2.0.0",
+    "authoring": "independent-pre-response",
+    "product_visible": false
+  },
+  "required_bindings": [
+    "campaign-authorization",
+    "credential-authorization",
+    "stage-authorization",
+    "canonical-request-hashes",
+    "retained-raw-response-hashes",
+    "retained-header-hashes",
+    "one-owned-usage-per-stage",
+    "settlement",
+    "replay",
+    "stage-evidence-acceptance",
+    "semantic-validation-package-hashes"
+  ],
+  "explicit_omissions": [
+    "credentials",
+    "raw-target-names",
+    "hosted-search",
+    "Nexus",
+    "private-fixtures",
+    "expected-answers"
+  ],
+  "no_fourth_call": true
+}

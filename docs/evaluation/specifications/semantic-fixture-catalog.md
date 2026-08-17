@@ -903,6 +903,14 @@ operations and do not create local facts, findings, cases, or taxonomy.
 
 ### 10.4 Live source-claim extraction package
 
+The successor-campaign R1 candidate is the clean-break pair
+`S6-CLAIM-LIVE-VAL-v2/2.0.0` and `LLM-CLAIM-LIVE-VAL-v2/2.0.0`. The first
+freezes the answer-free retained-revision input, complete eight-state matrix,
+and independently authored oracle; the second binds those exact bytes for one
+retained live response and host admission. The additive registry v2 indexes
+both while preserving the v1 package and registry row as historical evidence.
+Product comparison remains prohibited until the R1 freeze is accepted.
+
 `LLM-CLAIM-LIVE-VAL` is a project-authored validation package for the accepted
 source-claim extraction contract. It contains:
 
@@ -928,6 +936,14 @@ local state or source authority, and complete retained provenance. The raw
 model output remains a proposal until host validation admits it.
 
 ### 10.5 Live evidence-bound candidate-investigation package
+
+The successor-campaign R1 candidate is the clean-break pair
+`S6-CANDIDATE-LIVE-VAL-v2/2.0.0` and
+`LLM-INVESTIGATE-LIVE-VAL-v2/2.0.0`. Its positive binds the predetermined
+WP10 acquisition/proposal/admission/artifact/application chain and payload
+digest; its structurally matched negative uses separate frozen neutral host
+evidence and creates no second WP10 claim. Exact v2 identities prevent any
+cross-binding to the retained v1 packages.
 
 `LLM-INVESTIGATE-LIVE-VAL` is a project-authored validation package for the
 accepted evidence-bound candidate-investigation contract. It supplies, in one
@@ -1020,6 +1036,13 @@ qualification call jointly owned by the
 `M1-PLAT-PROVIDER-CAPABILITY-v1`,
 `M1-PLAT-PROVIDER-AUTHORITY-v1`, `M1-PLAT-BUDGET-v1`, and
 `M1-PLAT-CREDENTIAL-v1`. It does not create a fourth provider request.
+
+The successor-campaign R1 candidate
+`PROV-LIVE-COMPOSED-VAL-v2/2.0.0` instead binds the unchanged qualification
+manifest followed by the exact WP10-v2 and WP11-v2 wrapper manifests. Its
+qualification role is explicitly non-semantic, both semantic stages are
+ordered and hash-bound, the composed check has `provider_call_count: 0`, and
+`no_fourth_call` is required.
 
 ### 11.3 Contradiction and deletion
 

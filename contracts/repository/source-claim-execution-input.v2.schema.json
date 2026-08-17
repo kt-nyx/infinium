@@ -12,10 +12,6 @@
     "applicability_facts": { "type": "array", "minItems": 1, "maxItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/applicability_fact" } },
     "passages": { "type": "array", "minItems": 9, "maxItems": 9, "uniqueItems": true, "items": { "$ref": "#/$defs/passage" } }
   },
-  "allOf": [
-    { "properties": { "passages": { "contains": { "type": "object", "properties": { "deleted": { "const": false } }, "required": ["deleted"] }, "minContains": 8, "maxContains": 8 } } },
-    { "properties": { "passages": { "contains": { "type": "object", "properties": { "deleted": { "const": true } }, "required": ["deleted"] }, "minContains": 1, "maxContains": 1 } } }
-  ],
   "$defs": {
     "applicability_fact": { "type": "object", "additionalProperties": false, "required": ["fact_id", "source_revision_id", "statement", "statement_sha256"], "properties": { "fact_id": { "type": "string", "minLength": 1 }, "source_revision_id": { "type": "string", "minLength": 1 }, "statement": { "type": "string", "minLength": 1, "maxLength": 1024 }, "statement_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } },
     "passage": {

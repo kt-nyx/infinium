@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/live-candidate-investigation-oracle.v2.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "package_id",
+    "package_version",
+    "partition",
+    "semantic_use",
+    "validates",
+    "candidate_package",
+    "required_live_validation"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "infinium.evaluation.live-candidate-investigation-oracle/2.0.0"
+    },
+    "schema_version": {
+      "const": "2"
+    },
+    "package_id": {
+      "const": "LLM-INVESTIGATE-LIVE-VAL-v2"
+    },
+    "package_version": {
+      "const": "2.0.0"
+    },
+    "partition": {
+      "const": "validation"
+    },
+    "semantic_use": {
+      "const": true
+    },
+    "validates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retained_live_response",
+        "host_admission",
+        "canned_transcript_execution",
+        "provider_request_during_replay"
+      ],
+      "properties": {
+        "retained_live_response": {
+          "const": true
+        },
+        "host_admission": {
+          "const": true
+        },
+        "canned_transcript_execution": {
+          "const": false
+        },
+        "provider_request_during_replay": {
+          "const": false
+        }
+      }
+    },
+    "candidate_package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package_id",
+        "package_version",
+        "execution_input",
+        "context_manifest",
+        "oracle"
+      ],
+      "properties": {
+        "package_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "package_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "execution_input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "byte_length",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "byte_length": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "context_manifest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "byte_length",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "byte_length": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "oracle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "schema_id"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "schema_id": {
+              "const": "infinium.evaluation.candidate-investigation-oracle/2.0.0"
+            }
+          }
+        }
+      }
+    },
+    "required_live_validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completed_response_envelope_count",
+        "operation_id",
+        "analysis_run_id",
+        "host_authorization_id",
+        "accepted_context_id",
+        "accepted_candidate_id",
+        "accepted_hypothesis_id",
+        "required_shared_local_observation_id",
+        "required_shared_local_observation_sha256",
+        "supporting_evidence_id",
+        "evidence_application_link_id",
+        "required_wp10_predecessor",
+        "abstained_context_id",
+        "abstained_candidate_id",
+        "abstained_hypothesis_id",
+        "neutral_non_supporting_evidence_id",
+        "requires_same_conditional_local_observation_in_both_contexts",
+        "requires_activation_unestablished_for_abstained_context",
+        "requires_visible_uncertainty_and_gaps",
+        "requires_typed_semantic_oracle_validation",
+        "requires_retained_response_replay_equality",
+        "forbidden"
+      ],
+      "properties": {
+        "completed_response_envelope_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "analysis_run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "host_authorization_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accepted_context_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accepted_candidate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accepted_hypothesis_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required_shared_local_observation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required_shared_local_observation_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "supporting_evidence_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_application_link_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required_wp10_predecessor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "acquisition_run_id",
+            "proposal_id",
+            "source_admission_id",
+            "admitted_artifact_id",
+            "application_link_id",
+            "source_revision_id",
+            "passage_id",
+            "persisted_payload_sha256",
+            "required_applicability_fact_id",
+            "required_applicability_fact_sha256"
+          ],
+          "properties": {
+            "acquisition_run_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "proposal_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "source_admission_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "admitted_artifact_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "application_link_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "source_revision_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "passage_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "persisted_payload_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "required_applicability_fact_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required_applicability_fact_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "abstained_context_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "abstained_candidate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "abstained_hypothesis_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "neutral_non_supporting_evidence_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requires_same_conditional_local_observation_in_both_contexts": {
+          "const": true
+        },
+        "requires_activation_unestablished_for_abstained_context": {
+          "const": true
+        },
+        "requires_visible_uncertainty_and_gaps": {
+          "const": true
+        },
+        "requires_typed_semantic_oracle_validation": {
+          "const": true
+        },
+        "requires_retained_response_replay_equality": {
+          "const": true
+        },
+        "forbidden": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "second-wp10-claim",
+              "fabricated-facts",
+              "fabricated-citations",
+              "fabricated-ids"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

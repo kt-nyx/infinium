@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/public-fixture-partition-history.v2.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "package_id", "package_version", "partition", "history", "replacement_rule"],
+  "properties": {
+    "schema_id": { "const": "infinium.evaluation.fixture-partition-history/2.0.0" },
+    "schema_version": { "const": "2" },
+    "package_id": { "type": "string", "minLength": 1 },
+    "package_version": { "const": "2.0.0" },
+    "partition": { "const": "validation" },
+    "history": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/history" } },
+    "replacement_rule": { "type": "string", "minLength": 1 }
+  },
+  "$defs": { "history": { "type": "object", "additionalProperties": false, "required": ["state", "reason"], "properties": { "state": { "type": "string", "minLength": 1 }, "reason": { "type": "string", "minLength": 1 } } } }
+}

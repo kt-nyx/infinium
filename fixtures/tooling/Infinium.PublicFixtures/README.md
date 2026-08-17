@@ -15,6 +15,21 @@ workflow, or product runtime dependency. It does not reference archived
 evaluator code or schemas, private fixture material, or candidate/product
 output. Public product-fixture tests reference this project directly.
 
+`LiveSemanticV2AuthorityVerifier` is the read-only R1 successor-authority
+reader. It closes all five v2 packages, their 23 repository schemas, the
+additive 43-row registry, the exact WP10-to-WP11 semantic join, and the
+qualification/WP10/WP11 no-fourth-call composition. It never reseals fixtures,
+executes product behavior, reads credentials, or performs network/provider
+operations. The named `LiveSemanticV2Authority` Slice 6 gate runs its focused
+positive and mutation contract suite and separately proves the five v1 package
+trees plus registry v1 remain unchanged.
+
+`reseal-live-semantic-v2.mjs` is the only resealer for this successor family.
+It defaults to `--check`; explicit `--write` can update only the five v2
+manifests and registry v2. Its fixed allowlist cannot write a v1 path, and its
+round-trip contract test proves canonical write/check stability while retaining
+registry v1 byte-for-byte.
+
 The source-claim reader closes the registered `S6-CLAIM-DEV-v1` and
 `S6-CLAIM-VAL-v1` packages. It strictly parses only their answer-free execution
 input, minimized-context manifest, deterministic retained transcripts, and

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://schemas.infinium.dev/repository/candidate-investigation-public-manifest.v2.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_identity", "package_identity", "package_version", "fixture_id", "fixture_version", "partition", "status", "product_input_files", "oracle_file", "oracle_provenance_file", "partition_history_file", "file_identities", "answer_free_product_inputs", "oracle_frozen_before_product_comparison", "network_required", "provider_request_count", "credential_operation_count"],
+  "properties": {
+    "schema_identity": { "const": "infinium.evaluation.candidate-investigation-public-manifest/2.0.0" }, "package_identity": { "const": "S6-CANDIDATE-LIVE-VAL-v2" }, "package_version": { "const": "2.0.0" }, "fixture_id": { "const": "S6-CANDIDATE-LIVE-VAL-v2" }, "fixture_version": { "const": "2.0.0" }, "partition": { "const": "validation" }, "status": { "const": "oracle-frozen-pre-comparison" },
+    "product_input_files": { "const": ["execution-input.v2.json", "context-manifest.v2.json"] }, "oracle_file": { "const": "oracle.v2.json" }, "oracle_provenance_file": { "const": "oracle-provenance.v2.json" }, "partition_history_file": { "const": "partition-history.v2.json" },
+    "file_identities": { "type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true, "items": { "$ref": "#/$defs/file" } }, "answer_free_product_inputs": { "const": true }, "oracle_frozen_before_product_comparison": { "const": true }, "network_required": { "const": false }, "provider_request_count": { "const": 0 }, "credential_operation_count": { "const": 0 }
+  },
+  "$defs": { "file": { "type": "object", "additionalProperties": false, "required": ["path", "role", "bytes", "sha256"], "properties": { "path": { "type": "string", "minLength": 1 }, "role": { "enum": ["product-input", "oracle", "oracle-provenance", "partition-history"] }, "bytes": { "type": "integer", "minimum": 1 }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } } } }
+}

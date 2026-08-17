@@ -1,0 +1,541 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/candidate-investigation-oracle.v2.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "package_id",
+    "package_version",
+    "partition",
+    "input_bindings",
+    "expected_semantics"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "infinium.evaluation.candidate-investigation-oracle/2.0.0"
+    },
+    "schema_version": {
+      "const": "2"
+    },
+    "package_id": {
+      "const": "S6-CANDIDATE-LIVE-VAL-v2"
+    },
+    "package_version": {
+      "const": "2.0.0"
+    },
+    "partition": {
+      "const": "validation"
+    },
+    "input_bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "context_manifest",
+        "execution_input"
+      ],
+      "properties": {
+        "context_manifest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "byte_length",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "byte_length": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "execution_input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "byte_length",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "byte_length": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "expected_semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retained_live_response_validation",
+        "operation_id",
+        "analysis_run_id",
+        "host_authorization_id",
+        "contexts",
+        "required_totality"
+      ],
+      "properties": {
+        "retained_live_response_validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "required_completed_response_envelopes",
+            "validates_retained_live_response",
+            "executes_canned_transcript",
+            "requires_replay_equality_without_provider_request"
+          ],
+          "properties": {
+            "required_completed_response_envelopes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "validates_retained_live_response": {
+              "const": true
+            },
+            "executes_canned_transcript": {
+              "const": false
+            },
+            "requires_replay_equality_without_provider_request": {
+              "const": true
+            }
+          }
+        },
+        "operation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "analysis_run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "host_authorization_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contexts": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "context_id",
+                  "candidate_id",
+                  "hypothesis_id",
+                  "expected_host_result",
+                  "required_local_observation",
+                  "supporting_evidence_ids",
+                  "contradicting_evidence_ids",
+                  "required_predecessor_chain",
+                  "required_uncertainty_and_gaps",
+                  "forbidden"
+                ],
+                "properties": {
+                  "context_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "candidate_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "hypothesis_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "expected_host_result": {
+                    "const": "accepted"
+                  },
+                  "required_local_observation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "observation_id",
+                      "text_sha256",
+                      "condition"
+                    ],
+                    "properties": {
+                      "observation_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "text_sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "condition": {
+                        "const": "declared-exchange-active"
+                      }
+                    }
+                  },
+                  "supporting_evidence_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "relay-gate-evidence-a"
+                      ]
+                    }
+                  },
+                  "contradicting_evidence_ids": {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 0,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required_predecessor_chain": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "acquisition_run_id",
+                      "proposal_id",
+                      "source_admission_id",
+                      "admitted_artifact_id",
+                      "application_link_id",
+                      "source_revision_id",
+                      "passage_id",
+                      "persisted_payload_sha256",
+                      "evidence_application_link_id",
+                      "required_applicability_fact_id",
+                      "required_applicability_fact_sha256"
+                    ],
+                    "properties": {
+                      "acquisition_run_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "proposal_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "source_admission_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "admitted_artifact_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "application_link_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "source_revision_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "passage_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "persisted_payload_sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "evidence_application_link_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "required_applicability_fact_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "required_applicability_fact_sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    }
+                  },
+                  "required_uncertainty_and_gaps": {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 0,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "forbidden": {
+                    "type": "array",
+                    "minItems": 5,
+                    "maxItems": 5,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "fabricated-facts",
+                        "fabricated-citations",
+                        "fabricated-predecessor-identities",
+                        "parallel-wp10-acquisition",
+                        "parallel-wp10-application"
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "context_id",
+                  "candidate_id",
+                  "hypothesis_id",
+                  "expected_host_result",
+                  "required_local_observation",
+                  "supporting_evidence_ids",
+                  "contradicting_evidence_ids",
+                  "neutral_evidence_ids",
+                  "required_host_evidence",
+                  "required_uncertainty_and_gaps",
+                  "forbidden"
+                ],
+                "properties": {
+                  "context_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "candidate_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "hypothesis_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "expected_host_result": {
+                    "const": "abstained"
+                  },
+                  "required_local_observation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "observation_id",
+                      "text_sha256",
+                      "condition"
+                    ],
+                    "properties": {
+                      "observation_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "text_sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "condition": {
+                        "const": "declared-exchange-active"
+                      }
+                    }
+                  },
+                  "supporting_evidence_ids": {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 0,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "contradicting_evidence_ids": {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 0,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "neutral_evidence_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "relay-gate-evidence-b"
+                      ]
+                    }
+                  },
+                  "required_host_evidence": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "evidence_id",
+                      "evidence_application_link_id",
+                      "relationship",
+                      "evidence_root_id",
+                      "applicability_record_id",
+                      "source_revision_id",
+                      "passage_id",
+                      "content_sha256"
+                    ],
+                    "properties": {
+                      "evidence_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "evidence_application_link_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "relationship": {
+                        "const": "neutral"
+                      },
+                      "evidence_root_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "applicability_record_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "source_revision_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "passage_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "content_sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    }
+                  },
+                  "required_uncertainty_and_gaps": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "The shared local observation is conditional on active exchange, while the independently frozen neutral host evidence does not establish that the declared exchange is active."
+                      ]
+                    }
+                  },
+                  "forbidden": {
+                    "type": "array",
+                    "minItems": 5,
+                    "maxItems": 5,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "fabricated-facts",
+                        "fabricated-citations",
+                        "fabricated-predecessor-identities",
+                        "second-wp10-claim",
+                        "second-wp10-application"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "required_totality": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "expected_accepted_hypothesis_count",
+            "expected_rejected_or_abstained_hypothesis_count",
+            "required_context_ids",
+            "requires_host_admission",
+            "requires_durable_replay",
+            "requires_exact_wp10_to_wp11_application_edge",
+            "requires_same_local_observation_in_both_contexts",
+            "forbidden"
+          ],
+          "properties": {
+            "expected_accepted_hypothesis_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "expected_rejected_or_abstained_hypothesis_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "required_context_ids": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "relay-gate-context-a",
+                  "relay-gate-context-b"
+                ]
+              }
+            },
+            "requires_host_admission": {
+              "const": true
+            },
+            "requires_durable_replay": {
+              "const": true
+            },
+            "requires_exact_wp10_to_wp11_application_edge": {
+              "const": true
+            },
+            "requires_same_local_observation_in_both_contexts": {
+              "const": true
+            },
+            "forbidden": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "invented-local-facts",
+                  "invented-citations",
+                  "invented-ids"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
