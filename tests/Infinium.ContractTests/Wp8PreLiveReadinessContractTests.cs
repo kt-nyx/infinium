@@ -24,6 +24,15 @@ public sealed class Wp8PreLiveReadinessContractTests
         "tests/Infinium.ContractTests/M1Slice6CampaignContractTests.cs",
         "tests/Infinium.ContractTests/Wp8PreLiveReadinessContractTests.cs",
     ];
+    private const string R1PlanningBase = "5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98";
+    private const string R1AcceptedCandidate = "6a1f0774fdfc3b4efa2e44f88d3df67e48393ffe";
+    private static readonly IReadOnlyDictionary<string, string> R1AuthorityBlobHashes =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["docs/current-state.md"] = "2ac64e2edb815923f59e1eb3efc235106ac6e352a92575aca0227f993b8c4c44",
+            ["docs/plans/milestones/m1/slices/s6/README.md"] = "260d01a39c06be6355065bd304e9888db23d1ffa12b525277162b0d88a529f5a",
+            ["docs/plans/milestones/m1/slices/s6/record.md"] = "6f0adc55934f99a58f0da45337e1fe2df5b00478230fdc0eabf174c67d574235",
+        };
 
     [TestMethod]
     [TestCategory("Contract")]
@@ -287,23 +296,46 @@ public sealed class Wp8PreLiveReadinessContractTests
             StringAssert.Contains(campaignPaths.Value, requiredPath,
                 $"Finite-campaign retained path equation omitted {requiredPath}.");
         }
-        Assert.AreNotEqual(0, RunLayer6Mode(root, null),
-            "Ordinary Layer6 admitted the pre-correction 53-path HEAD after the R1 equation advanced to 57 paths.");
-        Assert.AreNotEqual(0, RunLayer6Mode(root, "wp8"),
-            "Explicit WP8 pre-live closeout mode incorrectly accepted the later WP9 state.");
-        string currentState = RunGitOutput(root, "show", "HEAD:docs/current-state.md");
-        int ownerStop = RunLayer6Mode(root, "wp9");
-        int reviewCloseout = RunLayer6Mode(root, "wp9-review");
-        int ownerAcceptanceCloseout = RunLayer6Mode(root, "wp9-owner-acceptance");
-        int campaignReview = RunLayer6Mode(root, "campaign-review");
-        if (currentState.Contains("R1-R3 are active effect-free correction, integration, fixture freeze, full non-live verification, and successor-campaign materialization", StringComparison.Ordinal))
+        string lifecycleRoot = Path.Combine(Path.GetTempPath(), "infinium-r1-lifecycle-" + Guid.NewGuid().ToString("N"));
+        try
         {
-            Assert.AreNotEqual(0, ownerStop, "R1 no-effect state was admitted as WP9 owner-stop.");
-            Assert.AreNotEqual(0, reviewCloseout, "R1 no-effect state was admitted as WP9 review closeout.");
-            Assert.AreNotEqual(0, ownerAcceptanceCloseout, "R1 no-effect state was admitted as WP9 owner acceptance.");
-            Assert.AreNotEqual(0, campaignReview, "R1 no-effect state was admitted as campaign review.");
-        }
-        else if (currentState.Contains("non-effectful production-profile preparation verification and independent review only", StringComparison.Ordinal))
+            string exactCandidate = CreateCommittedR1CorrectionClone(root, lifecycleRoot);
+            Assert.AreEqual(0, RunLayer6Mode(lifecycleRoot, null),
+                "Ordinary Layer6 rejected the exact committed 57-path R1 candidate.");
+            Assert.AreNotEqual(0, RunLayer6Mode(lifecycleRoot, null,
+                    candidateCommit: "854b0c6f414397bb08e37500766f3119c1df3350"),
+                "Ordinary Layer6 admitted the pre-correction 53-path predecessor.");
+
+            string addedPath = Path.Combine(lifecycleRoot, "r1-unexpected-path.txt");
+            File.WriteAllText(addedPath, "unexpected R1 path\n", new UTF8Encoding(false));
+            Assert.AreEqual(0, RunGit(lifecycleRoot, "add", "r1-unexpected-path.txt"));
+            Assert.AreEqual(0, RunGit(lifecycleRoot, "commit", "--quiet", "-m", "Test R1 added-path rejection"));
+            Assert.AreNotEqual(0, RunLayer6Mode(lifecycleRoot, null),
+                "Ordinary Layer6 admitted an R1 candidate with an added 58th path.");
+
+            Assert.AreEqual(0, RunGit(lifecycleRoot, "checkout", "--quiet", "--detach", exactCandidate));
+            const string removedPath = "contracts/repository/candidate-investigation-context.v2.schema.json";
+            Assert.AreEqual(0, RunGit(lifecycleRoot, "rm", "--quiet", "--", removedPath));
+            Assert.AreEqual(0, RunGit(lifecycleRoot, "commit", "--quiet", "-m", "Test R1 removed-path rejection"));
+            Assert.AreNotEqual(0, RunLayer6Mode(lifecycleRoot, null),
+                "Ordinary Layer6 admitted an R1 candidate with one required path removed.");
+            Assert.AreEqual(0, RunGit(lifecycleRoot, "checkout", "--quiet", "--detach", exactCandidate));
+
+            Assert.AreNotEqual(0, RunLayer6Mode(lifecycleRoot, "wp8"),
+                "Explicit WP8 pre-live closeout mode incorrectly accepted the R1 state.");
+            string currentState = RunGitOutput(lifecycleRoot, "show", "HEAD:docs/current-state.md");
+            int ownerStop = RunLayer6Mode(lifecycleRoot, "wp9");
+            int reviewCloseout = RunLayer6Mode(lifecycleRoot, "wp9-review");
+            int ownerAcceptanceCloseout = RunLayer6Mode(lifecycleRoot, "wp9-owner-acceptance");
+            int campaignReview = RunLayer6Mode(lifecycleRoot, "campaign-review");
+            if (currentState.Contains("R1-R3 are active effect-free correction, integration, fixture freeze, full non-live verification, and successor-campaign materialization", StringComparison.Ordinal))
+            {
+                Assert.AreNotEqual(0, ownerStop, "R1 no-effect state was admitted as WP9 owner-stop.");
+                Assert.AreNotEqual(0, reviewCloseout, "R1 no-effect state was admitted as WP9 review closeout.");
+                Assert.AreNotEqual(0, ownerAcceptanceCloseout, "R1 no-effect state was admitted as WP9 owner acceptance.");
+                Assert.AreNotEqual(0, campaignReview, "R1 no-effect state was admitted as campaign review.");
+            }
+            else if (currentState.Contains("non-effectful production-profile preparation verification and independent review only", StringComparison.Ordinal))
         {
             Assert.AreEqual(0, ownerStop, "Exact WP9 pre-review owner-stop state was rejected.");
             Assert.AreNotEqual(0, reviewCloseout, "Pre-review owner-stop state was admitted as reviewed closeout.");
@@ -336,14 +368,19 @@ public sealed class Wp8PreLiveReadinessContractTests
             Assert.AreNotEqual(0, ownerAcceptanceCloseout, "Campaign correction state was admitted as WP9 owner acceptance.");
             Assert.AreNotEqual(0, campaignReview, "Campaign correction state was admitted as a frozen campaign review candidate.");
         }
-        else
+            else
+            {
+                Assert.IsTrue(currentState.Contains("review-closeout", StringComparison.Ordinal) ||
+                    currentState.Contains("post-owner contract correction", StringComparison.Ordinal));
+                StringAssert.Contains(currentState, "correction and complete reverification only");
+                Assert.AreNotEqual(0, ownerStop, "Correction state was admitted as pre-review owner-stop.");
+                Assert.AreNotEqual(0, reviewCloseout, "Correction state was admitted as reviewed closeout.");
+                Assert.AreNotEqual(0, ownerAcceptanceCloseout, "Correction state was admitted as owner acceptance.");
+            }
+        }
+        finally
         {
-            Assert.IsTrue(currentState.Contains("review-closeout", StringComparison.Ordinal) ||
-                currentState.Contains("post-owner contract correction", StringComparison.Ordinal));
-            StringAssert.Contains(currentState, "correction and complete reverification only");
-            Assert.AreNotEqual(0, ownerStop, "Correction state was admitted as pre-review owner-stop.");
-            Assert.AreNotEqual(0, reviewCloseout, "Correction state was admitted as reviewed closeout.");
-            Assert.AreNotEqual(0, ownerAcceptanceCloseout, "Correction state was admitted as owner acceptance.");
+            if (Directory.Exists(lifecycleRoot)) { DeleteReadOnlyTree(lifecycleRoot); }
         }
     }
 
@@ -901,21 +938,82 @@ public sealed class Wp8PreLiveReadinessContractTests
             "NonLiveAll accepted generic or weakened WP9 authority.");
     }
 
-    private static void CreateCommittedR1CorrectionClone(string sourceRoot, string cloneRoot)
+    private static string CreateCommittedR1CorrectionClone(string sourceRoot, string cloneRoot)
     {
+        string candidate = ResolveBoundR1EnforcementCandidate(sourceRoot);
         Assert.AreEqual(0, RunGit(sourceRoot, "clone", "--quiet", "--shared", sourceRoot, cloneRoot));
         Assert.AreEqual(0, RunGit(cloneRoot, "config", "user.name", "Infinium Contract Test"));
         Assert.AreEqual(0, RunGit(cloneRoot, "config", "user.email", "contract-test@invalid.example"));
-        foreach (string relative in R1CorrectionPaths)
+        Assert.AreEqual(0, RunGit(cloneRoot, "checkout", "--quiet", "--detach", candidate));
+        Assert.IsTrue(string.IsNullOrWhiteSpace(RunGitOutput(cloneRoot, "status", "--short")),
+            "Resolved R1 candidate clone must remain clean; no overlay or empty commit is permitted.");
+        return candidate;
+    }
+
+    private static string ResolveBoundR1EnforcementCandidate(string root)
+    {
+        Assert.AreEqual(0, RunGit(root, "merge-base", "--is-ancestor", R1AcceptedCandidate, "HEAD"),
+            "The fixed accepted R1 enforcement anchor must be an ancestor of current HEAD.");
+        string[] expectedPaths = GitDiffPaths(root, R1PlanningBase, R1AcceptedCandidate);
+        Assert.AreEqual(57, expectedPaths.Length,
+            "The fixed accepted R1 enforcement anchor no longer yields the exact 57-path equation.");
+        foreach ((string path, string expectedSha256) in R1AuthorityBlobHashes)
         {
-            File.Copy(
-                Path.Combine(sourceRoot, relative.Replace('/', Path.DirectorySeparatorChar)),
-                Path.Combine(cloneRoot, relative.Replace('/', Path.DirectorySeparatorChar)),
-                overwrite: true);
+            Assert.AreEqual(expectedSha256, GitBlobSha256(root, R1AcceptedCandidate, path), path);
         }
-        string[] addArguments = ["add", "--", .. R1CorrectionPaths];
-        Assert.AreEqual(0, RunGit(cloneRoot, addArguments));
-        Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "-m", "Test committed R1 correction candidate"));
+        return R1AcceptedCandidate;
+    }
+
+    private static string[] GitDiffPaths(string root, string baseline, string candidate) =>
+        RunGitOutput(root, "-c", "core.quotePath=false", "diff", "--name-only", baseline, candidate, "--")
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+    private static string GitBlobSha256(string root, string commit, string relative)
+    {
+        byte[] bytes = RunGitBytes(root, "cat-file", "blob", commit + ":" + relative);
+        return Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(bytes));
+    }
+
+    private static byte[] RunGitBytes(string root, params string[] arguments)
+    {
+        ProcessStartInfo start = new("git")
+        {
+            WorkingDirectory = root,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+        foreach (string argument in arguments) { start.ArgumentList.Add(argument); }
+        using Process process = Process.Start(start)!;
+        Task<string> standardErrorTask = process.StandardError.ReadToEndAsync();
+        using MemoryStream bytes = new();
+        Task standardOutputTask = process.StandardOutput.BaseStream.CopyToAsync(bytes);
+        bool exited = process.WaitForExit(30_000);
+        if (!exited)
+        {
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit();
+            try { Task.WhenAll(standardOutputTask, standardErrorTask).GetAwaiter().GetResult(); }
+            catch { /* The timeout remains the authoritative failure. */ }
+            throw new TimeoutException("Git blob read exceeded its bounded non-live timeout.");
+        }
+        try
+        {
+            standardOutputTask.GetAwaiter().GetResult();
+            string standardError = standardErrorTask.GetAwaiter().GetResult();
+            if (process.ExitCode != 0)
+            {
+                throw new InvalidOperationException("Git blob read failed: " + standardError);
+            }
+        }
+        catch (Exception error) when (error is not InvalidOperationException)
+        {
+            throw new InvalidOperationException("Git blob stream read failed.", error);
+        }
+        return bytes.ToArray();
     }
 
     private static int RunValidator(Action<Dictionary<string, JsonObject>>? mutation, string? repositoryRoot = null)
@@ -1060,7 +1158,11 @@ public sealed class Wp8PreLiveReadinessContractTests
         }
     }
 
-    private static int RunLayer6Mode(string root, string? mode, Action<string>? inspectOutput = null)
+    private static int RunLayer6Mode(
+        string root,
+        string? mode,
+        Action<string>? inspectOutput = null,
+        string candidateCommit = "HEAD")
     {
         string output = Path.Combine(Path.GetTempPath(), "infinium-wp8-layer6-" + Guid.NewGuid().ToString("N"));
         try
@@ -1100,7 +1202,7 @@ public sealed class Wp8PreLiveReadinessContractTests
             {
                 "-NoProfile", "-File", Path.Combine(root, "eng", "verify-m1-slice6.ps1"),
                 "-Gate", "Layer6Review", "-BaselineCommit", baseline,
-                "-CandidateCommit", "HEAD", "-OutputRoot", output,
+                "-CandidateCommit", candidateCommit, "-OutputRoot", output,
             })
             {
                 start.ArgumentList.Add(argument);
