@@ -1,0 +1,67 @@
+{
+  "schema_id": "infinium.evaluation.live-candidate-investigation-oracle/2.0.0",
+  "schema_version": "2",
+  "package_id": "LLM-INVESTIGATE-LIVE-VAL-v2",
+  "package_version": "2.0.0",
+  "partition": "validation",
+  "semantic_use": true,
+  "validates": {
+    "retained_live_response": true,
+    "host_admission": true,
+    "canned_transcript_execution": false,
+    "provider_request_during_replay": false
+  },
+  "candidate_package": {
+    "package_id": "S6-CANDIDATE-LIVE-VAL-v2",
+    "package_version": "2.0.0",
+    "execution_input": {
+      "path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/execution-input.v2.json",
+      "byte_length": 3335,
+      "sha256": "d9d84af1a0a4e8c86100928fd6737482b51a96fd7d1c461cd30ecc81cd29eeb6"
+    },
+    "context_manifest": {
+      "path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/context-manifest.v2.json",
+      "byte_length": 891,
+      "sha256": "af4e8d97c482b4665634c438a1d9f973ce8ad2a69123f019a350ff03f7cc9375"
+    },
+    "oracle": {
+      "path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/oracle.v2.json",
+      "schema_id": "infinium.evaluation.candidate-investigation-oracle/2.0.0"
+    }
+  },
+  "required_live_validation": {
+    "completed_response_envelope_count": 1,
+    "operation_id": "wp11-candidate-operation-live-val-v2",
+    "analysis_run_id": "wp11-analysis-live-val-v2",
+    "host_authorization_id": "wp11-host-authorization-live-val-v2",
+    "accepted_context_id": "relay-gate-context-a",
+    "accepted_candidate_id": "relay-gate-candidate-a",
+    "accepted_hypothesis_id": "relay-gate-hypothesis-a",
+    "required_shared_local_observation_id": "relay-gate-shared-slot-write",
+    "required_shared_local_observation_sha256": "f5a28519ca79d537c07e5a6b8dbbe18f7a2e2db548609a55b924ce1868ed4c6e",
+    "supporting_evidence_id": "relay-gate-evidence-a",
+    "evidence_application_link_id": "wp11-evidence-application-a",
+    "required_wp10_predecessor": {
+      "acquisition_run_id": "wp10-acquisition-live-val-v2",
+      "proposal_id": "wp10-proposal-relay-activation",
+      "source_admission_id": "wp10-source-admission-relay-activation",
+      "admitted_artifact_id": "wp10-artifact-relay-activation",
+      "application_link_id": "wp10-application-link-relay-activation",
+      "source_revision_id": "relay-guidance-revision-4",
+      "passage_id": "relay-activation-rule",
+      "persisted_payload_sha256": "09b6e7649ed3e8ce0abe09911bf635144876b804901a61a7eefc0bf081ece236",
+      "required_applicability_fact_id": "relay-activation-mark-presence",
+      "required_applicability_fact_sha256": "38ebdf04f55dea7e37f881e0f2e992176dcd593400a8b2f453208d7e247e6f48"
+    },
+    "abstained_context_id": "relay-gate-context-b",
+    "abstained_candidate_id": "relay-gate-candidate-b",
+    "abstained_hypothesis_id": "relay-gate-hypothesis-b",
+    "neutral_non_supporting_evidence_id": "relay-gate-evidence-b",
+    "requires_same_conditional_local_observation_in_both_contexts": true,
+    "requires_activation_unestablished_for_abstained_context": true,
+    "requires_visible_uncertainty_and_gaps": true,
+    "requires_typed_semantic_oracle_validation": true,
+    "requires_retained_response_replay_equality": true,
+    "forbidden": ["second-wp10-claim", "fabricated-facts", "fabricated-citations", "fabricated-ids"]
+  }
+}

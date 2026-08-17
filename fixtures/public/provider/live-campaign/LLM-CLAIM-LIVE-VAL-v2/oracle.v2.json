@@ -1,0 +1,51 @@
+{
+  "schema_id": "infinium.evaluation.live-source-claim-oracle/2.0.0",
+  "schema_version": "2",
+  "package_id": "LLM-CLAIM-LIVE-VAL-v2",
+  "package_version": "2.0.0",
+  "partition": "validation",
+  "semantic_use": true,
+  "validates": {
+    "retained_live_response": true,
+    "host_admission": true,
+    "canned_transcript_execution": false,
+    "provider_request_during_replay": false
+  },
+  "source_package": {
+    "package_id": "S6-CLAIM-LIVE-VAL-v2",
+    "package_version": "2.0.0",
+    "execution_input": {
+      "path": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/execution-input.v2.json",
+      "byte_length": 4144,
+      "sha256": "bcbcc804eee7ea51fc00b6daa33d688078dcb1e8ddc53349a0ec673b77a5e789"
+    },
+    "context_manifest": {
+      "path": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/context-manifest.v2.json",
+      "byte_length": 1415,
+      "sha256": "96d1c98d8ba3d817006de1e7972eaaeef33b6c47942d643a22c2cbb3ff8f2ffc"
+    },
+    "oracle": {
+      "path": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/oracle.v2.json",
+      "schema_id": "infinium.evaluation.source-claim-oracle/2.0.0"
+    }
+  },
+  "required_live_validation": {
+    "completed_response_envelope_count": 1,
+    "operation_id": "wp10-source-claim-operation-live-val-v2",
+    "acquisition_run_id": "wp10-acquisition-live-val-v2",
+    "host_authorization_id": "wp10-host-authorization-live-val-v2",
+    "expected_host_admission_count": 1,
+    "admission_id": "wp10-source-admission-relay-activation",
+    "proposal_id": "wp10-proposal-relay-activation",
+    "admitted_artifact_id": "wp10-artifact-relay-activation",
+    "application_link_id": "wp10-application-link-relay-activation",
+    "source_revision_id": "relay-guidance-revision-4",
+    "passage_id": "relay-activation-rule",
+    "persisted_payload_sha256": "09b6e7649ed3e8ce0abe09911bf635144876b804901a61a7eefc0bf081ece236",
+    "required_applicability_fact_id": "relay-activation-mark-presence",
+    "required_applicability_fact_sha256": "38ebdf04f55dea7e37f881e0f2e992176dcd593400a8b2f453208d7e247e6f48",
+    "requires_typed_semantic_oracle_validation": true,
+    "requires_retained_response_replay_equality": true
+  },
+  "no_admission_states": ["unsupported-negative", "conditional-unestablished", "version-mismatched", "contradictory", "hostile-untrusted", "deleted-audit-only", "insufficient-abstention"]
+}
