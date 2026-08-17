@@ -270,6 +270,17 @@ public sealed class Wp8PreLiveReadinessContractTests
         Assert.IsFalse(function.Value.Contains("Invoke-CredentialNativeRecoveryGate", StringComparison.Ordinal));
         Assert.IsFalse(function.Value.Contains("run-m1-slice6-live", StringComparison.Ordinal));
         Assert.IsFalse(function.Value.Contains("run-m1-slice6-credential", StringComparison.Ordinal));
+        StringAssert.Contains(function.Value, "313ecfc04a22330c4c5dc52a79aae87d13982a74");
+        StringAssert.Contains(function.Value, "'layer6review.json'");
+        StringAssert.Contains(function.Value, "Write-Receipt 'NonLiveAll'");
+        System.Text.RegularExpressions.Match remainderRoute = System.Text.RegularExpressions.Regex.Match(
+            function.Value,
+            @"(?ms)\} elseif \(\$currentStateDisposition -eq 'exact-m1-s6-remainder-r1-no-effect-state'\) \{\s*Invoke-Layer6ReviewGate \$baseline \$candidate(?<arguments>.*?)^    \} else \{");
+        Assert.IsTrue(remainderRoute.Success, "NonLiveAll exact R1 Layer6 route was not found.");
+        Assert.AreEqual(13,
+            System.Text.RegularExpressions.Regex.Count(remainderRoute.Groups["arguments"].Value, @"\$false"),
+            "NonLiveAll exact R1 route must disable every special Layer6 mode explicitly.");
+        Assert.IsFalse(remainderRoute.Groups["arguments"].Value.Contains("$true", StringComparison.Ordinal));
         string retainedValidator = TestRepository.Read("eng", "validate-m1-slice6-wp8-prelive.ps1");
         System.Text.RegularExpressions.Match campaignPaths = System.Text.RegularExpressions.Regex.Match(retainedValidator,
             @"(?ms)^function Get-Wp8CampaignReviewPaths\(\) \{.*?^function Test-Wp8CampaignCorrectionState");

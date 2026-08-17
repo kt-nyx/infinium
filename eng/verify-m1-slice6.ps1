@@ -2739,11 +2739,17 @@ function Invoke-NonLiveAllGate {
         $currentStateDisposition -eq 'exact-m1-s6-finite-campaign-review-no-effect-state')
 
     $candidate = (& git -C $repoRoot rev-parse HEAD).Trim()
-    $baseline = '63e4584f8926227c2a1e12ef31c71a3a88798c7f'
+    $baseline = if ($currentStateDisposition -eq 'exact-m1-s6-remainder-r1-no-effect-state') {
+        '313ecfc04a22330c4c5dc52a79aae87d13982a74'
+    } else { '63e4584f8926227c2a1e12ef31c71a3a88798c7f' }
     if ($currentStateDisposition -eq 'exact-m1-s6-finite-campaign-review-no-effect-state') {
         Invoke-Layer6ReviewGate 'deadb9850fbd832435dcb4672fa93f8bd0a3d8cd' $candidate $false $false $false $false $true
     } elseif ($currentStateDisposition -eq 'exact-wp9-reviewed-owner-pending-no-effect-state') {
         Invoke-Layer6ReviewGate ([string]$wp9ReviewBinding.reviewed_candidate_commit) $candidate $false $false $true
+    } elseif ($currentStateDisposition -eq 'exact-m1-s6-remainder-r1-no-effect-state') {
+        Invoke-Layer6ReviewGate $baseline $candidate `
+            $false $false $false $false $false $false $false `
+            $false $false $false $false $false $false
     } else {
         Invoke-Layer6ReviewGate $baseline $candidate $false $true $false
     }
