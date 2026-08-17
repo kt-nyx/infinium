@@ -44,6 +44,7 @@ public sealed class AnalysisStatePersistenceTests
         "provider_run_output_v2_bindings", "provider_operation_projection",
         "provider_profile_projection", "provider_budget_limits", "provider_budget_events",
         "provider_usage_rollup_references", "provider_budget_settlement_receipts", "provider_budget_projection",
+        "source_claim_admitted_artifacts", "source_claim_applicability_facts", "candidate_evidence_authority",
     ];
 
     private static readonly string[] AnalysisTables =
@@ -139,7 +140,7 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint,
+            ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint,
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));

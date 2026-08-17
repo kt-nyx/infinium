@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'CredentialNativeRecovery', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'LiveSemanticV2Authority', 'NonLiveAll', 'Layer6Review')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'CredentialNativeRecovery', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'LiveSemanticV2Authority', 'CampaignV2NonLive', 'NonLiveAll', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -51,10 +51,12 @@ param(
 
     [switch] $OwnerTestProcessCleanup,
 
-    [switch] $CredentialNativePostEffectAudit
+    [switch] $CredentialNativePostEffectAudit,
+
+    [switch] $CampaignV2CandidateOnly
 )
 
-if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'LiveSemanticV2Authority', 'NonLiveAll') -and $PSVersionTable.PSEdition -ne 'Core') {
+if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'LiveSemanticV2Authority', 'CampaignV2NonLive', 'NonLiveAll') -and $PSVersionTable.PSEdition -ne 'Core') {
     $pwsh = Get-Command pwsh.exe -ErrorAction Stop
     $arguments = @(
         '-NoProfile',
@@ -108,6 +110,9 @@ if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 
     }
     if ($CredentialNativePostEffectAudit) {
         $arguments += '-CredentialNativePostEffectAudit'
+    }
+    if ($CampaignV2CandidateOnly) {
+        $arguments += '-CampaignV2CandidateOnly'
     }
     if (-not [string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
         $arguments += @('-AuthorizationManifest', $AuthorizationManifest)
@@ -175,9 +180,32 @@ $schemaNames = @(
 $script:FocusedTestResults = [System.Collections.Generic.List[object]]::new()
 
 function Invoke-DotnetTest([string] $Project, [string] $Filter) {
-    $output = @(& dotnet test $Project -c Release --no-build --nologo --filter $Filter 2>&1)
-    foreach ($line in $output) { Write-Host $line }
-    if ($LASTEXITCODE -ne 0) {
+    $startInfo = [Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = 'dotnet'
+    $startInfo.UseShellExecute = $false
+    $startInfo.CreateNoWindow = $true
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    foreach ($argument in @('test', $Project, '-c', 'Release', '--no-build', '--nologo', '--filter', $Filter)) {
+        [void]$startInfo.ArgumentList.Add($argument)
+    }
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $startInfo
+    if (-not $process.Start()) { throw "Focused test process did not start for $Project." }
+    $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+    $stderrTask = $process.StandardError.ReadToEndAsync()
+    if (-not $process.WaitForExit(600000)) {
+        try { $process.Kill($true) } finally { $process.WaitForExit() }
+        [void]$stdoutTask.GetAwaiter().GetResult()
+        [void]$stderrTask.GetAwaiter().GetResult()
+        throw "Focused test command timed out for $Project after 600000 ms; its process tree was terminated."
+    }
+    $process.WaitForExit()
+    $stdout = $stdoutTask.GetAwaiter().GetResult()
+    $stderr = $stderrTask.GetAwaiter().GetResult()
+    $output = @(($stdout + "`n" + $stderr) -split "`r?`n")
+    foreach ($line in $output) { if ($line.Length -gt 0) { Write-Host $line } }
+    if ($process.ExitCode -ne 0) {
         throw "Focused test command failed for $Project."
     }
     $summaryPattern = 'Failed:\s+(?<failed>\d+),\s+Passed:\s+(?<passed>\d+),\s+Skipped:\s+(?<skipped>\d+),\s+Total:\s+(?<total>\d+)'
@@ -577,6 +605,8 @@ function Get-M1Slice6RemainderR1Paths() {
         'contracts/repository/m1-slice6-campaign-composed-evidence.v2.schema.json',
         'contracts/repository/m1-slice6-campaign-stage-evidence.v2.schema.json',
         'contracts/repository/m1-slice6-campaign-stage-request.v2.schema.json',
+        'contracts/repository/m1-slice6-campaign-stage-evidence.v2.schema.json',
+        'contracts/repository/m1-slice6-campaign-composed-evidence.v2.schema.json',
         'contracts/repository/m1-slice6-finite-campaign-authorization.v2.schema.json',
         'contracts/repository/public-fixture-partition-history.v2.schema.json',
         'contracts/repository/public-fixture-registry.v2.schema.json',
@@ -1026,6 +1056,7 @@ function Invoke-Layer6ReviewGate(
         'src/Infinium.Application/Runtime/HelperProtocolV2Codec.cs',
         'src/Infinium.Coordinator/CredentialNativeQualificationRunner.cs',
         'src/Infinium.Coordinator/M1Slice6CampaignProviderAccounting.cs',
+        'src/Infinium.Coordinator/Program.cs',
         'src/Infinium.Coordinator/M1Slice6CampaignSemanticAdmission.cs',
         'src/Infinium.Domain/Contracts/ProductUserSafetyIdentifier.cs',
         'src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs',
@@ -1203,12 +1234,17 @@ function Invoke-Layer6ReviewGate(
             throw 'Campaign stage review closeout baseline is not the exact reviewed stage candidate.'
         }
         if ($CampaignStageAdmissionCloseoutMode) {
+            $stageAdmissionExpiry = if ([string]$stage.schema_identity -ceq 'infinium.repository.m1-slice6-campaign-stage-request/2.0.0') {
+                '2026-08-31T23:59:00.0000000Z'
+            } else {
+                '2026-08-22T23:59:00.0000000Z'
+            }
             $admission = 'M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=' + $reviewed +
                 ' campaign_id=' + [string]$campaign.campaign_id +
                 ' campaign_sha256=' + [string]$campaign.campaign_manifest_sha256 +
                 ' stage_manifest_id=' + $stageId + ' sha256=' + $stageSha +
                 ' predecessor_evidence_sha256=' + $predecessorSha +
-                ' expires_at_utc=2026-08-22T23:59:00.0000000Z'
+                ' expires_at_utc=' + $stageAdmissionExpiry
             if (@($record -split "`r?`n" | Where-Object { $_ -ceq $admission }).Count -ne 1) {
                 throw 'Campaign stage admission closeout lacks one exact identity-scoped admission marker.'
             }
@@ -1252,7 +1288,18 @@ function Invoke-Layer6ReviewGate(
         $evidenceBytes = [IO.File]::ReadAllBytes($evidencePath)
         $evidenceSha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($evidenceBytes)).ToLowerInvariant()
         $evidence = [Text.Encoding]::UTF8.GetString($evidenceBytes) | ConvertFrom-Json -Depth 100 -DateKind String
-        $campaignPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json'
+        $campaignPath = if (-not [string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
+            if ([IO.Path]::IsPathRooted($AuthorizationManifest)) {
+                [IO.Path]::GetFullPath($AuthorizationManifest)
+            } else {
+                [IO.Path]::GetFullPath((Join-Path $repoRoot $AuthorizationManifest))
+            }
+        } else {
+            Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json'
+        }
+        if (-not (Test-Path -LiteralPath $campaignPath -PathType Leaf)) {
+            throw 'Campaign evidence closeout lacks its explicit campaign authority bytes.'
+        }
         $campaignBytes = [IO.File]::ReadAllBytes($campaignPath)
         $campaignSha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($campaignBytes)).ToLowerInvariant()
         $campaign = [Text.Encoding]::UTF8.GetString($campaignBytes) | ConvertFrom-Json -Depth 100 -DateKind String
@@ -1277,7 +1324,7 @@ function Invoke-Layer6ReviewGate(
             $statePhrase = 'Campaign credential evidence independently accepted; provider stages remain separately gated.'
         } elseif ($CampaignStageEvidenceCloseoutMode) {
             if ([string]::IsNullOrWhiteSpace($CampaignStageManifest) -or
-                [string]$evidence.schema -cne 'infinium.m1-s6.campaign-stage-evidence/v1' -or
+                [string]$evidence.schema -cne 'infinium.m1-s6.campaign-stage-evidence/v2' -or
                 [string]$evidence.status -cne 'independent-review-pending' -or
                 [string]$evidence.campaign_manifest_sha256 -cne $campaignSha) {
                 throw 'Campaign stage evidence closeout has stale evidence or manifest input.'
@@ -1289,7 +1336,7 @@ function Invoke-Layer6ReviewGate(
                 ' sha256=' + $evidenceSha + ' verdicts=security,semantics,budget,provenance'
             $statePhrase = 'Campaign stage evidence independently accepted; only the exact legal successor may be materialized.'
         } else {
-            if ([string]$evidence.schema -cne 'infinium.m1-s6.campaign-composed-evidence/v1' -or
+            if ([string]$evidence.schema -cne 'infinium.m1-s6.campaign-composed-evidence/v2' -or
                 [int]$evidence.provider_call_count -ne 3 -or [bool]$evidence.fourth_call_observed) {
                 throw 'Campaign composed evidence closeout is incomplete or observed a fourth call.'
             }
@@ -1877,6 +1924,102 @@ function Invoke-LiveSemanticV2AuthorityGate {
     })
 }
 
+function Invoke-CampaignV2NonLiveGate {
+    $baseline = '8c9ff5227fcc076df74f0c9faf1385640995b3d1'
+    $candidate = if ([string]::IsNullOrWhiteSpace($CandidateCommit)) { 'HEAD' } else { $CandidateCommit }
+    $candidateHash = (& git -C $repoRoot rev-parse --verify "$candidate^{commit}").Trim()
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($candidateHash)) {
+        throw 'CampaignV2NonLive requires one resolvable committed R2 candidate.'
+    }
+    & git -C $repoRoot merge-base --is-ancestor $baseline $candidateHash
+    if ($LASTEXITCODE -ne 0 -or (& git -C $repoRoot rev-list --count "$baseline..$candidateHash").Trim() -ne '1') {
+        throw 'CampaignV2NonLive requires the one exact committed successor of the accepted R1 handoff.'
+    }
+    if ($candidateHash -ceq (& git -C $repoRoot rev-parse HEAD).Trim() -and
+        @(& git -C $repoRoot status --porcelain=v1 --untracked-files=all).Count -ne 0) {
+        throw 'CampaignV2NonLive refuses a dirty candidate worktree.'
+    }
+    [string[]]$expectedPaths = @(
+        'contracts/repository/m1-slice6-campaign-composed-evidence.v2.schema.json',
+        'contracts/repository/m1-slice6-campaign-stage-evidence.v2.schema.json',
+        'contracts/repository/m1-slice6-campaign-stage-request.v2.schema.json',
+        'eng/run-m1-slice6-credential.ps1',
+        'eng/run-m1-slice6-live.ps1',
+        'eng/validate-m1-slice6-campaign-v2.ps1',
+        'eng/validate-m1-slice6-wp9-profile-authorization-v2.ps1',
+        'eng/verify-m1-slice6.ps1',
+        'fixtures/tooling/Infinium.PublicFixtures/LiveSemanticV2TypedOracleVerifier.cs',
+        'src/Infinium.Application/Evaluation/ActiveRepositoryJsonSchemaValidator.cs',
+        'src/Infinium.Application/Provider/CandidateInvestigation.cs',
+        'src/Infinium.Application/Provider/SourceClaimAcquisition.cs',
+        'src/Infinium.Coordinator/CandidateInvestigationCoordinator.cs',
+        'src/Infinium.Coordinator/M1Slice6CampaignProviderAccounting.cs',
+        'src/Infinium.Coordinator/Program.cs',
+        'src/Infinium.Coordinator/M1Slice6CampaignSemanticAdmission.cs',
+        'src/Infinium.Coordinator/M1Slice6CampaignStageCoordinator.cs',
+        'src/Infinium.Coordinator/M1Slice6CampaignV2InputAdapter.cs',
+        'src/Infinium.Coordinator/SourceClaimAcquisitionCoordinator.cs',
+        'src/Infinium.Coordinator/Wp9ProductionProfileEnrollmentRunner.cs',
+        'src/Infinium.CredentialHelper/WindowsCredentialNativeQualification.cs',
+        'src/Infinium.Persistence/AuthoritativeStore.Migrations.cs',
+        'src/Infinium.Persistence/AuthoritativeStore.SourceClaims.cs',
+        'src/Infinium.Persistence/ProviderPersistenceDeclarations.cs',
+        'tests/Infinium.ContractTests/M1Slice6CampaignContractTests.cs',
+        'tests/Infinium.ContractTests/Wp8PreLiveReadinessContractTests.cs',
+        'tests/Infinium.IntegrationTests/M1Slice6CampaignRehearsalTests.cs',
+        'tests/Infinium.IntegrationTests/M1Slice6CampaignV2InputAdapterTests.cs',
+        'tests/Infinium.IntegrationTests/M1Slice6LiveCampaignOfflineGateTests.cs',
+        'tests/Infinium.IntegrationTests/ProviderBudgetIntegrationTests.cs',
+        'tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs',
+        'tests/Infinium.UnitTests/Wp9ProductionProfileAuthorizationTests.cs',
+        'tests/Infinium.UnitTests/M1Slice6FiniteCampaignLedgerTests.cs'
+    )
+    [string[]]$actualPaths = @(& git -C $repoRoot -c core.quotePath=false diff --name-only $baseline $candidateHash --)
+    [Array]::Sort($expectedPaths, [StringComparer]::Ordinal)
+    [Array]::Sort($actualPaths, [StringComparer]::Ordinal)
+    if ([string]::Join("`n", $actualPaths) -cne [string]::Join("`n", $expectedPaths)) {
+        throw 'CampaignV2NonLive rejected an added, removed, or substituted R2 candidate path.'
+    }
+    $boundAuthorityBlobs = [ordered]@{
+        'docs/current-state.md' = '1632ff04a7f34bd5e141fa67ea304a319607dfbf'
+        'docs/plans/milestones/m1/slices/s6/README.md' = '7c039242b021e2cc1f0aefcf220b9f741de170f1'
+        'docs/plans/milestones/m1/slices/s6/record.md' = '45847b21c92ac21fe54f9e2527a2436fcd059d1b'
+    }
+    foreach ($entry in $boundAuthorityBlobs.GetEnumerator()) {
+        $blob = (& git -C $repoRoot rev-parse "$candidateHash`:$($entry.Key)").Trim()
+        if ($LASTEXITCODE -ne 0 -or $blob -cne $entry.Value) {
+            throw "CampaignV2NonLive rejected changed pre-closeout authority bytes at $($entry.Key)."
+        }
+    }
+    if ($CampaignV2CandidateOnly) {
+        Write-Receipt 'CampaignV2NonLive' ([ordered]@{
+            baseline_commit = $baseline
+            candidate_commit = $candidateHash
+            exact_path_count = $expectedPaths.Count
+            authority_blob_count = $boundAuthorityBlobs.Count
+            candidate_predicate_only = $true
+            provider_requests = 0
+            credential_operations = 0
+        })
+        return
+    }
+    Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' `
+        'FullyQualifiedName~M1Slice6CampaignV2InputAdapterTests|FullyQualifiedName~FrozenWp10AndWp11ValidationPackagesExecuteTypedProductOraclesOffline|FullyQualifiedName~SourceClaimAdmissionPersistsReadsBackAndPublishesExactAcquisitionOwnership|FullyQualifiedName~CandidateAdmissionPersistsReadsBackBacksUpAndRebuildsWithoutSending|FullyQualifiedName~FreshCloneRehearsesReviewedAdmissionFakeCredentialAndThreeLiteralLoopbackStages'
+    Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' `
+        'FullyQualifiedName~M1Slice6FiniteCampaignLedgerTests'
+    Write-Receipt 'CampaignV2NonLive' ([ordered]@{
+        baseline_commit = $baseline
+        candidate_commit = $candidateHash
+        exact_path_count = $expectedPaths.Count
+        authority_blob_count = $boundAuthorityBlobs.Count
+        focused_tests = @($script:FocusedTestResults)
+        provider_requests = 0
+        credential_operations = 0
+        campaign_materialization = $false
+        private_or_archive_access = $false
+    })
+}
+
 function Invoke-StateSurfaceGate([bool] $RequireAcceptedInputProof) {
     Assert-Slice5V1Unchanged
     Invoke-DotnetTest `
@@ -2398,11 +2541,11 @@ function Get-M1Slice6RetainedLiveEvidence {
     if ($resolvedInput -cne $exactRoot -or -not [IO.Directory]::Exists($resolvedInput)) {
         throw "$Gate requires the exact retained artifacts/m1-slice6 root."
     }
-    $schemaPath = Join-Path $repoRoot 'contracts/repository/m1-slice6-campaign-stage-evidence.v1.schema.json'
+    $schemaPath = Join-Path $repoRoot 'contracts/repository/m1-slice6-campaign-stage-evidence.v2.schema.json'
     $expected = @(
         [ordered]@{ directory = 'wp9-live'; stage = 'Qualification'; ordinal = 1; package = 'M1-PLAT-PROVIDER-CAPABILITY-VAL-v1'; semantic = $false },
-        [ordered]@{ directory = 'wp10-live'; stage = 'SourceClaimExtraction'; ordinal = 2; package = 'LLM-CLAIM-LIVE-VAL'; semantic = $true },
-        [ordered]@{ directory = 'wp11-live'; stage = 'CandidateInvestigation'; ordinal = 3; package = 'LLM-INVESTIGATE-LIVE-VAL'; semantic = $true }
+        [ordered]@{ directory = 'wp10-live'; stage = 'SourceClaimExtraction'; ordinal = 2; package = 'LLM-CLAIM-LIVE-VAL-v2'; semantic = $true },
+        [ordered]@{ directory = 'wp11-live'; stage = 'CandidateInvestigation'; ordinal = 3; package = 'LLM-INVESTIGATE-LIVE-VAL-v2'; semantic = $true }
     )
     $retained = @()
     foreach ($item in $expected) {
@@ -2412,7 +2555,9 @@ function Get-M1Slice6RetainedLiveEvidence {
             throw "$Gate is missing exact $($item.directory)/stage-evidence.json."
         }
         $raw = [IO.File]::ReadAllText($evidencePath)
-        if (-not ($raw | Test-Json -SchemaFile $schemaPath -ErrorAction Stop)) {
+        $schemaValidator = Join-Path $repoRoot 'src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.dll'
+        & dotnet $schemaValidator --validate-repository-authority-json --document $evidencePath --schema $schemaPath *> $null
+        if ($LASTEXITCODE -ne 0) {
             throw "$Gate rejected the recursively closed $($item.stage) evidence schema."
         }
         $evidence = $raw | ConvertFrom-Json -Depth 100 -DateKind String
@@ -2488,7 +2633,8 @@ function Invoke-M1Slice6CampaignCSharpOfflineValidation {
     } else {
         [IO.Path]::GetFullPath((Join-Path $repoRoot $InputRoot))
     }
-    $project = if ([string]::IsNullOrWhiteSpace($env:INFINIUM_CAMPAIGN_OFFLINE_TEST_PROJECT)) {
+    $externalValidationProject = -not [string]::IsNullOrWhiteSpace($env:INFINIUM_CAMPAIGN_OFFLINE_TEST_PROJECT)
+    $project = if (-not $externalValidationProject) {
         Join-Path $repoRoot 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj'
     } else {
         $externalProject = [IO.Path]::GetFullPath($env:INFINIUM_CAMPAIGN_OFFLINE_TEST_PROJECT)
@@ -2521,15 +2667,36 @@ function Invoke-M1Slice6CampaignCSharpOfflineValidation {
         [string[]]$expectedBindingPaths = @(
             'docs/current-state.md',
             'docs/plans/milestones/m1/slices/s6/README.md',
+            'docs/plans/milestones/m1/slices/s6/live/1-Qualification.json',
+            'docs/plans/milestones/m1/slices/s6/live/1-request.json',
+            'docs/plans/milestones/m1/slices/s6/live/2-SourceClaimExtraction.json',
+            'docs/plans/milestones/m1/slices/s6/live/2-request.json',
+            'docs/plans/milestones/m1/slices/s6/live/3-CandidateInvestigation.json',
+            'docs/plans/milestones/m1/slices/s6/live/3-request.json',
             'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json',
+            'docs/plans/milestones/m1/slices/s6/record.md',
             'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
         )
+        $r2CampaignAuthorityPath =
+            'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v2.json'
+        $r2ProfileAuthorityPath =
+            'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json'
+        & git -C $externalRoot cat-file -e "$externalHead`:$r2CampaignAuthorityPath" 2>$null
+        $hasR2CampaignAuthority = $LASTEXITCODE -eq 0
+        & git -C $externalRoot cat-file -e "$externalHead`:$r2ProfileAuthorityPath" 2>$null
+        $hasR2ProfileAuthority = $LASTEXITCODE -eq 0
+        if ($hasR2CampaignAuthority -ne $hasR2ProfileAuthority) {
+            throw "$Gate external campaign validation candidate has a partial v2 authority pair."
+        }
+        if ($hasR2CampaignAuthority) {
+            $expectedBindingPaths += @($r2CampaignAuthorityPath, $r2ProfileAuthorityPath)
+        }
         [string[]]$actualBindingPaths = @(& git -C $externalRoot diff --name-only `
             "$externalCloseReady..$externalHead")
         [Array]::Sort($expectedBindingPaths, [StringComparer]::Ordinal)
         [Array]::Sort($actualBindingPaths, [StringComparer]::Ordinal)
         if ([string]::Join("`n", $actualBindingPaths) -cne [string]::Join("`n", $expectedBindingPaths)) {
-            throw "$Gate external campaign validation candidate differs from its source outside the exact four binding documents."
+            throw "$Gate external campaign validation candidate differs from its source outside the exact $($expectedBindingPaths.Count) authority and stage documents: $($actualBindingPaths -join ', ')."
         }
         $externalProject
     }
@@ -2539,9 +2706,13 @@ function Invoke-M1Slice6CampaignCSharpOfflineValidation {
     $priorInput = $env:INFINIUM_CAMPAIGN_OFFLINE_INPUT_ROOT
     try {
         $env:INFINIUM_CAMPAIGN_OFFLINE_INPUT_ROOT = $resolvedInput
-        $output = @(& dotnet test $project --configuration Release --no-build `
-            --filter 'FullyQualifiedName~MaterializedCampaignArtifactsReopenThroughLedgerSqliteReplayAndSemanticCrosslinks' `
-            --logger 'console;verbosity=minimal' 2>&1)
+        [string[]]$testArguments = @('test', $project, '--configuration', 'Release', '--no-build')
+        $testArguments += @(
+            '--filter',
+            'FullyQualifiedName~MaterializedCampaignArtifactsReopenThroughLedgerSqliteReplayAndSemanticCrosslinks',
+            '--logger',
+            'console;verbosity=minimal')
+        $output = @(& dotnet @testArguments 2>&1)
         if ($LASTEXITCODE -ne 0 -or ($output -join "`n") -notmatch '(?m)^\s*Passed!\s+-\s+Failed:\s+0,\s+Passed:\s+1,') {
             throw "$Gate recursive C# ledger/SQLite/replay/semantic validation failed.`n$($output -join "`n")"
         }
@@ -2589,13 +2760,17 @@ function Invoke-ComposedProvenanceGate {
     $retained = @(Get-M1Slice6RetainedLiveEvidence)
     $recursive = Invoke-M1Slice6CampaignCSharpOfflineValidation
     $composedPath = Join-Path ([IO.Path]::GetFullPath((Join-Path $repoRoot $InputRoot))) 'wp11-live/composed-evidence.json'
-    $schemaPath = Join-Path $repoRoot 'contracts/repository/m1-slice6-campaign-composed-evidence.v1.schema.json'
+    $schemaPath = Join-Path $repoRoot 'contracts/repository/m1-slice6-campaign-composed-evidence.v2.schema.json'
     if (-not [IO.File]::Exists($composedPath)) {
         throw 'ComposedProvenance is missing exact wp11-live/composed-evidence.json.'
     }
     $raw = [IO.File]::ReadAllText($composedPath)
-    if (-not ($raw | Test-Json -SchemaFile $schemaPath -ErrorAction Stop)) {
-        throw 'ComposedProvenance rejected the recursively closed composed evidence schema.'
+    $schemaValidator = Join-Path $repoRoot 'src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.dll'
+    $schemaDiagnostic = @(& dotnet $schemaValidator --validate-repository-authority-json `
+        --document $composedPath --schema $schemaPath 2>&1)
+    if ($LASTEXITCODE -ne 0) {
+        throw ('ComposedProvenance rejected the recursively closed composed evidence schema: ' +
+            ($schemaDiagnostic -join ' '))
     }
     $composed = $raw | ConvertFrom-Json -Depth 100 -DateKind String
     $stages = @($composed.stages)
@@ -2604,9 +2779,9 @@ function Invoke-ComposedProvenanceGate {
         [bool]$composed.prohibited_effects.fourth_provider_call -or [bool]$composed.prohibited_effects.automatic_retry -or
         [bool]$composed.prohibited_effects.credential_delete -or [bool]$composed.prohibited_effects.hosted_search -or
         [bool]$composed.prohibited_effects.private_fixture_access -or [bool]$composed.prohibited_effects.secret_retained -or
-        [string]$composed.composed_validation_package.package_id -cne 'PROV-LIVE-COMPOSED-VAL' -or
-        [string]$composed.composed_validation_package.manifest_sha256 -cne 'da6b6b05456a2ed956393c3a0f7c7d470a947adba8e991cae72e9dd7f28250c8' -or
-        [string]$composed.composed_validation_package.oracle_sha256 -cne '2b8174e58cfdda414883aff245b8f9087647d05a9d4ca6c11e7b0ac076634f8e' -or
+        [string]$composed.composed_validation_package.package_id -cne 'PROV-LIVE-COMPOSED-VAL-v2' -or
+        [string]$composed.composed_validation_package.manifest_sha256 -cne '61368c3b8da3808724d64e796b85a3b26043ca4ef1a2e3ad1dd441daf2405be8' -or
+        [string]$composed.composed_validation_package.oracle_sha256 -cne 'e85cb6a9ead7c6ecb1a09b677fb8d6b12b3c29f022f6ea03cd8b6812c073e1d2' -or
         (($composed.explicit_omissions -join '|') -cne 'credential-secret|hosted-search|nexus|private-fixture') -or
         [string]$stages[0].evidence_sha256 -cne [string]$retained[0].evidence_sha256 -or
         [string]$stages[1].evidence_sha256 -cne [string]$retained[1].evidence_sha256 -or
@@ -2618,7 +2793,7 @@ function Invoke-ComposedProvenanceGate {
         composed_evidence_sha256 = (Get-FileHash -LiteralPath $composedPath -Algorithm SHA256).Hash.ToLowerInvariant()
         stage_evidence_sha256 = @($retained.evidence_sha256)
         validation_packages = @($retained.validation_package_id)
-        composed_validation_package = 'PROV-LIVE-COMPOSED-VAL'
+        composed_validation_package = 'PROV-LIVE-COMPOSED-VAL-v2'
         qualification_semantic_use = $false
         recursive_product_validation = $recursive
         provider_call_count = 3; dns_resolution_count = 3; fourth_call_observed = $false
@@ -3705,6 +3880,7 @@ try {
         'RetainedReplay' { Invoke-RetainedReplayGate }
         'ComposedProvenance' { Invoke-ComposedProvenanceGate }
         'LiveSemanticV2Authority' { Invoke-LiveSemanticV2AuthorityGate }
+        'CampaignV2NonLive' { Invoke-CampaignV2NonLiveGate }
         'NonLiveAll' { Invoke-NonLiveAllGate }
         'Layer6Review' { Invoke-Layer6ReviewGate }
     }

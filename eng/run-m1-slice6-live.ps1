@@ -35,16 +35,16 @@ if ([int]$stage.stage.ordinal -ne $expectedOrdinal -or [string]$stage.stage.oper
     throw 'The stage operation, ordinal, or authority state is stale.'
 }
 $stageSha = (Get-FileHash -LiteralPath $stagePath -Algorithm SHA256).Hash.ToLowerInvariant()
-$campaignPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json'
-$campaignReceipt = & (Join-Path $PSScriptRoot 'validate-m1-slice6-campaign.ps1') `
+$campaignPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v2.json'
+$campaignReceipt = & (Join-Path $PSScriptRoot 'validate-m1-slice6-campaign-v2.ps1') `
     -AuthorizationManifest $campaignPath -RequireState RolloverAdmitted | ConvertFrom-Json -Depth 20
 $campaign = Get-Content -LiteralPath $campaignPath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
 if ([DateTimeOffset]::UtcNow -ge [DateTimeOffset]::Parse([string]$campaign.expires_at_utc,
         [Globalization.CultureInfo]::InvariantCulture)) {
     throw 'The finite provider campaign expired before stage launch.'
 }
-$credentialPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
-$credentialReceipt = & (Join-Path $PSScriptRoot 'validate-m1-slice6-wp9-profile-authorization.ps1') `
+$credentialPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json'
+$credentialReceipt = & (Join-Path $PSScriptRoot 'validate-m1-slice6-wp9-profile-authorization-v2.ps1') `
     -AuthorizationManifest $credentialPath -RequireReady | ConvertFrom-Json -Depth 20
 $credential = Get-Content -LiteralPath $credentialPath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
 $expectedOutputRelative = switch ($Operation) {

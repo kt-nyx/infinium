@@ -60,9 +60,9 @@ function Write-Wp9CreateNewText([string] $Path, [string] $Text) {
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $manifestPath = (Resolve-Path -LiteralPath $AuthorizationManifest).Path
-$expectedManifestPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
+$expectedManifestPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json'
 if ($manifestPath -cne $expectedManifestPath) { throw 'Only the exact WP9 production-profile manifest path is executable.' }
-$validation = & (Join-Path $PSScriptRoot 'validate-m1-slice6-wp9-profile-authorization.ps1') `
+$validation = & (Join-Path $PSScriptRoot 'validate-m1-slice6-wp9-profile-authorization-v2.ps1') `
     -AuthorizationManifest $manifestPath -RequireReady | ConvertFrom-Json
 $m = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
 if ([DateTimeOffset]::UtcNow -ge [DateTimeOffset]::Parse($m.expires_at_utc, [Globalization.CultureInfo]::InvariantCulture)) {
@@ -86,7 +86,7 @@ $allowedPostClose = @(
     'docs/current-state.md',
     'docs/plans/milestones/m1/slices/s6/README.md',
     'docs/plans/milestones/m1/slices/s6/record.md',
-    'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
+    'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json'
 )
 $manifestSha = [string]$validation.manifest_sha256
 $canonical = "WP9_PROFILE_OWNER_ACCEPTANCE manifest_id=$($m.manifest_id) sha256=$manifestSha close_ready_commit=$closeReady expires_at_utc=$($m.expires_at_utc)"
@@ -94,7 +94,7 @@ $reviewPattern = '^WP9_PROFILE_REVIEW_ACCEPTANCE candidate_commit=([0-9a-f]{40})
     [Regex]::Escape([string]$m.manifest_id) + ' sha256=' + [Regex]::Escape($manifestSha) +
     ' verdicts=security,semantics,diff$'
 $recordPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/record.md'
-$campaignManifestPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json'
+$campaignManifestPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v2.json'
 $campaignIdentity = Get-Content -LiteralPath $campaignManifestPath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
 $campaignIntentLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object {
     ($_.StartsWith('M1_S6_CAMPAIGN_REVIEW_ACCEPTANCE ', [StringComparison]::Ordinal) -or
@@ -104,7 +104,7 @@ $campaignIntentLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object {
 })
 $campaignValidation = $null
 try {
-    $campaignValidation = & (Join-Path $PSScriptRoot 'validate-m1-slice6-campaign.ps1') `
+    $campaignValidation = & (Join-Path $PSScriptRoot 'validate-m1-slice6-campaign-v2.ps1') `
         -AuthorizationManifest $campaignManifestPath -RequireState RolloverAdmitted 2>$null | ConvertFrom-Json
 }
 catch { $campaignValidation = $null }
@@ -118,7 +118,7 @@ if ($campaignRoute) {
     $rolloverLine = "WP9_PROFILE_CAMPAIGN_ROLLOVER_ADMISSION campaign_candidate_commit=$reviewedCandidate authority_sha256=$($campaign.authority_source.attachment_sha256) campaign_id=$($campaign.campaign_id) campaign_sha256=$($campaignValidation.manifest_sha256) manifest_id=$($m.manifest_id) sha256=$manifestSha close_ready_commit=$closeReady credential_expires_at_utc=$($m.expires_at_utc)"
     $rolloverLines = @([IO.File]::ReadAllLines($recordPath) | Where-Object { $_ -ceq $rolloverLine })
     if ($rolloverLines.Count -ne 1) { throw 'Campaign-derived credential execution requires one exact identity-scoped rollover admission.' }
-    & git -C $repoRoot diff --quiet $reviewedCandidate -- 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
+    & git -C $repoRoot diff --quiet $reviewedCandidate -- 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json'
     if ($LASTEXITCODE -ne 0) { throw 'The campaign-derived credential manifest differs from the exact reviewed campaign candidate.' }
     $postReview = @(& git -C $repoRoot diff --name-only "$reviewedCandidate..$head")
     $expectedPostReview = @('docs/current-state.md','docs/plans/milestones/m1/slices/s6/README.md','docs/plans/milestones/m1/slices/s6/record.md')
@@ -139,7 +139,7 @@ else {
     if ($LASTEXITCODE -ne 0) { throw 'The independently reviewed WP9 candidate does not descend from the close-ready implementation.' }
     $postClose = @(& git -C $repoRoot diff --name-only "$closeReady..$reviewedCandidate")
     if (@($postClose | Where-Object { $_ -notin $allowedPostClose }).Count -ne 0) { throw 'Code or unapproved documentation drift exists before the exact independently reviewed WP9 candidate.' }
-    & git -C $repoRoot diff --quiet $reviewedCandidate -- 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v1.json'
+    & git -C $repoRoot diff --quiet $reviewedCandidate -- 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json'
     if ($LASTEXITCODE -ne 0) { throw 'The owner-accepted WP9 manifest differs from the exact independently reviewed bytes.' }
     $postReview = @(& git -C $repoRoot diff --name-only "$reviewedCandidate..$head")
     $expectedPostReview = @('docs/current-state.md','docs/plans/milestones/m1/slices/s6/README.md','docs/plans/milestones/m1/slices/s6/record.md')
@@ -190,7 +190,7 @@ if ($ValidateCampaignAdmissionOnly) {
         --campaign-reviewed-candidate $reviewedCandidate
     if ($LASTEXITCODE -ne 0) { throw 'The contained Coordinator campaign credential route rejected admission.' }
     [pscustomobject]@{
-        schema = 'infinium.m1-s6.wp9.campaign-credential-route-validation/v1'
+        schema = 'infinium.m1-s6.wp9.campaign-credential-route-validation/v2'
         disposition = 'validated-before-output-lock-helper-readiness-ui-native-or-provider-effect'
         campaign_id = [string]$campaign.campaign_id
         campaign_manifest_sha256 = [string]$campaignValidation.manifest_sha256
@@ -258,7 +258,7 @@ if ($coordinatorExit -ne 0) {
     $failurePath = Join-Path $resolvedOutput 'profile-enrollment-failure.json'
     if (-not [IO.File]::Exists($failurePath)) {
         $fallback = [ordered]@{
-            schema = 'infinium.m1-s6.wp9.production-profile-enrollment-failure/v1'
+            schema = 'infinium.m1-s6.wp9.production-profile-enrollment-failure/v2'
             status = 'stopped-ambiguous-effect'
             failure_kind = "coordinator-exit-$coordinatorExit-without-complete-evidence"
             manifest_id = [string]$m.manifest_id
@@ -300,7 +300,7 @@ if ($coordinatorExit -ne 0) {
     $mainEvidencePath = Join-Path $resolvedOutput 'profile-enrollment-evidence.json'
     if (-not [IO.File]::Exists($mainEvidencePath)) {
         $mainFallback = [ordered]@{
-            schema = 'infinium.m1-s6.wp9.production-profile-enrollment-evidence/v1'
+            schema = 'infinium.m1-s6.wp9.production-profile-enrollment-evidence/v2'
             status = 'stopped-ambiguous-effect'
             manifest_id = [string]$m.manifest_id
             manifest_sha256 = $manifestSha

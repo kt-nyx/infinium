@@ -78,7 +78,7 @@
         "properties": {
           "cumulative_credential_calls": { "$ref": "#/$defs/nativeSourceClaim" },
           "validation_package": { "properties": { "package_id": { "const": "LLM-CLAIM-LIVE-VAL-v2" }, "manifest_path": { "const": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/public-manifest.json" }, "manifest_sha256": { "const": "1231c98875c3ba3ca0ce3b60773e566c791b4a313c1fd691233be1a1bc60ba09" }, "product_input_path": { "const": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/execution-input.v2.json" }, "product_input_sha256": { "const": "bcbcc804eee7ea51fc00b6daa33d688078dcb1e8ddc53349a0ec673b77a5e789" }, "predecessor_manifest_path": { "const": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/public-manifest.json" }, "predecessor_manifest_sha256": { "const": "926963ca067da52ec8d6d7ecdd824df3cb2e2efed6dd12fe3418f3e63b29b4b7" }, "oracle_path": { "const": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/oracle.v2.json" }, "oracle_sha256": { "const": "76a631ffa02eeff301c240588d1507e3fe3cc2fe13f19aa597aecb8d2ddb3e14" }, "semantic_use": { "const": true } } },
-          "semantic_validation": { "properties": { "validation_id": { "const": "infinium.host.source-claim-admission/v1" }, "proposal_count": { "const": 1 }, "admission_count": { "const": 1 } } }
+          "semantic_validation": { "properties": { "validation_id": { "const": "infinium.host.source-claim-admission/v1" }, "proposal_count": { "const": 9 }, "admission_count": { "const": 1 } } }
         }
       }
     },

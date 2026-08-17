@@ -429,13 +429,8 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         string errorText = process.StandardError.ReadToEnd();
         process.WaitForExit();
         Assert.AreNotEqual(0, process.ExitCode, outputText);
-        Assert.IsTrue(
-            errorText.Contains("still draft binding-pending", StringComparison.Ordinal)
-            || errorText.Contains("exact clean codex/m1-s6 candidate", StringComparison.Ordinal)
-            || errorText.Contains("exactly one canonical owner-acceptance line", StringComparison.Ordinal)
-            || errorText.Contains("one exact independent-review acceptance for the current manifest bytes", StringComparison.Ordinal)
-            || errorText.Contains("Only the exact owner-stop authority-document transition", StringComparison.Ordinal),
-            errorText);
+        StringAssert.Contains(errorText,
+            "Only the exact WP9 production-profile manifest path is executable.");
         Assert.IsFalse(Directory.Exists(output));
         Assert.IsFalse(Directory.Exists(Path.Combine(root, "artifacts", "m1-slice6", "wp9-production-profile-state")));
     }

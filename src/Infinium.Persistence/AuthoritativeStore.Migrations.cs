@@ -163,6 +163,8 @@ public sealed partial class AuthoritativeStore
                 Execute(Wp2Schema6Extension, transaction);
                 CreateAppendOnlyTriggers(Wp2Schema6ExtensionAppendOnlyTables, transaction);
                 CreateCanonicalTimestampTriggers(Wp2Schema6ExtensionCanonicalTimestampColumns, transaction, replaceExisting: true);
+                Execute(R2LiveSemanticSchema6Extension, transaction);
+                CreateAppendOnlyTriggers(R2LiveSemanticSchema6ExtensionAppendOnlyTables, transaction);
                 string schemaFingerprint = ComputeSchemaFingerprint(connection, transaction);
                 Execute(
                     """
@@ -197,6 +199,9 @@ public sealed partial class AuthoritativeStore
                     INSERT INTO store_metadata(key,value)
                     VALUES ('wp9_campaign_input_bound_correction_id','M1-S6-WP9-0006I')
                     ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+                    INSERT INTO store_metadata(key,value)
+                    VALUES ('r2_live_semantic_extension_id','M1-S6-R2-0006J')
+                    ON CONFLICT(key) DO UPDATE SET value=excluded.value;
                     INSERT INTO migration_history(
                         migration_id, from_version, to_version, applied_at, sqlite_source_id)
                     VALUES ('M1-S6-0006', 5, 6, $now, $sqlite_source);
@@ -219,8 +224,30 @@ public sealed partial class AuthoritativeStore
                 ApplyWp6ActiveContractCorrectionIfRequired();
                 ApplyWp7Schema6ExtensionIfRequired();
                 ApplyWp9CampaignInputBoundCorrectionIfRequired();
+                ApplyR2LiveSemanticSchema6ExtensionIfRequired();
             }
         }
+    }
+
+    private void ApplyR2LiveSemanticSchema6ExtensionIfRequired()
+    {
+        using SqliteCommand declared = connection.CreateCommand();
+        declared.CommandText =
+            "SELECT COUNT(*) FROM store_metadata WHERE key='r2_live_semantic_extension_id' AND value='M1-S6-R2-0006J';";
+        if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) == 1)
+        {
+            return;
+        }
+        using SqliteTransaction transaction = BeginTransaction();
+        Execute(R2LiveSemanticSchema6Extension, transaction);
+        CreateAppendOnlyTriggers(R2LiveSemanticSchema6ExtensionAppendOnlyTables, transaction);
+        string upgradedFingerprint = ComputeSchemaFingerprint(connection, transaction);
+        Execute(
+            "UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint'; "
+            + "INSERT INTO store_metadata(key,value) VALUES('r2_live_semantic_extension_id','M1-S6-R2-0006J');",
+            transaction,
+            ("$fingerprint", upgradedFingerprint));
+        transaction.Commit();
     }
 
     private void ApplyWp2Schema6ExtensionIfRequired()
@@ -278,6 +305,7 @@ public sealed partial class AuthoritativeStore
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
             or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+            or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint
@@ -398,6 +426,7 @@ public sealed partial class AuthoritativeStore
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
             or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+            or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint
@@ -445,6 +474,7 @@ public sealed partial class AuthoritativeStore
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
             or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+            or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint)
@@ -507,6 +537,7 @@ public sealed partial class AuthoritativeStore
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
             or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+            or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint)
         {
@@ -557,6 +588,7 @@ public sealed partial class AuthoritativeStore
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
             or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+            or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
@@ -650,7 +682,8 @@ public sealed partial class AuthoritativeStore
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint)
+            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+            or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
             declared.CommandText =
@@ -692,7 +725,8 @@ public sealed partial class AuthoritativeStore
     private void ApplyWp9CampaignInputBoundCorrectionIfRequired()
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
-        if (actualFingerprint == ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint)
+        if (actualFingerprint is ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+            or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
             declared.CommandText =
@@ -1093,6 +1127,13 @@ public sealed partial class AuthoritativeStore
         "provider_budget_settlement_receipts",
     ];
 
+    private static readonly string[] R2LiveSemanticSchema6ExtensionAppendOnlyTables =
+    [
+        "source_claim_admitted_artifacts",
+        "source_claim_applicability_facts",
+        "candidate_evidence_authority",
+    ];
+
     private static readonly (string Table, string Column, bool Optional)[] Wp2Schema6ExtensionCanonicalTimestampColumns =
     [
         ("provider_budget_limits", "created_at", false),
@@ -1104,6 +1145,12 @@ public sealed partial class AuthoritativeStore
 
     private static readonly HashSet<string> RequiredSchemaObjects =
     [
+        .. R2LiveSemanticSchema6ExtensionAppendOnlyTables.Select(table => $"table:{table}"),
+        .. R2LiveSemanticSchema6ExtensionAppendOnlyTables.SelectMany(table => new[]
+        {
+            $"trigger:{table}_append_only_update",
+            $"trigger:{table}_append_only_delete",
+        }),
         .. SchemaV6CanonicalTimestampColumns.Select(item =>
             $"trigger:{item.Table}_{item.Column}_canonical_utc_insert"),
         .. Wp2Schema6ExtensionCanonicalTimestampColumns.Select(item =>
@@ -2578,6 +2625,68 @@ public sealed partial class AuthoritativeStore
         """
         ALTER TABLE provider_operation_authorizations ADD COLUMN execution_mode TEXT NOT NULL
           DEFAULT 'simulated-nonnetwork' CHECK(execution_mode IN ('simulated-nonnetwork','provider-live'));
+        """;
+
+    private const string R2LiveSemanticSchema6Extension =
+        """
+        CREATE TABLE source_claim_admitted_artifacts(
+          admitted_artifact_id TEXT PRIMARY KEY,
+          acquisition_run_id TEXT NOT NULL REFERENCES evidence_acquisition_runs(acquisition_run_id) ON DELETE RESTRICT,
+          proposal_id TEXT NOT NULL REFERENCES provider_semantic_proposals(proposal_id) ON DELETE RESTRICT,
+          admission_id TEXT NOT NULL UNIQUE REFERENCES provider_semantic_admissions(admission_id) ON DELETE RESTRICT,
+          payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+          source_revision_id TEXT NOT NULL REFERENCES documentation_revisions(documentation_revision_id) ON DELETE RESTRICT,
+          passage_id TEXT NOT NULL,
+          content_sha256 TEXT NOT NULL CHECK(length(content_sha256)=64),
+          byte_length INTEGER NOT NULL CHECK(byte_length >= 0),
+          start_byte INTEGER NOT NULL CHECK(start_byte >= 0),
+          end_byte INTEGER NOT NULL CHECK(end_byte >= start_byte AND end_byte <= byte_length),
+          created_at TEXT NOT NULL,
+          UNIQUE(acquisition_run_id,proposal_id),
+          UNIQUE(payload_id,source_revision_id,passage_id,start_byte,end_byte)
+        ) STRICT;
+        CREATE TABLE source_claim_applicability_facts(
+          applicability_fact_id TEXT PRIMARY KEY,
+          acquisition_run_id TEXT NOT NULL REFERENCES evidence_acquisition_runs(acquisition_run_id) ON DELETE RESTRICT,
+          proposal_id TEXT NOT NULL REFERENCES provider_semantic_proposals(proposal_id) ON DELETE RESTRICT,
+          source_revision_id TEXT NOT NULL REFERENCES documentation_revisions(documentation_revision_id) ON DELETE RESTRICT,
+          statement_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+          statement_sha256 TEXT NOT NULL CHECK(length(statement_sha256)=64),
+          created_at TEXT NOT NULL,
+          UNIQUE(acquisition_run_id,proposal_id,applicability_fact_id)
+        ) STRICT;
+        CREATE TABLE candidate_evidence_authority(
+          outcome_id TEXT NOT NULL REFERENCES candidate_investigation_outcomes(outcome_id) ON DELETE RESTRICT,
+          evidence_id TEXT NOT NULL,
+          evidence_application_link_id TEXT NOT NULL,
+          root_kind TEXT NOT NULL CHECK(root_kind IN ('persisted-source-claim-application','frozen-host-evidence')),
+          evidence_root_id TEXT,
+          applicability_record_id TEXT,
+          source_acquisition_id TEXT,
+          source_proposal_id TEXT,
+          source_admission_id TEXT,
+          admitted_artifact_id TEXT,
+          source_application_link_id TEXT,
+          source_revision_id TEXT NOT NULL,
+          passage_id TEXT NOT NULL,
+          content_sha256 TEXT NOT NULL CHECK(length(content_sha256)=64),
+          local_observation_id TEXT NOT NULL,
+          local_observation_sha256 TEXT NOT NULL CHECK(length(local_observation_sha256)=64),
+          input_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+          created_at TEXT NOT NULL,
+          PRIMARY KEY(outcome_id,evidence_id),
+          UNIQUE(outcome_id,evidence_application_link_id),
+          CHECK((root_kind='persisted-source-claim-application'
+              AND evidence_root_id IS NULL AND applicability_record_id IS NULL
+              AND source_acquisition_id IS NOT NULL AND source_proposal_id IS NOT NULL
+              AND source_admission_id IS NOT NULL AND admitted_artifact_id IS NOT NULL
+              AND source_application_link_id IS NOT NULL)
+            OR (root_kind='frozen-host-evidence'
+              AND evidence_root_id IS NOT NULL AND applicability_record_id IS NOT NULL
+              AND source_acquisition_id IS NULL AND source_proposal_id IS NULL
+              AND source_admission_id IS NULL AND admitted_artifact_id IS NULL
+              AND source_application_link_id IS NULL))
+        ) STRICT;
         """;
 
     private const string Wp2Schema6Extension =

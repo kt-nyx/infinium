@@ -24,6 +24,7 @@ public static class ProviderPersistenceDeclarations
     public const string Wp9CampaignInputBoundCorrectionMigrationId = "M1-S6-WP9-0006I";
     public const string Wp9CampaignInputBoundCorrectionSourceSchemaFingerprint = SchemaFingerprint;
     public const string Wp9CampaignInputBoundCorrectionSchemaFingerprint = "f138afbdd4737400370473f6caa9ae44324f3f8eb04a5bac150f1ab2a01d08b7";
+    public const string R2LiveSemanticSchemaFingerprint = "b70a79ef993b0db45a661ab0a1f701dd2484223ba105e1e82fd77ec9debc8e32";
     public const int SourceSchemaVersion = 5;
     public const string SourceStorageContractVersion = "1.4.0";
     public const string SourceSchemaFingerprint = "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d";

@@ -899,13 +899,20 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 .Select(item => item.GetString()!).ToArray();
             JsonElement maxima = boundary.GetProperty("maximum_calls");
             if (root.GetProperty("schema_identity").GetString()
-                    != "infinium.repository.wp9-production-profile-authorization/1.0.0"
+                    != "infinium.repository.wp9-production-profile-authorization/2.0.0"
                 || root.GetProperty("manifest_id").GetString() != expectedManifestId
                 || root.GetProperty("packet_kind").GetString() != "EnrollOrVerifyProfile"
                 || root.GetProperty("status").GetString() != "ready-for-owner-acceptance"
+                || root.GetProperty("expires_at_utc").GetString() != "2026-08-31T23:00:00.0000000Z"
                 || root.GetProperty("effect_authority").GetString()
                     != "none-until-owner-accepts-exact-manifest-bytes"
                 || profile.GetProperty("mode").GetString() != "new-only"
+                || profile.GetProperty("access_profile_id").GetString()
+                    != "openai-platform-c2f213dbc4d9461c9fa8485050ab324d"
+                || profile.GetProperty("generation_id").GetString()
+                    != "g-cb0c3748ef2b4745b97a9311c89f2b65"
+                || profile.GetProperty("target_fingerprint_sha256").GetString()
+                    != "7c4683448a864da4b7cb96a07cf13db93cff9b1a1eb22ed013250a2975a9c071"
                 || target.TargetFingerprintSha256 != actualFingerprint
                 || !callOrder.SequenceEqual(["CredReadW", "CredWriteW", "CredReadW", "CredFree"])
                 || !results.SequenceEqual(["ERROR_NOT_FOUND", "success", "success", "released"])

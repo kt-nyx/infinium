@@ -1132,6 +1132,20 @@ public sealed class ProviderBudgetIntegrationTests
         }
         Assert.AreEqual(0L, CandidatePipelineIntegrationTests.Count(
             context.Store.Paths.Database, "candidate_investigation_outcomes"));
+        CandidateInvestigationPersistenceRequest batchFirst = noModelEnvelope with
+        {
+            OutcomeId = "outcome-batch-first",
+        };
+        CandidateInvestigationPersistenceRequest batchSecond = noModelEnvelope with
+        {
+            OutcomeId = "outcome-batch-second",
+            ContextId = "missing-second-context",
+        };
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            context.Store.PersistCandidateInvestigationBatch([batchFirst, batchSecond]));
+        Assert.AreEqual(0L, CandidatePipelineIntegrationTests.Count(
+            context.Store.Paths.Database, "candidate_investigation_outcomes"),
+            "A second-context failure must roll back the first context and its semantic graph.");
         foreach (CandidateInvestigationExecutionInput invalid in new[]
                  {
                      input with { Contexts = [durableContext with { Evidence =

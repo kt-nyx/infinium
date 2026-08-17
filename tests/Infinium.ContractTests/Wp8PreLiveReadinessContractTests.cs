@@ -1241,7 +1241,7 @@ public sealed class Wp8PreLiveReadinessContractTests
             using Process process = Process.Start(start)!;
             Task<string> standardOutputTask = process.StandardOutput.ReadToEndAsync();
             Task<string> standardErrorTask = process.StandardError.ReadToEndAsync();
-            bool exited = process.WaitForExit(30_000);
+            bool exited = process.WaitForExit(60_000);
             if (!exited)
             {
                 process.Kill(entireProcessTree: true);

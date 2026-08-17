@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Google.Protobuf;
+using Infinium.Application.Evaluation;
 using Infinium.Application.Provider;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Common.V1;
@@ -21,6 +22,10 @@ internal static class Wp9ProductionProfileEnrollmentRunner
     {
         byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
         byte[] campaignBytes = File.ReadAllBytes(Path.GetFullPath(campaignManifestPath));
+        ValidateV2AuthoritySchema(credentialManifestPath, credentialBytes,
+            "wp9-production-profile-authorization.v2.schema.json");
+        ValidateV2AuthoritySchema(campaignManifestPath, campaignBytes,
+            "m1-slice6-finite-campaign-authorization.v2.schema.json");
         if (Convert.ToHexStringLower(SHA256.HashData(credentialBytes)) != credentialManifestSha256
             || Convert.ToHexStringLower(SHA256.HashData(campaignBytes)) != campaignManifestSha256)
         {
@@ -30,7 +35,17 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         using JsonDocument campaign = JsonDocument.Parse(campaignBytes);
         JsonElement profile = credential.RootElement.GetProperty("profile");
         JsonElement envelope = campaign.RootElement.GetProperty("credential_envelope");
-        if (credential.RootElement.GetProperty("manifest_id").GetString() is not string manifestId
+        if (credential.RootElement.GetProperty("schema_identity").GetString()
+                != "infinium.repository.wp9-production-profile-authorization/2.0.0"
+            || campaign.RootElement.GetProperty("schema_identity").GetString()
+                != "infinium.repository.m1-slice6-finite-campaign-authorization/2.0.0"
+            || campaign.RootElement.GetProperty("campaign_id").GetString()
+                != "infinium.m1-s6.finite-live-campaign/51b9dba6-aca3-41d7-82d1-afd805e33e66"
+            || credential.RootElement.GetProperty("expires_at_utc").GetString()
+                != "2026-08-31T23:00:00.0000000Z"
+            || campaign.RootElement.GetProperty("expires_at_utc").GetString()
+                != "2026-08-31T23:59:00.0000000Z"
+            || credential.RootElement.GetProperty("manifest_id").GetString() is not string manifestId
             || envelope.GetProperty("profile_id").GetString() != profile.GetProperty("access_profile_id").GetString()
             || envelope.GetProperty("generation_id").GetString() != profile.GetProperty("generation_id").GetString()
             || envelope.GetProperty("target_fingerprint_sha256").GetString()
@@ -48,6 +63,8 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         string reviewedCandidate, string ledgerPath, DateTimeOffset now)
     {
         byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
+        ValidateV2AuthoritySchema(credentialManifestPath, credentialBytes,
+            "wp9-production-profile-authorization.v2.schema.json");
         if (Convert.ToHexStringLower(SHA256.HashData(credentialBytes)) != credentialManifestSha256)
         {
             throw new InvalidDataException("Campaign credential handoff admission has stale manifest bytes.");
@@ -76,6 +93,8 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         DateTimeOffset now)
     {
         byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
+        ValidateV2AuthoritySchema(credentialManifestPath, credentialBytes,
+            "wp9-production-profile-authorization.v2.schema.json");
         if (Convert.ToHexStringLower(SHA256.HashData(credentialBytes)) != credentialManifestSha256)
         {
             throw new InvalidDataException("Credential evidence acceptance has stale manifest bytes.");
@@ -97,6 +116,14 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         string evidenceSha = Convert.ToHexStringLower(SHA256.HashData(evidenceBytes));
         using JsonDocument evidence = JsonDocument.Parse(evidenceBytes);
         JsonElement root = evidence.RootElement;
+        if (credential.RootElement.GetProperty("schema_identity").GetString()
+            != "infinium.repository.wp9-production-profile-authorization/2.0.0")
+        {
+            throw new InvalidDataException("Campaign credential evidence accepts only the clean-break v2 profile authority.");
+        }
+        const string evidenceSchema =
+            "infinium.m1-s6.wp9.production-profile-enrollment-evidence/v2";
+        const string evidenceId = "wp9-production-profile-enrollment-evidence-v2";
         string[] exactProperties = ["schema", "status", "manifest_id", "manifest_sha256",
             "campaign_credential_handoff_event_hash", "profile_id", "generation_id",
             "target_fingerprint_sha256", "lifecycle_state", "verification_state",
@@ -117,8 +144,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             || !containment.EnumerateObject().Select(property => property.Name).SequenceEqual(
                 ["probe_executed", "excluded_handle_accessible", "process_tree_terminated",
                     "process_tree_survivor_count", "total_contained_process_count"], StringComparer.Ordinal)
-            || root.GetProperty("schema").GetString()
-                != "infinium.m1-s6.wp9.production-profile-enrollment-evidence/v1"
+            || root.GetProperty("schema").GetString() != evidenceSchema
             || root.GetProperty("status").GetString() != "passed-active-verified"
             || root.GetProperty("manifest_id").GetString()
                 != credential.RootElement.GetProperty("manifest_id").GetString()
@@ -153,7 +179,6 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         using JsonDocument campaignDocument = JsonDocument.Parse(
             File.ReadAllBytes(Path.GetFullPath(campaignManifestPath)));
         JsonElement campaignRoot = campaignDocument.RootElement;
-        string evidenceId = "wp9-production-profile-enrollment-evidence";
         string marker = "M1_S6_CAMPAIGN_CREDENTIAL_EVIDENCE_ACCEPTANCE campaign_id="
             + ledger.Current.Identity.CampaignId + " campaign_sha256=" + campaignManifestSha256
             + " manifest_id=" + ledger.Current.Identity.CredentialManifestId
@@ -178,7 +203,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             now);
     }
 
-    private static void ValidateAcceptedCampaignCredentialArtifacts(JsonElement root, string targetFingerprint)
+    internal static void ValidateAcceptedCampaignCredentialArtifacts(JsonElement root, string targetFingerprint)
     {
         JsonElement traceValue = root.GetProperty("native_call_trace");
         if (traceValue.ValueKind != JsonValueKind.Array || traceValue.GetArrayLength() != 4)
@@ -215,6 +240,55 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             entry.GetRawText(), "submitted");
         ValidateEntryElement(entry, "submitted");
         ValidateCanaryElement(root.GetProperty("canaries"));
+    }
+
+    internal static string ProduceV2SuccessEvidence(string evidencePath,
+        string manifestId, string manifestSha256, string campaignCredentialHandoffEventHash,
+        string profileId, string generationId, string targetFingerprint,
+        JsonElement nativeCallTrace, JsonElement entryEvidence, JsonElement canaries,
+        DateTimeOffset completedAtUtc)
+    {
+        object evidence = new
+        {
+            schema = "infinium.m1-s6.wp9.production-profile-enrollment-evidence/v2",
+            status = "passed-active-verified",
+            manifest_id = manifestId,
+            manifest_sha256 = manifestSha256,
+            campaign_credential_handoff_event_hash = campaignCredentialHandoffEventHash,
+            profile_id = profileId,
+            generation_id = generationId,
+            target_fingerprint_sha256 = targetFingerprint,
+            lifecycle_state = "active-verified",
+            verification_state = "available",
+            native_credential_operation_count = 4,
+            native_call_trace = nativeCallTrace,
+            entry_evidence = entryEvidence,
+            canaries,
+            network_operation_count = 0,
+            listener_count = 0,
+            provider_operation_count = 0,
+            billable_operation_count = 0,
+            retry_attempted = false,
+            containment = new
+            {
+                probe_executed = true,
+                excluded_handle_accessible = false,
+                process_tree_terminated = true,
+                process_tree_survivor_count = 0,
+                total_contained_process_count = 2,
+            },
+            namespace_reuse_blocked = false,
+            namespace_reuse_block_reason = (string?)null,
+            retention = "exact-generation-retained-no-delete-authority",
+            completed_at_utc = completedAtUtc.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ",
+                System.Globalization.CultureInfo.InvariantCulture),
+        };
+        string fullPath = Path.GetFullPath(evidencePath);
+        File.WriteAllText(fullPath, JsonSerializer.Serialize(evidence, IndentedJson) + "\n",
+            new UTF8Encoding(false));
+        using JsonDocument retained = JsonDocument.Parse(File.ReadAllBytes(fullPath));
+        ValidateAcceptedCampaignCredentialArtifacts(retained.RootElement, targetFingerprint);
+        return Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(fullPath)));
     }
 
     private static void ValidateCanaryElement(JsonElement canary)
@@ -312,6 +386,8 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         outputRoot = Path.GetFullPath(outputRoot);
         productRoot = Path.GetFullPath(productRoot);
         byte[] manifestBytes = File.ReadAllBytes(manifestPath);
+        ValidateV2AuthoritySchema(manifestPath, manifestBytes,
+            "wp9-production-profile-authorization.v2.schema.json");
         if (!string.Equals(Convert.ToHexStringLower(SHA256.HashData(manifestBytes)), manifestSha256, StringComparison.Ordinal))
         {
             throw new InvalidDataException("WP9 production enrollment manifest bytes changed after authorization.");
@@ -320,9 +396,10 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         JsonElement root = document.RootElement;
         JsonElement profile = root.GetProperty("profile");
         JsonElement providerIntent = root.GetProperty("provider_intent");
-        if (root.GetProperty("schema_identity").GetString() != "infinium.repository.wp9-production-profile-authorization/1.0.0"
+        if (root.GetProperty("schema_identity").GetString() != "infinium.repository.wp9-production-profile-authorization/2.0.0"
             || root.GetProperty("status").GetString() != "ready-for-owner-acceptance"
-            || profile.GetProperty("mode").GetString() != "new-only")
+            || profile.GetProperty("mode").GetString() != "new-only"
+            || root.GetProperty("expires_at_utc").GetString() != "2026-08-31T23:00:00.0000000Z")
         {
             throw new InvalidDataException("WP9 production enrollment requires the exact new-only accepted packet.");
         }
@@ -391,7 +468,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         }
         object evidence = new
         {
-            schema = "infinium.m1-s6.wp9.production-profile-enrollment-evidence/v1",
+            schema = "infinium.m1-s6.wp9.production-profile-enrollment-evidence/v2",
             status = disposition,
             manifest_id = manifestId,
             manifest_sha256 = manifestSha256,
@@ -425,12 +502,28 @@ internal static class Wp9ProductionProfileEnrollmentRunner
                 System.Globalization.CultureInfo.InvariantCulture),
         };
         string evidencePath = Path.Combine(outputRoot, "profile-enrollment-evidence.json");
-        File.WriteAllText(evidencePath, JsonSerializer.Serialize(evidence, IndentedJson) + "\n", new UTF8Encoding(false));
+        if (disposition == "passed-active-verified")
+        {
+            JsonElement trace = ParseOptional(helper.Process.NativeCallTraceBytes)
+                ?? throw new InvalidDataException("Successful enrollment omitted its retained native trace.");
+            JsonElement entry = ParseOptional(helper.Process.NativeEntryCleanupBytes)
+                ?? throw new InvalidDataException("Successful enrollment omitted its entry cleanup evidence.");
+            JsonElement canary = ParseOptional(helper.Process.NativeCanaryEvidenceBytes)
+                ?? throw new InvalidDataException("Successful enrollment omitted its canary evidence.");
+            _ = ProduceV2SuccessEvidence(evidencePath, manifestId, manifestSha256,
+                campaignLedger?.Current.EventHash ?? string.Empty, profileId, generationId,
+                targetFingerprint, trace, entry, canary, DateTimeOffset.UtcNow);
+        }
+        else
+        {
+            File.WriteAllText(evidencePath, JsonSerializer.Serialize(evidence, IndentedJson) + "\n",
+                new UTF8Encoding(false));
+        }
         if (disposition != "passed-active-verified")
         {
             object failure = new
             {
-                schema = "infinium.m1-s6.wp9.production-profile-enrollment-failure/v1",
+                schema = "infinium.m1-s6.wp9.production-profile-enrollment-failure/v2",
                 status = disposition,
                 failure_kind = helper.Process.Receipt.Outcome.ToString(),
                 manifest_id = manifestId,
@@ -481,7 +574,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             if (disposition == "passed-active-verified")
             {
                 campaignLedger.RecordCredentialEvidenceHandoff(
-                    "wp9-production-profile-enrollment-evidence", evidenceSha256,
+                    "wp9-production-profile-enrollment-evidence-v2", evidenceSha256,
                     new M1Slice6CampaignNativeEnvelope(1, 2, 0, 1, 4), DateTimeOffset.UtcNow);
             }
             else
@@ -494,7 +587,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
                     _ => "cleanup-ambiguity",
                 };
                 campaignLedger.StopCredentialHandoff(reason,
-                    "wp9-production-profile-enrollment-evidence", evidenceSha256, DateTimeOffset.UtcNow);
+                    "wp9-production-profile-enrollment-evidence-v2", evidenceSha256, DateTimeOffset.UtcNow);
             }
         }
         return disposition == "passed-active-verified" ? 0 : 73;
@@ -515,6 +608,8 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         string campaignPath = Path.GetFullPath(campaign.ManifestPath);
         string ledgerPath = Path.GetFullPath(campaign.LedgerPath);
         byte[] bytes = File.ReadAllBytes(campaignPath);
+        ValidateV2AuthoritySchema(campaignPath, bytes,
+            "m1-slice6-finite-campaign-authorization.v2.schema.json");
         if (!string.Equals(Convert.ToHexStringLower(SHA256.HashData(bytes)), campaign.ManifestSha256,
                 StringComparison.Ordinal)
             || campaign.ReviewedCandidateCommit.Length != 40
@@ -533,8 +628,11 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             envelope.GetProperty("credential_expires_at_utc").GetString()!,
             System.Globalization.CultureInfo.InvariantCulture);
         if (root.GetProperty("schema_identity").GetString()
-                != "infinium.repository.m1-slice6-finite-campaign-authorization/1.0.0"
+                != "infinium.repository.m1-slice6-finite-campaign-authorization/2.0.0"
             || root.GetProperty("status").GetString() != "ready-for-campaign-review"
+            || root.GetProperty("campaign_id").GetString()
+                != "infinium.m1-s6.finite-live-campaign/51b9dba6-aca3-41d7-82d1-afd805e33e66"
+            || root.GetProperty("expires_at_utc").GetString() != "2026-08-31T23:59:00.0000000Z"
             || now >= campaignExpiry || credentialExpiry != envelopeExpiry
             || envelope.GetProperty("profile_id").GetString() != profileId
             || envelope.GetProperty("generation_id").GetString() != generationId
@@ -596,8 +694,75 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         }
         string repositoryRoot = cursor?.FullName
             ?? throw new InvalidDataException("Campaign-derived execution requires its exact Git worktree.");
-        string validator = Path.Combine(repositoryRoot, "eng", "validate-m1-slice6-campaign.ps1");
-        ProcessStartInfo start = new("pwsh")
+        using JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(campaignManifestPath));
+        if (manifest.RootElement.GetProperty("schema_identity").GetString()
+            == "infinium.repository.m1-slice6-finite-campaign-authorization/2.0.0")
+        {
+            string relative = Path.GetRelativePath(repositoryRoot, campaignManifestPath).Replace('\\', '/');
+            const string campaignRelative =
+                "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v2.json";
+            const string profileRelative =
+                "docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json";
+            const string recordRelative = "docs/plans/milestones/m1/slices/s6/record.md";
+            if (relative != campaignRelative
+                || expectedReviewedCandidate.Length != 40
+                || expectedReviewedCandidate.Any(character => !char.IsAsciiHexDigit(character)))
+            {
+                throw new InvalidDataException("R2 campaign authority is outside its exact reviewed Git candidate.");
+            }
+            byte[] committed = ReadGitBlob(repositoryRoot, expectedReviewedCandidate, relative);
+            string committedSha = Convert.ToHexStringLower(SHA256.HashData(committed));
+            JsonElement root = manifest.RootElement;
+            JsonElement authority = root.GetProperty("authority_source");
+            JsonElement candidateBinding = root.GetProperty("candidate_binding");
+            JsonElement envelope = root.GetProperty("credential_envelope");
+            byte[] profileBytes = ReadGitBlob(repositoryRoot, expectedReviewedCandidate, profileRelative);
+            string profileSha = Convert.ToHexStringLower(SHA256.HashData(profileBytes));
+            using JsonDocument profile = JsonDocument.Parse(profileBytes);
+            JsonElement profileRoot = profile.RootElement;
+            if (committedSha != expectedManifestSha256
+                || manifest.RootElement.GetProperty("campaign_id").GetString()
+                    != "infinium.m1-s6.finite-live-campaign/51b9dba6-aca3-41d7-82d1-afd805e33e66"
+                || manifest.RootElement.GetProperty("status").GetString() != "ready-for-campaign-review"
+                || manifest.RootElement.GetProperty("expires_at_utc").GetString()
+                    != "2026-08-31T23:59:00.0000000Z"
+                || envelope.GetProperty("source_manifest_id").GetString()
+                    != profileRoot.GetProperty("manifest_id").GetString()
+                || envelope.GetProperty("source_manifest_sha256").GetString() != profileSha)
+            {
+                throw new InvalidDataException("R2 campaign authority differs from its exact reviewed Git blob.");
+            }
+            string campaignId = root.GetProperty("campaign_id").GetString()!;
+            string closeReady = candidateBinding.GetProperty(
+                "close_ready_implementation_commit").GetString()!;
+            string review = $"M1_S6_CAMPAIGN_REVIEW_ACCEPTANCE candidate_commit={expectedReviewedCandidate}" +
+                $" campaign_id={campaignId} sha256={committedSha} verdicts=security,semantics,diff";
+            string admission = $"M1_S6_CAMPAIGN_ADMISSION candidate_commit={expectedReviewedCandidate}" +
+                $" authority_sha256={authority.GetProperty("attachment_sha256").GetString()}" +
+                $" campaign_id={campaignId} sha256={committedSha} close_ready_commit={closeReady}" +
+                $" expires_at_utc={root.GetProperty("expires_at_utc").GetString()}";
+            string rollover = $"WP9_PROFILE_CAMPAIGN_ROLLOVER_ADMISSION campaign_candidate_commit={expectedReviewedCandidate}" +
+                $" authority_sha256={authority.GetProperty("attachment_sha256").GetString()}" +
+                $" campaign_id={campaignId} campaign_sha256={committedSha}" +
+                $" manifest_id={profileRoot.GetProperty("manifest_id").GetString()} sha256={profileSha}" +
+                $" close_ready_commit={profileRoot.GetProperty("candidate_binding")
+                    .GetProperty("close_ready_implementation_commit").GetString()}" +
+                $" credential_expires_at_utc={profileRoot.GetProperty("expires_at_utc").GetString()}";
+            string reviewCommit = M1Slice6CampaignStageManifestValidator.UniqueMarkerCommit(
+                repositoryRoot, review, expectedReviewedCandidate, recordRelative);
+            string admissionCommit = M1Slice6CampaignStageManifestValidator.UniqueMarkerCommit(
+                repositoryRoot, admission, reviewCommit, recordRelative);
+            _ = M1Slice6CampaignStageManifestValidator.UniqueMarkerCommit(
+                repositoryRoot, rollover, admissionCommit, recordRelative);
+            return;
+        }
+        throw new InvalidDataException(
+            "Campaign-derived credential execution accepts only the clean-break v2 campaign authority.");
+    }
+
+    private static byte[] ReadGitBlob(string repositoryRoot, string commit, string relativePath)
+    {
+        ProcessStartInfo start = new("git")
         {
             WorkingDirectory = repositoryRoot,
             UseShellExecute = false,
@@ -605,38 +770,35 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             RedirectStandardError = true,
             CreateNoWindow = true,
         };
-        foreach (string argument in new[]
-        {
-            "-NoProfile", "-File", validator, "-AuthorizationManifest", campaignManifestPath,
-            "-RequireState", "RolloverAdmitted",
-        })
-        {
-            start.ArgumentList.Add(argument);
-        }
+        start.ArgumentList.Add("show");
+        start.ArgumentList.Add(commit + ":" + relativePath);
         using Process process = Process.Start(start)
-            ?? throw new InvalidOperationException("Campaign authority validator did not start.");
-        Task<string> output = process.StandardOutput.ReadToEndAsync();
-        Task<string> error = process.StandardError.ReadToEndAsync();
+            ?? throw new InvalidOperationException("R2 campaign Git-blob reader did not start.");
+        using MemoryStream output = new();
+        Task outputDrain = process.StandardOutput.BaseStream.CopyToAsync(output);
+        Task<string> errorDrain = process.StandardError.ReadToEndAsync();
         if (!process.WaitForExit(30_000))
         {
             process.Kill(entireProcessTree: true);
             process.WaitForExit();
-            throw new TimeoutException("Campaign authority validator exceeded its pre-effect bound.");
+            throw new TimeoutException("R2 campaign Git-blob reader exceeded its bound.");
         }
-        string json = output.GetAwaiter().GetResult();
-        string diagnostic = error.GetAwaiter().GetResult();
+        Task.WaitAll(outputDrain, errorDrain);
         if (process.ExitCode != 0)
         {
-            throw new InvalidDataException("Campaign authority validator rejected the committed rollover: "
-                + diagnostic.GetType().Name);
+            throw new InvalidDataException("R2 campaign Git-blob binding is unavailable: "
+                + errorDrain.Result.GetType().Name);
         }
-        using JsonDocument receipt = JsonDocument.Parse(json);
-        if (receipt.RootElement.GetProperty("disposition").GetString() != "rollover-admitted"
-            || receipt.RootElement.GetProperty("manifest_sha256").GetString() != expectedManifestSha256
-            || receipt.RootElement.GetProperty("reviewed_candidate_commit").GetString() != expectedReviewedCandidate)
-        {
-            throw new InvalidDataException("Campaign authority receipt identity is stale.");
-        }
+        return output.ToArray();
+    }
+
+    private static void ValidateV2AuthoritySchema(string manifestPath, byte[] manifestBytes,
+        string schemaFileName)
+    {
+        string repositoryRoot = M1Slice6CampaignStageManifestValidator.FindRepositoryRoot(manifestPath);
+        string schemaPath = Path.Combine(repositoryRoot, "contracts", "repository", schemaFileName);
+        byte[] schemaBytes = File.ReadAllBytes(schemaPath);
+        ActiveRepositoryJsonSchemaValidator.Validate(manifestBytes, schemaBytes, schemaFileName);
     }
 
     internal static string ValidateEffectReceipt(
@@ -825,7 +987,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
                 ? null : JsonSerializer.Deserialize<object>(retained.EntryCleanupJson);
             object failure = new
             {
-                schema = "infinium.m1-s6.wp9.production-profile-enrollment-failure/v1",
+                schema = "infinium.m1-s6.wp9.production-profile-enrollment-failure/v2",
                 status = "stopped-ambiguous-effect",
                 failure_kind = exception.GetType().Name,
                 manifest_id = manifestId,
@@ -891,7 +1053,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             }
             object main = new
             {
-                schema = "infinium.m1-s6.wp9.production-profile-enrollment-evidence/v1",
+                schema = "infinium.m1-s6.wp9.production-profile-enrollment-evidence/v2",
                 status = "stopped-ambiguous-effect",
                 manifest_id = manifestId,
                 manifest_sha256 = manifestSha256,

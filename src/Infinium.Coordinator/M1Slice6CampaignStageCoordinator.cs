@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Google.Protobuf;
+using Infinium.Application.Evaluation;
 using Infinium.Application.Provider;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Common.V1;
@@ -78,6 +79,15 @@ public interface IM1Slice6CampaignProviderAccounting
     public M1Slice6CampaignAccountingSettlement PersistSettleAndReplay(
         M1Slice6CampaignAccountingAdmission admission, M1Slice6CampaignStageAuthority authority,
         M1Slice6CampaignStageBoundaryResult result);
+}
+
+/// <summary>
+/// Independent post-persistence review boundary. Product code supplies only the retained response
+/// and stage identity; an external evaluation implementation returns the already-reviewed digest.
+/// </summary>
+public interface IM1Slice6CampaignSemanticReviewBoundary
+{
+    public string Review(M1Slice6CampaignStage stage, byte[] retainedRawResponse);
 }
 
 public interface IM1Slice6CampaignRecoveryAccounting
@@ -417,7 +427,7 @@ public static class M1Slice6CampaignStageManifestValidator
             "stage", "predecessor_evidence", "canonical_request", "transport", "limits",
             "safety_identifier", "validation_package", "execution");
         if (root.GetProperty("schema_identity").GetString()
-                != "infinium.repository.m1-slice6-campaign-stage-request/1.0.0")
+                != "infinium.repository.m1-slice6-campaign-stage-request/2.0.0")
         {
             throw new InvalidDataException("The stage manifest schema identity is stale.");
         }
@@ -597,84 +607,70 @@ public static class M1Slice6CampaignStageManifestValidator
         }
 
         JsonElement validation = root.GetProperty("validation_package");
-        Exact(validation, "package_id", "manifest_path", "manifest_sha256", "product_input_path",
-            "product_input_bytes", "product_input_sha256", "predecessor_manifest_path",
-            "predecessor_manifest_bytes", "predecessor_manifest_sha256", "oracle_path",
-            "oracle_sha256", "deterministic_oracle_result_sha256", "semantic_use");
-        (string packageId, string packagePath, string packageSha, string productInputPath,
-            long productInputBytes, string productInputSha, string predecessorPath,
-            long predecessorBytes, string predecessorSha, string oraclePath,
-            string oracleSha, string deterministicResultSha, bool semanticUse) expectedPackage = stage switch
-            {
-                M1Slice6CampaignStage.Qualification => (
-                    "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1",
-                    "fixtures/public/platform/provider-budget/capability-val/public-manifest.json",
-                    "3fa9f56a2ad1f815638ed7f4ce198b499cc072604e2a29b3bf5e418d6d33389c",
-                    "fixtures/public/platform/provider-budget/capability-val/input.json", 190,
-                    "c9cb054a578a244bca1a1d77bcc2ca7f2898ada42f4250da88588ddf6472b55a",
-                    "fixtures/public/platform/provider-budget/capability-val/public-manifest.json", 526,
-                    "3fa9f56a2ad1f815638ed7f4ce198b499cc072604e2a29b3bf5e418d6d33389c",
-                    "fixtures/public/platform/provider-budget/capability-val/oracle.json",
-                    "7ce656a0d056239cedcbfc75ec44b21ca7be79946da2613a109dfd233f6b8bda",
-                    "0000000000000000000000000000000000000000000000000000000000000000", false),
-                M1Slice6CampaignStage.SourceClaimExtraction => (
-                    "LLM-CLAIM-LIVE-VAL",
-                    "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/public-manifest.json",
-                    "83a63ba290966f27f7f6ddc581f63f7e2cb7b4d745f6958177f17043f220b3e6",
-                    "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1/execution-input.v1.json", 1767,
-                    "77cffbebbc940357e1f8b39a9fd054c50e6c1a25c9e24c7b564f37867b95469c",
-                    "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1/public-manifest.json", 1320,
-                    "0f95265340873dc4abb083c6f857db9e8786c6e1ba36da385f07c876afe1c13f",
-                    "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/oracle.v1.json",
-                    "d917aed55912b0d6c82f8d19c772c6c504b9edcd3b1d3dcf9082da0f7a52e9eb",
-                    "122aa491aca8fdb23e2ca9405bd0651b2c69c4e372fbc378584ce779520f0c3c", true),
-                _ => (
-                    "LLM-INVESTIGATE-LIVE-VAL",
-                    "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/public-manifest.json",
-                    "486181221a67311ca14e5454451f40012465535e0f09e999561a58ed5110a135",
-                    "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/execution-input.v1.json", 12403,
-                    "99029f0834e03e72bbba69ad4991a7ca22c441ce4888cfcfac31e7ca7e74fbe7",
-                    "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/public-manifest.json", 2035,
-                    "b42dff12144f192c1e7a913a3a99433398f0f2d41148a3353f7aa9cf89154323",
-                    "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/oracle.v1.json",
-                    "3f6db5e3618d8d0b5d35f2e79c203ef5bcd1bac8166e5cae417e7b5ac2e3348a",
-                    "bb5ac6574182a5335f445d75df88e4e9514794da5756c0657f27b741711bdb14", true),
-            };
+        string[] validationProperties = stage == M1Slice6CampaignStage.CandidateInvestigation
+            ? ["package_id", "manifest_path", "manifest_sha256", "product_input_path",
+                "product_input_bytes", "product_input_sha256", "predecessor_manifest_path",
+                "predecessor_manifest_bytes", "predecessor_manifest_sha256", "oracle_path",
+                "oracle_sha256", "deterministic_oracle_result_sha256", "semantic_use", "evidence_roots"]
+            : ["package_id", "manifest_path", "manifest_sha256", "product_input_path",
+                "product_input_bytes", "product_input_sha256", "predecessor_manifest_path",
+                "predecessor_manifest_bytes", "predecessor_manifest_sha256", "oracle_path",
+                "oracle_sha256", "deterministic_oracle_result_sha256", "semantic_use"];
+        Exact(validation, validationProperties);
         string repository = FindRepositoryRoot(manifestPath);
+        string packageId = validation.GetProperty("package_id").GetString() ?? string.Empty;
         string packageRelative = validation.GetProperty("manifest_path").GetString()!;
         string productInputRelative = validation.GetProperty("product_input_path").GetString()!;
         string predecessorRelative = validation.GetProperty("predecessor_manifest_path").GetString()!;
         string oracleRelative = validation.GetProperty("oracle_path").GetString()!;
+        string packageSha = validation.GetProperty("manifest_sha256").GetString()!;
+        long productInputBytes = validation.GetProperty("product_input_bytes").GetInt64();
+        string productInputSha = validation.GetProperty("product_input_sha256").GetString()!;
+        long predecessorBytes = validation.GetProperty("predecessor_manifest_bytes").GetInt64();
+        string predecessorSha = validation.GetProperty("predecessor_manifest_sha256").GetString()!;
+        string oracleSha = validation.GetProperty("oracle_sha256").GetString()!;
+        string reviewedResultSha = validation.GetProperty("deterministic_oracle_result_sha256").GetString()!;
+        bool semanticUse = validation.GetProperty("semantic_use").GetBoolean();
         string packageAbsolute = Path.GetFullPath(Path.Combine(repository,
             packageRelative.Replace('/', Path.DirectorySeparatorChar)));
-        string oracleAbsolute = Path.GetFullPath(Path.Combine(repository,
-            oracleRelative.Replace('/', Path.DirectorySeparatorChar)));
         string productInputAbsolute = Path.GetFullPath(Path.Combine(repository,
             productInputRelative.Replace('/', Path.DirectorySeparatorChar)));
         string predecessorAbsolute = Path.GetFullPath(Path.Combine(repository,
             predecessorRelative.Replace('/', Path.DirectorySeparatorChar)));
-        if (validation.GetProperty("package_id").GetString() != expectedPackage.packageId
-            || packageRelative != expectedPackage.packagePath
-            || validation.GetProperty("manifest_sha256").GetString() != expectedPackage.packageSha
-            || productInputRelative != expectedPackage.productInputPath
-            || validation.GetProperty("product_input_bytes").GetInt64() != expectedPackage.productInputBytes
-            || validation.GetProperty("product_input_sha256").GetString() != expectedPackage.productInputSha
-            || predecessorRelative != expectedPackage.predecessorPath
-            || validation.GetProperty("predecessor_manifest_bytes").GetInt64() != expectedPackage.predecessorBytes
-            || validation.GetProperty("predecessor_manifest_sha256").GetString() != expectedPackage.predecessorSha
-            || oracleRelative != expectedPackage.oraclePath
-            || validation.GetProperty("oracle_sha256").GetString() != expectedPackage.oracleSha
-            || validation.GetProperty("deterministic_oracle_result_sha256").GetString()
-                != expectedPackage.deterministicResultSha
-            || validation.GetProperty("semantic_use").GetBoolean() != expectedPackage.semanticUse
-            || Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(packageAbsolute))) != expectedPackage.packageSha
-            || new FileInfo(productInputAbsolute).Length != expectedPackage.productInputBytes
-            || Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(productInputAbsolute))) != expectedPackage.productInputSha
-            || new FileInfo(predecessorAbsolute).Length != expectedPackage.predecessorBytes
-            || Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(predecessorAbsolute))) != expectedPackage.predecessorSha
-            || Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(oracleAbsolute))) != expectedPackage.oracleSha)
+        string rootPrefix = Path.TrimEndingDirectorySeparator(repository) + Path.DirectorySeparatorChar;
+        if (string.IsNullOrWhiteSpace(packageId) || packageId.Length > 256 || packageId.Any(char.IsControl)
+            || string.IsNullOrWhiteSpace(oracleRelative) || oracleRelative.Length > 1024
+            || new[] { packageAbsolute, productInputAbsolute, predecessorAbsolute }.Any(path =>
+                !path.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase))
+            || new[] { packageSha, productInputSha, predecessorSha, oracleSha, reviewedResultSha }.Any(hash =>
+                hash.Length != 64 || hash.Any(character => character is not (>= '0' and <= '9')
+                    and not (>= 'a' and <= 'f')))
+            || semanticUse != (stage != M1Slice6CampaignStage.Qualification)
+            || Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(packageAbsolute))) != packageSha
+            || new FileInfo(productInputAbsolute).Length != productInputBytes
+            || Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(productInputAbsolute))) != productInputSha
+            || new FileInfo(predecessorAbsolute).Length != predecessorBytes
+            || Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(predecessorAbsolute))) != predecessorSha)
         {
-            throw new InvalidDataException("The stage semantic validation package or frozen oracle is stale, swapped, or broadened.");
+            throw new InvalidDataException(
+                "The stage review package binding is malformed, escapes the repository, or has stale answer-free bytes.");
+        }
+        byte[] frozenProductInput = File.ReadAllBytes(productInputAbsolute);
+        byte[] canonicalProductInput = Encoding.UTF8.GetBytes(
+            M1Slice6CampaignSemanticAdmission.ExtractUntrustedInput(canonical));
+        if (stage is M1Slice6CampaignStage.SourceClaimExtraction or M1Slice6CampaignStage.CandidateInvestigation
+            && !canonicalProductInput.AsSpan().SequenceEqual(frozenProductInput))
+        {
+            throw new InvalidDataException("The canonical request does not contain the exact frozen v2 product input bytes.");
+        }
+        if (semanticUse)
+        {
+            ValidateReviewPackageBindings(stage, validation, packageAbsolute, predecessorAbsolute,
+                frozenProductInput, oracleRelative);
+        }
+        if (stage == M1Slice6CampaignStage.CandidateInvestigation)
+        {
+            ValidateCandidateEvidenceRoots(validation.GetProperty("evidence_roots"), canonicalProductInput);
         }
 
         JsonElement execution = root.GetProperty("execution");
@@ -697,12 +693,138 @@ public static class M1Slice6CampaignStageManifestValidator
         return new(root.GetProperty("manifest_id").GetString()!, sha, stage, workPackage, operation,
             reviewed, predecessor.GetProperty("evidence_id").GetString()!,
             predecessor.GetProperty("evidence_sha256").GetString()!, requestPath, requestSha,
-            canonical, provedInput, exactLimits, projection, expectedPackage.packageId,
-            expectedPackage.packagePath, expectedPackage.packageSha,
-            expectedPackage.productInputPath, expectedPackage.productInputBytes,
-            expectedPackage.productInputSha, expectedPackage.predecessorPath,
-            expectedPackage.predecessorBytes, expectedPackage.predecessorSha, expectedPackage.oraclePath,
-            expectedPackage.oracleSha, expectedPackage.deterministicResultSha, expectedPackage.semanticUse);
+            canonical, provedInput, exactLimits, projection, packageId,
+            packageRelative, packageSha, productInputRelative, productInputBytes,
+            productInputSha, predecessorRelative, predecessorBytes, predecessorSha, oracleRelative,
+            oracleSha, reviewedResultSha, semanticUse);
+    }
+
+    private static void ValidateReviewPackageBindings(M1Slice6CampaignStage stage,
+        JsonElement validation, string packagePath, string predecessorPath,
+        byte[] productInputBytes, string reviewPath)
+    {
+        using JsonDocument package = JsonDocument.Parse(File.ReadAllBytes(packagePath));
+        using JsonDocument predecessor = JsonDocument.Parse(File.ReadAllBytes(predecessorPath));
+        using JsonDocument input = JsonDocument.Parse(productInputBytes);
+        JsonElement root = package.RootElement;
+        Exact(root, "schema_identity", "package_identity", "package_version", "partition", "status",
+            "operation", "semantic_use", "answer_free_product_input", "network_required_for_oracle",
+            "product_input", "predecessor_manifest", "oracle");
+        JsonElement product = root.GetProperty("product_input");
+        JsonElement prior = root.GetProperty("predecessor_manifest");
+        JsonElement review = root.GetProperty("oracle");
+        Exact(product, "path", "bytes", "sha256");
+        Exact(prior, "path", "bytes", "sha256");
+        Exact(review, "path", "bytes", "sha256", "schema_identity", "authoring", "product_visible");
+        string packageIdentity = root.GetProperty("package_identity").GetString() ?? string.Empty;
+        string packageVersion = root.GetProperty("package_version").GetString() ?? string.Empty;
+        if (packageIdentity != validation.GetProperty("package_id").GetString()
+            || packageVersion.Length == 0
+            || root.GetProperty("operation").GetString() != stage.ToString()
+            || !root.GetProperty("semantic_use").GetBoolean()
+            || !root.GetProperty("answer_free_product_input").GetBoolean()
+            || root.GetProperty("network_required_for_oracle").GetBoolean()
+            || product.GetProperty("path").GetString() != validation.GetProperty("product_input_path").GetString()
+            || product.GetProperty("bytes").GetInt64() != validation.GetProperty("product_input_bytes").GetInt64()
+            || product.GetProperty("sha256").GetString() != validation.GetProperty("product_input_sha256").GetString()
+            || prior.GetProperty("path").GetString() != validation.GetProperty("predecessor_manifest_path").GetString()
+            || prior.GetProperty("bytes").GetInt64() != validation.GetProperty("predecessor_manifest_bytes").GetInt64()
+            || prior.GetProperty("sha256").GetString()
+                != validation.GetProperty("predecessor_manifest_sha256").GetString()
+            || review.GetProperty("sha256").GetString() != validation.GetProperty("oracle_sha256").GetString()
+            || review.GetProperty("path").GetString() != Path.GetFileName(reviewPath)
+            || review.GetProperty("product_visible").GetBoolean())
+        {
+            throw new InvalidDataException(
+                "The semantic review package does not relationally bind its admitted input and predecessor bytes.");
+        }
+
+        string inputPackageIdentity = input.RootElement.GetProperty("package_id").GetString() ?? string.Empty;
+        JsonElement predecessorRoot = predecessor.RootElement;
+        string predecessorIdentity = predecessorRoot.GetProperty("package_identity").GetString() ?? string.Empty;
+        string predecessorVersion = predecessorRoot.GetProperty("package_version").GetString() ?? string.Empty;
+        JsonElement[] fileIdentities = predecessorRoot.GetProperty("file_identities").EnumerateArray().ToArray();
+        string inputName = Path.GetFileName(validation.GetProperty("product_input_path").GetString()!);
+        JsonElement[] inputRows = fileIdentities.Where(row => row.GetProperty("role").GetString() == "product-input"
+            && row.GetProperty("path").GetString() == inputName).ToArray();
+        if (inputPackageIdentity != predecessorIdentity || predecessorVersion != packageVersion
+            || input.RootElement.GetProperty("schema_version").GetString() != packageVersion.Split('.')[0]
+            || inputRows.Length != 1
+            || inputRows[0].GetProperty("bytes").GetInt64() != productInputBytes.LongLength
+            || inputRows[0].GetProperty("sha256").GetString()
+                != Convert.ToHexStringLower(SHA256.HashData(productInputBytes)))
+        {
+            throw new InvalidDataException(
+                "The answer-free input package identity, version, or physical file binding is stale.");
+        }
+    }
+
+    private static void ValidateCandidateEvidenceRoots(JsonElement evidenceRoots,
+        ReadOnlySpan<byte> exactProductInput)
+    {
+        M1Slice6CampaignCandidateInput candidate = M1Slice6CampaignV2InputAdapter.ReadCandidate(
+            Encoding.UTF8.GetString(exactProductInput));
+        JsonElement[] roots = evidenceRoots.ValueKind == JsonValueKind.Array
+            ? evidenceRoots.EnumerateArray().ToArray()
+            : throw new InvalidDataException("The WP11 evidence roots are not an array.");
+        if (roots.Length != 2)
+        {
+            throw new InvalidDataException("WP11 requires exactly one persisted source root and one frozen host root.");
+        }
+
+        HashSet<string> observedContexts = new(StringComparer.Ordinal);
+        foreach (JsonElement root in roots)
+        {
+            string kind = root.GetProperty("root_kind").GetString() ?? string.Empty;
+            string contextId = root.GetProperty("context_id").GetString() ?? string.Empty;
+            if (!candidate.RootsByContext.TryGetValue(contextId, out M1Slice6CampaignEvidenceRoot? expected)
+                || !observedContexts.Add(contextId)
+                || root.GetProperty("candidate_id").GetString() != expected.CandidateId
+                || root.GetProperty("parallel_claim_permitted").GetBoolean())
+            {
+                throw new InvalidDataException("A WP11 evidence root is duplicated, orphaned, or broadened.");
+            }
+
+            if (expected.Kind == M1Slice6CampaignEvidenceRootKind.PersistedSourceClaimApplication)
+            {
+                Exact(root, "root_kind", "context_id", "candidate_id", "acquisition_run_id",
+                    "proposal_id", "source_admission_id", "admitted_artifact_id", "application_link_id",
+                    "source_revision_id", "passage_id", "persisted_payload_sha256",
+                    "parallel_claim_permitted");
+                if (kind != "persisted-source-claim-application"
+                    || root.GetProperty("acquisition_run_id").GetString() != expected.AcquisitionRunId
+                    || root.GetProperty("proposal_id").GetString() != expected.ProposalId
+                    || root.GetProperty("source_admission_id").GetString() != expected.SourceAdmissionId
+                    || root.GetProperty("admitted_artifact_id").GetString() != expected.AdmittedArtifactId
+                    || root.GetProperty("application_link_id").GetString() != expected.ApplicationLinkId
+                    || root.GetProperty("source_revision_id").GetString() != expected.SourceRevisionId
+                    || root.GetProperty("passage_id").GetString() != expected.PassageId
+                    || root.GetProperty("persisted_payload_sha256").GetString() != expected.ContentSha256)
+                {
+                    throw new InvalidDataException("The WP11 persisted source root differs from its exact WP10 chain.");
+                }
+            }
+            else
+            {
+                Exact(root, "root_kind", "context_id", "candidate_id", "evidence_root_id",
+                    "applicability_record_id", "source_revision_id", "passage_id", "content_sha256",
+                    "parallel_claim_permitted");
+                if (kind != "frozen-host-evidence"
+                    || root.GetProperty("evidence_root_id").GetString() != expected.EvidenceRootId
+                    || root.GetProperty("applicability_record_id").GetString() != expected.ApplicabilityRecordId
+                    || root.GetProperty("source_revision_id").GetString() != expected.SourceRevisionId
+                    || root.GetProperty("passage_id").GetString() != expected.PassageId
+                    || root.GetProperty("content_sha256").GetString() != expected.ContentSha256)
+                {
+                    throw new InvalidDataException("The WP11 frozen host root differs from its bounded input evidence.");
+                }
+            }
+        }
+
+        if (observedContexts.Count != candidate.RootsByContext.Count)
+        {
+            throw new InvalidDataException("The WP11 evidence-root set is incomplete.");
+        }
     }
 
     private static void Exact(JsonElement value, params string[] names)
@@ -747,7 +869,7 @@ public static class M1Slice6CampaignStageManifestValidator
         if (!Hex(reviewed, 40)) { throw new InvalidDataException("The stage review candidate is malformed."); }
         string admission = $"M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit={reviewed} campaign_id={identity.CampaignId}" +
             $" campaign_sha256={identity.CampaignManifestSha256} stage_manifest_id={manifestId} sha256={manifestSha}" +
-            $" predecessor_evidence_sha256={predecessorEvidenceSha} expires_at_utc=2026-08-22T23:59:00.0000000Z";
+            $" predecessor_evidence_sha256={predecessorEvidenceSha} expires_at_utc=2026-08-31T23:59:00.0000000Z";
         if (lines.Count(line => line == admission) != 1)
         {
             throw new InvalidDataException("The exact stage admission marker is absent or duplicated.");
@@ -950,16 +1072,19 @@ public sealed class M1Slice6CampaignStageCoordinator
     private readonly ProductUserSafetyIdentifierStateStore safetyState;
     private readonly IM1Slice6CampaignStageExecutionBoundary boundary;
     private readonly IM1Slice6CampaignProviderAccounting accounting;
+    private readonly IM1Slice6CampaignSemanticReviewBoundary? semanticReview;
 
     public M1Slice6CampaignStageCoordinator(M1Slice6FiniteCampaignLedger ledger,
         ProductUserSafetyIdentifierStateStore safetyState,
         IM1Slice6CampaignStageExecutionBoundary boundary,
-        IM1Slice6CampaignProviderAccounting accounting)
+        IM1Slice6CampaignProviderAccounting accounting,
+        IM1Slice6CampaignSemanticReviewBoundary? semanticReview = null)
     {
         this.ledger = ledger ?? throw new ArgumentNullException(nameof(ledger));
         this.safetyState = safetyState ?? throw new ArgumentNullException(nameof(safetyState));
         this.boundary = boundary ?? throw new ArgumentNullException(nameof(boundary));
         this.accounting = accounting ?? throw new ArgumentNullException(nameof(accounting));
+        this.semanticReview = semanticReview;
     }
 
     public async Task<string> ExecuteOneShotAsync(string manifestPath, string manifestSha256,
@@ -1144,6 +1269,22 @@ public sealed class M1Slice6CampaignStageCoordinator
                 checked(priorNative.Total + stageNative.Total));
             ledger.RecordKnownSettlement(authority.Stage, input, output, raw, cost, stageNative,
                 result.CompletedAtUtc);
+            if (authority.SemanticUse)
+            {
+                string reviewedResult = semanticReview?.Review(authority.Stage, response.RawResponseBytes)
+                    ?? throw new InvalidDataException(
+                        "A semantic stage cannot emit evidence before independent post-persistence review.");
+                if (!IsLowerHex(reviewedResult, 64)
+                    || reviewedResult != authority.DeterministicOracleResultSha256)
+                {
+                    throw new InvalidDataException(
+                        "The independent semantic review result is malformed or differs from admitted review authority.");
+                }
+                accountingSettlement = accountingSettlement with
+                {
+                    SemanticResultSha256 = reviewedResult,
+                };
+            }
             evidencePath = Path.GetFullPath(evidencePath);
             string evidenceDirectory = Path.GetDirectoryName(evidencePath)!;
             Directory.CreateDirectory(evidenceDirectory);
@@ -1160,7 +1301,7 @@ public sealed class M1Slice6CampaignStageCoordinator
             WriteNew(canaryPath, result.CanaryEvidenceBytes);
             object evidence = new
             {
-                schema = "infinium.m1-s6.campaign-stage-evidence/v1",
+                schema = "infinium.m1-s6.campaign-stage-evidence/v2",
                 status = "independent-review-pending",
                 campaign_id = ledger.Current.Identity.CampaignId,
                 campaign_manifest_sha256 = ledger.Current.Identity.CampaignManifestSha256,
@@ -1186,6 +1327,9 @@ public sealed class M1Slice6CampaignStageCoordinator
                 provider_send_count = response.SendCount,
                 dns_resolution_count = result.DnsResolutionCount,
                 retry_permitted = response.RetryPermitted,
+                credential_profile_id = ledger.Current.Identity.CredentialProfileId,
+                credential_generation_id = ledger.Current.Identity.CredentialGenerationId,
+                credential_target_fingerprint_sha256 = ledger.Current.Identity.CredentialTargetFingerprintSha256,
                 input_tokens = input,
                 output_tokens = output,
                 raw_response_bytes = raw,
@@ -1296,6 +1440,9 @@ public sealed class M1Slice6CampaignStageCoordinator
         }
     }
 
+    private static bool IsLowerHex(string value, int length) => value.Length == length
+        && value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f');
+
     private void ReconcileOrStop(M1Slice6CampaignStageAuthority authority, DateTimeOffset now)
     {
         if (ledger.Current.State != M1Slice6CampaignState.TransportMayHaveStarted)
@@ -1362,6 +1509,13 @@ internal static class M1Slice6CampaignStageRunner
             campaignReviewedCandidate);
         byte[] campaignBytes = File.ReadAllBytes(Path.GetFullPath(campaignManifestPath));
         byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
+        string repository = M1Slice6CampaignStageManifestValidator.FindRepositoryRoot(campaignManifestPath);
+        ActiveRepositoryJsonSchemaValidator.Validate(campaignBytes, File.ReadAllBytes(Path.Combine(repository,
+            "contracts", "repository", "m1-slice6-finite-campaign-authorization.v2.schema.json")),
+            "m1-slice6-finite-campaign-authorization.v2.schema.json");
+        ActiveRepositoryJsonSchemaValidator.Validate(credentialBytes, File.ReadAllBytes(Path.Combine(repository,
+            "contracts", "repository", "wp9-production-profile-authorization.v2.schema.json")),
+            "wp9-production-profile-authorization.v2.schema.json");
         using JsonDocument campaign = JsonDocument.Parse(campaignBytes);
         using JsonDocument credential = JsonDocument.Parse(credentialBytes);
         JsonElement campaignRoot = campaign.RootElement;
@@ -1387,7 +1541,6 @@ internal static class M1Slice6CampaignStageRunner
         M1Slice6FiniteCampaignLedger ledger = new(Path.GetFullPath(ledgerPath), identity,
             campaignExpiry, credentialExpiry, DateTimeOffset.UtcNow);
         ProductUserSafetyIdentifierStateStore safety = new(Path.GetFullPath(safetyStateRoot));
-        string repository = M1Slice6CampaignStageManifestValidator.FindRepositoryRoot(credentialManifestPath);
         string expectedStateRoot = Path.GetFullPath(Path.Combine(repository,
             credentialRoot.GetProperty("durable_state").GetProperty("product_state_root_relative")
                 .GetString()!.Replace('/', Path.DirectorySeparatorChar)));
@@ -1424,6 +1577,7 @@ internal static class M1Slice6CampaignStageRunner
             "provider_request_id", "requested_model", "returned_model", "requested_service_tier",
             "returned_service_tier", "reasoning_context", "reasoning_mode", "prompt_cache_mode",
             "provider_send_count", "dns_resolution_count", "retry_permitted",
+            "credential_profile_id", "credential_generation_id", "credential_target_fingerprint_sha256",
             "input_tokens", "output_tokens", "raw_response_bytes", "calculated_nano_usd",
             "usage", "rate_facts",
             "credential_reads", "credential_frees", "credential_writes", "credential_deletes",
@@ -1485,7 +1639,7 @@ internal static class M1Slice6CampaignStageRunner
             ledger.Current.Identity.CredentialTargetFingerprintSha256);
         ValidateSemanticEvidence(root.GetProperty("validation_package"),
             root.GetProperty("semantic_validation"), stageManifestRoot.GetProperty("validation_package"), stage);
-        if (root.GetProperty("schema").GetString() != "infinium.m1-s6.campaign-stage-evidence/v1"
+        if (root.GetProperty("schema").GetString() != "infinium.m1-s6.campaign-stage-evidence/v2"
             || root.GetProperty("status").GetString() != "independent-review-pending"
             || root.GetProperty("campaign_id").GetString() != ledger.Current.Identity.CampaignId
             || root.GetProperty("campaign_manifest_sha256").GetString() != campaignManifestSha256
@@ -1518,6 +1672,10 @@ internal static class M1Slice6CampaignStageRunner
             || root.GetProperty("provider_send_count").GetInt32() != 1
             || root.GetProperty("dns_resolution_count").GetInt32() != 1
             || root.GetProperty("retry_permitted").GetBoolean()
+            || root.GetProperty("credential_profile_id").GetString() != ledger.Current.Identity.CredentialProfileId
+            || root.GetProperty("credential_generation_id").GetString() != ledger.Current.Identity.CredentialGenerationId
+            || root.GetProperty("credential_target_fingerprint_sha256").GetString()
+                != ledger.Current.Identity.CredentialTargetFingerprintSha256
             || observedInput < 0 || observedInput > limits.MaximumInputTokens
             || observedOutput < 0 || observedOutput > limits.MaximumOutputTokens
             || observedRaw <= 0 || observedRaw > limits.MaximumRawResponseBytes
@@ -1569,7 +1727,7 @@ internal static class M1Slice6CampaignStageRunner
             + $" campaign_id={ledger.Current.Identity.CampaignId} campaign_sha256={campaignManifestSha256}"
             + $" stage_manifest_id={reservation.RequestManifestId} sha256={reservation.RequestManifestSha256}"
             + $" predecessor_evidence_sha256={predecessor.EvidenceSha256}"
-            + " expires_at_utc=2026-08-22T23:59:00.0000000Z";
+            + " expires_at_utc=2026-08-31T23:59:00.0000000Z";
         string admissionCommit = M1Slice6CampaignStageManifestValidator.UniqueMarkerCommit(
             repository, admissionMarker, stageReviewCommit, recordRelative);
         _ = M1Slice6CampaignStageManifestValidator.UniqueMarkerCommit(repository, marker,
@@ -1588,12 +1746,19 @@ internal static class M1Slice6CampaignStageRunner
             "proposal_count", "admission_count", "result_sha256", "source_acquisition_id",
             "source_admission_id", "admitted_artifact_id", "source_application_link_id",
             "evidence_application_link_id", "candidate_id", "hypothesis_id"]);
-        if (!JsonElement.DeepEquals(package, manifestPackage))
+        if (package.EnumerateObject().Any(property =>
+                !manifestPackage.TryGetProperty(property.Name, out JsonElement admitted)
+                || !JsonElement.DeepEquals(property.Value, admitted))
+            || manifestPackage.EnumerateObject().Any(property =>
+                property.Name != "evidence_roots" && !package.TryGetProperty(property.Name, out _)))
         {
             throw new InvalidDataException("Stage evidence validation package differs from its exact admitted manifest.");
         }
         string resultSha = validation.GetProperty("result_sha256").GetString() ?? string.Empty;
         bool qualification = stage == M1Slice6CampaignStage.Qualification;
+        int expectedProposalCount = stage == M1Slice6CampaignStage.SourceClaimExtraction ? 9
+            : stage == M1Slice6CampaignStage.CandidateInvestigation ? 1 : 0;
+        int expectedAdmissionCount = qualification ? 0 : 1;
         string[] provenance = ["source_acquisition_id", "source_admission_id", "admitted_artifact_id",
             "source_application_link_id", "evidence_application_link_id", "candidate_id", "hypothesis_id"];
         if (package.GetProperty("semantic_use").GetBoolean() == qualification
@@ -1607,9 +1772,9 @@ internal static class M1Slice6CampaignStageRunner
                     ("infinium.host.source-claim-admission/v1" or "infinium.host.candidate-investigation-admission/v1")
                 || validation.GetProperty("disposition").GetString() is not ("accepted" or "accepted-conditional"
                     or "accepted-conditional-applicability")
-                || validation.GetProperty("proposal_count").GetInt32() != 1
-                || validation.GetProperty("admission_count").GetInt32() != 1
-                || resultSha.Length != 64 || resultSha.Any(character => !Uri.IsHexDigit(character)))
+                || validation.GetProperty("proposal_count").GetInt32() != expectedProposalCount
+                || validation.GetProperty("admission_count").GetInt32() != expectedAdmissionCount
+                || resultSha != package.GetProperty("deterministic_oracle_result_sha256").GetString())
             || !qualification && provenance.Take(4).Any(name =>
                 string.IsNullOrWhiteSpace(validation.GetProperty(name).GetString()))
             || stage == M1Slice6CampaignStage.SourceClaimExtraction
@@ -1871,7 +2036,7 @@ internal static class M1Slice6CampaignStageRunner
                 "cumulative_credential_calls",
                 "prohibited_effects", "fourth_call_observed"]);
         if (composedRoot.GetProperty("schema").GetString()
-                != "infinium.m1-s6.campaign-composed-evidence/v1"
+                != "infinium.m1-s6.campaign-composed-evidence/v2"
             || composedRoot.GetProperty("campaign_id").GetString() != ledger.Current.Identity.CampaignId
             || composedRoot.GetProperty("campaign_manifest_sha256").GetString() != campaignManifestSha256
             || composedRoot.GetProperty("credential_manifest_id").GetString()
@@ -1907,26 +2072,29 @@ internal static class M1Slice6CampaignStageRunner
             throw new InvalidDataException("Campaign composed evidence does not bind exactly three stage results.");
         }
         ValidateComposedStage(stages[0], M1Slice6CampaignStage.Qualification,
-            "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1", false, "qualification-nonsemantic", 0);
+            false, "qualification-nonsemantic", 0, 0);
         ValidateComposedStage(stages[1], M1Slice6CampaignStage.SourceClaimExtraction,
-            "LLM-CLAIM-LIVE-VAL", true, "infinium.host.source-claim-admission/v1", 1);
+            true, "infinium.host.source-claim-admission/v1", 9, 1);
         ValidateComposedStage(stages[2], M1Slice6CampaignStage.CandidateInvestigation,
-            "LLM-INVESTIGATE-LIVE-VAL", true, "infinium.host.candidate-investigation-admission/v1", 1);
+            true, "infinium.host.candidate-investigation-admission/v1", 1, 1);
         ValidateComposedSemanticSuccessor(stages[1], stages[2], credentialManifestPath);
         JsonElement composedPackage = composedRoot.GetProperty("composed_validation_package");
         RequireExactNames(composedPackage, "composed provenance validation package",
             ["package_id", "manifest_path", "manifest_sha256", "oracle_path", "oracle_sha256", "semantic_use"]);
         string[] omissions = composedRoot.GetProperty("explicit_omissions").EnumerateArray()
             .Select(item => item.GetString()!).ToArray();
-        if (composedPackage.GetProperty("package_id").GetString() != "PROV-LIVE-COMPOSED-VAL"
-            || composedPackage.GetProperty("manifest_path").GetString()
-                != "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json"
-            || composedPackage.GetProperty("manifest_sha256").GetString()
-                != "da6b6b05456a2ed956393c3a0f7c7d470a947adba8e991cae72e9dd7f28250c8"
-            || composedPackage.GetProperty("oracle_path").GetString()
-                != "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/oracle.v1.json"
-            || composedPackage.GetProperty("oracle_sha256").GetString()
-                != "2b8174e58cfdda414883aff245b8f9087647d05a9d4ca6c11e7b0ac076634f8e"
+        string composedPackageId = composedPackage.GetProperty("package_id").GetString() ?? string.Empty;
+        string composedManifestPath = composedPackage.GetProperty("manifest_path").GetString() ?? string.Empty;
+        string composedManifestSha = composedPackage.GetProperty("manifest_sha256").GetString() ?? string.Empty;
+        string composedReviewPath = composedPackage.GetProperty("oracle_path").GetString() ?? string.Empty;
+        string composedReviewSha = composedPackage.GetProperty("oracle_sha256").GetString() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(composedPackageId) || composedPackageId.Length > 256
+            || composedPackageId.Any(char.IsControl)
+            || string.IsNullOrWhiteSpace(composedManifestPath) || composedManifestPath.Length > 1024
+            || string.IsNullOrWhiteSpace(composedReviewPath) || composedReviewPath.Length > 1024
+            || new[] { composedManifestSha, composedReviewSha }.Any(hash =>
+                hash.Length != 64 || hash.Any(character => character is not (>= '0' and <= '9')
+                    and not (>= 'a' and <= 'f')))
             || !composedPackage.GetProperty("semantic_use").GetBoolean()
             || !omissions.SequenceEqual(["credential-secret", "hosted-search", "nexus", "private-fixture"],
                 StringComparer.Ordinal))
@@ -2047,7 +2215,8 @@ internal static class M1Slice6CampaignStageRunner
     }
 
     private static void ValidateComposedStage(JsonElement stage, M1Slice6CampaignStage expectedStage,
-        string expectedPackage, bool semanticUse, string expectedValidation, int expectedAdmissions)
+        bool semanticUse, string expectedValidation,
+        int expectedProposals, int expectedAdmissions)
     {
         RequireExactNames(stage, "campaign composed stage",
             ["ordinal", "stage", "stage_manifest_id", "stage_manifest_sha256", "evidence_id",
@@ -2089,31 +2258,26 @@ internal static class M1Slice6CampaignStageRunner
             }
         }
         string semanticResult = semantic.GetProperty("result_sha256").GetString() ?? string.Empty;
-        string expectedOracleResult = expectedStage switch
-        {
-            M1Slice6CampaignStage.Qualification => new string('0', 64),
-            M1Slice6CampaignStage.SourceClaimExtraction =>
-                "122aa491aca8fdb23e2ca9405bd0651b2c69c4e372fbc378584ce779520f0c3c",
-            _ => "bb5ac6574182a5335f445d75df88e4e9514794da5756c0657f27b741711bdb14",
-        };
+        string oracleResult = package.GetProperty("deterministic_oracle_result_sha256").GetString() ?? string.Empty;
+        string packageId = package.GetProperty("package_id").GetString() ?? string.Empty;
         if (stage.GetProperty("ordinal").GetInt32() != (int)expectedStage
             || stage.GetProperty("stage").GetString() != expectedStage.ToString()
             || stage.GetProperty("stage_manifest_id").GetString()
                 != "infinium.m1-s6.campaign-stage/" + expectedStage
             || stage.GetProperty("evidence_id").GetString()
                 != "campaign-stage-evidence-" + (int)expectedStage
-            || package.GetProperty("package_id").GetString() != expectedPackage
-            || package.GetProperty("deterministic_oracle_result_sha256").GetString()
-                != expectedOracleResult
+            || string.IsNullOrWhiteSpace(packageId) || packageId.Length > 256 || packageId.Any(char.IsControl)
+            || oracleResult.Length != 64 || oracleResult.Any(character => character is not (>= '0' and <= '9')
+                and not (>= 'a' and <= 'f'))
             || package.GetProperty("semantic_use").GetBoolean() != semanticUse
             || semantic.GetProperty("validation_id").GetString() != expectedValidation
-            || semantic.GetProperty("proposal_count").GetInt32() != expectedAdmissions
+            || semantic.GetProperty("proposal_count").GetInt32() != expectedProposals
             || semantic.GetProperty("admission_count").GetInt32() != expectedAdmissions
             || expectedAdmissions == 0 && (semantic.GetProperty("disposition").GetString() != "not-applicable"
                 || semanticResult != new string('0', 64))
             || expectedAdmissions == 1 && (semantic.GetProperty("disposition").GetString() is not
                     ("accepted" or "accepted-conditional" or "accepted-conditional-applicability")
-                || semanticResult.Length != 64))
+                || semanticResult != oracleResult))
         {
             throw new InvalidDataException("Campaign composed stage has stale stage, package, or semantic identities.");
         }

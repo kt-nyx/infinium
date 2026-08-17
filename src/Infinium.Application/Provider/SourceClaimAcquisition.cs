@@ -20,7 +20,14 @@ public sealed record SourceClaimPassageInput(
     string SourceRevisionId,
     string Text,
     string TextSha256,
-    bool Deleted);
+    bool Deleted)
+{
+    [JsonIgnore]
+    public long? StartByte { get; init; }
+
+    [JsonIgnore]
+    public long? EndByte { get; init; }
+}
 
 public sealed record SourceClaimExecutionInput(
     string SchemaId,
@@ -119,7 +126,11 @@ public static class SourceClaimContextMinimizer
             || input.Passages.Count is < 1 or > 64 || string.IsNullOrWhiteSpace(input.DeclaredPurpose)
             || input.Passages.Select(x => x.PassageId).Distinct(StringComparer.Ordinal).Count() != input.Passages.Count
             || input.Passages.Any(x => x.SourceRevisionId != input.SourceRevisionId
-                || x.TextSha256 != Hash(x.Text) || string.IsNullOrWhiteSpace(x.PassageId)))
+                || (x.Deleted
+                    ? x.Text.Length != 0 && x.TextSha256 != Hash(x.Text)
+                        || x.TextSha256.Length != 64 || !x.TextSha256.All(Uri.IsHexDigit)
+                    : x.TextSha256 != Hash(x.Text))
+                || string.IsNullOrWhiteSpace(x.PassageId)))
         {
             throw new InvalidDataException("Source-claim input is not the exact closed answer-free context contract.");
         }

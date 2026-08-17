@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 
@@ -23,7 +24,17 @@ public sealed record CandidateEvidenceInput(
     string PassageId,
     string Relationship,
     string Availability,
-    string ContentSha256);
+    string ContentSha256)
+{
+    [JsonIgnore]
+    public string RootKind { get; init; } = "persisted-source-claim-application";
+
+    [JsonIgnore]
+    public string EvidenceRootId { get; init; } = string.Empty;
+
+    [JsonIgnore]
+    public string ApplicabilityRecordId { get; init; } = string.Empty;
+}
 
 public sealed record CandidateInvestigationContextInput(
     string ContextId,
@@ -167,9 +178,16 @@ public static class CandidateInvestigationContextMinimizer
                 || item.ContentSha256.Length != 64 || !item.ContentSha256.All(Uri.IsHexDigit)
                 || string.IsNullOrWhiteSpace(item.EvidenceId)
                 || string.IsNullOrWhiteSpace(item.EvidenceApplicationLinkId)
-                || string.IsNullOrWhiteSpace(item.SourceAcquisitionId)
-                || string.IsNullOrWhiteSpace(item.SourceAdmissionId)
-                || string.IsNullOrWhiteSpace(item.SourceApplicationLinkId)
+                || item.RootKind is not ("persisted-source-claim-application" or "frozen-host-evidence")
+                || item.RootKind == "persisted-source-claim-application"
+                    && (string.IsNullOrWhiteSpace(item.SourceAcquisitionId)
+                        || string.IsNullOrWhiteSpace(item.SourceAdmissionId)
+                        || string.IsNullOrWhiteSpace(item.SourceApplicationLinkId))
+                || item.RootKind == "frozen-host-evidence"
+                    && (item.SourceAcquisitionId.Length != 0 || item.SourceAdmissionId.Length != 0
+                        || item.SourceApplicationLinkId.Length != 0
+                        || string.IsNullOrWhiteSpace(item.EvidenceRootId)
+                        || string.IsNullOrWhiteSpace(item.ApplicabilityRecordId))
                 || string.IsNullOrWhiteSpace(item.SourceRevisionId)
                 || string.IsNullOrWhiteSpace(item.PassageId)))
         {
@@ -409,7 +427,9 @@ public static class CandidateInvestigationEngine
             transcript.Abstentions, transcript.Gaps, validationIds, admissionIds ?? [], links);
         ProviderOperationContractInvariants.Validate(document);
         byte[] canonical = ProviderContractJsonCodecs.Serialize(document);
-        CandidateSourceAcquisitionLink[] sourceLinks = context.Evidence.Select(item => new CandidateSourceAcquisitionLink(
+        CandidateSourceAcquisitionLink[] sourceLinks = context.Evidence
+            .Where(item => item.RootKind == "persisted-source-claim-application")
+            .Select(item => new CandidateSourceAcquisitionLink(
             item.EvidenceId, item.EvidenceApplicationLinkId, item.SourceAcquisitionId, item.SourceAdmissionId, item.SourceApplicationLinkId,
             item.SourceRevisionId, item.PassageId, item.Relationship, item.Availability, item.ContentSha256)).ToArray();
         string[] rawIds = [transcript.TranscriptId, transcript.ResponseRecordId, .. transcript.Proposals.Select(x => x.ProposalId)];

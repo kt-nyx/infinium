@@ -233,12 +233,13 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
                 M1Slice6CampaignStage.Qualification, SafetyIdentifier, Start.AddMinutes(4)));
             ledger.LatchPossibleStart(M1Slice6CampaignStage.Qualification, SafetyIdentifier,
                 Start.AddMinutes(5).AddSeconds(1));
-            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.RecordKnownSettlement(
+            ledger.RecordKnownSettlement(
                 M1Slice6CampaignStage.Qualification, 1, 1, 1, 0,
-                new M1Slice6CampaignNativeEnvelope(0, 1, 0, 1, 2), Start.AddMinutes(6)));
-            Assert.AreEqual(M1Slice6CampaignState.Stopped, ledger.Current.State);
+                new M1Slice6CampaignNativeEnvelope(0, 1, 0, 1, 2), Start.AddMinutes(6).AddTicks(1));
+            Assert.AreEqual(M1Slice6CampaignState.StageSettled, ledger.Current.State);
             Assert.AreEqual(1L, ledger.Current.ProviderCallCount);
-            Assert.AreEqual(1L, ledger.Current.ReservedNanoUsd);
+            Assert.AreEqual(0L, ledger.Current.ReservedNanoUsd);
+            Assert.AreEqual(0L, ledger.Current.SettledNanoUsd);
 
             M1Slice6CampaignIdentity stale = Identity with { CredentialManifestSha256 = new string('a', 64) };
             Assert.ThrowsExactly<InvalidDataException>(() => new M1Slice6FiniteCampaignLedger(

@@ -69,25 +69,34 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
             throw new InvalidDataException("Provider accounting rejected a cross-profile stage.");
         }
         string prefix = "m1s6-campaign-stage-" + (int)authority.Stage;
-        string operationId = prefix + "-operation";
+        string canonicalInput = M1Slice6CampaignSemanticAdmission.ExtractUntrustedInput(
+            authority.CanonicalRequest);
+        SourceClaimExecutionInput? sourceInput = authority.Stage == M1Slice6CampaignStage.SourceClaimExtraction
+            ? M1Slice6CampaignV2InputAdapter.ReadSourceClaim(canonicalInput) : null;
+        CandidateInvestigationExecutionInput? candidateInput =
+            authority.Stage == M1Slice6CampaignStage.CandidateInvestigation
+                ? M1Slice6CampaignV2InputAdapter.ReadCandidate(canonicalInput).ProductInput : null;
+        string operationId = sourceInput?.OperationId ?? candidateInput?.OperationId ?? prefix + "-operation";
         string attemptId = prefix + "-attempt-1";
         string requestId = prefix + "-request";
         string reservationId = prefix + "-reservation-1";
-        string authorizationId = prefix + "-authorization";
+        string authorizationId = sourceInput?.HostAuthorizationId
+            ?? candidateInput?.HostAuthorizationId ?? prefix + "-authorization";
         string dispatchFenceId = prefix + "-dispatch-1";
         string ownerKind = authority.Stage == M1Slice6CampaignStage.SourceClaimExtraction
             ? "evidence-acquisition-run" : "analysis-run";
-        string ownerId = authority.Stage == M1Slice6CampaignStage.SourceClaimExtraction
-            ? prefix + "-acquisition" : prefix + "-run";
+        string ownerId = sourceInput?.AcquisitionRunId ?? candidateInput?.AnalysisRunId
+            ?? (authority.Stage == M1Slice6CampaignStage.SourceClaimExtraction
+                ? prefix + "-acquisition" : prefix + "-run");
         // Coordinator leases are process-clock authority, while the retained stage clock is
         // an independently validated campaign timestamp. Never project a rehearsed/event time
         // into the live fencing lease comparison performed by AuthoritativeStore.
         CoordinatorAuthority coordinator = store.AcquireCoordinatorAuthorityAfterProcessExclusion(
             "m1-s6-finite-campaign", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(10));
         DateTimeOffset deadline = now.AddMilliseconds(authority.Limits.DeadlineMilliseconds);
-        M1Slice6CampaignSemanticAdmission.PreparePrerequisites(store, authority, now);
         SeedOperationGraph(authority, prefix, ownerKind, ownerId, operationId, attemptId,
             requestId, authorizationId, coordinator.FencingEpoch, deadline, now);
+        M1Slice6CampaignSemanticAdmission.PreparePrerequisites(store, authority, now);
         ProviderFiniteLimitsContract finiteLimits = new(
             authority.Limits.MaximumRequestBytes,
             authority.Limits.MaximumInputTokens,
@@ -107,11 +116,8 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         if (ownerKind == "evidence-acquisition-run")
         {
             kinds.Add("analysis-run");
-            SourceClaimExecutionInput sourceInput = System.Text.Json.JsonSerializer.Deserialize<SourceClaimExecutionInput>(
-                M1Slice6CampaignSemanticAdmission.ExtractUntrustedInput(authority.CanonicalRequest),
-                SourceClaimContextMinimizer.JsonOptions)
-                ?? throw new InvalidDataException("WP10 canonical request has no exact parent analysis run.");
-            ids.Add(sourceInput.ParentAnalysisRunId);
+            ids.Add(sourceInput?.ParentAnalysisRunId
+                ?? throw new InvalidDataException("WP10 canonical request has no exact parent analysis run."));
         }
         kinds.AddRange(["provider-profile", "provider-account", "billing-scope", "global"]);
         ids.AddRange([profileId, accountIdentityId, billingScopeIdentityId, "provider-global"]);
@@ -344,10 +350,8 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         string costAttributionScopeId = prefix + "-cost";
         if (authority.Stage == M1Slice6CampaignStage.SourceClaimExtraction)
         {
-            SourceClaimExecutionInput sourceInput = System.Text.Json.JsonSerializer.Deserialize<SourceClaimExecutionInput>(
-                M1Slice6CampaignSemanticAdmission.ExtractUntrustedInput(authority.CanonicalRequest),
-                SourceClaimContextMinimizer.JsonOptions)
-                ?? throw new InvalidDataException("WP10 canonical request has no exact source-claim input.");
+            SourceClaimExecutionInput sourceInput = M1Slice6CampaignV2InputAdapter.ReadSourceClaim(
+                M1Slice6CampaignSemanticAdmission.ExtractUntrustedInput(authority.CanonicalRequest));
             if (sourceInput.AcquisitionRunId != ownerId || sourceInput.OperationId != operationId
                 || sourceInput.HostAuthorizationId != authorizationId)
             {
@@ -356,6 +360,19 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
             parentRunId = sourceInput.ParentAnalysisRunId;
             applicationScopeId = sourceInput.ApplicationScopeId;
             costAttributionScopeId = sourceInput.CostAttributionScopeId;
+        }
+        else if (authority.Stage == M1Slice6CampaignStage.CandidateInvestigation)
+        {
+            CandidateInvestigationExecutionInput candidateInput = M1Slice6CampaignV2InputAdapter.ReadCandidate(
+                M1Slice6CampaignSemanticAdmission.ExtractUntrustedInput(authority.CanonicalRequest)).ProductInput;
+            if (candidateInput.AnalysisRunId != ownerId || candidateInput.OperationId != operationId
+                || candidateInput.HostAuthorizationId != authorizationId)
+            {
+                throw new InvalidDataException("WP11 candidate input differs from the authoritative stage identities.");
+            }
+            parentRunId = candidateInput.AnalysisRunId;
+            applicationScopeId = candidateInput.ApplicationScopeId;
+            costAttributionScopeId = candidateInput.CostAttributionScopeId;
         }
         string requestHash = authority.CanonicalRequestSha256;
         byte[] settingsBytes = Encoding.UTF8.GetBytes("m1-s6-campaign-settings/" + (int)authority.Stage);
@@ -386,11 +403,14 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         using SqliteConnection connection = new($"Data Source={store.Paths.Database};Pooling=False");
         connection.Open();
         using SqliteCommand command = connection.CreateCommand();
+        string commandRunId = ownerKind == "analysis-run" ? ownerId : prefix + "-run";
+        string commandParentPrefix = commandRunId == parentRunId
+            ? prefix
+            : parentRunId.EndsWith("-run", StringComparison.Ordinal) ? parentRunId[..^4] : parentRunId;
         command.Parameters.AddWithValue("$prefix", prefix);
-        command.Parameters.AddWithValue("$run", prefix + "-run");
+        command.Parameters.AddWithValue("$run", commandRunId);
         command.Parameters.AddWithValue("$parentRun", parentRunId);
-        command.Parameters.AddWithValue("$parentPrefix", parentRunId.EndsWith("-run", StringComparison.Ordinal)
-            ? parentRunId[..^4] : parentRunId);
+        command.Parameters.AddWithValue("$parentPrefix", commandParentPrefix);
         command.Parameters.AddWithValue("$applicationScope", applicationScopeId);
         command.Parameters.AddWithValue("$costScope", costAttributionScopeId);
         command.Parameters.AddWithValue("$ownerKind", ownerKind);
@@ -430,8 +450,12 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         command.CommandText =
             """
             PRAGMA foreign_keys=ON;
-            INSERT OR IGNORE INTO runs VALUES($run,$prefix || '-install',$prefix || '-context',$prefix || '-config',$prefix || '-manifest','Running',0,1,1,$now,$now);
-            INSERT OR IGNORE INTO runs VALUES($parentRun,$parentPrefix || '-install',$parentPrefix || '-context',$parentPrefix || '-config',$parentPrefix || '-manifest','Running',0,1,1,$now,$now);
+            INSERT INTO runs VALUES($run,$prefix || '-install',$prefix || '-context',$prefix || '-config',$prefix || '-manifest','Running',0,1,1,$now,$now)
+              ON CONFLICT(run_id) DO NOTHING;
+            INSERT INTO runs
+            SELECT $parentRun,$parentPrefix || '-install',$parentPrefix || '-context',$parentPrefix || '-config',$parentPrefix || '-manifest','Running',0,1,1,$now,$now
+              WHERE $parentRun <> $run
+              ON CONFLICT(run_id) DO NOTHING;
             INSERT INTO job_nodes VALUES($prefix || '-job',$run,NULL,'provider','Running',0,$now,$now);
             INSERT INTO durable_commands VALUES($prefix || '-command','provider',$run,0,'recorded','running',NULL,$now,NULL,NULL);
             INSERT INTO evidence_acquisition_runs
@@ -502,6 +526,36 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
               'openai-responses-o200k-byte-envelope','v2','proved',$prefix || '-payload',$requestHash,$requestBytes,$now);
             """;
         _ = command.ExecuteNonQuery();
+        using SqliteCommand validateRuns = connection.CreateCommand();
+        validateRuns.CommandText =
+            """
+            SELECT COUNT(*) FROM runs
+            WHERE run_id=$run AND installation_snapshot_id=$prefix || '-install'
+              AND analysis_context_id=$prefix || '-context'
+              AND effective_scan_configuration_id=$prefix || '-config'
+              AND resolved_input_manifest_id=$prefix || '-manifest'
+              AND lifecycle_state='Running' AND lifecycle_generation=0
+              AND coordinator_fencing_epoch=1 AND durable_sequence=1;
+            SELECT COUNT(*) FROM runs
+            WHERE run_id=$parentRun AND installation_snapshot_id=$parentPrefix || '-install'
+              AND analysis_context_id=$parentPrefix || '-context'
+              AND effective_scan_configuration_id=$parentPrefix || '-config'
+              AND resolved_input_manifest_id=$parentPrefix || '-manifest'
+              AND lifecycle_state='Running' AND lifecycle_generation=0
+              AND coordinator_fencing_epoch=1 AND durable_sequence=1;
+            """;
+        validateRuns.Parameters.AddWithValue("$run", commandRunId);
+        validateRuns.Parameters.AddWithValue("$prefix", prefix);
+        validateRuns.Parameters.AddWithValue("$parentRun", parentRunId);
+        validateRuns.Parameters.AddWithValue("$parentPrefix", commandParentPrefix);
+        using SqliteDataReader runReader = validateRuns.ExecuteReader();
+        long runCount = runReader.Read() ? runReader.GetInt64(0) : 0;
+        _ = runReader.NextResult();
+        long parentRunCount = runReader.Read() ? runReader.GetInt64(0) : 0;
+        if (runCount != 1 || parentRunCount != 1)
+        {
+            throw new InvalidDataException("Campaign accounting found a conflicting preexisting run identity.");
+        }
     }
 
     private static long Required(ProviderQuantityContract quantity, string name) =>

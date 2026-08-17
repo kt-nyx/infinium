@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using Infinium.Domain.Contracts;
 using Microsoft.Data.Sqlite;
@@ -26,7 +27,38 @@ public sealed record SourceClaimPersistenceRequest(
     string ProviderAttemptId,
     string RequestId,
     string DispatchFenceId,
-    DateTimeOffset OccurredAt);
+    DateTimeOffset OccurredAt)
+{
+    public IReadOnlyDictionary<string, string> AdmittedArtifactIdsByProposal { get; init; } =
+        new Dictionary<string, string>(StringComparer.Ordinal);
+    public IReadOnlyDictionary<string, SourceClaimArtifactAuthority> AdmittedArtifactAuthorityByProposal { get; init; } =
+        new Dictionary<string, SourceClaimArtifactAuthority>(StringComparer.Ordinal);
+    public IReadOnlyDictionary<string, SourceClaimApplicabilityFactAuthority> ApplicabilityFactsById { get; init; } =
+        new Dictionary<string, SourceClaimApplicabilityFactAuthority>(StringComparer.Ordinal);
+    public IReadOnlyDictionary<string, SourceClaimApplicationAuthority> ApplicationAuthorityByProposal { get; init; } =
+        new Dictionary<string, SourceClaimApplicationAuthority>(StringComparer.Ordinal);
+}
+
+public sealed record SourceClaimArtifactAuthority(
+    string AdmittedArtifactId,
+    string SourceRevisionId,
+    string PassageId,
+    byte[] Payload,
+    string ContentSha256,
+    int StartByte,
+    int EndByte);
+
+public sealed record SourceClaimApplicabilityFactAuthority(
+    string ApplicabilityFactId,
+    string SourceRevisionId,
+    string Statement,
+    string StatementSha256);
+
+public sealed record SourceClaimApplicationAuthority(
+    string ApplicationLinkId,
+    string ParentAnalysisRunId,
+    string ApplicationScopeId,
+    string CostAttributionScopeId);
 
 public sealed record SourceClaimPersistenceReceipt(
     string AcquisitionRunId,
@@ -62,6 +94,45 @@ public sealed record SourceClaimApplicationReadModel(
 
 public partial class AuthoritativeStore
 {
+    private SqliteTransaction? candidateInvestigationBatchTransaction;
+
+    public IReadOnlyList<CandidateInvestigationPersistenceReceipt> PersistCandidateInvestigationBatch(
+        IReadOnlyList<CandidateInvestigationPersistenceRequest> requests)
+    {
+        ArgumentNullException.ThrowIfNull(requests);
+        if (requests.Count < 2
+            || requests.Select(item => item.OutcomeId).Distinct(StringComparer.Ordinal).Count() != requests.Count
+            || requests.Select(item => item.ContextId).Distinct(StringComparer.Ordinal).Count() != requests.Count)
+        {
+            throw new InvalidDataException("A candidate campaign batch requires distinct outcomes and contexts.");
+        }
+        return ExecuteCandidateInvestigationBatch(() => requests.Select(PersistCandidateInvestigation).ToArray());
+    }
+
+    public T ExecuteCandidateInvestigationBatch<T>(Func<T> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        lock (gate)
+        {
+            if (candidateInvestigationBatchTransaction is not null)
+            {
+                throw new InvalidOperationException("Nested candidate campaign persistence batches are prohibited.");
+            }
+            using SqliteTransaction transaction = BeginImmediateTransaction();
+            candidateInvestigationBatchTransaction = transaction;
+            try
+            {
+                T result = action();
+                transaction.Commit();
+                return result;
+            }
+            finally
+            {
+                candidateInvestigationBatchTransaction = null;
+            }
+        }
+    }
+
     public void RegisterSourceClaimAcquisition(SourceClaimAcquisitionRegistration request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -70,8 +141,9 @@ public partial class AuthoritativeStore
             using SqliteTransaction transaction = BeginImmediateTransaction();
             Execute(
                 """
-                INSERT OR IGNORE INTO evidence_acquisition_runs VALUES(
-                  $acquisition,$snapshot,$context,$configuration,$manifest,$run,$scope,$cost,'running',$now);
+                INSERT INTO evidence_acquisition_runs VALUES(
+                  $acquisition,$snapshot,$context,$configuration,$manifest,$run,$scope,$cost,'running',$now)
+                ON CONFLICT(acquisition_run_id) DO NOTHING;
                 INSERT INTO evidence_acquisition_job_nodes VALUES($job,$acquisition,'source-claim-extraction','running',$now);
                 INSERT INTO evidence_acquisition_commands VALUES($command,$acquisition,'provider-operation',$now,'recorded');
                 INSERT INTO provider_command_bindings VALUES($command,'evidence-acquisition-run',$acquisition,$now);
@@ -134,6 +206,14 @@ public partial class AuthoritativeStore
                 FROM provider_semantic_admissions admission
                 JOIN evidence_acquisition_runs acquisition
                   ON acquisition.acquisition_run_id=admission.owner_id
+                LEFT JOIN source_claim_admitted_artifacts artifact
+                  ON artifact.admitted_artifact_id=admission.admitted_artifact_id
+                 AND artifact.acquisition_run_id=admission.owner_id
+                 AND artifact.proposal_id=admission.proposal_id
+                 AND artifact.admission_id=admission.admission_id
+                LEFT JOIN payloads payload ON payload.payload_id=artifact.payload_id
+                 AND payload.content_sha256=artifact.content_sha256
+                 AND payload.byte_length=artifact.byte_length
                 WHERE admission.admission_id=$admission
                   AND admission.owner_kind='evidence-acquisition-run'
                   AND admission.owner_id=$acquisition
@@ -142,6 +222,8 @@ public partial class AuthoritativeStore
                   AND acquisition.parent_analysis_run_id=$run
                   AND acquisition.application_scope_id=$scope
                   AND acquisition.cost_attribution_scope_id=$cost
+                  AND (admission.admitted_artifact_id NOT LIKE 'wp10-artifact-%'
+                    OR artifact.admitted_artifact_id IS NOT NULL AND artifact.end_byte <= payload.byte_length)
                   AND admission.created_at <= $now;
                 """;
             admitted.Parameters.AddWithValue("$admission", request.AdmissionId);
@@ -205,6 +287,19 @@ public partial class AuthoritativeStore
         {
             throw new InvalidDataException("Source-claim persistence requires exact authorization and response identities on every admission link.");
         }
+        if (request.AdmittedArtifactAuthorityByProposal.Count != 0
+            && (!request.AdmittedArtifactAuthorityByProposal.Keys.ToHashSet(StringComparer.Ordinal)
+                    .SetEquals(document.ClaimProposals.Where(item => item.State == ProposalAdmissionState.Admitted)
+                        .Select(item => item.ProposalId.Value))
+                || !request.ApplicationAuthorityByProposal.Keys.ToHashSet(StringComparer.Ordinal)
+                    .SetEquals(request.AdmittedArtifactAuthorityByProposal.Keys)
+                || !request.ApplicabilityFactsById.Keys.ToHashSet(StringComparer.Ordinal).SetEquals(
+                    document.ClaimProposals.Where(item => item.State == ProposalAdmissionState.Admitted)
+                        .SelectMany(item => item.ConditionIds).Select(item => item.Value))))
+        {
+            throw new InvalidDataException(
+                "Campaign source persistence requires exact artifact, application, and applicability authority closure.");
+        }
         lock (gate)
         {
             using SqliteTransaction transaction = BeginImmediateTransaction();
@@ -247,6 +342,18 @@ public partial class AuthoritativeStore
                 string kind = proposal.State is ProposalAdmissionState.Abstained ? "abstention"
                     : proposal.State is ProposalAdmissionState.Unsupported or ProposalAdmissionState.Unavailable
                         or ProposalAdmissionState.Deleted ? "gap" : "source-claim";
+                string? admittedArtifactId = null;
+                if (proposal.State == ProposalAdmissionState.Admitted)
+                {
+                    admittedArtifactId = request.AdmittedArtifactIdsByProposal.TryGetValue(
+                        proposal.ProposalId.Value, out string? exactArtifact)
+                        ? exactArtifact
+                        : payloadId;
+                    if (string.IsNullOrWhiteSpace(admittedArtifactId))
+                    {
+                        throw new InvalidDataException("An admitted source claim requires one exact artifact identity.");
+                    }
+                }
                 Execute(
                     """
                     INSERT INTO provider_semantic_proposals(
@@ -271,8 +378,81 @@ public partial class AuthoritativeStore
                     ("$correlation", link.AdmissionCorrelationId.Value), ("$kind", kind), ("$payload", payloadId),
                     ("$validation", link.ValidationId.Value), ("$state", ToAdmissionState(proposal.State)),
                     ("$reason", proposal.Reason), ("$admission", link.AdmissionId.Value),
-                    ("$artifact", proposal.State == ProposalAdmissionState.Admitted ? payloadId : null),
+                    ("$artifact", admittedArtifactId),
                     ("$now", ToText(request.OccurredAt)));
+                if (proposal.State == ProposalAdmissionState.Admitted
+                    && request.AdmittedArtifactAuthorityByProposal.Count != 0)
+                {
+                    if (!request.AdmittedArtifactAuthorityByProposal.TryGetValue(proposal.ProposalId.Value,
+                            out SourceClaimArtifactAuthority? artifact)
+                        || artifact.AdmittedArtifactId != admittedArtifactId
+                        || artifact.SourceRevisionId != document.SourceRevisionId.Value
+                        || artifact.PassageId != proposal.PassageId.Value
+                        || artifact.StartByte < 0 || artifact.EndByte < artifact.StartByte
+                        || artifact.EndByte > artifact.Payload.LongLength
+                        || Convert.ToHexStringLower(SHA256.HashData(artifact.Payload)) != artifact.ContentSha256)
+                    {
+                        throw new InvalidDataException(
+                            "The admitted source artifact does not bind its exact passage payload, digest, and offsets.");
+                    }
+                    string artifactPayloadId = AdmitCoordinatorPayload(artifact.Payload,
+                        "source-claim-admitted-artifact", artifact.AdmittedArtifactId,
+                        request.OccurredAt, transaction);
+                    Execute(
+                        """
+                        INSERT INTO source_claim_admitted_artifacts VALUES(
+                          $artifact,$owner,$proposal,$admission,$payload,$revision,$passage,$sha,$bytes,$start,$end,$now);
+                        """,
+                        transaction,
+                        ("$artifact", artifact.AdmittedArtifactId), ("$owner", document.AcquisitionRunId.Value),
+                        ("$proposal", proposal.ProposalId.Value), ("$admission", link.AdmissionId.Value),
+                        ("$payload", artifactPayloadId), ("$revision", artifact.SourceRevisionId),
+                        ("$passage", artifact.PassageId), ("$sha", artifact.ContentSha256),
+                        ("$bytes", artifact.Payload.LongLength), ("$start", artifact.StartByte),
+                        ("$end", artifact.EndByte), ("$now", ToText(request.OccurredAt)));
+                    if (!request.ApplicationAuthorityByProposal.TryGetValue(proposal.ProposalId.Value,
+                            out SourceClaimApplicationAuthority? application))
+                    {
+                        throw new InvalidDataException("The campaign source artifact has no atomic application link.");
+                    }
+                    Execute(
+                        """
+                        INSERT INTO evidence_acquisition_application_links VALUES(
+                          $application,$acquisition,$admission,$run,$scope,$cost,$artifact,$now);
+                        """,
+                        transaction,
+                        ("$application", application.ApplicationLinkId),
+                        ("$acquisition", document.AcquisitionRunId.Value),
+                        ("$admission", link.AdmissionId.Value), ("$run", application.ParentAnalysisRunId),
+                        ("$scope", application.ApplicationScopeId), ("$cost", application.CostAttributionScopeId),
+                        ("$artifact", artifact.AdmittedArtifactId), ("$now", ToText(request.OccurredAt)));
+                    foreach (OpaqueId conditionId in proposal.ConditionIds)
+                    {
+                        if (!request.ApplicabilityFactsById.TryGetValue(conditionId.Value,
+                                out SourceClaimApplicabilityFactAuthority? fact)
+                            || fact.SourceRevisionId != document.SourceRevisionId.Value
+                            || Convert.ToHexStringLower(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(fact.Statement)))
+                                != fact.StatementSha256)
+                        {
+                            throw new InvalidDataException(
+                                "The admitted source proposal does not bind its exact applicability fact.");
+                        }
+                        byte[] statementBytes = System.Text.Encoding.UTF8.GetBytes(fact.Statement);
+                        string statementPayloadId = AdmitCoordinatorPayload(statementBytes,
+                            "source-claim-applicability-fact", fact.ApplicabilityFactId,
+                            request.OccurredAt, transaction);
+                        Execute(
+                            """
+                            INSERT INTO source_claim_applicability_facts VALUES(
+                              $fact,$owner,$proposal,$revision,$payload,$sha,$now);
+                            """,
+                            transaction,
+                            ("$fact", fact.ApplicabilityFactId), ("$owner", document.AcquisitionRunId.Value),
+                            ("$proposal", proposal.ProposalId.Value), ("$revision", fact.SourceRevisionId),
+                            ("$payload", statementPayloadId), ("$sha", fact.StatementSha256),
+                            ("$now", ToText(request.OccurredAt)));
+                    }
+                }
             }
             transaction.Commit();
             return new(document.AcquisitionRunId.Value, document.OperationId.Value, document.SourceRevisionId.Value,
@@ -363,12 +543,15 @@ public partial class AuthoritativeStore
         }
         lock (gate)
         {
-            using SqliteTransaction transaction = BeginImmediateTransaction();
-            using (SqliteCommand authority = connection.CreateCommand())
+            bool ownsTransaction = candidateInvestigationBatchTransaction is null;
+            SqliteTransaction transaction = candidateInvestigationBatchTransaction ?? BeginImmediateTransaction();
+            try
             {
-                authority.Transaction = transaction;
-                authority.CommandText =
-                    """
+                using (SqliteCommand authority = connection.CreateCommand())
+                {
+                    authority.Transaction = transaction;
+                    authority.CommandText =
+                        """
                     SELECT 1 FROM provider_operation_authorizations authorization
                     JOIN analysis_candidates candidate
                       ON candidate.candidate_id=$candidate AND candidate.run_id=authorization.owner_id
@@ -386,62 +569,96 @@ public partial class AuthoritativeStore
                           AND response.provider_attempt_id=$attempt AND response.request_id=$request
                           AND response.dispatch_fence_id=$fence));
                     """;
-                authority.Parameters.AddWithValue("$candidate", document.CandidateId.Value);
-                authority.Parameters.AddWithValue("$authorization", request.AuthorizationId);
-                authority.Parameters.AddWithValue("$operation", document.OperationId.Value);
-                authority.Parameters.AddWithValue("$owner", document.OwnerId.Value);
-                authority.Parameters.AddWithValue("$prompt", hostContext.PromptId);
-                authority.Parameters.AddWithValue("$prompt_fingerprint", hostContext.PromptFingerprint);
-                authority.Parameters.AddWithValue("$response", (object?)request.ResponseRecordId ?? DBNull.Value);
-                authority.Parameters.AddWithValue("$attempt", (object?)request.ProviderAttemptId ?? DBNull.Value);
-                authority.Parameters.AddWithValue("$request", (object?)request.RequestId ?? DBNull.Value);
-                authority.Parameters.AddWithValue("$fence", (object?)request.DispatchFenceId ?? DBNull.Value);
-                if (authority.ExecuteScalar() is null)
-                {
-                    throw new InvalidDataException("Candidate persistence requires exact retained analysis, authorization, response, and candidate authority.");
+                    authority.Parameters.AddWithValue("$candidate", document.CandidateId.Value);
+                    authority.Parameters.AddWithValue("$authorization", request.AuthorizationId);
+                    authority.Parameters.AddWithValue("$operation", document.OperationId.Value);
+                    authority.Parameters.AddWithValue("$owner", document.OwnerId.Value);
+                    authority.Parameters.AddWithValue("$prompt", hostContext.PromptId);
+                    authority.Parameters.AddWithValue("$prompt_fingerprint", hostContext.PromptFingerprint);
+                    authority.Parameters.AddWithValue("$response", (object?)request.ResponseRecordId ?? DBNull.Value);
+                    authority.Parameters.AddWithValue("$attempt", (object?)request.ProviderAttemptId ?? DBNull.Value);
+                    authority.Parameters.AddWithValue("$request", (object?)request.RequestId ?? DBNull.Value);
+                    authority.Parameters.AddWithValue("$fence", (object?)request.DispatchFenceId ?? DBNull.Value);
+                    if (authority.ExecuteScalar() is null)
+                    {
+                        throw new InvalidDataException("Candidate persistence requires exact retained analysis, authorization, response, and candidate authority.");
+                    }
                 }
-            }
-            ValidateCandidateHostContext(request, hostContext, transaction);
-            foreach (CandidateEvidenceProvenanceBinding binding in request.EvidenceBindings)
-            {
-                ValidateCandidateEvidenceBinding(request, binding, transaction);
-            }
-            string inputPayloadId = AdmitCoordinatorPayload(
-                request.InputPayload, "candidate-investigation-input", request.OutcomeId, request.OccurredAt, transaction);
-            string transcriptPayloadId = AdmitCoordinatorPayload(
-                request.TranscriptPayload, "candidate-investigation-transcript", request.OutcomeId, request.OccurredAt, transaction);
-            byte[] documentPayload = JsonSerializer.SerializeToUtf8Bytes(document);
-            if (!documentPayload.AsSpan().SequenceEqual(request.ResultPayload))
-            {
-                throw new InvalidDataException("Candidate outcome payload is not the exact canonical retained investigation document.");
-            }
-            string resultPayloadId = AdmitCoordinatorPayload(
-                request.ResultPayload, "candidate-investigation-outcome", request.OutcomeId, request.OccurredAt, transaction);
-            Execute(
-                """
+                ValidateCandidateHostContext(request, hostContext, transaction);
+                foreach (CandidateEvidenceProvenanceBinding binding in request.EvidenceBindings)
+                {
+                    ValidateCandidateEvidenceBinding(request, binding, transaction);
+                }
+                string inputPayloadId = AdmitCoordinatorPayload(
+                    request.InputPayload, "candidate-investigation-input", request.OutcomeId, request.OccurredAt, transaction);
+                string transcriptPayloadId = AdmitCoordinatorPayload(
+                    request.TranscriptPayload, "candidate-investigation-transcript", request.OutcomeId, request.OccurredAt, transaction);
+                byte[] documentPayload = JsonSerializer.SerializeToUtf8Bytes(document);
+                if (!documentPayload.AsSpan().SequenceEqual(request.ResultPayload))
+                {
+                    throw new InvalidDataException("Candidate outcome payload is not the exact canonical retained investigation document.");
+                }
+                string resultPayloadId = AdmitCoordinatorPayload(
+                    request.ResultPayload, "candidate-investigation-outcome", request.OutcomeId, request.OccurredAt, transaction);
+                Execute(
+                    """
                 INSERT INTO candidate_investigation_outcomes VALUES(
                   $outcome,$authorization,$operation,$owner,$candidate,$hypothesis,$context,$transcript,$response,$fingerprint,
                   $transcript_state,$disposition,$replay_state,$input_payload,$transcript_payload,$result_payload,$now);
                 """,
-                transaction,
-                ("$outcome", request.OutcomeId), ("$authorization", request.AuthorizationId),
-                ("$operation", document.OperationId.Value), ("$owner", document.OwnerId.Value),
-                ("$candidate", document.CandidateId.Value), ("$hypothesis", request.HypothesisId),
-                ("$context", request.ContextId),
-                ("$transcript", request.TranscriptId), ("$response", request.ResponseRecordId),
-                ("$fingerprint", request.ResponseFingerprint), ("$transcript_state", request.TranscriptState),
-                ("$disposition", request.Disposition), ("$replay_state", request.ReplayState),
-                ("$input_payload", inputPayloadId), ("$transcript_payload", transcriptPayloadId),
-                ("$result_payload", resultPayloadId), ("$now", ToText(request.OccurredAt)));
-            foreach (ProviderSemanticAdmissionLinkContract link in document.AdmissionLinks)
-            {
-                HypothesisProposalContract proposal = document.HypothesisProposals.Single(x => x.ProposalId == link.ProposalId);
-                string payloadId = resultPayloadId;
-                string kind = proposal.State is ProposalAdmissionState.Abstained ? "abstention"
-                    : proposal.State is ProposalAdmissionState.Unsupported or ProposalAdmissionState.Unavailable
-                        or ProposalAdmissionState.Deleted ? "gap" : "candidate-hypothesis";
-                Execute(
-                    """
+                    transaction,
+                    ("$outcome", request.OutcomeId), ("$authorization", request.AuthorizationId),
+                    ("$operation", document.OperationId.Value), ("$owner", document.OwnerId.Value),
+                    ("$candidate", document.CandidateId.Value), ("$hypothesis", request.HypothesisId),
+                    ("$context", request.ContextId),
+                    ("$transcript", request.TranscriptId), ("$response", request.ResponseRecordId),
+                    ("$fingerprint", request.ResponseFingerprint), ("$transcript_state", request.TranscriptState),
+                    ("$disposition", request.Disposition), ("$replay_state", request.ReplayState),
+                    ("$input_payload", inputPayloadId), ("$transcript_payload", transcriptPayloadId),
+                    ("$result_payload", resultPayloadId), ("$now", ToText(request.OccurredAt)));
+                if (request.NormalizedProductInputPayload is not null)
+                {
+                    foreach (CandidateEvidenceProvenanceBinding binding in request.EvidenceBindings)
+                    {
+                        if (string.IsNullOrWhiteSpace(binding.LocalObservationId)
+                            || !IsSha256(binding.LocalObservationSha256))
+                        {
+                            throw new InvalidDataException(
+                                "Campaign candidate persistence requires one exact local-observation identity and digest.");
+                        }
+                        bool sourceRoot = binding.RootKind == "persisted-source-claim-application";
+                        Execute(
+                            """
+                        INSERT INTO candidate_evidence_authority VALUES(
+                          $outcome,$evidence,$application,$kind,$root,$applicability,$acquisition,$proposal,
+                          $admission,$artifact,$source_application,$revision,$passage,$sha,$observation,
+                          $observation_sha,$input,$now);
+                        """,
+                            transaction,
+                            ("$outcome", request.OutcomeId), ("$evidence", binding.EvidenceId),
+                            ("$application", binding.EvidenceApplicationLinkId), ("$kind", binding.RootKind),
+                            ("$root", sourceRoot ? null : binding.EvidenceRootId),
+                            ("$applicability", sourceRoot ? null : binding.ApplicabilityRecordId),
+                            ("$acquisition", sourceRoot ? binding.SourceAcquisitionId : null),
+                            ("$proposal", sourceRoot ? binding.ProposalId : null),
+                            ("$admission", sourceRoot ? binding.SourceAdmissionId : null),
+                            ("$artifact", sourceRoot ? binding.AdmittedArtifactId : null),
+                            ("$source_application", sourceRoot ? binding.SourceApplicationLinkId : null),
+                            ("$revision", binding.SourceRevisionId), ("$passage", binding.PassageId),
+                            ("$sha", binding.ContentSha256), ("$observation", binding.LocalObservationId),
+                            ("$observation_sha", binding.LocalObservationSha256),
+                            ("$input", inputPayloadId), ("$now", ToText(request.OccurredAt)));
+                    }
+                }
+                foreach (ProviderSemanticAdmissionLinkContract link in document.AdmissionLinks)
+                {
+                    HypothesisProposalContract proposal = document.HypothesisProposals.Single(x => x.ProposalId == link.ProposalId);
+                    string payloadId = resultPayloadId;
+                    string kind = proposal.State is ProposalAdmissionState.Abstained ? "abstention"
+                        : proposal.State is ProposalAdmissionState.Unsupported or ProposalAdmissionState.Unavailable
+                            or ProposalAdmissionState.Deleted ? "gap" : "candidate-hypothesis";
+                    Execute(
+                        """
                     INSERT INTO provider_semantic_proposals(
                       proposal_id,authorization_id,operation_id,provider_attempt_id,request_id,response_record_id,
                       dispatch_fence_id,owner_kind,owner_id,root_subject_id,semantic_link_id,proposal_kind,
@@ -455,22 +672,41 @@ public partial class AuthoritativeStore
                       $admission,$proposal,$operation,$response,'analysis-run',$owner,$candidate,$validation,$application,
                       $state,'infinium.host.candidate-investigation-admission/v1',$reason,$artifact,$now);
                     """,
-                    transaction,
-                    ("$proposal", proposal.ProposalId.Value), ("$authorization", request.AuthorizationId),
-                    ("$operation", document.OperationId.Value), ("$attempt", request.ProviderAttemptId),
-                    ("$request", request.RequestId), ("$response", request.ResponseRecordId),
-                    ("$fence", request.DispatchFenceId), ("$owner", document.OwnerId.Value),
-                    ("$candidate", document.CandidateId.Value), ("$application", link.ApplicationLinkId.Value),
-                    ("$kind", kind), ("$payload", payloadId), ("$validation", link.ValidationId.Value),
-                    ("$state", ToAdmissionState(proposal.State)), ("$reason", proposal.Reason),
-                    ("$admission", link.AdmissionId.Value),
-                    ("$artifact", proposal.State == ProposalAdmissionState.Admitted ? payloadId : null),
-                    ("$now", ToText(request.OccurredAt)));
+                        transaction,
+                        ("$proposal", proposal.ProposalId.Value), ("$authorization", request.AuthorizationId),
+                        ("$operation", document.OperationId.Value), ("$attempt", request.ProviderAttemptId),
+                        ("$request", request.RequestId), ("$response", request.ResponseRecordId),
+                        ("$fence", request.DispatchFenceId), ("$owner", document.OwnerId.Value),
+                        ("$candidate", document.CandidateId.Value), ("$application", link.ApplicationLinkId.Value),
+                        ("$kind", kind), ("$payload", payloadId), ("$validation", link.ValidationId.Value),
+                        ("$state", ToAdmissionState(proposal.State)), ("$reason", proposal.Reason),
+                        ("$admission", link.AdmissionId.Value),
+                        ("$artifact", proposal.State == ProposalAdmissionState.Admitted ? payloadId : null),
+                        ("$now", ToText(request.OccurredAt)));
+                }
+                if (ownsTransaction)
+                {
+                    transaction.Commit();
+                }
+                return new(document.AnalysisRunId.Value, document.OperationId.Value, document.CandidateId.Value,
+                    document.HypothesisProposals.Count, document.AdmissionLinks.Count,
+                    document.AdmissionLinkIds.Select(x => x.Value).ToArray(), request.OutcomeId);
             }
-            transaction.Commit();
-            return new(document.AnalysisRunId.Value, document.OperationId.Value, document.CandidateId.Value,
-                document.HypothesisProposals.Count, document.AdmissionLinks.Count,
-                document.AdmissionLinkIds.Select(x => x.Value).ToArray(), request.OutcomeId);
+            catch
+            {
+                if (ownsTransaction)
+                {
+                    transaction.Rollback();
+                }
+                throw;
+            }
+            finally
+            {
+                if (ownsTransaction)
+                {
+                    transaction.Dispose();
+                }
+            }
         }
     }
 
@@ -500,14 +736,15 @@ public partial class AuthoritativeStore
         {
             throw new InvalidDataException("Candidate outcome payload is not the exact canonical retained investigation document.");
         }
-        using JsonDocument input = JsonDocument.Parse(request.InputPayload, new JsonDocumentOptions
+        byte[] validationInput = request.NormalizedProductInputPayload ?? request.InputPayload;
+        using JsonDocument input = JsonDocument.Parse(validationInput, new JsonDocumentOptions
         {
             AllowTrailingCommas = false,
             CommentHandling = JsonCommentHandling.Disallow,
             MaxDepth = 64,
         });
         JsonElement root = input.RootElement;
-        ValidateCandidateInputShape(root);
+        ValidateCandidateInputShape(root, request.NormalizedProductInputPayload is not null);
         JsonElement[] contexts = root.GetProperty("contexts").EnumerateArray()
             .Where(x => Text(x, "context_id") == request.ContextId).ToArray();
         if (contexts.Length != 1
@@ -542,13 +779,25 @@ public partial class AuthoritativeStore
         foreach (CandidateEvidenceProvenanceBinding binding in request.EvidenceBindings)
         {
             CandidateHostEvidenceSnapshot expected = evidence.Single(x => x.EvidenceId == binding.EvidenceId);
-            if (binding != new CandidateEvidenceProvenanceBinding(
-                    expected.EvidenceId, expected.EvidenceApplicationLinkId, expected.SourceAcquisitionId,
-                    expected.SourceAdmissionId, expected.SourceApplicationLinkId, expected.SourceRevisionId,
-                    expected.PassageId, expected.Relationship, expected.Availability, expected.ContentSha256))
+            bool frozenHost = binding.RootKind == "frozen-host-evidence";
+            if (binding.EvidenceApplicationLinkId != expected.EvidenceApplicationLinkId
+                || !frozenHost && binding.SourceAcquisitionId != expected.SourceAcquisitionId
+                || !frozenHost && binding.SourceAdmissionId != expected.SourceAdmissionId
+                || !frozenHost && binding.SourceApplicationLinkId != expected.SourceApplicationLinkId
+                || frozenHost && (binding.SourceAcquisitionId.Length != 0
+                    || binding.SourceAdmissionId.Length != 0 || binding.SourceApplicationLinkId.Length != 0)
+                || binding.SourceRevisionId != expected.SourceRevisionId
+                || binding.PassageId != expected.PassageId
+                || binding.Relationship != expected.Relationship
+                || binding.Availability != expected.Availability
+                || binding.ContentSha256 != expected.ContentSha256)
             {
                 throw new InvalidDataException("Candidate evidence binding drifts from its exact retained input provenance.");
             }
+        }
+        if (request.NormalizedProductInputPayload is not null)
+        {
+            ValidateCandidateCampaignV2Input(request);
         }
         ValidateCandidateTranscriptPayload(request, root, context);
         return new(request.HypothesisId, Text(context, "hypothesis"), participantIds, participantRoles,
@@ -556,7 +805,7 @@ public partial class AuthoritativeStore
             Text(root, "prompt_id"), Text(root, "prompt_fingerprint"));
     }
 
-    private static void ValidateCandidateInputShape(JsonElement input)
+    private static void ValidateCandidateInputShape(JsonElement input, bool allowFrozenHostRoot)
     {
         string[] exactRootProperties = ["schema_id", "schema_version", "package_id", "operation_id",
             "host_authorization_id", "owner_kind", "owner_id", "analysis_run_id", "application_scope_id",
@@ -585,6 +834,10 @@ public partial class AuthoritativeStore
         string[] exactEvidenceProperties = ["evidence_id", "evidence_application_link_id", "source_acquisition_id",
             "source_admission_id", "source_application_link_id", "source_revision_id", "passage_id", "relationship",
             "availability", "content_sha256"];
+        string[] requiredEvidenceProperties =
+            ["evidence_id", "evidence_application_link_id", "source_revision_id", "passage_id"];
+        string[] sourceEvidenceProperties =
+            ["source_acquisition_id", "source_admission_id", "source_application_link_id"];
         JsonElement[] allEvidence = contexts.SelectMany(item => item.GetProperty("evidence").EnumerateArray()).ToArray();
         if (contexts.Any(item => !HasExactProperties(item, exactContextProperties)
                 || !Nonempty(Text(item, "context_id")) || !Nonempty(Text(item, "candidate_id"))
@@ -599,12 +852,79 @@ public partial class AuthoritativeStore
                 || item.GetProperty("evidence").GetArrayLength() is < 1 or > 64)
             || !Unique(StringsBy(allEvidence, "evidence_id"))
             || allEvidence.Any(item => !HasExactProperties(item, exactEvidenceProperties)
-                || exactEvidenceProperties.Take(7).Any(name => !Nonempty(Text(item, name)))
+                || requiredEvidenceProperties.Any(name => !Nonempty(Text(item, name)))
+                || !(sourceEvidenceProperties.All(name => Nonempty(Text(item, name)))
+                    || allowFrozenHostRoot && sourceEvidenceProperties.All(name => Text(item, name).Length == 0))
                 || Text(item, "relationship") is not ("supporting" or "contradicting" or "neutral")
                 || Text(item, "availability") is not ("available" or "deleted" or "unavailable")
                 || !IsSha256(Text(item, "content_sha256"))))
         {
             throw new InvalidDataException("Candidate persistence input contains an invalid context or evidence contract.");
+        }
+    }
+
+    private static void ValidateCandidateCampaignV2Input(CandidateInvestigationPersistenceRequest request)
+    {
+        using JsonDocument document = JsonDocument.Parse(request.InputPayload, new JsonDocumentOptions
+        {
+            AllowTrailingCommas = false,
+            CommentHandling = JsonCommentHandling.Disallow,
+            MaxDepth = 64,
+        });
+        JsonElement root = document.RootElement;
+        JsonElement[] contexts = root.GetProperty("contexts").EnumerateArray().ToArray();
+        string packageIdentity = Text(root, "package_id");
+        if (Text(root, "schema_id") != "infinium.llm.candidate-investigation-execution-input/v2"
+            || Text(root, "schema_version") != "2"
+            || !Nonempty(packageIdentity) || packageIdentity.Length > 256 || packageIdentity.Any(char.IsControl)
+            || contexts.Length != 2)
+        {
+            throw new InvalidDataException("Candidate persistence did not retain the exact campaign v2 authority envelope.");
+        }
+        JsonElement context = contexts.SingleOrDefault(item => Text(item, "context_id") == request.ContextId);
+        if (context.ValueKind == JsonValueKind.Undefined || context.GetProperty("evidence").GetArrayLength() != 1)
+        {
+            throw new InvalidDataException("Candidate campaign v2 input does not bind one exact context root.");
+        }
+        JsonElement evidence = context.GetProperty("evidence")[0];
+        CandidateEvidenceProvenanceBinding binding = request.EvidenceBindings.Single();
+        if (Text(evidence, "evidence_id") != binding.EvidenceId
+            || Text(evidence, "evidence_application_link_id") != binding.EvidenceApplicationLinkId
+            || Text(evidence, "content_sha256") != binding.ContentSha256)
+        {
+            throw new InvalidDataException("Candidate campaign v2 evidence identity or digest drifted.");
+        }
+        bool source = evidence.TryGetProperty("host_bindings", out JsonElement sourceRoot);
+        bool host = evidence.TryGetProperty("host_evidence", out JsonElement hostRoot);
+        if (source == host)
+        {
+            throw new InvalidDataException("Candidate campaign v2 evidence root discriminator is invalid.");
+        }
+        if (source)
+        {
+            if (binding.RootKind != "persisted-source-claim-application"
+                || Text(sourceRoot, "acquisition_run_id") != binding.SourceAcquisitionId
+                || Text(sourceRoot, "proposal_id") != binding.ProposalId
+                || Text(sourceRoot, "source_admission_id") != binding.SourceAdmissionId
+                || Text(sourceRoot, "admitted_artifact_id") != binding.AdmittedArtifactId
+                || Text(sourceRoot, "application_link_id") != binding.SourceApplicationLinkId
+                || Text(sourceRoot, "source_revision_id") != binding.SourceRevisionId
+                || Text(sourceRoot, "passage_id") != binding.PassageId
+                || Text(sourceRoot, "persisted_payload_sha256") != binding.ContentSha256)
+            {
+                throw new InvalidDataException("Candidate campaign v2 source root differs from its exact persisted WP10 chain.");
+            }
+        }
+        else if (binding.RootKind != "frozen-host-evidence"
+            || Text(hostRoot, "evidence_root_id") != binding.EvidenceRootId
+            || Text(hostRoot, "applicability_record_id") != binding.ApplicabilityRecordId
+            || Text(hostRoot, "source_revision_id") != binding.SourceRevisionId
+            || Text(hostRoot, "passage_id") != binding.PassageId
+            || binding.SourceAcquisitionId.Length != 0 || binding.SourceAdmissionId.Length != 0
+            || binding.SourceApplicationLinkId.Length != 0 || binding.ProposalId.Length != 0
+            || binding.AdmittedArtifactId.Length != 0)
+        {
+            throw new InvalidDataException("Candidate campaign v2 frozen-host root gained a parallel source claim or drifted.");
         }
     }
 
@@ -1020,47 +1340,91 @@ public partial class AuthoritativeStore
         CandidateEvidenceProvenanceBinding binding,
         SqliteTransaction transaction)
     {
-        using SqliteCommand source = connection.CreateCommand();
-        source.Transaction = transaction;
-        source.CommandText =
+        if (binding.RootKind == "persisted-source-claim-application")
+        {
+            using SqliteCommand source = connection.CreateCommand();
+            source.Transaction = transaction;
+            source.CommandText =
             """
-            SELECT proposal.payload_id FROM evidence_acquisition_application_links application
+            SELECT CASE WHEN $campaign=1 THEN artifact.payload_id ELSE proposal.payload_id END
+            FROM evidence_acquisition_application_links application
             JOIN evidence_acquisition_runs acquisition ON acquisition.acquisition_run_id=application.acquisition_run_id
             JOIN provider_semantic_admissions admission
               ON admission.admission_id=application.admission_id
              AND admission.owner_kind='evidence-acquisition-run'
              AND admission.owner_id=application.acquisition_run_id
              AND admission.admitted_artifact_id=application.admitted_artifact_id
+             AND ($proposal='' OR admission.proposal_id=$proposal)
+             AND ($artifact='' OR admission.admitted_artifact_id=$artifact)
              AND admission.state='admitted'
             JOIN provider_semantic_proposals proposal ON proposal.proposal_id=admission.proposal_id
-             AND proposal.payload_id=application.admitted_artifact_id
+            LEFT JOIN source_claim_admitted_artifacts artifact
+              ON artifact.admitted_artifact_id=application.admitted_artifact_id
+             AND artifact.acquisition_run_id=application.acquisition_run_id
+             AND artifact.proposal_id=proposal.proposal_id
+             AND artifact.admission_id=admission.admission_id
+             AND artifact.source_revision_id=$revision
+             AND artifact.passage_id=$passage
+             AND artifact.content_sha256=$sha
+            LEFT JOIN payloads payload ON payload.payload_id=artifact.payload_id
+             AND payload.content_sha256=artifact.content_sha256
+             AND payload.byte_length=artifact.byte_length
             WHERE application.application_link_id=$source_application
               AND application.acquisition_run_id=$acquisition AND application.admission_id=$admission
-              AND application.analysis_run_id=$run AND application.application_scope_id=$scope
-              AND application.cost_attribution_scope_id=$cost
-              AND acquisition.parent_analysis_run_id=$run;
+              AND ($campaign=1 OR application.analysis_run_id=$run)
+              AND application.application_scope_id=$scope
+              AND ($campaign=1 OR application.cost_attribution_scope_id=$cost)
+              AND acquisition.parent_analysis_run_id=application.analysis_run_id
+              AND ($campaign=0 OR artifact.admitted_artifact_id IS NOT NULL
+                AND payload.content_sha256=artifact.content_sha256
+                AND payload.byte_length=artifact.byte_length);
             """;
-        source.Parameters.AddWithValue("$source_application", binding.SourceApplicationLinkId);
-        source.Parameters.AddWithValue("$acquisition", binding.SourceAcquisitionId);
-        source.Parameters.AddWithValue("$admission", binding.SourceAdmissionId);
-        source.Parameters.AddWithValue("$run", request.Document.AnalysisRunId.Value);
-        source.Parameters.AddWithValue("$scope", request.ApplicationScopeId);
-        source.Parameters.AddWithValue("$cost", request.CostAttributionScopeId);
-        string sourcePayloadId = source.ExecuteScalar() as string
-            ?? throw new InvalidDataException("Candidate evidence does not bind one exact admitted WP6 source-acquisition chain.");
-        byte[] sourceBytes = ReadRetainedPayloadBytes(sourcePayloadId)
-            ?? throw new InvalidDataException("Candidate evidence source-acquisition payload is unavailable.");
-        SourceClaimExtractionDocument sourceDocument = JsonSerializer.Deserialize<SourceClaimExtractionDocument>(sourceBytes)
-            ?? throw new InvalidDataException("Candidate evidence source-acquisition payload is invalid.");
-        if (sourceDocument.SourceRevisionId.Value != binding.SourceRevisionId
-            || !sourceDocument.PassageIds.Any(passage => passage.Value == binding.PassageId))
+            source.Parameters.AddWithValue("$source_application", binding.SourceApplicationLinkId);
+            source.Parameters.AddWithValue("$acquisition", binding.SourceAcquisitionId);
+            source.Parameters.AddWithValue("$admission", binding.SourceAdmissionId);
+            source.Parameters.AddWithValue("$proposal", binding.ProposalId);
+            source.Parameters.AddWithValue("$artifact", binding.AdmittedArtifactId);
+            source.Parameters.AddWithValue("$campaign", request.NormalizedProductInputPayload is null ? 0 : 1);
+            source.Parameters.AddWithValue("$run", request.Document.AnalysisRunId.Value);
+            source.Parameters.AddWithValue("$scope", request.ApplicationScopeId);
+            source.Parameters.AddWithValue("$cost", request.CostAttributionScopeId);
+            source.Parameters.AddWithValue("$revision", binding.SourceRevisionId);
+            source.Parameters.AddWithValue("$passage", binding.PassageId);
+            source.Parameters.AddWithValue("$sha", binding.ContentSha256);
+            string sourcePayloadId = source.ExecuteScalar() as string
+                ?? throw new InvalidDataException("Candidate evidence does not bind one exact admitted WP10 source-acquisition chain.");
+            byte[] sourceBytes = ReadRetainedPayloadBytes(sourcePayloadId)
+                ?? throw new InvalidDataException("Candidate evidence source-acquisition payload is unavailable.");
+            if (request.NormalizedProductInputPayload is not null
+                && Convert.ToHexStringLower(SHA256.HashData(sourceBytes)) != binding.ContentSha256)
+            {
+                throw new InvalidDataException("Candidate evidence payload bytes differ from its admitted WP10 artifact.");
+            }
+        }
+        else if (binding.RootKind != "frozen-host-evidence")
         {
-            throw new InvalidDataException("Candidate evidence revision or passage does not match its admitted WP6 artifact.");
+            throw new InvalidDataException("Candidate evidence has an unknown provenance-root discriminator.");
         }
 
         using SqliteCommand evidence = connection.CreateCommand();
         evidence.Transaction = transaction;
-        evidence.CommandText =
+        evidence.CommandText = binding.RootKind == "frozen-host-evidence"
+            ?
+            """
+            SELECT revision.evidence_state,payload.content_sha256,''
+            FROM evidence_application_links application
+            JOIN evidence_revisions revision ON revision.evidence_revision_id=application.evidence_revision_id
+            JOIN documentation_imports import_record ON import_record.documentation_import_id=revision.import_id
+            JOIN payloads payload ON payload.payload_id=revision.evidence_payload_id
+            WHERE application.evidence_application_link_id=$evidence_application
+              AND application.evidence_revision_id=$evidence AND application.run_id=$run
+              AND revision.documentation_passage_id IS NULL
+              AND revision.evidence_kind='local-observation'
+              AND revision.authority_kind='snapshot-bound-local'
+              AND import_record.documentation_revision_id=$revision
+              AND payload.content_sha256=$fingerprint;
+            """
+            :
             """
             SELECT revision.evidence_state,payload.content_sha256,
               (SELECT CASE WHEN COUNT(*)=0 THEN ''
@@ -1141,6 +1505,181 @@ public partial class AuthoritativeStore
             return results;
         }
     }
+
+    public void ValidateCandidateEvidenceAuthority(string outcomeId, string contextId, byte[] exactV2Input)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(outcomeId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(contextId);
+        ArgumentNullException.ThrowIfNull(exactV2Input);
+        using JsonDocument input = JsonDocument.Parse(exactV2Input);
+        JsonElement context = input.RootElement.GetProperty("contexts").EnumerateArray()
+            .Single(item => Text(item, "context_id") == contextId);
+        JsonElement evidence = context.GetProperty("evidence").EnumerateArray().Single();
+        JsonElement observation = context.GetProperty("local_observations").EnumerateArray().Single();
+        bool sourceRoot = evidence.TryGetProperty("host_bindings", out JsonElement root);
+        if (!sourceRoot && !evidence.TryGetProperty("host_evidence", out root))
+        {
+            throw new InvalidDataException("The retained v2 candidate input has no evidence-root discriminator.");
+        }
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT authority.evidence_id,authority.evidence_application_link_id,authority.root_kind,
+                  authority.evidence_root_id,authority.applicability_record_id,authority.source_acquisition_id,
+                  authority.source_proposal_id,authority.source_admission_id,authority.admitted_artifact_id,
+                  authority.source_application_link_id,authority.source_revision_id,authority.passage_id,
+                  authority.content_sha256,authority.local_observation_id,authority.local_observation_sha256,
+                  payload.content_sha256,payload.byte_length
+                FROM candidate_evidence_authority authority
+                JOIN candidate_investigation_outcomes outcome ON outcome.outcome_id=authority.outcome_id
+                 AND outcome.context_id=$context
+                JOIN payloads payload ON payload.payload_id=authority.input_payload_id
+                WHERE authority.outcome_id=$outcome;
+                """;
+            command.Parameters.AddWithValue("$outcome", outcomeId);
+            command.Parameters.AddWithValue("$context", contextId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                throw new InvalidDataException("The retained candidate outcome has no relational evidence authority.");
+            }
+            string expectedKind = sourceRoot ? "persisted-source-claim-application" : "frozen-host-evidence";
+            string exactInputSha = Convert.ToHexStringLower(SHA256.HashData(exactV2Input));
+            if (reader.GetString(0) != Text(evidence, "evidence_id")
+                || reader.GetString(1) != Text(evidence, "evidence_application_link_id")
+                || reader.GetString(2) != expectedKind
+                || NullableText(reader, 3) != (sourceRoot ? null : Text(root, "evidence_root_id"))
+                || NullableText(reader, 4) != (sourceRoot ? null : Text(root, "applicability_record_id"))
+                || NullableText(reader, 5) != (sourceRoot ? Text(root, "acquisition_run_id") : null)
+                || NullableText(reader, 6) != (sourceRoot ? Text(root, "proposal_id") : null)
+                || NullableText(reader, 7) != (sourceRoot ? Text(root, "source_admission_id") : null)
+                || NullableText(reader, 8) != (sourceRoot ? Text(root, "admitted_artifact_id") : null)
+                || NullableText(reader, 9) != (sourceRoot ? Text(root, "application_link_id") : null)
+                || reader.GetString(10) != Text(root, "source_revision_id")
+                || reader.GetString(11) != Text(root, "passage_id")
+                || reader.GetString(12) != Text(evidence, "content_sha256")
+                || reader.GetString(13) != Text(observation, "observation_id")
+                || reader.GetString(14) != Text(observation, "text_sha256")
+                || reader.GetString(15) != exactInputSha || reader.GetInt64(16) != exactV2Input.LongLength
+                || reader.Read())
+            {
+                throw new InvalidDataException("The retained candidate relational root or local observation drifted.");
+            }
+            reader.Close();
+            ValidateCandidateUnderlyingEvidenceRows(outcomeId, contextId, evidence, root, sourceRoot);
+        }
+    }
+
+    private void ValidateCandidateUnderlyingEvidenceRows(string outcomeId, string contextId,
+        JsonElement evidence, JsonElement root, bool sourceRoot)
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        if (sourceRoot)
+        {
+            command.CommandText =
+                """
+                SELECT artifact.payload_id,artifact.byte_length,artifact.start_byte,artifact.end_byte,
+                  artifact.content_sha256,COUNT(DISTINCT fact.applicability_fact_id)
+                FROM candidate_evidence_authority authority
+                JOIN evidence_acquisition_application_links application
+                  ON application.application_link_id=authority.source_application_link_id
+                 AND application.acquisition_run_id=authority.source_acquisition_id
+                 AND application.admission_id=authority.source_admission_id
+                 AND application.admitted_artifact_id=authority.admitted_artifact_id
+                JOIN provider_semantic_admissions admission
+                  ON admission.admission_id=authority.source_admission_id
+                 AND admission.proposal_id=authority.source_proposal_id
+                 AND admission.owner_id=authority.source_acquisition_id
+                 AND admission.admitted_artifact_id=authority.admitted_artifact_id
+                 AND admission.state='admitted'
+                JOIN source_claim_admitted_artifacts artifact
+                  ON artifact.admitted_artifact_id=authority.admitted_artifact_id
+                 AND artifact.acquisition_run_id=authority.source_acquisition_id
+                 AND artifact.proposal_id=authority.source_proposal_id
+                 AND artifact.admission_id=authority.source_admission_id
+                 AND artifact.source_revision_id=authority.source_revision_id
+                 AND artifact.passage_id=authority.passage_id
+                 AND artifact.content_sha256=authority.content_sha256
+                JOIN payloads payload ON payload.payload_id=artifact.payload_id
+                 AND payload.content_sha256=artifact.content_sha256
+                 AND payload.byte_length=artifact.byte_length
+                JOIN source_claim_applicability_facts fact
+                  ON fact.acquisition_run_id=authority.source_acquisition_id
+                 AND fact.proposal_id=authority.source_proposal_id
+                 AND fact.source_revision_id=authority.source_revision_id
+                JOIN payloads fact_payload ON fact_payload.payload_id=fact.statement_payload_id
+                 AND fact_payload.content_sha256=fact.statement_sha256
+                WHERE authority.outcome_id=$outcome AND authority.evidence_id=$evidence
+                  AND authority.root_kind='persisted-source-claim-application'
+                GROUP BY artifact.payload_id,artifact.byte_length,artifact.start_byte,artifact.end_byte,
+                  artifact.content_sha256;
+                """;
+        }
+        else
+        {
+            command.CommandText =
+                """
+                SELECT payload.payload_id,payload.byte_length,0,payload.byte_length,payload.content_sha256,1
+                FROM candidate_evidence_authority authority
+                JOIN candidate_investigation_outcomes outcome ON outcome.outcome_id=authority.outcome_id
+                 AND outcome.context_id=$context
+                JOIN evidence_application_links application
+                 ON application.evidence_application_link_id=authority.evidence_application_link_id
+                 AND application.evidence_revision_id=authority.evidence_id
+                 AND application.run_id=outcome.owner_id
+                 AND application.subject_id=outcome.candidate_id
+                 AND application.subject_type='installed-entity'
+                 AND application.analysis_context_id=outcome.context_id
+                JOIN evidence_revisions revision ON revision.evidence_revision_id=application.evidence_revision_id
+                 AND revision.documentation_passage_id IS NULL
+                 AND revision.evidence_kind='local-observation'
+                 AND revision.authority_kind='snapshot-bound-local'
+                 AND revision.evidence_state='admitted'
+                JOIN documentation_imports import_record ON import_record.documentation_import_id=revision.import_id
+                 AND import_record.documentation_revision_id=authority.source_revision_id
+                JOIN payloads payload ON payload.payload_id=revision.evidence_payload_id
+                 AND payload.content_sha256=authority.content_sha256
+                WHERE authority.outcome_id=$outcome AND authority.evidence_id=$evidence
+                  AND authority.root_kind='frozen-host-evidence'
+                  AND authority.evidence_root_id=$root
+                  AND authority.applicability_record_id=$applicability;
+                """;
+            command.Parameters.AddWithValue("$context", contextId);
+            command.Parameters.AddWithValue("$root", Text(root, "evidence_root_id"));
+            command.Parameters.AddWithValue("$applicability", Text(root, "applicability_record_id"));
+        }
+        command.Parameters.AddWithValue("$outcome", outcomeId);
+        command.Parameters.AddWithValue("$evidence", Text(evidence, "evidence_id"));
+        using SqliteDataReader reader = command.ExecuteReader();
+        if (!reader.Read())
+        {
+            throw new InvalidDataException("Candidate replay cannot reopen its underlying evidence graph.");
+        }
+        string payloadId = reader.GetString(0);
+        long byteLength = reader.GetInt64(1);
+        long startByte = reader.GetInt64(2);
+        long endByte = reader.GetInt64(3);
+        string sha256 = reader.GetString(4);
+        long applicabilityCount = reader.GetInt64(5);
+        if (reader.Read() || sha256 != Text(evidence, "content_sha256")
+            || byteLength < 0 || startByte < 0 || endByte < startByte || endByte > byteLength
+            || sourceRoot && applicabilityCount != 1)
+        {
+            throw new InvalidDataException("Candidate replay underlying evidence graph is ambiguous or mismatched.");
+        }
+        byte[] bytes = ReadRetainedPayloadBytes(payloadId)
+            ?? throw new InvalidDataException("Candidate replay underlying evidence payload is unavailable.");
+        if (bytes.LongLength != byteLength
+            || Convert.ToHexStringLower(SHA256.HashData(bytes)) != sha256)
+        {
+            throw new InvalidDataException("Candidate replay underlying evidence bytes drifted.");
+        }
+    }
+
+    private static string? NullableText(SqliteDataReader reader, int ordinal) =>
+        reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
 
     public IReadOnlyList<ProviderSemanticAdmissionReadModel> ReadCandidateInvestigationAdmissionsForOperation(
         string analysisRunId,
@@ -1352,7 +1891,10 @@ public sealed record CandidateInvestigationPersistenceRequest(
     string? ProviderAttemptId,
     string? RequestId,
     string? DispatchFenceId,
-    DateTimeOffset OccurredAt);
+    DateTimeOffset OccurredAt)
+{
+    public byte[]? NormalizedProductInputPayload { get; init; }
+}
 
 public sealed record CandidateEvidenceProvenanceBinding(
     string EvidenceId,
@@ -1364,7 +1906,16 @@ public sealed record CandidateEvidenceProvenanceBinding(
     string PassageId,
     string Relationship,
     string Availability,
-    string ContentSha256);
+    string ContentSha256)
+{
+    public string RootKind { get; init; } = "persisted-source-claim-application";
+    public string ProposalId { get; init; } = string.Empty;
+    public string AdmittedArtifactId { get; init; } = string.Empty;
+    public string EvidenceRootId { get; init; } = string.Empty;
+    public string ApplicabilityRecordId { get; init; } = string.Empty;
+    public string LocalObservationId { get; init; } = string.Empty;
+    public string LocalObservationSha256 { get; init; } = string.Empty;
+}
 
 public sealed record CandidateInvestigationPersistenceReceipt(
     string AnalysisRunId,

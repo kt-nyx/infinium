@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infinium.Application.Provider;
+using Infinium.Domain.Contracts;
 using Infinium.OpenAI;
 using Infinium.Persistence;
 using Microsoft.Data.Sqlite;
@@ -46,25 +47,26 @@ internal static class M1Slice6CampaignSemanticAdmission
         string inputJson = ExtractUntrustedInput(authority.CanonicalRequest);
         if (authority.Stage == M1Slice6CampaignStage.SourceClaimExtraction)
         {
-            SourceClaimExecutionInput input = JsonSerializer.Deserialize<SourceClaimExecutionInput>(
-                inputJson, SourceClaimContextMinimizer.JsonOptions)
-                ?? throw new InvalidDataException("WP10 has no exact answer-free prerequisite input.");
+            SourceClaimExecutionInput input = M1Slice6CampaignV2InputAdapter.ReadSourceClaim(inputJson);
             MaterializeSourceRevision(store, input, occurredAt);
         }
         else if (authority.Stage == M1Slice6CampaignStage.CandidateInvestigation)
         {
-            CandidateInvestigationExecutionInput input =
-                JsonSerializer.Deserialize<CandidateInvestigationExecutionInput>(
-                    inputJson, SourceClaimContextMinimizer.JsonOptions)
-                ?? throw new InvalidDataException("WP11 has no exact answer-free prerequisite input.");
+            M1Slice6CampaignCandidateInput campaignInput = M1Slice6CampaignV2InputAdapter.ReadCandidate(inputJson);
+            CandidateInvestigationExecutionInput input = campaignInput.ProductInput;
             if (input.Contexts.Count != 2)
             {
                 throw new InvalidDataException("WP11 live input must bind the exact two-context product contract.");
             }
+            using SqliteConnection connection = new($"Data Source={store.Paths.Database};Pooling=False");
+            connection.Open();
+            using SqliteTransaction transaction = connection.BeginTransaction();
             foreach (CandidateInvestigationContextInput context in input.Contexts)
             {
-                MaterializeCandidateRoots(store, input, context, occurredAt);
+                MaterializeCandidateRoots(store, input, context,
+                    campaignInput.RootsByContext[context.ContextId], occurredAt, connection, transaction);
             }
+            transaction.Commit();
         }
     }
 
@@ -109,9 +111,9 @@ internal static class M1Slice6CampaignSemanticAdmission
         AuthoritativeStore store, string inputJson, string outputJson, string rawResponseSha256,
         M1Slice6CampaignAccountingAdmission admission, DateTimeOffset occurredAt)
     {
-        SourceClaimExecutionInput input = JsonSerializer.Deserialize<SourceClaimExecutionInput>(
-            inputJson, SourceClaimContextMinimizer.JsonOptions)
-            ?? throw new InvalidDataException("WP10 output has no exact source-claim product input.");
+        M1Slice6CampaignSourceInput campaignInput =
+            M1Slice6CampaignV2InputAdapter.ReadSourceClaimAuthority(inputJson);
+        SourceClaimExecutionInput input = campaignInput.ProductInput;
         M1Slice6CampaignTranscriptEnvelope<SourceClaimRetainedTranscript> envelope =
             JsonSerializer.Deserialize<M1Slice6CampaignTranscriptEnvelope<SourceClaimRetainedTranscript>>(
                 outputJson, SourceClaimContextMinimizer.JsonOptions)
@@ -123,64 +125,166 @@ internal static class M1Slice6CampaignSemanticAdmission
         {
             throw new InvalidDataException("WP10 input/output identities differ from the authoritative provider admission.");
         }
-        SourceClaimRetainedTranscript transcript = envelope.Transcripts[0] with
+        SourceClaimRetainedTranscript retainedTranscript = envelope.Transcripts[0] with
         {
             ResponseFingerprint = rawResponseSha256,
         };
-        if (transcript.ResponseRecordId != "m1s6-campaign-stage-2-response")
+        if (retainedTranscript.ResponseRecordId != "m1s6-campaign-stage-2-response"
+            || retainedTranscript.Proposals.Select(item => item.PassageId).Distinct(StringComparer.Ordinal).Count()
+                != input.Passages.Count
+            || !retainedTranscript.Proposals.Select(item => item.PassageId).ToHashSet(StringComparer.Ordinal)
+                .SetEquals(input.Passages.Select(item => item.PassageId)))
         {
-            throw new InvalidDataException("WP10 transcript did not bind the authoritative response record.");
+            throw new InvalidDataException("WP10 transcript did not total the authoritative response and passages.");
         }
+        SourceClaimTranscriptProposal admittedProposal = retainedTranscript.Proposals.Single(item => item.State == "proposed");
+        if (admittedProposal.ConditionIds.Count == 0 || admittedProposal.ConditionIds.Any(conditionId =>
+                !campaignInput.ApplicabilityFacts.TryGetValue(conditionId, out M1Slice6CampaignApplicabilityFact? fact)
+                || fact.SourceRevisionId != input.SourceRevisionId))
+        {
+            throw new InvalidDataException("WP10 admitted proposal did not reopen exact applicability facts.");
+        }
+        string semanticResultSha256 = SourceActualSemanticResultSha256(input, retainedTranscript);
+        SourceClaimRetainedTranscript transcript = retainedTranscript;
         RequireSourceRevision(store, input);
+        Dictionary<string, SourceClaimCampaignIdentity> identities = transcript.Proposals
+            .Where(item => item.State == "proposed")
+            .ToDictionary(item => item.ProposalId, item => CampaignSourceIdentity(item.ProposalId),
+                StringComparer.Ordinal);
+        SourceClaimPassageInput admittedPassage = input.Passages.Single(item =>
+            item.PassageId == admittedProposal.PassageId);
+        SourceClaimCampaignIdentity admittedIdentity = identities[admittedProposal.ProposalId];
+        Dictionary<string, SourceClaimArtifactAuthority> artifactAuthority = new(StringComparer.Ordinal)
+        {
+            [admittedProposal.ProposalId] = new(admittedIdentity.AdmittedArtifactId,
+                admittedPassage.SourceRevisionId, admittedPassage.PassageId,
+                Encoding.UTF8.GetBytes(admittedPassage.Text), admittedPassage.TextSha256,
+                checked((int)(admittedPassage.StartByte ?? 0)),
+                checked((int)(admittedPassage.EndByte ?? Encoding.UTF8.GetByteCount(admittedPassage.Text)))),
+        };
+        Dictionary<string, SourceClaimApplicabilityFactAuthority> applicabilityFacts =
+            campaignInput.ApplicabilityFacts.Values.ToDictionary(item => item.FactId,
+                item => new SourceClaimApplicabilityFactAuthority(item.FactId, item.SourceRevisionId,
+                    item.Statement, item.StatementSha256), StringComparer.Ordinal);
+        Dictionary<string, SourceClaimApplicationAuthority> applicationAuthority = new(StringComparer.Ordinal)
+        {
+            [admittedProposal.ProposalId] = new(admittedIdentity.ApplicationLinkId,
+                input.ParentAnalysisRunId, input.ApplicationScopeId, input.CostAttributionScopeId),
+        };
         SourceClaimAdmissionPublication publication = new SourceClaimAcquisitionCoordinator(store)
             .AdmitRetainedTranscript(input, transcript, admission.AuthorizationId,
-                admission.AttemptId, admission.RequestId, admission.DispatchFenceId, occurredAt);
+                admission.AttemptId, admission.RequestId, admission.DispatchFenceId, occurredAt,
+                identities, artifactAuthority, applicabilityFacts, applicationAuthority);
         SourceClaimScenarioResult scenario = publication.Scenario;
-        if (scenario.Disposition is not ("accepted" or "accepted-conditional"
-                or "accepted-conditional-applicability")
-            || publication.Persistence.ProposalCount != 1
-            || publication.Persistence.AdmissionCount != 1)
+        int admittedCount = scenario.Extraction.AdmissionCorrelations.Count(item =>
+            item.State == ProposalAdmissionState.Admitted);
+        const string semanticDisposition = "accepted-conditional-applicability";
+        if (publication.Persistence.ProposalCount != input.Passages.Count
+            || publication.Persistence.AdmissionCount != input.Passages.Count
+            || admittedCount != 1
+            || scenario.Extraction.ContradictionEvidenceIds.Count == 0
+            || scenario.Extraction.Abstentions.Count == 0
+            || scenario.Extraction.Gaps.Count == 0)
         {
-            throw new InvalidDataException("WP10 host admission did not produce one exact admitted source claim.");
+            throw new InvalidDataException(
+                "WP10 host admission did not durably retain the total semantic matrix and one exact admitted source claim.");
         }
-        SourceClaimConsumptionReceipt consumed = store.ConsumeAdmittedSourceClaim(new(
-            "m1s6-campaign-source-application", input.AcquisitionRunId,
-            "admission-m1s6-campaign-source-proposal", input.ParentAnalysisRunId,
-            input.ApplicationScopeId, input.CostAttributionScopeId, occurredAt.AddTicks(1)));
-        if (consumed.AdmittedArtifactId.Length == 0)
+        SourceClaimAdmissionCorrelationContract admitted = scenario.Extraction.AdmissionCorrelations
+            .Single(item => item.State == ProposalAdmissionState.Admitted);
+        SourceClaimCampaignIdentity semanticIdentity = identities[admitted.ProposalId.Value];
+        SourceClaimApplicationReadModel consumed = store.ReadSourceClaimApplicationLinks(input.AcquisitionRunId)
+            .Single(link => link.ApplicationLinkId == semanticIdentity.ApplicationLinkId);
+        if (consumed.AdmittedArtifactId != semanticIdentity.AdmittedArtifactId
+            || consumed.AdmissionId != semanticIdentity.AdmissionId)
         {
             throw new InvalidDataException("WP10 admitted claim did not produce the exact WP11 provenance handoff.");
         }
-        byte[] result = publication.JsonTransparency;
-        return new("infinium.host.source-claim-admission/v1", scenario.Disposition,
-            publication.Persistence.ProposalCount, publication.Persistence.AdmissionCount,
-            Convert.ToHexStringLower(SHA256.HashData(result)), new(input.AcquisitionRunId,
+        return new("infinium.host.source-claim-admission/v1", semanticDisposition,
+            publication.Persistence.ProposalCount, admittedCount,
+            semanticResultSha256, new(input.AcquisitionRunId,
                 consumed.AdmissionId, consumed.AdmittedArtifactId, consumed.ApplicationLinkId,
                 "", "", ""));
+    }
+
+    private static SourceClaimCampaignIdentity CampaignSourceIdentity(string proposalId)
+    {
+        const string prefix = "wp10-proposal-";
+        if (!proposalId.StartsWith(prefix, StringComparison.Ordinal)
+            || proposalId.Length == prefix.Length)
+        {
+            throw new InvalidDataException(
+                "WP10 v2 proposal identity must expose one bounded host-owned semantic suffix.");
+        }
+        string suffix = proposalId[prefix.Length..];
+        return new("wp10-source-admission-" + suffix, "wp10-artifact-" + suffix,
+            "wp10-application-link-" + suffix);
     }
 
     private static void MaterializeSourceRevision(AuthoritativeStore store, SourceClaimExecutionInput input,
         DateTimeOffset occurredAt)
     {
+        foreach (SourceClaimPassageInput passage in input.Passages.Where(item => !item.Deleted))
+        {
+            byte[] payload = Encoding.UTF8.GetBytes(passage.Text);
+            string sha = Convert.ToHexStringLower(SHA256.HashData(payload));
+            if (sha != passage.TextSha256)
+            {
+                throw new InvalidDataException("WP10 prerequisite passage bytes differ from their frozen digest.");
+            }
+            string directory = Path.Combine(store.Paths.Payloads, sha[..2], sha[2..4]);
+            Directory.CreateDirectory(directory);
+            string path = Path.Combine(directory, sha);
+            if (!File.Exists(path))
+            {
+                using FileStream stream = new(path, FileMode.CreateNew, FileAccess.Write, FileShare.None,
+                    4096, FileOptions.WriteThrough);
+                stream.Write(payload);
+                stream.Flush(flushToDisk: true);
+            }
+        }
         using SqliteConnection connection = new($"Data Source={store.Paths.Database};Pooling=False");
         connection.Open();
+        using SqliteTransaction transaction = connection.BeginTransaction();
         using SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText =
             """
-            INSERT OR IGNORE INTO documentation_revisions VALUES(
+            INSERT INTO documentation_revisions VALUES(
               $revision,$source,'fixture','1',NULL,NULL,$sha,0,
-              'unavailable','unavailable','unavailable',$now);
+              'unavailable','unavailable','unavailable',$now)
+            ON CONFLICT(documentation_revision_id) DO NOTHING;
             """;
         command.Parameters.AddWithValue("$revision", input.SourceRevisionId);
         command.Parameters.AddWithValue("$source", "source-" + input.SourceRevisionId);
         command.Parameters.AddWithValue("$sha", input.Passages[0].TextSha256);
         command.Parameters.AddWithValue("$now", occurredAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
         _ = command.ExecuteNonQuery();
+        foreach (SourceClaimPassageInput passage in input.Passages.Where(item => !item.Deleted))
+        {
+            byte[] payload = Encoding.UTF8.GetBytes(passage.Text);
+            command.Parameters.Clear();
+            command.CommandText =
+                """
+                INSERT INTO payloads VALUES(
+                  $payload,$sha,$bytes,'text/plain','retained',
+                  'payloads/' || substr($sha,1,2) || '/' || substr($sha,3,2) || '/' || $sha,$now)
+                ON CONFLICT(content_sha256) DO NOTHING;
+                """;
+            command.Parameters.AddWithValue("$payload", "wp10-passage-" + passage.PassageId);
+            command.Parameters.AddWithValue("$sha", passage.TextSha256);
+            command.Parameters.AddWithValue("$bytes", payload.LongLength);
+            command.Parameters.AddWithValue("$now", occurredAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+            _ = command.ExecuteNonQuery();
+        }
+        transaction.Commit();
+        command.Transaction = null;
+        command.Parameters.Clear();
         command.CommandText =
             """
             SELECT source_id,content_sha256,availability_state
               FROM documentation_revisions WHERE documentation_revision_id=$revision;
             """;
+        command.Parameters.AddWithValue("$revision", input.SourceRevisionId);
         using SqliteDataReader reader = command.ExecuteReader();
         if (!reader.Read())
         {
@@ -220,54 +324,77 @@ internal static class M1Slice6CampaignSemanticAdmission
         AuthoritativeStore store, string inputJson, string outputJson, string rawResponseSha256,
         M1Slice6CampaignAccountingAdmission admission, DateTimeOffset occurredAt)
     {
-        CandidateInvestigationExecutionInput input =
-            JsonSerializer.Deserialize<CandidateInvestigationExecutionInput>(
-                inputJson, SourceClaimContextMinimizer.JsonOptions)
-            ?? throw new InvalidDataException("WP11 output has no exact candidate product input.");
+        M1Slice6CampaignCandidateInput campaignInput = M1Slice6CampaignV2InputAdapter.ReadCandidate(inputJson);
+        CandidateInvestigationExecutionInput input = campaignInput.ProductInput;
         M1Slice6CampaignTranscriptEnvelope<CandidateInvestigationRetainedTranscript> envelope =
             JsonSerializer.Deserialize<M1Slice6CampaignTranscriptEnvelope<CandidateInvestigationRetainedTranscript>>(
                 outputJson, SourceClaimContextMinimizer.JsonOptions)
             ?? throw new InvalidDataException("WP11 output is not an exact retained transcript envelope.");
         if (envelope.SchemaId != "infinium.llm.candidate-investigation-retained-transcripts/v1"
-            || envelope.SchemaVersion != "1" || envelope.Transcripts.Count != 1
+            || envelope.SchemaVersion != "1" || envelope.Transcripts.Count != 2
             || input.OperationId != admission.OperationId
             || input.HostAuthorizationId != admission.AuthorizationId)
         {
             throw new InvalidDataException("WP11 input/output identities differ from the authoritative provider admission.");
         }
-        CandidateInvestigationRetainedTranscript transcript = envelope.Transcripts[0] with
+        if (!envelope.Transcripts.Select(item => item.ContextId).ToHashSet(StringComparer.Ordinal)
+                .SetEquals(input.Contexts.Select(item => item.ContextId))
+            || envelope.Transcripts.Any(item => item.ResponseRecordId != "m1s6-campaign-stage-3-response"))
         {
-            ResponseFingerprint = rawResponseSha256,
-        };
-        if (transcript.ResponseRecordId != "m1s6-campaign-stage-3-response")
-        {
-            throw new InvalidDataException("WP11 transcript did not bind the authoritative response record.");
+            throw new InvalidDataException("WP11 transcripts did not total the exact contexts or response record.");
         }
-        RequireCandidateRoots(store, input, transcript.ContextId);
-        CandidateInvestigationAdmissionPublication publication =
-            new DurableCandidateInvestigationCoordinator(store).AdmitRetainedTranscript(
-                input, transcript, admission.AuthorizationId, admission.AttemptId,
-                admission.RequestId, admission.DispatchFenceId, occurredAt);
-        if (publication.Scenario.Disposition is not ("accepted" or "accepted-conditional")
-            || publication.Persistence.ProposalCount != 1
-            || publication.Persistence.AdmissionCount != 1)
+        CandidateInvestigationRetainedTranscript[] retainedTranscripts = envelope.Transcripts
+            .Select(item => item with { ResponseFingerprint = rawResponseSha256 }).ToArray();
+        string semanticResultSha256 = CandidateActualSemanticResultSha256(campaignInput, retainedTranscripts);
+        DurableCandidateInvestigationCoordinator coordinator = new(store);
+        List<CandidateInvestigationAdmissionPublication> publications =
+            store.ExecuteCandidateInvestigationBatch(() =>
         {
-            throw new InvalidDataException("WP11 host admission did not produce one exact evidence-bound candidate proposal.");
+            List<CandidateInvestigationAdmissionPublication> staged = [];
+            foreach (CandidateInvestigationRetainedTranscript transcript in retainedTranscripts)
+            {
+                M1Slice6CampaignEvidenceRoot root = campaignInput.RootsByContext[transcript.ContextId];
+                RequireCandidateRoots(store, input, transcript.ContextId, root);
+                staged.Add(coordinator.AdmitRetainedTranscript(
+                    input, transcript, admission.AuthorizationId, admission.AttemptId,
+                    admission.RequestId, admission.DispatchFenceId, occurredAt,
+                    campaignInput.ExactV2Bytes, root,
+                    campaignInput.LocalObservationsByContext[transcript.ContextId]));
+            }
+            return staged;
+        });
+        foreach (CandidateInvestigationAdmissionPublication publication in publications)
+        {
+            CandidateInvestigationScenarioResult replay = coordinator.ReplayRetained(
+                input.AnalysisRunId, input.OperationId, publication.Scenario.ContextId);
+            if (replay.CanonicalInvestigationSha256 != publication.Scenario.CanonicalInvestigationSha256)
+            {
+                throw new InvalidDataException("WP11 authoritative replay differs from an admitted candidate result.");
+            }
         }
-        CandidateInvestigationScenarioResult replay =
-            new DurableCandidateInvestigationCoordinator(store).ReplayRetained(
-                input.AnalysisRunId, input.OperationId, transcript.ContextId);
-        if (replay.CanonicalInvestigationSha256 != publication.Scenario.CanonicalInvestigationSha256)
+        CandidateInvestigationAdmissionPublication positive = publications.Single(item =>
+            item.Scenario.Disposition is "accepted" or "accepted-conditional");
+        CandidateInvestigationAdmissionPublication negative = publications.Single(item =>
+            item.Scenario.Disposition == "empty-abstained");
+        M1Slice6CampaignEvidenceRoot positiveRoot = campaignInput.RootsByContext[positive.Scenario.ContextId];
+        M1Slice6CampaignEvidenceRoot negativeRoot = campaignInput.RootsByContext[negative.Scenario.ContextId];
+        if (positive.Scenario.Disposition is not ("accepted" or "accepted-conditional")
+            || negative.Scenario.Disposition != "empty-abstained"
+            || positiveRoot.Kind != M1Slice6CampaignEvidenceRootKind.PersistedSourceClaimApplication
+            || negativeRoot.Kind != M1Slice6CampaignEvidenceRootKind.FrozenHostEvidence
+            || positive.Scenario.SourceAcquisitionLinks.Count != 1
+            || negative.Scenario.SourceAcquisitionLinks.Count != 0
+            || positive.Persistence.ProposalCount != 1 || positive.Persistence.AdmissionCount != 1
+            || negative.Persistence.ProposalCount != 0 || negative.Persistence.AdmissionCount != 0)
         {
-            throw new InvalidDataException("WP11 authoritative replay differs from the admitted candidate result.");
+            throw new InvalidDataException("WP11 host admission did not produce one accepted and one explicitly abstained context.");
         }
         CandidateInvestigationContextInput context = input.Contexts.Single(item =>
-            item.ContextId == transcript.ContextId);
+            item.ContextId == positive.Scenario.ContextId);
         CandidateEvidenceInput evidence = context.Evidence.Single();
         return new("infinium.host.candidate-investigation-admission/v1",
-            publication.Scenario.Disposition, publication.Persistence.ProposalCount,
-            publication.Persistence.AdmissionCount,
-            Convert.ToHexStringLower(SHA256.HashData(publication.JsonTransparency)), new(
+            "accepted-conditional", 1, 1,
+            semanticResultSha256, new(
                 evidence.SourceAcquisitionId, evidence.SourceAdmissionId,
                 store.ReadSourceClaimApplicationLinks(evidence.SourceAcquisitionId)
                     .Single(link => link.ApplicationLinkId == evidence.SourceApplicationLinkId).AdmittedArtifactId,
@@ -275,35 +402,145 @@ internal static class M1Slice6CampaignSemanticAdmission
                 context.CandidateId, context.HypothesisId));
     }
 
+    private static string SourceActualSemanticResultSha256(
+        SourceClaimExecutionInput input, SourceClaimRetainedTranscript transcript)
+    {
+        Dictionary<string, SourceClaimTranscriptProposal> proposals = transcript.Proposals
+            .ToDictionary(item => item.PassageId, StringComparer.Ordinal);
+        if (proposals.Count != input.Passages.Count
+            || transcript.Proposals.Select(item => item.ProposalId).Distinct(StringComparer.Ordinal).Count()
+                != transcript.Proposals.Count
+            || !proposals.Keys.ToHashSet(StringComparer.Ordinal)
+                .SetEquals(input.Passages.Select(item => item.PassageId))
+            || proposals.Values.Any(proposal => !BoundedOpaqueId(proposal.ProposalId)))
+        {
+            throw new InvalidDataException("WP10 retained semantic result does not total every input passage.");
+        }
+        object projection = new
+        {
+            transcript.OperationId,
+            transcript.SourceRevisionId,
+            proposals = input.Passages.Select(item =>
+            {
+                SourceClaimTranscriptProposal proposal = proposals[item.PassageId];
+                return new
+                {
+                    proposal_id = proposal.State == "proposed" ? proposal.ProposalId : null,
+                    proposal.PassageId,
+                    proposal.Claim,
+                    proposal.ClaimKind,
+                    proposal.ConditionIds,
+                    proposal.ConditionScope,
+                    proposal.AuthorityCategory,
+                    proposal.ApplicationSemantics,
+                    proposal.State,
+                    proposal.Reason,
+                };
+            }).ToArray(),
+            contradiction_evidence_ids = transcript.ContradictionEvidenceIds,
+            abstentions = transcript.Abstentions,
+            gaps = transcript.Gaps,
+        };
+        return Convert.ToHexStringLower(SHA256.HashData(
+            JsonSerializer.SerializeToUtf8Bytes(projection, SourceClaimContextMinimizer.JsonOptions)));
+    }
+
+    private static string CandidateActualSemanticResultSha256(
+        M1Slice6CampaignCandidateInput campaignInput,
+        IReadOnlyList<CandidateInvestigationRetainedTranscript> transcripts)
+    {
+        CandidateInvestigationExecutionInput input = campaignInput.ProductInput;
+        Dictionary<string, CandidateInvestigationRetainedTranscript> byContext = transcripts
+            .ToDictionary(item => item.ContextId, StringComparer.Ordinal);
+        if (byContext.Count != input.Contexts.Count
+            || !byContext.Keys.ToHashSet(StringComparer.Ordinal)
+                .SetEquals(input.Contexts.Select(item => item.ContextId)))
+        {
+            throw new InvalidDataException("WP11 retained semantic result does not total every input context.");
+        }
+        using JsonDocument exactInput = JsonDocument.Parse(campaignInput.ExactV2Bytes);
+        Dictionary<string, JsonElement> exactContexts = exactInput.RootElement.GetProperty("contexts")
+            .EnumerateArray().ToDictionary(
+                item => item.GetProperty("context_id").GetString()!, item => item, StringComparer.Ordinal);
+        if (byContext.Values.SelectMany(item => item.Proposals).Any(proposal =>
+                !BoundedOpaqueId(proposal.ProposalId)))
+        {
+            throw new InvalidDataException("WP11 retained proposal identity is absent or unbounded.");
+        }
+        object projection = new
+        {
+            operation_id = input.OperationId,
+            contexts = input.Contexts.Select(context =>
+            {
+                CandidateInvestigationRetainedTranscript transcript = byContext[context.ContextId];
+                JsonElement exactContext = exactContexts[context.ContextId];
+                return new
+                {
+                    context_id = context.ContextId,
+                    candidate_id = context.CandidateId,
+                    hypothesis_id = context.HypothesisId,
+                    hypothesis = context.Hypothesis,
+                    local_observations = JsonSerializer.Deserialize<object>(
+                        exactContext.GetProperty("local_observations").GetRawText()),
+                    evidence = JsonSerializer.Deserialize<object>(
+                        exactContext.GetProperty("evidence").GetRawText()),
+                    proposals = transcript.Proposals.Select(proposal => new
+                    {
+                        proposal.CandidateId,
+                        proposal.HypothesisId,
+                        proposal.Hypothesis,
+                        proposal.SupportingEvidenceIds,
+                        proposal.ContradictingEvidenceIds,
+                        proposal.MissingInformation,
+                        proposal.AuthorityCategory,
+                        proposal.State,
+                        proposal.Reason,
+                    }).ToArray(),
+                    transcript.Abstentions,
+                    transcript.Gaps,
+                };
+            }).ToArray(),
+        };
+        return Convert.ToHexStringLower(SHA256.HashData(
+            JsonSerializer.SerializeToUtf8Bytes(projection, SourceClaimContextMinimizer.JsonOptions)));
+    }
+
+    private static bool BoundedOpaqueId(string value) => !string.IsNullOrWhiteSpace(value)
+        && value.Length <= 256 && !value.Any(char.IsControl);
+
     private static void MaterializeCandidateRoots(AuthoritativeStore store,
         CandidateInvestigationExecutionInput input,
-        CandidateInvestigationContextInput context, DateTimeOffset occurredAt)
+        CandidateInvestigationContextInput context, M1Slice6CampaignEvidenceRoot root,
+        DateTimeOffset occurredAt, SqliteConnection connection, SqliteTransaction transaction)
     {
         if (context.Evidence.Count != 1)
         {
             throw new InvalidDataException("WP11 live candidate context requires one exact admitted evidence root.");
         }
         CandidateEvidenceInput evidence = context.Evidence[0];
-        SourceClaimApplicationReadModel application = store.ReadSourceClaimApplicationLinks(
-            evidence.SourceAcquisitionId).SingleOrDefault(link =>
-                link.ApplicationLinkId == evidence.SourceApplicationLinkId
-                && link.AdmissionId == evidence.SourceAdmissionId
-                && link.ParentAnalysisRunId == input.AnalysisRunId
-                && link.ApplicationScopeId == input.ApplicationScopeId
-                && link.CostAttributionScopeId == input.CostAttributionScopeId)
-            ?? throw new InvalidDataException(
-                "WP11 prerequisite does not consume the exact admitted WP10 artifact.");
-        if (string.IsNullOrWhiteSpace(application.AdmittedArtifactId))
+        if (root.Kind == M1Slice6CampaignEvidenceRootKind.PersistedSourceClaimApplication)
         {
-            throw new InvalidDataException("WP11 prerequisite has no admitted WP10 artifact identity.");
+            SourceClaimApplicationReadModel application = store.ReadSourceClaimApplicationLinks(
+                root.AcquisitionRunId).SingleOrDefault(link =>
+                    link.ApplicationLinkId == root.ApplicationLinkId
+                    && link.AdmissionId == root.SourceAdmissionId
+                    && link.AdmittedArtifactId == root.AdmittedArtifactId
+                    && link.ApplicationScopeId == input.ApplicationScopeId)
+                ?? throw new InvalidDataException(
+                    "WP11 prerequisite does not consume the exact admitted WP10 artifact.");
+            if (string.IsNullOrWhiteSpace(application.ParentAnalysisRunId)
+                || string.IsNullOrWhiteSpace(application.CostAttributionScopeId))
+            {
+                throw new InvalidDataException("WP11 persisted WP10 application omitted its owner or cost binding.");
+            }
         }
-        byte[] payload = Encoding.UTF8.GetBytes("Campaign source Alpha is enabled for the exact retained revision.");
+        else if (root.AcquisitionRunId.Length != 0 || root.SourceAdmissionId.Length != 0
+            || root.ApplicationLinkId.Length != 0)
+        {
+            throw new InvalidDataException("WP11 frozen host evidence cannot fabricate a parallel WP10 chain.");
+        }
+        (string payloadId, byte[] payload) = ReadPayloadBySha(store, evidence.ContentSha256);
         string payloadSha = Convert.ToHexStringLower(SHA256.HashData(payload));
-        if (payloadSha != evidence.ContentSha256)
-        {
-            throw new InvalidDataException("WP11 candidate evidence bytes differ from the frozen product input.");
-        }
-        const string payloadId = "m1s6-campaign-evidence-payload";
         string payloadDirectory = Path.Combine(store.Paths.Payloads, payloadSha[..2], payloadSha[2..4]);
         Directory.CreateDirectory(payloadDirectory);
         string payloadPath = Path.Combine(payloadDirectory, payloadSha);
@@ -350,47 +587,68 @@ internal static class M1Slice6CampaignSemanticAdmission
             stream.Write(candidatePayload);
             stream.Flush(flushToDisk: true);
         }
-        using SqliteConnection connection = new($"Data Source={store.Paths.Database};Pooling=False");
-        connection.Open();
-        using SqliteTransaction transaction = connection.BeginTransaction();
         using SqliteCommand command = connection.CreateCommand();
         command.Transaction = transaction;
-        command.CommandText =
+        string payloadAndCandidateInsert =
             """
-            INSERT OR IGNORE INTO payloads VALUES(
+            INSERT INTO payloads VALUES(
               $payload,$sha,$bytes,'application/json','retained',
-              'payloads/' || substr($sha,1,2) || '/' || substr($sha,3,2) || '/' || $sha,$now);
-            INSERT OR IGNORE INTO payloads VALUES(
+              'payloads/' || substr($sha,1,2) || '/' || substr($sha,3,2) || '/' || $sha,$now)
+            ON CONFLICT(content_sha256) DO NOTHING;
+            INSERT INTO payloads VALUES(
               $candidatePayload,$candidatePayloadSha,$candidatePayloadBytes,'application/json','retained',
               'payloads/' || substr($candidatePayloadSha,1,2) || '/' || substr($candidatePayloadSha,3,2) || '/' || $candidatePayloadSha,$now);
-            INSERT OR IGNORE INTO documentation_imports VALUES(
-              'm1s6-campaign-source-import',$run,$revision,'clean-import',NULL,
+            """;
+        string evidenceInsert = root.Kind == M1Slice6CampaignEvidenceRootKind.PersistedSourceClaimApplication
+            ?
+            """
+            INSERT INTO documentation_imports VALUES(
+              $sourceImport,$run,$revision,'clean-import',NULL,
               'm1s6-campaign-source-closure','campaign-source-extractor','none','none',$payload,$payload,$now);
-            INSERT OR IGNORE INTO documentation_passages VALUES(
+            INSERT INTO documentation_passages VALUES(
               $passage,$revision,0,$bytes,$sha,$payload,'present',$now);
-            INSERT OR IGNORE INTO evidence_revisions VALUES(
-              $evidence,$passage,'m1s6-campaign-source-import','infinium.evidence.campaign/v1','1',
+            INSERT INTO evidence_revisions VALUES(
+              $evidence,$passage,$sourceImport,'infinium.evidence.campaign/v1','1',
               'documentation-claim','requirement','authoritative-external','applicable','established',
               'admitted',$payload,NULL,$now);
-            INSERT OR IGNORE INTO documentation_application_bindings VALUES(
+            """
+            :
+            """
+            INSERT INTO documentation_imports(
+              documentation_import_id,import_run_id,documentation_revision_id,import_mode,reused_import_id,
+              dependency_closure_id,extractor_id,llm_involvement,llm_operation,boundaries_payload_id,
+              import_payload_id,created_at)
+            SELECT $import,$run,documentation_revision_id,'retained-reuse',documentation_import_id,
+              dependency_closure_id,extractor_id,llm_involvement,llm_operation,boundaries_payload_id,
+              import_payload_id,$now
+            FROM documentation_imports WHERE documentation_import_id=$sourceImport;
+            INSERT INTO evidence_revisions VALUES(
+              $evidence,NULL,$import,'infinium.evidence.campaign-host-observation/v1','1',
+              'local-observation',NULL,'snapshot-bound-local','contradicted',NULL,
+              'admitted',$payload,NULL,$now);
+            """;
+        string applicationAndCandidateInsert =
+            """
+            INSERT INTO documentation_application_bindings VALUES(
               $documentApplication,$run,'m1s6-campaign-stage-3-install',
               $context,'m1s6-campaign-stage-3-manifest',$candidate,
               'installed-entity',$closure,$now);
-            INSERT OR IGNORE INTO evidence_application_links VALUES(
+            INSERT INTO evidence_application_links VALUES(
               $evidenceApplication,$evidence,$run,$documentApplication,
               $context,$candidate,'installed-entity',$closure,
               'applicable',$payload,$now);
-            INSERT OR IGNORE INTO candidate_decisions VALUES(
+            INSERT INTO candidate_decisions VALUES(
               $decision,$run,'m1s6-campaign-population',
               'm1s6-campaign-relationship','candidate-admitted','optional-ranked',
               'm1s6-campaign-rule/v1',$candidatePayload,$now);
-            INSERT OR IGNORE INTO analysis_candidates VALUES(
+            INSERT INTO analysis_candidates VALUES(
               $candidate,$decision,$run,'optional-ranked','present',
               $closure,$candidatePayload,$now);
-            INSERT OR IGNORE INTO analysis_hypotheses VALUES(
+            INSERT INTO analysis_hypotheses VALUES(
               $hypothesis,$candidate,$run,'present','plausible',
               'm1s6-campaign-threshold',$candidatePayload,$now);
             """;
+        command.CommandText = payloadAndCandidateInsert + evidenceInsert + applicationAndCandidateInsert;
         command.Parameters.AddWithValue("$payload", payloadId);
         command.Parameters.AddWithValue("$sha", payloadSha);
         command.Parameters.AddWithValue("$bytes", payload.LongLength);
@@ -398,6 +656,9 @@ internal static class M1Slice6CampaignSemanticAdmission
         command.Parameters.AddWithValue("$candidatePayloadSha", candidatePayloadSha);
         command.Parameters.AddWithValue("$candidatePayloadBytes", candidatePayload.LongLength);
         command.Parameters.AddWithValue("$run", input.AnalysisRunId);
+        command.Parameters.AddWithValue("$sourceImport",
+            input.AnalysisRunId + "-" + evidence.SourceRevisionId + "-source-import");
+        command.Parameters.AddWithValue("$import", context.ContextId + "-source-import");
         command.Parameters.AddWithValue("$revision", evidence.SourceRevisionId);
         command.Parameters.AddWithValue("$passage", evidence.PassageId);
         command.Parameters.AddWithValue("$evidence", evidence.EvidenceId);
@@ -410,22 +671,37 @@ internal static class M1Slice6CampaignSemanticAdmission
         command.Parameters.AddWithValue("$closure", context.DependencyClosureId);
         command.Parameters.AddWithValue("$now", occurredAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
         _ = command.ExecuteNonQuery();
-        transaction.Commit();
     }
 
     private static void RequireCandidateRoots(AuthoritativeStore store,
-        CandidateInvestigationExecutionInput input, string contextId)
+        CandidateInvestigationExecutionInput input, string contextId, M1Slice6CampaignEvidenceRoot root)
     {
         CandidateInvestigationContextInput context = input.Contexts.Single(item => item.ContextId == contextId);
         CandidateEvidenceInput evidence = context.Evidence.Single();
-        SourceClaimApplicationReadModel application = store.ReadSourceClaimApplicationLinks(
-            evidence.SourceAcquisitionId).SingleOrDefault(link =>
-                link.ApplicationLinkId == evidence.SourceApplicationLinkId
-                && link.AdmissionId == evidence.SourceAdmissionId
-                && link.ParentAnalysisRunId == input.AnalysisRunId
+        SourceClaimApplicationReadModel? application = root.Kind == M1Slice6CampaignEvidenceRootKind.PersistedSourceClaimApplication
+            ? store.ReadSourceClaimApplicationLinks(root.AcquisitionRunId).SingleOrDefault(link =>
+                link.ApplicationLinkId == root.ApplicationLinkId
+                && link.AdmissionId == root.SourceAdmissionId
+                && link.AdmittedArtifactId == root.AdmittedArtifactId
                 && link.ApplicationScopeId == input.ApplicationScopeId
-                && link.CostAttributionScopeId == input.CostAttributionScopeId)
-            ?? throw new InvalidDataException("WP11 response has no exact admitted WP10 application predecessor.");
+                && !string.IsNullOrWhiteSpace(link.ParentAnalysisRunId)
+                && !string.IsNullOrWhiteSpace(link.CostAttributionScopeId))
+            : null;
+        if (application is not null)
+        {
+            SourceClaimExtractionDocument sourceMatrix = store.ReadSourceClaimExtraction(
+                root.AcquisitionRunId, root.SourceAdmissionId);
+            if (sourceMatrix.ClaimProposals.Count != 9
+                || sourceMatrix.AdmissionCorrelations.Count != 9
+                || sourceMatrix.AdmissionCorrelations.Count(item =>
+                    item.State == ProposalAdmissionState.Admitted) != 1
+                || sourceMatrix.ContradictionEvidenceIds.Count == 0
+                || sourceMatrix.Abstentions.Count == 0 || sourceMatrix.Gaps.Count == 0)
+            {
+                throw new InvalidDataException(
+                    "WP11 prerequisite cannot reopen the full durable WP10 semantic matrix.");
+            }
+        }
         using SqliteConnection connection = new($"Data Source={store.Paths.Database};Pooling=False");
         connection.Open();
         using SqliteCommand command = connection.CreateCommand();
@@ -442,11 +718,31 @@ internal static class M1Slice6CampaignSemanticAdmission
         long candidateCount = reader.Read() ? reader.GetInt64(0) : 0;
         _ = reader.NextResult();
         long hypothesisCount = reader.Read() ? reader.GetInt64(0) : 0;
-        if (string.IsNullOrWhiteSpace(application.AdmittedArtifactId)
+        if (root.Kind == M1Slice6CampaignEvidenceRootKind.PersistedSourceClaimApplication
+                && application is null
             || evidenceCount != 1 || candidateCount != 1 || hypothesisCount != 1)
         {
             throw new InvalidDataException("WP11 response cannot fabricate its admitted-source or candidate roots.");
         }
+    }
+
+    private static (string PayloadId, byte[] Bytes) ReadPayloadBySha(
+        AuthoritativeStore store, string sha256)
+    {
+        using SqliteConnection connection = new($"Data Source={store.Paths.Database};Pooling=False");
+        connection.Open();
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "SELECT payload_id FROM payloads WHERE content_sha256=$sha;";
+        command.Parameters.AddWithValue("$sha", sha256);
+        string payloadId = command.ExecuteScalar() as string
+            ?? throw new InvalidDataException("WP11 frozen evidence payload was not retained by WP10 prerequisites.");
+        string path = Path.Combine(store.Paths.Payloads, sha256[..2], sha256[2..4], sha256);
+        byte[] bytes = File.ReadAllBytes(path);
+        if (Convert.ToHexStringLower(SHA256.HashData(bytes)) != sha256)
+        {
+            throw new InvalidDataException("WP11 frozen evidence payload bytes drifted from their retained digest.");
+        }
+        return (payloadId, bytes);
     }
 
     internal static string ExtractUntrustedInput(ReadOnlySpan<byte> canonicalRequest)

@@ -4,6 +4,7 @@ using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
+using Infinium.Application.Evaluation;
 using Infinium.Application.Runtime;
 using Infinium.Coordinator;
 using Infinium.Persistence;
@@ -18,6 +19,25 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 #pragma warning disable CA1416 // The executable rejects non-Windows hosts before setup.
+
+if (args is ["--validate-repository-authority-json", "--document", string authorityDocument,
+    "--schema", string authoritySchema])
+{
+    try
+    {
+        ActiveRepositoryJsonSchemaValidator.Validate(File.ReadAllBytes(Path.GetFullPath(authorityDocument)),
+            File.ReadAllBytes(Path.GetFullPath(authoritySchema)), Path.GetFileName(authoritySchema));
+        Console.WriteLine("{\"schema\":\"infinium.repository.active-json-schema-validation/v1\",\"disposition\":\"valid\",\"effect_count\":0}");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException
+        or InvalidOperationException or System.Text.Json.JsonException)
+    {
+        Console.Error.WriteLine("Repository authority JSON validation stopped: "
+            + exception.GetType().Name + ": " + exception.Message);
+        return 64;
+    }
+}
 
 if (args is ["--wp9-production-profile-enrollment", "--manifest", string wp9Manifest,
     "--manifest-sha256", string wp9ManifestSha256,

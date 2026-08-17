@@ -8,6 +8,7 @@ namespace Infinium.Tests;
 [TestCategory("Contract")]
 public sealed class M1Slice6CampaignContractTests
 {
+    private const string R1AcceptedEnforcementAnchor = "6a1f0774fdfc3b4efa2e44f88d3df67e48393ffe";
     private const string ManifestRelative = "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json";
     private static readonly string[] OrderedOperations = ["Qualification", "SourceClaimExtraction", "CandidateInvestigation"];
     private static readonly string[] CampaignSchemas = ["m1-slice6-finite-campaign-authorization.v1.schema.json",
@@ -141,10 +142,18 @@ public sealed class M1Slice6CampaignContractTests
             StringAssert.Contains(script, "function Test-M1Slice6RemainderR1Candidate");
             StringAssert.Contains(script, "$planningBase = '5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98'");
             StringAssert.Contains(script, "[string]::Join(\"`n\", $actual) -cne [string]::Join(\"`n\", $expected)");
-            string command = stateFunction.Value + "\n" + """
-                $current = Get-Content -Raw 'docs/current-state.md'
-                $readme = Get-Content -Raw 'docs/plans/milestones/m1/slices/s6/README.md'
-                $record = Get-Content -Raw 'docs/plans/milestones/m1/slices/s6/record.md'
+            string currentBase64 = Convert.ToBase64String(ReadGitBlob(
+                R1AcceptedEnforcementAnchor, "docs/current-state.md"));
+            string readmeBase64 = Convert.ToBase64String(ReadGitBlob(
+                R1AcceptedEnforcementAnchor, "docs/plans/milestones/m1/slices/s6/README.md"));
+            string recordBase64 = Convert.ToBase64String(ReadGitBlob(
+                R1AcceptedEnforcementAnchor, "docs/plans/milestones/m1/slices/s6/record.md"));
+            string command = stateFunction.Value + "\n"
+                + "$utf8 = [Text.UTF8Encoding]::new($false, $true)\n"
+                + "$current = $utf8.GetString([Convert]::FromBase64String('" + currentBase64 + "'))\n"
+                + "$readme = $utf8.GetString([Convert]::FromBase64String('" + readmeBase64 + "'))\n"
+                + "$record = $utf8.GetString([Convert]::FromBase64String('" + recordBase64 + "'))\n"
+                + """
                 if (-not (Test-M1Slice6RemainderR1NoEffectState $current $readme $record)) { exit 10 }
                 $currentWork = @($current -split '\r?\n' | Where-Object { $_.StartsWith('| Current authorized work |') })[0]
                 $nextAction = @($current -split '\r?\n' | Where-Object { $_.StartsWith('| Next eligible action |') })[0]
@@ -258,6 +267,41 @@ public sealed class M1Slice6CampaignContractTests
         {
             File.Delete(path);
         }
+    }
+
+    private static byte[] ReadGitBlob(string commit, string relative)
+    {
+        ProcessStartInfo start = new("git")
+        {
+            WorkingDirectory = TestRepository.Root,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+        foreach (string argument in new[] { "cat-file", "blob", commit + ":" + relative })
+        {
+            start.ArgumentList.Add(argument);
+        }
+        using Process process = Process.Start(start)!;
+        Task<string> standardErrorTask = process.StandardError.ReadToEndAsync();
+        using MemoryStream bytes = new();
+        Task standardOutputTask = process.StandardOutput.BaseStream.CopyToAsync(bytes);
+        if (!process.WaitForExit(30_000))
+        {
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit();
+            try { Task.WhenAll(standardOutputTask, standardErrorTask).GetAwaiter().GetResult(); }
+            catch { /* The timeout remains the authoritative failure. */ }
+            throw new TimeoutException("Historical R1 Git blob read exceeded its non-live bound.");
+        }
+        standardOutputTask.GetAwaiter().GetResult();
+        string standardError = standardErrorTask.GetAwaiter().GetResult();
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException("Historical R1 Git blob read failed: " + standardError);
+        }
+        return bytes.ToArray();
     }
 
     private static void CloneWithCurrentCampaignValidator(string destination)
