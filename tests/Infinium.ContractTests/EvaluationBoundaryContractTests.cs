@@ -9,6 +9,15 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class EvaluationBoundaryContractTests
 {
+    private static readonly IReadOnlyDictionary<string, string> R1V2PackageAuthorities =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["S6-CLAIM-LIVE-VAL-v2"] = "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/public-manifest.json",
+            ["LLM-CLAIM-LIVE-VAL-v2"] = "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/public-manifest.json",
+            ["S6-CANDIDATE-LIVE-VAL-v2"] = "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/public-manifest.json",
+            ["LLM-INVESTIGATE-LIVE-VAL-v2"] = "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/public-manifest.json",
+            ["PROV-LIVE-COMPOSED-VAL-v2"] = "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL-v2/public-manifest.json",
+        };
     private static readonly string[] CurrentPublicFixtureFamilies =
     [
         "fixtures/public/platform/analysis-runtime-substrate",
@@ -150,6 +159,68 @@ public sealed class EvaluationBoundaryContractTests
 
     [TestMethod]
     [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
+    public void ProviderPublicFixtureRegistryV2PreservesV1AndIndexesOnlyExactR1Successors()
+    {
+        using JsonDocument v1 = ReadAndValidate(
+            "fixtures/public/public-fixture-registry.v1.json", "public-fixture-registry.v1.schema.json");
+        using JsonDocument v2 = ReadAndValidate(
+            "fixtures/public/public-fixture-registry.v2.json", "public-fixture-registry.v2.schema.json");
+        JsonElement[] retained = v1.RootElement.GetProperty("packages").EnumerateArray().ToArray();
+        JsonElement[] rows = v2.RootElement.GetProperty("packages").EnumerateArray().ToArray();
+        Assert.AreEqual(38, retained.Length);
+        Assert.AreEqual(43, rows.Length);
+        for (int index = 0; index < retained.Length; index++)
+        {
+            Assert.IsTrue(JsonElement.DeepEquals(retained[index], rows[index]), $"Registry v1 row {index} drifted in v2.");
+        }
+        CollectionAssert.AreEqual(R1V2PackageAuthorities.Keys.ToArray(),
+            rows.Skip(38).Select(x => x.GetProperty("package_identity").GetString()).ToArray());
+        foreach (JsonElement row in rows.Skip(38))
+        {
+            string authority = row.GetProperty("authority_file").GetString()!;
+            byte[] bytes = File.ReadAllBytes(TestRepository.PathFromRoot([.. authority.Split('/')]));
+            using JsonDocument manifest = JsonDocument.Parse(bytes);
+            string packagePath = authority[..authority.LastIndexOf('/')];
+            Assert.AreEqual(manifest.RootElement.GetProperty("package_identity").GetString(),
+                row.GetProperty("package_identity").GetString(), authority);
+            Assert.AreEqual(manifest.RootElement.GetProperty("package_version").GetString(),
+                row.GetProperty("package_version").GetString(), authority);
+            Assert.AreEqual(manifest.RootElement.GetProperty("partition").GetString(),
+                row.GetProperty("partition").GetString(), authority);
+            Assert.AreEqual(packagePath, row.GetProperty("package_path").GetString(), authority);
+            Assert.AreEqual(bytes.LongLength, row.GetProperty("authority_bytes").GetInt64(), authority);
+            Assert.AreEqual(Convert.ToHexStringLower(SHA256.HashData(bytes)),
+                row.GetProperty("authority_sha256").GetString(), authority);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
+    public void R1V2ManifestExclusionRequiresExactIdentityAndAuthorityPathPair()
+    {
+        foreach ((string identity, string authorityPath) in R1V2PackageAuthorities)
+        {
+            using JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(
+                TestRepository.PathFromRoot([.. authorityPath.Split('/')])));
+            Assert.IsTrue(IsExpectedR1V2Manifest(manifest.RootElement, authorityPath));
+            bool rejected = false;
+            try
+            {
+                IsExpectedR1V2Manifest(manifest.RootElement,
+                    "fixtures/public/provider/misplaced/" + identity + "/public-manifest.json");
+            }
+            catch (AssertFailedException)
+            {
+                rejected = true;
+            }
+            Assert.IsTrue(rejected, $"Misplaced duplicate R1 v2 identity '{identity}' was not rejected.");
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
     [TestCategory("Security")]
     [TestProperty("Category", "Contract")]
     [TestProperty("Category", "Security")]
@@ -254,6 +325,11 @@ public sealed class EvaluationBoundaryContractTests
                      SearchOption.AllDirectories))
         {
             using JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(manifestPath));
+            string manifestAuthority = RepositoryRelativePath(manifestPath);
+            if (IsExpectedR1V2Manifest(manifest.RootElement, manifestAuthority))
+            {
+                continue;
+            }
             if (replacedRegistryAuthorities.Contains(manifest.RootElement.GetProperty("fixture_id").GetString()!))
             {
                 continue;
@@ -331,6 +407,20 @@ public sealed class EvaluationBoundaryContractTests
         }
 
         return packages;
+    }
+
+    private static bool IsExpectedR1V2Manifest(JsonElement manifest, string authorityPath)
+    {
+        if (!manifest.TryGetProperty("package_identity", out JsonElement identityElement)
+            || identityElement.ValueKind != JsonValueKind.String
+            || !R1V2PackageAuthorities.TryGetValue(identityElement.GetString()!, out string? expectedAuthority))
+        {
+            return false;
+        }
+
+        Assert.AreEqual(expectedAuthority, authorityPath,
+            $"R1 v2 identity '{identityElement.GetString()}' is duplicated or misplaced.");
+        return true;
     }
 
     private static string RepositoryRelativePath(string fullPath) =>

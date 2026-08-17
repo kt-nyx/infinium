@@ -107,20 +107,19 @@ public sealed class M1Slice6CampaignContractTests
         string record = File.ReadAllText(TestRepository.PathFromRoot(
             "docs", "plans", "milestones", "m1", "slices", "s6", "record.md"));
         string normalized = System.Text.RegularExpressions.Regex.Replace(record, @"\s+", " ");
-        const string authority = "Current authority is correction and non-live reverification only.";
+        const string authority = "M1_S6_REMAINDER_OWNER_ACCEPTANCE candidate_commit=5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98";
         StringAssert.Contains(normalized, authority);
-        Assert.IsFalse(normalized.Replace(authority, "Current authority is live execution.", StringComparison.Ordinal)
+        Assert.IsFalse(normalized.Replace(authority, "M1_S6_REMAINDER_OWNER_ACCEPTANCE candidate_commit=0000000000000000000000000000000000000000", StringComparison.Ordinal)
             .Contains(authority, StringComparison.Ordinal));
 
         string verifier = File.ReadAllText(TestRepository.PathFromRoot("eng", "verify-m1-slice6.ps1"));
         string currentState = File.ReadAllText(TestRepository.PathFromRoot("docs", "current-state.md"));
-        const string stateAuthority = "finite-campaign correction and non-live verification";
+        const string stateAuthority = "R1-R3 are active effect-free correction, integration, fixture freeze, full non-live verification, and successor-campaign materialization";
         StringAssert.Contains(currentState, stateAuthority);
         Assert.IsFalse(currentState.Replace(stateAuthority, "finite-campaign live execution", StringComparison.Ordinal)
             .Contains(stateAuthority, StringComparison.Ordinal));
-        StringAssert.Contains(verifier, "$normalizedRecordText = [regex]::Replace($recordText, '\\s+', ' ')");
-        StringAssert.Contains(verifier,
-            "$normalizedRecordText.Contains('Current authority is correction and non-live reverification only.'");
+        StringAssert.Contains(verifier, "function Test-M1Slice6RemainderR1NoEffectState");
+        StringAssert.Contains(verifier, "M1_S6_REMAINDER_OWNER_ACCEPTANCE candidate_commit=5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98");
         StringAssert.Contains(verifier, "'tests/Infinium.UnitTests/Wp9ProductionProfileAuthorizationTests.cs'");
         StringAssert.Contains(verifier, "'eng/validate-m1-slice6-wp8-prelive.ps1'");
         StringAssert.Contains(verifier, "'tests/Infinium.ContractTests/Wp8PreLiveReadinessContractTests.cs'");
@@ -128,6 +127,59 @@ public sealed class M1Slice6CampaignContractTests
             verifier.IndexOf("$failures = [System.Collections.Generic.List[string]]::new()", StringComparison.Ordinal)
             < verifier.IndexOf("[string[]]$actualOwnerCloseoutPaths", StringComparison.Ordinal),
             "Layer6 must initialize its finding list before any mode-specific path-set finding can be retained.");
+    }
+
+    [TestMethod]
+    public void RemainderR1AuthorityReadersRejectNearMutationsAndDoNotBroadenPaths()
+    {
+        foreach (string relative in new[] { "eng/verify-m1-slice6.ps1", "eng/validate-m1-slice6-wp8-prelive.ps1" })
+        {
+            string script = File.ReadAllText(TestRepository.PathFromRoot([.. relative.Split('/')]));
+            System.Text.RegularExpressions.Match stateFunction = System.Text.RegularExpressions.Regex.Match(script,
+                @"(?ms)^function Test-M1Slice6RemainderR1NoEffectState\(.*?^\}");
+            Assert.IsTrue(stateFunction.Success, relative);
+            StringAssert.Contains(script, "function Test-M1Slice6RemainderR1Candidate");
+            StringAssert.Contains(script, "$planningBase = '5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98'");
+            StringAssert.Contains(script, "[string]::Join(\"`n\", $actual) -cne [string]::Join(\"`n\", $expected)");
+            string command = stateFunction.Value + "\n" + """
+                $current = Get-Content -Raw 'docs/current-state.md'
+                $readme = Get-Content -Raw 'docs/plans/milestones/m1/slices/s6/README.md'
+                $record = Get-Content -Raw 'docs/plans/milestones/m1/slices/s6/record.md'
+                if (-not (Test-M1Slice6RemainderR1NoEffectState $current $readme $record)) { exit 10 }
+                $currentWork = @($current -split '\r?\n' | Where-Object { $_.StartsWith('| Current authorized work |') })[0]
+                $nextAction = @($current -split '\r?\n' | Where-Object { $_.StartsWith('| Next eligible action |') })[0]
+                $effectBoundary = @($current -split '\r?\n' | Where-Object { $_.StartsWith('| Campaign effect boundary |') })[0]
+                $readmeMarker = 'The project owner accepted the exact remainder planning candidate `5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98` and bound digests on 2026-08-16.'
+                $mutations = @(
+                    [pscustomobject]@{ current=$current.Replace('No credential or provider effect is currently admitted.', 'Credential and provider effects are admitted.'); readme=$readme; record=$record },
+                    [pscustomobject]@{ current=$current.Replace('Begin `R1`:', 'Begin `R4`:'); readme=$readme; record=$record },
+                    [pscustomobject]@{ current=$current; readme=$readme.Replace('5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98', '0000000000000000000000000000000000000000'); record=$record },
+                    [pscustomobject]@{ current=$current; readme=$readme; record=$record.Replace('credential_effect_expires_at_utc=2026-08-31T23:00:00.0000000Z', 'credential_effect_expires_at_utc=2026-09-01T00:00:00.0000000Z') },
+                    [pscustomobject]@{ current=$current + "`n" + $currentWork; readme=$readme; record=$record },
+                    [pscustomobject]@{ current=$current + "`n" + $nextAction; readme=$readme; record=$record },
+                    [pscustomobject]@{ current=$current + "`n" + $effectBoundary; readme=$readme; record=$record },
+                    [pscustomobject]@{ current=$current; readme=$readme + "`n" + $readmeMarker; record=$record },
+                    [pscustomobject]@{ current=$current + "`n| Campaign admission | admitted |"; readme=$readme; record=$record },
+                    [pscustomobject]@{ current=$current; readme=$readme + "`nPROVIDER_REQUEST_EXECUTED request_count=1"; record=$record },
+                    [pscustomobject]@{ current=$current; readme=$readme; record=$record + "`nprovider_request_count=1" },
+                    [pscustomobject]@{ current=$current; readme=$readme; record=$record + "`nM1_S6_REMAINDER_R4_CAMPAIGN_ADMISSION status=accepted" },
+                    [pscustomobject]@{ current=$current + "`n| External effect authority | admitted |"; readme=$readme; record=$record },
+                    [pscustomobject]@{ current=$current + "`nCredential and provider effects are admitted."; readme=$readme; record=$record },
+                    [pscustomobject]@{ current=$current; readme=$readme + "`nCampaign admission is accepted."; record=$record },
+                    [pscustomobject]@{ current=$current; readme=$readme; record=$record + "`nR4 is admitted and executable." },
+                    [pscustomobject]@{ current=$current; readme=$readme; record=$record + 'x' })
+                $mutationIndex = 0
+                foreach ($mutation in $mutations) {
+                    if (Test-M1Slice6RemainderR1NoEffectState $mutation.current $mutation.readme $mutation.record) {
+                        Write-Error "R1 no-effect mutation $mutationIndex was accepted"
+                        exit (20 + $mutationIndex)
+                    }
+                    $mutationIndex++
+                }
+                exit 0
+                """;
+            Assert.AreEqual(0, RunPowerShellScript(command), relative);
+        }
     }
 
     private static int RunValidator(string root, Action<JsonObject>? mutation, bool requireSuccess = true)
@@ -156,14 +208,17 @@ public sealed class M1Slice6CampaignContractTests
                     "-AuthorizationManifest", ManifestRelative, "-RequireState", "Verification",
                 },
             }) ?? throw new InvalidOperationException("Campaign validator did not start.");
-            process.WaitForExit(30_000);
-            if (!process.HasExited)
+            Task<string> stdoutTask = process.StandardOutput.ReadToEndAsync();
+            Task<string> stderrTask = process.StandardError.ReadToEndAsync();
+            bool exited = process.WaitForExit(30_000);
+            if (!exited)
             {
                 process.Kill(entireProcessTree: true);
+                process.WaitForExit();
                 throw new TimeoutException("Campaign validator exceeded its non-live bound.");
             }
-            string stdout = process.StandardOutput.ReadToEnd();
-            string stderr = process.StandardError.ReadToEnd();
+            string stdout = stdoutTask.GetAwaiter().GetResult();
+            string stderr = stderrTask.GetAwaiter().GetResult();
             if (requireSuccess && mutation is null && process.ExitCode != 0)
             {
                 throw new InvalidOperationException("Exact campaign validator failed: " + stdout + stderr);
@@ -173,6 +228,35 @@ public sealed class M1Slice6CampaignContractTests
         finally
         {
             if (mutation is not null) { File.WriteAllText(manifest, exact); }
+        }
+    }
+
+    private static int RunPowerShellScript(string command)
+    {
+        string path = Path.Combine(Path.GetTempPath(), "infinium-r1-authority-" + Guid.NewGuid().ToString("N") + ".ps1");
+        try
+        {
+            File.WriteAllText(path, command);
+            using Process process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "pwsh.exe",
+                WorkingDirectory = TestRepository.Root,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                ArgumentList = { "-NoProfile", "-File", path },
+            })!;
+            bool exited = process.WaitForExit(10_000);
+            if (!exited)
+            {
+                process.Kill(entireProcessTree: true);
+                process.WaitForExit();
+                throw new TimeoutException("R1 authority mutation script exceeded its non-live bound.");
+            }
+            return process.ExitCode;
+        }
+        finally
+        {
+            File.Delete(path);
         }
     }
 

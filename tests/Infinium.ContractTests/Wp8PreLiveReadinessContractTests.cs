@@ -16,6 +16,14 @@ public sealed class Wp8PreLiveReadinessContractTests
         "docs/plans/milestones/m1/slices/s6/wp8-source-claim-authorization.template.v1.json",
         "docs/plans/milestones/m1/slices/s6/wp8-candidate-investigation-authorization.template.v1.json",
     ];
+    private static readonly string[] R1CorrectionPaths =
+    [
+        "eng/validate-m1-slice6-wp8-prelive.ps1",
+        "eng/verify-m1-slice6.ps1",
+        "tests/Infinium.ContractTests/EvaluationBoundaryContractTests.cs",
+        "tests/Infinium.ContractTests/M1Slice6CampaignContractTests.cs",
+        "tests/Infinium.ContractTests/Wp8PreLiveReadinessContractTests.cs",
+    ];
 
     [TestMethod]
     [TestCategory("Contract")]
@@ -130,8 +138,6 @@ public sealed class Wp8PreLiveReadinessContractTests
     [TestCategory("Contract")]
     public void SemanticValidatorAcceptsExactCandidateAndRejectsPacketMatrixMutations()
     {
-        Assert.AreEqual(0, RunValidator(null), "Exact WP8 candidate failed semantic validation.");
-
         (string Name, Action<Dictionary<string, JsonObject>> Mutation)[] mutations =
         [
             ("missing-case", docs => docs["matrix"]["cases"]!.AsArray().RemoveAt(0)),
@@ -214,9 +220,20 @@ public sealed class Wp8PreLiveReadinessContractTests
             ("stale-identity", docs => docs["matrix"]["candidate_binding"]!["accepted_wp7_product_commit"] = new string('0', 40)),
             ("executable", docs => docs["candidate"]["status"] = "ready-for-owner-acceptance"),
         ];
-        foreach ((string name, Action<Dictionary<string, JsonObject>> mutation) in mutations)
+        string sourceRoot = RepositoryRoot();
+        string cloneRoot = Path.Combine(Path.GetTempPath(), "infinium-r1-wp8-semantic-" + Guid.NewGuid().ToString("N"));
+        try
         {
-            Assert.AreNotEqual(0, RunValidator(mutation), $"WP8 validator accepted mutation '{name}'.");
+            CreateCommittedR1CorrectionClone(sourceRoot, cloneRoot);
+            Assert.AreEqual(0, RunValidator(null, cloneRoot), "Exact committed WP8 candidate failed semantic validation.");
+            foreach ((string name, Action<Dictionary<string, JsonObject>> mutation) in mutations)
+            {
+                Assert.AreNotEqual(0, RunValidator(mutation, cloneRoot), $"WP8 validator accepted mutation '{name}'.");
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(cloneRoot)) { DeleteReadOnlyTree(cloneRoot); }
         }
     }
 
@@ -271,7 +288,7 @@ public sealed class Wp8PreLiveReadinessContractTests
                 $"Finite-campaign retained path equation omitted {requiredPath}.");
         }
         Assert.AreNotEqual(0, RunLayer6Mode(root, null),
-            "Ordinary Layer6 unexpectedly unprotected the WP8 current-state path.");
+            "Ordinary Layer6 admitted the pre-correction 53-path HEAD after the R1 equation advanced to 57 paths.");
         Assert.AreNotEqual(0, RunLayer6Mode(root, "wp8"),
             "Explicit WP8 pre-live closeout mode incorrectly accepted the later WP9 state.");
         string currentState = RunGitOutput(root, "show", "HEAD:docs/current-state.md");
@@ -279,7 +296,14 @@ public sealed class Wp8PreLiveReadinessContractTests
         int reviewCloseout = RunLayer6Mode(root, "wp9-review");
         int ownerAcceptanceCloseout = RunLayer6Mode(root, "wp9-owner-acceptance");
         int campaignReview = RunLayer6Mode(root, "campaign-review");
-        if (currentState.Contains("non-effectful production-profile preparation verification and independent review only", StringComparison.Ordinal))
+        if (currentState.Contains("R1-R3 are active effect-free correction, integration, fixture freeze, full non-live verification, and successor-campaign materialization", StringComparison.Ordinal))
+        {
+            Assert.AreNotEqual(0, ownerStop, "R1 no-effect state was admitted as WP9 owner-stop.");
+            Assert.AreNotEqual(0, reviewCloseout, "R1 no-effect state was admitted as WP9 review closeout.");
+            Assert.AreNotEqual(0, ownerAcceptanceCloseout, "R1 no-effect state was admitted as WP9 owner acceptance.");
+            Assert.AreNotEqual(0, campaignReview, "R1 no-effect state was admitted as campaign review.");
+        }
+        else if (currentState.Contains("non-effectful production-profile preparation verification and independent review only", StringComparison.Ordinal))
         {
             Assert.AreEqual(0, ownerStop, "Exact WP9 pre-review owner-stop state was rejected.");
             Assert.AreNotEqual(0, reviewCloseout, "Pre-review owner-stop state was admitted as reviewed closeout.");
@@ -320,6 +344,41 @@ public sealed class Wp8PreLiveReadinessContractTests
             Assert.AreNotEqual(0, ownerStop, "Correction state was admitted as pre-review owner-stop.");
             Assert.AreNotEqual(0, reviewCloseout, "Correction state was admitted as reviewed closeout.");
             Assert.AreNotEqual(0, ownerAcceptanceCloseout, "Correction state was admitted as owner acceptance.");
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
+    public void CommittedR1CorrectionCandidateSatisfiesExact57PathLayer6AndWp8Equations()
+    {
+        string sourceRoot = RepositoryRoot();
+        string cloneRoot = Path.Combine(Path.GetTempPath(), "infinium-r1-committed-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            CreateCommittedR1CorrectionClone(sourceRoot, cloneRoot);
+
+            string[] actualPaths = RunGitOutput(cloneRoot, "-c", "core.quotePath=false", "diff", "--name-only",
+                "5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98", "HEAD", "--")
+                .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+            Assert.AreEqual(57, actualPaths.Length, "The committed R1 correction candidate must own exactly 57 paths.");
+            foreach (string required in R1CorrectionPaths.Where(path => path != "eng/verify-m1-slice6.ps1"))
+            {
+                CollectionAssert.Contains(actualPaths, required);
+            }
+
+            Assert.AreEqual(0, RunLayer6Mode(cloneRoot, null),
+                "Layer6 rejected the exact committed 57-path R1 correction candidate.");
+            JsonObject receipt = RunWp8ValidatorAtRoot(cloneRoot);
+            Assert.AreEqual("exact-m1-s6-remainder-r1-no-effect-state",
+                receipt["post_verification_disposition"]!.GetValue<string>());
+            Assert.IsFalse(receipt["execution_authorized"]!.GetValue<bool>());
+            Assert.AreEqual(0, receipt["credential_manager_operations"]!.GetValue<int>());
+            Assert.AreEqual(0, receipt["provider_requests"]!.GetValue<int>());
+        }
+        finally
+        {
+            if (Directory.Exists(cloneRoot)) { DeleteReadOnlyTree(cloneRoot); }
         }
     }
 
@@ -842,9 +901,26 @@ public sealed class Wp8PreLiveReadinessContractTests
             "NonLiveAll accepted generic or weakened WP9 authority.");
     }
 
-    private static int RunValidator(Action<Dictionary<string, JsonObject>>? mutation)
+    private static void CreateCommittedR1CorrectionClone(string sourceRoot, string cloneRoot)
     {
-        string root = RepositoryRoot();
+        Assert.AreEqual(0, RunGit(sourceRoot, "clone", "--quiet", "--shared", sourceRoot, cloneRoot));
+        Assert.AreEqual(0, RunGit(cloneRoot, "config", "user.name", "Infinium Contract Test"));
+        Assert.AreEqual(0, RunGit(cloneRoot, "config", "user.email", "contract-test@invalid.example"));
+        foreach (string relative in R1CorrectionPaths)
+        {
+            File.Copy(
+                Path.Combine(sourceRoot, relative.Replace('/', Path.DirectorySeparatorChar)),
+                Path.Combine(cloneRoot, relative.Replace('/', Path.DirectorySeparatorChar)),
+                overwrite: true);
+        }
+        string[] addArguments = ["add", "--", .. R1CorrectionPaths];
+        Assert.AreEqual(0, RunGit(cloneRoot, addArguments));
+        Assert.AreEqual(0, RunGit(cloneRoot, "commit", "--quiet", "-m", "Test committed R1 correction candidate"));
+    }
+
+    private static int RunValidator(Action<Dictionary<string, JsonObject>>? mutation, string? repositoryRoot = null)
+    {
+        string root = repositoryRoot ?? RepositoryRoot();
         string temp = Path.Combine(Path.GetTempPath(), "infinium-wp8-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(temp);
         try
@@ -939,6 +1015,48 @@ public sealed class Wp8PreLiveReadinessContractTests
         finally
         {
             File.Delete(path);
+        }
+    }
+
+    private static JsonObject RunWp8ValidatorAtRoot(string root)
+    {
+        string output = Path.Combine(Path.GetTempPath(), "infinium-r1-wp8-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            ProcessStartInfo start = new("pwsh.exe")
+            {
+                WorkingDirectory = root,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+            };
+            foreach (string argument in new[]
+            {
+                "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+                Path.Combine(root, "eng", "validate-m1-slice6-wp8-prelive.ps1"), "-OutputPath", output,
+            })
+            {
+                start.ArgumentList.Add(argument);
+            }
+            using Process process = Process.Start(start)!;
+            Task<string> standardOutputTask = process.StandardOutput.ReadToEndAsync();
+            Task<string> standardErrorTask = process.StandardError.ReadToEndAsync();
+            bool exited = process.WaitForExit(30_000);
+            if (!exited)
+            {
+                process.Kill(entireProcessTree: true);
+                process.WaitForExit();
+                throw new TimeoutException("Committed-candidate WP8 validator exceeded its non-live bound.");
+            }
+            string standardOutput = standardOutputTask.GetAwaiter().GetResult();
+            string standardError = standardErrorTask.GetAwaiter().GetResult();
+            Assert.AreEqual(0, process.ExitCode, standardOutput + standardError);
+            return JsonNode.Parse(File.ReadAllText(output))!.AsObject();
+        }
+        finally
+        {
+            if (File.Exists(output)) { File.Delete(output); }
         }
     }
 

@@ -69,6 +69,143 @@ function Get-Wp8Wp9OwnerStopPaths() {
         'tests/Infinium.UnitTests/Wp9ProductionProfileAuthorizationTests.cs')
 }
 
+function Get-M1Slice6RemainderR1Paths() {
+    return @(
+        'contracts/repository/candidate-investigation-context.v2.schema.json',
+        'contracts/repository/candidate-investigation-execution-input.v2.schema.json',
+        'contracts/repository/candidate-investigation-oracle-provenance.v2.schema.json',
+        'contracts/repository/candidate-investigation-oracle.v2.schema.json',
+        'contracts/repository/candidate-investigation-public-manifest.v2.schema.json',
+        'contracts/repository/live-candidate-investigation-oracle.v2.schema.json',
+        'contracts/repository/live-candidate-investigation-public-manifest.v2.schema.json',
+        'contracts/repository/live-composed-provenance-oracle.v2.schema.json',
+        'contracts/repository/live-composed-provenance-public-manifest.v2.schema.json',
+        'contracts/repository/live-source-claim-oracle.v2.schema.json',
+        'contracts/repository/live-source-claim-public-manifest.v2.schema.json',
+        'contracts/repository/m1-slice6-campaign-composed-evidence.v2.schema.json',
+        'contracts/repository/m1-slice6-campaign-stage-evidence.v2.schema.json',
+        'contracts/repository/m1-slice6-campaign-stage-request.v2.schema.json',
+        'contracts/repository/m1-slice6-finite-campaign-authorization.v2.schema.json',
+        'contracts/repository/public-fixture-partition-history.v2.schema.json',
+        'contracts/repository/public-fixture-registry.v2.schema.json',
+        'contracts/repository/public-fixture-source-claim-oracle.v2.schema.json',
+        'contracts/repository/public-fixture-source-claim.v2.schema.json',
+        'contracts/repository/source-claim-context.v2.schema.json',
+        'contracts/repository/source-claim-execution-input.v2.schema.json',
+        'contracts/repository/source-claim-oracle-provenance.v2.schema.json',
+        'contracts/repository/wp9-production-profile-authorization.v2.schema.json',
+        'docs/current-state.md',
+        'docs/evaluation/specifications/semantic-fixture-catalog.md',
+        'docs/execution-policy.md',
+        'docs/plans/milestones/m1/slices/s6/README.md',
+        'docs/plans/milestones/m1/slices/s6/orchestrator-handoff.md',
+        'docs/plans/milestones/m1/slices/s6/record.md',
+        'eng/validate-m1-slice6-wp8-prelive.ps1',
+        'eng/verify-m1-slice6.ps1',
+        'fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/context-manifest.v2.json',
+        'fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/execution-input.v2.json',
+        'fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/oracle-provenance.v2.json',
+        'fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/oracle.v2.json',
+        'fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/partition-history.v2.json',
+        'fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/public-manifest.json',
+        'fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/oracle.v2.json',
+        'fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/public-manifest.json',
+        'fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/oracle.v2.json',
+        'fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/public-manifest.json',
+        'fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL-v2/oracle.v2.json',
+        'fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL-v2/public-manifest.json',
+        'fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/context-manifest.v2.json',
+        'fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/execution-input.v2.json',
+        'fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/oracle-provenance.v2.json',
+        'fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/oracle.v2.json',
+        'fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/partition-history.v2.json',
+        'fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/public-manifest.json',
+        'fixtures/public/public-fixture-registry.v2.json',
+        'fixtures/tooling/Infinium.PublicFixtures/LiveSemanticV2AuthorityVerifier.cs',
+        'fixtures/tooling/Infinium.PublicFixtures/README.md',
+        'fixtures/tooling/reseal-live-semantic-v2.mjs',
+        'tests/Infinium.ContractTests/EvaluationBoundaryContractTests.cs',
+        'tests/Infinium.ContractTests/LiveSemanticV2AuthorityContractTests.cs',
+        'tests/Infinium.ContractTests/M1Slice6CampaignContractTests.cs',
+        'tests/Infinium.ContractTests/Wp8PreLiveReadinessContractTests.cs'
+    )
+}
+
+function Test-M1Slice6RemainderR1NoEffectState(
+    [string] $CurrentStateText,
+    [string] $ReadmeText,
+    [string] $RecordText) {
+    $state = [regex]::Replace($CurrentStateText, '\s+', ' ')
+    $readme = [regex]::Replace($ReadmeText, '\s+', ' ')
+    $record = [regex]::Replace($RecordText, '\s+', ' ')
+    $utf8 = [Text.UTF8Encoding]::new($false, $true)
+    $currentStateSha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($utf8.GetBytes($CurrentStateText))).ToLowerInvariant()
+    $readmeSha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($utf8.GetBytes($ReadmeText))).ToLowerInvariant()
+    $recordSha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($utf8.GetBytes($RecordText))).ToLowerInvariant()
+    $currentWorkRow = '| Current authorized work | Execute the owner-accepted Slice 6 remainder amendment from exact planning candidate `5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98`. R1-R3 are active effect-free correction, integration, fixture freeze, full non-live verification, and successor-campaign materialization. R4-R7 have dormant conditional authority only and become exercisable in order after their exact predecessor, machine, independent-review, clean-candidate, and expiry gates. No credential or provider effect is currently admitted. |'
+    $nextActionRow = '| Next eligible action | Begin `R1`: materialize and independently freeze the five answer-isolated v2 public packages, all named v2 schemas, and additive registry v2 while preserving current package trees and registry v1 exactly. Product comparison and every external effect remain prohibited in R1. |'
+    $effectBoundaryRow = "| Campaign effect boundary | R1-R3 authorize no API-key use, UI/helper/readiness launch, authority lock, live-manifest execution, native Credential Manager operation, profile materialization, DNS/public-network operation, provider request, or billable operation. All observed counts remain zero. After accepted R3 evidence, R4-R7 may advance automatically only within the accepted successor campaign's exact ceilings, expiries, stage admission, and no-retry rules. |"
+    $currentWorkRows = @($CurrentStateText -split '\r?\n' | Where-Object { $_.StartsWith('| Current authorized work |', [StringComparison]::Ordinal) })
+    $nextActionRows = @($CurrentStateText -split '\r?\n' | Where-Object { $_.StartsWith('| Next eligible action |', [StringComparison]::Ordinal) })
+    $effectBoundaryRows = @($CurrentStateText -split '\r?\n' | Where-Object { $_.StartsWith('| Campaign effect boundary |', [StringComparison]::Ordinal) })
+    $readmeMarker = 'The project owner accepted the exact remainder planning candidate `5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98` and bound digests on 2026-08-16.'
+    $ownerMarker = 'M1_S6_REMAINDER_OWNER_ACCEPTANCE candidate_commit=5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98 plan_sha256=135bd2a524bbd06190af7f64ffa1d57baa568e0f193f562a83ee5706f1a0c1ea authority_sha256=4f4ffefa0b70d4063738e232ef5aba9968571665ba0146f7a6446d4674580666 fixture_authority_sha256=4c4e2c2b249a370874e3731e301b95ab75200c0e1d471bc41083d36387f57657 research_sha256=ad718ae64075e02340bf9c4376a13c1216f5a6da1a387002a17218159993974c credential_effect_expires_at_utc=2026-08-31T23:00:00.0000000Z campaign_expires_at_utc=2026-08-31T23:59:00.0000000Z'
+    $combined = [string]::Join("`n", @($CurrentStateText, $ReadmeText, $RecordText))
+    $contradictoryAuthority = '(?im)^\s*(?:M1_S6_REMAINDER_R[4-7]_[A-Z0-9_]+|CAMPAIGN_ADMISSION|PROVIDER_REQUEST(?:_EXECUTED)?|OBSERVED_EXTERNAL_EFFECT)\b|^\s*(?:provider_request_count|provider_requests|provider_operations|provider_call_count|billable_operations|network_operations|dns_operations|credential_manager_operations)\s*[:=]\s*[1-9][0-9]*\b|^\s*\|\s*(?:Campaign admission|Observed provider requests?|Provider request count|Credential effect count)\s*\|.*(?:admitted|executed|[1-9][0-9]*)'
+    return $currentStateSha256 -ceq '2ac64e2edb815923f59e1eb3efc235106ac6e352a92575aca0227f993b8c4c44' -and
+        $readmeSha256 -ceq '260d01a39c06be6355065bd304e9888db23d1ffa12b525277162b0d88a529f5a' -and
+        $recordSha256 -ceq '6f0adc55934f99a58f0da45337e1fe2df5b00478230fdc0eabf174c67d574235' -and
+        $currentWorkRows.Count -eq 1 -and $currentWorkRows[0] -ceq $currentWorkRow -and
+        $nextActionRows.Count -eq 1 -and $nextActionRows[0] -ceq $nextActionRow -and
+        $effectBoundaryRows.Count -eq 1 -and $effectBoundaryRows[0] -ceq $effectBoundaryRow -and
+        @([regex]::Matches($readme, [regex]::Escape($readmeMarker))).Count -eq 1 -and
+        @([regex]::Matches($record, [regex]::Escape($ownerMarker))).Count -eq 1 -and
+        $record.Contains('R1-R3 are effect-free execution packages spanning the remaining WP9-WP11 vertical path.', [StringComparison]::Ordinal) -and
+        $record.Contains('No helper, UI/readiness, authority lock, API key, Credential Manager, production profile, DNS/public network, provider, billable, private/archive, or push effect occurred.', [StringComparison]::Ordinal) -and
+        -not [regex]::IsMatch($combined, $contradictoryAuthority)
+}
+
+function Get-M1Slice6CandidateBlobText([string] $CandidateCommit, [string] $Path) {
+    $start = [Diagnostics.ProcessStartInfo]::new('git')
+    $start.WorkingDirectory = $repoRoot
+    $start.UseShellExecute = $false
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    $start.CreateNoWindow = $true
+    foreach ($argument in @('-C', $repoRoot, 'cat-file', 'blob', "$CandidateCommit`:$Path")) {
+        [void]$start.ArgumentList.Add($argument)
+    }
+    $process = [Diagnostics.Process]::Start($start)
+    try {
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+        $bytes = [IO.MemoryStream]::new()
+        try { $process.StandardOutput.BaseStream.CopyTo($bytes) } finally { $process.StandardOutput.Close() }
+        $process.WaitForExit()
+        $stderr = $stderrTask.GetAwaiter().GetResult()
+        if ($process.ExitCode -ne 0) { throw "Cannot read candidate blob '$Path': $stderr" }
+        return [Text.UTF8Encoding]::new($false, $true).GetString($bytes.ToArray())
+    } finally {
+        $process.Dispose()
+    }
+}
+
+function Test-M1Slice6RemainderR1Candidate([string] $CandidateCommit) {
+    $planningBase = '5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98'
+    & git -C $repoRoot merge-base --is-ancestor $planningBase $CandidateCommit
+    if ($LASTEXITCODE -ne 0) { return $false }
+    [string[]]$actual = @(& git -C $repoRoot -c core.quotePath=false diff --name-only $planningBase $CandidateCommit --)
+    if ($LASTEXITCODE -ne 0) { return $false }
+    [string[]]$expected = @(Get-M1Slice6RemainderR1Paths)
+    [Array]::Sort($actual, [StringComparer]::Ordinal)
+    [Array]::Sort($expected, [StringComparer]::Ordinal)
+    if ([string]::Join("`n", $actual) -cne [string]::Join("`n", $expected)) { return $false }
+    $currentState = Get-M1Slice6CandidateBlobText $CandidateCommit 'docs/current-state.md'
+    $readme = Get-M1Slice6CandidateBlobText $CandidateCommit 'docs/plans/milestones/m1/slices/s6/README.md'
+    $record = Get-M1Slice6CandidateBlobText $CandidateCommit 'docs/plans/milestones/m1/slices/s6/record.md'
+    return Test-M1Slice6RemainderR1NoEffectState $currentState $readme $record
+}
+
+
 function Get-Wp8CampaignReviewPaths() {
     return @(Get-Wp8Wp9OwnerStopPaths) + @(
         'contracts/json-schema/README.md',
@@ -963,6 +1100,10 @@ elseif ($verificationCandidateCommit -match '^[0-9a-f]{40}$') {
     $postVerificationDisposition = Get-Wp8PostVerificationDisposition `
         $postVerificationPaths $currentStateAtHead $readmeAtHead $verificationRecord $headRecord `
         $acceptanceBinding $wp9ReviewBinding
+    if ($postVerificationDisposition -eq 'invalid' -and
+        (Test-M1Slice6RemainderR1Candidate 'HEAD')) {
+        $postVerificationDisposition = 'exact-m1-s6-remainder-r1-no-effect-state'
+    }
     if ($postVerificationDisposition -in @(
             'exact-m1-s6-finite-campaign-correction-no-effect-state',
             'exact-m1-s6-finite-campaign-review-no-effect-state')) {
