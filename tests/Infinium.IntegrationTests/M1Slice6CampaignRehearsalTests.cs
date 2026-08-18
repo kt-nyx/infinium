@@ -208,6 +208,7 @@ public sealed class M1Slice6CampaignRehearsalTests
                 "contracts/repository/m1-slice6-campaign-composed-evidence.v2.schema.json",
                 "src/Infinium.Application/Evaluation/ActiveRepositoryJsonSchemaValidator.cs",
                 "src/Infinium.Application/Provider/CandidateInvestigation.cs",
+                "src/Infinium.Application/Provider/ProviderEffectRuntimeAuthorityLoader.cs",
                 "src/Infinium.Application/Provider/SourceClaimAcquisition.cs",
                 "src/Infinium.Coordinator/CandidateInvestigationCoordinator.cs",
                 "src/Infinium.Coordinator/M1Slice6CampaignProviderAccounting.cs",
@@ -218,9 +219,11 @@ public sealed class M1Slice6CampaignRehearsalTests
                 "src/Infinium.Coordinator/SourceClaimAcquisitionCoordinator.cs",
                 "src/Infinium.Coordinator/Wp9ProductionProfileEnrollmentRunner.cs",
                 "src/Infinium.CredentialHelper/WindowsCredentialNativeQualification.cs",
+                "src/Infinium.Domain/Contracts/ProviderEffectRuntimeAuthority.cs",
                 "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
                 "src/Infinium.Persistence/AuthoritativeStore.SourceClaims.cs",
                 "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
+                "src/Infinium.Persistence/M1Slice6FiniteCampaignLedger.cs",
                 "tests/Infinium.IntegrationTests/M1Slice6CampaignRehearsalTests.cs",
                 "tests/Infinium.IntegrationTests/M1Slice6LiveCampaignOfflineGateTests.cs",
                 "tests/Infinium.IntegrationTests/M1Slice6CampaignV2InputAdapterTests.cs",
@@ -661,7 +664,15 @@ public sealed class M1Slice6CampaignRehearsalTests
             ledgerPath = Path.Combine(clone, "artifacts", "m1-slice6", "campaign-ledger-v2.jsonl");
             ledger = new(ledgerPath, identity, CampaignExpiry, CredentialExpiry,
                 Start.AddMinutes(4).AddTicks(2));
-            ledger.RecordIndependentReview(Start.AddMinutes(4).AddTicks(3));
+            ProviderEffectRuntimeAuthority credentialRuntimeAuthority = EffectFreeAuthority(identity,
+                ProviderEffectAuthorityKind.CredentialEnrollment, identity.CredentialManifestId,
+                identity.CredentialManifestSha256, "none", "none", "none", "c1-credential-runtime");
+            ProviderEffectRuntimeAuthorityLoader.ValidateDurableBinding(credentialRuntimeAuthority,
+                identity, ledger.Current, ProviderEffectAuthorityKind.CredentialEnrollment,
+                identity.CredentialManifestId, identity.CredentialManifestSha256,
+                requireExternalEffect: false);
+            ledger.RecordIndependentReview(credentialRuntimeAuthority.AuthorityId,
+                credentialRuntimeAuthority.ManifestSha256, Start.AddMinutes(4).AddTicks(3));
             ledger.AdmitCampaign(Start.AddMinutes(4).AddTicks(4));
             ledger.BeginCredentialExecutionHandoff(Start.AddMinutes(4).AddTicks(5));
             JsonArray successorTrace = JsonNode.Parse(JsonSerializer.Serialize(credentialTrace))!.AsArray();
@@ -824,10 +835,21 @@ public sealed class M1Slice6CampaignRehearsalTests
             "wp" + (8 + (int)stage) + "-live");
         Directory.CreateDirectory(evidenceDirectory);
         string evidencePath = Path.Combine(evidenceDirectory, "stage-evidence.json");
+        ProviderEffectAuthorityKind authorityKind = stage switch
+        {
+            M1Slice6CampaignStage.Qualification => ProviderEffectAuthorityKind.TransportQualification,
+            M1Slice6CampaignStage.SourceClaimExtraction => ProviderEffectAuthorityKind.SourceClaimExtraction,
+            _ => ProviderEffectAuthorityKind.CandidateInvestigation,
+        };
+        ProviderEffectRuntimeAuthority runtimeAuthority = EffectFreeAuthority(ledger.Current.Identity,
+            authorityKind, "infinium.m1-s6.campaign-stage/" + stage, manifestSha,
+            ledger.Current.EventHash, ledger.Current.EvidenceId, ledger.Current.EvidenceSha256,
+            "c1-stage-runtime-" + (int)stage);
         try
         {
             string evidenceSha = await coordinator.ExecuteOneShotAsync(manifestPath, manifestSha, evidencePath,
-                now, CancellationToken.None);
+                now, CancellationToken.None, runtimeAuthority,
+                runtimeAuthorityRequiresExternalEffect: false);
             composedStages.Add(CreateComposedStageSummary(evidencePath, evidenceSha, ledger.Current.Identity, stage));
             Assert.AreEqual(1, boundary.SendCount);
             string recordPath = Path.Combine(clone, "docs", "plans", "milestones", "m1", "slices", "s6", "record.md");
@@ -972,6 +994,23 @@ public sealed class M1Slice6CampaignRehearsalTests
             finally { }
         }
         return new(ledgerPath, identity, CampaignExpiry, CredentialExpiry, now.AddSeconds(5));
+    }
+
+    private static ProviderEffectRuntimeAuthority EffectFreeAuthority(M1Slice6CampaignIdentity identity,
+        ProviderEffectAuthorityKind kind, string subjectId, string subjectSha, string predecessorHash,
+        string predecessorEvidenceId, string predecessorEvidenceSha, string authorityId)
+    {
+        return new(authorityId, ProviderEffectAuthorityScope.EffectFreeRehearsal, kind, subjectId,
+            subjectSha, identity.CampaignId, identity.CampaignManifestSha256, predecessorHash,
+            predecessorEvidenceId, predecessorEvidenceSha, identity.VerificationCandidateCommit,
+            new string('a', 64), new string('b', 64), "c1-rehearsal-review", new string('c', 64),
+            "c1-rehearsal-owner", new string('d', 64), Start.AddHours(-1), CampaignExpiry,
+            new("artifacts/m1-slice6/c1-rehearsal", "artifacts/m1-slice6/c1-rehearsal/ledger.jsonl",
+                "artifacts/m1-slice6/c1-rehearsal/product-state",
+                "artifacts/m1-slice6/c1-rehearsal/Infinium.Coordinator.exe",
+                "artifacts/m1-slice6/c1-rehearsal/Infinium.CredentialHelper.exe"),
+            new(0, 0, 0, 0, 0, kind == ProviderEffectAuthorityKind.CredentialEnrollment ? 0 : 1,
+                false, false), Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(authorityId))));
     }
 
     private static void EnsureVerifiedCredential(string stateRoot, string profileId,
@@ -1461,8 +1500,8 @@ public sealed class M1Slice6CampaignRehearsalTests
             execution = new
             {
                 provider_request_permitted = true,
-                requires_exact_review_marker = true,
-                requires_exact_admission_marker = true,
+                requires_typed_runtime_authority = true,
+                requires_durable_admission = true,
                 automatic_retry = false,
                 fourth_call_permitted = false
             },

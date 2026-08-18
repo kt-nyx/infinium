@@ -4,81 +4,61 @@ param(
     [ValidateSet('Qualification','SourceClaimExtraction','CandidateInvestigation')]
     [string] $Operation,
     [Parameter(Mandatory = $true)] [string] $AuthorizationManifest,
+    [Parameter(Mandatory = $true)] [string] $CampaignManifest,
+    [Parameter(Mandatory = $true)] [string] $CampaignReviewedCandidate,
+    [Parameter(Mandatory = $true)] [string] $CredentialManifest,
+    [Parameter(Mandatory = $true)] [string] $CampaignLedger,
+    [Parameter(Mandatory = $true)] [string] $ProductStateRoot,
+    [Parameter(Mandatory = $true)] [string] $CoordinatorBinary,
+    [Parameter(Mandatory = $true)] [string] $HelperBinary,
+    [Parameter(Mandatory = $true)] [string] $RuntimeAuthorityManifest,
+    [Parameter(Mandatory = $true)] [string] $RuntimeAuthoritySha256,
     [Parameter(Mandatory = $true)] [string] $OutputRoot
 )
 
 if ($PSVersionTable.PSEdition -ne 'Core') {
-    & (Get-Command pwsh.exe).Source -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
-        -Operation $Operation -AuthorizationManifest $AuthorizationManifest -OutputRoot $OutputRoot
+    & (Get-Command pwsh.exe).Source -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath @PSBoundParameters
     exit $LASTEXITCODE
 }
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$branch = (& git -C $repoRoot branch --show-current).Trim()
-$head = (& git -C $repoRoot rev-parse HEAD).Trim()
-$status = @(& git -C $repoRoot status --porcelain=v1 --untracked-files=all)
-if ($branch -cne 'codex/m1-s6' -or $status.Count -ne 0) {
-    throw 'Campaign stage execution requires the exact clean codex/m1-s6 authority candidate.'
+
+function Resolve-RequiredFile([string] $Path) {
+    return (Resolve-Path -LiteralPath $Path -ErrorAction Stop).Path
+}
+function Get-Sha256([string] $Path) {
+    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
 }
 
-$stagePath = (Resolve-Path -LiteralPath $AuthorizationManifest).Path
-$liveRoot = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/live'
-if (-not $stagePath.StartsWith($liveRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
-    throw 'Campaign stage execution requires an exact canonical live stage manifest.'
+$stagePath = Resolve-RequiredFile $AuthorizationManifest
+$campaignPath = Resolve-RequiredFile $CampaignManifest
+$credentialPath = Resolve-RequiredFile $CredentialManifest
+$ledgerPath = Resolve-RequiredFile $CampaignLedger
+$stateRoot = (Resolve-Path -LiteralPath $ProductStateRoot -ErrorAction Stop).Path
+$coordinator = Resolve-RequiredFile $CoordinatorBinary
+$helper = Resolve-RequiredFile $HelperBinary
+$runtimeAuthority = Resolve-RequiredFile $RuntimeAuthorityManifest
+$runtimeSha = Get-Sha256 $runtimeAuthority
+if ($runtimeSha -cne $RuntimeAuthoritySha256) {
+    throw 'The typed runtime authority bytes differ from the exact supplied digest.'
 }
-$stage = Get-Content -LiteralPath $stagePath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
-$expectedOrdinal = switch ($Operation) { 'Qualification' { 1 } 'SourceClaimExtraction' { 2 } default { 3 } }
-if ([int]$stage.stage.ordinal -ne $expectedOrdinal -or [string]$stage.stage.operation -cne $Operation -or
-    [string]$stage.status -cne 'reviewed-and-admitted') {
-    throw 'The stage operation, ordinal, or authority state is stale.'
-}
-$stageSha = (Get-FileHash -LiteralPath $stagePath -Algorithm SHA256).Hash.ToLowerInvariant()
-$campaignPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v2.json'
-$campaignReceipt = & (Join-Path $PSScriptRoot 'validate-m1-slice6-campaign-v2.ps1') `
-    -AuthorizationManifest $campaignPath -RequireState RolloverAdmitted | ConvertFrom-Json -Depth 20
-$campaign = Get-Content -LiteralPath $campaignPath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
-if ([DateTimeOffset]::UtcNow -ge [DateTimeOffset]::Parse([string]$campaign.expires_at_utc,
-        [Globalization.CultureInfo]::InvariantCulture)) {
-    throw 'The finite provider campaign expired before stage launch.'
-}
-$credentialPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json'
-$credentialReceipt = & (Join-Path $PSScriptRoot 'validate-m1-slice6-wp9-profile-authorization-v2.ps1') `
-    -AuthorizationManifest $credentialPath -RequireReady | ConvertFrom-Json -Depth 20
-$credential = Get-Content -LiteralPath $credentialPath -Raw | ConvertFrom-Json -Depth 100 -DateKind String
-$expectedOutputRelative = switch ($Operation) {
-    'Qualification' { 'artifacts/m1-slice6/wp9-live' }
-    'SourceClaimExtraction' { 'artifacts/m1-slice6/wp10-live' }
-    default { 'artifacts/m1-slice6/wp11-live' }
-}
-$expectedOutput = [IO.Path]::GetFullPath((Join-Path $repoRoot ($expectedOutputRelative -replace '/', [IO.Path]::DirectorySeparatorChar)))
+
 $resolvedOutput = [IO.Path]::GetFullPath((Join-Path (Get-Location).Path $OutputRoot))
-if ($resolvedOutput -cne $expectedOutput -or [IO.Directory]::Exists($resolvedOutput) -or [IO.File]::Exists($resolvedOutput)) {
-    throw 'The stage output must be its exact fresh absent one-shot root.'
+if ([IO.Directory]::Exists($resolvedOutput) -or [IO.File]::Exists($resolvedOutput)) {
+    throw 'The one-shot stage output root must be absent.'
 }
-$credentialOutput = Join-Path $repoRoot ([string]$credential.output.output_root_relative -replace '/', [IO.Path]::DirectorySeparatorChar)
-$ledgerPath = Join-Path $credentialOutput 'finite-campaign-ledger.v1.jsonl'
-$safetyRoot = Join-Path $repoRoot ([string]$credential.durable_state.product_state_root_relative -replace '/', [IO.Path]::DirectorySeparatorChar)
-if (-not [IO.File]::Exists($ledgerPath) -or -not [IO.Directory]::Exists($safetyRoot)) {
-    throw 'Campaign stage execution requires the exact accepted credential ledger and product state.'
-}
-$coordinator = Join-Path $repoRoot ([string]$credential.release_build.coordinator_relative_path -replace '/', [IO.Path]::DirectorySeparatorChar)
-$helper = Join-Path $repoRoot ([string]$credential.release_build.helper_relative_path -replace '/', [IO.Path]::DirectorySeparatorChar)
-if ((Get-FileHash -LiteralPath $coordinator -Algorithm SHA256).Hash.ToLowerInvariant() -cne [string]$credential.release_build.coordinator_sha256 -or
-    (Get-FileHash -LiteralPath $helper -Algorithm SHA256).Hash.ToLowerInvariant() -cne [string]$credential.release_build.helper_sha256) {
-    throw 'The campaign stage executable closure differs from the exact reviewed credential binding.'
-}
-
 [IO.Directory]::CreateDirectory($resolvedOutput) | Out-Null
+
 $evidencePath = Join-Path $resolvedOutput 'stage-evidence.json'
 & $coordinator --m1-slice6-campaign-stage --stage-manifest $stagePath `
-    --stage-manifest-sha256 $stageSha --campaign-manifest $campaignPath `
-    --campaign-manifest-sha256 ([string]$campaignReceipt.manifest_sha256) `
-    --campaign-reviewed-candidate ([string]$campaignReceipt.reviewed_candidate_commit) `
-    --credential-manifest $credentialPath --credential-manifest-sha256 ([string]$credentialReceipt.manifest_sha256) `
-    --campaign-ledger $ledgerPath --safety-state-root $safetyRoot --helper-binary $helper `
-    --helper-sha256 ([string]$credential.release_build.helper_sha256) --evidence $evidencePath
+    --stage-manifest-sha256 (Get-Sha256 $stagePath) --campaign-manifest $campaignPath `
+    --campaign-manifest-sha256 (Get-Sha256 $campaignPath) `
+    --campaign-reviewed-candidate $CampaignReviewedCandidate `
+    --credential-manifest $credentialPath --credential-manifest-sha256 (Get-Sha256 $credentialPath) `
+    --campaign-ledger $ledgerPath --safety-state-root $stateRoot --helper-binary $helper `
+    --helper-sha256 (Get-Sha256 $helper) --runtime-authority $runtimeAuthority `
+    --runtime-authority-sha256 $runtimeSha --evidence $evidencePath
 if ($LASTEXITCODE -ne 0) {
-    throw "The exact one-shot $Operation campaign stage stopped; retry is prohibited."
+    throw "The exact one-shot $Operation stage stopped; retry is prohibited."
 }

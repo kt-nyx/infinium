@@ -1,9 +1,9 @@
 # Current project state
 
 Status: Accepted
-Disposition: Conditional C1 handoff; exact-commit owner acceptance required
+Disposition: C1 effect-free readiness accepted; C2 effect authority absent
 
-Last reviewed: 2026-08-17
+Last reviewed: 2026-08-18
 Owner: Project owner
 
 This is the only document that states the live milestone, slice, work package,
@@ -20,12 +20,12 @@ chronology and evidence.
 | Accepted implementation baseline | R1 candidate `fcd17cd6db98019fc9e5253d5167d2487862671c`; R2 implementation `67ca34d6de162ad64f05fbe88972105745d3e831`; R2 handoff `8c25ca7274c394e41953a0b076010c26f6ffa97e` |
 | Accepted R2 evidence | Final `CampaignV2NonLive` receipt SHA-256 `bb9455c293b3049c1561cf9a15322c0b6b79502365097b51e2c92e4014e5019d`; all credential, native, network, provider, and billable counts were zero |
 | Accepted process proposal | Commit `2c82365fd853cb2021f1772d6c572ee9fa006d01`; process-amendment SHA-256 `5d9aff4226f93ff73025573e056080530d23f66e5cb9cc92efddfd78655acc9f`; lean-plan SHA-256 `57d9a3b25201bf55281cad02c9b8a3e458639ec10d1e465cdbad85f532c464af` |
-| Current authorized work | Before owner acceptance of the exact documentation activation commit: documentation activation only. Upon that acceptance: `M1/S6/C1` effect-free readiness closure becomes the current authorized package. Neither state authorizes an external effect. |
-| Activation gate | The project owner must accept the exact documentation activation commit. That acceptance makes `M1/S6/C1` eligible under this handoff; until then C1 is inactive. |
-| Next package after activation | `M1/S6/C1` effect-free readiness closure. C1 may modify and verify ordinary product/repository surfaces within its accepted plan, but it may not use a credential, launch an effect helper/UI, perform a native credential operation, access public network/DNS, contact a provider, incur cost, or access private evaluator material. |
-| Later packages | `C2` bounded live campaign and `C3` retained-evidence closeout are inactive. C2 requires accepted C1 plus a separate fresh owner-accepted campaign, credential authorization, stage manifests, exact bindings, ceilings, expiries, and current official-profile/capability/price evidence. C3 requires accepted retained C2 evidence and authorizes no new effect. |
+| Accepted C1 outcome | C1 effect-free readiness closure is accepted in the commit containing this handoff. Typed runtime authority, durable ledger binding, safety-state closure, exact R1/R2 preservation, and the fake-store/literal-loopback WP9-to-WP11 rehearsal passed without an external effect. |
+| Current authorized work | Preparation and owner review of a fresh `M1/S6/C2` authority package only. No credential, helper/UI, native, DNS/network, provider, or billable effect is authorized. |
+| Next gate | Materialize fresh C2 campaign, credential, profile/generation, stage, candidate/build, predecessor, path, ceiling, expiry, and current official-profile/capability/price bindings; then obtain separate owner acceptance of those exact bytes before any possible effect. |
+| Later packages | C2 execution and `C3` retained-evidence closeout are inactive. C3 requires accepted retained C2 evidence and authorizes no new effect. |
 | Final Slice 6 gate | After C3, the project owner decides Slice 6 acceptance and contract freeze. Slice 7 does not start automatically. |
-| External-effect authority | None. No API-key use, credential enrollment/read, helper/UI launch, authority lock, live manifest, native operation, DNS/public-network operation, provider request, billable operation, private-fixture access, archive operation, destructive action, push, or later-slice work is authorized by this handoff. |
+| External-effect authority | None. C1 materialized no active campaign, credential authority, stage request/admission, production profile, real-campaign safety latch, or effect evidence. Credential, helper/UI, native, DNS/network, provider, billable, private-fixture, and archive counts remain zero. |
 
 ## Current authority
 
@@ -67,23 +67,22 @@ They are not competing live handoffs.
 
 ## Process and successor-campaign state
 
-The owner accepted the exact process proposal on 2026-08-17. Acceptance of the
-documentation activation commit will:
+The owner accepted the exact process proposal on 2026-08-17 and accepted
+documentation activation commit
+`0b015753a926b1e498f59ffc3fbef1d07597b94a`, opening only C1. C1 then:
 
-1. activate the coherent-candidate, focused-verification,
-   consolidated-review, final-floor, bind-once lifecycle;
-2. supersede only the post-R2 R3-R7 orchestration mechanics with C1-C3 while
-   preserving every accepted obligation; and
-3. retire without execution the dormant campaign
+1. implemented the coherent effect-free readiness candidate and preserved the
+   focused-verification, consolidated-review, final-floor, bind-once lifecycle;
+2. preserved the accepted R1/R2 semantic, persistence, replay, provenance,
+   fixture, oracle, credential, budget, and effect-denial obligations; and
+3. confirmed retirement without execution of the dormant campaign
    `infinium.m1-s6.finite-live-campaign/51b9dba6-aca3-41d7-82d1-afd805e33e66`
    and credential authorization
    `infinium.m1-s6.wp9.production-profile-authorization/09b8e309-ead8-441e-8307-5a4a1a2c43d5`.
 
-Those two identities had no effect. Upon activation they become reserved
-historical identities and may never be executed, resumed, rolled over, reused,
-or treated as authority for C2. Until activation acceptance, they remain
-unexercised and ineligible. C2 must use entirely fresh exact authority accepted
-after C1.
+Those two identities had no effect. They are reserved historical identities
+and may never be executed, resumed, rolled over, reused, or treated as
+authority for C2. C2 must use entirely fresh exact authority accepted after C1.
 
 Git may bind reviewed bytes, but runtime effect authority comes only from a
 closed typed manifest plus durable coordinator-owned admission, use,

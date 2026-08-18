@@ -118,12 +118,13 @@ public sealed class Wp9ProductionProfileAuthorizationTests
     }
 
     [TestMethod]
-    public async Task AuthorityLockCreateNewAllowsExactlyOneConcurrentWinner()
+    public async Task DurableLedgerExclusiveLeaseAllowsExactlyOneConcurrentWinner()
     {
         string root = RepositoryRoot();
-        string runner = File.ReadAllText(Path.Combine(root, "eng", "run-m1-slice6-credential.ps1"));
-        StringAssert.Contains(runner, "[IO.FileMode]::CreateNew");
-        StringAssert.Contains(runner, "[IO.FileShare]::None");
+        string ledger = File.ReadAllText(Path.Combine(root, "src", "Infinium.Persistence",
+            "M1Slice6FiniteCampaignLedger.cs"));
+        StringAssert.Contains(ledger, "FileMode.OpenOrCreate, FileAccess.ReadWrite");
+        StringAssert.Contains(ledger, "FileShare.None");
         string directory = Path.Combine(Path.GetTempPath(), "infinium-wp9-lock-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         string path = Path.Combine(directory, "authority-lock.json");
@@ -147,59 +148,21 @@ public sealed class Wp9ProductionProfileAuthorizationTests
     }
 
     [TestMethod]
-    public void ReleaseBinaryInventoryIsExactAndDetectsDependencyDrift()
+    public void ReleaseRuntimeBindingIsTypedAndBinaryInventoryDetectsDependencyDrift()
     {
         string root = RepositoryRoot();
         string runner = File.ReadAllText(Path.Combine(root, "eng", "run-m1-slice6-credential.ps1"));
-        StringAssert.Contains(runner, "Get-Wp9BinaryInventory");
-        StringAssert.Contains(runner, "binary_inventory_file_count");
-        StringAssert.Contains(runner, "binary_inventory_sha256");
+        string coordinator = File.ReadAllText(Path.Combine(root, "src", "Infinium.Coordinator",
+            "Wp9ProductionProfileEnrollmentRunner.cs"));
+        StringAssert.Contains(runner, "RuntimeAuthorityManifest");
+        StringAssert.Contains(coordinator, "ValidateExecutableBinding(runtimeAuthority");
         string buildTargets = File.ReadAllText(TestRepository.PathFromRoot("Directory.Build.targets"));
-        StringAssert.Contains(buildTargets, "InfiniumWp9ManifestPath");
-        StringAssert.Contains(buildTargets, "InfiniumManifestSourceRevisionId");
         StringAssert.Contains(buildTargets, "InfiniumCanonicalSourceRevisionId");
         StringAssert.Contains(buildTargets, "^[0-9a-f]{40}$");
-        StringAssert.Contains(buildTargets, "<SourceRevisionId>$(InfiniumCanonicalSourceRevisionId)</SourceRevisionId>");
         StringAssert.Contains(buildTargets, "RevisionId=\"$(InfiniumCanonicalSourceRevisionId)\"");
-        StringAssert.Contains(runner, "SourceRevisionId=$closeReady");
         StringAssert.Contains(buildTargets, "AfterTargets=\"InitializeSourceControlInformationFromSourceControlManager\"");
-        string manifest = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
-            "wp9-production-profile-authorization.v1.json"));
-        StringAssert.Contains(manifest, "bin/Release/net10.0/Infinium.Coordinator.exe");
-        using JsonDocument manifestDocument = JsonDocument.Parse(manifest);
-        string sourceCommit = manifestDocument.RootElement.GetProperty("release_build").GetProperty("source_commit").GetString()!;
-        string expectedSourceCommit = sourceCommit;
-        string currentState = File.ReadAllText(Path.Combine(root, "docs", "current-state.md"));
-        if (currentState.Contains("`M1/S6` finite-campaign amendment implementation, non-live verification, and fresh review only.", StringComparison.Ordinal)
-            && currentState.Contains("No credential or provider effect is admitted.", StringComparison.Ordinal))
-        {
-            string campaignPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
-                "m1-slice6-finite-campaign-authorization.v1.json");
-            using JsonDocument campaign = JsonDocument.Parse(File.ReadAllText(campaignPath));
-            string campaignStatus = campaign.RootElement.GetProperty("status").GetString()!;
-            Assert.IsTrue(campaignStatus is "verification-pending" or "ready-for-campaign-review");
-            Assert.AreEqual("c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be",
-                campaign.RootElement.GetProperty("authority_source").GetProperty("attachment_sha256").GetString());
-            expectedSourceCommit = campaign.RootElement.GetProperty("candidate_binding")
-                .GetProperty("close_ready_implementation_commit").GetString()!;
-            if (campaignStatus == "ready-for-campaign-review")
-            {
-                Assert.AreEqual(expectedSourceCommit, sourceCommit,
-                    "The campaign-reviewed credential closure must share the exact non-broadening rollover source.");
-            }
-            else
-            {
-                Assert.AreEqual("pending", expectedSourceCommit);
-            }
-            StringAssert.Contains(runner, "(Get-Wp9Sha256 $coordinator) -cne [string]$m.release_build.coordinator_sha256");
-            StringAssert.Contains(runner, "$inventory.sha256 -cne [string]$m.release_build.binary_inventory_sha256");
-        }
-        string sourceLink = File.ReadAllText(Path.Combine(root, "src", "Infinium.Coordinator", "obj", "Release", "net10.0",
-            "Infinium.Coordinator.sourcelink.json"));
-        if (expectedSourceCommit.Length == 40 && expectedSourceCommit != new string('0', 40))
-        {
-            StringAssert.Contains(sourceLink, expectedSourceCommit);
-        }
+        StringAssert.Contains(buildTargets, "Infinium builds require one exact Git SourceRevisionId");
+        Assert.IsFalse(buildTargets.Contains("wp9-production-profile-authorization", StringComparison.Ordinal));
         string directory = Path.Combine(Path.GetTempPath(), "infinium-wp9-binaries-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(directory, "CredentialHelper"));
         try
@@ -299,26 +262,20 @@ public sealed class Wp9ProductionProfileAuthorizationTests
     }
 
     [TestMethod]
-    public void RunnerIsAbsentFromOrdinaryVerifierAndRequiresExactOwnerOrCampaignRolloverBeforeLaunch()
+    public void RunnerIsAbsentFromOrdinaryVerifierAndRequiresTypedDurableAuthorityBeforeLaunch()
     {
         string root = RepositoryRoot();
         string runner = File.ReadAllText(Path.Combine(root, "eng", "run-m1-slice6-credential.ps1"));
         string verifier = File.ReadAllText(Path.Combine(root, "eng", "verify-m1-slice6.ps1"));
-        StringAssert.Contains(runner, "$allReviewLines");
-        StringAssert.Contains(runner, "$reviewLines = @($allReviewLines | Where-Object { [Regex]::IsMatch($_, $reviewPattern) })");
-        StringAssert.Contains(runner, "WP9_PROFILE_OWNER_ACCEPTANCE");
-        StringAssert.Contains(runner, "WP9_PROFILE_CAMPAIGN_ROLLOVER_ADMISSION");
-        StringAssert.Contains(runner, "-RequireState RolloverAdmitted");
-        StringAssert.Contains(runner, "$campaignIntentLines");
-        StringAssert.Contains(runner, "refuses downgrade to an owner-marker route");
+        StringAssert.Contains(runner, "RuntimeAuthorityManifest");
+        StringAssert.Contains(runner, "RuntimeAuthoritySha256");
+        StringAssert.Contains(runner, "--runtime-authority");
+        StringAssert.Contains(runner, "--wp9-campaign-credential-handoff-admission");
         StringAssert.Contains(runner, "--campaign-reviewed-candidate");
-        StringAssert.Contains(runner, "-ValidateCampaignAdmissionOnly");
-        StringAssert.Contains(runner, "$currentOwnerPrefix");
-        StringAssert.Contains(runner, "status --porcelain=v1");
-        StringAssert.Contains(runner, "merge-base --is-ancestor");
-        StringAssert.Contains(runner, "output must be the exact fresh absent manifest-bound root");
-        StringAssert.Contains(runner, "new-only WP9 production profile state root already exists");
-        StringAssert.Contains(runner, "authority-lock.json");
+        StringAssert.Contains(runner, "ValidateCampaignAdmissionOnly");
+        Assert.IsFalse(runner.Contains("git ", StringComparison.OrdinalIgnoreCase));
+        Assert.IsFalse(runner.Contains("record.md", StringComparison.Ordinal));
+        Assert.IsFalse(runner.Contains("OWNER_ACCEPTANCE", StringComparison.Ordinal));
         StringAssert.Contains(runner, "--wp9-production-profile-enrollment");
         System.Text.RegularExpressions.Match nonLiveAll = System.Text.RegularExpressions.Regex.Match(
             verifier, @"(?ms)^function Invoke-NonLiveAllGate \{.*?^\}");
@@ -405,8 +362,6 @@ public sealed class Wp9ProductionProfileAuthorizationTests
     public void RunnerRejectsMissingAuthorityBeforeOutputHelperOrNativeBoundary()
     {
         string root = RepositoryRoot();
-        string manifest = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
-            "wp9-production-profile-authorization.v1.json");
         string output = Path.Combine(root, "artifacts", "m1-slice6", "wp9-profile");
         Assert.IsFalse(Directory.Exists(output));
         ProcessStartInfo start = new("powershell.exe")
@@ -421,7 +376,7 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         {
             "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
             Path.Combine(root, "eng", "run-m1-slice6-credential.ps1"),
-            "-Operation", "EnrollOrVerifyProfile", "-AuthorizationManifest", manifest,
+            "-Operation", "EnrollOrVerifyProfile",
             "-OutputRoot", "artifacts/m1-slice6/wp9-profile",
         }) { start.ArgumentList.Add(argument); }
         using Process process = Process.Start(start)!;
@@ -429,8 +384,8 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         string errorText = process.StandardError.ReadToEnd();
         process.WaitForExit();
         Assert.AreNotEqual(0, process.ExitCode, outputText);
-        StringAssert.Contains(errorText,
-            "Only the exact WP9 production-profile manifest path is executable.");
+        StringAssert.Contains(errorText, "missing mandatory parameters");
+        StringAssert.Contains(errorText, "RuntimeAuthorityManifest");
         Assert.IsFalse(Directory.Exists(output));
         Assert.IsFalse(Directory.Exists(Path.Combine(root, "artifacts", "m1-slice6", "wp9-production-profile-state")));
     }

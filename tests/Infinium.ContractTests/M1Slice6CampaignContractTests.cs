@@ -115,9 +115,12 @@ public sealed class M1Slice6CampaignContractTests
 
         string verifier = File.ReadAllText(TestRepository.PathFromRoot("eng", "verify-m1-slice6.ps1"));
         string currentState = File.ReadAllText(TestRepository.PathFromRoot("docs", "current-state.md"));
-        const string stateAuthority = "R1-R3 are active effect-free correction, integration, fixture freeze, full non-live verification, and successor-campaign materialization";
+        const string stateAuthority = "C1 effect-free readiness closure is accepted";
         StringAssert.Contains(currentState, stateAuthority);
-        Assert.IsFalse(currentState.Replace(stateAuthority, "finite-campaign live execution", StringComparison.Ordinal)
+        StringAssert.Contains(currentState,
+            "Preparation and owner review of a fresh `M1/S6/C2` authority package only.");
+        StringAssert.Contains(currentState, "No credential, helper/UI, native, DNS/network, provider, or billable effect is authorized.");
+        Assert.IsFalse(currentState.Replace(stateAuthority, "C2 live execution is authorized", StringComparison.Ordinal)
             .Contains(stateAuthority, StringComparison.Ordinal));
         StringAssert.Contains(verifier, "function Test-M1Slice6RemainderR1NoEffectState");
         StringAssert.Contains(verifier, "M1_S6_REMAINDER_OWNER_ACCEPTANCE candidate_commit=5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98");

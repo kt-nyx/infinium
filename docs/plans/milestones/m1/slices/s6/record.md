@@ -8878,3 +8878,58 @@ billable operation, private/archive access, or push effect occurred. Repository-
 owned test/gate process survivors were zero before this handoff.
 
 M1_S6_REMAINDER_R2_ACCEPTANCE candidate_commit=67ca34d6de162ad64f05fbe88972105745d3e831 baseline_commit=8c9ff5227fcc076df74f0c9faf1385640995b3d1 exact_path_count=33 receipt_sha256=bb9455c293b3049c1561cf9a15322c0b6b79502365097b51e2c92e4014e5019d wp10_result_sha256=beabc1d5cef06317d215bfa45ab481273e5995e0b4bd58ce412c78335bfc8e0f wp11_result_sha256=5d594a901257437387cf970c9456106f16461401024d206fd4c1109f207dedd5 credential_operations=0 provider_requests=0 r3_authorized=false
+
+## C1 effect-free readiness closure — 2026-08-18
+
+C1 uses owner-accepted activation commit
+`0b015753a926b1e498f59ffc3fbef1d07597b94a`, R2 implementation
+`67ca34d6de162ad64f05fbe88972105745d3e831`, and R2 handoff
+`8c25ca7274c394e41953a0b076010c26f6ffa97e` as exact inputs. The implementation
+commit is the commit containing this append; its exact identity and the final
+`C1Readiness` receipt digest are reported by the clean exact-candidate handoff.
+
+The package adds product contract
+`infinium.provider.effect-runtime-authority/v1`, a strict loader for exact
+scope/kind/subject/campaign/predecessor/candidate/binary/path/time/limit
+bindings, and hash-chained campaign-ledger retention of the authority identity
+and digest. Credential and provider-stage executable paths now require typed
+authority plus durable state. Git branch, HEAD, history, messages, record
+markers, and attribution do not supply runtime authority. No executable C2
+authority instance is included.
+
+The accepted R2 fake-store/literal-loopback rehearsal now binds effect-free
+credential and stage authorities and traverses qualification, WP10, WP11,
+composed provenance, settlement, persistence, reload, replay, recovery,
+invalid states, expiry, counters, ceilings, safety latching, and no-fourth-call
+closure. The public fixture registry remains exactly 43 rows; the v2 reseal
+check reports five manifests, zero differences, and zero v1 writes. Frozen
+public package and oracle bytes are unchanged, and production code has no
+evaluator-oracle dependency or expected-truth authoring path.
+
+Focused verification passed 29/29 authority/ledger/safety/WP9 Unit tests, the
+schema-set Contract check, the fresh-clone end-to-end rehearsal, strict JSON
+schema validation, PowerShell parsing, documentation validation, and the v2
+authority reseal. Consolidated semantic, persistence/replay/recovery,
+fixture/oracle/provenance, security/effect-denial, runtime-authority, scope,
+claims, documentation, and complete-diff review ended with zero must-fix
+findings. It corrected two issues on the same candidate: build identity had
+still fallen back to a retired WP9 manifest, and the campaign-stage v2 contract
+still carried Git-era review/admission-marker names. The final clean-commit
+continuation-profile floor then found two historical contract tests that still
+required superseded pre-C1 navigation prose. They now verify retained WP8/R1-R2
+evidence in this record while requiring the compact accepted C1/C2 boundary in
+current navigation; their focused recheck passed 2/2. The final clean-commit
+floor then exposed a whitespace-sensitive C1 navigation check in the verifier;
+the gate now normalizes Markdown whitespace before comparing the exact phrase.
+The final clean-commit floor and exact `C1Readiness` gate are retained in the
+acceptance handoff and receipt rather than duplicating intermediate diagnostics
+here.
+
+C1 did not create an active campaign, credential authorization manifest,
+provider-stage request or admission, production profile, real-campaign safety
+latch, or effect evidence. Credential access, helper/UI launch, native
+credential operation, DNS/public-network operation, provider request, billable
+operation, private-fixture access, and archive access counts are all zero. No
+push occurred. C1 opens only preparation and owner review of an entirely fresh
+C2 authority package; separate owner acceptance of those exact bytes remains
+the next gate before any possible effect.

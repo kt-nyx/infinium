@@ -118,11 +118,11 @@
     },
     "execution": {
       "type": "object", "additionalProperties": false,
-      "required": ["provider_request_permitted", "requires_exact_review_marker", "requires_exact_admission_marker", "automatic_retry", "fourth_call_permitted"],
+      "required": ["provider_request_permitted", "requires_typed_runtime_authority", "requires_durable_admission", "automatic_retry", "fourth_call_permitted"],
       "properties": {
         "provider_request_permitted": { "type": "boolean" },
-        "requires_exact_review_marker": { "const": true },
-        "requires_exact_admission_marker": { "const": true },
+        "requires_typed_runtime_authority": { "const": true },
+        "requires_durable_admission": { "const": true },
         "automatic_retry": { "const": false },
         "fourth_call_permitted": { "const": false }
       }

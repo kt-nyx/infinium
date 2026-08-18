@@ -39,24 +39,6 @@ if (args is ["--validate-repository-authority-json", "--document", string author
     }
 }
 
-if (args is ["--wp9-production-profile-enrollment", "--manifest", string wp9Manifest,
-    "--manifest-sha256", string wp9ManifestSha256,
-    "--output-root", string wp9OutputRoot,
-    "--product-root", string wp9ProductRoot])
-{
-    try
-    {
-        return await Wp9ProductionProfileEnrollmentRunner.RunAsync(
-            wp9Manifest, wp9ManifestSha256, wp9OutputRoot, wp9ProductRoot).ConfigureAwait(false);
-    }
-    catch (Exception exception) when (exception is IOException or InvalidDataException
-        or InvalidOperationException or OperationCanceledException or PlatformNotSupportedException)
-    {
-        Console.Error.WriteLine($"WP9 production profile enrollment stopped with typed non-secret error: {exception.GetType().Name}");
-        return 73;
-    }
-}
-
 if (args is ["--wp9-production-profile-enrollment", "--manifest", string campaignWp9Manifest,
     "--manifest-sha256", string campaignWp9ManifestSha256,
     "--output-root", string campaignWp9OutputRoot,
@@ -64,13 +46,16 @@ if (args is ["--wp9-production-profile-enrollment", "--manifest", string campaig
     "--campaign-manifest", string campaignManifest,
     "--campaign-manifest-sha256", string campaignManifestSha256,
     "--campaign-reviewed-candidate", string campaignReviewedCandidate,
-    "--campaign-ledger", string campaignLedger])
+    "--campaign-ledger", string campaignLedger,
+    "--runtime-authority", string credentialRuntimeAuthority,
+    "--runtime-authority-sha256", string credentialRuntimeAuthoritySha256])
 {
     try
     {
         return await Wp9ProductionProfileEnrollmentRunner.RunAsync(campaignWp9Manifest,
             campaignWp9ManifestSha256, campaignWp9OutputRoot, campaignWp9ProductRoot,
-            new(campaignManifest, campaignManifestSha256, campaignReviewedCandidate, campaignLedger))
+            new(campaignManifest, campaignManifestSha256, campaignReviewedCandidate, campaignLedger,
+                credentialRuntimeAuthority, credentialRuntimeAuthoritySha256))
             .ConfigureAwait(false);
     }
     catch (Exception exception) when (exception is IOException or InvalidDataException
@@ -85,13 +70,15 @@ if (args is ["--wp9-campaign-credential-admission-probe", "--manifest", string p
     "--manifest-sha256", string probeWp9ManifestSha256,
     "--campaign-manifest", string probeCampaignManifest,
     "--campaign-manifest-sha256", string probeCampaignManifestSha256,
-    "--campaign-reviewed-candidate", string probeReviewedCandidate])
+    "--campaign-reviewed-candidate", string probeReviewedCandidate,
+    "--runtime-authority", string probeRuntimeAuthority,
+    "--runtime-authority-sha256", string probeRuntimeAuthoritySha256])
 {
     try
     {
         Wp9ProductionProfileEnrollmentRunner.ValidateCampaignAdmissionOnly(probeWp9Manifest,
             probeWp9ManifestSha256, probeCampaignManifest, probeCampaignManifestSha256,
-            probeReviewedCandidate);
+            probeReviewedCandidate, probeRuntimeAuthority, probeRuntimeAuthoritySha256);
         Console.WriteLine("WP9 campaign credential admission validated with zero effect.");
         return 0;
     }
@@ -107,14 +94,16 @@ if (args is ["--wp9-campaign-credential-handoff-admission", "--manifest", string
     "--campaign-manifest", string handoffCampaignManifest,
     "--campaign-manifest-sha256", string handoffCampaignManifestSha256,
     "--campaign-reviewed-candidate", string handoffReviewedCandidate,
-    "--campaign-ledger", string handoffCampaignLedger])
+    "--campaign-ledger", string handoffCampaignLedger,
+    "--runtime-authority", string handoffRuntimeAuthority,
+    "--runtime-authority-sha256", string handoffRuntimeAuthoritySha256])
 {
     try
     {
         Wp9ProductionProfileEnrollmentRunner.AdmitCampaignCredentialExecutionHandoff(
             handoffWp9Manifest, handoffWp9ManifestSha256, handoffCampaignManifest,
             handoffCampaignManifestSha256, handoffReviewedCandidate, handoffCampaignLedger,
-            DateTimeOffset.UtcNow);
+            handoffRuntimeAuthority, handoffRuntimeAuthoritySha256, DateTimeOffset.UtcNow);
         Console.WriteLine("WP9 campaign credential execution handoff admitted with zero effect.");
         return 0;
     }
@@ -161,6 +150,8 @@ if (args is ["--m1-slice6-campaign-stage", "--stage-manifest", string stageManif
     "--safety-state-root", string stageSafetyStateRoot,
     "--helper-binary", string stageHelperBinary,
     "--helper-sha256", string stageHelperSha256,
+    "--runtime-authority", string stageRuntimeAuthority,
+    "--runtime-authority-sha256", string stageRuntimeAuthoritySha256,
     "--evidence", string stageEvidence])
 {
     try
@@ -168,7 +159,8 @@ if (args is ["--m1-slice6-campaign-stage", "--stage-manifest", string stageManif
         return await M1Slice6CampaignStageRunner.RunAsync(stageManifest, stageManifestSha256,
             stageCampaignManifest, stageCampaignManifestSha256, stageCampaignReviewedCandidate,
             stageCredentialManifest, stageCredentialManifestSha256, stageCampaignLedger,
-            stageSafetyStateRoot, stageHelperBinary, stageHelperSha256, stageEvidence)
+            stageSafetyStateRoot, stageHelperBinary, stageHelperSha256, stageEvidence,
+            stageRuntimeAuthority, stageRuntimeAuthoritySha256)
             .ConfigureAwait(false);
     }
     catch (Exception exception) when (exception is IOException or InvalidDataException

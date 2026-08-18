@@ -40,6 +40,7 @@ network.
 | `source-claim-extraction.v1.schema.json` | `infinium.llm.source-claim-extraction/v1` |
 | `candidate-investigation.v1.schema.json` | `infinium.llm.candidate-investigation/v1` |
 | `provider-execution-input.v1.schema.json` | `infinium.provider.execution-input/v1` |
+| `provider-effect-runtime-authority.v1.schema.json` | `infinium.provider.effect-runtime-authority/v1` |
 | `effective-scan-configuration.v2.schema.json` | `infinium.scan.effective-configuration/v2` |
 | `run-output.v2.schema.json` | `infinium.run-output/v2` |
 | `cli-summary.v2.schema.json` | `infinium.cli-summary/v2` |
@@ -53,6 +54,11 @@ supplements. They bind the exact frozen local v1 artifact by identity or
 fingerprint and do not reinterpret or replace the Slice 5 v1 bytes. All nine
 contracts are closed at every declared object boundary and contain no
 credential target, secret byte, authorization-header, or raw-header field.
+The separate `provider-effect-runtime-authority.v1` contract is a C1 runtime
+admission envelope, not an analysis input or repository-governance schema. It
+binds a future effect subject, campaign, predecessor, reviewed implementation
+and binaries, execution paths, time window, and closed counters. No executable
+instance is supplied by the schema or by C1.
 Provider execution and operation carry the accepted versioned local input-bound
 policy `openai-responses-o200k-byte-envelope/v2`. This maturity transition does
 not authorize provider dispatch, credentials, or later-package execution and

@@ -111,22 +111,23 @@ public sealed class Wp8PreLiveReadinessContractTests
         }
         else
         {
-            StringAssert.Contains(normalizedReadme, "Corrected WP8 is independently accepted.");
-            StringAssert.Contains(normalizedReadme, acceptance["verification_candidate_commit"]!.GetValue<string>());
-            StringAssert.Contains(normalizedReadme, acceptance["post_run_evidence_candidate_commit"]!.GetValue<string>());
-            StringAssert.Contains(normalizedReadme, acceptance["non_live_all_receipt_sha256"]!.GetValue<string>());
-            StringAssert.Contains(normalizedReadme, acceptance["pre_live_receipt_sha256"]!.GetValue<string>());
-            StringAssert.Contains(normalizedReadme, acceptance["direct_layer6_receipt_sha256"]!.GetValue<string>());
-            Assert.IsTrue(
-                normalizedReadme.Contains("The next eligible action is only the owner's decision whether to begin WP9", StringComparison.Ordinal)
-                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is active.", StringComparison.Ordinal)
-                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is complete at close-ready", StringComparison.Ordinal)
-                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is in bounded correction and reverification.", StringComparison.Ordinal)
-                || normalizedReadme.Contains("WP9 non-effectful production-profile preparation is frozen at corrected close-ready implementation", StringComparison.Ordinal),
-                "Accepted WP8 must retain either its exact closeout handoff or the exact later no-effect WP9 preparation handoff.");
+            string record = File.ReadAllText(Path.Combine(root,
+                "docs/plans/milestones/m1/slices/s6/record.md".Replace('/', Path.DirectorySeparatorChar)));
+            string normalizedRecord = System.Text.RegularExpressions.Regex.Replace(record, @"\s+", " ");
+            StringAssert.Contains(normalizedRecord, "Corrected WP8 independent acceptance and handoff");
+            StringAssert.Contains(normalizedRecord, acceptance["verification_candidate_commit"]!.GetValue<string>());
+            StringAssert.Contains(normalizedRecord, acceptance["post_run_evidence_candidate_commit"]!.GetValue<string>());
+            StringAssert.Contains(normalizedRecord, acceptance["non_live_all_receipt_sha256"]!.GetValue<string>());
+            StringAssert.Contains(normalizedRecord, acceptance["pre_live_receipt_sha256"]!.GetValue<string>());
+            StringAssert.Contains(normalizedRecord, acceptance["direct_layer6_receipt_sha256"]!.GetValue<string>());
+            StringAssert.Contains(normalizedReadme, "C1 effect-free readiness closure is accepted");
+            StringAssert.Contains(normalizedReadme,
+                "Accepted C1 makes only preparation and owner review of a fresh C2 authority package eligible.");
+            StringAssert.Contains(normalizedRecord,
+                "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.");
+            StringAssert.Contains(normalizedRecord,
+                "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.");
         }
-        StringAssert.Contains(normalizedReadme, "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.");
-        StringAssert.Contains(normalizedReadme, "No API-key use, live-manifest execution, native Credential Manager operation, DNS operation, public-network operation, provider request, billable operation, or production-profile materialization/use is authorized.");
 
         foreach (string relative in new[]
         {

@@ -415,7 +415,9 @@ public sealed class M1Slice6CampaignProductionStageBoundary : IM1Slice6CampaignS
 public static class M1Slice6CampaignStageManifestValidator
 {
     public static M1Slice6CampaignStageAuthority LoadAndValidate(string manifestPath,
-        string expectedSha256, M1Slice6FiniteCampaignLedger ledger, bool requireAdmitted)
+        string expectedSha256, M1Slice6FiniteCampaignLedger ledger, bool requireAdmitted,
+        ProviderEffectRuntimeAuthority? runtimeAuthority = null,
+        bool runtimeAuthorityRequiresExternalEffect = true)
     {
         manifestPath = Path.GetFullPath(manifestPath);
         byte[] bytes = File.ReadAllBytes(manifestPath);
@@ -674,22 +676,43 @@ public static class M1Slice6CampaignStageManifestValidator
         }
 
         JsonElement execution = root.GetProperty("execution");
-        Exact(execution, "provider_request_permitted", "requires_exact_review_marker",
-            "requires_exact_admission_marker", "automatic_retry", "fourth_call_permitted");
+        Exact(execution, "provider_request_permitted", "requires_typed_runtime_authority",
+            "requires_durable_admission", "automatic_retry", "fourth_call_permitted");
         if (execution.GetProperty("provider_request_permitted").GetBoolean()
                 != (status == "reviewed-and-admitted")
-            || !execution.GetProperty("requires_exact_review_marker").GetBoolean()
-            || !execution.GetProperty("requires_exact_admission_marker").GetBoolean()
+            || !execution.GetProperty("requires_typed_runtime_authority").GetBoolean()
+            || !execution.GetProperty("requires_durable_admission").GetBoolean()
             || execution.GetProperty("automatic_retry").GetBoolean()
             || execution.GetProperty("fourth_call_permitted").GetBoolean())
         {
             throw new InvalidDataException("The stage execution authority is absent or broadened.");
         }
 
-        string reviewed = requireAdmitted
-            ? ResolveCommittedStageAuthority(manifestPath, requestPath, sha, closeReady,
-                root.GetProperty("manifest_id").GetString()!, identity, predecessor.GetProperty("evidence_sha256").GetString()!)
-            : "pending";
+        string reviewed;
+        if (!requireAdmitted)
+        {
+            reviewed = "pending";
+        }
+        else if (runtimeAuthority is null)
+        {
+            reviewed = ResolveCommittedStageAuthority(manifestPath, requestPath, sha, closeReady,
+                root.GetProperty("manifest_id").GetString()!, identity,
+                predecessor.GetProperty("evidence_sha256").GetString()!);
+        }
+        else
+        {
+            ProviderEffectAuthorityKind expectedKind = stage switch
+            {
+                M1Slice6CampaignStage.Qualification => ProviderEffectAuthorityKind.TransportQualification,
+                M1Slice6CampaignStage.SourceClaimExtraction => ProviderEffectAuthorityKind.SourceClaimExtraction,
+                M1Slice6CampaignStage.CandidateInvestigation => ProviderEffectAuthorityKind.CandidateInvestigation,
+                _ => throw new InvalidDataException("The runtime authority stage is outside the finite campaign."),
+            };
+            ProviderEffectRuntimeAuthorityLoader.ValidateDurableBinding(runtimeAuthority, identity,
+                ledger.Current, expectedKind, root.GetProperty("manifest_id").GetString()!, sha,
+                requireExternalEffect: runtimeAuthorityRequiresExternalEffect);
+            reviewed = runtimeAuthority.ImplementationCommit;
+        }
         return new(root.GetProperty("manifest_id").GetString()!, sha, stage, workPackage, operation,
             reviewed, predecessor.GetProperty("evidence_id").GetString()!,
             predecessor.GetProperty("evidence_sha256").GetString()!, requestPath, requestSha,
@@ -1088,7 +1111,9 @@ public sealed class M1Slice6CampaignStageCoordinator
     }
 
     public async Task<string> ExecuteOneShotAsync(string manifestPath, string manifestSha256,
-        string evidencePath, DateTimeOffset now, CancellationToken cancellationToken)
+        string evidencePath, DateTimeOffset now, CancellationToken cancellationToken,
+        ProviderEffectRuntimeAuthority? runtimeAuthority = null,
+        bool runtimeAuthorityRequiresExternalEffect = true)
     {
         if (ledger.Current.State == M1Slice6CampaignState.TransportMayHaveStarted)
         {
@@ -1149,11 +1174,13 @@ public sealed class M1Slice6CampaignStageCoordinator
                 new InvalidOperationException("reconciled-sqlite-settlement"));
         }
         M1Slice6CampaignStageAuthority authority = M1Slice6CampaignStageManifestValidator.LoadAndValidate(
-            manifestPath, manifestSha256, ledger, requireAdmitted: true);
+            manifestPath, manifestSha256, ledger, requireAdmitted: true, runtimeAuthority,
+            runtimeAuthorityRequiresExternalEffect);
         ledger.ReserveStage(authority.Stage, new(authority.ManifestId, authority.ManifestSha256,
             authority.CanonicalRequest.LongLength, authority.ProvedInputTokens,
             authority.Limits.MaximumOutputTokens, authority.Limits.MaximumRawResponseBytes,
-            authority.Limits.MaximumNanoUsd), now);
+            authority.Limits.MaximumNanoUsd), runtimeAuthority?.AuthorityId ?? "",
+            runtimeAuthority?.ManifestSha256 ?? "", now);
         M1Slice6CampaignAccountingAdmission? accountingAdmission = null;
         try
         {
@@ -1502,11 +1529,9 @@ internal static class M1Slice6CampaignStageRunner
         string campaignManifestPath, string campaignManifestSha256, string campaignReviewedCandidate,
         string credentialManifestPath, string credentialManifestSha256, string ledgerPath,
         string safetyStateRoot, string helperBinary, string helperSha256, string evidencePath,
+        string runtimeAuthorityManifestPath, string runtimeAuthorityManifestSha256,
         CancellationToken cancellationToken = default)
     {
-        Wp9ProductionProfileEnrollmentRunner.ValidateCampaignAdmissionOnly(credentialManifestPath,
-            credentialManifestSha256, campaignManifestPath, campaignManifestSha256,
-            campaignReviewedCandidate);
         byte[] campaignBytes = File.ReadAllBytes(Path.GetFullPath(campaignManifestPath));
         byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
         string repository = M1Slice6CampaignStageManifestValidator.FindRepositoryRoot(campaignManifestPath);
@@ -1540,6 +1565,17 @@ internal static class M1Slice6CampaignStageRunner
             profile.GetProperty("target_fingerprint_sha256").GetString()!);
         M1Slice6FiniteCampaignLedger ledger = new(Path.GetFullPath(ledgerPath), identity,
             campaignExpiry, credentialExpiry, DateTimeOffset.UtcNow);
+        ProviderEffectRuntimeAuthority runtimeAuthority = ProviderEffectRuntimeAuthorityLoader.LoadAndValidate(
+            runtimeAuthorityManifestPath, runtimeAuthorityManifestSha256, DateTimeOffset.UtcNow);
+        string coordinatorBinary = Environment.ProcessPath
+            ?? throw new InvalidOperationException("The executing coordinator binary path is unavailable.");
+        string coordinatorSha256 = Convert.ToHexStringLower(
+            SHA256.HashData(File.ReadAllBytes(Path.GetFullPath(coordinatorBinary))));
+        ProviderEffectRuntimeAuthorityLoader.ValidateExecutableBinding(runtimeAuthority,
+            typeof(M1Slice6CampaignStageRunner).Assembly, coordinatorSha256, helperSha256);
+        ProviderEffectRuntimeAuthorityLoader.ValidateExecutionBinding(runtimeAuthority, repository,
+            Path.GetDirectoryName(Path.GetFullPath(evidencePath))!, ledgerPath, safetyStateRoot,
+            coordinatorBinary, helperBinary);
         ProductUserSafetyIdentifierStateStore safety = new(Path.GetFullPath(safetyStateRoot));
         string expectedStateRoot = Path.GetFullPath(Path.Combine(repository,
             credentialRoot.GetProperty("durable_state").GetProperty("product_state_root_relative")
@@ -1554,7 +1590,7 @@ internal static class M1Slice6CampaignStageRunner
             credentialManifestPath, credentialManifestSha256, identity.CredentialManifestId);
         M1Slice6CampaignStageCoordinator coordinator = new(ledger, safety, boundary, accounting);
         _ = await coordinator.ExecuteOneShotAsync(stageManifestPath, stageManifestSha256,
-            evidencePath, DateTimeOffset.UtcNow, cancellationToken).ConfigureAwait(false);
+            evidencePath, DateTimeOffset.UtcNow, cancellationToken, runtimeAuthority).ConfigureAwait(false);
         return 0;
     }
 

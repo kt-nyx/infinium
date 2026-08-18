@@ -8,6 +8,7 @@ using Infinium.Application.Provider;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Helper.V2;
+using Infinium.Domain.Contracts;
 using Infinium.Persistence;
 
 namespace Infinium.Coordinator;
@@ -18,7 +19,8 @@ internal static class Wp9ProductionProfileEnrollmentRunner
 
     internal static void ValidateCampaignAdmissionOnly(string credentialManifestPath,
         string credentialManifestSha256, string campaignManifestPath, string campaignManifestSha256,
-        string reviewedCandidate)
+        string reviewedCandidate, string? runtimeAuthorityManifestPath = null,
+        string? runtimeAuthorityManifestSha256 = null)
     {
         byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
         byte[] campaignBytes = File.ReadAllBytes(Path.GetFullPath(campaignManifestPath));
@@ -54,13 +56,31 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         {
             throw new InvalidDataException("Campaign credential admission probe envelope is stale.");
         }
-        ValidateCommittedCampaignAuthority(Path.GetFullPath(campaignManifestPath), campaignManifestSha256,
-            reviewedCandidate);
+        if (string.IsNullOrEmpty(runtimeAuthorityManifestPath)
+            || string.IsNullOrEmpty(runtimeAuthorityManifestSha256))
+        {
+            ValidateCommittedCampaignAuthority(Path.GetFullPath(campaignManifestPath), campaignManifestSha256,
+                reviewedCandidate);
+            return;
+        }
+        ProviderEffectRuntimeAuthority runtimeAuthority = ProviderEffectRuntimeAuthorityLoader.LoadAndValidate(
+            runtimeAuthorityManifestPath, runtimeAuthorityManifestSha256, DateTimeOffset.UtcNow);
+        ProviderEffectRuntimeAuthorityLoader.RequireExternalEffect(runtimeAuthority,
+            ProviderEffectAuthorityKind.CredentialEnrollment);
+        if (runtimeAuthority.SubjectManifestId != manifestId
+            || runtimeAuthority.SubjectManifestSha256 != credentialManifestSha256
+            || runtimeAuthority.CampaignId != campaign.RootElement.GetProperty("campaign_id").GetString()
+            || runtimeAuthority.CampaignManifestSha256 != campaignManifestSha256
+            || runtimeAuthority.ImplementationCommit != reviewedCandidate)
+        {
+            throw new InvalidDataException("The credential runtime authority does not bind the exact campaign candidate.");
+        }
     }
 
     internal static void AdmitCampaignCredentialExecutionHandoff(string credentialManifestPath,
         string credentialManifestSha256, string campaignManifestPath, string campaignManifestSha256,
-        string reviewedCandidate, string ledgerPath, DateTimeOffset now)
+        string reviewedCandidate, string ledgerPath, string runtimeAuthorityManifestPath,
+        string runtimeAuthorityManifestSha256, DateTimeOffset now)
     {
         byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
         ValidateV2AuthoritySchema(credentialManifestPath, credentialBytes,
@@ -75,14 +95,17 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         DateTimeOffset expiry = DateTimeOffset.Parse(root.GetProperty("expires_at_utc").GetString()!,
             System.Globalization.CultureInfo.InvariantCulture);
         Wp9CampaignCredentialExecution campaign = new(campaignManifestPath, campaignManifestSha256,
-            reviewedCandidate, ledgerPath);
+            reviewedCandidate, ledgerPath, runtimeAuthorityManifestPath, runtimeAuthorityManifestSha256);
         M1Slice6FiniteCampaignLedger ledger = OpenCampaignCredentialHandoff(campaign, root,
             root.GetProperty("manifest_id").GetString()!, credentialManifestSha256,
             profile.GetProperty("access_profile_id").GetString()!,
             profile.GetProperty("generation_id").GetString()!,
             profile.GetProperty("target_fingerprint_sha256").GetString()!, now, expiry,
             M1Slice6CampaignState.Ready);
-        ledger.RecordIndependentReview(now.AddTicks(1));
+        ProviderEffectRuntimeAuthority runtimeAuthority = ProviderEffectRuntimeAuthorityLoader.LoadAndValidate(
+            runtimeAuthorityManifestPath, runtimeAuthorityManifestSha256, now);
+        ledger.RecordIndependentReview(runtimeAuthority.AuthorityId, runtimeAuthority.ManifestSha256,
+            now.AddTicks(1));
         ledger.AdmitCampaign(now.AddTicks(2));
         ledger.BeginCredentialExecutionHandoff(now.AddTicks(3));
     }
@@ -427,6 +450,20 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         {
             throw new InvalidDataException("WP9 production enrollment helper differs from the exact reviewed Release binding.");
         }
+        if (campaign is not null && campaign.RuntimeAuthorityManifestPath.Length != 0)
+        {
+            ProviderEffectRuntimeAuthority runtimeAuthority = ProviderEffectRuntimeAuthorityLoader.LoadAndValidate(
+                campaign.RuntimeAuthorityManifestPath, campaign.RuntimeAuthorityManifestSha256, now);
+            string coordinatorBinary = Environment.ProcessPath
+                ?? throw new InvalidOperationException("The executing coordinator binary path is unavailable.");
+            string coordinatorSha256 = Convert.ToHexStringLower(
+                SHA256.HashData(File.ReadAllBytes(Path.GetFullPath(coordinatorBinary))));
+            ProviderEffectRuntimeAuthorityLoader.ValidateExecutableBinding(runtimeAuthority,
+                typeof(Wp9ProductionProfileEnrollmentRunner).Assembly, coordinatorSha256, helperSha256);
+            string repository = M1Slice6CampaignStageManifestValidator.FindRepositoryRoot(campaign.ManifestPath);
+            ProviderEffectRuntimeAuthorityLoader.ValidateExecutionBinding(runtimeAuthority, repository,
+                outputRoot, campaign.LedgerPath, productRoot, coordinatorBinary, helperBinary);
+        }
         OneShotCredentialHelperLauncher launcher = OneShotCredentialHelperLauncher.CreateWp9ProductionEnrollment(
             helperBinary, reviewedHelperSha256, manifestPath, manifestSha256, manifestId);
         Directory.CreateDirectory(Path.GetDirectoryName(productRoot)!);
@@ -641,13 +678,33 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         {
             throw new InvalidDataException("Campaign-derived credential handoff does not preserve the exact credential envelope.");
         }
-        ValidateCommittedCampaignAuthority(campaignPath, campaign.ManifestSha256,
-            campaign.ReviewedCandidateCommit);
         M1Slice6CampaignIdentity identity = new(
             root.GetProperty("campaign_id").GetString()!, campaign.ManifestSha256,
             authority.GetProperty("attachment_sha256").GetString()!, campaign.ReviewedCandidateCommit,
             credentialManifestId, credentialManifestSha256, profileId, generationId, targetFingerprint);
         M1Slice6FiniteCampaignLedger ledger = new(ledgerPath, identity, campaignExpiry, credentialExpiry, now);
+        if (campaign.RuntimeAuthorityManifestPath.Length == 0
+            || campaign.RuntimeAuthorityManifestSha256.Length == 0)
+        {
+            ValidateCommittedCampaignAuthority(campaignPath, campaign.ManifestSha256,
+                campaign.ReviewedCandidateCommit);
+        }
+        else
+        {
+            ProviderEffectRuntimeAuthority runtimeAuthority = ProviderEffectRuntimeAuthorityLoader.LoadAndValidate(
+                campaign.RuntimeAuthorityManifestPath, campaign.RuntimeAuthorityManifestSha256, now);
+            if (ledger.Current.State == M1Slice6CampaignState.Ready)
+            {
+                ProviderEffectRuntimeAuthorityLoader.ValidateDurableBinding(runtimeAuthority, identity,
+                    ledger.Current, ProviderEffectAuthorityKind.CredentialEnrollment,
+                    credentialManifestId, credentialManifestSha256, requireExternalEffect: true);
+            }
+            else if (ledger.Current.RuntimeAuthorityId != runtimeAuthority.AuthorityId
+                || ledger.Current.RuntimeAuthoritySha256 != runtimeAuthority.ManifestSha256)
+            {
+                throw new InvalidDataException("The credential runtime authority differs from the durable admission.");
+            }
+        }
         if (ledger.Current.State != expectedState)
         {
             throw new InvalidOperationException("Campaign credential operation requires its exact durable predecessor.");
@@ -1195,4 +1252,6 @@ internal sealed record Wp9CampaignCredentialExecution(
     string ManifestPath,
     string ManifestSha256,
     string ReviewedCandidateCommit,
-    string LedgerPath);
+    string LedgerPath,
+    string RuntimeAuthorityManifestPath = "",
+    string RuntimeAuthorityManifestSha256 = "");

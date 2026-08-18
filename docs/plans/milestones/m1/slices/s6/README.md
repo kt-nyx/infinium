@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active slice navigation; live authority remains in current state
 
-Last reviewed: 2026-08-17
+Last reviewed: 2026-08-18
 
 Live authorization is stated only in
 [current project state](../../../../../current-state.md). This entry routes to
@@ -49,10 +49,13 @@ final `CampaignV2NonLive` receipt SHA-256 is
 All credential, native, network, provider, and billable counts were zero.
 
 The owner accepted the process amendment and lean continuation proposal at
-commit `2c82365fd853cb2021f1772d6c572ee9fa006d01` on 2026-08-17. The current
-documentation activation candidate must still be accepted at its exact commit.
-Until that decision, C1 is inactive and no product implementation or effect is
-authorized. Acceptance makes only effect-free C1 eligible; it does not open C2.
+commit `2c82365fd853cb2021f1772d6c572ee9fa006d01` and accepted documentation
+activation commit `0b015753a926b1e498f59ffc3fbef1d07597b94a`. C1 effect-free
+readiness closure is accepted in the commit containing this handoff. It adds
+typed runtime authority and durable campaign-ledger binding, closes the safety
+and invalid-state surfaces, preserves the exact R1/R2 public authority, and
+rehearses WP9 through WP11 with fake credential storage and literal loopback.
+No external effect or executable C2 authority was materialized.
 
 ## Lean continuation
 
@@ -83,12 +86,12 @@ credential enrollment/read, native Credential Manager access, DNS/public
 network, provider contact, billing, private-fixture access, archive work,
 destructive action, push, or later-slice implementation.
 
-Acceptance of the documentation activation commit retires without execution
-the old dormant campaign and credential authorization IDs named in the lean
-continuation plan. They cannot be inherited or reused. After accepted C1, C2
-requires entirely fresh exact IDs, bindings, expiries, ceilings, current
-official-profile/capability/price evidence, and owner acceptance before any
-possible effect.
+The old dormant campaign and credential authorization IDs named in the lean
+continuation plan are retired without execution and cannot be inherited or
+reused. Accepted C1 makes only preparation and owner review of a fresh C2
+authority package eligible. C2 still requires entirely fresh exact IDs,
+bindings, paths, expiries, ceilings, current official-profile/capability/price
+evidence, and separate owner acceptance before any possible effect.
 
 Runtime effect authority comes from a closed typed manifest and durable
 coordinator state, never Git history, current HEAD, commit subjects, log order,

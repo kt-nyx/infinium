@@ -873,6 +873,9 @@ public sealed class CredentialNativeAuthorizationTests
     public void Recovery4936ManifestValidatorBindsExactAmbiguityAndOneTarget()
     {
         string root = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        RequireRetainedRecoveryArtifacts(root,
+            "artifacts/m1-slice6/wp4-native-4936dcef/credential-native-cleanup-ambiguity.v3.json",
+            "artifacts/m1-slice6/wp4-native-authority-locks/16d19410cd200caee29da362c474805929cc4c65651685173d39838849e27421.json");
         string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp4-credential-native-recovery.4936dcef.v1.json");
         JsonObject manifest = JsonNode.Parse(File.ReadAllBytes(manifestPath))!.AsObject();
@@ -909,6 +912,7 @@ public sealed class CredentialNativeAuthorizationTests
     public void Recovery076bManifestBindsExactRetainedLineageTargetsAndOutputRoot()
     {
         string root = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        Require076bRetainedArtifacts(root);
         string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp4-credential-native-recovery.076b981a.v1.json");
         JsonObject valid = JsonNode.Parse(File.ReadAllBytes(manifestPath))!.AsObject();
@@ -1021,6 +1025,7 @@ public sealed class CredentialNativeAuthorizationTests
     public void Recovery076bEvidenceRequiresExactV2LineageAndPerTargetCallGrammar()
     {
         string root = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        Require076bRetainedArtifacts(root);
         string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp4-credential-native-recovery.076b981a.v1.json");
         byte[] manifestBytes = File.ReadAllBytes(manifestPath);
@@ -1104,6 +1109,23 @@ public sealed class CredentialNativeAuthorizationTests
             JsonObject mutation = evidence.DeepClone().AsObject();
             mutate(mutation);
             AssertEvidenceValidation(root, manifestPath, sha, id, mutation, expectedSuccess: false);
+        }
+    }
+
+    private static void Require076bRetainedArtifacts(string root) => RequireRetainedRecoveryArtifacts(root,
+        "artifacts/m1-slice6/wp4-native-076b981a/coordinator-stderr.txt",
+        "artifacts/m1-slice6/wp4-native-076b981a/credential-native-summary.txt",
+        "artifacts/m1-slice6/wp4-native-076b981a/native-backup-metadata.v2.json",
+        "artifacts/m1-slice6/wp4-native-authority-locks/25c657c7241731d5f91d9df3f49dd2cc0c3241eb5c6a470a3817400552d9d3c8.json");
+
+    private static void RequireRetainedRecoveryArtifacts(string root, params string[] relativePaths)
+    {
+        string[] missing = relativePaths.Where(relative =>
+            !File.Exists(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)))).ToArray();
+        if (missing.Length != 0)
+        {
+            Assert.Inconclusive("Maintainer-local retained credential-effect artifacts are unavailable in this worktree; "
+                + "ordinary effect-free product verification does not reconstruct them.");
         }
     }
 

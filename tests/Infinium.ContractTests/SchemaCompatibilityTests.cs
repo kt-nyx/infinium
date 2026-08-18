@@ -55,6 +55,7 @@ public sealed partial class SchemaCompatibilityTests
         "candidate-investigation-retained-transcripts.v1.schema.json",
         "candidate-investigation-oracle.v1.schema.json",
         "provider-execution-input.v1.schema.json",
+        "provider-effect-runtime-authority.v1.schema.json",
         "effective-scan-configuration.v2.schema.json",
         "run-output.v2.schema.json",
         "cli-summary.v2.schema.json",

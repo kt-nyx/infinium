@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'CredentialNativeRecovery', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'LiveSemanticV2Authority', 'CampaignV2NonLive', 'NonLiveAll', 'Layer6Review')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'CredentialNativeRecovery', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'LiveSemanticV2Authority', 'CampaignV2NonLive', 'C1Readiness', 'NonLiveAll', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -56,7 +56,7 @@ param(
     [switch] $CampaignV2CandidateOnly
 )
 
-if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'LiveSemanticV2Authority', 'CampaignV2NonLive', 'NonLiveAll') -and $PSVersionTable.PSEdition -ne 'Core') {
+if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'LiveSemanticV2Authority', 'CampaignV2NonLive', 'C1Readiness', 'NonLiveAll') -and $PSVersionTable.PSEdition -ne 'Core') {
     $pwsh = Get-Command pwsh.exe -ErrorAction Stop
     $arguments = @(
         '-NoProfile',
@@ -2823,6 +2823,109 @@ function Invoke-Wp8PreLiveValidationGate([bool] $HistoricalEvidence = $false) {
     }
 }
 
+function Invoke-C1ReadinessGate {
+    if (-not [string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
+        throw 'C1Readiness refuses every executable authorization manifest.'
+    }
+    if ($outputRootHadEntriesBeforeInvocation) {
+        throw 'C1Readiness requires a fresh empty output root.'
+    }
+    if (-not [string]::IsNullOrWhiteSpace((& git -C $repoRoot status --porcelain))) {
+        throw 'C1Readiness requires the exact clean committed candidate.'
+    }
+    & git -C $repoRoot merge-base --is-ancestor 0b015753a926b1e498f59ffc3fbef1d07597b94a HEAD
+    if ($LASTEXITCODE -ne 0) {
+        throw 'C1Readiness does not descend from the owner-accepted activation commit.'
+    }
+
+    $currentState = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/current-state.md') -Raw
+    $sliceReadme = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/README.md') -Raw
+    $currentStateNormalized = [Regex]::Replace($currentState, '\s+', ' ')
+    $sliceReadmeNormalized = [Regex]::Replace($sliceReadme, '\s+', ' ')
+    $readinessReport = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/c1-readiness-report.md'
+    if (-not $currentStateNormalized.Contains('C1 effect-free readiness closure is accepted', [StringComparison]::Ordinal) -or
+        -not $sliceReadmeNormalized.Contains('C1 effect-free readiness closure is accepted', [StringComparison]::Ordinal) -or
+        -not (Test-Path -LiteralPath $readinessReport -PathType Leaf)) {
+        throw 'C1Readiness requires the exact accepted C1 navigation and owner-readable readiness report.'
+    }
+
+    $credentialScript = Get-Content -LiteralPath (Join-Path $repoRoot 'eng/run-m1-slice6-credential.ps1') -Raw
+    $stageScript = Get-Content -LiteralPath (Join-Path $repoRoot 'eng/run-m1-slice6-live.ps1') -Raw
+    foreach ($script in @($credentialScript, $stageScript)) {
+        foreach ($forbidden in @('branch --show-current', 'rev-parse HEAD', 'git log', 'git show',
+                'merge-base', 'record.md', 'OWNER_ACCEPTANCE', 'STAGE_ADMISSION')) {
+            if ($script.Contains($forbidden, [StringComparison]::OrdinalIgnoreCase)) {
+                throw "C1Readiness found forbidden Git/marker runtime-authority discovery: $forbidden"
+            }
+        }
+        if (-not $script.Contains('RuntimeAuthorityManifest', [StringComparison]::Ordinal) -or
+            -not $script.Contains('--runtime-authority', [StringComparison]::Ordinal) -or
+            -not $script.Contains('CampaignLedger', [StringComparison]::Ordinal)) {
+            throw 'C1Readiness requires typed runtime authority and durable ledger input in every effect script.'
+        }
+    }
+    $program = Get-Content -LiteralPath (Join-Path $repoRoot 'src/Infinium.Coordinator/Program.cs') -Raw
+    if (-not $program.Contains('"--runtime-authority", string credentialRuntimeAuthority', [StringComparison]::Ordinal) -or
+        -not $program.Contains('"--runtime-authority", string stageRuntimeAuthority', [StringComparison]::Ordinal)) {
+        throw 'C1Readiness requires typed runtime authority at credential and provider-stage executable entry points.'
+    }
+
+    $forbiddenMaterialized = @(
+        'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v2.json',
+        'docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v2.json',
+        'docs/plans/milestones/m1/slices/s6/live',
+        'artifacts/m1-slice6/wp9-profile',
+        'artifacts/m1-slice6/wp9-production-profile-state',
+        'artifacts/m1-slice6/wp9-live',
+        'artifacts/m1-slice6/wp10-live',
+        'artifacts/m1-slice6/wp11-live')
+    foreach ($relative in $forbiddenMaterialized) {
+        if (Test-Path -LiteralPath (Join-Path $repoRoot $relative)) {
+            throw "C1Readiness found forbidden C2 authority, state, or effect materialization: $relative"
+        }
+    }
+
+    Invoke-LiveSemanticV2AuthorityGate
+    Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' `
+        'FullyQualifiedName~ProviderEffectRuntimeAuthorityTests|FullyQualifiedName~M1Slice6FiniteCampaignLedgerTests|FullyQualifiedName~ProductUserSafetyIdentifierTests'
+    Invoke-DotnetTest 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' `
+        'FullyQualifiedName~SchemaCompatibilityTests.JsonSchemaSetIsVersionedClosedAndLocallyResolvable'
+    Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' `
+        'FullyQualifiedName~FreshCloneRehearsesReviewedAdmissionFakeCredentialAndThreeLiteralLoopbackStages|FullyQualifiedName~FrozenWp10AndWp11ValidationPackagesExecuteTypedProductOraclesOffline|FullyQualifiedName~SourceClaimAdmissionPersistsReadsBackAndPublishesExactAcquisitionOwnership|FullyQualifiedName~CandidateAdmissionPersistsReadsBackBacksUpAndRebuildsWithoutSending'
+    Invoke-DotnetTest 'tests/Infinium.SecurityTests/Infinium.SecurityTests.csproj' `
+        'FullyQualifiedName~CredentialSecurityTests'
+
+    $registryPath = Join-Path $repoRoot 'fixtures/public/public-fixture-registry.v2.json'
+    $schemaPath = Join-Path $repoRoot 'contracts/json-schema/provider-effect-runtime-authority.v1.schema.json'
+    Write-Receipt 'C1Readiness' ([ordered]@{
+        candidate_commit = (& git -C $repoRoot rev-parse HEAD).Trim()
+        activation_commit = '0b015753a926b1e498f59ffc3fbef1d07597b94a'
+        runtime_authority_schema = 'infinium.provider.effect-runtime-authority/v1'
+        runtime_authority_schema_sha256 = (Get-FileHash -LiteralPath $schemaPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        durable_authority_binding = 'campaign-ledger-hash-chain-and-atomic-stage-reservation'
+        public_registry_sha256 = (Get-FileHash -LiteralPath $registryPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        credential_authority_materialized = $false
+        provider_stage_authority_materialized = $false
+        production_profile_materialized = $false
+        real_campaign_safety_latch_materialized = $false
+        effect_evidence_materialized = $false
+        credential_accesses = 0
+        helper_launches = 0
+        ui_launches = 0
+        native_credential_operations = 0
+        dns_operations = 0
+        public_network_operations = 0
+        provider_requests = 0
+        billable_operations = 0
+        private_fixture_accesses = 0
+        archive_accesses = 0
+        literal_loopback_provider_stages = 3
+        automatic_retries = 0
+        fourth_calls = 0
+        next_gate = 'fresh separately owner-accepted C2 authority package before any effect'
+    })
+}
+
 function Invoke-NonLiveAllGate {
     if (-not [string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
         throw 'NonLiveAll refuses every authorization manifest.'
@@ -3881,6 +3984,7 @@ try {
         'ComposedProvenance' { Invoke-ComposedProvenanceGate }
         'LiveSemanticV2Authority' { Invoke-LiveSemanticV2AuthorityGate }
         'CampaignV2NonLive' { Invoke-CampaignV2NonLiveGate }
+        'C1Readiness' { Invoke-C1ReadinessGate }
         'NonLiveAll' { Invoke-NonLiveAllGate }
         'Layer6Review' { Invoke-Layer6ReviewGate }
     }
