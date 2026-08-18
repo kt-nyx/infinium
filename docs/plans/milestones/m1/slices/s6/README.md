@@ -10,6 +10,8 @@ Live authorization remains stated only in
 
 - [Accepted Slice 6 plan](plan.md)
 - [Owner-accepted remainder plan](remainder-plan.md)
+- [Proposed lean continuation plan](continuation-plan.md)
+- [Proposed M1 process-continuation amendment](../../amendments/process-continuation.md)
 - [Owner-accepted remainder authority amendment](m1-slice6-remainder-authority-amendment.v1.json)
 - [Owner-accepted live semantic v2 fixture-authority amendment](../../../../../evaluation/specifications/m1-slice6-live-semantic-v2-amendment.md)
 - [Live semantic authority-conflict investigation](../../../../../research/investigations/RESEARCH-0056-slice6-live-semantic-authority-conflict.md)
@@ -47,6 +49,13 @@ and offline rehearsal path. The final `CampaignV2NonLive` receipt has SHA-256
 records zero credential and provider operations. Per the owner's 2026-08-17
 closeout direction, R3 is paused pending a process-reorientation planning task;
 this handoff does not activate R3 or any external effect.
+
+The proposed process amendment and lean continuation plan are navigation-only
+inputs until the project owner accepts their exact committed bytes. They map
+the remaining R3-R7 outcomes to effect-free readiness (`C1`), one freshly
+authorized bounded campaign (`C2`), and retained-evidence closeout (`C3`). The
+proposal does not activate C1, inherit the dormant campaign, or authorize any
+credential, native, network, provider, or billable effect.
 
 Historical material must not be accumulated in a new in-repository archive.
 Any future archival move requires a separate owner-authorized transfer into an
