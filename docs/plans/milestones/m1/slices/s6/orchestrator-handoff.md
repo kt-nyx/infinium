@@ -1,17 +1,22 @@
 # M1 Slice 6 remainder implementation-orchestrator handoff
 
-Status: Accepted
+Status: Superseded
 
-Disposition: Copy-paste R1-R7 implementation handoff; authority remains in
-`docs/current-state.md` and the exact owner-accepted plan artifacts
+Disposition: Historical R1-R7 handoff used through accepted R2; superseded by
+the accepted lean continuation plan and current-state activation gate
 
-Last reviewed: 2026-08-16
+Last reviewed: 2026-08-17
 
 Accepted planning candidate: `5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98`
 
-Use the prompt below to start one persistent implementation-orchestrator task.
-The orchestrator delegates bounded work to fresh subagents; it does not create
-seven user-managed tasks.
+This prompt is retained only to interpret execution through R2. Do not copy,
+resume, or use it to start R3-R7. The current handoff is
+[current project state](../../../../../current-state.md), and post-R2 work is
+governed by the [accepted lean continuation plan](continuation-plan.md) only
+after the exact documentation activation commit is owner-accepted.
+
+The superseded prompt follows solely as historical evidence of the instructions
+that governed R1-R2. It must not be executed or used as current authority.
 
 ```text
 You are the persistent implementation orchestrator for the accepted remainder

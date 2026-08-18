@@ -1,13 +1,17 @@
 # M1 backend semantic proof plan revision 4 process amendment
 
-Status: Proposed
+Status: Accepted
 
-Disposition: Acceptance-ready process amendment; no implementation or effect
-authority until the project owner accepts the exact committed candidate
+Disposition: Owner-accepted process amendment; documentation activation
+candidate pending final owner acceptance before C1 becomes eligible
 
 Owner: Project owner
 
 Prepared: 2026-08-17
+
+Accepted: 2026-08-17
+
+Accepted by: Project owner
 
 Last reviewed: 2026-08-17
 
@@ -19,6 +23,11 @@ Predecessors: the accepted M1 plan, accepted development execution policy,
 accepted M1 continuation verification profile, and accepted Slice 6 remainder
 plan through R2
 
+Accepted proposal commit: `2c82365fd853cb2021f1772d6c572ee9fa006d01`
+
+Accepted proposal SHA-256:
+`5d9aff4226f93ff73025573e056080530d23f66e5cb9cc92efddfd78655acc9f`
+
 ## 1. Purpose and authority status
 
 This amendment restores a proportional development lifecycle for the remaining
@@ -27,8 +36,9 @@ persistence, replay, contract, and external-effect boundaries while preventing
 ordinary implementation correction from becoming a sequence of premature
 candidate freezes, bindings, full-floor executions, and historical closeouts.
 
-This proposal creates no current authority. Until the project owner accepts the
-exact committed bytes:
+The project owner accepted the exact proposal bytes identified above on
+2026-08-17. That decision authorizes only the documentation activation package
+defined in Section 9. Until the owner accepts that package's exact commit:
 
 - the accepted execution policy remains unchanged;
 - Slice 6 R3 remains inactive;
@@ -38,9 +48,9 @@ exact committed bytes:
 - no credential, helper, native, network, provider, billable, private,
   destructive, archive, or push operation is authorized.
 
-Once owner-accepted and activated through the documentation-only handoff in
-Section 9, this amendment governs the ordinary candidate, verification, review,
-correction, and navigation lifecycle for the remaining M1 work. A
+Once activated through the documentation-only handoff in Section 9, this
+amendment governs the ordinary candidate, verification, review, correction,
+and navigation lifecycle for the remaining M1 work. A
 narrower accepted safety, answer-isolation, destructive, credential, or
 externally effectful protocol continues to override it only for the exact
 irreversible boundary that requires the narrower rule.
@@ -228,10 +238,11 @@ outcomes.
 
 ## 9. Acceptance and activation
 
-Owner acceptance must bind the exact committed bytes and SHA-256 values of
-this amendment and the companion Slice 6 continuation plan. Acceptance approves
-the proposed model and authorizes the documentation-only activation package. It
-does not itself change the live handoff. The accepted activation package:
+The owner's 2026-08-17 acceptance binds the proposal commit and SHA-256 values
+recorded in this amendment and the companion Slice 6 continuation plan. It
+approves the model and authorizes this documentation-only activation package;
+it does not itself change the live handoff. The activation package, once
+accepted at its exact commit:
 
 - supersedes conflicting ordinary candidate/freeze/bind/review cadence in
   narrower M1 plans;
@@ -241,10 +252,10 @@ does not itself change the live handoff. The accepted activation package:
 - opens only the exact package named by its updated `current-state.md`; it does
   not authorize any external effect by itself.
 
-After acceptance, a documentation-only activation package may update
+The documentation-only activation package may update
 `AGENTS.md`, `docs/execution-policy.md`, `docs/current-state.md`, the M1 plan
 and navigation, the M1 continuation verification profile, and Slice 6
 navigation to incorporate this amendment without rewriting historical plans or
-records. That package must preserve the accepted proposal's meaning, pass
+records. It must preserve the accepted proposal's meaning, pass
 documentation/diff validation, and receive fresh review. Only its accepted
 `current-state.md` handoff may open C1.

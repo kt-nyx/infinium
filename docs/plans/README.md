@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active navigation
 
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-17
 
 The live handoff is [current project state](../current-state.md). Ordinary work
 follows the [repository execution policy](../execution-policy.md).
@@ -11,6 +11,12 @@ follows the [repository execution policy](../execution-policy.md).
 Plans consume accepted product requirements, ADRs, and evaluation cases. They
 define scope, sequencing, deliverables, and verification; they do not create
 product meaning or current status.
+
+For remaining M1 work, the accepted
+[process-continuation amendment](milestones/m1/amendments/process-continuation.md)
+applies the repository policy's coherent-candidate, proportional-verification,
+consolidated-review, and bind-once lifecycle. Narrow immutable fixture/oracle
+and external-effect rules still govern their exact boundaries.
 
 ## Hierarchy
 

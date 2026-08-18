@@ -1,8 +1,8 @@
 # M1 continuation verification profile
 
 Status: Accepted
-Disposition: and effective
-Last reviewed: 2026-08-10
+Disposition: Active and effective
+Last reviewed: 2026-08-17
 
 Date: 2026-08-08
 
@@ -37,6 +37,16 @@ authority decision or safety/isolation escalation condition pauses the affected
 path. Evaluator-specific freeze and no-retry rules remain confined to a
 separately authorized evaluator task.
 
+The accepted
+[M1 process-continuation amendment](../plans/milestones/m1/amendments/process-continuation.md)
+governs verification cadence for remaining M1 work. Focused checks discover
+and correct defects while one coherent working candidate is assembled. The
+complete common floor confirms a review-ready candidate; it is not rerun after
+every local edit. A failed complete floor is diagnostic, and only a passing
+floor against the exact accepted commit is retained as acceptance evidence.
+This timing rule does not change any required layer, command, fixture/oracle
+freeze, effect manifest, no-retry boundary, or evidence strength below.
+
 For every row below, the owning slice must retain the exact executed command,
 commit, fixture and result identities, pass/fail/skip counts, unsupported
 surfaces, coverage and gaps, and fresh-review result in its implementation
@@ -46,8 +56,9 @@ slice shows that its applicable assertions passed.
 ## Common command floor
 
 Every Slice 5-9 implementation runs the applicable focused commands during
-development and, before acceptance, this accumulated public floor from the
-repository root:
+development and, once consolidated review and corrections make the package
+review-ready, this accumulated public floor from the repository root before
+acceptance:
 
 ```powershell
 dotnet restore Infinium.sln --locked-mode --nologo
@@ -168,6 +179,9 @@ Reviewers classify findings as must-fix, follow-up, non-blocking,
 owner/authority decision, or safety/isolation breach and return `ACCEPT`,
 `CORRECT`, or `ESCALATE`. `CORRECT` may repeat until must-fix findings close;
 correction count is retained as evidence, not used as a stop threshold.
+Mechanical or local corrections receive changed-surface review; consolidated
+review repeats only after a material semantic, architecture, authority,
+immutable-fixture/oracle, or package-scope change.
 
 | Mapping | Required value |
 |---|---|

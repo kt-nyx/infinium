@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active navigation
 
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-17
 
 This directory is the authoritative entry point for the rebuilt Infinium
 project. It records product intent, accepted decisions, current execution,
@@ -28,10 +28,12 @@ plans and records.
 
 Ordinary development follows the
 [development execution policy](execution-policy.md): implement a
-vertical increment, run focused checks, review, classify findings, correct,
-and re-review. Routine defects do not create a correction-budget stop. Strict
-freeze, no-retry, and terminal-stop rules remain scoped to the evaluator or
-other exceptional operation that explicitly requires them.
+coherent vertical package, use focused checks while developing, perform one
+consolidated review, correct the same working candidate, then run the complete
+floor and bind once when review-ready. Routine defects do not create a
+correction-budget stop. Strict freeze, no-retry, and terminal-stop rules remain
+scoped to the fixture/oracle, external-effect, evaluator, or other exceptional
+operation that explicitly requires them.
 
 ## Supporting document map
 
@@ -56,6 +58,7 @@ other exceptional operation that explicitly requires them.
 - Planning: [plan policy](plans/README.md),
   [work-breakdown notation](plans/work-breakdown-notation.md),
   [active M1 plan](plans/milestones/m1/plan.md),
+  [accepted M1 process amendment](plans/milestones/m1/amendments/process-continuation.md),
   and [current Slice 6 entry](plans/milestones/m1/slices/s6/README.md)
 - Product: [product definition](product/product-definition.md),
   [requirements](product/requirements.md),

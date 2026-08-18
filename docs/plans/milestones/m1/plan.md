@@ -4,7 +4,7 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-17
 Target milestone: M1 — Backend semantic proof
 
 ## Authority and start condition
@@ -13,6 +13,21 @@ The project owner accepted this plan on 2026-07-28. It is the active
 implementation authorization for the bounded M1 scope below. It does not
 authorize excluded capabilities or imply that any implementation or evaluation
 already passes.
+
+On 2026-08-17, the owner accepted the
+[M1 process-continuation amendment](amendments/process-continuation.md).
+Its revised cadence becomes operative only when the owner accepts the exact
+documentation activation commit named by current state.
+Remaining M1 execution uses one coherent working candidate, focused checks
+during development, consolidated review, corrections on that same candidate,
+and one final complete floor and binding when review-ready. The amendment
+changes cadence, not M1 scope, completion criteria, required cases, evidence
+strength, answer isolation, credential boundaries, or live-effect ceilings.
+After accepted Slice 6 R2, its companion
+[lean continuation plan](slices/s6/continuation-plan.md) preserves every
+remaining R3-R7 obligation through C1 readiness, C2 bounded live execution,
+and C3 closeout. Only [current project state](../../../current-state.md) may
+open the next package or effect gate.
 
 On 2026-07-30, the owner accepted RESEARCH-0051's exact-target amendment.
 For EVAL-0051, ordinary MO2 physical Data/mod/overwrite overlay reconstruction
@@ -590,23 +605,29 @@ milestone entry points requires a reviewed plan amendment.
 ## Review cycle
 
 For each slice, follow the repository
-[development execution policy](../../../execution-policy.md):
+[development execution policy](../../../execution-policy.md) and, for
+remaining M1 work, the accepted
+[process-continuation amendment](amendments/process-continuation.md):
 
-1. implement the complete declared contract;
-2. run the slice's unit, contract, integration, security/fault, and evaluation
-   subset;
+1. implement the complete coherent vertical package on one working candidate;
+2. run focused contract, unit, integration, security/fault, evaluation,
+   persistence, and replay checks for the affected surface;
 3. inspect raw outputs, failures, abstentions, gaps, provenance, and coverage;
-4. perform a semantic review against requirements, ADRs, anti-overfitting
-   rules, and expected case answers;
-5. correct issues;
-6. rerun the affected checks and the accumulated M1 regression set;
-7. record exact commands/results and intentional behavior changes.
+4. perform one consolidated semantic and diff review against requirements,
+   ADRs, anti-overfitting rules, and expected case answers;
+5. batch and correct issues on the same candidate;
+6. rerun affected checks and changed-surface review;
+7. once review-ready, run the accumulated M1 regression floor against the
+   exact candidate; and
+8. retain the passing floor and record the accepted candidate once.
 
-Repeat correction and re-review as needed until acceptance. Test success
-without semantic/diff review is insufficient, and a failed check or review
-finding is not an owner-level blocker by itself. Only the policy's explicit
-authority, scope, dependency, safety, isolation, destructive, or external-
-effect escalation conditions pause the affected path.
+Repeat focused correction and changed-surface re-review as needed until
+acceptance. A failed complete floor is diagnostic and returns to the same
+working candidate; it does not create an intermediate freeze or binding. Test
+success without semantic/diff review is insufficient, and a failed check or
+review finding is not an owner-level blocker by itself. Only the policy's
+explicit authority, scope, dependency, safety, isolation, destructive, or
+external-effect escalation conditions pause the affected path.
 
 ## Completion criteria
 

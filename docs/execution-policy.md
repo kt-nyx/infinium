@@ -2,7 +2,7 @@
 
 Status: Accepted
 
-Last reviewed: 2026-08-16
+Last reviewed: 2026-08-17
 Owner: Project owner
 
 ## Purpose and scope
@@ -32,9 +32,59 @@ met or a genuine escalation condition occurs:
 6. rerun affected checks and re-review the changed surface; and
 7. record deferred, unsupported, and follow-up work explicitly.
 
-There is no arbitrary correction-pass budget for ordinary development. A
-repeated defect is evidence to improve the implementation, test, tool, plan,
-or decomposition. It is not by itself an owner decision point.
+There is no arbitrary correction-pass budget for ordinary development. The
+recurrent-defect rule below replaces repeated trial-and-error with design
+diagnosis without making an ordinary defect an owner decision by itself.
+
+## Candidate lifecycle and verification pyramid
+
+Ordinary work keeps one mutable working candidate through implementation and
+correction:
+
+```text
+working implementation
+  -> coherent vertical package
+  -> focused verification
+  -> consolidated semantic/security/provenance/diff review
+  -> batched corrections on the same candidate
+  -> affected checks and changed-surface re-review
+  -> review-ready package
+  -> one final complete verification floor
+  -> one accepted candidate binding
+```
+
+A package is coherent only when the full affected producer, consumer,
+persistence, readback/output, replay, invalid-state, fixture, test, and
+documentation path exists. During development, run the smallest checks that
+exercise the current change. Run the package's focused contract, semantic,
+persistence, replay, security, and fixture checks before consolidated review.
+Run the complete accepted floor only after review findings are corrected and
+the package is review-ready.
+
+A failed complete floor means the candidate was not final. Treat that run as
+diagnostic evidence, correct the same working candidate, rerun affected checks
+and changed-surface review, and attempt the final floor again when ready. Do
+not freeze, bind, version, or append closeout chronology for intermediate
+corrections. Retain the passing complete floor against the exact accepted
+commit as acceptance evidence.
+
+Mechanical or local corrections do not restart a consolidated review. Review
+the changed surface. Repeat consolidated review only when a correction changes
+semantics, architecture, authority, an independently frozen fixture/oracle, or
+the declared package scope.
+
+## Recurrent conceptual defects
+
+If the same conceptual defect recurs after two completed correction attempts,
+pause that path for an explicit design diagnosis. State the invariant being
+violated, the two attempted resolutions, why they failed, and the smallest
+durable correction before continuing.
+
+The diagnosis remains ordinary in-scope work when the answer is an
+implementation, test, fixture, validator, documentation, tool, or decomposition
+change. Request owner disposition only when the durable resolution would choose
+missing product meaning, change accepted architecture, expand scope or
+authority, weaken isolation, or require an otherwise unauthorized effect.
 
 ## Finding classification
 
@@ -191,6 +241,30 @@ The current execution handoff is maintained in
 documents and ADRs define meaning, and implementation records preserve
 evidence. None of those historical records substitutes for the current-state
 handoff.
+
+Current navigation states only the live handoff, accepted inputs, meaningful
+gaps, and next gate. Rejected candidates, diagnostic command identities, and
+correction chronology stay in Git history or the owning implementation record
+unless needed to explain the accepted result, a safety incident, an unresolved
+gap, or recovery authority.
+
+## Immutable and runtime-effect authority
+
+The proportional candidate lifecycle does not relax genuine immutable
+boundaries. Continue to freeze and bind independently authored fixture inputs
+before oracle access where required, independent oracles before product
+comparison, accepted public package bytes and provenance, exact external-effect
+manifests immediately before admission, durable evidence for any known or
+possible effect, final accepted implementation/evidence, and contracts at their
+accepted maturity boundary.
+
+Runtime effect authority comes from a closed typed manifest plus durable
+coordinator-owned admission, use, settlement, and terminal state. Git may bind
+the reviewed implementation named by a manifest, and inert preflight may check
+that binding and worktree state. Branch/HEAD state, commit subjects, log order,
+pickaxe results, line attribution, and historical message discovery never grant
+permission, stage state, predecessor acceptance, or marker ownership at
+runtime.
 
 ## User-facing orchestration reports
 

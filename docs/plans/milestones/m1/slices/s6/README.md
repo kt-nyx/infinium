@@ -5,225 +5,100 @@ Disposition: Active slice navigation; live authority remains in current state
 
 Last reviewed: 2026-08-17
 
-Live authorization remains stated only in
-[current project state](../../../../../current-state.md).
+Live authorization is stated only in
+[current project state](../../../../../current-state.md). This entry routes to
+current Slice 6 authority and evidence without duplicating implementation
+chronology.
+
+## Current authority and navigation
 
 - [Accepted Slice 6 plan](plan.md)
-- [Owner-accepted remainder plan](remainder-plan.md)
-- [Proposed lean continuation plan](continuation-plan.md)
-- [Proposed M1 process-continuation amendment](../../amendments/process-continuation.md)
-- [Owner-accepted remainder authority amendment](m1-slice6-remainder-authority-amendment.v1.json)
-- [Owner-accepted live semantic v2 fixture-authority amendment](../../../../../evaluation/specifications/m1-slice6-live-semantic-v2-amendment.md)
-- [Live semantic authority-conflict investigation](../../../../../research/investigations/RESEARCH-0056-slice6-live-semantic-authority-conflict.md)
-- [Slice 6 provider-profile and implementation-readiness investigation](../../../../../research/investigations/RESEARCH-0054-slice6-openai-profile-and-implementation-readiness-refresh.md)
-- [Copy-paste implementation-orchestrator handoff](orchestrator-handoff.md)
-- [Append-only implementation record](record.md)
-- [Frozen WP1 acceptance ledger](wp1-acceptance-ledger.v1.json)
-- [WP1 field-to-seam traceability inventory](wp1-contract-traceability.v1.json)
-- [WP9 exact production-profile enrollment authorization](wp9-production-profile-authorization.v1.json)
-- [Finite campaign owner authority input](m1-slice6-finite-campaign-owner-authority.v1.json)
-- [Finite campaign authorization](m1-slice6-finite-campaign-authorization.v1.json)
-- [Finite campaign and safety-identifier official snapshot](../../../../../research/investigations/RESEARCH-0055-slice6-finite-campaign-and-safety-identifier-refresh.md)
+- [Accepted Slice 6 remainder plan](remainder-plan.md), governing historical
+  R1-R2 execution and preserving the original remaining obligations
+- [Accepted lean continuation plan](continuation-plan.md), superseding post-R2
+  orchestration only after activation
+- [Accepted M1 process-continuation amendment](../../amendments/process-continuation.md)
+- [M1 continuation verification profile](../../../../../evaluation/m1-continuation-verification-profile.md)
+- [Append-only implementation record](record.md), for exact chronology and
+  retained evidence
+- [Superseded R1-R7 orchestrator handoff](orchestrator-handoff.md), retained as
+  historical execution guidance only
 
-The project owner accepted the exact remainder planning candidate
-`5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98` and bound digests on 2026-08-16.
-The four accepted artifacts retain their immutable `Proposed` bytes; acceptance
-is recorded in [current project state](../../../../../current-state.md) and the
-[append-only implementation record](record.md). The current
-[implementation-orchestrator handoff](orchestrator-handoff.md) explains the
-R1-R7 to WP9-WP11 mapping and requires user-facing conceptual reports.
+Task-specific fixture, campaign, research, and authority documents remain
+linked from the accepted plans and implementation record. Load them only when
+the current package names them as exact inputs.
 
-R1 is independently accepted at exact candidate
-`fcd17cd6db98019fc9e5253d5167d2487862671c`. It freezes five answer-isolated
-live-semantic v2 packages, 23 closed repository schemas, additive registry v2,
-strict read-only verification, and a v2-only resealer while preserving every
-frozen v1 byte. The final actual-candidate NonLiveAll receipt has SHA-256
-`38d7dc84a7d4c05945ee937aaa3559a01a46deaa8fde3d523a4657805272ab7c` and its
-ordinary Layer 6 receipt has SHA-256
+## Current handoff
+
+R1 is accepted at candidate
+`fcd17cd6db98019fc9e5253d5167d2487862671c`. Its final NonLiveAll receipt
+SHA-256 is
+`38d7dc84a7d4c05945ee937aaa3559a01a46deaa8fde3d523a4657805272ab7c`,
+and its ordinary Layer 6 receipt SHA-256 is
 `9bcdadf4e57cc453306570474260783a49b9ba4cf76a3d1a9dabbe6c79a38071`.
-R2 is independently accepted at exact candidate
-`67ca34d6de162ad64f05fbe88972105745d3e831`. It completes the effect-free
-WP10-to-WP11 product, persistence, replay, provenance, recovery, v2 evidence,
-and offline rehearsal path. The final `CampaignV2NonLive` receipt has SHA-256
-`bb9455c293b3049c1561cf9a15322c0b6b79502365097b51e2c92e4014e5019d` and
-records zero credential and provider operations. Per the owner's 2026-08-17
-closeout direction, R3 is paused pending a process-reorientation planning task;
-this handoff does not activate R3 or any external effect.
+R1 froze the accepted answer-isolated live-semantic v2 packages, closed
+repository schemas, additive registry v2, v2-only resealing, and frozen-v1
+preservation without any external effect.
 
-The proposed process amendment and lean continuation plan are navigation-only
-inputs until the project owner accepts their exact committed bytes. They map
-the remaining R3-R7 outcomes to effect-free readiness (`C1`), one freshly
-authorized bounded campaign (`C2`), and retained-evidence closeout (`C3`). The
-proposal does not activate C1, inherit the dormant campaign, or authorize any
-credential, native, network, provider, or billable effect.
+R2 implementation `67ca34d6de162ad64f05fbe88972105745d3e831` and handoff
+`8c25ca7274c394e41953a0b076010c26f6ffa97e` are accepted. R2 completes the
+effect-free WP9-to-WP11 product, persistence, replay, provenance, recovery,
+semantic-review, evidence, lifecycle/expiry, and offline-rehearsal path. Its
+final `CampaignV2NonLive` receipt SHA-256 is
+`bb9455c293b3049c1561cf9a15322c0b6b79502365097b51e2c92e4014e5019d`.
+All credential, native, network, provider, and billable counts were zero.
 
-Historical material must not be accumulated in a new in-repository archive.
-Any future archival move requires a separate owner-authorized transfer into an
-explicit sibling archive repository with inventory, provenance, recovery, and
-active-reference validation. No existing sibling archive is in scope by
-default.
+The owner accepted the process amendment and lean continuation proposal at
+commit `2c82365fd853cb2021f1772d6c572ee9fa006d01` on 2026-08-17. The current
+documentation activation candidate must still be accepted at its exact commit.
+Until that decision, C1 is inactive and no product implementation or effect is
+authorized. Acceptance makes only effect-free C1 eligible; it does not open C2.
 
-The project owner accepted the plan and its explicit stateless/cache-off
-ADR-0025 conformance closure on 2026-08-10; no separate ADR is required. WP1
-is accepted at exact candidate
-`61b90314d8273749849f590b303814008fa2fdfa`, WP2 is independently accepted at
-exact candidate `ed27ed04897103d93a60e6200971ca12d04f2e11`, and WP3 is
-independently accepted at exact candidate
-`b32939e8b7491a5c47453f912d25dd98c090f103`. WP5 is independently accepted
-at exact product candidate `fd3c80d91dd247e65b5130309a9b5bb19dd1381f`
-with evidence commit `11e60445b6d5f1d3efc5b607f080dd986afb4ed4`.
-WP6 is independently accepted at exact product candidate
-`ee0b6d31f1c1826c2af7634766155397e916c3e1`, with append-only evidence
-`2b277338390f7dac37b5a5436bbe2cd81dedc871` and answer-isolated oracle
-`37aa2b4e2fc084307ba5211f21bbeeb7a93efab0`. WP7 is independently accepted
-at exact product candidate `59367a7479a7395b173b974bf720543aab2404d4`,
-with append-only evidence `51251c0e0eb98d67dbc9b295b9ff084ebca33890`
-and answer-isolated VAL-v3 oracle freeze
-`e9b032366552aa67649636655ed07a3bb50bb3b1`. WP4 is accepted through
-owner-authorized execution `1fe62bbad155b4e9b8fc2d1056fee14a15dbc11b`, retained evidence SHA-256
-`3f148b76fef94c077293d863a06447bb22b395997db2b09dea291193c1598390`,
-and audit correction `be55eda59752f884fe6e113f40927295da45f2cd`; all 12 consumed targets
-are absent and that namespace may never be reused. The nine Slice 6 contracts
-remain `Implementation-active`.
+## Lean continuation
 
-Corrected WP8 is independently accepted. Its exact verification candidate is
-`cc14bf60f78c80280cb6eafe60fddaf2bc764d06`; its post-run evidence candidate
-is `baef115cdd43fa38d0a352c15f8ba44cbfa35312`. Acceptance binds NonLiveAll
-SHA-256 `52aa77325a2226505c35b1fba6d9d0fe2b6354022a6c85f6652211d609c529ad`,
-pre-live validation SHA-256
-`e5f0ca42e44e6a4ea4f98bf4aab0c1bf6769c436c51aecc32a01e22a3db5f567`, and
-direct Layer 6 SHA-256
-`4b0b661575b14c681e59d2097abca5a04cfa9baecea3837b7acef7d07e0227b5`.
-WP9 non-effectful production-profile preparation is frozen at corrected
-close-ready implementation `0d0064bc5813cf26e704e7b79714d7a55c4d01fc`.
-The canonical non-incremental Release build pins both informational-version and
-SourceLink revision identities to that exact commit. Two consecutive clean
-builds reproduced the coordinator, helper, and complete 126-file execution
-closure exactly.
-WP9 non-effectful production-profile preparation is frozen at corrected
-close-ready implementation `af1bfd6345c5a29f6535771fbbc86b33ec1826b9`.
-The canonical non-incremental Release build pins both informational-version and
-SourceLink revision identities to that exact commit. Two consecutive clean
-builds reproduced the coordinator, helper, and complete 126-file execution
-closure exactly.
-WP9 non-effectful production-profile preparation is frozen at corrected
-close-ready implementation `3017fe1bbebbd904b57ca562a91148884f665d5a`.
-The canonical non-incremental Release build pins both informational-version and
-SourceLink revision identities to that exact commit. Two consecutive clean
-builds reproduced the coordinator, helper, and complete 126-file execution
-closure exactly.
-WP9 non-effectful production-profile preparation is frozen at corrected
-close-ready implementation `4f0b82bf57eabc77ffcae1b2c6b69602584c7bb3`.
-The canonical non-incremental Release build pins both informational-version and
-SourceLink revision identities to that exact commit. Two consecutive clean
-builds reproduced the coordinator, helper, and complete 126-file execution
-closure exactly.
-Binding `a9c497691a16b9c9639ba6422941b3e9b9e52256` is excluded because terminal
-review found incomplete production credential-evidence and provider-stage
-transitions plus a self-referential A/B candidate binding. Binding
-`876130e6a030b3228c151e030a6914cc2f156c04` is also excluded because its
-committed rehearsal inherited ready bindings into the synthetic close-ready
-source. Binding `3b6a13a3192b54b80d7b80322fb57af4d4a646c3` is excluded because
-NonLiveAll found that its credential-recovery source-boundary assertion spanned
-into a later campaign provider route. Binding
-`6303a4d8da6a56860f638e32a0fb3266c65e88e1` is excluded because the common
-static floor found two unformatted new C# files. Binding
-`cfb11302d2011a0edc18aed6891ec1efff681713` is excluded because terminal
-review found incomplete authoritative provider persistence, retained semantic
-evidence, and offline evidence gates. Binding
-`f7257e63fb5269ff5f44e28097c7ce00cd71475b` is excluded because post-bind
-Layer 6 verification found that the exact finite-campaign review path equation
-omitted current provider evidence surfaces. The corrected finite-campaign
-binding `aa1c1f582309f39daf57a17922128e068e134d40` is excluded because
-NonLiveAll contract validation found stale registry and input-bound-v2 consumer
-contracts. Source `dd4d52c98ab74558c9e9f7006d466a73c3aafcc5` is excluded
-because focused retained-WP8 validation found that the exact finite-campaign
-path equation omitted the public fixture registry schema. The finite-campaign
-implementation is under correction and non-live
-reverification only. Its separate credential-evidence handoff, all three stage
-review/admission transitions, and composed no-fourth closeout are exercised as
-committed transitions only in a disposable synthetic temp-clone rehearsal.
-They are proof of the production validators and coordinator-owned
-successor/limit/safety enforcement, not active-repository authority or live
-evidence. No provider-stage manifest or stage/evidence marker is materialized
-in the active repository. Binding `0da49dab6146ec34b71338df894cc36090677d3a`
-is excluded because NonLiveAll found one unit contract fixture retaining the
-superseded pre-v2 canonical request shape. Binding
-`26edecadcd13c0201740f60729673c6ae90ecb53` is excluded because NonLiveAll
-found two persistence fixtures retaining the pre-campaign schema fingerprint
-and input-bound policy version. Source
-`3a078804c70677b016f90a7214966693ea3d90a5` is excluded because focused
-retained-WP8 validation found that the exact finite-campaign path equation
-omitted the changed persistence-state contract test. Binding
-`ff5c18024bf1265ced69bb36f45ecf1d0843ab50` is excluded because README
-formatting split the exact `finite-campaign` review-state token.
-Binding `c3166811e57c23c84575689a29f31f9f4e3de1b8` is excluded because
-fresh terminal review found that the production stage path could fabricate a
-credential predecessor, semantic packages were not executed over exact bound
-inputs, post-settlement campaign/SQLite recovery was incomplete, and the
-offline gates did not independently reopen the authoritative database,
-artifacts, markers, and WP10-to-WP11 provenance. Binding
-`8b6c1df19cacd6b4fa92c58904bda426773adf4f` is excluded because locked
-restore found the IntegrationTests dependency lock stale after the exact
-PublicFixtures project reference was added. Binding
-`58f9b54e6b22bd4c967d77c954aadd6d465e516f` is excluded because the exact
-finite-campaign retained/Layer6 path equations omitted that newly changed
-lockfile. Binding `7b717d9b09acc863aab977e9d3abd788c2b9ae46` is excluded
-because its complete unfiltered run exposed attribution-sensitive stage-marker
-commit discovery after append-only record rewrites. The corrected close-ready
-source attempt `f8069f2d540f85718bde6ad58885b62a51b8222c` was not a valid
-pending-source freeze and its binding is excluded. Binding
-`21193145f0d01abb524d98d23ac6faf0c20abc01` is also excluded because its
-complete unfiltered run showed that range-scoped Git pickaxe lookup remained
-attribution-sensitive under concurrency. The corrected finite-campaign
-close-ready source `acb76c0e9754568013fee9597ee5a7d257b19c38` and exact
-four-document binding `0b72c001db0a06c35b330a980090952f62c5613e` are retained
-as rejected review evidence only. Review found incomplete late-settlement
-reconciliation and stage-native tuple proof, and exposed an owner decision:
-the frozen WP10 validation package admits no proposal while WP11 requires an
-admitted WP10 artifact. Current work is correction and non-live verification
-only; no replacement is review-ready or executable.
-No authority is inherited. The
-immutable owner authority source is SHA-256
-`c9541bb5563304335e8f7af4d176eba3e507c719c4e135c542b8ac1bc4bc12be`.
-Campaign `infinium.m1-s6.finite-live-campaign/da6ba996-29b9-4aa7-a938-b6675047ebee`
-remains non-executable. The first B11 campaign candidate
-was rejected because committed review/admission/rollover transitions, schema
-enforcement, the production rollover/ledger route, and durable post-use safety
-identifier state were incomplete. B20 manifest SHA-256
-`fb301a17843496b0452561facdbaa29412c2ba0d44ce4cc7c8bc102a391e88a9`
-and E20 are predecessor evidence only. No API-key use, UI/helper/readiness
-launch, authority lock, live-manifest execution, native Credential Manager
-operation, profile materialization, DNS/public-network operation, provider
-request, or billable effect is authorized or has occurred. No authority is
-inherited.
-The exact current-manifest owner marker committed at `cba787882b854bbe0e471431e51024781a041fbd` remains append-only superseded historical non-executed evidence and is non-authoritative for the replacement manifest.
-The exact B17 review and attached SHA-256
-`7123ee85fec6d238ef8965b8449e7729cd2fb204e525a30558d1ebac53209476`
-owner markers remain append-only superseded historical evidence and are
-non-authoritative for the exact current manifest ID and SHA-256.
-The exact B16 review marker remains append-only superseded historical evidence
-and cannot satisfy the corrected manifest. The exact B17 review marker is
-append-only superseded historical evidence. WP10 and WP11 remain blocked.
-The transport-qualification request manifest is not materialized. Section 19A
-resolves `safety_identifier` through a stable local random seed and transmitted
-domain-separated SHA-256 projection, but request materialization remains
-blocked until credential success is independently accepted. The earlier WP8
-acceptance identities and receipts remain superseded historical evidence.
+The remaining accepted R3-R7 obligations are preserved through three outcome
+packages:
 
-The four WP8 packets remain non-secret, non-executable templates with pending
-future bindings. No WP8 template, prior owner statement, packet identity,
-expiry, profile identity, predecessor acceptance, official-doc result, or
-request fingerprint grants inherited authority. No API-key use,
-live-manifest execution, native Credential Manager operation, DNS operation,
-public-network operation, provider request, billable operation, or
-production-profile materialization/use is authorized. The M1 direct helper
-surface prepared by WP9 is a distinct masked, paste-capable native enrollment
-surface, not the future M2 Settings -> Add/Replace API key -> WPF-parented
-helper-owned modal. In both flows the renderer receives or retains no secret.
-The one exact finite campaign conditionally supersedes separate WP9-WP11 owner
-acceptances only after exact review/admission and each predecessor evidence
-gate. Before that bootstrap closes, WP9 credential execution and every provider
-stage remain blocked. Only
-[current project state](../../../../../current-state.md) states the active
-handoff.
+1. `M1/S6/C1` - one coherent effect-free readiness candidate, focused checks,
+   consolidated review, corrections on the same candidate, and one final floor
+   and binding when review-ready.
+2. `M1/S6/C2` - one fresh, separately owner-authorized bounded live campaign:
+   masked credential enrollment, WP9 transport qualification, WP10
+   source-claim extraction, and WP11 candidate investigation, each with exact
+   admission, expiry, ceiling, persistence, evidence, and no-retry gates.
+3. `M1/S6/C3` - retained-evidence replay, composed provenance, accumulated
+   verification, contract-maturity review, documentation, and the final owner
+   Slice 6 acceptance handoff without another effect.
+
+C1-C3 preserve WP9, WP10, and WP11 identities, semantic outcomes, exact
+profile and ceiling requirements, persistence/replay, invalid-state handling,
+product/evaluator separation, answer isolation, provenance, and final owner
+acceptance. The change is execution cadence and package decomposition, not
+scope reduction.
+
+## Effect and campaign boundary
+
+No current document supplies an API key or authorizes helper/UI launch,
+credential enrollment/read, native Credential Manager access, DNS/public
+network, provider contact, billing, private-fixture access, archive work,
+destructive action, push, or later-slice implementation.
+
+Acceptance of the documentation activation commit retires without execution
+the old dormant campaign and credential authorization IDs named in the lean
+continuation plan. They cannot be inherited or reused. After accepted C1, C2
+requires entirely fresh exact IDs, bindings, expiries, ceilings, current
+official-profile/capability/price evidence, and owner acceptance before any
+possible effect.
+
+Runtime effect authority comes from a closed typed manifest and durable
+coordinator state, never Git history, current HEAD, commit subjects, log order,
+pickaxe, line attribution, or historical marker discovery.
+
+## Historical evidence
+
+WP1-WP8 acceptance identities, qualification and recovery history, rejected
+candidate diagnostics, command receipts, and the full R1-R2 chronology remain
+in the [implementation record](record.md). The accepted remainder plan and
+record are not rewritten. Do not accumulate that chronology in this entry or
+create a new archive inside the active repository. Any later sibling-archive
+transfer requires separate exact owner authorization.

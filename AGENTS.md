@@ -87,6 +87,21 @@ do not become current defaults merely because an old record is linked.
 - Follow `docs/execution-policy.md` for ordinary work: implement,
   test, review, correct, and re-review until the package is accepted or a
   genuine escalation condition occurs.
+- Use one mutable working candidate for ordinary development. Bring the full
+  affected vertical path to coherence, run focused checks, perform one
+  consolidated semantic/security/provenance/diff review, batch corrections on
+  that same candidate, recheck the affected surface, then run the complete
+  accepted verification floor once the package is review-ready and bind the
+  passing accepted candidate once.
+- A failed complete floor is diagnostic evidence that the candidate was not
+  final. Correct the same working candidate and rerun focused checks and
+  changed-surface review before attempting a new final floor. Do not create
+  freeze/bind/record churn for intermediate corrections.
+- If the same conceptual defect recurs after two completed correction
+  attempts, pause that path for explicit design diagnosis. Escalate to the
+  owner only when the durable resolution would choose missing product meaning,
+  change accepted architecture, expand scope or authority, weaken isolation,
+  or require an otherwise unauthorized effect.
 - Treat failed tests, review findings, fixture defects, schema/codec mismatch,
   validator bugs, stale documentation, and incomplete implementation as
   recoverable work, not owner-level blockers by themselves.
@@ -102,6 +117,18 @@ do not become current defaults merely because an old record is linked.
   persistence, round-trip, invalid-state, and focused fixture evidence support
   freezing them. Update all affected seams together when implementation
   evidence requires a clean-break revision.
+- Freeze exact independent fixture/oracle inputs, external-effect manifests,
+  durable effect evidence, and final accepted contracts/implementation at
+  their owning immutable boundary. Do not freeze ordinary intermediate
+  corrections.
+- Runtime effect authority comes from a closed typed manifest plus durable
+  coordinator-owned admission/use/settlement state. Git may bind reviewed
+  bytes, but branch/HEAD state, commit subjects, log order, pickaxe, line
+  attribution, and historical message discovery never grant runtime authority.
+- Keep current navigation compact: state the live handoff, accepted inputs,
+  meaningful gaps, and next gate. Preserve material chronology in the owning
+  implementation record or Git history instead of copying it into current
+  entry documents.
 
 ## Special evaluator and private-fixture boundaries
 

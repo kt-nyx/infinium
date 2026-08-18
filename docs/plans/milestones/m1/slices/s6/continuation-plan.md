@@ -1,14 +1,17 @@
 # M1 Slice 6 lean continuation plan
 
-Status: Proposed
+Status: Accepted
 
-Disposition: Acceptance-ready successor execution model; no C1, credential,
-native, network, provider, or billable authority until owner acceptance and a
-separate documentation-only activation handoff
+Disposition: Owner-accepted successor execution model; documentation activation
+candidate pending final owner acceptance before C1 becomes eligible
 
 Owner: Project owner
 
 Prepared: 2026-08-17
+
+Accepted: 2026-08-17
+
+Accepted by: Project owner
 
 Last reviewed: 2026-08-17
 
@@ -22,9 +25,14 @@ Accepted implementation baseline: R2 implementation
 `67ca34d6de162ad64f05fbe88972105745d3e831` and handoff
 `8c25ca7274c394e41953a0b076010c26f6ffa97e`
 
+Accepted proposal commit: `2c82365fd853cb2021f1772d6c572ee9fa006d01`
+
+Accepted proposal SHA-256:
+`57d9a3b25201bf55281cad02c9b8a3e458639ec10d1e465cdbad85f532c464af`
+
 Parent authority: accepted M1 plan, accepted Slice 6 plan, accepted Slice 6
 remainder plan through R2, accepted product requirements and ADRs, accepted M1
-continuation verification profile, and the proposed
+continuation verification profile, and the accepted
 [M1 process amendment](../../amendments/process-continuation.md)
 
 ## 1. Purpose and current authority
@@ -34,9 +42,10 @@ with three outcome packages. It preserves every uncompleted R3-R7 obligation
 while applying the process amendment's coherent-candidate, proportional-
 verification, consolidated-review, and bind-once lifecycle.
 
-This proposal grants no current authority. R3 remains inactive under
-`docs/current-state.md`. Until the owner accepts this exact plan and the process
-amendment, then accepts a separate documentation-only activation handoff:
+The owner accepted this plan and the process amendment at their exact proposal
+commit on 2026-08-17. That acceptance grants only the documentation activation
+package. Until the owner accepts that package's exact commit and its
+`docs/current-state.md` handoff:
 
 - C1 is not open;
 - the dormant R3-R7 authority remains unexercised;
@@ -398,7 +407,8 @@ owned. No obligation is removed merely because its orchestration label changes.
 
 ## 10. Activation and next handoff
 
-Acceptance of this proposal authorizes only a documentation activation package.
+The owner's acceptance of the proposal authorizes only this documentation
+activation package.
 That package must:
 
 1. mark this plan and the M1 process amendment accepted with the exact owner
@@ -412,5 +422,6 @@ That package must:
    validation; and
 6. receive fresh review before `current-state.md` opens C1.
 
-No acceptance statement for this proposal supplies a credential, campaign,
-provider-stage manifest, API key, or external-effect authority.
+No acceptance statement for the plan or activation package supplies a
+credential, campaign, provider-stage manifest, API key, or external-effect
+authority.
