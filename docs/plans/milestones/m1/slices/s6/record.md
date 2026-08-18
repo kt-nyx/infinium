@@ -8766,3 +8766,115 @@ matches later states. R2 must bind its own explicit current state. No helper,
 UI/readiness, authority lock, API key, Credential Manager, production profile,
 DNS/public network, provider, billable, private/archive, or push effect
 occurred.
+
+## R2 effect-free WP10-to-WP11 integration acceptance and process-reorientation stop — 2026-08-17
+
+R2 is accepted at exact candidate
+`67ca34d6de162ad64f05fbe88972105745d3e831`, the one committed successor of
+the accepted R1 handoff `8c9ff5227fcc076df74f0c9faf1385640995b3d1`.
+Its exact duplicate-free candidate equation contains 33 paths. The candidate
+changes only the R2-owned repository schemas, v2 credential/campaign scripts,
+product consumers, coordinator and persistence seams, public-fixture review
+tooling, and focused Unit/Contract/Integration tests. Frozen public provider
+packages, registry v1, current authority documents, private/archive roots, and
+artifact outputs are unchanged by the implementation commit.
+
+The accepted vertical path now:
+
+- validates clean-break campaign/profile v2 authority and exact committed
+  review -> admission -> rollover transitions before any effect boundary;
+- retains all nine WP10 semantic states while admitting exactly one proposal,
+  artifact, and application link;
+- persists the exact WP10 acquisition/proposal/admission/artifact payload,
+  digest, byte offsets, applicability fact, and application chain atomically;
+- reopens that exact relational chain for the WP11 positive context and
+  persists the independent frozen-host negative root without inventing a
+  second source claim;
+- commits and replays both WP11 contexts atomically, rejecting missing,
+  duplicated, mismatched, swapped, orphaned, corrupted, or torn rows;
+- emits and validates stage-evidence v2 and composed-evidence v2 with the exact
+  campaign/profile/generation/target, package/input/review, semantic, usage,
+  settlement, native-count, and provenance joins; and
+- performs semantic comparison only after settlement and persistence through
+  an injected independent public-fixture reviewer. Production assemblies
+  contain no frozen oracle wording, fixture-specific answer, or dependency on
+  the evaluation tooling and cannot emit semantic evidence without an accepted
+  reviewed digest.
+
+The final semantic-flexibility audit preserves every ordered lowercase
+alphanumeric token and accepts only the authoritative wording or four explicit
+role-preserving reviewed paraphrases. It rejects a new `if` condition,
+appended tokens, subject/object reversal, polarity inversion, fabricated or
+unrelated facts, citation-like content, and extra assertions. The final
+reviewed WP10 result SHA-256 is
+`beabc1d5cef06317d215bfa45ab481273e5995e0b4bd58ce412c78335bfc8e0f`;
+the WP11 result SHA-256 is
+`5d594a901257437387cf970c9456106f16461401024d206fd4c1109f207dedd5`.
+Fresh semantic/answer-isolation/product-evaluator review returned `ACCEPT`;
+the previously completed persistence/replay and security/effect-boundary
+reviews also returned `ACCEPT`. No architecture-contract gap remains in R2.
+
+The stable final receipt is
+`artifacts/m1-slice6/r2-final-campaignv2-67ca34d/campaignv2nonlive.json`,
+3,439 bytes, SHA-256
+`bb9455c293b3049c1561cf9a15322c0b6b79502365097b51e2c92e4014e5019d`.
+It records `status=passed`, baseline
+`8c9ff5227fcc076df74f0c9faf1385640995b3d1`, candidate
+`67ca34d6de162ad64f05fbe88972105745d3e831`, 33 exact paths, focused
+Integration 7/7, ledger Unit 9/9, `campaign_materialization=false`, zero
+credential operations, zero provider requests, and no private/archive access.
+
+The exact candidate's continuation-profile floor passed:
+
+- locked restore and Release build with zero warnings and errors;
+- Unit 264 passed / 1 expected environment skip;
+- Contract 160 passed, plus Contract-tagged Unit 7/7 and Evaluation 2/2;
+- Integration 144 passed / 1 expected materialized-artifact skip, plus tagged
+  Contract 1/1 and Evaluation 1/1;
+- Evaluation 64 passed / 8 expected private-environment skips, plus tagged
+  Contract 16/16 and Integration 6/6;
+- Security: Security 15/15, Evaluation 7/7 with 2 expected skips, Contract
+  51/51, Integration 29/29, and Unit 70/70 with 1 expected skip;
+- Fault: Fault 3/3, Evaluation 9/9 with 3 expected skips, Contract 44/44,
+  Unit 32/32, and Integration 22/22;
+- unfiltered solution totals: Security 19/19, Fault 7/7, Evaluation 66 passed
+  / 8 expected skips, Unit 287 passed / 1 expected skip, Contract 197/197,
+  and Integration 172 passed / 1 expected skip; and
+- formatting, dependency-manifest check, `git diff --check`, strict JSON and
+  PowerShell parsing, frozen-provider/registry preservation, product
+  answer-isolation scan, and documentation validation (170 metadata files,
+  172 Markdown link sources, 33 JSON files).
+
+The common floor found and the same coherent candidate corrected stale
+schema-6 fingerprint/rollback fixtures, the clean-break v1 credential-runner
+rejection expectation, a historical R1 mutation test that had read current
+post-R1 documents instead of fixed-anchor blobs, and a measured Layer 6 test
+process bound that had become shorter than the verifier runtime. Only the
+Layer 6 test helper bound changed from 30 to 60 seconds; concurrent output
+drains, whole-tree kill/wait, and fail-closed behavior remain unchanged. These
+were ordinary test/evidence defects, not new candidate bindings or authority
+expansions.
+
+Per the owner's 2026-08-17 direction, acceptance stops at R2. R3 is not active
+and no automatic advancement occurs. The next eligible work is a separate
+process-reorientation planning task using: the accepted remainder plan and
+authority at `5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98`; accepted R1 candidate
+`fcd17cd6db98019fc9e5253d5167d2487862671c` and handoff
+`8c9ff5227fcc076df74f0c9faf1385640995b3d1`; this exact R2 candidate, receipt,
+test ledger, and independent reviews; and the owner's requirement to simplify
+candidate binding and review cadence without weakening one-writer discipline,
+answer isolation, provenance, persistence, lifecycle, expiry, process
+containment, or no-effect gates. The planning task grants no product change,
+R3 execution, credential/native/network/provider/billable effect,
+private/archive access, or push authority.
+
+This append changes the three pre-closeout authority-document hashes, so the
+narrow exact-candidate R2 predicate intentionally does not classify this later
+accepted handoff as the pre-closeout implementation candidate.
+
+No helper, UI/readiness, authority lock, API key, Credential Manager,
+production-profile materialization, DNS/public network, provider request,
+billable operation, private/archive access, or push effect occurred. Repository-
+owned test/gate process survivors were zero before this handoff.
+
+M1_S6_REMAINDER_R2_ACCEPTANCE candidate_commit=67ca34d6de162ad64f05fbe88972105745d3e831 baseline_commit=8c9ff5227fcc076df74f0c9faf1385640995b3d1 exact_path_count=33 receipt_sha256=bb9455c293b3049c1561cf9a15322c0b6b79502365097b51e2c92e4014e5019d wp10_result_sha256=beabc1d5cef06317d215bfa45ab481273e5995e0b4bd58ce412c78335bfc8e0f wp11_result_sha256=5d594a901257437387cf970c9456106f16461401024d206fd4c1109f207dedd5 credential_operations=0 provider_requests=0 r3_authorized=false

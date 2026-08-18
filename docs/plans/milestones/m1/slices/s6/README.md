@@ -39,8 +39,14 @@ frozen v1 byte. The final actual-candidate NonLiveAll receipt has SHA-256
 `38d7dc84a7d4c05945ee937aaa3559a01a46deaa8fde3d523a4657805272ab7c` and its
 ordinary Layer 6 receipt has SHA-256
 `9bcdadf4e57cc453306570474260783a49b9ba4cf76a3d1a9dabbe6c79a38071`.
-R2 is now active for effect-free WP10-to-WP11 product, persistence, replay,
-provenance, recovery, and offline rehearsal integration.
+R2 is independently accepted at exact candidate
+`67ca34d6de162ad64f05fbe88972105745d3e831`. It completes the effect-free
+WP10-to-WP11 product, persistence, replay, provenance, recovery, v2 evidence,
+and offline rehearsal path. The final `CampaignV2NonLive` receipt has SHA-256
+`bb9455c293b3049c1561cf9a15322c0b6b79502365097b51e2c92e4014e5019d` and
+records zero credential and provider operations. Per the owner's 2026-08-17
+closeout direction, R3 is paused pending a process-reorientation planning task;
+this handoff does not activate R3 or any external effect.
 
 Historical material must not be accumulated in a new in-repository archive.
 Any future archival move requires a separate owner-authorized transfer into an
