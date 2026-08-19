@@ -1,0 +1,39 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-c2-owner-acceptance/2.0.0",
+  "decision_id": "infinium.m1-s6.c2.owner-acceptance/1420976b-2d21-4227-8b38-22d359fe7679",
+  "status": "accepted",
+  "recorded_at_utc": "2026-08-19T20:32:13.5675259Z",
+  "accepted_package": {
+    "package_id": "infinium.m1-s6.c2.authority-package/53b8ce48-08ca-4300-8fa9-21f58e5ff622",
+    "commit": "ad5277fa3c5861f4f6115fe26215e55b61e30728",
+    "sha256": "c19248fcc843808588860968a04828cfab5105e5cf08ca98228fbc98419be2bf"
+  },
+  "owner_direction": {
+    "decision": "accept-exact-replacement-c2-package-and-proceed",
+    "credential_choice": "use-new-project-bound-key-for-masked-c2a-entry",
+    "account_intent": "owner-will-confirm-user-owned-openai-platform-project-at-masked-entry",
+    "billing_scope_intent": "owner-will-confirm-direct-usage-priced-platform-api-at-masked-entry"
+  },
+  "scope": {
+    "opens": "replacement-c2a-runtime-authority-preparation-review-admission-and-one-masked-credential-enrollment-then-package-defined-predecessor-gated-c2b-through-c2d",
+    "automatic_effect": false,
+    "successor_requires_independent_evidence_acceptance": true
+  },
+  "prohibitions": [
+    "plaintext-key-in-repository-command-log-or-environment-file",
+    "credential-enumeration",
+    "credential-overwrite-or-delete",
+    "provider-request-before-accepted-c2a-evidence",
+    "fallback",
+    "parallel-dispatch",
+    "automatic-retry",
+    "counter-reset",
+    "ceiling-transfer",
+    "retired-or-terminal-identity-reuse",
+    "fourth-provider-call",
+    "private-fixture-or-archive-access",
+    "push",
+    "c3",
+    "slice7"
+  ]
+}

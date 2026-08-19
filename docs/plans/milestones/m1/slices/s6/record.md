@@ -9077,3 +9077,22 @@ official retrieval headers, Windows PowerShell validator compatibility,
 terminal package/decision identity closure, and exact full-clone executable
 staging rules. The next gate is final clean-commit validation and exact owner
 acceptance of the resulting commit plus package SHA-256.
+
+## 2026-08-19 — Replacement C2 package owner acceptance
+
+The project owner explicitly accepted replacement package commit
+`ad5277fa3c5861f4f6115fe26215e55b61e30728`, package SHA-256
+`c19248fcc843808588860968a04828cfab5105e5cf08ca98228fbc98419be2bf`,
+and directed execution to proceed. Fresh decision identity
+`infinium.m1-s6.c2.owner-acceptance/1420976b-2d21-4227-8b38-22d359fe7679`
+records that acceptance without concrete account identifiers or secret
+material. The owner selected a new project-bound key for later masked helper
+entry. Account ownership and direct usage-priced API billing remain manual
+confirmations at that entry boundary.
+
+This transition opens only replacement C2A runtime-authority derivation,
+independent review, durable admission, immediate revalidation, and one masked
+credential enrollment. It authorizes zero provider requests, DNS resolutions,
+billable operations, retries, fallback, parallel dispatch, counter reset,
+ceiling transfer, terminal-identity reuse, C3, Slice 7, private fixtures,
+archives, or push. No effect occurred merely because acceptance was recorded.

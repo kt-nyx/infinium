@@ -1,12 +1,20 @@
 # M1/S6/C2 replacement authority-package report
 
-Status: Proposed
+Status: Accepted
 
-Disposition: Inert replacement for the terminal C2 campaign; no external effect authorized
+Disposition: Exact replacement package bytes owner-accepted on 2026-08-19; report retained as the pre-acceptance review artifact
 
 Date: 2026-08-19
 
 Last reviewed: 2026-08-19
+
+Owner acceptance: commit `ad5277fa3c5861f4f6115fe26215e55b61e30728`,
+package SHA-256
+`c19248fcc843808588860968a04828cfab5105e5cf08ca98228fbc98419be2bf`,
+recorded separately in
+[c2-replacement-owner-acceptance.v2.json](c2-replacement-owner-acceptance.v2.json).
+Acceptance changed the handoff, not the immutable package bytes, and caused no
+effect automatically.
 
 ## Practical meaning
 
@@ -152,7 +160,7 @@ successor can be materialized. A known or possible provider start consumes its
 single start and full reservation. Ambiguity is terminal: no retry, fallback,
 counter reset, ceiling transfer, or fourth call.
 
-After owner acceptance, the next permitted step is only to derive and review
+The next permitted step is only to derive and review
 the exact credential runtime-authority bytes under
 `artifacts/m1-slice6/c2-replacement-authority/runtime/credential.v1.json`.
 The command templates are frozen in the typed package and must run from a
@@ -175,17 +183,22 @@ two stale v3 labels. Those corrections passed affected re-review. Consolidated
 replacement-package authority/security/provenance/diff review also passed
 after closing Windows PowerShell compatibility, official-header provenance,
 terminal package/decision non-reuse, and full-clone executable-staging rules.
-Only final clean-commit validation remains before owner acceptance.
+Final clean-commit validation passed before owner acceptance. The acceptance
+record now binds the exact package commit and digest; typed runtime authority
+and durable coordinator admission remain separate gates.
 
-Two owner-controlled inputs remain deliberately unresolved:
+The owner resolved the package-acceptance input:
 
-1. exact acceptance of the final package commit and SHA-256; recommendation:
-   accept only after the final verification/review report;
-2. at a later separately authorized C2A dialog, confirmation that the pasted
-   project-bound key belongs to the intended user-owned OpenAI Platform
-   account and direct usage-priced API billing scope; recommendation: confirm
-   manually at entry without recording concrete account identifiers or the
-   secret.
+1. exact acceptance of the final package commit and SHA-256.
+
+At masked C2A entry, the owner must still confirm that the selected new
+project-bound key belongs to the intended user-owned Platform project and that
+direct usage-priced API billing is intended. Those facts are deliberately not
+pre-confirmed by package acceptance.
+
+The concrete key, organization, project, and account identifiers are not
+retained in repository authority. Manual entry confirms the intended key,
+account, and billing scope without exposing the secret.
 
 The package prohibits key creation/discovery, secret handling before C2A,
 private fixtures, evaluator/archive access, destructive operations, push, C3,

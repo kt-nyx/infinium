@@ -1,7 +1,7 @@
 # Current project state
 
 Status: Accepted
-Disposition: Prior C2A campaign terminal after a known-zero-effect pre-UI stop; C1.2 corrected; inert replacement C2 authority package ready for owner review; no external effect authorized
+Disposition: Replacement C2 package owner-accepted; replacement C2A credential-enrollment handoff active; no effect occurs without exact runtime admission
 
 Last reviewed: 2026-08-19
 Owner: Project owner
@@ -24,11 +24,11 @@ chronology and evidence.
 | C1.1 implementation | Commit `9aea07380a3d3cc2a6f70be6d32907a96e7720da` added fresh v3 coordinator consumers and schemas while retaining effect-free v2 rehearsal compatibility, but the compiled credential helper still hard-coded the obsolete v2 production-enrollment contract. The terminal C2A attempt exposed that incomplete vertical closure before UI or native access. |
 | Terminal C2A evidence | Under owner-accepted package commit `926d6a49a37b6c465cb706cdebbfbf8b98b32c61`, exactly one helper process launched and rejected the v3 manifest at `manifest-validation`. `ManualUiAttempted=false`; `CredWriteW`, `CredReadW`, `CredDeleteW`, `CredFree`, DNS, network, provider, and billable counts were all zero. Ledger event 5 terminalized the campaign with final event hash `bb23edb886b68a90b2bb74f74e9b77cb021232e2d5b2633b33f62c82e3a576d8`; retry and reuse are prohibited. |
 | C1.2 implementation | Commit `356ce66c18bb67d5b1de8815970e04bf88195a86` closes the v4 helper/coordinator authority seam, rejects every dormant v2 and terminal v3 identity before UI/native execution, preserves known-zero pre-UI facts, passes the exact effect-free readiness floor, and binds a reproducible 126-file Release closure. |
-| Current authorized work | The wholly fresh replacement C2 authority package is inert and independently reviewed, ready only for final clean-commit validation and exact owner acceptance. Repository-local validation/documentation correction remains authorized. It does not authorize another helper/UI/native credential operation, provider request, DNS/public-network operation, or billable effect. |
-| Next gate | Commit the independently reviewed replacement bytes, run final clean-commit validation, then stop for exact owner acceptance of that commit and package SHA-256. |
+| Current authorized work | Replacement C2 package commit `ad5277fa3c5861f4f6115fe26215e55b61e30728`, package SHA-256 `c19248fcc843808588860968a04828cfab5105e5cf08ca98228fbc98419be2bf`, and the [replacement owner acceptance record](plans/milestones/m1/slices/s6/c2-replacement-owner-acceptance.v2.json) open C2A preparation and one exact masked credential enrollment. Helper/UI and native access remain closed until the fresh typed credential runtime authority is independently reviewed, digest-bound, durably admitted, and immediately revalidated. |
+| Next gate | Derive and independently review the exact replacement C2A credential runtime-authority bytes, validate the accepted binaries/profile/campaign/document snapshot/expiry/absence state in the bound fresh full clone, durably admit the authority, then perform the single masked enrollment. No provider request is permitted in C2A. |
 | Later packages | C2B-C2D never opened under the terminal campaign. They remain unavailable until a replacement package is owner-accepted, C2A succeeds under that replacement, and each exact predecessor evidence gate is independently accepted. `C3` remains inactive. |
 | Final Slice 6 gate | After C3, the project owner decides Slice 6 acceptance and contract freeze. Slice 7 does not start automatically. |
-| External-effect authority | None. The prior runtime authority and campaign are terminal historical identities. No replacement runtime authority, durable admission, provider request, production lock, safety latch, or effect evidence may be created before separate acceptance of the exact replacement package. |
+| External-effect authority | The owner decision opens only derivation of the replacement C2A closed typed runtime authority. No replacement runtime-authority file, campaign ledger, profile, native call, provider request, safety latch, or effect evidence existed when this acceptance was recorded. The first possible effect remains the exact helper/native C2A operation after runtime review and durable admission; provider/DNS/billable authority remains zero. |
 
 ## Current authority
 
@@ -41,6 +41,7 @@ chronology and evidence.
 - [Accepted Slice 6 lean continuation plan](plans/milestones/m1/slices/s6/continuation-plan.md)
 - [Replacement C2 inert authority-package report](plans/milestones/m1/slices/s6/c2-replacement-authority-package-report.md)
 - [Replacement C2 typed authority-package candidate](plans/milestones/m1/slices/s6/m1-slice6-c2-replacement-authority-package.v2.json)
+- [Replacement C2 owner acceptance record](plans/milestones/m1/slices/s6/c2-replacement-owner-acceptance.v2.json)
 - [Terminal predecessor C2 report](plans/milestones/m1/slices/s6/c2-authority-package-report.md)
 - [Terminal predecessor owner acceptance record](plans/milestones/m1/slices/s6/c2-owner-acceptance.v1.json)
 - [Accepted Slice 6 remainder plan through R2](plans/milestones/m1/slices/s6/remainder-plan.md)

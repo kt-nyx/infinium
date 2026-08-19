@@ -20,9 +20,11 @@ chronology.
 - [Accepted M1 process-continuation amendment](../../amendments/process-continuation.md)
 - [M1 continuation verification profile](../../../../../evaluation/m1-continuation-verification-profile.md)
 - [Replacement C2 inert authority-package report](c2-replacement-authority-package-report.md),
-  ready for owner review but not accepted
+  whose exact package commit and digest are now owner-accepted
 - [Replacement C2 typed package](m1-slice6-c2-replacement-authority-package.v2.json),
   which grants no effect authority by itself
+- [Replacement C2 owner acceptance record](c2-replacement-owner-acceptance.v2.json),
+  opening only the package-defined C2A handoff and predecessor-gated C2B-C2D envelope
 - [Terminal predecessor C2 report](c2-authority-package-report.md) and
   [acceptance record](c2-owner-acceptance.v1.json), retained only as terminal
   chronology and never reusable authority
@@ -87,10 +89,11 @@ The owner-authorized offline C1.2 correction is committed at
 helper/coordinator authority seam, explicit v2/v3 retirement rejection,
 compiled-helper coverage before UI/native execution, and truthful known-zero
 failure summaries. Its exact clean-commit readiness floor and reproducible
-126-file Release closure passed. The fresh replacement package is now inert,
-independently reviewed, and ready only for final clean-commit validation and
-exact owner acceptance; no replacement effect authority exists until that
-separate acceptance.
+126-file Release closure passed. The exact replacement package at commit
+`ad5277fa3c5861f4f6115fe26215e55b61e30728`, SHA-256
+`c19248fcc843808588860968a04828cfab5105e5cf08ca98228fbc98419be2bf`,
+is now owner-accepted. That decision opens C2A runtime-authority preparation
+and one masked credential enrollment, but creates no effect automatically.
 
 ## Lean continuation
 
@@ -116,10 +119,12 @@ scope reduction.
 
 ## Effect and campaign boundary
 
-No current document supplies an API key or authorizes helper/UI launch,
-credential enrollment/read, native Credential Manager access, DNS/public
-network, provider contact, billing, private-fixture access, archive work,
-destructive action, push, or later-slice implementation.
+No repository document supplies an API key. The accepted package and owner
+decision permit the exact C2A helper/UI and native enrollment only after they
+are intersected with independently reviewed, digest-bound, durably admitted,
+and immediately revalidated typed runtime authority. DNS/public network,
+provider contact, billing, private-fixture access, archive work, destructive
+action, push, and later-slice implementation remain unauthorized in C2A.
 
 The old dormant campaign and credential authorization IDs named in the lean
 continuation plan are retired without execution and cannot be inherited or
@@ -127,10 +132,10 @@ reused. The terminal C2 package bound its exact IDs, C1.1 binaries, paths,
 expiries, ceilings, official-profile/capability/price evidence, sequencing, and
 inert derivation rules. Its one helper launch is now terminal historical
 evidence. Replacement v4 identities are sealed candidate inputs only and do
-not grant authority. Before any later C2A helper can run, the fresh exact
-package must be committed, independently reviewed, and separately
-owner-accepted;
-only then may a new credential runtime authority be derived and reviewed.
+not grant authority. Before the C2A helper can run, the fresh credential
+runtime authority must be derived from the accepted package and decision,
+independently reviewed, digest-bound, durably admitted, and immediately
+revalidated.
 
 Runtime effect authority comes from a closed typed manifest and durable
 coordinator state, never Git history, current HEAD, commit subjects, log order,
