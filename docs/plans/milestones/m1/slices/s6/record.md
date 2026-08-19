@@ -9011,3 +9011,69 @@ It grants no replacement runtime authority or external effect. The correction
 must complete focused checks, consolidated review, a new exact executable
 closure, official-document drift review, and one owner-ready replacement C2
 package before the next owner acceptance gate.
+
+## C1.2 closure and replacement C2 authority candidate — 2026-08-19
+
+C1.2 commit `356ce66c18bb67d5b1de8815970e04bf88195a86` completed the
+helper/coordinator v4 vertical without an external effect. The helper admits
+only fresh v4 production-enrollment authority, rejects every dormant v2 and
+terminal v3 manifest/profile/generation/target identity before UI/native
+execution, and preserves exact known-zero pre-UI failure facts. Coordinator
+external-effect admission likewise requires fresh v4 campaign and subject
+authority and rejects both retired campaign/credential pairs.
+
+Focused unit, integration, and credential-security checks passed. Independent
+review required direct negative cases for every retired identity and corrected
+two stale v3 labels; affected re-review passed. The exact committed fresh-clone
+fake-store/literal-loopback rehearsal passed, followed by the clean-commit C1
+readiness floor. The readiness receipt SHA-256 is
+`0457bb093ed3e5eccb4de0378fa453d12f33c1c2d9242bb9941ac7b764000fc8`.
+No helper, UI, native credential, DNS, public-network, provider, billable, or
+private-fixture effect occurred.
+
+Two consecutive SourceRevisionId-pinned non-incremental Release builds
+reproduced:
+
+- coordinator SHA-256
+  `74b0f051886b524e9909b6478762464ee4b5dd3fe3da94fea8e4316dc1f8ea52`;
+- helper SHA-256
+  `60b51d2e46508560409553ab898a4cf45ef46f75a0cf3d77fc01dcf4bd00a9a5`;
+  and
+- 126-file inventory SHA-256
+  `abc0c47d665e733111ae65783616bf029e6a191ee714749d9f79ab617d1afad6`.
+
+Read-only retrieval of the eight approved official OpenAI documentation pages
+ran from `2026-08-19T18:56:30.5740304Z` through
+`2026-08-19T18:56:31.3349670Z`. Every source byte count and SHA-256 matched the
+accepted predecessor snapshot: `gpt-5.6-sol`, Responses, medium reasoning,
+structured outputs, context/output limits, prompt caching, store/data facts,
+and the 5,000/500/6,250/30,000 nano-USD ordinary input/cache read/cache
+write/output prices remain unchanged. No API, account, billing, credential, or
+provider endpoint was contacted.
+
+The inert replacement package binds new v4 campaign, credential, profile,
+generation, target, stage, and runtime-authority identities; terminal v3 and
+dormant v2 identities remain reserved. It preserves all per-stage and aggregate
+ceilings, answer isolation, predecessor equations, ledger/settlement/recovery,
+no-retry/no-fourth-call behavior, and abstract owner account/direct-billing
+intent. Future stage requests and runtime-authority bytes remain deliberately
+unmaterialized.
+
+Candidate digests before the final owner-ready commit are:
+
+- package
+  `c19248fcc843808588860968a04828cfab5105e5cf08ca98228fbc98419be2bf`;
+- profile
+  `2ad6eb68ac9f569c358da99989939993b29744f612ab2a22f533e5049ed865df`;
+- campaign
+  `824b344073ed802b5cf78014eb0b425bf27713634086b008831b9ded549ae536`;
+  and
+- official-document snapshot
+  `a7dc926b49e129aab43ccf1b4625bbd586c8ef7ccb49d056bf2f15afb88a9638`.
+
+The package is not owner-accepted and supplies no runtime effect authority.
+Consolidated authority/security/provenance/diff review passed after correcting
+official retrieval headers, Windows PowerShell validator compatibility,
+terminal package/decision identity closure, and exact full-clone executable
+staging rules. The next gate is final clean-commit validation and exact owner
+acceptance of the resulting commit plus package SHA-256.

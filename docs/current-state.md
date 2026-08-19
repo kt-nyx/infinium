@@ -1,7 +1,7 @@
 # Current project state
 
 Status: Accepted
-Disposition: Prior C2A campaign terminal after a known-zero-effect pre-UI stop; offline C1.2 correction and replacement C2 authority preparation active; no external effect authorized
+Disposition: Prior C2A campaign terminal after a known-zero-effect pre-UI stop; C1.2 corrected; inert replacement C2 authority package ready for owner review; no external effect authorized
 
 Last reviewed: 2026-08-19
 Owner: Project owner
@@ -23,8 +23,9 @@ chronology and evidence.
 | Accepted C1 outcome | C1 effect-free readiness closure is accepted in the commit containing this handoff. Typed runtime authority, durable ledger binding, safety-state closure, exact R1/R2 preservation, and the fake-store/literal-loopback WP9-to-WP11 rehearsal passed without an external effect. |
 | C1.1 implementation | Commit `9aea07380a3d3cc2a6f70be6d32907a96e7720da` added fresh v3 coordinator consumers and schemas while retaining effect-free v2 rehearsal compatibility, but the compiled credential helper still hard-coded the obsolete v2 production-enrollment contract. The terminal C2A attempt exposed that incomplete vertical closure before UI or native access. |
 | Terminal C2A evidence | Under owner-accepted package commit `926d6a49a37b6c465cb706cdebbfbf8b98b32c61`, exactly one helper process launched and rejected the v3 manifest at `manifest-validation`. `ManualUiAttempted=false`; `CredWriteW`, `CredReadW`, `CredDeleteW`, `CredFree`, DNS, network, provider, and billable counts were all zero. Ledger event 5 terminalized the campaign with final event hash `bb23edb886b68a90b2bb74f74e9b77cb021232e2d5b2633b33f62c82e3a576d8`; retry and reuse are prohibited. |
-| Current authorized work | The owner authorized an offline C1.2 correction and preparation/review of a wholly fresh replacement C2 authority package. This includes helper/coordinator/schema/tests/documentation/build corrections and read-only official OpenAI documentation refresh. It does not authorize another helper/UI/native credential operation, provider request, DNS/public-network operation other than the documentation refresh, or billable effect. |
-| Next gate | Complete and independently review the C1.2 v4 authority vertical, bind a new exact executable closure, prepare and validate fresh replacement package bytes with entirely new identities, then stop for exact owner acceptance. |
+| C1.2 implementation | Commit `356ce66c18bb67d5b1de8815970e04bf88195a86` closes the v4 helper/coordinator authority seam, rejects every dormant v2 and terminal v3 identity before UI/native execution, preserves known-zero pre-UI facts, passes the exact effect-free readiness floor, and binds a reproducible 126-file Release closure. |
+| Current authorized work | The wholly fresh replacement C2 authority package is inert and independently reviewed, ready only for final clean-commit validation and exact owner acceptance. Repository-local validation/documentation correction remains authorized. It does not authorize another helper/UI/native credential operation, provider request, DNS/public-network operation, or billable effect. |
+| Next gate | Commit the independently reviewed replacement bytes, run final clean-commit validation, then stop for exact owner acceptance of that commit and package SHA-256. |
 | Later packages | C2B-C2D never opened under the terminal campaign. They remain unavailable until a replacement package is owner-accepted, C2A succeeds under that replacement, and each exact predecessor evidence gate is independently accepted. `C3` remains inactive. |
 | Final Slice 6 gate | After C3, the project owner decides Slice 6 acceptance and contract freeze. Slice 7 does not start automatically. |
 | External-effect authority | None. The prior runtime authority and campaign are terminal historical identities. No replacement runtime authority, durable admission, provider request, production lock, safety latch, or effect evidence may be created before separate acceptance of the exact replacement package. |
@@ -38,9 +39,10 @@ chronology and evidence.
 - [Slice 6 entry](plans/milestones/m1/slices/s6/README.md)
 - [Accepted Slice 6 plan](plans/milestones/m1/slices/s6/plan.md)
 - [Accepted Slice 6 lean continuation plan](plans/milestones/m1/slices/s6/continuation-plan.md)
-- [C2 inert authority-package report](plans/milestones/m1/slices/s6/c2-authority-package-report.md)
-- [C2 typed authority-package candidate](plans/milestones/m1/slices/s6/m1-slice6-c2-authority-package.v1.json)
-- [C2 owner acceptance record](plans/milestones/m1/slices/s6/c2-owner-acceptance.v1.json)
+- [Replacement C2 inert authority-package report](plans/milestones/m1/slices/s6/c2-replacement-authority-package-report.md)
+- [Replacement C2 typed authority-package candidate](plans/milestones/m1/slices/s6/m1-slice6-c2-replacement-authority-package.v2.json)
+- [Terminal predecessor C2 report](plans/milestones/m1/slices/s6/c2-authority-package-report.md)
+- [Terminal predecessor owner acceptance record](plans/milestones/m1/slices/s6/c2-owner-acceptance.v1.json)
 - [Accepted Slice 6 remainder plan through R2](plans/milestones/m1/slices/s6/remainder-plan.md)
 - [Slice 6 implementation record](plans/milestones/m1/slices/s6/record.md), only when exact chronology or retained evidence is needed
 

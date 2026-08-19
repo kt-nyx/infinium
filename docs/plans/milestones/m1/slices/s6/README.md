@@ -19,10 +19,13 @@ chronology.
   orchestration only after activation
 - [Accepted M1 process-continuation amendment](../../amendments/process-continuation.md)
 - [M1 continuation verification profile](../../../../../evaluation/m1-continuation-verification-profile.md)
-- [C2 inert authority-package report](c2-authority-package-report.md), whose
-  exact package commit and digest are now owner-accepted
-- [C2 owner acceptance record](c2-owner-acceptance.v1.json), opening only the
-  package-defined C2A handoff and predecessor-gated C2B-C2D envelope
+- [Replacement C2 inert authority-package report](c2-replacement-authority-package-report.md),
+  ready for owner review but not accepted
+- [Replacement C2 typed package](m1-slice6-c2-replacement-authority-package.v2.json),
+  which grants no effect authority by itself
+- [Terminal predecessor C2 report](c2-authority-package-report.md) and
+  [acceptance record](c2-owner-acceptance.v1.json), retained only as terminal
+  chronology and never reusable authority
 - [Append-only implementation record](record.md), for exact chronology and
   retained evidence
 - [Superseded R1-R7 orchestrator handoff](orchestrator-handoff.md), retained as
@@ -79,12 +82,15 @@ generation, target, stage, runtime-authority, package, and decision identity
 from that attempt is reserved historical state that cannot be retried or
 reused. C2B-C2D did not open.
 
-The owner authorized ordinary offline C1.2 correction and preparation/review
-of a wholly fresh replacement package. The active correction introduces a v4
+The owner-authorized offline C1.2 correction is committed at
+`356ce66c18bb67d5b1de8815970e04bf88195a86`. It introduces the v4
 helper/coordinator authority seam, explicit v2/v3 retirement rejection,
 compiled-helper coverage before UI/native execution, and truthful known-zero
-failure summaries. No replacement effect authority exists until the exact
-new package receives separate owner acceptance.
+failure summaries. Its exact clean-commit readiness floor and reproducible
+126-file Release closure passed. The fresh replacement package is now inert,
+independently reviewed, and ready only for final clean-commit validation and
+exact owner acceptance; no replacement effect authority exists until that
+separate acceptance.
 
 ## Lean continuation
 
@@ -120,9 +126,10 @@ continuation plan are retired without execution and cannot be inherited or
 reused. The terminal C2 package bound its exact IDs, C1.1 binaries, paths,
 expiries, ceilings, official-profile/capability/price evidence, sequencing, and
 inert derivation rules. Its one helper launch is now terminal historical
-evidence. Replacement v4 identities are working-candidate inputs only and do
-not grant authority. Before any later C2A helper can run, a fresh exact package
-must be committed, independently reviewed, and separately owner-accepted;
+evidence. Replacement v4 identities are sealed candidate inputs only and do
+not grant authority. Before any later C2A helper can run, the fresh exact
+package must be committed, independently reviewed, and separately
+owner-accepted;
 only then may a new credential runtime authority be derived and reviewed.
 
 Runtime effect authority comes from a closed typed manifest and durable
