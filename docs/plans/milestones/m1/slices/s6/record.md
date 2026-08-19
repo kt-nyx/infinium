@@ -8933,3 +8933,31 @@ operation, private-fixture access, and archive access counts are all zero. No
 push occurred. C1 opens only preparation and owner review of an entirely fresh
 C2 authority package; separate owner acceptance of those exact bytes remains
 the next gate before any possible effect.
+## C1.1 fresh-authority correction and C2 package preparation — 2026-08-19
+
+Owner-authorized offline correction commit
+`9aea07380a3d3cc2a6f70be6d32907a96e7720da` replaces the impossible C2
+runtime binding without altering accepted C1 behavior. Fresh v3 campaign,
+credential-profile, stage-request, stage-evidence, and composed-evidence
+authority is accepted by the runtime only when intersected with external typed
+runtime authority; retired v2 IDs are explicitly rejected for external
+effects. Effect-free v2 rehearsal remains compatible.
+
+The exact C1.1 Release build reproduced twice: coordinator SHA-256
+`59ffbe971c22a9a2907df79429c05dbc8b468a272f822b7cd23fff2872d30d36`,
+helper SHA-256
+`3d900e9cb4b11dfbf5fd2edb82a15d26d61b42d920203a99ac4657de67adc20b`,
+and 126-file inventory SHA-256
+`715bae71c42dafdfac5a400907fedc95317409ab5a9e21665a42216345262c13`.
+The exact C1 readiness floor was rerun in a detached worktree at that commit;
+its receipt SHA-256 is
+`ca6d9ef80ff17bfc3272684be4c54c8a60e6e9067282aef091fa9507dcef52f8`.
+
+The resulting C2 package is inert and ready only for owner review. It binds
+fresh identities, the C1.1 build, current official OpenAI documentation,
+unchanged ceilings, sequential predecessor equations, typed runtime-authority
+derivation, durable ledger rules, evidence paths, and effect prohibitions. It
+materializes no runtime authority, request, durable state, lock, latch,
+credential, provider call, or evidence and does not accept itself.
+Its typed package SHA-256 is
+`10b1704591f36a85a6e680b13f28744ad5e81b786efad9aca276ce791b169b9c`.

@@ -1,0 +1,396 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/m1-slice6-c2-authority-package.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_identity",
+    "package_id",
+    "status",
+    "effect_authority",
+    "prepared_at_utc",
+    "expires_at_utc",
+    "implementation",
+    "artifacts",
+    "fresh_identities",
+    "owner_inputs",
+    "request_profile",
+    "pricing_arithmetic",
+    "stage_authority",
+    "sequencing",
+    "answer_isolation",
+    "durable_authority",
+    "commands",
+    "evidence",
+    "prohibitions",
+    "materialization_state",
+    "acceptance"
+  ],
+  "properties": {
+    "schema_identity": {
+      "const": "infinium.repository.m1-slice6-c2-authority-package/1.0.0"
+    },
+    "package_id": {
+      "const": "infinium.m1-s6.c2.authority-package/3dc568bd-3a08-4eb0-9b77-b1e92627f760"
+    },
+    "status": {
+      "const": "ready-for-owner-review-not-accepted"
+    },
+    "effect_authority": {
+      "const": "none"
+    },
+    "prepared_at_utc": {
+      "const": "2026-08-19T02:30:00.0000000Z"
+    },
+    "expires_at_utc": {
+      "const": "2026-08-31T22:45:00.0000000Z"
+    },
+    "implementation": {
+      "const": {
+        "accepted_c1_commit": "25227d30e8e5e5f97655645faf2f3ad71319749b",
+        "accepted_c1_receipt_sha256": "8ffe939f050f336ec240706728760438e4b42e5f1688fa575d464da19430430c",
+        "c1_1_commit": "9aea07380a3d3cc2a6f70be6d32907a96e7720da",
+        "c1_1_readiness_receipt_sha256": "ca6d9ef80ff17bfc3272684be4c54c8a60e6e9067282aef091fa9507dcef52f8",
+        "build_command": "dotnet build Infinium.sln -c Release --no-restore --nologo --no-incremental -p:SourceRevisionId=9aea07380a3d3cc2a6f70be6d32907a96e7720da",
+        "coordinator_path": "src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe",
+        "coordinator_sha256": "59ffbe971c22a9a2907df79429c05dbc8b468a272f822b7cd23fff2872d30d36",
+        "helper_path": "src/Infinium.Coordinator/bin/Release/net10.0/CredentialHelper/Infinium.CredentialHelper.exe",
+        "helper_sha256": "3d900e9cb4b11dfbf5fd2edb82a15d26d61b42d920203a99ac4657de67adc20b",
+        "binary_inventory_file_count": 126,
+        "binary_inventory_sha256": "715bae71c42dafdfac5a400907fedc95317409ab5a9e21665a42216345262c13"
+      }
+    },
+    "artifacts": {
+      "const": [
+        {
+          "role": "profile-authority",
+          "path": "docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v3.json",
+          "sha256": "1146c2882982683de0b789a376ab45514633de96c834f389d01d2265ce426072"
+        },
+        {
+          "role": "campaign-authority",
+          "path": "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v3.json",
+          "sha256": "c0de630d84a2979fa1c768617880e5692b511fd79a768c2dcabeea34468115b7"
+        },
+        {
+          "role": "official-document-snapshot",
+          "path": "docs/plans/milestones/m1/slices/s6/c2-openai-official-document-snapshot.v1.json",
+          "sha256": "f45b9049197739d3d7286bd0be4a0144f2637687109468c966c805db0dd98ab7"
+        }
+      ]
+    },
+    "fresh_identities": {
+      "const": {
+        "campaign": "infinium.m1-s6.finite-live-campaign/aef3cd3f-9321-4cdc-86a2-2d61510c2e28",
+        "credential_authorization": "infinium.m1-s6.wp9.production-profile-authorization/52b2cfdb-ccd4-49c0-8f6a-ace8c426012e",
+        "profile": "openai-platform-ecd3de4b9fac443593347905970d942d",
+        "generation": "g-6eefeaf6e4a74273bf4ee69f02449f47",
+        "credential_target_sha256": "990e46a57687417a1a1865bab3b11823f3b37d35961fb8101e32a8977e2a4b67",
+        "qualification_stage": "infinium.m1-s6.campaign-stage/Qualification/033d4d98-871e-44e3-947d-295d8429514e",
+        "source_claim_stage": "infinium.m1-s6.campaign-stage/SourceClaimExtraction/01c76dba-f052-48dc-9b9b-b63414128233",
+        "candidate_stage": "infinium.m1-s6.campaign-stage/CandidateInvestigation/4b3378e2-e29c-4e62-843a-62a882f16144",
+        "runtime_credential": "infinium.m1-s6.runtime-authority/credential/f3ba6209-b29a-4a99-bfff-9eb8b56199cb",
+        "runtime_credential_path": "artifacts/m1-slice6/c2-authority/runtime/credential.v1.json",
+        "runtime_wp9": "infinium.m1-s6.runtime-authority/wp9/1926afb5-041a-4f9b-83eb-49c877e010d7",
+        "runtime_wp9_path": "artifacts/m1-slice6/c2-authority/runtime/wp9-qualification.v1.json",
+        "runtime_wp10": "infinium.m1-s6.runtime-authority/wp10/7088ed0e-fab4-4d57-82d4-f639f321d30e",
+        "runtime_wp10_path": "artifacts/m1-slice6/c2-authority/runtime/wp10-source-claims.v1.json",
+        "runtime_wp11": "infinium.m1-s6.runtime-authority/wp11/2d4f92b6-9c1c-4d22-9531-548862231f51",
+        "runtime_wp11_path": "artifacts/m1-slice6/c2-authority/runtime/wp11-candidates.v1.json",
+        "retired_campaign": "infinium.m1-s6.finite-live-campaign/51b9dba6-aca3-41d7-82d1-afd805e33e66",
+        "retired_credential_authorization": "infinium.m1-s6.wp9.production-profile-authorization/09b8e309-ead8-441e-8307-5a4a1a2c43d5",
+        "retired_identity_disposition": "reserved-history-only-never-runtime-authority"
+      }
+    },
+    "owner_inputs": {
+      "const": [
+        {
+          "field": "exact_package_acceptance",
+          "when": "before-any-c2-effect",
+          "value": "unresolved-owner-decision",
+          "recommendation": "accept-only-these-committed-bytes-and-digest"
+        },
+        {
+          "field": "openai_account_identity",
+          "when": "manual-c2a-enrollment",
+          "value": "owner-confirms-intended-platform-account-at-entry",
+          "recommendation": "confirm-the-user-owned-platform-account-that-will-bear-direct-api-usage"
+        },
+        {
+          "field": "openai_billing_scope",
+          "when": "manual-c2a-enrollment",
+          "value": "owner-confirms-direct-usage-billing-at-entry",
+          "recommendation": "confirm-direct-API-usage-not-subscription-entitlement"
+        }
+      ]
+    },
+    "request_profile": {
+      "const": {
+        "model": "gpt-5.6-sol",
+        "api": "responses",
+        "reasoning_effort": "medium",
+        "structured_outputs": true,
+        "store": false,
+        "service_tier": "default",
+        "stream": false,
+        "tools": "none",
+        "prompt_cache_options": {
+          "mode": "explicit",
+          "breakpoints": [],
+          "cache_key": null
+        },
+        "safety_identifier": "stable-privacy-preserving-derived-product-user-identifier",
+        "fallback": "none",
+        "parallel_dispatch": false,
+        "automatic_retry": false
+      }
+    },
+    "pricing_arithmetic": {
+      "const": {
+        "basis": "cache-write-input-worst-case-plus-output-at-current-short-context-prices",
+        "rates_nano_usd_per_token": {
+          "input": 6250,
+          "output": 30000
+        },
+        "wp9": {
+          "equation": "20480*6250+256*30000",
+          "reserved_nano_usd": 135680000,
+          "ceiling_nano_usd": 140000000
+        },
+        "wp10": {
+          "equation": "73728*6250+4096*30000",
+          "reserved_nano_usd": 583680000,
+          "ceiling_nano_usd": 600000000
+        },
+        "wp11": {
+          "equation": "73728*6250+4096*30000",
+          "reserved_nano_usd": 583680000,
+          "ceiling_nano_usd": 600000000
+        },
+        "aggregate": {
+          "equation": "135680000+583680000+583680000",
+          "reserved_nano_usd": 1303040000,
+          "ceiling_nano_usd": 1340000000
+        }
+      }
+    },
+    "stage_authority": {
+      "const": [
+        {
+          "ordinal": 1,
+          "work_package": "WP9",
+          "operation": "Qualification",
+          "stage_id": "infinium.m1-s6.campaign-stage/Qualification/033d4d98-871e-44e3-947d-295d8429514e",
+          "manifest_path": "docs/plans/milestones/m1/slices/s6/live/wp9-qualification.v3.json",
+          "predecessor": "accepted-credential-enrollment-evidence",
+          "request_manifest": "deferred-derive-only-after-predecessor",
+          "validation_package": {
+            "id": "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1",
+            "manifest_path": "fixtures/public/platform/provider-budget/capability-val/public-manifest.json",
+            "manifest_sha256": "3fa9f56a2ad1f815638ed7f4ce198b499cc072604e2a29b3bf5e418d6d33389c",
+            "input_sha256": "c9cb054a578a244bca1a1d77bcc2ca7f2898ada42f4250da88588ddf6472b55a",
+            "oracle_sha256": "7ce656a0d056239cedcbfc75ec44b21ca7be79946da2613a109dfd233f6b8bda",
+            "semantic_use": false
+          },
+          "limits": {
+            "request_bytes": 16384,
+            "input_tokens": 20480,
+            "output_tokens": 256,
+            "raw_response_bytes": 262144,
+            "deadline_milliseconds": 60000,
+            "provider_calls": 1,
+            "maximum_nano_usd": 140000000
+          }
+        },
+        {
+          "ordinal": 2,
+          "work_package": "WP10",
+          "operation": "SourceClaimExtraction",
+          "stage_id": "infinium.m1-s6.campaign-stage/SourceClaimExtraction/01c76dba-f052-48dc-9b9b-b63414128233",
+          "manifest_path": "docs/plans/milestones/m1/slices/s6/live/wp10-source-claims.v3.json",
+          "predecessor": "accepted-wp9-stage-evidence",
+          "request_manifest": "deferred-derive-only-after-predecessor",
+          "validation_package": {
+            "id": "LLM-CLAIM-LIVE-VAL-v2",
+            "manifest_path": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/public-manifest.json",
+            "manifest_sha256": "1231c98875c3ba3ca0ce3b60773e566c791b4a313c1fd691233be1a1bc60ba09",
+            "input_path": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/execution-input.v2.json",
+            "input_sha256": "bcbcc804eee7ea51fc00b6daa33d688078dcb1e8ddc53349a0ec673b77a5e789",
+            "oracle_path": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/oracle.v2.json",
+            "oracle_sha256": "76a631ffa02eeff301c240588d1507e3fe3cc2fe13f19aa597aecb8d2ddb3e14",
+            "semantic_use": true
+          },
+          "limits": {
+            "request_bytes": 65536,
+            "input_tokens": 73728,
+            "output_tokens": 4096,
+            "raw_response_bytes": 1048576,
+            "deadline_milliseconds": 120000,
+            "provider_calls": 1,
+            "maximum_nano_usd": 600000000
+          }
+        },
+        {
+          "ordinal": 3,
+          "work_package": "WP11",
+          "operation": "CandidateInvestigation",
+          "stage_id": "infinium.m1-s6.campaign-stage/CandidateInvestigation/4b3378e2-e29c-4e62-843a-62a882f16144",
+          "manifest_path": "docs/plans/milestones/m1/slices/s6/live/wp11-candidates.v3.json",
+          "predecessor": "accepted-wp10-stage-evidence-and-persisted-source-claim-chain",
+          "request_manifest": "deferred-derive-only-after-predecessor",
+          "validation_package": {
+            "id": "LLM-INVESTIGATE-LIVE-VAL-v2",
+            "manifest_path": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/public-manifest.json",
+            "manifest_sha256": "f531447c5d7a1a3efc45b0787b319e3467d35197fbfea85436e3e003a789bb50",
+            "input_path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/execution-input.v2.json",
+            "input_sha256": "d9d84af1a0a4e8c86100928fd6737482b51a96fd7d1c461cd30ecc81cd29eeb6",
+            "oracle_path": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/oracle.v2.json",
+            "oracle_sha256": "52f13b89f0c0cab2dc91c72e3986b8bc358e41a5ab5253ea1e8fab3b19230e3a",
+            "semantic_use": true
+          },
+          "limits": {
+            "request_bytes": 65536,
+            "input_tokens": 73728,
+            "output_tokens": 4096,
+            "raw_response_bytes": 1048576,
+            "deadline_milliseconds": 120000,
+            "provider_calls": 1,
+            "maximum_nano_usd": 600000000
+          }
+        }
+      ]
+    },
+    "sequencing": {
+      "const": {
+        "order": [
+          "C2A-credential-enrollment",
+          "C2B-WP9-qualification",
+          "C2C-WP10-source-claims",
+          "C2D-WP11-candidates"
+        ],
+        "derivation_rule": "after-exact-predecessor-independent-acceptance-canonicalize-accepted-template-plus-bound-product-input-compute-bytes-and-sha-validate-v3-or-stop",
+        "future_bytes": "must-not-be-fabricated-or-pre-materialized",
+        "between_stages": "fresh-independent-evidence-acceptance-required",
+        "immediate_pre_effect": [
+          "expiry",
+          "official-doc-drift",
+          "profile-and-price",
+          "exact-binaries",
+          "runtime-authority-digest",
+          "ledger-predecessor-and-counters",
+          "output-absence",
+          "safety-latch-state"
+        ]
+      }
+    },
+    "answer_isolation": {
+      "const": {
+        "product_runtime_receives": "answer-free-product-input-and-accepted-predecessor-product-evidence-only",
+        "oracle_runtime_access": "prohibited",
+        "oracle_use": "independent-post-output-public-validation-only",
+        "qualification_semantic_use": false,
+        "private_fixture_access": "prohibited",
+        "product_authors_expected_truth": false
+      }
+    },
+    "durable_authority": {
+      "const": {
+        "source": "closed-v3-manifest-intersected-with-typed-runtime-authority-and-hash-chained-coordinator-ledger",
+        "ledger": "artifacts/m1-slice6/wp9-profile/finite-campaign-ledger.v1.jsonl",
+        "possible_start": "reserves-one-provider-call-one-dns-and-full-stage-cost-before-send",
+        "settlement": "observed-usage-within-reservation-only-no-ceiling-transfer",
+        "ambiguous_start": "terminal-stop-retain-full-hold-no-retry",
+        "recovery": "reopen-full-hash-chain-identity-state-clock-vector-and-successor-grammar",
+        "retention": "retain-exact-generation-raw-responses-sanitized-evidence-and-ledger-through-C3-no-delete-authority",
+        "aggregate_limits": {
+          "provider_calls": 3,
+          "request_bytes": 147456,
+          "input_tokens": 167936,
+          "output_tokens": 8448,
+          "raw_response_bytes": 2359296,
+          "maximum_nano_usd": 1340000000,
+          "dns_resolutions": 3,
+          "credential_calls": {
+            "CredWriteW": 1,
+            "CredReadW": 5,
+            "CredDeleteW": 0,
+            "CredFree": 4,
+            "total": 10
+          },
+          "starts": 3,
+          "retries": 0,
+          "fourth_call": 0
+        }
+      }
+    },
+    "commands": {
+      "const": {
+        "credential_template": "powershell -NoProfile -ExecutionPolicy Bypass -File eng/run-m1-slice6-credential.ps1 -Operation EnrollOrVerifyProfile -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v3.json -CampaignManifest docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v3.json -CampaignReviewedCandidate 9aea07380a3d3cc2a6f70be6d32907a96e7720da -CampaignLedger artifacts/m1-slice6/wp9-profile/finite-campaign-ledger.v1.jsonl -ProductStateRoot artifacts/m1-slice6/wp9-production-profile-state -CoordinatorBinary src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe -RuntimeAuthorityManifest artifacts/m1-slice6/c2-authority/runtime/credential.v1.json -RuntimeAuthoritySha256 <closed-owner-derived-runtime-authority-sha256> -OutputRoot artifacts/m1-slice6/wp9-profile",
+        "stage_template": "powershell -NoProfile -ExecutionPolicy Bypass -File eng/run-m1-slice6-live.ps1 -Operation <Qualification|SourceClaimExtraction|CandidateInvestigation> -AuthorizationManifest <accepted-derived-stage-manifest> -CampaignManifest docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v3.json -CampaignReviewedCandidate 9aea07380a3d3cc2a6f70be6d32907a96e7720da -CredentialManifest docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v3.json -CampaignLedger artifacts/m1-slice6/wp9-profile/finite-campaign-ledger.v1.jsonl -ProductStateRoot artifacts/m1-slice6/wp9-production-profile-state -CoordinatorBinary src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe -HelperBinary src/Infinium.Coordinator/bin/Release/net10.0/CredentialHelper/Infinium.CredentialHelper.exe -RuntimeAuthorityManifest <owner-derived-stage-runtime-authority> -RuntimeAuthoritySha256 <exact-runtime-authority-sha256> -OutputRoot <exact-stage-output-root>",
+        "qualification_output": "artifacts/m1-slice6/wp9-live",
+        "source_claim_output": "artifacts/m1-slice6/wp10-live",
+        "candidate_output": "artifacts/m1-slice6/wp11-live"
+      }
+    },
+    "evidence": {
+      "const": {
+        "credential": "artifacts/m1-slice6/wp9-profile/profile-enrollment-evidence.json",
+        "qualification": "artifacts/m1-slice6/wp9-live/stage-evidence.json",
+        "source_claim": "artifacts/m1-slice6/wp10-live/stage-evidence.json",
+        "candidate": "artifacts/m1-slice6/wp11-live/stage-evidence.json",
+        "composed": "artifacts/m1-slice6/wp11-live/campaign-composed-evidence.json",
+        "acceptance_gate": "each-sanitized-evidence-sha-requires-distinct-independent-review-and-durable-acceptance-before-successor-materialization"
+      }
+    },
+    "prohibitions": {
+      "const": [
+        "fallback",
+        "parallel-dispatch",
+        "automatic-retry",
+        "counter-reset",
+        "ceiling-transfer",
+        "inherited-authority",
+        "retired-identity-reuse",
+        "predecessor-bypass",
+        "fabricated-future-evidence",
+        "fourth-provider-call",
+        "credential-enumeration",
+        "credential-overwrite",
+        "credential-delete",
+        "provider-tools",
+        "background",
+        "batch",
+        "private-fixture-access",
+        "evaluator-or-archive-access",
+        "git-head-or-marker-runtime-authority",
+        "push",
+        "C3",
+        "Slice7"
+      ]
+    },
+    "materialization_state": {
+      "const": {
+        "credential_runtime_authority": false,
+        "stage_runtime_authority": false,
+        "stage_requests": false,
+        "campaign_ledger": false,
+        "production_profile": false,
+        "production_lock": false,
+        "real_safety_latch": false,
+        "effect_evidence": false,
+        "provider_requests": 0,
+        "billable_operations": 0
+      }
+    },
+    "acceptance": {
+      "const": {
+        "required": true,
+        "scope": "accept-exact-package-commit-and-sha-only-then-permit-C2A-preparation-and-sequential-gated-C2B-through-C2D",
+        "does_not_execute": true,
+        "does_not_accept_itself": true,
+        "runtime_authority_derivation": "only-after-owner-acceptance-bind-package-commit-package-sha-subject-sha-campaign-sha-c1.1-build-review-expiry-paths-and-exact-ceilings",
+        "automatic_handoff": false
+      }
+    }
+  }
+}

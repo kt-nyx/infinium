@@ -1,7 +1,7 @@
 # Current project state
 
 Status: Accepted
-Disposition: C1 effect-free readiness accepted; C2 effect authority absent
+Disposition: C1.1 correction complete; C2 authority package awaiting owner acceptance; effect authority absent
 
 Last reviewed: 2026-08-18
 Owner: Project owner
@@ -21,8 +21,9 @@ chronology and evidence.
 | Accepted R2 evidence | Final `CampaignV2NonLive` receipt SHA-256 `bb9455c293b3049c1561cf9a15322c0b6b79502365097b51e2c92e4014e5019d`; all credential, native, network, provider, and billable counts were zero |
 | Accepted process proposal | Commit `2c82365fd853cb2021f1772d6c572ee9fa006d01`; process-amendment SHA-256 `5d9aff4226f93ff73025573e056080530d23f66e5cb9cc92efddfd78655acc9f`; lean-plan SHA-256 `57d9a3b25201bf55281cad02c9b8a3e458639ec10d1e465cdbad85f532c464af` |
 | Accepted C1 outcome | C1 effect-free readiness closure is accepted in the commit containing this handoff. Typed runtime authority, durable ledger binding, safety-state closure, exact R1/R2 preservation, and the fake-store/literal-loopback WP9-to-WP11 rehearsal passed without an external effect. |
-| Current authorized work | Preparation and owner review of a fresh `M1/S6/C2` authority package only. No credential, helper/UI, native, DNS/network, provider, or billable effect is authorized. |
-| Next gate | Materialize fresh C2 campaign, credential, profile/generation, stage, candidate/build, predecessor, path, ceiling, expiry, and current official-profile/capability/price bindings; then obtain separate owner acceptance of those exact bytes before any possible effect. |
+| C1.1 implementation | Commit `9aea07380a3d3cc2a6f70be6d32907a96e7720da` adds fresh v3 authority consumers and schemas while retaining effect-free v2 rehearsal compatibility. External effects explicitly reject the retired v2 identities. |
+| Current authorized work | Owner review of the inert [C2 authority package](plans/milestones/m1/slices/s6/c2-authority-package-report.md) only. No credential, helper/UI, native, DNS/network, provider, or billable effect is authorized. |
+| Next gate | Separate owner acceptance of the exact committed C2 package bytes and digest. Acceptance may open only C2A preparation and the package's sequential predecessor-gated C2B-C2D path; it causes no effect automatically. |
 | Later packages | C2 execution and `C3` retained-evidence closeout are inactive. C3 requires accepted retained C2 evidence and authorizes no new effect. |
 | Final Slice 6 gate | After C3, the project owner decides Slice 6 acceptance and contract freeze. Slice 7 does not start automatically. |
 | External-effect authority | None. C1 materialized no active campaign, credential authority, stage request/admission, production profile, real-campaign safety latch, or effect evidence. Credential, helper/UI, native, DNS/network, provider, billable, private-fixture, and archive counts remain zero. |
@@ -36,6 +37,8 @@ chronology and evidence.
 - [Slice 6 entry](plans/milestones/m1/slices/s6/README.md)
 - [Accepted Slice 6 plan](plans/milestones/m1/slices/s6/plan.md)
 - [Accepted Slice 6 lean continuation plan](plans/milestones/m1/slices/s6/continuation-plan.md)
+- [C2 inert authority-package report](plans/milestones/m1/slices/s6/c2-authority-package-report.md)
+- [C2 typed authority-package candidate](plans/milestones/m1/slices/s6/m1-slice6-c2-authority-package.v1.json)
 - [Accepted Slice 6 remainder plan through R2](plans/milestones/m1/slices/s6/remainder-plan.md)
 - [Slice 6 implementation record](plans/milestones/m1/slices/s6/record.md), only when exact chronology or retained evidence is needed
 

@@ -19,6 +19,8 @@ chronology.
   orchestration only after activation
 - [Accepted M1 process-continuation amendment](../../amendments/process-continuation.md)
 - [M1 continuation verification profile](../../../../../evaluation/m1-continuation-verification-profile.md)
+- [C2 inert authority-package report](c2-authority-package-report.md), awaiting
+  separate owner acceptance and granting no effect authority
 - [Append-only implementation record](record.md), for exact chronology and
   retained evidence
 - [Superseded R1-R7 orchestrator handoff](orchestrator-handoff.md), retained as
@@ -55,7 +57,12 @@ readiness closure is accepted in the commit containing this handoff. It adds
 typed runtime authority and durable campaign-ledger binding, closes the safety
 and invalid-state surfaces, preserves the exact R1/R2 public authority, and
 rehearses WP9 through WP11 with fake credential storage and literal loopback.
-No external effect or executable C2 authority was materialized.
+No external effect was materialized. The owner-authorized C1.1 correction is
+implemented at `9aea07380a3d3cc2a6f70be6d32907a96e7720da`; it adds fresh v3
+authority paths and rejects retired v2 identities for every external effect.
+The exact C2 authority package is now an inert owner-review candidate. It has
+not been owner-accepted and does not create runtime authority, stage requests,
+durable admission, a profile, a safety latch, or effect evidence.
 
 ## Lean continuation
 
@@ -88,10 +95,11 @@ destructive action, push, or later-slice implementation.
 
 The old dormant campaign and credential authorization IDs named in the lean
 continuation plan are retired without execution and cannot be inherited or
-reused. Accepted C1 makes only preparation and owner review of a fresh C2
-authority package eligible. C2 still requires entirely fresh exact IDs,
-bindings, paths, expiries, ceilings, current official-profile/capability/price
-evidence, and separate owner acceptance before any possible effect.
+reused. The fresh C2 package now binds new exact IDs, C1.1 binaries, paths,
+expiries, ceilings, official-profile/capability/price evidence, sequencing, and
+inert derivation rules. Separate owner acceptance of its exact committed bytes
+remains mandatory before even C2A effect preparation; nothing runs on
+acceptance automatically.
 
 Runtime effect authority comes from a closed typed manifest and durable
 coordinator state, never Git history, current HEAD, commit subjects, log order,
