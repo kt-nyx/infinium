@@ -1,0 +1,321 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/m1-slice6-finite-campaign-authorization.v4.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_identity", "campaign_id", "status", "effect_authority", "prepared_at_utc", "expires_at_utc",
+    "candidate_binding", "authority_source", "fresh_authority", "credential_envelope", "safety_identifier",
+    "official_document_snapshot", "ordered_stages", "aggregate_limits", "campaign_ledger", "stage_authority_contract", "admission", "rehearsal", "execution"
+  ],
+  "properties": {
+    "schema_identity": { "const": "infinium.repository.m1-slice6-finite-campaign-authorization/4.0.0" },
+    "campaign_id": { "const": "infinium.m1-s6.finite-live-campaign/ff2d542a-04f0-448a-bcb8-a0ecbedde5b9" },
+    "status": { "enum": ["verification-pending", "ready-for-campaign-review"] },
+    "effect_authority": { "const": "none-until-exact-reviewed-campaign-admission" },
+    "prepared_at_utc": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{7}Z$" },
+    "expires_at_utc": { "const": "2026-09-15T23:59:00.0000000Z" },
+    "candidate_binding": { "$ref": "#/$defs/candidateBinding" },
+    "authority_source": { "$ref": "#/$defs/authoritySource" },
+    "fresh_authority": { "$ref": "#/$defs/freshAuthority" },
+    "credential_envelope": { "$ref": "#/$defs/credentialEnvelope" },
+    "safety_identifier": { "$ref": "#/$defs/safetyIdentifier" },
+    "official_document_snapshot": { "$ref": "#/$defs/officialSnapshot" },
+    "ordered_stages": {
+      "type": "array", "minItems": 3, "maxItems": 3, "items": { "oneOf": [
+        { "$ref": "#/$defs/qualificationStage" },
+        { "$ref": "#/$defs/sourceClaimStage" },
+        { "$ref": "#/$defs/candidateStage" }
+      ] }
+    },
+    "aggregate_limits": { "$ref": "#/$defs/aggregateLimits" },
+    "campaign_ledger": { "$ref": "#/$defs/campaignLedger" },
+    "stage_authority_contract": { "$ref": "#/$defs/stageAuthorityContract" },
+    "admission": { "$ref": "#/$defs/admission" },
+    "rehearsal": { "$ref": "#/$defs/rehearsal" },
+    "execution": { "$ref": "#/$defs/execution" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "verification-pending" } }, "required": ["status"] },
+      "then": { "properties": { "candidate_binding": { "$ref": "#/$defs/pendingCandidateBinding" } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "ready-for-campaign-review" } }, "required": ["status"] },
+      "then": { "properties": { "candidate_binding": { "$ref": "#/$defs/readyCandidateBinding" } } }
+    }
+  ],
+  "$defs": {
+    "gitSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "candidateBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["close_ready_implementation_commit", "review_candidate_resolution"],
+      "properties": {
+        "close_ready_implementation_commit": { "type": "string" },
+        "review_candidate_resolution": { "type": "string" }
+      }
+    },
+    "pendingCandidateBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["close_ready_implementation_commit", "review_candidate_resolution"],
+      "properties": {
+        "close_ready_implementation_commit": { "const": "pending" },
+        "review_candidate_resolution": { "const": "pending" }
+      }
+    },
+    "readyCandidateBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["close_ready_implementation_commit", "review_candidate_resolution"],
+      "properties": {
+        "close_ready_implementation_commit": { "$ref": "#/$defs/gitSha" },
+        "review_candidate_resolution": { "const": "exact-clean-head-after-four-document-binding" }
+      }
+    },
+    "authoritySource": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact", "attachment_sha256", "authority_kind", "unknown-future-byte-owner-marker"],
+      "properties": {
+        "artifact": { "const": "docs/plans/milestones/m1/slices/s6/continuation-plan.md" },
+        "attachment_sha256": { "const": "4e593f7d60416d694f5a73b3488b8a68bd76b7a386aac776561e471986b07ad9" },
+        "authority_kind": { "const": "accepted-slice6-continuation-plan-plus-explicit-owner-authorized-c1.2-correction-and-replacement-c2-preparation" },
+        "unknown-future-byte-owner-marker": { "const": "prohibited" }
+      }
+    },
+    "zeroEffect": {
+      "type": "object", "additionalProperties": false,
+      "required": ["credential_helper_launch_count", "credential_helper_readiness_count", "credential_authority_lock_count", "credential_manager_call_count", "provider_dispatch_count", "dns_or_public_network_count", "profile_materialization_count", "api_key_observed", "production_output_roots_absent"],
+      "properties": {
+        "credential_helper_launch_count": { "const": 0 },
+        "credential_helper_readiness_count": { "const": 0 },
+        "credential_authority_lock_count": { "const": 0 },
+        "credential_manager_call_count": { "const": 0 },
+        "provider_dispatch_count": { "const": 0 },
+        "dns_or_public_network_count": { "const": 0 },
+        "profile_materialization_count": { "const": 0 },
+        "api_key_observed": { "const": false },
+        "production_output_roots_absent": { "const": true }
+      }
+    },
+    "freshAuthority": {
+      "type": "object", "additionalProperties": false,
+      "required": ["authorized", "pre_effect_only", "accepted_c1_commit", "accepted_c1_receipt_sha256", "retired_campaign_id", "retired_credential_manifest_id", "retired_c2_campaign_id", "retired_c2_credential_manifest_id", "retired_c2_profile_id", "retired_c2_generation_id", "retired_c2_target_fingerprint_sha256", "retired_c2_stage_ids", "retired_c2_runtime_authority_ids", "terminal_c2_effect_statement", "retired_identity_use", "zero_effect_proof", "fresh_review_required", "prior_review_or_owner_marker_inheritance"],
+      "properties": {
+        "authorized": { "const": true },
+        "pre_effect_only": { "const": true },
+        "accepted_c1_commit": { "const": "25227d30e8e5e5f97655645faf2f3ad71319749b" },
+        "accepted_c1_receipt_sha256": { "const": "8ffe939f050f336ec240706728760438e4b42e5f1688fa575d464da19430430c" },
+        "retired_campaign_id": { "const": "infinium.m1-s6.finite-live-campaign/51b9dba6-aca3-41d7-82d1-afd805e33e66" },
+        "retired_credential_manifest_id": { "const": "infinium.m1-s6.wp9.production-profile-authorization/09b8e309-ead8-441e-8307-5a4a1a2c43d5" },
+        "retired_c2_campaign_id": { "const": "infinium.m1-s6.finite-live-campaign/aef3cd3f-9321-4cdc-86a2-2d61510c2e28" },
+        "retired_c2_credential_manifest_id": { "const": "infinium.m1-s6.wp9.production-profile-authorization/52b2cfdb-ccd4-49c0-8f6a-ace8c426012e" },
+        "retired_c2_profile_id": { "const": "openai-platform-ecd3de4b9fac443593347905970d942d" },
+        "retired_c2_generation_id": { "const": "g-6eefeaf6e4a74273bf4ee69f02449f47" },
+        "retired_c2_target_fingerprint_sha256": { "const": "990e46a57687417a1a1865bab3b11823f3b37d35961fb8101e32a8977e2a4b67" },
+        "retired_c2_stage_ids": { "const": [
+          "infinium.m1-s6.campaign-stage/Qualification/033d4d98-871e-44e3-947d-295d8429514e",
+          "infinium.m1-s6.campaign-stage/SourceClaimExtraction/01c76dba-f052-48dc-9b9b-b63414128233",
+          "infinium.m1-s6.campaign-stage/CandidateInvestigation/4b3378e2-e29c-4e62-843a-62a882f16144"
+        ] },
+        "retired_c2_runtime_authority_ids": { "const": [
+          "infinium.m1-s6.runtime-authority/credential/f3ba6209-b29a-4a99-bfff-9eb8b56199cb",
+          "infinium.m1-s6.runtime-authority/wp9/1926afb5-041a-4f9b-83eb-49c877e010d7",
+          "infinium.m1-s6.runtime-authority/wp10/7088ed0e-fab4-4d57-82d4-f639f321d30e",
+          "infinium.m1-s6.runtime-authority/wp11/2d4f92b6-9c1c-4d22-9531-548862231f51"
+        ] },
+        "terminal_c2_effect_statement": { "const": "one-helper-launch-known-zero-ui-native-network-provider-and-billable-effect" },
+        "retired_identity_use": { "const": "prohibited-reserved-or-terminal-history-only" },
+        "zero_effect_proof": { "$ref": "#/$defs/zeroEffect" },
+        "fresh_review_required": { "const": true },
+        "prior_review_or_owner_marker_inheritance": { "const": "prohibited" }
+      }
+    },
+    "profile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "access_profile_id", "generation_id", "generation_ordinal", "revocation_epoch", "display_label", "target_derivation", "target_fingerprint_sha256", "target_encoding", "preflight_requirement"],
+      "properties": {
+        "mode": { "const": "new-only" }, "access_profile_id": { "const": "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e" },
+        "generation_id": { "const": "g-ff6d82e7a7d244f6b8a9d0164991be37" }, "generation_ordinal": { "const": 1 },
+        "revocation_epoch": { "const": 0 }, "display_label": { "const": "OpenAI Platform API (M1 Slice 6)" },
+        "target_derivation": { "const": "Infinium:<access_profile_id>:<generation_id>" },
+        "target_fingerprint_sha256": { "const": "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0" },
+        "target_encoding": { "const": "utf-8" }, "preflight_requirement": { "const": "exact-CredReadW-ERROR_NOT_FOUND-or-stop-no-write" }
+      }
+    },
+    "nativeBoundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["exact_call_order", "exact_results", "exact_collision_order", "exact_collision_results", "maximum_calls", "enumeration", "fallback", "overwrite", "delete"],
+      "properties": {
+        "exact_call_order": { "const": ["CredReadW", "CredWriteW", "CredReadW", "CredFree"] },
+        "exact_results": { "const": ["ERROR_NOT_FOUND", "success", "success", "released"] },
+        "exact_collision_order": { "const": ["CredReadW", "CredFree"] }, "exact_collision_results": { "const": ["success", "released"] },
+        "maximum_calls": { "const": { "CredWriteW": 1, "CredReadW": 2, "CredDeleteW": 0, "CredFree": 1, "total": 4 } },
+        "enumeration": { "const": "prohibited" }, "fallback": { "const": "none" }, "overwrite": { "const": "prohibited" }, "delete": { "const": "not-authorized" }
+      }
+    },
+    "entrySurface": {
+      "type": "object", "additionalProperties": false,
+      "required": ["purpose", "owner", "presentation", "masked", "paste_permitted", "renderer_receives_or_retains_secret", "readiness_deadline_seconds", "response_deadline_seconds", "input_bound"],
+      "properties": {
+        "purpose": { "const": "m1-native-boundary-production-enrollment-only-not-final-product-settings-ui" }, "owner": { "const": "one-shot-credential-helper" },
+        "presentation": { "const": "direct-helper-owned-native-modal" }, "masked": { "const": true }, "paste_permitted": { "const": true },
+        "renderer_receives_or_retains_secret": { "const": false }, "readiness_deadline_seconds": { "const": 10 }, "response_deadline_seconds": { "const": 600 },
+        "input_bound": { "const": "live-character-length-1-through-2560-and-utf8-byte-length-1-through-2560-no-truncation" }
+      }
+    },
+    "durableState": {
+      "type": "object", "additionalProperties": false,
+      "required": ["initial_state", "success_state", "required_intent_sequence", "active_unverified_request_gate", "cancel_state", "unavailable_or_ambiguous_state", "retention"],
+      "properties": {
+        "initial_state": { "const": "pending-enrollment" }, "success_state": { "const": "active-verified" },
+        "required_intent_sequence": { "const": ["enroll:pending-enrollment->active-unverified", "verify:active-unverified->active-verified"] },
+        "active_unverified_request_gate": { "const": "reject" }, "cancel_state": { "const": "pending-enrollment-no-native-write" },
+        "unavailable_or_ambiguous_state": { "const": "block-all-provider-requests-until-fresh-authorized-recovery" },
+        "retention": { "const": "retain-exact-generation-through-wp11-no-delete-authority" }
+      }
+    },
+    "credentialEnvelope": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_manifest_id", "source_manifest_sha256", "source_candidate_commit", "comparison", "exact_immutable_fields", "mutable_fields", "ceilings", "credential_expires_at_utc", "profile_id", "generation_id", "target_fingerprint_sha256"],
+      "properties": {
+        "source_manifest_id": { "const": "infinium.m1-s6.wp9.production-profile-authorization/234b5227-0ad4-4f5e-acf5-5ac6b89fca2b" },
+        "source_manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "source_candidate_commit": { "$ref": "#/$defs/gitSha" },
+        "comparison": { "const": "field-by-field-deep-equality-except-exact-candidate-and-release-binding-allowlist" },
+        "exact_immutable_fields": { "const": ["schema_identity", "manifest_id", "packet_kind", "status", "effect_authority", "expires_at_utc", "predecessor_binding", "owner_authorization", "provider_intent", "official_document_refresh", "profile", "native_boundary", "m1_entry_surface", "future_product_ux", "durable_state", "output", "stop_conditions", "execution"] },
+        "mutable_fields": { "const": ["candidate_binding.close_ready_implementation_commit", "release_build.source_commit", "release_build.build_command", "release_build.coordinator_sha256", "release_build.helper_sha256", "release_build.binary_inventory_file_count", "release_build.binary_inventory_sha256"] },
+        "ceilings": { "const": "unchanged-or-lower-only" },
+        "credential_expires_at_utc": { "const": "2026-09-15T23:00:00.0000000Z" },
+        "profile_id": { "const": "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e" },
+        "generation_id": { "const": "g-ff6d82e7a7d244f6b8a9d0164991be37" },
+        "target_fingerprint_sha256": { "const": "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0" }
+      }
+    },
+    "safetyIdentifier": {
+      "type": "object", "additionalProperties": false,
+      "required": ["state_version", "seed_generation", "local_state_file", "use_latch_file", "use_latch_schema", "post_use_missing_corrupt_or_torn_state", "transmitted_projection", "domain", "projection_length", "stable_for_product_user", "raw_seed_transmitted", "forbidden_inputs"],
+      "properties": {
+        "state_version": { "const": "infinium.product-user-safety-identifier/1.0.0" }, "seed_generation": { "const": "cryptographic-random-32-bytes-create-new-once" },
+        "local_state_file": { "const": "product-user-safety-identifier.v1.seed" },
+        "use_latch_file": { "const": "product-user-safety-identifier.v1.use" },
+        "use_latch_schema": { "const": "infinium.product-user-safety-identifier-use/v1" },
+        "post_use_missing_corrupt_or_torn_state": { "const": "terminal-stop-never-regenerate" },
+        "transmitted_projection": { "const": "lowercase-hex-sha256(domain-utf8-nul || seed)" },
+        "domain": { "const": "infinium.openai.safety-identifier/v1" }, "projection_length": { "const": 64 },
+        "stable_for_product_user": { "const": true }, "raw_seed_transmitted": { "const": false },
+        "forbidden_inputs": { "const": ["api-key-or-credential-bytes", "credential-target-profile-or-generation", "email-or-account-identifier", "os-user-or-machine-name", "source-content-or-prompt", "file-path-or-mod-name", "advertising-or-telemetry-identifier"] }
+      }
+    },
+    "officialSnapshot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["record", "provider", "model", "api", "structured_outputs", "safety_identifier_guidance", "prices_nano_usd_per_token", "long_context_threshold_tokens", "long_context_input_multiplier", "long_context_output_multiplier", "campaign_below_long_context_threshold"],
+      "properties": {
+        "record": { "const": "docs/research/investigations/RESEARCH-0055-slice6-finite-campaign-and-safety-identifier-refresh.md" }, "provider": { "const": "openai" },
+        "model": { "const": "gpt-5.6-sol" }, "api": { "const": "responses" }, "structured_outputs": { "const": true },
+        "safety_identifier_guidance": { "const": "recommended-stable-privacy-preserving-identifier-for-individual-users" },
+        "prices_nano_usd_per_token": { "const": { "ordinary_input": 5000, "cache_read": 500, "cache_write": 6250, "output": 30000 } },
+        "long_context_threshold_tokens": { "const": 272000 }, "long_context_input_multiplier": { "const": 2 }, "long_context_output_multiplier": { "const": 1.5 },
+        "campaign_below_long_context_threshold": { "const": true }
+      }
+    },
+    "stageBase": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ordinal", "work_package", "operation", "request_manifest", "predecessor", "maximum_request_bytes", "maximum_input_tokens", "maximum_output_tokens", "maximum_raw_response_bytes", "deadline_milliseconds", "maximum_provider_calls", "maximum_nano_usd"],
+      "properties": {
+        "ordinal": { "type": "integer" }, "work_package": { "type": "string" }, "operation": { "type": "string" },
+        "request_manifest": { "type": "string" }, "predecessor": { "type": "string" },
+        "maximum_request_bytes": { "type": "integer" }, "maximum_input_tokens": { "type": "integer" },
+        "maximum_output_tokens": { "type": "integer" }, "maximum_raw_response_bytes": { "type": "integer" },
+        "deadline_milliseconds": { "type": "integer" }, "maximum_provider_calls": { "type": "integer" },
+        "maximum_nano_usd": { "type": "integer" }
+      }
+    },
+    "qualificationStage": { "allOf": [{ "$ref": "#/$defs/stageBase" }, { "properties": { "ordinal": { "const": 1 }, "work_package": { "const": "WP9" }, "operation": { "const": "Qualification" }, "request_manifest": { "const": "infinium.m1-s6.campaign-stage/Qualification/cf3ba7b9-e2cb-427d-b5cb-ae9f679c19c1" }, "predecessor": { "const": "credential-profile-active-verified-and-independently-accepted" }, "maximum_request_bytes": { "const": 16384 }, "maximum_input_tokens": { "const": 20480 }, "maximum_output_tokens": { "const": 256 }, "maximum_raw_response_bytes": { "const": 262144 }, "deadline_milliseconds": { "const": 60000 }, "maximum_provider_calls": { "const": 1 }, "maximum_nano_usd": { "const": 140000000 } } }] },
+    "sourceClaimStage": { "allOf": [{ "$ref": "#/$defs/stageBase" }, { "properties": { "ordinal": { "const": 2 }, "work_package": { "const": "WP10" }, "operation": { "const": "SourceClaimExtraction" }, "request_manifest": { "const": "infinium.m1-s6.campaign-stage/SourceClaimExtraction/5eae2494-e3fe-41a7-8b3d-ed11148744e8" }, "predecessor": { "const": "wp9-live-evidence-independently-accepted" }, "maximum_request_bytes": { "const": 65536 }, "maximum_input_tokens": { "const": 73728 }, "maximum_output_tokens": { "const": 4096 }, "maximum_raw_response_bytes": { "const": 1048576 }, "deadline_milliseconds": { "const": 120000 }, "maximum_provider_calls": { "const": 1 }, "maximum_nano_usd": { "const": 600000000 } } }] },
+    "candidateStage": { "allOf": [{ "$ref": "#/$defs/stageBase" }, { "properties": { "ordinal": { "const": 3 }, "work_package": { "const": "WP11" }, "operation": { "const": "CandidateInvestigation" }, "request_manifest": { "const": "infinium.m1-s6.campaign-stage/CandidateInvestigation/a9d1346f-ef84-44dc-a482-266b8e089dce" }, "predecessor": { "const": "wp10-live-evidence-independently-accepted" }, "maximum_request_bytes": { "const": 65536 }, "maximum_input_tokens": { "const": 73728 }, "maximum_output_tokens": { "const": 4096 }, "maximum_raw_response_bytes": { "const": 1048576 }, "deadline_milliseconds": { "const": 120000 }, "maximum_provider_calls": { "const": 1 }, "maximum_nano_usd": { "const": 600000000 } } }] },
+    "aggregateLimits": {
+      "type": "object", "additionalProperties": false,
+      "required": ["maximum_provider_calls", "maximum_request_bytes", "maximum_input_tokens", "maximum_output_tokens", "maximum_raw_response_bytes", "maximum_nano_usd", "maximum_dns_resolutions", "maximum_credential_calls", "automatic_retry", "parallel_calls", "fourth_call", "ambiguous_start"],
+      "properties": {
+        "maximum_provider_calls": { "const": 3 }, "maximum_request_bytes": { "const": 147456 }, "maximum_input_tokens": { "const": 167936 },
+        "maximum_output_tokens": { "const": 8448 }, "maximum_raw_response_bytes": { "const": 2359296 }, "maximum_nano_usd": { "const": 1340000000 },
+        "maximum_dns_resolutions": { "const": 3 }, "maximum_credential_calls": { "const": { "CredWriteW": 1, "CredReadW": 5, "CredDeleteW": 0, "CredFree": 4, "total": 10 } },
+        "automatic_retry": { "const": false }, "parallel_calls": { "const": false }, "fourth_call": { "const": "prohibited" }, "ambiguous_start": { "const": "stop-campaign-retain-hold-no-retry" }
+      }
+    },
+    "campaignLedger": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_identity", "path", "owner", "state_order", "identity_fields", "aggregate_vector_fields", "request_and_evidence_binding", "clock", "expiry_checks", "stage_deadline", "reopen_validation", "terminal_failure", "possible_start_hold"],
+      "properties": {
+        "schema_identity": { "const": "infinium.m1-s6.finite-campaign-ledger/v1" },
+        "path": { "const": "artifacts/m1-slice6/wp9-profile/finite-campaign-ledger.v1.jsonl" },
+        "owner": { "const": "coordinator-only-append-create-write-through" },
+        "state_order": { "const": ["ready", "reviewed", "admitted", "credential-execution-handoff", "credential-evidence-handoff", "credential-evidence-accepted", "stage-reserved", "transport-may-have-started", "stage-evidence-handoff", "stage-accepted", "completed-or-stopped"] },
+        "identity_fields": { "const": ["campaign-id", "campaign-manifest-sha256", "authority-attachment-sha256", "verification-candidate-commit", "credential-manifest-id", "credential-manifest-sha256", "credential-profile-id", "credential-generation-id", "credential-target-fingerprint-sha256"] },
+        "aggregate_vector_fields": { "const": ["provider-calls", "dns-resolutions", "request-bytes", "input-tokens", "output-tokens", "raw-response-bytes", "reserved-nano-usd", "settled-nano-usd", "observed-input-tokens", "observed-output-tokens", "observed-raw-response-bytes"] },
+        "request_and_evidence_binding": { "const": "exact-stage-manifest-id-and-sha256-plus-independent-evidence-id-and-sha256" },
+        "clock": { "const": "utc-monotonic-no-rollback" },
+        "expiry_checks": { "const": ["campaign-admission", "credential-execution-handoff", "stage-reservation", "possible-start"] },
+        "stage_deadline": { "const": "immutable-reservation-time-plus-exact-stage-deadline" },
+        "reopen_validation": { "const": "full-hash-chain-identity-state-clock-vector-and-successor-grammar" },
+        "terminal_failure": { "const": "append-stopped-retain-reservation-and-possible-start-hold-no-retry" },
+        "possible_start_hold": { "const": "one-call-and-one-dns-consumed-before-send" }
+      }
+    },
+    "stageAuthorityContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_path", "schema_identity", "stage_evidence_schema_path", "stage_evidence_schema_identity", "composed_evidence_schema_path", "composed_evidence_schema_identity", "canonical_directory", "review_candidate_shape", "review_closeout_mode", "admission_closeout_mode", "credential_evidence_closeout_mode", "stage_evidence_closeout_mode", "composed_evidence_closeout_mode", "execution_runner", "helper_boundary", "stage_review_marker", "stage_admission_marker", "credential_evidence_acceptance_marker", "stage_evidence_acceptance_marker", "composed_evidence_acceptance_marker", "stage_evidence_acceptance", "composed_evidence_acceptance", "fourth_stage"],
+      "properties": {
+        "schema_path": { "const": "contracts/repository/m1-slice6-campaign-stage-request.v4.schema.json" },
+        "schema_identity": { "const": "infinium.repository.m1-slice6-campaign-stage-request/4.0.0" },
+        "stage_evidence_schema_path": { "const": "contracts/repository/m1-slice6-campaign-stage-evidence.v4.schema.json" },
+        "stage_evidence_schema_identity": { "const": "infinium.m1-s6.campaign-stage-evidence/v4" },
+        "composed_evidence_schema_path": { "const": "contracts/repository/m1-slice6-campaign-composed-evidence.v4.schema.json" },
+        "composed_evidence_schema_identity": { "const": "infinium.m1-s6.campaign-composed-evidence/v4" },
+        "canonical_directory": { "const": "docs/plans/milestones/m1/slices/s6/live/" },
+        "review_candidate_shape": { "const": "exact-clean-committed-manifest-plus-canonical-request" },
+        "review_closeout_mode": { "const": "M1Slice6CampaignStageReviewCloseout" },
+        "admission_closeout_mode": { "const": "M1Slice6CampaignStageAdmissionCloseout" },
+        "credential_evidence_closeout_mode": { "const": "M1Slice6CampaignCredentialEvidenceCloseout" },
+        "stage_evidence_closeout_mode": { "const": "M1Slice6CampaignStageEvidenceCloseout" },
+        "composed_evidence_closeout_mode": { "const": "M1Slice6CampaignComposedEvidenceCloseout" },
+        "execution_runner": { "const": "eng/run-m1-slice6-live.ps1" },
+        "helper_boundary": { "const": "helper-owned-exact-credential-read-free-production-responses" },
+        "stage_review_marker": { "const": "M1_S6_CAMPAIGN_STAGE_REVIEW_ACCEPTANCE candidate_commit=<stage_review_candidate> campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> stage_manifest_id=<stage_manifest_id> sha256=<stage_manifest_sha256> predecessor_evidence_sha256=<predecessor_evidence_sha256> verdicts=security,semantics,diff" },
+        "stage_admission_marker": { "const": "M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=<stage_review_candidate> campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> stage_manifest_id=<stage_manifest_id> sha256=<stage_manifest_sha256> predecessor_evidence_sha256=<predecessor_evidence_sha256> expires_at_utc=<campaign_expires_at_utc>" },
+        "credential_evidence_acceptance_marker": { "const": "M1_S6_CAMPAIGN_CREDENTIAL_EVIDENCE_ACCEPTANCE campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> manifest_id=<credential_manifest_id> manifest_sha256=<credential_manifest_sha256> evidence_id=wp9-production-profile-enrollment-evidence sha256=<evidence_sha256> verdicts=credential,security,semantics,diff" },
+        "stage_evidence_acceptance_marker": { "const": "M1_S6_CAMPAIGN_STAGE_EVIDENCE_ACCEPTANCE campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> stage_manifest_id=<stage_manifest_id> stage_manifest_sha256=<stage_manifest_sha256> evidence_id=<evidence_id> sha256=<evidence_sha256> verdicts=security,semantics,budget,provenance" },
+        "composed_evidence_acceptance_marker": { "const": "M1_S6_CAMPAIGN_COMPOSED_EVIDENCE_ACCEPTANCE campaign_id=<campaign_id> campaign_sha256=<campaign_sha256> evidence_id=campaign-composed-evidence sha256=<evidence_sha256> verdicts=security,semantics,budget,provenance,diff" },
+        "stage_evidence_acceptance": { "const": "distinct-exact-sha256-independent-review-transition" },
+        "composed_evidence_acceptance": { "const": "distinct-exact-sha256-three-stage-no-fourth-transition" },
+        "fourth_stage": { "const": "prohibited" }
+      }
+    },
+    "admission": {
+      "type": "object", "additionalProperties": false,
+      "required": ["review_marker", "campaign_admission_marker", "credential_rollover_marker", "review_required_before_owner_admission", "exact_manifest_bytes_required", "prior_marker_inheritance", "credential_expiry_hard_cap_utc", "credential_effect_first", "provider_stage_materialization_before_credential_acceptance"],
+      "properties": {
+        "review_marker": { "const": "M1_S6_CAMPAIGN_REVIEW_ACCEPTANCE candidate_commit=<exact-reviewed-candidate> campaign_id=<campaign_id> sha256=<manifest_sha256> verdicts=security,semantics,diff" },
+        "campaign_admission_marker": { "const": "M1_S6_CAMPAIGN_ADMISSION candidate_commit=<exact-reviewed-candidate> authority_sha256=<attachment_sha256> campaign_id=<campaign_id> sha256=<manifest_sha256> close_ready_commit=<close_ready_implementation_commit> expires_at_utc=<expires_at_utc>" },
+        "credential_rollover_marker": { "const": "WP9_PROFILE_CAMPAIGN_ROLLOVER_ADMISSION campaign_candidate_commit=<exact-reviewed-candidate> authority_sha256=<attachment_sha256> campaign_id=<campaign_id> campaign_sha256=<manifest_sha256> manifest_id=<credential_manifest_id> sha256=<credential_manifest_sha256> close_ready_commit=<close_ready_implementation_commit> credential_expires_at_utc=<credential_expires_at_utc>" },
+        "review_required_before_owner_admission": { "const": true }, "exact_manifest_bytes_required": { "const": true }, "prior_marker_inheritance": { "const": false },
+        "credential_expiry_hard_cap_utc": { "const": "2026-09-15T23:00:00.0000000Z" }, "credential_effect_first": { "const": true },
+        "provider_stage_materialization_before_credential_acceptance": { "const": false }
+      }
+    },
+    "rehearsal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository", "effects", "required_states", "required_stop_mutations"],
+      "properties": {
+        "repository": { "const": "fresh-temporary-git-clone" }, "effects": { "const": "none" },
+        "required_states": { "const": ["ready", "reviewed", "campaign-admitted", "credential-execution-handoff", "credential-evidence-handoff"] },
+        "required_stop_mutations": { "type": "array", "minItems": 18, "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "execution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["campaign_permitted", "credential_helper_launch_permitted", "credential_manager_operation_permitted", "provider_request_permitted", "command"],
+      "properties": { "campaign_permitted": { "const": false }, "credential_helper_launch_permitted": { "const": false }, "credential_manager_operation_permitted": { "const": false }, "provider_request_permitted": { "const": false }, "command": { "type": "null" } }
+    }
+  }
+}

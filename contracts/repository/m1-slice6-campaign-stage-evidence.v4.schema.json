@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/m1-slice6-campaign-stage-evidence.v4.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "status", "campaign_id", "campaign_manifest_sha256", "stage_manifest_id",
+    "stage_manifest_sha256", "stage", "canonical_request_sha256", "predecessor_evidence_id",
+    "predecessor_evidence_sha256", "safety_identifier_projection", "provider_state", "http_status",
+    "provider_response_id", "client_request_id", "provider_request_id", "requested_model",
+    "returned_model", "requested_service_tier", "returned_service_tier", "reasoning_context",
+    "reasoning_mode", "prompt_cache_mode", "provider_send_count", "dns_resolution_count",
+    "retry_permitted", "credential_profile_id", "credential_generation_id", "credential_target_fingerprint_sha256", "input_tokens", "output_tokens", "raw_response_bytes", "calculated_nano_usd",
+    "usage", "rate_facts", "credential_reads", "credential_frees", "credential_writes",
+    "credential_deletes", "cumulative_credential_calls", "retained_artifacts",
+    "authoritative_persistence", "validation_package", "semantic_validation"
+  ],
+  "properties": {
+    "schema": { "const": "infinium.m1-s6.campaign-stage-evidence/v4" },
+    "status": { "const": "independent-review-pending" },
+    "campaign_id": { "const": "infinium.m1-s6.finite-live-campaign/ff2d542a-04f0-448a-bcb8-a0ecbedde5b9" },
+    "campaign_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "stage_manifest_id": { "enum": [
+      "infinium.m1-s6.campaign-stage/Qualification/cf3ba7b9-e2cb-427d-b5cb-ae9f679c19c1",
+      "infinium.m1-s6.campaign-stage/SourceClaimExtraction/5eae2494-e3fe-41a7-8b3d-ed11148744e8",
+      "infinium.m1-s6.campaign-stage/CandidateInvestigation/a9d1346f-ef84-44dc-a482-266b8e089dce"
+    ] },
+    "stage_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "stage": { "enum": ["Qualification", "SourceClaimExtraction", "CandidateInvestigation"] },
+    "canonical_request_sha256": { "$ref": "#/$defs/sha256" },
+    "predecessor_evidence_id": { "$ref": "#/$defs/id" },
+    "predecessor_evidence_sha256": { "$ref": "#/$defs/sha256" },
+    "safety_identifier_projection": { "$ref": "#/$defs/sha256" },
+    "provider_state": { "const": "Completed" },
+    "http_status": { "type": "integer", "minimum": 200, "maximum": 299 },
+    "provider_response_id": { "$ref": "#/$defs/id" },
+    "client_request_id": { "$ref": "#/$defs/id" },
+    "provider_request_id": { "$ref": "#/$defs/id" },
+    "requested_model": { "const": "gpt-5.6-sol" },
+    "returned_model": { "const": "gpt-5.6-sol" },
+    "requested_service_tier": { "const": "default" },
+    "returned_service_tier": { "const": "default" },
+    "reasoning_context": { "const": "current_turn" },
+    "reasoning_mode": { "const": "standard" },
+    "prompt_cache_mode": { "const": "explicit" },
+    "provider_send_count": { "const": 1 },
+    "dns_resolution_count": { "const": 1 },
+    "retry_permitted": { "const": false },
+    "credential_profile_id": { "const": "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e" },
+    "credential_generation_id": { "const": "g-ff6d82e7a7d244f6b8a9d0164991be37" },
+    "credential_target_fingerprint_sha256": { "const": "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0" },
+    "input_tokens": { "type": "integer", "minimum": 0, "maximum": 73728 },
+    "output_tokens": { "type": "integer", "minimum": 0, "maximum": 4096 },
+    "raw_response_bytes": { "type": "integer", "minimum": 1, "maximum": 1048576 },
+    "calculated_nano_usd": { "type": "integer", "minimum": 0, "maximum": 600000000 },
+    "usage": { "$ref": "#/$defs/usage" },
+    "rate_facts": { "type": "array", "maxItems": 32, "items": { "$ref": "#/$defs/rateFact" } },
+    "credential_reads": { "const": 1 },
+    "credential_frees": { "const": 1 },
+    "credential_writes": { "const": 0 },
+    "credential_deletes": { "const": 0 },
+    "cumulative_credential_calls": { "$ref": "#/$defs/native" },
+    "retained_artifacts": { "$ref": "#/$defs/artifacts" },
+    "authoritative_persistence": { "$ref": "#/$defs/persistence" },
+    "validation_package": { "$ref": "#/$defs/validationPackage" },
+    "semantic_validation": { "$ref": "#/$defs/semanticValidation" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "stage": { "const": "Qualification" } }, "required": ["stage"] },
+      "then": {
+        "properties": {
+          "cumulative_credential_calls": { "$ref": "#/$defs/nativeQualification" },
+          "validation_package": { "properties": { "package_id": { "const": "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1" }, "semantic_use": { "const": false } } },
+          "semantic_validation": { "properties": { "validation_id": { "const": "qualification-nonsemantic" }, "disposition": { "const": "not-applicable" }, "proposal_count": { "const": 0 }, "admission_count": { "const": 0 }, "result_sha256": { "const": "0000000000000000000000000000000000000000000000000000000000000000" } } }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "stage": { "const": "SourceClaimExtraction" } }, "required": ["stage"] },
+      "then": {
+        "properties": {
+          "cumulative_credential_calls": { "$ref": "#/$defs/nativeSourceClaim" },
+          "validation_package": { "properties": { "package_id": { "const": "LLM-CLAIM-LIVE-VAL-v2" }, "manifest_path": { "const": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/public-manifest.json" }, "manifest_sha256": { "const": "1231c98875c3ba3ca0ce3b60773e566c791b4a313c1fd691233be1a1bc60ba09" }, "product_input_path": { "const": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/execution-input.v2.json" }, "product_input_sha256": { "const": "bcbcc804eee7ea51fc00b6daa33d688078dcb1e8ddc53349a0ec673b77a5e789" }, "predecessor_manifest_path": { "const": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/public-manifest.json" }, "predecessor_manifest_sha256": { "const": "926963ca067da52ec8d6d7ecdd824df3cb2e2efed6dd12fe3418f3e63b29b4b7" }, "oracle_path": { "const": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/oracle.v2.json" }, "oracle_sha256": { "const": "76a631ffa02eeff301c240588d1507e3fe3cc2fe13f19aa597aecb8d2ddb3e14" }, "semantic_use": { "const": true } } },
+          "semantic_validation": { "properties": { "validation_id": { "const": "infinium.host.source-claim-admission/v1" }, "proposal_count": { "const": 9 }, "admission_count": { "const": 1 } } }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "stage": { "const": "CandidateInvestigation" } }, "required": ["stage"] },
+      "then": {
+        "properties": {
+          "cumulative_credential_calls": { "$ref": "#/$defs/nativeCandidate" },
+          "validation_package": { "properties": { "package_id": { "const": "LLM-INVESTIGATE-LIVE-VAL-v2" }, "manifest_path": { "const": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/public-manifest.json" }, "manifest_sha256": { "const": "f531447c5d7a1a3efc45b0787b319e3467d35197fbfea85436e3e003a789bb50" }, "product_input_path": { "const": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/execution-input.v2.json" }, "product_input_sha256": { "const": "d9d84af1a0a4e8c86100928fd6737482b51a96fd7d1c461cd30ecc81cd29eeb6" }, "predecessor_manifest_path": { "const": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/public-manifest.json" }, "predecessor_manifest_sha256": { "const": "c607ca873edb888502c9511ee5d9663b87247565d88b302edf3de55fb2750942" }, "oracle_path": { "const": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/oracle.v2.json" }, "oracle_sha256": { "const": "52f13b89f0c0cab2dc91c72e3986b8bc358e41a5ab5253ea1e8fab3b19230e3a" }, "semantic_use": { "const": true } } },
+          "semantic_validation": { "properties": { "validation_id": { "const": "infinium.host.candidate-investigation-admission/v1" }, "proposal_count": { "const": 1 }, "admission_count": { "const": 1 } } }
+        }
+      }
+    }
+  ],
+  "allOf": [
+    {
+      "if": { "properties": { "stage": { "const": "Qualification" } } },
+      "then": { "properties": { "stage_manifest_id": { "const": "infinium.m1-s6.campaign-stage/Qualification/cf3ba7b9-e2cb-427d-b5cb-ae9f679c19c1" } } }
+    },
+    {
+      "if": { "properties": { "stage": { "const": "SourceClaimExtraction" } } },
+      "then": { "properties": { "stage_manifest_id": { "const": "infinium.m1-s6.campaign-stage/SourceClaimExtraction/5eae2494-e3fe-41a7-8b3d-ed11148744e8" } } }
+    },
+    {
+      "if": { "properties": { "stage": { "const": "CandidateInvestigation" } } },
+      "then": { "properties": { "stage_manifest_id": { "const": "infinium.m1-s6.campaign-stage/CandidateInvestigation/a9d1346f-ef84-44dc-a482-266b8e089dce" } } }
+    }
+  ],
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "quantity": { "type": "object", "additionalProperties": false, "required": ["Availability", "Value"], "properties": { "Availability": { "enum": ["Available", "Unavailable", 1, 2] }, "Value": { "type": ["integer", "null"], "minimum": 0 } } },
+    "usage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["Availability", "DispatchCount", "InputTokens", "OutputTokens", "TotalTokens", "ReasoningTokens", "CacheReadTokens", "CacheWriteTokens", "PricedToolCalls", "CalculatedNanoUsd", "BillingAvailability", "RateAvailability", "CreditAvailability", "ReceiptState"],
+      "properties": {
+        "Availability": { "enum": ["Available", 1] }, "DispatchCount": { "$ref": "#/$defs/quantity" },
+        "InputTokens": { "$ref": "#/$defs/quantity" }, "OutputTokens": { "$ref": "#/$defs/quantity" },
+        "TotalTokens": { "$ref": "#/$defs/quantity" }, "ReasoningTokens": { "$ref": "#/$defs/quantity" },
+        "CacheReadTokens": { "$ref": "#/$defs/quantity" }, "CacheWriteTokens": { "$ref": "#/$defs/quantity" },
+        "PricedToolCalls": { "$ref": "#/$defs/quantity" }, "CalculatedNanoUsd": { "$ref": "#/$defs/quantity" },
+        "BillingAvailability": { "type": ["string", "integer"] }, "RateAvailability": { "type": ["string", "integer"] },
+        "CreditAvailability": { "type": ["string", "integer"] }, "ReceiptState": { "type": ["string", "integer"] }
+      }
+    },
+    "rateFact": { "type": "object", "additionalProperties": false, "required": ["name", "value"], "properties": { "name": { "$ref": "#/$defs/id" }, "value": { "type": "integer", "minimum": 0 } } },
+    "native": { "type": "object", "additionalProperties": false, "required": ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree", "total"], "properties": { "CredWriteW": { "const": 1 }, "CredReadW": { "type": "integer", "minimum": 3, "maximum": 5 }, "CredDeleteW": { "const": 0 }, "CredFree": { "type": "integer", "minimum": 2, "maximum": 4 }, "total": { "type": "integer", "minimum": 6, "maximum": 10 } } },
+    "nativeQualification": { "type": "object", "additionalProperties": false, "required": ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree", "total"], "properties": { "CredWriteW": { "const": 1 }, "CredReadW": { "const": 3 }, "CredDeleteW": { "const": 0 }, "CredFree": { "const": 2 }, "total": { "const": 6 } } },
+    "nativeSourceClaim": { "type": "object", "additionalProperties": false, "required": ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree", "total"], "properties": { "CredWriteW": { "const": 1 }, "CredReadW": { "const": 4 }, "CredDeleteW": { "const": 0 }, "CredFree": { "const": 3 }, "total": { "const": 8 } } },
+    "nativeCandidate": { "type": "object", "additionalProperties": false, "required": ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree", "total"], "properties": { "CredWriteW": { "const": 1 }, "CredReadW": { "const": 5 }, "CredDeleteW": { "const": 0 }, "CredFree": { "const": 4 }, "total": { "const": 10 } } },
+    "artifacts": { "type": "object", "additionalProperties": false, "required": ["canonical_request_path", "canonical_request_sha256", "raw_response_path", "raw_response_sha256", "response_headers_path", "response_headers_sha256", "native_trace_path", "native_trace_sha256", "canary_evidence_path", "canary_evidence_sha256"], "properties": { "canonical_request_path": { "$ref": "#/$defs/id" }, "canonical_request_sha256": { "$ref": "#/$defs/sha256" }, "raw_response_path": { "$ref": "#/$defs/id" }, "raw_response_sha256": { "$ref": "#/$defs/sha256" }, "response_headers_path": { "$ref": "#/$defs/id" }, "response_headers_sha256": { "$ref": "#/$defs/sha256" }, "native_trace_path": { "$ref": "#/$defs/id" }, "native_trace_sha256": { "$ref": "#/$defs/sha256" }, "canary_evidence_path": { "$ref": "#/$defs/id" }, "canary_evidence_sha256": { "$ref": "#/$defs/sha256" } } },
+    "persistence": { "type": "object", "additionalProperties": false, "required": ["authorization_id", "operation_id", "attempt_id", "request_id", "reservation_id", "dispatch_fence_id", "response_id", "usage_entry_id", "settlement_id", "replay_edge_id", "raw_response_sha256", "response_headers_sha256", "unresolved_hold", "retry_permitted"], "properties": { "authorization_id": { "$ref": "#/$defs/id" }, "operation_id": { "$ref": "#/$defs/id" }, "attempt_id": { "$ref": "#/$defs/id" }, "request_id": { "$ref": "#/$defs/id" }, "reservation_id": { "$ref": "#/$defs/id" }, "dispatch_fence_id": { "$ref": "#/$defs/id" }, "response_id": { "$ref": "#/$defs/id" }, "usage_entry_id": { "$ref": "#/$defs/id" }, "settlement_id": { "$ref": "#/$defs/id" }, "replay_edge_id": { "$ref": "#/$defs/id" }, "raw_response_sha256": { "$ref": "#/$defs/sha256" }, "response_headers_sha256": { "$ref": "#/$defs/sha256" }, "unresolved_hold": { "const": false }, "retry_permitted": { "const": false } } },
+    "validationPackage": { "type": "object", "additionalProperties": false, "required": ["package_id", "manifest_path", "manifest_sha256", "product_input_path", "product_input_bytes", "product_input_sha256", "predecessor_manifest_path", "predecessor_manifest_bytes", "predecessor_manifest_sha256", "oracle_path", "oracle_sha256", "deterministic_oracle_result_sha256", "semantic_use"], "properties": { "package_id": { "$ref": "#/$defs/id" }, "manifest_path": { "$ref": "#/$defs/id" }, "manifest_sha256": { "$ref": "#/$defs/sha256" }, "product_input_path": { "$ref": "#/$defs/id" }, "product_input_bytes": { "type": "integer", "minimum": 1, "maximum": 262144 }, "product_input_sha256": { "$ref": "#/$defs/sha256" }, "predecessor_manifest_path": { "$ref": "#/$defs/id" }, "predecessor_manifest_bytes": { "type": "integer", "minimum": 1, "maximum": 262144 }, "predecessor_manifest_sha256": { "$ref": "#/$defs/sha256" }, "oracle_path": { "$ref": "#/$defs/id" }, "oracle_sha256": { "$ref": "#/$defs/sha256" }, "deterministic_oracle_result_sha256": { "$ref": "#/$defs/sha256" }, "semantic_use": { "type": "boolean" } } },
+    "semanticValidation": { "type": "object", "additionalProperties": false, "required": ["validation_id", "disposition", "proposal_count", "admission_count", "result_sha256", "source_acquisition_id", "source_admission_id", "admitted_artifact_id", "source_application_link_id", "evidence_application_link_id", "candidate_id", "hypothesis_id"], "properties": { "validation_id": { "$ref": "#/$defs/id" }, "disposition": { "enum": ["not-applicable", "accepted", "accepted-conditional", "accepted-conditional-applicability"] }, "proposal_count": { "type": "integer", "minimum": 0, "maximum": 64 }, "admission_count": { "type": "integer", "minimum": 0, "maximum": 64 }, "result_sha256": { "$ref": "#/$defs/sha256" }, "source_acquisition_id": { "type": "string", "maxLength": 256 }, "source_admission_id": { "type": "string", "maxLength": 256 }, "admitted_artifact_id": { "type": "string", "maxLength": 256 }, "source_application_link_id": { "type": "string", "maxLength": 256 }, "evidence_application_link_id": { "type": "string", "maxLength": 256 }, "candidate_id": { "type": "string", "maxLength": 256 }, "hypothesis_id": { "type": "string", "maxLength": 256 } } }
+  }
+}

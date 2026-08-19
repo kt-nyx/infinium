@@ -710,6 +710,28 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         "94cb5c77b906100c6c436ddbb889f7511b2f4c1cea0c60556651c97b7020414d";
     private const string ExpectedCleanupRecoveryEvidenceSha256 =
         "d65cefe9c2a71231c8fd9a6c4105f26acd742f49af248f38be989b059a93a515";
+    private const string ProductionEnrollmentV4 =
+        "infinium.repository.wp9-production-profile-authorization/4.0.0";
+    private static readonly HashSet<string> RetiredProductionManifestIds = new(StringComparer.Ordinal)
+    {
+        "infinium.m1-s6.wp9.production-profile-authorization/09b8e309-ead8-441e-8307-5a4a1a2c43d5",
+        "infinium.m1-s6.wp9.production-profile-authorization/52b2cfdb-ccd4-49c0-8f6a-ace8c426012e",
+    };
+    private static readonly HashSet<string> RetiredProductionProfileIds = new(StringComparer.Ordinal)
+    {
+        "openai-platform-c2f213dbc4d9461c9fa8485050ab324d",
+        "openai-platform-ecd3de4b9fac443593347905970d942d",
+    };
+    private static readonly HashSet<string> RetiredProductionGenerationIds = new(StringComparer.Ordinal)
+    {
+        "g-cb0c3748ef2b4745b97a9311c89f2b65",
+        "g-6eefeaf6e4a74273bf4ee69f02449f47",
+    };
+    private static readonly HashSet<string> RetiredProductionTargetFingerprints = new(StringComparer.Ordinal)
+    {
+        "7c4683448a864da4b7cb96a07cf13db93cff9b1a1eb22ed013250a2975a9c071",
+        "990e46a57687417a1a1865bab3b11823f3b37d35961fb8101e32a8977e2a4b67",
+    };
     private WindowsCredentialFault fault;
     private int writeCount;
     private int readCount;
@@ -882,6 +904,7 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
             JsonElement root = document.RootElement;
             JsonElement profile = root.GetProperty("profile");
             JsonElement boundary = root.GetProperty("native_boundary");
+            string manifestId = root.GetProperty("manifest_id").GetString()!;
             NativeTarget target = new(
                 "production-enrollment",
                 profile.GetProperty("access_profile_id").GetString()!,
@@ -898,21 +921,22 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
             string[] collisionResults = boundary.GetProperty("exact_collision_results").EnumerateArray()
                 .Select(item => item.GetString()!).ToArray();
             JsonElement maxima = boundary.GetProperty("maximum_calls");
-            if (root.GetProperty("schema_identity").GetString()
-                    != "infinium.repository.wp9-production-profile-authorization/2.0.0"
-                || root.GetProperty("manifest_id").GetString() != expectedManifestId
+            if (root.GetProperty("schema_identity").GetString() != ProductionEnrollmentV4
+                || manifestId != expectedManifestId
+                || IsRetiredProductionIdentity(manifestId, target.AccessProfileId,
+                    target.GenerationId, target.TargetFingerprintSha256)
                 || root.GetProperty("packet_kind").GetString() != "EnrollOrVerifyProfile"
                 || root.GetProperty("status").GetString() != "ready-for-owner-acceptance"
-                || root.GetProperty("expires_at_utc").GetString() != "2026-08-31T23:00:00.0000000Z"
                 || root.GetProperty("effect_authority").GetString()
                     != "none-until-owner-accepts-exact-manifest-bytes"
                 || profile.GetProperty("mode").GetString() != "new-only"
-                || profile.GetProperty("access_profile_id").GetString()
-                    != "openai-platform-c2f213dbc4d9461c9fa8485050ab324d"
-                || profile.GetProperty("generation_id").GetString()
-                    != "g-cb0c3748ef2b4745b97a9311c89f2b65"
-                || profile.GetProperty("target_fingerprint_sha256").GetString()
-                    != "7c4683448a864da4b7cb96a07cf13db93cff9b1a1eb22ed013250a2975a9c071"
+                || profile.GetProperty("generation_ordinal").GetInt32() != 1
+                || profile.GetProperty("revocation_epoch").GetInt32() != 0
+                || profile.GetProperty("target_derivation").GetString()
+                    != "Infinium:<access_profile_id>:<generation_id>"
+                || profile.GetProperty("target_encoding").GetString() != "utf-8"
+                || profile.GetProperty("preflight_requirement").GetString()
+                    != "exact-CredReadW-ERROR_NOT_FOUND-or-stop-no-write"
                 || target.TargetFingerprintSha256 != actualFingerprint
                 || !callOrder.SequenceEqual(["CredReadW", "CredWriteW", "CredReadW", "CredFree"])
                 || !results.SequenceEqual(["ERROR_NOT_FOUND", "success", "success", "released"])
@@ -923,8 +947,13 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 || maxima.GetProperty("CredDeleteW").GetInt32() != 0
                 || maxima.GetProperty("CredFree").GetInt32() != 1
                 || maxima.GetProperty("total").GetInt32() != 4
-                || !root.GetProperty("m1_entry_surface").GetProperty("paste_permitted").GetBoolean()
-                || root.GetProperty("m1_entry_surface").GetProperty("renderer_receives_or_retains_secret").GetBoolean()
+                || boundary.GetProperty("enumeration").GetString() != "prohibited"
+                || boundary.GetProperty("fallback").GetString() != "none"
+                || boundary.GetProperty("overwrite").GetString() != "prohibited"
+                || boundary.GetProperty("delete").GetString() != "not-authorized"
+                || !ValidProductionEnrollmentWindow(root)
+                || !ValidProductionEntrySurface(root.GetProperty("m1_entry_surface"))
+                || root.GetProperty("provider_intent").GetProperty("provider").GetString() != "openai"
                 || root.GetProperty("provider_intent").GetProperty("provider_request_permitted").GetBoolean())
             {
                 throw new InvalidDataException("The production enrollment manifest does not preserve its exact finite authority.");
@@ -942,6 +971,41 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
             throw new InvalidDataException("The production enrollment manifest structure is invalid.", exception);
         }
     }
+
+    internal static bool IsRetiredProductionIdentity(
+        string manifestId,
+        string profileId,
+        string generationId,
+        string targetFingerprintSha256) =>
+        RetiredProductionManifestIds.Contains(manifestId)
+        || RetiredProductionProfileIds.Contains(profileId)
+        || RetiredProductionGenerationIds.Contains(generationId)
+        || RetiredProductionTargetFingerprints.Contains(targetFingerprintSha256);
+
+    private static bool ValidProductionEnrollmentWindow(JsonElement root)
+    {
+        if (!DateTimeOffset.TryParseExact(root.GetProperty("prepared_at_utc").GetString(), "O",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind, out DateTimeOffset prepared)
+            || !DateTimeOffset.TryParseExact(root.GetProperty("expires_at_utc").GetString(), "O",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind, out DateTimeOffset expires))
+        {
+            return false;
+        }
+        return prepared.Offset == TimeSpan.Zero && expires.Offset == TimeSpan.Zero && prepared < expires;
+    }
+
+    private static bool ValidProductionEntrySurface(JsonElement surface) =>
+        surface.GetProperty("owner").GetString() == "one-shot-credential-helper"
+        && surface.GetProperty("presentation").GetString() == "direct-helper-owned-native-modal"
+        && surface.GetProperty("masked").GetBoolean()
+        && surface.GetProperty("paste_permitted").GetBoolean()
+        && !surface.GetProperty("renderer_receives_or_retains_secret").GetBoolean()
+        && surface.GetProperty("readiness_deadline_seconds").GetInt32() == 10
+        && surface.GetProperty("response_deadline_seconds").GetInt32() == 600
+        && surface.GetProperty("input_bound").GetString()
+            == "live-character-length-1-through-2560-and-utf8-byte-length-1-through-2560-no-truncation";
 
     internal static WindowsCredentialManagerStore FromRecoveryManifest(JsonElement manifestRoot)
     {

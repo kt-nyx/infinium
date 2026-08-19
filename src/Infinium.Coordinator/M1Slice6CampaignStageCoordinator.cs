@@ -1663,7 +1663,8 @@ internal static class M1Slice6CampaignStageRunner
             stageManifestRoot.GetProperty("schema_identity").GetString() switch
             {
                 M1Slice6AuthorityContracts.StageV2 => M1Slice6AuthorityContractVersion.RetiredV2,
-                M1Slice6AuthorityContracts.StageV3 => M1Slice6AuthorityContractVersion.FreshC2V3,
+                M1Slice6AuthorityContracts.StageV3 => M1Slice6AuthorityContractVersion.RetiredC2V3,
+                M1Slice6AuthorityContracts.StageV4 => M1Slice6AuthorityContractVersion.FreshC2V4,
                 _ => throw new InvalidDataException("Campaign stage evidence references an unsupported request authority."),
             };
         string expectedEvidenceSchema = M1Slice6AuthorityContracts.StageEvidenceSchema(stageContractVersion);

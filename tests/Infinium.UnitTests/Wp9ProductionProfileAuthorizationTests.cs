@@ -100,6 +100,127 @@ public sealed class Wp9ProductionProfileAuthorizationTests
     }
 
     [TestMethod]
+    public void CompiledHelperAdmitsFreshV4AndRejectsRetiredV2AndV3BeforeUiOrNativeCalls()
+    {
+        string root = RepositoryRoot();
+        string slice = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6");
+        string temporary = Path.Combine(Path.GetTempPath(),
+            "infinium-c1-2-helper-contract-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(temporary);
+        try
+        {
+            JsonObject fresh = JsonNode.Parse(File.ReadAllText(Path.Combine(
+                slice, "wp9-production-profile-authorization.v3.json")))!.AsObject();
+            const string manifestId =
+                "infinium.m1-s6.wp9.production-profile-authorization/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+            const string profileId = "openai-platform-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+            const string generationId = "g-cccccccccccc4ccc8ccccccccccccccc";
+            string target = $"Infinium:{profileId}:{generationId}";
+            string fingerprint = Convert.ToHexStringLower(
+                System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(target)));
+            fresh["schema_identity"] = "infinium.repository.wp9-production-profile-authorization/4.0.0";
+            fresh["manifest_id"] = manifestId;
+            fresh["prepared_at_utc"] = "2026-08-19T18:00:00.0000000Z";
+            fresh["expires_at_utc"] = "2026-09-15T23:00:00.0000000Z";
+            fresh["profile"]!["access_profile_id"] = profileId;
+            fresh["profile"]!["generation_id"] = generationId;
+            fresh["profile"]!["target_fingerprint_sha256"] = fingerprint;
+            byte[] freshBytes = JsonSerializer.SerializeToUtf8Bytes(fresh);
+            string freshPath = Path.Combine(temporary, "fresh-v4.json");
+            File.WriteAllBytes(freshPath, freshBytes);
+            string freshSha = Convert.ToHexStringLower(
+                System.Security.Cryptography.SHA256.HashData(freshBytes));
+
+            using (WindowsCredentialManagerStore store =
+                WindowsCredentialManagerStore.FromProductionEnrollmentManifest(
+                    freshPath, freshSha, manifestId))
+            {
+                Assert.IsTrue(store.IsProductionEnrollment);
+                Assert.AreEqual(0, store.CallTrace.Count,
+                    "Manifest admission must not perform a native credential operation.");
+            }
+
+            JsonObject retiredV2 = fresh.DeepClone().AsObject();
+            retiredV2["schema_identity"] = "infinium.repository.wp9-production-profile-authorization/2.0.0";
+            retiredV2["manifest_id"] =
+                "infinium.m1-s6.wp9.production-profile-authorization/09b8e309-ead8-441e-8307-5a4a1a2c43d5";
+            string retiredV2Path = Path.Combine(temporary, "retired-v2.json");
+            File.WriteAllText(retiredV2Path, retiredV2.ToJsonString());
+            foreach (string retiredPath in new[]
+            {
+                retiredV2Path,
+                Path.Combine(slice, "wp9-production-profile-authorization.v3.json"),
+            })
+            {
+                byte[] retiredBytes = File.ReadAllBytes(retiredPath);
+                using JsonDocument retired = JsonDocument.Parse(retiredBytes);
+                string retiredId = retired.RootElement.GetProperty("manifest_id").GetString()!;
+                string retiredSha = Convert.ToHexStringLower(
+                    System.Security.Cryptography.SHA256.HashData(retiredBytes));
+                Assert.ThrowsExactly<InvalidDataException>(() =>
+                    WindowsCredentialManagerStore.FromProductionEnrollmentManifest(
+                        retiredPath, retiredSha, retiredId), Path.GetFileName(retiredPath));
+            }
+
+            (string Name, string Property, string Value)[] retiredIdentityCases =
+            [
+                ("v2-manifest", "manifest_id",
+                    "infinium.m1-s6.wp9.production-profile-authorization/09b8e309-ead8-441e-8307-5a4a1a2c43d5"),
+                ("v3-manifest", "manifest_id",
+                    "infinium.m1-s6.wp9.production-profile-authorization/52b2cfdb-ccd4-49c0-8f6a-ace8c426012e"),
+                ("v2-profile", "access_profile_id", "openai-platform-c2f213dbc4d9461c9fa8485050ab324d"),
+                ("v3-profile", "access_profile_id", "openai-platform-ecd3de4b9fac443593347905970d942d"),
+                ("v2-generation", "generation_id", "g-cb0c3748ef2b4745b97a9311c89f2b65"),
+                ("v3-generation", "generation_id", "g-6eefeaf6e4a74273bf4ee69f02449f47"),
+                ("v2-fingerprint", "target_fingerprint_sha256",
+                    "7c4683448a864da4b7cb96a07cf13db93cff9b1a1eb22ed013250a2975a9c071"),
+                ("v3-fingerprint", "target_fingerprint_sha256",
+                    "990e46a57687417a1a1865bab3b11823f3b37d35961fb8101e32a8977e2a4b67"),
+            ];
+            foreach ((string _, string property, string value) in retiredIdentityCases)
+            {
+                Assert.IsTrue(WindowsCredentialManagerStore.IsRetiredProductionIdentity(
+                    property == "manifest_id" ? value : manifestId,
+                    property == "access_profile_id" ? value : profileId,
+                    property == "generation_id" ? value : generationId,
+                    property == "target_fingerprint_sha256" ? value : fingerprint), property);
+            }
+            foreach ((string name, string property, string value) in retiredIdentityCases)
+            {
+                JsonObject smuggled = fresh.DeepClone().AsObject();
+                if (property == "manifest_id")
+                {
+                    smuggled[property] = value;
+                }
+                else
+                {
+                    smuggled["profile"]![property] = value;
+                }
+                string smuggledPath = Path.Combine(temporary, name + ".json");
+                byte[] smuggledBytes = JsonSerializer.SerializeToUtf8Bytes(smuggled);
+                File.WriteAllBytes(smuggledPath, smuggledBytes);
+                string smuggledSha = Convert.ToHexStringLower(
+                    System.Security.Cryptography.SHA256.HashData(smuggledBytes));
+                string smuggledManifestId = smuggled["manifest_id"]!.GetValue<string>();
+                Assert.ThrowsExactly<InvalidDataException>(() =>
+                    WindowsCredentialManagerStore.FromProductionEnrollmentManifest(
+                        smuggledPath, smuggledSha, smuggledManifestId), name);
+            }
+
+            string program = File.ReadAllText(Path.Combine(root, "src", "Infinium.CredentialHelper", "Program.cs"));
+            int validation = program.IndexOf("FromProductionEnrollmentManifest(", StringComparison.Ordinal);
+            int containment = program.IndexOf("productionDescendant = Process.Start", validation, StringComparison.Ordinal);
+            int uiSource = program.IndexOf("productionSecretSource = new();", validation, StringComparison.Ordinal);
+            Assert.IsTrue(validation >= 0 && containment > validation && uiSource > containment,
+                "The compiled helper must reject a manifest before containment, UI, or native-store execution.");
+        }
+        finally
+        {
+            Directory.Delete(temporary, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void HiddenNativeMessagePumpExercisesActionDrainDesktopOwnershipBufferAndDestroyCleanup()
     {
         if (!OperatingSystem.IsWindows()) { Assert.Inconclusive("Windows message-pump evidence is required."); }

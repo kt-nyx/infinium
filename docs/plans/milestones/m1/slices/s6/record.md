@@ -8961,3 +8961,53 @@ materializes no runtime authority, request, durable state, lock, latch,
 credential, provider call, or evidence and does not accept itself.
 Its typed package SHA-256 is
 `10b1704591f36a85a6e680b13f28744ad5e81b786efad9aca276ce791b169b9c`.
+
+## Terminal C2A pre-UI helper rejection and C1.2 correction start — 2026-08-19
+
+The owner accepted exact C2 package commit
+`926d6a49a37b6c465cb706cdebbfbf8b98b32c61` and package SHA-256
+`10b1704591f36a85a6e680b13f28744ad5e81b786efad9aca276ce791b169b9c`.
+The exact credential runtime authority passed independent byte review and the
+non-effectful campaign admission probe. One helper process then launched and
+returned typed failure exit 72 at `manifest-validation` before the containment
+descendant, manual dialog, secret source, or native store existed.
+
+The retained evidence proves `ManualUiAttempted=false`, an empty native call
+trace, `CredWriteW=0`, `CredReadW=0`, `CredDeleteW=0`, `CredFree=0`, DNS and
+network operations 0, provider requests 0, billable operations 0, no possible-
+start latch, no surviving helper process, and no API-key request, entry, read,
+or storage. The exact retained digests are:
+
+- enrollment evidence
+  `67f7bfdd9d58c573dd3a74241c27094c26117c7360d811d0398ed22fd56b0f30`;
+- typed failure
+  `6ce57d23e9774b3dd8b6a4424634d8e787829d4f76caed69682a808e1e06578f`;
+- human summary
+  `a560e013d631e101530f54017b5e80c630ac380c925cd12cc3603b0214b59155`;
+  and
+- five-event hash-chained ledger
+  `4bb66c972b9ad29677161846aa1d1c3806447d9f12a424edae6f8b267a374dd0`,
+  whose terminal event hash is
+  `bb23edb886b68a90b2bb74f74e9b77cb021232e2d5b2633b33f62c82e3a576d8`.
+
+The ledger conservatively terminalized the campaign, so its campaign,
+credential, profile, generation, target, stage, runtime-authority, package,
+and decision identities cannot be retried, inherited, or reused. C2B-C2D were
+not materialized and hold no provider authority.
+
+Diagnosis found an incomplete C1.1 producer-consumer seam:
+`Wp9ProductionProfileEnrollmentRunner` admitted fresh v3 authority, while
+`WindowsCredentialManagerStore.FromProductionEnrollmentManifest` still
+hard-coded the obsolete v2 schema and retired profile/generation/target tuple.
+The helper therefore rejected the correct v3 manifest before UI or native
+execution. This is an ordinary offline implementation defect, not an API-key,
+account, billing, provider, or owner-entry failure.
+
+The owner authorized C1.2-style correction and fresh replacement-package
+preparation. The working correction introduces v4 authority consumers,
+explicit rejection of both dormant v2 and terminal v3 identities, compiled-
+helper pre-UI/native tests, and truthful known-zero failure classification.
+It grants no replacement runtime authority or external effect. The correction
+must complete focused checks, consolidated review, a new exact executable
+closure, official-document drift review, and one owner-ready replacement C2
+package before the next owner acceptance gate.

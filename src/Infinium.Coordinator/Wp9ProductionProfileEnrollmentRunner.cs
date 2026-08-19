@@ -133,7 +133,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         JsonElement root = evidence.RootElement;
         // Profile-enrollment evidence has its own contract-version axis. The accepted v2
         // evidence shape carries manifest IDs as data and is valid for either authority
-        // generation; only campaign/profile/stage authority needed the fresh v3 break.
+        // generation; only campaign/profile/stage authority needed the fresh v4 break.
         const string evidenceSchema = "infinium.m1-s6.wp9.production-profile-enrollment-evidence/v2";
         const string evidenceId = "wp9-production-profile-enrollment-evidence-v2";
         string[] exactProperties = ["schema", "status", "manifest_id", "manifest_sha256",
@@ -411,7 +411,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         if (root.GetProperty("status").GetString() != "ready-for-owner-acceptance"
             || profile.GetProperty("mode").GetString() != "new-only"
             || credentialVersion is not (M1Slice6AuthorityContractVersion.RetiredV2
-                or M1Slice6AuthorityContractVersion.FreshC2V3))
+                or M1Slice6AuthorityContractVersion.FreshC2V4))
         {
             throw new InvalidDataException("WP9 production enrollment requires the exact new-only accepted packet.");
         }
@@ -646,7 +646,8 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         M1Slice6AuthorityContractVersion credentialVersion = credentialManifest.GetProperty("schema_identity").GetString() switch
         {
             M1Slice6AuthorityContracts.CredentialV2 => M1Slice6AuthorityContractVersion.RetiredV2,
-            M1Slice6AuthorityContracts.CredentialV3 => M1Slice6AuthorityContractVersion.FreshC2V3,
+            M1Slice6AuthorityContracts.CredentialV3 => M1Slice6AuthorityContractVersion.RetiredC2V3,
+            M1Slice6AuthorityContracts.CredentialV4 => M1Slice6AuthorityContractVersion.FreshC2V4,
             _ => throw new InvalidDataException("Campaign credential authority version is unsupported."),
         };
         if (!string.Equals(Convert.ToHexStringLower(SHA256.HashData(bytes)), campaign.ManifestSha256,
@@ -1026,6 +1027,25 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             NativeHelperFailureEnvelope? retained = typedFailure?.Evidence;
             NativeHelperFailureContainmentEvidence? containment = typedFailure?.Containment
                 ?? (exception as CredentialNativeHelperEvidenceAmbiguityException)?.Containment;
+            bool knownZeroEffectPreUi = retained is
+            {
+                Stage: "manifest-validation",
+                ManualUiAttempted: false,
+                CallCountsKnown: true,
+                Total: 0,
+                NetworkFactsKnown: true,
+                ListenerCount: 0,
+                NetworkOperationCount: 0,
+                ExternalEffectFactsKnown: true,
+                DnsOperationCount: 0,
+                ProviderOperationCount: 0,
+                BillableOperationCount: 0,
+                ContainmentDescendantStarted: false,
+            }
+                && containment is { ProcessTreeTerminated: true, ProcessTreeSurvivorCount: 0 };
+            string retainedStatus = knownZeroEffectPreUi
+                ? "stopped-known-zero-effect-pre-ui"
+                : "stopped-ambiguous-effect";
             object? retainedTrace = retained?.NativeCallTraceJson is null
                 ? null : JsonSerializer.Deserialize<object>(retained.NativeCallTraceJson);
             object? retainedCanaries = retained?.CanaryEvidenceJson is null
@@ -1035,7 +1055,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             object failure = new
             {
                 schema = "infinium.m1-s6.wp9.production-profile-enrollment-failure/v2",
-                status = "stopped-ambiguous-effect",
+                status = retainedStatus,
                 failure_kind = exception.GetType().Name,
                 manifest_id = manifestId,
                 manifest_sha256 = manifestSha256,
@@ -1101,7 +1121,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             object main = new
             {
                 schema = "infinium.m1-s6.wp9.production-profile-enrollment-evidence/v2",
-                status = "stopped-ambiguous-effect",
+                status = retainedStatus,
                 manifest_id = manifestId,
                 manifest_sha256 = manifestSha256,
                 profile_id = profileId,
@@ -1134,11 +1154,13 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             if (!File.Exists(summaryPath))
             {
                 File.WriteAllText(summaryPath,
-                    "WP9 production profile enrollment\nstatus=stopped-ambiguous-effect\n"
+                    $"WP9 production profile enrollment\nstatus={retainedStatus}\n"
                     + $"profile_id={profileId}\ngeneration_id={generationId}\n"
                     + $"target_fingerprint_sha256={fingerprint}\n"
                     + $"lifecycle_state={durableState}\nverification_state=unavailable\n"
-                    + "native_calls=unknown\nnetwork_operations=unknown\nprovider_operations=0\n"
+                    + $"native_calls={(retained?.CallCountsKnown == true ? retained.Total.ToString(System.Globalization.CultureInfo.InvariantCulture) : "unknown")}\n"
+                    + $"network_operations={(retained?.NetworkFactsKnown == true ? retained.NetworkOperationCount.ToString(System.Globalization.CultureInfo.InvariantCulture) : "unknown")}\n"
+                    + "provider_operations=0\n"
                     + "billable_operations=0\nretry_attempted=false\nrecovery_required=true\n"
                     + "qualification_request_authority=none\n", new UTF8Encoding(false));
             }

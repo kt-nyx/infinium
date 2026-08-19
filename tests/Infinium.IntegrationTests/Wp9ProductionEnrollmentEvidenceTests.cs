@@ -407,6 +407,55 @@ public sealed class Wp9ProductionEnrollmentEvidenceTests
         finally { Directory.Delete(output, recursive: true); }
     }
 
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    public void PreUiManifestFailureRetainsKnownZeroEffectClassificationAndCounts()
+    {
+        string root = RepositoryRoot();
+        string manifest = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp9-production-profile-authorization.v3.json");
+        string output = Path.Combine(Path.GetTempPath(), "infinium-wp9-pre-ui-zero-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(output);
+        try
+        {
+            NativeHelperFailureEnvelope envelope = new(
+                "manifest-validation", "manifest-rejected", true, 0, 0, 0, 0, 0,
+                true, 0, 0, true, 0, 0, 0, "[]", null, null,
+                false, false, 0, false, null);
+            CredentialNativeHelperFailureException failure = new(
+                envelope, "wp9-production-profile/enroll-and-verify");
+            failure.AttachContainment(new(41, 72, 1, 1, 0, true));
+
+            Wp9ProductionProfileEnrollmentRunner.RetainAmbiguousFailure(
+                output, manifest, new string('a', 64), failure, "recovery-required");
+
+            foreach (string file in new[]
+            {
+                "profile-enrollment-failure.json",
+                "profile-enrollment-evidence.json",
+            })
+            {
+                using JsonDocument retained = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(output, file)));
+                Assert.AreEqual("stopped-known-zero-effect-pre-ui",
+                    retained.RootElement.GetProperty("status").GetString(), file);
+                Assert.AreEqual(0,
+                    retained.RootElement.GetProperty("native_credential_operation_count").GetInt32(), file);
+                Assert.AreEqual(0,
+                    retained.RootElement.GetProperty("network_operation_count").GetInt32(), file);
+                Assert.AreEqual(0,
+                    retained.RootElement.GetProperty("provider_operation_count").GetInt32(), file);
+                Assert.AreEqual(0,
+                    retained.RootElement.GetProperty("billable_operation_count").GetInt32(), file);
+            }
+            string summary = File.ReadAllText(Path.Combine(output, "profile-enrollment-summary.txt"));
+            StringAssert.Contains(summary, "status=stopped-known-zero-effect-pre-ui");
+            StringAssert.Contains(summary, "native_calls=0");
+            StringAssert.Contains(summary, "network_operations=0");
+        }
+        finally { Directory.Delete(output, recursive: true); }
+    }
+
     private static HelperProcessReceipt Receipt(
         HelperOutcomeV2 outcome,
         CredentialNativeCallTraceEntry[] trace,

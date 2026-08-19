@@ -70,6 +70,22 @@ package's sequential predecessor-gated C2 path; it does not itself create a
 runtime authority, stage request, durable admission, profile, safety latch, or
 effect evidence.
 
+The resulting C2A attempt reached exactly one helper launch, then stopped at
+helper-side `manifest-validation` before the credential dialog, secret entry,
+containment descendant, or native store creation. Typed evidence proves zero
+credential-manager, DNS, network, provider, and billable operations. The
+campaign ledger is terminal, and every v3 campaign, credential, profile,
+generation, target, stage, runtime-authority, package, and decision identity
+from that attempt is reserved historical state that cannot be retried or
+reused. C2B-C2D did not open.
+
+The owner authorized ordinary offline C1.2 correction and preparation/review
+of a wholly fresh replacement package. The active correction introduces a v4
+helper/coordinator authority seam, explicit v2/v3 retirement rejection,
+compiled-helper coverage before UI/native execution, and truthful known-zero
+failure summaries. No replacement effect authority exists until the exact
+new package receives separate owner acceptance.
+
 ## Lean continuation
 
 The remaining accepted R3-R7 obligations are preserved through three outcome
@@ -101,13 +117,13 @@ destructive action, push, or later-slice implementation.
 
 The old dormant campaign and credential authorization IDs named in the lean
 continuation plan are retired without execution and cannot be inherited or
-reused. The fresh C2 package now binds new exact IDs, C1.1 binaries, paths,
+reused. The terminal C2 package bound its exact IDs, C1.1 binaries, paths,
 expiries, ceilings, official-profile/capability/price evidence, sequencing, and
-inert derivation rules. The exact owner acceptance is recorded separately from
-the immutable package. Before the C2A helper can run, the credential runtime
-authority must still be derived, independently reviewed, digest-bound, durably
-admitted, and pass its immediate pre-effect checks. Nothing ran automatically
-on acceptance.
+inert derivation rules. Its one helper launch is now terminal historical
+evidence. Replacement v4 identities are working-candidate inputs only and do
+not grant authority. Before any later C2A helper can run, a fresh exact package
+must be committed, independently reviewed, and separately owner-accepted;
+only then may a new credential runtime authority be derived and reviewed.
 
 Runtime effect authority comes from a closed typed manifest and durable
 coordinator state, never Git history, current HEAD, commit subjects, log order,
