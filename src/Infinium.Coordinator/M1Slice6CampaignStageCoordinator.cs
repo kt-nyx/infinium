@@ -15,6 +15,7 @@ using Microsoft.Data.Sqlite;
 namespace Infinium.Coordinator;
 
 public sealed record M1Slice6CampaignStageAuthority(
+    M1Slice6AuthorityContractVersion ContractVersion,
     string ManifestId, string ManifestSha256, M1Slice6CampaignStage Stage,
     string WorkPackage, ProviderOperationKind Operation, string ReviewCandidateCommit,
     string PredecessorEvidenceId, string PredecessorEvidenceSha256,
@@ -423,16 +424,13 @@ public static class M1Slice6CampaignStageManifestValidator
         byte[] bytes = File.ReadAllBytes(manifestPath);
         string sha = Convert.ToHexStringLower(SHA256.HashData(bytes));
         if (sha != expectedSha256) { throw new InvalidDataException("The stage manifest bytes are stale."); }
+        M1Slice6AuthorityContractVersion contractVersion = M1Slice6AuthorityContracts.Validate(
+            manifestPath, bytes, M1Slice6AuthorityDocumentKind.StageRequest);
         using JsonDocument document = JsonDocument.Parse(bytes);
         JsonElement root = document.RootElement;
         Exact(root, "schema_identity", "manifest_id", "status", "candidate_binding", "campaign_binding",
             "stage", "predecessor_evidence", "canonical_request", "transport", "limits",
             "safety_identifier", "validation_package", "execution");
-        if (root.GetProperty("schema_identity").GetString()
-                != "infinium.repository.m1-slice6-campaign-stage-request/2.0.0")
-        {
-            throw new InvalidDataException("The stage manifest schema identity is stale.");
-        }
         string status = root.GetProperty("status").GetString()!;
         if (requireAdmitted ? status != "reviewed-and-admitted"
             : status is not ("verification-pending" or "ready-for-independent-review"))
@@ -711,9 +709,11 @@ public static class M1Slice6CampaignStageManifestValidator
             ProviderEffectRuntimeAuthorityLoader.ValidateDurableBinding(runtimeAuthority, identity,
                 ledger.Current, expectedKind, root.GetProperty("manifest_id").GetString()!, sha,
                 requireExternalEffect: runtimeAuthorityRequiresExternalEffect);
+            M1Slice6AuthorityContracts.RequireFreshExternalEffect(runtimeAuthority, contractVersion,
+                contractVersion, identity.CampaignId, identity.CredentialManifestId);
             reviewed = runtimeAuthority.ImplementationCommit;
         }
-        return new(root.GetProperty("manifest_id").GetString()!, sha, stage, workPackage, operation,
+        return new(contractVersion, root.GetProperty("manifest_id").GetString()!, sha, stage, workPackage, operation,
             reviewed, predecessor.GetProperty("evidence_id").GetString()!,
             predecessor.GetProperty("evidence_sha256").GetString()!, requestPath, requestSha,
             canonical, provedInput, exactLimits, projection, packageId,
@@ -1328,7 +1328,7 @@ public sealed class M1Slice6CampaignStageCoordinator
             WriteNew(canaryPath, result.CanaryEvidenceBytes);
             object evidence = new
             {
-                schema = "infinium.m1-s6.campaign-stage-evidence/v2",
+                schema = M1Slice6AuthorityContracts.StageEvidenceSchema(authority.ContractVersion),
                 status = "independent-review-pending",
                 campaign_id = ledger.Current.Identity.CampaignId,
                 campaign_manifest_sha256 = ledger.Current.Identity.CampaignManifestSha256,
@@ -1535,12 +1535,10 @@ internal static class M1Slice6CampaignStageRunner
         byte[] campaignBytes = File.ReadAllBytes(Path.GetFullPath(campaignManifestPath));
         byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
         string repository = M1Slice6CampaignStageManifestValidator.FindRepositoryRoot(campaignManifestPath);
-        ActiveRepositoryJsonSchemaValidator.Validate(campaignBytes, File.ReadAllBytes(Path.Combine(repository,
-            "contracts", "repository", "m1-slice6-finite-campaign-authorization.v2.schema.json")),
-            "m1-slice6-finite-campaign-authorization.v2.schema.json");
-        ActiveRepositoryJsonSchemaValidator.Validate(credentialBytes, File.ReadAllBytes(Path.Combine(repository,
-            "contracts", "repository", "wp9-production-profile-authorization.v2.schema.json")),
-            "wp9-production-profile-authorization.v2.schema.json");
+        M1Slice6AuthorityContractVersion campaignVersion = M1Slice6AuthorityContracts.Validate(
+            campaignManifestPath, campaignBytes, M1Slice6AuthorityDocumentKind.Campaign);
+        M1Slice6AuthorityContractVersion credentialVersion = M1Slice6AuthorityContracts.Validate(
+            credentialManifestPath, credentialBytes, M1Slice6AuthorityDocumentKind.CredentialProfile);
         using JsonDocument campaign = JsonDocument.Parse(campaignBytes);
         using JsonDocument credential = JsonDocument.Parse(credentialBytes);
         JsonElement campaignRoot = campaign.RootElement;
@@ -1567,6 +1565,9 @@ internal static class M1Slice6CampaignStageRunner
             campaignExpiry, credentialExpiry, DateTimeOffset.UtcNow);
         ProviderEffectRuntimeAuthority runtimeAuthority = ProviderEffectRuntimeAuthorityLoader.LoadAndValidate(
             runtimeAuthorityManifestPath, runtimeAuthorityManifestSha256, DateTimeOffset.UtcNow);
+        M1Slice6AuthorityContracts.RequireFreshExternalEffect(runtimeAuthority, campaignVersion,
+            credentialVersion, campaignRoot.GetProperty("campaign_id").GetString()!,
+            credentialRoot.GetProperty("manifest_id").GetString()!);
         string coordinatorBinary = Environment.ProcessPath
             ?? throw new InvalidOperationException("The executing coordinator binary path is unavailable.");
         string coordinatorSha256 = Convert.ToHexStringLower(
@@ -1658,6 +1659,14 @@ internal static class M1Slice6CampaignStageRunner
         byte[] stageManifestBytes = File.ReadAllBytes(Path.GetFullPath(stageManifestPath));
         using JsonDocument stageManifest = JsonDocument.Parse(stageManifestBytes);
         JsonElement stageManifestRoot = stageManifest.RootElement;
+        M1Slice6AuthorityContractVersion stageContractVersion =
+            stageManifestRoot.GetProperty("schema_identity").GetString() switch
+            {
+                M1Slice6AuthorityContracts.StageV2 => M1Slice6AuthorityContractVersion.RetiredV2,
+                M1Slice6AuthorityContracts.StageV3 => M1Slice6AuthorityContractVersion.FreshC2V3,
+                _ => throw new InvalidDataException("Campaign stage evidence references an unsupported request authority."),
+            };
+        string expectedEvidenceSchema = M1Slice6AuthorityContracts.StageEvidenceSchema(stageContractVersion);
         string stageManifestSha = Convert.ToHexStringLower(SHA256.HashData(stageManifestBytes));
         long observedInput = root.GetProperty("input_tokens").GetInt64();
         long observedOutput = root.GetProperty("output_tokens").GetInt64();
@@ -1675,7 +1684,7 @@ internal static class M1Slice6CampaignStageRunner
             ledger.Current.Identity.CredentialTargetFingerprintSha256);
         ValidateSemanticEvidence(root.GetProperty("validation_package"),
             root.GetProperty("semantic_validation"), stageManifestRoot.GetProperty("validation_package"), stage);
-        if (root.GetProperty("schema").GetString() != "infinium.m1-s6.campaign-stage-evidence/v2"
+        if (root.GetProperty("schema").GetString() != expectedEvidenceSchema
             || root.GetProperty("status").GetString() != "independent-review-pending"
             || root.GetProperty("campaign_id").GetString() != ledger.Current.Identity.CampaignId
             || root.GetProperty("campaign_manifest_sha256").GetString() != campaignManifestSha256
@@ -2058,6 +2067,9 @@ internal static class M1Slice6CampaignStageRunner
     {
         M1Slice6FiniteCampaignLedger ledger = OpenLedger(campaignManifestPath, campaignManifestSha256,
             campaignReviewedCandidate, credentialManifestPath, credentialManifestSha256, ledgerPath, now);
+        byte[] campaignAuthorityBytes = File.ReadAllBytes(Path.GetFullPath(campaignManifestPath));
+        M1Slice6AuthorityContractVersion campaignContractVersion = M1Slice6AuthorityContracts.Validate(
+            campaignManifestPath, campaignAuthorityBytes, M1Slice6AuthorityDocumentKind.Campaign);
         byte[] bytes = File.ReadAllBytes(Path.GetFullPath(composedEvidencePath));
         string sha = Convert.ToHexStringLower(SHA256.HashData(bytes));
         using JsonDocument composed = JsonDocument.Parse(bytes);
@@ -2072,7 +2084,7 @@ internal static class M1Slice6CampaignStageRunner
                 "cumulative_credential_calls",
                 "prohibited_effects", "fourth_call_observed"]);
         if (composedRoot.GetProperty("schema").GetString()
-                != "infinium.m1-s6.campaign-composed-evidence/v2"
+                != M1Slice6AuthorityContracts.ComposedEvidenceSchema(campaignContractVersion)
             || composedRoot.GetProperty("campaign_id").GetString() != ledger.Current.Identity.CampaignId
             || composedRoot.GetProperty("campaign_manifest_sha256").GetString() != campaignManifestSha256
             || composedRoot.GetProperty("credential_manifest_id").GetString()

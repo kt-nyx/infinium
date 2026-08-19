@@ -211,6 +211,7 @@ public sealed class M1Slice6CampaignRehearsalTests
                 "src/Infinium.Application/Provider/ProviderEffectRuntimeAuthorityLoader.cs",
                 "src/Infinium.Application/Provider/SourceClaimAcquisition.cs",
                 "src/Infinium.Coordinator/CandidateInvestigationCoordinator.cs",
+                "src/Infinium.Coordinator/M1Slice6AuthorityContractVersion.cs",
                 "src/Infinium.Coordinator/M1Slice6CampaignProviderAccounting.cs",
                 "src/Infinium.Coordinator/Program.cs",
                 "src/Infinium.Coordinator/M1Slice6CampaignSemanticAdmission.cs",

@@ -24,10 +24,10 @@ internal static class Wp9ProductionProfileEnrollmentRunner
     {
         byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
         byte[] campaignBytes = File.ReadAllBytes(Path.GetFullPath(campaignManifestPath));
-        ValidateV2AuthoritySchema(credentialManifestPath, credentialBytes,
-            "wp9-production-profile-authorization.v2.schema.json");
-        ValidateV2AuthoritySchema(campaignManifestPath, campaignBytes,
-            "m1-slice6-finite-campaign-authorization.v2.schema.json");
+        M1Slice6AuthorityContractVersion credentialVersion = M1Slice6AuthorityContracts.Validate(
+            credentialManifestPath, credentialBytes, M1Slice6AuthorityDocumentKind.CredentialProfile);
+        M1Slice6AuthorityContractVersion campaignVersion = M1Slice6AuthorityContracts.Validate(
+            campaignManifestPath, campaignBytes, M1Slice6AuthorityDocumentKind.Campaign);
         if (Convert.ToHexStringLower(SHA256.HashData(credentialBytes)) != credentialManifestSha256
             || Convert.ToHexStringLower(SHA256.HashData(campaignBytes)) != campaignManifestSha256)
         {
@@ -37,17 +37,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         using JsonDocument campaign = JsonDocument.Parse(campaignBytes);
         JsonElement profile = credential.RootElement.GetProperty("profile");
         JsonElement envelope = campaign.RootElement.GetProperty("credential_envelope");
-        if (credential.RootElement.GetProperty("schema_identity").GetString()
-                != "infinium.repository.wp9-production-profile-authorization/2.0.0"
-            || campaign.RootElement.GetProperty("schema_identity").GetString()
-                != "infinium.repository.m1-slice6-finite-campaign-authorization/2.0.0"
-            || campaign.RootElement.GetProperty("campaign_id").GetString()
-                != "infinium.m1-s6.finite-live-campaign/51b9dba6-aca3-41d7-82d1-afd805e33e66"
-            || credential.RootElement.GetProperty("expires_at_utc").GetString()
-                != "2026-08-31T23:00:00.0000000Z"
-            || campaign.RootElement.GetProperty("expires_at_utc").GetString()
-                != "2026-08-31T23:59:00.0000000Z"
-            || credential.RootElement.GetProperty("manifest_id").GetString() is not string manifestId
+        if (credential.RootElement.GetProperty("manifest_id").GetString() is not string manifestId
             || envelope.GetProperty("profile_id").GetString() != profile.GetProperty("access_profile_id").GetString()
             || envelope.GetProperty("generation_id").GetString() != profile.GetProperty("generation_id").GetString()
             || envelope.GetProperty("target_fingerprint_sha256").GetString()
@@ -67,6 +57,8 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             runtimeAuthorityManifestPath, runtimeAuthorityManifestSha256, DateTimeOffset.UtcNow);
         ProviderEffectRuntimeAuthorityLoader.RequireExternalEffect(runtimeAuthority,
             ProviderEffectAuthorityKind.CredentialEnrollment);
+        M1Slice6AuthorityContracts.RequireFreshExternalEffect(runtimeAuthority, campaignVersion,
+            credentialVersion, campaign.RootElement.GetProperty("campaign_id").GetString()!, manifestId);
         if (runtimeAuthority.SubjectManifestId != manifestId
             || runtimeAuthority.SubjectManifestSha256 != credentialManifestSha256
             || runtimeAuthority.CampaignId != campaign.RootElement.GetProperty("campaign_id").GetString()
@@ -83,8 +75,8 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         string runtimeAuthorityManifestSha256, DateTimeOffset now)
     {
         byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
-        ValidateV2AuthoritySchema(credentialManifestPath, credentialBytes,
-            "wp9-production-profile-authorization.v2.schema.json");
+        _ = M1Slice6AuthorityContracts.Validate(credentialManifestPath, credentialBytes,
+            M1Slice6AuthorityDocumentKind.CredentialProfile);
         if (Convert.ToHexStringLower(SHA256.HashData(credentialBytes)) != credentialManifestSha256)
         {
             throw new InvalidDataException("Campaign credential handoff admission has stale manifest bytes.");
@@ -116,8 +108,8 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         DateTimeOffset now)
     {
         byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
-        ValidateV2AuthoritySchema(credentialManifestPath, credentialBytes,
-            "wp9-production-profile-authorization.v2.schema.json");
+        _ = M1Slice6AuthorityContracts.Validate(
+            credentialManifestPath, credentialBytes, M1Slice6AuthorityDocumentKind.CredentialProfile);
         if (Convert.ToHexStringLower(SHA256.HashData(credentialBytes)) != credentialManifestSha256)
         {
             throw new InvalidDataException("Credential evidence acceptance has stale manifest bytes.");
@@ -139,13 +131,10 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         string evidenceSha = Convert.ToHexStringLower(SHA256.HashData(evidenceBytes));
         using JsonDocument evidence = JsonDocument.Parse(evidenceBytes);
         JsonElement root = evidence.RootElement;
-        if (credential.RootElement.GetProperty("schema_identity").GetString()
-            != "infinium.repository.wp9-production-profile-authorization/2.0.0")
-        {
-            throw new InvalidDataException("Campaign credential evidence accepts only the clean-break v2 profile authority.");
-        }
-        const string evidenceSchema =
-            "infinium.m1-s6.wp9.production-profile-enrollment-evidence/v2";
+        // Profile-enrollment evidence has its own contract-version axis. The accepted v2
+        // evidence shape carries manifest IDs as data and is valid for either authority
+        // generation; only campaign/profile/stage authority needed the fresh v3 break.
+        const string evidenceSchema = "infinium.m1-s6.wp9.production-profile-enrollment-evidence/v2";
         const string evidenceId = "wp9-production-profile-enrollment-evidence-v2";
         string[] exactProperties = ["schema", "status", "manifest_id", "manifest_sha256",
             "campaign_credential_handoff_event_hash", "profile_id", "generation_id",
@@ -409,8 +398,8 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         outputRoot = Path.GetFullPath(outputRoot);
         productRoot = Path.GetFullPath(productRoot);
         byte[] manifestBytes = File.ReadAllBytes(manifestPath);
-        ValidateV2AuthoritySchema(manifestPath, manifestBytes,
-            "wp9-production-profile-authorization.v2.schema.json");
+        M1Slice6AuthorityContractVersion credentialVersion = M1Slice6AuthorityContracts.Validate(
+            manifestPath, manifestBytes, M1Slice6AuthorityDocumentKind.CredentialProfile);
         if (!string.Equals(Convert.ToHexStringLower(SHA256.HashData(manifestBytes)), manifestSha256, StringComparison.Ordinal))
         {
             throw new InvalidDataException("WP9 production enrollment manifest bytes changed after authorization.");
@@ -419,10 +408,10 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         JsonElement root = document.RootElement;
         JsonElement profile = root.GetProperty("profile");
         JsonElement providerIntent = root.GetProperty("provider_intent");
-        if (root.GetProperty("schema_identity").GetString() != "infinium.repository.wp9-production-profile-authorization/2.0.0"
-            || root.GetProperty("status").GetString() != "ready-for-owner-acceptance"
+        if (root.GetProperty("status").GetString() != "ready-for-owner-acceptance"
             || profile.GetProperty("mode").GetString() != "new-only"
-            || root.GetProperty("expires_at_utc").GetString() != "2026-08-31T23:00:00.0000000Z")
+            || credentialVersion is not (M1Slice6AuthorityContractVersion.RetiredV2
+                or M1Slice6AuthorityContractVersion.FreshC2V3))
         {
             throw new InvalidDataException("WP9 production enrollment requires the exact new-only accepted packet.");
         }
@@ -454,6 +443,13 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         {
             ProviderEffectRuntimeAuthority runtimeAuthority = ProviderEffectRuntimeAuthorityLoader.LoadAndValidate(
                 campaign.RuntimeAuthorityManifestPath, campaign.RuntimeAuthorityManifestSha256, now);
+            byte[] campaignBytes = File.ReadAllBytes(Path.GetFullPath(campaign.ManifestPath));
+            M1Slice6AuthorityContractVersion campaignVersion = M1Slice6AuthorityContracts.Validate(
+                campaign.ManifestPath, campaignBytes, M1Slice6AuthorityDocumentKind.Campaign);
+            using JsonDocument campaignDocument = JsonDocument.Parse(campaignBytes);
+            M1Slice6AuthorityContracts.RequireFreshExternalEffect(runtimeAuthority, campaignVersion,
+                credentialVersion, campaignDocument.RootElement.GetProperty("campaign_id").GetString()!,
+                manifestId);
             string coordinatorBinary = Environment.ProcessPath
                 ?? throw new InvalidOperationException("The executing coordinator binary path is unavailable.");
             string coordinatorSha256 = Convert.ToHexStringLower(
@@ -645,8 +641,14 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         string campaignPath = Path.GetFullPath(campaign.ManifestPath);
         string ledgerPath = Path.GetFullPath(campaign.LedgerPath);
         byte[] bytes = File.ReadAllBytes(campaignPath);
-        ValidateV2AuthoritySchema(campaignPath, bytes,
-            "m1-slice6-finite-campaign-authorization.v2.schema.json");
+        M1Slice6AuthorityContractVersion campaignVersion = M1Slice6AuthorityContracts.Validate(
+            campaignPath, bytes, M1Slice6AuthorityDocumentKind.Campaign);
+        M1Slice6AuthorityContractVersion credentialVersion = credentialManifest.GetProperty("schema_identity").GetString() switch
+        {
+            M1Slice6AuthorityContracts.CredentialV2 => M1Slice6AuthorityContractVersion.RetiredV2,
+            M1Slice6AuthorityContracts.CredentialV3 => M1Slice6AuthorityContractVersion.FreshC2V3,
+            _ => throw new InvalidDataException("Campaign credential authority version is unsupported."),
+        };
         if (!string.Equals(Convert.ToHexStringLower(SHA256.HashData(bytes)), campaign.ManifestSha256,
                 StringComparison.Ordinal)
             || campaign.ReviewedCandidateCommit.Length != 40
@@ -664,12 +666,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         DateTimeOffset envelopeExpiry = DateTimeOffset.Parse(
             envelope.GetProperty("credential_expires_at_utc").GetString()!,
             System.Globalization.CultureInfo.InvariantCulture);
-        if (root.GetProperty("schema_identity").GetString()
-                != "infinium.repository.m1-slice6-finite-campaign-authorization/2.0.0"
-            || root.GetProperty("status").GetString() != "ready-for-campaign-review"
-            || root.GetProperty("campaign_id").GetString()
-                != "infinium.m1-s6.finite-live-campaign/51b9dba6-aca3-41d7-82d1-afd805e33e66"
-            || root.GetProperty("expires_at_utc").GetString() != "2026-08-31T23:59:00.0000000Z"
+        if (root.GetProperty("status").GetString() != "ready-for-campaign-review"
             || now >= campaignExpiry || credentialExpiry != envelopeExpiry
             || envelope.GetProperty("profile_id").GetString() != profileId
             || envelope.GetProperty("generation_id").GetString() != generationId
@@ -693,6 +690,8 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         {
             ProviderEffectRuntimeAuthority runtimeAuthority = ProviderEffectRuntimeAuthorityLoader.LoadAndValidate(
                 campaign.RuntimeAuthorityManifestPath, campaign.RuntimeAuthorityManifestSha256, now);
+            M1Slice6AuthorityContracts.RequireFreshExternalEffect(runtimeAuthority, campaignVersion,
+                credentialVersion, root.GetProperty("campaign_id").GetString()!, credentialManifestId);
             if (ledger.Current.State == M1Slice6CampaignState.Ready)
             {
                 ProviderEffectRuntimeAuthorityLoader.ValidateDurableBinding(runtimeAuthority, identity,
@@ -847,15 +846,6 @@ internal static class Wp9ProductionProfileEnrollmentRunner
                 + errorDrain.Result.GetType().Name);
         }
         return output.ToArray();
-    }
-
-    private static void ValidateV2AuthoritySchema(string manifestPath, byte[] manifestBytes,
-        string schemaFileName)
-    {
-        string repositoryRoot = M1Slice6CampaignStageManifestValidator.FindRepositoryRoot(manifestPath);
-        string schemaPath = Path.Combine(repositoryRoot, "contracts", "repository", schemaFileName);
-        byte[] schemaBytes = File.ReadAllBytes(schemaPath);
-        ActiveRepositoryJsonSchemaValidator.Validate(manifestBytes, schemaBytes, schemaFileName);
     }
 
     internal static string ValidateEffectReceipt(
