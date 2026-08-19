@@ -1,12 +1,19 @@
 # M1/S6/C2 inert authority-package report
 
-Status: Proposed
+Status: Accepted
 
-Disposition: Ready for owner review; not owner-accepted
+Disposition: Exact package bytes owner-accepted on 2026-08-19; report retained as the pre-acceptance review artifact
 
 Date: 2026-08-19
 
 Last reviewed: 2026-08-19
+
+Owner acceptance: commit `926d6a49a37b6c465cb706cdebbfbf8b98b32c61`,
+package SHA-256
+`10b1704591f36a85a6e680b13f28744ad5e81b786efad9aca276ce791b169b9c`,
+recorded separately in [c2-owner-acceptance.v1.json](c2-owner-acceptance.v1.json).
+Acceptance changed the handoff, not the immutable package bytes, and caused no
+effect automatically.
 
 ## Practical meaning
 
@@ -121,20 +128,19 @@ The exact retrieval times and content hashes are in
 
 ## Owner inputs and use
 
-The package is reviewable now. The remaining owner-controlled inputs are:
+The owner accepted the exact final package commit and SHA-256 and directed C2
+implementation to proceed. The separate acceptance record preserves the
+abstract user-owned OpenAI Platform account intent, direct usage-priced API
+billing intent, and choice to create a new key without retaining concrete
+account identifiers or any secret.
 
-1. accept or reject the exact final package commit and package SHA-256;
-2. at C2A manual entry, confirm the intended user-owned OpenAI Platform
-   account; and
-3. at C2A manual entry, confirm that direct API usage is the intended billing
-   scope rather than a subscription entitlement.
-
-Recommended use is to accept only the exact final bytes after reviewing this
-report. A later separately authorized executor must first derive and validate
-the credential runtime-authority manifest from that acceptance, perform the
-immediate pre-effect checks, and run the exact command template in the typed
-package. After each effect, stop for independent evidence acceptance before
-deriving the next stage. No live effect proceeds automatically.
+At C2A manual entry, the owner re-confirms that the key being entered belongs
+to the intended user-owned Platform project and bears direct API usage. The
+next gate is derivation, independent review, digest binding, and durable
+admission of the exact credential runtime-authority manifest, followed by the
+immediate C2A pre-effect checks and exact command template. After each effect,
+execution stops for independent evidence acceptance before deriving the next
+stage. No live effect proceeds automatically.
 
 ## Verification and review
 
@@ -175,7 +181,8 @@ operations, push, C3, Slice 7, fallback, retries, parallel dispatch, inherited
 authority, or reuse of retired IDs. No active runtime authority, provider
 request, production state, lock, latch, or effect evidence exists.
 
-The final package commit and independent-review verdict are supplied by the
-owner handoff after this candidate passes its final non-live verification
-floor. A Git commit helps identify the reviewed bytes but does not grant
+The final package commit and independent-review verdict were supplied before
+owner acceptance. The acceptance record now binds those exact package bytes;
+runtime authority still requires the separate typed manifest and durable
+coordinator admission. Git identifies reviewed bytes but does not grant
 runtime authority.

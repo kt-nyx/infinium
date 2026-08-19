@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active slice navigation; live authority remains in current state
 
-Last reviewed: 2026-08-18
+Last reviewed: 2026-08-19
 
 Live authorization is stated only in
 [current project state](../../../../../current-state.md). This entry routes to
@@ -19,8 +19,10 @@ chronology.
   orchestration only after activation
 - [Accepted M1 process-continuation amendment](../../amendments/process-continuation.md)
 - [M1 continuation verification profile](../../../../../evaluation/m1-continuation-verification-profile.md)
-- [C2 inert authority-package report](c2-authority-package-report.md), awaiting
-  separate owner acceptance and granting no effect authority
+- [C2 inert authority-package report](c2-authority-package-report.md), whose
+  exact package commit and digest are now owner-accepted
+- [C2 owner acceptance record](c2-owner-acceptance.v1.json), opening only the
+  package-defined C2A handoff and predecessor-gated C2B-C2D envelope
 - [Append-only implementation record](record.md), for exact chronology and
   retained evidence
 - [Superseded R1-R7 orchestrator handoff](orchestrator-handoff.md), retained as
@@ -60,9 +62,13 @@ rehearses WP9 through WP11 with fake credential storage and literal loopback.
 No external effect was materialized. The owner-authorized C1.1 correction is
 implemented at `9aea07380a3d3cc2a6f70be6d32907a96e7720da`; it adds fresh v3
 authority paths and rejects retired v2 identities for every external effect.
-The exact C2 authority package is now an inert owner-review candidate. It has
-not been owner-accepted and does not create runtime authority, stage requests,
-durable admission, a profile, a safety latch, or effect evidence.
+The owner accepted exact C2 package commit
+`926d6a49a37b6c465cb706cdebbfbf8b98b32c61` and package SHA-256
+`10b1704591f36a85a6e680b13f28744ad5e81b786efad9aca276ce791b169b9c`
+on 2026-08-19. That decision opens C2A runtime-authority preparation and the
+package's sequential predecessor-gated C2 path; it does not itself create a
+runtime authority, stage request, durable admission, profile, safety latch, or
+effect evidence.
 
 ## Lean continuation
 
@@ -97,9 +103,11 @@ The old dormant campaign and credential authorization IDs named in the lean
 continuation plan are retired without execution and cannot be inherited or
 reused. The fresh C2 package now binds new exact IDs, C1.1 binaries, paths,
 expiries, ceilings, official-profile/capability/price evidence, sequencing, and
-inert derivation rules. Separate owner acceptance of its exact committed bytes
-remains mandatory before even C2A effect preparation; nothing runs on
-acceptance automatically.
+inert derivation rules. The exact owner acceptance is recorded separately from
+the immutable package. Before the C2A helper can run, the credential runtime
+authority must still be derived, independently reviewed, digest-bound, durably
+admitted, and pass its immediate pre-effect checks. Nothing ran automatically
+on acceptance.
 
 Runtime effect authority comes from a closed typed manifest and durable
 coordinator state, never Git history, current HEAD, commit subjects, log order,

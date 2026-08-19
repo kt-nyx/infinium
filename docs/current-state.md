@@ -1,9 +1,9 @@
 # Current project state
 
 Status: Accepted
-Disposition: C1.1 correction complete; C2 authority package awaiting owner acceptance; effect authority absent
+Disposition: C2 package owner-accepted; C2A credential-enrollment handoff active; no effect occurs without exact runtime admission
 
-Last reviewed: 2026-08-18
+Last reviewed: 2026-08-19
 Owner: Project owner
 
 This is the only document that states the live milestone, slice, work package,
@@ -22,11 +22,11 @@ chronology and evidence.
 | Accepted process proposal | Commit `2c82365fd853cb2021f1772d6c572ee9fa006d01`; process-amendment SHA-256 `5d9aff4226f93ff73025573e056080530d23f66e5cb9cc92efddfd78655acc9f`; lean-plan SHA-256 `57d9a3b25201bf55281cad02c9b8a3e458639ec10d1e465cdbad85f532c464af` |
 | Accepted C1 outcome | C1 effect-free readiness closure is accepted in the commit containing this handoff. Typed runtime authority, durable ledger binding, safety-state closure, exact R1/R2 preservation, and the fake-store/literal-loopback WP9-to-WP11 rehearsal passed without an external effect. |
 | C1.1 implementation | Commit `9aea07380a3d3cc2a6f70be6d32907a96e7720da` adds fresh v3 authority consumers and schemas while retaining effect-free v2 rehearsal compatibility. External effects explicitly reject the retired v2 identities. |
-| Current authorized work | Owner review of the inert [C2 authority package](plans/milestones/m1/slices/s6/c2-authority-package-report.md) only. No credential, helper/UI, native, DNS/network, provider, or billable effect is authorized. |
-| Next gate | Separate owner acceptance of the exact committed C2 package bytes and digest. Acceptance may open only C2A preparation and the package's sequential predecessor-gated C2B-C2D path; it causes no effect automatically. |
-| Later packages | C2 execution and `C3` retained-evidence closeout are inactive. C3 requires accepted retained C2 evidence and authorizes no new effect. |
+| Current authorized work | C2A preparation and the one exact masked credential enrollment defined by owner-accepted C2 package commit `926d6a49a37b6c465cb706cdebbfbf8b98b32c61`, package SHA-256 `10b1704591f36a85a6e680b13f28744ad5e81b786efad9aca276ce791b169b9c`, and the [owner acceptance record](plans/milestones/m1/slices/s6/c2-owner-acceptance.v1.json). Helper/UI and native access remain closed until the fresh typed credential runtime authority is independently reviewed, digest-bound, durably admitted, and immediately revalidated. |
+| Next gate | Derive and independently review the exact C2A credential runtime-authority bytes, validate the accepted binaries/profile/campaign/price/document snapshot/expiry/absence state, durably admit the authority, then perform the single masked enrollment. No provider request is permitted in C2A. |
+| Later packages | C2B-C2D are included only in the package's accepted sequential finite envelope and remain locked behind fresh exact predecessor evidence acceptance plus separately materialized stage/runtime-authority bytes. `C3` remains inactive and requires accepted retained C2 evidence. |
 | Final Slice 6 gate | After C3, the project owner decides Slice 6 acceptance and contract freeze. Slice 7 does not start automatically. |
-| External-effect authority | None. C1 materialized no active campaign, credential authority, stage request/admission, production profile, real-campaign safety latch, or effect evidence. Credential, helper/UI, native, DNS/network, provider, billable, private-fixture, and archive counts remain zero. |
+| External-effect authority | The owner decision opens only derivation of C2A's closed typed runtime authority. No runtime-authority file, campaign ledger, profile, native call, provider request, safety latch, or effect evidence exists at this handoff update. The first possible effect remains the exact helper/native C2A operation after runtime review and durable admission; provider/DNS/billable authority remains zero. |
 
 ## Current authority
 
@@ -39,6 +39,7 @@ chronology and evidence.
 - [Accepted Slice 6 lean continuation plan](plans/milestones/m1/slices/s6/continuation-plan.md)
 - [C2 inert authority-package report](plans/milestones/m1/slices/s6/c2-authority-package-report.md)
 - [C2 typed authority-package candidate](plans/milestones/m1/slices/s6/m1-slice6-c2-authority-package.v1.json)
+- [C2 owner acceptance record](plans/milestones/m1/slices/s6/c2-owner-acceptance.v1.json)
 - [Accepted Slice 6 remainder plan through R2](plans/milestones/m1/slices/s6/remainder-plan.md)
 - [Slice 6 implementation record](plans/milestones/m1/slices/s6/record.md), only when exact chronology or retained evidence is needed
 
