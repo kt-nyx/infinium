@@ -182,6 +182,10 @@ runtime authority or durable admission; the exact admission transition and a
 separately derived and reviewed typed runtime manifest remain mandatory before
 the one-shot request can become eligible.
 
+The exact stage transition is now admitted through
+`2026-08-31T23:59:00.0000000Z`. This does not replace the still-absent typed
+runtime authority or the immediate durable-ledger and effect checks.
+
 Runtime effect authority comes from a closed typed manifest and durable
 coordinator state, never Git history, current HEAD, commit subjects, log order,
 pickaxe, line attribution, or historical marker discovery.
