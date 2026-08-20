@@ -122,7 +122,7 @@ public sealed class Wp8PreLiveReadinessContractTests
             StringAssert.Contains(normalizedRecord, acceptance["direct_layer6_receipt_sha256"]!.GetValue<string>());
             StringAssert.Contains(normalizedReadme, "C1 effect-free readiness closure is accepted");
             StringAssert.Contains(normalizedReadme,
-                "Accepted C1 makes only preparation and owner review of a fresh C2 authority package eligible.");
+                "The owner accepted keeping C1 implementation-active until C2 completes, with final C1 binding required before C3.");
             StringAssert.Contains(normalizedRecord,
                 "No WP8 template, prior owner statement, packet identity, expiry, profile identity, predecessor acceptance, official-doc result, or request fingerprint grants inherited authority.");
             StringAssert.Contains(normalizedRecord,

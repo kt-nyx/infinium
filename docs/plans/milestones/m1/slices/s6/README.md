@@ -102,8 +102,8 @@ failure summaries. Its exact clean-commit readiness floor and reproducible
 is now owner-accepted. That decision opens C2A runtime-authority preparation
 and one masked credential enrollment, but creates no effect automatically.
 
-C1 effect-free readiness closure is accepted. That retained readiness evidence
-does not itself decide the proposed implementation-active-through-C2 amendment.
+C1 effect-free readiness closure is accepted. The owner later accepted keeping
+it implementation-active through C2, with final C1 binding required before C3.
 
 That enrollment submitted successfully and retained success evidence proves
 the credential write/read-back, active verified profile, exact four-call native
@@ -121,9 +121,8 @@ validates the retained success and read-only durable product projection, and
 provides a closed append-only recovery path. Its complete non-live floor and
 independent affected-surface review passed. The inert authority package is the
 owner-accepted recovery boundary and its consolidated package review passed
-with no remaining must-fix. Before the path changes durable campaign state,
-its zero-effect runtime authority must still be derived, independently reviewed,
-exactly bound, and admitted.
+with no remaining must-fix. The zero-effect recovery is now complete and
+independently accepted; it changed only the append-only campaign ledger.
 
 ## Lean continuation
 

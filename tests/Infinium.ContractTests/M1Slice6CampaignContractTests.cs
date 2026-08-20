@@ -103,7 +103,7 @@ public sealed class M1Slice6CampaignContractTests
     }
 
     [TestMethod]
-    public void NonLiveAllCampaignStateRecognizesOnlyExactWhitespaceNormalizedRecordAuthority()
+    public void CampaignStateRetainsHistoricalRemainderAuthorityAndExactActiveHandoff()
     {
         string record = File.ReadAllText(TestRepository.PathFromRoot(
             "docs", "plans", "milestones", "m1", "slices", "s6", "record.md"));
@@ -118,8 +118,11 @@ public sealed class M1Slice6CampaignContractTests
         const string stateAuthority = "C1 effect-free readiness closure is accepted";
         StringAssert.Contains(currentState, stateAuthority);
         StringAssert.Contains(currentState,
-            "Preparation and owner review of a fresh `M1/S6/C2` authority package only.");
-        StringAssert.Contains(currentState, "No credential, helper/UI, native, DNS/network, provider, or billable effect is authorized.");
+            "Sequential C2B, C2C, and C2D under the exact accepted replacement campaign, with one possible provider start per stage and maximum costs USD 0.14, USD 0.60, and USD 0.60 respectively (USD 1.34 aggregate).");
+        StringAssert.Contains(currentState,
+            "Runtime authority remains absent until each stage's closed manifest is derived and independently reviewed.");
+        StringAssert.Contains(currentState,
+            "enumeration, replacement, deletion, exposure, retry, fallback, a fourth request, broader ceilings, private fixtures, archives, push, and destructive work remain prohibited.");
         Assert.IsFalse(currentState.Replace(stateAuthority, "C2 live execution is authorized", StringComparison.Ordinal)
             .Contains(stateAuthority, StringComparison.Ordinal));
         StringAssert.Contains(verifier, "function Test-M1Slice6RemainderR1NoEffectState");
