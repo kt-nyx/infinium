@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/m1-slice6-c2a-post-success-recovery-owner-acceptance.v1.schema.json",
+  "type": "object",
+  "const": {
+    "schema_identity": "infinium.repository.m1-slice6-c2a-post-success-recovery-owner-acceptance/1.0.0",
+    "decision_id": "infinium.m1-s6.c2a.recovery-owner-acceptance/805329e9-65e0-4e9d-9b38-84df7fc90b44",
+    "status": "accepted",
+    "recorded_at_utc": "2026-08-20T03:35:47.7771537Z",
+    "accepted_package": {
+      "package_id": "infinium.m1-s6.c2a.recovery-authority-package/50a1b244-40d9-4a7f-8175-c79929b0d8b9",
+      "commit": "dde661235533eb1b90a7330aed44e53e66b906d8",
+      "sha256": "1a53d48959ba03c26d99068263c274062b4f17ac9902effb4b15afcb9dd1b345"
+    },
+    "owner_direction": {
+      "decision": "accept-exact-c2a-post-success-recovery-package-and-proceed",
+      "process_amendment": "accepted-c1-implementation-active-through-c2-final-c1-binding-before-c3",
+      "authorized_operation": "prepare-review-admit-and-apply-one-zero-effect-append-only-c2a-recovery",
+      "stop_boundary": "after-independent-c2a-evidence-acceptance",
+      "c2b_disposition": "prohibited-not-authorized"
+    },
+    "scope": {
+      "opens": "fresh-recovery-runtime-authority-derivation-independent-review-and-one-ledger-only-recovery",
+      "maximum_ledger_appends": 1,
+      "automatic_effect": false,
+      "successor_requires_independent_evidence_acceptance": true
+    },
+    "prohibitions": [
+      "helper-or-ui-launch",
+      "credential-manager-read-write-delete-enumeration",
+      "credential-retry",
+      "dns-or-public-network",
+      "provider-request",
+      "billable-operation",
+      "product-state-mutation",
+      "existing-evidence-or-ledger-prefix-mutation",
+      "fallback-or-parallel-dispatch",
+      "counter-reset-or-ceiling-transfer",
+      "inherited-authority-or-terminal-identity-reuse",
+      "c2b-preparation-materialization-authority-or-execution",
+      "c3-or-slice7",
+      "private-fixture-evaluator-or-archive-access",
+      "push"
+    ]
+  }
+}

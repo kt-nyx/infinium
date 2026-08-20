@@ -27,7 +27,8 @@ chronology.
   opening only the package-defined C2A handoff and predecessor-gated C2B-C2D envelope
 - [C2A post-success recovery authority report](c2a-post-success-recovery-authority-report.md)
   and [typed package](m1-slice6-c2a-post-success-recovery-authority-package.v1.json),
-  which are inert and require fresh exact owner acceptance
+  plus its [owner acceptance record](c2a-post-success-recovery-owner-acceptance.v1.json),
+  which opens only one independently reviewed all-zero ledger recovery
 - [Terminal predecessor C2 report](c2-authority-package-report.md) and
   [acceptance record](c2-owner-acceptance.v1.json), retained only as terminal
   chronology and never reusable authority
@@ -110,17 +111,16 @@ still expected `wp9-production-profile/enroll-and-verify`. The conservative
 failure path terminalized the ledger. The credential operation must not be
 retried and Credential Manager must not be inspected or modified.
 
-The owner asked the project to consider keeping C1 implementation-active until
-C2 completes. The recovery package includes that proposal for exact acceptance;
-it is not current process authority yet. Corrected implementation
+The owner accepted keeping C1 implementation-active until C2 completes, with
+final C1 binding required before C3. Corrected implementation
 `c8cc455c8320f50bc87a160e3523f34eceb2ad13` now aligns the scenario contract,
 validates the retained success and read-only durable product projection, and
 provides a closed append-only recovery path. Its complete non-live floor and
 independent affected-surface review passed. The inert authority package is the
-current owner-review gate and its consolidated package review passed with no
-remaining must-fix. Before the path changes durable campaign state, its fresh
-owner decision and zero-effect runtime authority must still be derived,
-independently reviewed, exactly bound, and admitted.
+owner-accepted recovery boundary and its consolidated package review passed
+with no remaining must-fix. Before the path changes durable campaign state,
+its zero-effect runtime authority must still be derived, independently reviewed,
+exactly bound, and admitted.
 
 ## Lean continuation
 
@@ -150,20 +150,18 @@ No repository document supplies an API key. The consumed C2A authority permits
 no retry. The recovery package permits no helper/UI launch, native credential
 call, credential-store inspection, DNS/public network, provider contact,
 billing, private-fixture access, archive work, destructive action, push, or
-later-slice implementation. Even after package acceptance, the only proposed
-mutation is one append-only ledger event under a separately derived and
-reviewed all-zero runtime authority.
+later-slice implementation. Package acceptance authorizes only one append-only
+ledger event under a separately derived and reviewed all-zero runtime authority.
 
 The old dormant campaign and credential authorization IDs named in the lean
 continuation plan are retired without execution and cannot be inherited or
 reused. The terminal C2 package bound its exact IDs, C1.1 binaries, paths,
 expiries, ceilings, official-profile/capability/price evidence, sequencing, and
 inert derivation rules. Its one helper launch is now terminal historical
-evidence. Replacement v4 identities are sealed candidate inputs only and do
-not grant authority. Before the C2A helper can run, the fresh credential
-runtime authority must be derived from the accepted package and decision,
-independently reviewed, digest-bound, durably admitted, and immediately
-revalidated.
+evidence. The helper cannot run again. Before the ledger recovery can run, the
+fresh zero-effect recovery runtime authority must be derived from the accepted
+package and decision, independently reviewed, digest-bound, durably admitted,
+and immediately revalidated.
 
 Runtime effect authority comes from a closed typed manifest and durable
 coordinator state, never Git history, current HEAD, commit subjects, log order,

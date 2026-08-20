@@ -9185,3 +9185,21 @@ owner-review mode from activated pre-invocation mode; the latter requires the
 exact present schema-valid runtime manifest, owner-accepted activation commit,
 terminal evidence and product identities, runner and binary closure, all-zero
 limits, live bounded interval, and continued C2B absence.
+
+## 2026-08-19 — C2A recovery package owner acceptance
+
+The project owner explicitly accepted commit
+`dde661235533eb1b90a7330aed44e53e66b906d8`, package SHA-256
+`1a53d48959ba03c26d99068263c274062b4f17ac9902effb4b15afcb9dd1b345`,
+and the included C1-implementation-active-through-C2 amendment. Fresh decision
+`infinium.m1-s6.c2a.recovery-owner-acceptance/805329e9-65e0-4e9d-9b38-84df7fc90b44`
+records the exact direction without credential, account, project, or billing
+identifiers.
+
+The decision opens only derivation and independent review of the all-zero
+recovery runtime authority, exact activation of the clean execution clone, one
+append-only C2A ledger recovery, and independent evidence acceptance. It
+authorizes zero helper/UI/native credential, Credential Manager, DNS/network,
+provider, or billable operations and no product-state or existing-evidence
+mutation. The owner required a stop after C2A acceptance and explicitly did not
+authorize C2B preparation, materialization, runtime authority, or execution.
