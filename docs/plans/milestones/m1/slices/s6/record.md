@@ -9256,3 +9256,51 @@ official-model, capability, or pricing drift, ambiguous effect state, invalid
 authority/evidence, or a required architecture/authority expansion stops the
 affected path. Otherwise the next owner gate is the final Slice 6 acceptance
 decision after C3.
+
+## 2026-08-20 — C2B pre-effect correction and verification closure
+
+Before any C2B authority was committed or admitted, active v4 request/evidence
+validation exposed duplicate top-level `allOf` members in both stage schemas.
+Commit `025ce3aa466a955e2245c93efceb78aef25c5505` merged every retained
+conditional into one closed array, removed a logically impossible redundant
+WP11 root condition whose exact-one-of-each meaning is already guaranteed by
+the closed two-item base schema, and added duplicate-property regression
+coverage across all five v4 authority schemas. Independent schema review
+returned PASS; focused integration checks passed 4/4.
+
+The first complete-floor diagnostic then found two historical tests that still
+required the superseded pre-C2 owner-review-only navigation. Commit
+`142b841bc81e9a5dc457bf991382eb846e077a94` updated those tests to bind the
+exact active sequential C2B-C2D handoff and its retained prohibitions, and
+corrected two stale Slice 6 entry statements about the already accepted C1
+amendment and completed zero-effect C2A recovery. Focused contract checks
+passed 2/2.
+
+The next diagnostic reached the Security category and exposed a genuine
+recovery-path policy regression inherited from the accepted C2A recovery
+implementation: the nominally read-only credential projection reader created,
+copied, and deleted a pathname-based temporary SQLite snapshot from inside an
+authoritative product writer. An initial helper extraction was independently
+rejected as policy evasion and as a non-transactional DB/WAL/SHM copy. Commit
+`0c001293fa17600e3b3cfe042fd74f9e3350b048` instead binds the already-existing
+Data write class without creating it, pins the database family through the
+guarded Win32 VFS, opens an escaped immutable read-only SQLite URI, backs that
+consistent source view into memory, queries only the in-memory snapshot, and
+revalidates all opened-object guards. A new fault test proves existing-class
+binding cannot create a missing directory. Independent re-review returned
+PASS; focused write-authority/build-policy checks passed 23 with one explicit
+platform skip, and exact recovery plus denial checks passed 2/2 while retaining
+the complete product tree byte-for-byte.
+
+The exact clean executable candidate
+`0c001293fa17600e3b3cfe042fd74f9e3350b048` then passed locked restore,
+zero-warning Release build, all accepted Unit, Contract, Integration,
+Evaluation, Security, and Fault categories, the complete analysis pipeline,
+and `git diff --check`. The final `All` receipt SHA-256 is
+`26fbe4296871c801e47761005211ceba08917a63c177f93635c8c5688cda50a6`;
+the comprehensive receipt SHA-256 is
+`695e71a709cd2efb462d979622364190ac67f1ad3185ebc5211e5933ba50b3ff`.
+All correction and verification effects were zero credential-helper, UI,
+native Credential Manager, DNS, public-network, provider, billable, retry, and
+product-state mutation operations. The exact C2B request and manifest remained
+outside the tracked live-authority path for the entire correction floor.
