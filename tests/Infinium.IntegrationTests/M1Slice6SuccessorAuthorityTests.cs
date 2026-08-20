@@ -117,6 +117,73 @@ public sealed class M1Slice6SuccessorAuthorityTests
     }
 
     [TestMethod]
+    public void InitialSnapshotAllowsOnlyTransientSqliteSharedMemoryDrift()
+    {
+        string repository = RepositoryRoot();
+        string directory = Path.Combine(repository, ".successor-transient-snapshot-test-" + Guid.NewGuid().ToString("N"));
+        string source = Path.Combine(directory, "source");
+        string destination = Path.Combine(directory, "destination");
+        Directory.CreateDirectory(source);
+        Directory.CreateDirectory(destination);
+        try
+        {
+            string slice = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6");
+            JsonObject checkedInAccess = JsonNode.Parse(File.ReadAllText(Path.Combine(slice,
+                "m1-slice6-successor-credential-access.v1.json")))!.AsObject();
+            string checkedInSource = checkedInAccess["retained_product_state"]!["source_root_absolute"]!.GetValue<string>();
+            JsonObject checkedInOrigin = JsonNode.Parse(File.ReadAllText(Path.Combine(
+                checkedInAccess["retained_product_state"]!["successor_root_absolute"]!.GetValue<string>(),
+                "successor-snapshot-origin.v1.json")))!.AsObject();
+            foreach (JsonNode? item in checkedInOrigin["files"]!.AsArray())
+            {
+                string relative = item!["path"]!.GetValue<string>().Replace('/', Path.DirectorySeparatorChar);
+                string sourceFile = Path.Combine(checkedInSource, relative);
+                string copiedSource = Path.Combine(source, relative);
+                string copiedDestination = Path.Combine(destination, relative);
+                Directory.CreateDirectory(Path.GetDirectoryName(copiedSource)!);
+                Directory.CreateDirectory(Path.GetDirectoryName(copiedDestination)!);
+                File.Copy(sourceFile, copiedSource);
+                File.Copy(sourceFile, copiedDestination);
+            }
+            checkedInOrigin["source_root"] = source;
+            checkedInOrigin["destination_root"] = destination;
+            string originPath = Path.Combine(destination, "successor-snapshot-origin.v1.json");
+            File.WriteAllText(originPath, checkedInOrigin.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+
+            string sharedMemory = Path.Combine(destination, "data", "infinium.sqlite3-shm");
+            byte[] sharedMemoryBytes = File.ReadAllBytes(sharedMemory);
+            sharedMemoryBytes[0] ^= 0xff;
+            File.WriteAllBytes(sharedMemory, sharedMemoryBytes);
+
+            JsonObject access = checkedInAccess.DeepClone().AsObject();
+            access["retained_product_state"]!["source_root_absolute"] = source;
+            access["retained_product_state"]!["successor_root_absolute"] = destination;
+            access["retained_product_state"]!["snapshot_origin_sha256"] =
+                Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(originPath)));
+            string accessPath = Path.Combine(directory, "access.json");
+            File.WriteAllText(accessPath, access.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+            string accessSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(accessPath)));
+
+            JsonObject campaign = JsonNode.Parse(File.ReadAllText(Path.Combine(slice,
+                "m1-slice6-successor-campaign-authorization.v5.json")))!.AsObject();
+            campaign["credential_inheritance"]!["access_authority_path"] =
+                Path.GetRelativePath(repository, accessPath).Replace('\\', '/');
+            campaign["credential_inheritance"]!["access_authority_sha256"] = accessSha;
+            string campaignPath = Path.Combine(directory, "campaign.json");
+            File.WriteAllText(campaignPath, campaign.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+
+            _ = M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath,
+                Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(campaignPath))));
+
+            string retainedPayload = Directory.GetFiles(Path.Combine(destination, "payloads"), "*", SearchOption.AllDirectories).Single();
+            File.AppendAllText(retainedPayload, "changed");
+            Assert.ThrowsExactly<InvalidDataException>(() => M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath,
+                Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(campaignPath)))));
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
+    [TestMethod]
     public void ProductStateCheckpointIsDeterministicAndDetectsDatabaseOrRetainedFileMutation()
     {
         string root = Path.Combine(Path.GetTempPath(), "infinium-successor-state-checkpoint-" + Guid.NewGuid().ToString("N"));

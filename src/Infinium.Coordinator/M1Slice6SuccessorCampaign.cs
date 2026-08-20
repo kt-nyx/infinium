@@ -579,9 +579,18 @@ internal static class M1Slice6SuccessorAuthorityLoader
         }
         string database = Path.Combine(destinationRoot, "data", "infinium.sqlite3");
         string initialDatabaseSha = Text(files.Single(file => Text(file, "path") == "data/infinium.sqlite3"), "sha256");
-        if (HashFile(database) == initialDatabaseSha)
+        string wal = Path.Combine(destinationRoot, "data", "infinium.sqlite3-wal");
+        string initialWalSha = Text(files.Single(file => Text(file, "path") == "data/infinium.sqlite3-wal"), "sha256");
+        bool initialDatabaseState = File.Exists(database) && File.Exists(wal)
+            && HashFile(database) == initialDatabaseSha && HashFile(wal) == initialWalSha;
+        if (initialDatabaseState)
         {
-            foreach (JsonElement file in files)
+            // SQLite may rewrite the shared-memory coordination file during a read-only
+            // open. It is transient physical state and is excluded from the reviewed
+            // logical checkpoint; the immutable database, WAL, and retained files remain
+            // exact for an initial snapshot.
+            foreach (JsonElement file in files.Where(file =>
+                         Text(file, "path") != "data/infinium.sqlite3-shm"))
             {
                 string destination = Path.Combine(destinationRoot,
                     Text(file, "path").Replace('/', Path.DirectorySeparatorChar));
