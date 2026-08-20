@@ -503,6 +503,21 @@ public sealed partial class AuthoritativeStore
         using (var migration = database.CreateCommand())
         {
             migration.CommandText =
+                "SELECT COUNT(*) FROM migration_history "
+                + "WHERE migration_id='M1-S6-SUCCESSOR-0007' AND from_version=6 AND to_version=7 "
+                + "AND sqlite_source_id=$source;";
+            migration.Parameters.AddWithValue("$source", binding.SourceId);
+            if (Convert.ToInt32(migration.ExecuteScalar(),
+                    System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The Slice 6 successor attempt-identity storage migration is invalid.");
+            }
+        }
+
+        using (var migration = database.CreateCommand())
+        {
+            migration.CommandText =
                 """
                 SELECT COUNT(*)
                 FROM migration_history

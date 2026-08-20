@@ -259,6 +259,142 @@ if (args is ["--m1-slice6-campaign-composed-evidence-acceptance",
     }
 }
 
+if (args is ["--m1-slice6-successor-campaign-initialize", "--campaign-manifest", string successorCampaign,
+    "--campaign-manifest-sha256", string successorCampaignSha, "--ledger", string successorLedger,
+    "--review", string successorCampaignReview])
+{
+    try
+    {
+        M1Slice6SuccessorCampaignRunner.InitializeCampaign(successorCampaign, successorCampaignSha,
+            successorLedger, successorCampaignReview, DateTimeOffset.UtcNow);
+        Console.WriteLine("M1 Slice 6 successor campaign independently reviewed and admitted with zero effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"M1 Slice 6 successor campaign initialization stopped: {exception.GetType().Name}");
+        return 84;
+    }
+}
+
+if (args is ["--m1-slice6-successor-attempt", "--campaign-manifest", string successorAttemptCampaign,
+    "--campaign-manifest-sha256", string successorAttemptCampaignSha,
+    "--stage-manifest", string successorStage, "--stage-manifest-sha256", string successorStageSha,
+    "--credential-manifest", string successorCredential, "--credential-manifest-sha256", string successorCredentialSha,
+    "--runtime-authority", string successorRuntime, "--runtime-authority-sha256", string successorRuntimeSha,
+    "--ledger", string successorAttemptLedger, "--safety-state-root", string successorSafetyRoot,
+    "--helper-binary", string successorHelper, "--helper-sha256", string successorHelperSha,
+    "--evidence", string successorEvidence])
+{
+    try
+    {
+        return await M1Slice6SuccessorCampaignRunner.RunAttemptAsync(successorAttemptCampaign,
+            successorAttemptCampaignSha, successorStage, successorStageSha, successorCredential,
+            successorCredentialSha, successorRuntime, successorRuntimeSha, successorAttemptLedger,
+            successorSafetyRoot, successorHelper, successorHelperSha, successorEvidence, CancellationToken.None)
+            .ConfigureAwait(false);
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException
+        or InvalidOperationException or OperationCanceledException or TimeoutException
+        or PlatformNotSupportedException)
+    {
+        Console.Error.WriteLine($"M1 Slice 6 successor attempt stopped with typed non-secret error: {exception.GetType().Name}");
+        return 85;
+    }
+}
+
+if (args is ["--m1-slice6-successor-attempt-evidence-acceptance",
+    "--campaign-manifest", string successorAcceptCampaign,
+    "--campaign-manifest-sha256", string successorAcceptCampaignSha,
+    "--ledger", string successorAcceptLedger, "--evidence", string successorAcceptEvidence,
+    "--review", string successorAcceptReview])
+{
+    try
+    {
+        M1Slice6SuccessorCampaignRunner.AcceptAttempt(successorAcceptCampaign,
+            successorAcceptCampaignSha, successorAcceptLedger, successorAcceptEvidence,
+            successorAcceptReview, DateTimeOffset.UtcNow);
+        Console.WriteLine("M1 Slice 6 successor attempt evidence independently accepted with zero provider effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"M1 Slice 6 successor attempt acceptance stopped: {exception.GetType().Name}");
+        return 86;
+    }
+}
+
+if (args is ["--m1-slice6-successor-authoritative-recovery",
+    "--campaign-manifest", string successorRecoveryCampaign,
+    "--campaign-manifest-sha256", string successorRecoveryCampaignSha,
+    "--stage-manifest", string successorRecoveryStage,
+    "--stage-manifest-sha256", string successorRecoveryStageSha,
+    "--credential-manifest", string successorRecoveryCredential,
+    "--credential-manifest-sha256", string successorRecoveryCredentialSha,
+    "--runtime-authority", string successorRecoveryRuntime,
+    "--runtime-authority-sha256", string successorRecoveryRuntimeSha,
+    "--ledger", string successorRecoveryLedger,
+    "--original-evidence", string successorOriginalEvidence,
+    "--recovery-evidence", string successorRecoveryEvidence])
+{
+    try
+    {
+        M1Slice6SuccessorCampaignRunner.RecoverAuthoritativeAttempt(successorRecoveryCampaign,
+            successorRecoveryCampaignSha, successorRecoveryStage, successorRecoveryStageSha,
+            successorRecoveryCredential, successorRecoveryCredentialSha, successorRecoveryRuntime,
+            successorRecoveryRuntimeSha, successorRecoveryLedger, successorOriginalEvidence,
+            successorRecoveryEvidence, DateTimeOffset.UtcNow);
+        Console.WriteLine("M1 Slice 6 successor authoritative response recovered with zero provider effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is InvalidDataException or InvalidOperationException
+        or IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+    {
+        Console.Error.WriteLine($"M1 Slice 6 successor authoritative recovery stopped: {exception.GetType().Name}");
+        return 84;
+    }
+}
+
+if (args is ["--m1-slice6-successor-correction-review-acceptance",
+    "--campaign-manifest", string successorCorrectionCampaign,
+    "--campaign-manifest-sha256", string successorCorrectionCampaignSha,
+    "--ledger", string successorCorrectionLedger, "--review", string successorCorrectionReview])
+{
+    try
+    {
+        M1Slice6SuccessorCampaignRunner.AcceptCorrectionReview(successorCorrectionCampaign,
+            successorCorrectionCampaignSha, successorCorrectionLedger, successorCorrectionReview, DateTimeOffset.UtcNow);
+        Console.WriteLine("M1 Slice 6 successor offline correction review accepted with zero provider effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"M1 Slice 6 successor correction review acceptance stopped: {exception.GetType().Name}");
+        return 87;
+    }
+}
+
+if (args is ["--m1-slice6-successor-composed-evidence-acceptance",
+    "--campaign-manifest", string successorComposedCampaign,
+    "--campaign-manifest-sha256", string successorComposedCampaignSha,
+    "--ledger", string successorComposedLedger, "--evidence", string successorComposedEvidence,
+    "--review", string successorComposedReview])
+{
+    try
+    {
+        M1Slice6SuccessorCampaignRunner.CompleteComposedEvidence(successorComposedCampaign,
+            successorComposedCampaignSha, successorComposedLedger, successorComposedEvidence,
+            successorComposedReview, DateTimeOffset.UtcNow);
+        Console.WriteLine("M1 Slice 6 successor effect-free C3 handoff or exact review acceptance completed.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"M1 Slice 6 successor C3 acceptance stopped: {exception.GetType().Name}");
+        return 89;
+    }
+}
+
 if (args is ["--credential-native-qualification-v2", "--manifest", string nativeManifest,
     "--manifest-sha256", string nativeManifestSha256,
     "--output-root", string nativeOutputRoot])

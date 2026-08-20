@@ -295,7 +295,10 @@ public sealed class OneShotHelperEngine
         HelperReceiptV2 receipt = CreateReceipt(assignment, revalidation, outcome, hasResponse);
         byte[] stagedResponse = [];
         bool stageOversizedReceipt = adapterResult?.State == ProviderResponseState.Oversized;
-        if (hasResponse || stageOversizedReceipt)
+        // Every completed adapter invocation is retained as a closed, secret-free envelope.
+        // In particular, a possible start with no response bytes must not collapse into an
+        // undiagnosable zero-length helper result.
+        if (adapterResult is not null || hasResponse || stageOversizedReceipt)
         {
             stagedResponse = adapterResult is null
                 ? Encoding.UTF8.GetBytes("synthetic-provider-response/" + assignment.AssignmentId)
@@ -311,7 +314,7 @@ public sealed class OneShotHelperEngine
             {
                 receipt.RawResponse = Digest(adapterResult?.RawResponseBytes ?? stagedResponse);
             }
-            else
+            else if (stageOversizedReceipt)
             {
                 receipt.OverflowObservedExcessBytes = 1;
             }

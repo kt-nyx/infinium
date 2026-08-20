@@ -1,0 +1,65 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-successor-campaign-authorization/5.0.0",
+  "campaign_id": "infinium.m1-s6.successor-campaign/a4f66e58-6456-4c90-a6e2-20260820c2b1",
+  "status": "owner-authorized-reviewed-and-admitted",
+  "prepared_at_utc": "2026-08-20T12:00:00.0000000+00:00",
+  "expires_at_utc": "2026-09-14T22:00:00.0000000+00:00",
+  "owner_amendment": {
+    "amendment_id": "infinium.m1-s6.development-campaign-amendment/9e4506cb-6fb5-49bb-b9ad-41d7f7fe8c1b",
+    "path": "docs/plans/milestones/m1/slices/s6/m1-slice6-development-campaign-amendment.v1.json",
+    "sha256": "f56b49ebbcf39a219d0ff20d9508ce0d7a21195301082872cd97811f9b468119",
+    "owner_acceptance_ceremony": "satisfied-by-exact-owner-message-no-second-ceremony"
+  },
+  "terminal_predecessor": {
+    "campaign_id": "infinium.m1-s6.finite-live-campaign/ff2d542a-04f0-448a-bcb8-a0ecbedde5b9",
+    "final_event_hash": "282c97151dbdcd354288b67f96c4b01d7f7ef43b1bbfb9f247cbd9b510506de9",
+    "possible_starts": 1,
+    "conservative_nano_usd": 140000000,
+    "immutable": true
+  },
+  "credential_inheritance": {
+    "access_authority_id": "infinium.m1-s6.successor-credential-access/0e3e9a30-c4c7-43f0-8b9c-20260820c2b1",
+    "access_authority_path": "docs/plans/milestones/m1/slices/s6/m1-slice6-successor-credential-access.v1.json",
+    "access_authority_sha256": "e6788d546308a8ec8f7c3374c52cf8700a7a2245f52d213587e6a84d1d779b0d",
+    "manifest_id": "infinium.m1-s6.wp9.production-profile-authorization/234b5227-0ad4-4f5e-acf5-5ac6b89fca2b",
+    "manifest_path": "docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v4.json",
+    "manifest_sha256": "2ad6eb68ac9f569c358da99989939993b29744f612ab2a22f533e5049ed865df",
+    "profile_id": "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e",
+    "generation_id": "g-ff6d82e7a7d244f6b8a9d0164991be37",
+    "target_fingerprint_sha256": "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0",
+    "permitted_boundary": "masked-helper-exact-CredReadW-CredFree-only"
+  },
+  "limits": {
+    "maximum_possible_starts_per_stage": 5,
+    "terminal_wp9_possible_starts": 1,
+    "maximum_slice_nano_usd": 10000000000,
+    "terminal_conservative_nano_usd": 140000000,
+    "maximum_successor_nano_usd": 9860000000,
+    "automatic_retry": false,
+    "parallel_calls": false,
+    "first_structurally_valid_response": "permanent-stage-authority-stop-further-provider-starts"
+  },
+  "ordered_stages": [
+    {
+      "ordinal": 1,
+      "work_package": "WP9",
+      "maximum_lineage_starts": 5,
+      "maximum_successor_starts": 4,
+      "maximum_nano_usd_per_start": 140000000
+    },
+    {
+      "ordinal": 2,
+      "work_package": "WP10",
+      "maximum_lineage_starts": 5,
+      "maximum_successor_starts": 5,
+      "maximum_nano_usd_per_start": 600000000
+    },
+    {
+      "ordinal": 3,
+      "work_package": "WP11",
+      "maximum_lineage_starts": 5,
+      "maximum_successor_starts": 5,
+      "maximum_nano_usd_per_start": 600000000
+    }
+  ]
+}

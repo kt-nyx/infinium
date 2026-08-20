@@ -56,6 +56,16 @@ public sealed class ProviderTransportFaultTests
         Assert.IsTrue(result.TransportMayHaveStarted);
         Assert.IsFalse(result.RetryPermitted);
         Assert.AreEqual(1, result.SendCount);
+        byte[] envelope = OpenAiStagedResponseEnvelope.Create(result);
+        Assert.IsTrue(OpenAiStagedResponseEnvelope.TryRead(envelope, out byte[] raw, out byte[] headers));
+        Assert.HasCount(0, raw);
+        OpenAiResponsesResult replay = OpenAiStagedResponseEnvelope.Replay(raw, headers, "client-timeout");
+        Assert.AreEqual("provider-transport", replay.FailureStage);
+        Assert.AreEqual("may-have-started-no-response", replay.TransportDisposition);
+        Assert.IsNull(replay.ProviderErrorType);
+        Assert.IsTrue(replay.ErrorCode is "transport_ambiguous" or "deadline_ambiguous");
+        Assert.IsNull(replay.HttpStatus);
+        Assert.IsNull(replay.RawResponseBytes);
         await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => adapter.SendOnceAsync(
             ProviderAdapterTestData.CanonicalRequest(), Encoding.ASCII.GetBytes("sk-retry"),
             ProviderAdapterTestData.Limits(), "client-retry", CancellationToken.None));

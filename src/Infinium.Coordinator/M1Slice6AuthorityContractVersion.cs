@@ -9,6 +9,7 @@ public enum M1Slice6AuthorityContractVersion
     RetiredV2,
     RetiredC2V3,
     FreshC2V4,
+    SuccessorV5,
 }
 
 internal enum M1Slice6AuthorityDocumentKind
@@ -105,16 +106,8 @@ internal static class M1Slice6AuthorityContracts
         {
             return;
         }
-        if (campaignVersion != M1Slice6AuthorityContractVersion.FreshC2V4
-            || subjectVersion != M1Slice6AuthorityContractVersion.FreshC2V4
-            || campaignId == RetiredCampaignId
-            || credentialManifestId == RetiredCredentialManifestId
-            || campaignId == RetiredC2CampaignId
-            || credentialManifestId == RetiredC2CredentialManifestId)
-        {
-            throw new InvalidDataException(
-                "External C2 effects require fresh v4 authority and explicitly reject every retired campaign or credential identity.");
-        }
+        throw new InvalidDataException(
+            "Legacy v2-v4 campaign entry points are terminal for new external effects; only the clean-break v5 successor runner may admit one.");
     }
 
     internal static string StageEvidenceSchema(M1Slice6AuthorityContractVersion version) => version switch
@@ -122,6 +115,7 @@ internal static class M1Slice6AuthorityContracts
         M1Slice6AuthorityContractVersion.RetiredV2 => "infinium.m1-s6.campaign-stage-evidence/v2",
         M1Slice6AuthorityContractVersion.RetiredC2V3 => "infinium.m1-s6.campaign-stage-evidence/v3",
         M1Slice6AuthorityContractVersion.FreshC2V4 => "infinium.m1-s6.campaign-stage-evidence/v4",
+        M1Slice6AuthorityContractVersion.SuccessorV5 => "infinium.m1-s6.successor-attempt-evidence/v1",
         _ => throw new InvalidDataException("The stage evidence authority version is unknown."),
     };
 
@@ -130,6 +124,7 @@ internal static class M1Slice6AuthorityContracts
         M1Slice6AuthorityContractVersion.RetiredV2 => "infinium.m1-s6.campaign-composed-evidence/v2",
         M1Slice6AuthorityContractVersion.RetiredC2V3 => "infinium.m1-s6.campaign-composed-evidence/v3",
         M1Slice6AuthorityContractVersion.FreshC2V4 => "infinium.m1-s6.campaign-composed-evidence/v4",
+        M1Slice6AuthorityContractVersion.SuccessorV5 => "infinium.m1-s6.successor-composed-evidence/v1",
         _ => throw new InvalidDataException("The composed evidence authority version is unknown."),
     };
 }

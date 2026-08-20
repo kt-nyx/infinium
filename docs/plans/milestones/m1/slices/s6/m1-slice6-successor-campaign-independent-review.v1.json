@@ -1,0 +1,23 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-successor-independent-review/1.0.0",
+  "review_id": "/root/successor-authority-review/campaign-final-20260820",
+  "review_kind": "campaign-authority",
+  "verdict": "accept",
+  "reviewer_id": "/root/successor-authority-review",
+  "independent": true,
+  "provider_effect_used": false,
+  "subject": {
+    "id": "infinium.m1-s6.successor-campaign/a4f66e58-6456-4c90-a6e2-20260820c2b1",
+    "sha256": "ff0a8a1cd499f5639c85fa7d43737643dc4b3494643d150b72d2772fc2fc18ef"
+  },
+  "correction": {
+    "required": false,
+    "defect_id": null,
+    "diagnosis_disposition": null,
+    "failure_evidence_id": null,
+    "failure_evidence_sha256": null,
+    "candidate_commit": null
+  },
+  "findings": [],
+  "reviewed_at_utc": "2026-08-20T22:10:00.0000000+00:00"
+}

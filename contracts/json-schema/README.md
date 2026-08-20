@@ -41,6 +41,7 @@ network.
 | `candidate-investigation.v1.schema.json` | `infinium.llm.candidate-investigation/v1` |
 | `provider-execution-input.v1.schema.json` | `infinium.provider.execution-input/v1` |
 | `provider-effect-runtime-authority.v1.schema.json` | `infinium.provider.effect-runtime-authority/v1` |
+| `provider-effect-runtime-authority.v2.schema.json` | `infinium.provider.effect-runtime-authority/v2` |
 | `effective-scan-configuration.v2.schema.json` | `infinium.scan.effective-configuration/v2` |
 | `run-output.v2.schema.json` | `infinium.run-output/v2` |
 | `cli-summary.v2.schema.json` | `infinium.cli-summary/v2` |
@@ -59,6 +60,15 @@ admission envelope, not an analysis input or repository-governance schema. It
 binds a future effect subject, campaign, predecessor, reviewed implementation
 and binaries, execution paths, time window, and closed counters. No executable
 instance is supplied by the schema or by C1.
+
+The additive v2 runtime authority is restricted to the owner-authorized Slice
+6 successor campaign. It binds one fresh stage-attempt identity and exact
+request/reservation/effect roots while retaining `maximum_provider_starts=1`
+and `automatic_retry=false`. Serial campaign attempts are represented by fresh
+v2 authority bytes, never by broadening or reusing one runtime authority.
+Successor admission also requires the closed independent-review contract; a
+digest of arbitrary prose cannot advance campaign, failure, correction,
+runtime, or composed-evidence authority.
 Provider execution and operation carry the accepted versioned local input-bound
 policy `openai-responses-o200k-byte-envelope/v2`. This maturity transition does
 not authorize provider dispatch, credentials, or later-package execution and

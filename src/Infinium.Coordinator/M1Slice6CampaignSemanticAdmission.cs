@@ -48,7 +48,15 @@ internal static class M1Slice6CampaignSemanticAdmission
         if (authority.Stage == M1Slice6CampaignStage.SourceClaimExtraction)
         {
             SourceClaimExecutionInput input = M1Slice6CampaignV2InputAdapter.ReadSourceClaim(inputJson);
-            MaterializeSourceRevision(store, input, occurredAt);
+            try
+            {
+                RequireSourceRevision(store, input);
+            }
+            catch (InvalidDataException)
+            {
+                MaterializeSourceRevision(store, input, occurredAt);
+                RequireSourceRevision(store, input);
+            }
         }
         else if (authority.Stage == M1Slice6CampaignStage.CandidateInvestigation)
         {
@@ -58,15 +66,31 @@ internal static class M1Slice6CampaignSemanticAdmission
             {
                 throw new InvalidDataException("WP11 live input must bind the exact two-context product contract.");
             }
-            using SqliteConnection connection = new($"Data Source={store.Paths.Database};Pooling=False");
-            connection.Open();
-            using SqliteTransaction transaction = connection.BeginTransaction();
-            foreach (CandidateInvestigationContextInput context in input.Contexts)
+            bool alreadyPrepared = input.Contexts.All(context =>
             {
-                MaterializeCandidateRoots(store, input, context,
-                    campaignInput.RootsByContext[context.ContextId], occurredAt, connection, transaction);
+                try
+                {
+                    RequireCandidateRoots(store, input, context.ContextId,
+                        campaignInput.RootsByContext[context.ContextId]);
+                    return true;
+                }
+                catch (InvalidDataException)
+                {
+                    return false;
+                }
+            });
+            if (!alreadyPrepared)
+            {
+                using SqliteConnection connection = new($"Data Source={store.Paths.Database};Pooling=False");
+                connection.Open();
+                using SqliteTransaction transaction = connection.BeginTransaction();
+                foreach (CandidateInvestigationContextInput context in input.Contexts)
+                {
+                    MaterializeCandidateRoots(store, input, context,
+                        campaignInput.RootsByContext[context.ContextId], occurredAt, connection, transaction);
+                }
+                transaction.Commit();
             }
-            transaction.Commit();
         }
     }
 
@@ -120,8 +144,8 @@ internal static class M1Slice6CampaignSemanticAdmission
             ?? throw new InvalidDataException("WP10 output is not an exact retained transcript envelope.");
         if (envelope.SchemaId != "infinium.llm.source-claim-retained-transcripts/v1"
             || envelope.SchemaVersion != "1" || envelope.Transcripts.Count != 1
-            || input.OperationId != admission.OperationId
-            || input.HostAuthorizationId != admission.AuthorizationId)
+            || input.OperationId != SemanticOperationId(admission)
+            || input.HostAuthorizationId != SemanticAuthorizationId(admission))
         {
             throw new InvalidDataException("WP10 input/output identities differ from the authoritative provider admission.");
         }
@@ -172,7 +196,7 @@ internal static class M1Slice6CampaignSemanticAdmission
                 input.ParentAnalysisRunId, input.ApplicationScopeId, input.CostAttributionScopeId),
         };
         SourceClaimAdmissionPublication publication = new SourceClaimAcquisitionCoordinator(store)
-            .AdmitRetainedTranscript(input, transcript, admission.AuthorizationId,
+            .AdmitRetainedTranscript(input, transcript, SemanticAuthorizationId(admission),
                 admission.AttemptId, admission.RequestId, admission.DispatchFenceId, occurredAt,
                 identities, artifactAuthority, applicabilityFacts, applicationAuthority);
         SourceClaimScenarioResult scenario = publication.Scenario;
@@ -332,8 +356,8 @@ internal static class M1Slice6CampaignSemanticAdmission
             ?? throw new InvalidDataException("WP11 output is not an exact retained transcript envelope.");
         if (envelope.SchemaId != "infinium.llm.candidate-investigation-retained-transcripts/v1"
             || envelope.SchemaVersion != "1" || envelope.Transcripts.Count != 2
-            || input.OperationId != admission.OperationId
-            || input.HostAuthorizationId != admission.AuthorizationId)
+            || input.OperationId != SemanticOperationId(admission)
+            || input.HostAuthorizationId != SemanticAuthorizationId(admission))
         {
             throw new InvalidDataException("WP11 input/output identities differ from the authoritative provider admission.");
         }
@@ -356,7 +380,7 @@ internal static class M1Slice6CampaignSemanticAdmission
                 M1Slice6CampaignEvidenceRoot root = campaignInput.RootsByContext[transcript.ContextId];
                 RequireCandidateRoots(store, input, transcript.ContextId, root);
                 staged.Add(coordinator.AdmitRetainedTranscript(
-                    input, transcript, admission.AuthorizationId, admission.AttemptId,
+                    input, transcript, SemanticAuthorizationId(admission), admission.AttemptId,
                     admission.RequestId, admission.DispatchFenceId, occurredAt,
                     campaignInput.ExactV2Bytes, root,
                     campaignInput.LocalObservationsByContext[transcript.ContextId]));
@@ -744,6 +768,14 @@ internal static class M1Slice6CampaignSemanticAdmission
         }
         return (payloadId, bytes);
     }
+
+    private static string SemanticOperationId(M1Slice6CampaignAccountingAdmission admission) =>
+        string.IsNullOrEmpty(admission.SemanticOperationId)
+            ? admission.OperationId : admission.SemanticOperationId;
+
+    private static string SemanticAuthorizationId(M1Slice6CampaignAccountingAdmission admission) =>
+        string.IsNullOrEmpty(admission.SemanticAuthorizationId)
+            ? admission.AuthorizationId : admission.SemanticAuthorizationId;
 
     internal static string ExtractUntrustedInput(ReadOnlySpan<byte> canonicalRequest)
     {

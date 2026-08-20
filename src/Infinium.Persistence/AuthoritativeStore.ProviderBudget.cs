@@ -631,9 +631,18 @@ public sealed partial class AuthoritativeStore
                 ("$operation", request.OperationId), ("$attempt", request.AttemptId),
                 ("$request", request.RequestId), ("$reservation", request.ReservationId));
 
-            ProviderBudgetVectorContract actual = undispatched
-                || request.Usage.Availability != ProviderAvailabilityState.Available
-                || request.Usage.ReceiptState != UsageReceiptState.Complete
+            bool exactUsageAvailable = request.Usage.Availability == ProviderAvailabilityState.Available
+                && request.Usage.ReceiptState is UsageReceiptState.Complete or UsageReceiptState.FailedKnown
+                && ExactQuantityAvailable(request.Usage.DispatchCount)
+                && ExactQuantityAvailable(request.Usage.InputTokens)
+                && ExactQuantityAvailable(request.Usage.OutputTokens)
+                && ExactQuantityAvailable(request.Usage.TotalTokens)
+                && ExactQuantityAvailable(request.Usage.ReasoningTokens)
+                && ExactQuantityAvailable(request.Usage.CacheReadTokens)
+                && ExactQuantityAvailable(request.Usage.CacheWriteTokens)
+                && ExactQuantityAvailable(request.Usage.PricedToolCalls)
+                && ExactQuantityAvailable(request.Usage.CalculatedNanoUsd);
+            ProviderBudgetVectorContract actual = undispatched || !exactUsageAvailable
                 ? ProviderBudgetVectorContract.Zero
                 : ToAvailableBudgetVector(request.Usage);
             InsertProviderUsage(request, undispatched, rateAvailability, transaction);
@@ -685,7 +694,7 @@ public sealed partial class AuthoritativeStore
             ProviderBudgetVectorContract reserved = ReadReservationVectorOutsideTransaction(request.ReservationId);
             ProviderBudgetEventKind kind = undispatched
                 ? ProviderBudgetEventKind.ReleasedUndispatched
-                : request.Usage.Availability != ProviderAvailabilityState.Available
+                : !exactUsageAvailable
                     ? ProviderBudgetEventKind.RetainedUnavailable
                 : !ProviderBudgetVectorContract.FitsWithin(ProviderBudgetVectorContract.Zero, actual, reserved)
                     ? ProviderBudgetEventKind.SettledOverrun
@@ -1153,6 +1162,9 @@ public sealed partial class AuthoritativeStore
         return result;
     }
 
+    private static bool ExactQuantityAvailable(ProviderQuantityContract quantity) =>
+        quantity.Availability == ProviderAvailabilityState.Available && quantity.Value.HasValue;
+
     private static string ToAvailability(ProviderAvailabilityState value) => value switch
     {
         ProviderAvailabilityState.Available => "available",
@@ -1483,16 +1495,17 @@ public sealed partial class AuthoritativeStore
         }
         string ownerKind = reader.GetString(0);
         string ownerId = reader.GetString(1);
+        bool successor = operationId.StartsWith("m1s6-successor-", StringComparison.Ordinal);
         Dictionary<string, string> result = new(StringComparer.Ordinal)
         {
             ["request"] = requestId,
             ["operation"] = operationId,
             [ownerKind] = ownerId,
-            ["analysis-run"] = reader.GetString(5),
-            ["provider-profile"] = reader.GetString(2),
-            ["provider-account"] = reader.GetString(3),
-            ["billing-scope"] = reader.GetString(4),
-            ["global"] = "provider-global",
+            ["analysis-run"] = successor ? "m1s6-successor-campaign-budget" : reader.GetString(5),
+            ["provider-profile"] = successor ? "m1s6-successor-profile-budget" : reader.GetString(2),
+            ["provider-account"] = successor ? "m1s6-successor-account-budget" : reader.GetString(3),
+            ["billing-scope"] = successor ? "m1s6-successor-billing-budget" : reader.GetString(4),
+            ["global"] = successor ? "m1s6-successor-global" : "provider-global",
         };
         return result;
     }

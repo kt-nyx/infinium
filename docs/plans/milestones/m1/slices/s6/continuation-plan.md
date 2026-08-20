@@ -2,7 +2,7 @@
 
 Status: Accepted
 
-Disposition: Owner-accepted successor execution model; documentation activation
+Disposition: Owner-authorized successor execution model; corrected authority candidate remains review-pending
 candidate pending final owner acceptance before C1 becomes eligible
 
 Owner: Project owner
@@ -105,8 +105,8 @@ pre-accept unknown C2 bytes.
   admission, artifact, application, payload bytes, and digests.
 - WP11 negative uses only its independently frozen host-evidence root and does
   not fabricate a second WP10 claim.
-- Composed provenance requires qualification -> WP10 -> WP11 and no fourth
-  request.
+- Composed provenance requires qualification -> WP10 -> WP11, records every
+  lineage attempt, and proves no start after each stage's authoritative latch.
 
 ### 4.2 Persistence, replay, and invalid states
 
@@ -260,6 +260,50 @@ network, provider, or billable operation without the exact existing gates.
 
 ## 7. `M1/S6/C2` — One bounded live campaign
 
+### 2026-08-20 owner-authorized successor amendment
+
+The original v4 C2B execution is terminal and immutable at event hash
+`282c97151dbdcd354288b67f96c4b01d7f7ef43b1bbfb9f247cbd9b510506de9`.
+The following clean-break rules supersede Sections 7.1-7.5 only where those
+sections say one start per stage, exactly three total starts, USD 1.34
+aggregate, no fourth request, or permanent stop after any failed stage:
+
+- each v5 runtime authority permits one possible provider start and no retry;
+- the campaign permits serial fresh attempts, never an automatic loop;
+- each stage has at most five lineage starts; terminal WP9 consumed ordinal 1,
+  leaving at most four successor WP9 starts, while WP10 and WP11 each have at
+  most five;
+- terminal USD 0.14 plus successor cumulative reservations/spend may not
+  exceed USD 10.00; the existing per-attempt USD 0.14/USD 0.60/USD 0.60
+  ceilings are unchanged unless exact technical necessity is independently
+  reviewed and rebound;
+- additive migration `M1-S6-SUCCESSOR-0007` may advance only the exact retained
+  product-state root to schema 7/storage `1.6.0`; it preserves historical rows
+  and permits the same frozen request only through a fresh transport operation
+  and attempt identity;
+- every reviewed runtime candidate binds both the immutable snapshot-origin
+  digest and an exact read-only logical checkpoint digest of the then-current
+  SQLite state plus every retained non-database file; the coordinator
+  recomputes that checkpoint immediately before admission so between-attempt
+  state drift cannot inherit authority;
+- a failed or ambiguous attempt retains its response or zero-byte diagnostic,
+  unresolved hold when needed, and fresh identities. Another attempt requires
+  accepted failure evidence plus offline diagnosis/correction and independent
+  review;
+- the first structurally valid WP10 or WP11 response is authoritative before
+  semantic comparison and permanently stops provider calls for that stage;
+  no prompt, product, fixture, or frozen-oracle tuning and no choice among
+  multiple valid semantic outputs is permitted; and
+- the retained credential is accessible only through the exact masked-helper
+  `CredReadW -> CredFree` boundary in the successor credential-access
+  authority. Exposure, enumeration, replacement, write, and delete remain
+  prohibited.
+
+All v4 schemas, manifests, ledger bytes, evidence, and historical statements
+remain unchanged and historical. “One-shot stage” in the original text now
+means “one possible provider start per independently reviewed and durably
+admitted fresh attempt.”
+
 ### 7.1 Objective and authority
 
 Execute the exact Slice 6 credential enrollment and three provider stages once
@@ -386,8 +430,9 @@ maturity, documentation, and owner-handoff outcomes of old R7.
 - replay retained raw responses and headers with network disabled;
 - verify the WP10 admitted chain and WP11 positive/negative consumption;
 - assemble composed provenance with qualification marked non-semantic;
-- prove exact three-start totals, settlement/recovery, canaries, no retry, and
-  no fourth request;
+- prove the actual per-stage start totals are within five (including terminal
+  WP9), settlement/recovery, canaries, no retry, and no start after a first
+  authoritative stage response;
 - report refusals, unsupported modes, coverage, gaps, and claim limits;
 - run the final accumulated Slice 6 regression and continuation-profile floor;
 - review contract maturity and freeze only identities with complete producer,

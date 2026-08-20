@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.m1-s6.successor-composed-evidence/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "evidence_id", "status", "campaign_id", "campaign_manifest_sha256", "terminal_campaign_id", "terminal_event_hash", "ledger_precompletion_event_hash", "attempts", "authoritative_stages", "accounting", "assertions"],
+  "properties": {
+    "schema": { "const": "infinium.m1-s6.successor-composed-evidence/v1" },
+    "evidence_id": { "type": "string", "minLength": 1, "maxLength": 160, "pattern": "^[A-Za-z0-9._:-]+$" },
+    "status": { "const": "effect-free-c3-review-pending" },
+    "campaign_id": { "type": "string", "minLength": 1 },
+    "campaign_manifest_sha256": { "$ref": "#/$defs/sha" },
+    "terminal_campaign_id": { "type": "string", "minLength": 1 },
+    "terminal_event_hash": { "$ref": "#/$defs/sha" },
+    "ledger_precompletion_event_hash": { "$ref": "#/$defs/sha" },
+    "attempts": { "type": "array", "minItems": 3, "maxItems": 100, "items": { "$ref": "#/$defs/attempt" } },
+    "authoritative_stages": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/authority" } },
+    "accounting": { "$ref": "#/$defs/accounting" },
+    "assertions": { "$ref": "#/$defs/assertions" }
+  },
+  "$defs": {
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "attempt": { "type": "object", "additionalProperties": false, "required": ["attempt_id", "stage", "attempt_ordinal", "evidence_id", "evidence_path", "evidence_sha256", "review_id", "review_sha256", "failure_disposition", "authoritative"], "properties": {
+      "attempt_id": { "type": "string", "minLength": 1 }, "stage": { "enum": ["Qualification", "SourceClaimExtraction", "CandidateInvestigation"] },
+      "attempt_ordinal": { "type": "integer", "minimum": 1, "maximum": 100 }, "evidence_id": { "type": "string", "minLength": 1 },
+      "evidence_path": { "type": "string", "minLength": 1, "maxLength": 300 }, "evidence_sha256": { "$ref": "#/$defs/sha" },
+      "review_id": { "type": "string", "minLength": 1 }, "review_sha256": { "$ref": "#/$defs/sha" },
+      "failure_disposition": { "type": ["string", "null"] }, "authoritative": { "type": "boolean" }
+    }},
+    "authority": { "type": "object", "additionalProperties": false, "required": ["stage", "attempt_id", "evidence_id", "evidence_path", "evidence_sha256"], "properties": {
+      "stage": { "enum": ["Qualification", "SourceClaimExtraction", "CandidateInvestigation"] }, "attempt_id": { "type": "string", "minLength": 1 },
+      "evidence_id": { "type": "string", "minLength": 1 }, "evidence_path": { "type": "string", "minLength": 1, "maxLength": 300 }, "evidence_sha256": { "$ref": "#/$defs/sha" }
+    }},
+    "accounting": { "type": "object", "additionalProperties": false, "required": ["terminal_conservative_nano_usd", "successor_cumulative_reserved_nano_usd", "successor_settled_nano_usd", "successor_unresolved_nano_usd", "successor_outstanding_reserved_nano_usd", "slice_total_committed_nano_usd"], "properties": {
+      "terminal_conservative_nano_usd": { "const": 140000000 }, "successor_cumulative_reserved_nano_usd": { "type": "integer", "minimum": 1, "maximum": 9860000000 },
+      "successor_settled_nano_usd": { "type": "integer", "minimum": 0 }, "successor_unresolved_nano_usd": { "type": "integer", "minimum": 0 },
+      "successor_outstanding_reserved_nano_usd": { "const": 0 }, "slice_total_committed_nano_usd": { "type": "integer", "minimum": 140000001, "maximum": 10000000000 }
+    }},
+    "assertions": { "type": "object", "additionalProperties": false, "required": ["automatic_retry", "parallel_calls", "first_valid_per_stage_permanent", "all_attempt_evidence_retained", "terminal_campaign_immutable", "provider_effect_used_by_c3"], "properties": {
+      "automatic_retry": { "const": false }, "parallel_calls": { "const": false }, "first_valid_per_stage_permanent": { "const": true },
+      "all_attempt_evidence_retained": { "const": true }, "terminal_campaign_immutable": { "const": true }, "provider_effect_used_by_c3": { "const": false }
+    }}
+  }
+}

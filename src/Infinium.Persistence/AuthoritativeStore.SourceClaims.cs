@@ -308,17 +308,34 @@ public partial class AuthoritativeStore
                 authority.Transaction = transaction;
                 authority.CommandText =
                     """
-                    SELECT 1 FROM provider_operation_authorizations authorization
-                    JOIN provider_responses response
-                      ON response.authorization_id=authorization.authorization_id
-                     AND response.operation_id=authorization.operation_id
-                    WHERE authorization.authorization_id=$authorization
-                      AND authorization.operation_id=$operation
-                      AND authorization.owner_kind=$owner_kind AND authorization.owner_id=$owner
-                      AND authorization.operation_kind='source-claim-extraction'
-                      AND response.response_record_id=$response
-                      AND response.provider_attempt_id=$attempt AND response.request_id=$request
-                      AND response.dispatch_fence_id=$fence;
+                    SELECT 1 WHERE EXISTS(
+                      SELECT 1 FROM provider_operation_authorizations authorization
+                      JOIN provider_responses response
+                        ON response.authorization_id=authorization.authorization_id
+                       AND response.operation_id=authorization.operation_id
+                      WHERE authorization.authorization_id=$authorization
+                        AND authorization.operation_id=$operation
+                        AND authorization.owner_kind=$owner_kind AND authorization.owner_id=$owner
+                        AND authorization.operation_kind='source-claim-extraction'
+                        AND response.response_record_id=$response
+                        AND response.provider_attempt_id=$attempt AND response.request_id=$request
+                        AND response.dispatch_fence_id=$fence)
+                    OR EXISTS(
+                      SELECT 1 FROM m1_slice6_successor_semantic_response_bindings binding
+                      JOIN provider_operation_authorizations transport
+                        ON transport.authorization_id=binding.transport_authorization_id
+                       AND transport.operation_id=binding.transport_operation_id
+                      JOIN provider_responses response
+                        ON response.authorization_id=transport.authorization_id
+                       AND response.operation_id=transport.operation_id
+                       AND response.response_record_id=binding.transport_response_record_id
+                      WHERE binding.semantic_authorization_id=$authorization
+                        AND binding.semantic_operation_id=$operation
+                        AND binding.owner_kind=$owner_kind AND binding.owner_id=$owner
+                        AND binding.stage='source-claim-extraction'
+                        AND binding.semantic_response_record_id=$response
+                        AND response.provider_attempt_id=$attempt AND response.request_id=$request
+                        AND response.dispatch_fence_id=$fence);
                     """;
                 authority.Parameters.AddWithValue("$authorization", request.AuthorizationId);
                 authority.Parameters.AddWithValue("$operation", document.OperationId.Value);
@@ -552,22 +569,43 @@ public partial class AuthoritativeStore
                     authority.Transaction = transaction;
                     authority.CommandText =
                         """
-                    SELECT 1 FROM provider_operation_authorizations authorization
-                    JOIN analysis_candidates candidate
-                      ON candidate.candidate_id=$candidate AND candidate.run_id=authorization.owner_id
-                    WHERE authorization.authorization_id=$authorization
-                      AND authorization.operation_id=$operation
-                      AND authorization.owner_kind='analysis-run' AND authorization.owner_id=$owner
-                      AND authorization.operation_kind='candidate-investigation'
-                      AND authorization.prompt_id=$prompt
-                      AND authorization.prompt_fingerprint=$prompt_fingerprint
-                      AND ($response IS NULL OR EXISTS(
-                        SELECT 1 FROM provider_responses response
-                        WHERE response.authorization_id=authorization.authorization_id
-                          AND response.operation_id=authorization.operation_id
-                          AND response.response_record_id=$response
-                          AND response.provider_attempt_id=$attempt AND response.request_id=$request
-                          AND response.dispatch_fence_id=$fence));
+                    SELECT 1 WHERE EXISTS(
+                      SELECT 1 FROM provider_operation_authorizations authorization
+                      JOIN analysis_candidates candidate
+                        ON candidate.candidate_id=$candidate AND candidate.run_id=authorization.owner_id
+                      WHERE authorization.authorization_id=$authorization
+                        AND authorization.operation_id=$operation
+                        AND authorization.owner_kind='analysis-run' AND authorization.owner_id=$owner
+                        AND authorization.operation_kind='candidate-investigation'
+                        AND authorization.prompt_id=$prompt
+                        AND authorization.prompt_fingerprint=$prompt_fingerprint
+                        AND ($response IS NULL OR EXISTS(
+                          SELECT 1 FROM provider_responses response
+                          WHERE response.authorization_id=authorization.authorization_id
+                            AND response.operation_id=authorization.operation_id
+                            AND response.response_record_id=$response
+                            AND response.provider_attempt_id=$attempt AND response.request_id=$request
+                            AND response.dispatch_fence_id=$fence)))
+                    OR EXISTS(
+                      SELECT 1 FROM m1_slice6_successor_semantic_response_bindings binding
+                      JOIN provider_operation_authorizations transport
+                        ON transport.authorization_id=binding.transport_authorization_id
+                       AND transport.operation_id=binding.transport_operation_id
+                      JOIN analysis_candidates candidate
+                        ON candidate.candidate_id=$candidate AND candidate.run_id=binding.owner_id
+                      JOIN provider_responses response
+                        ON response.authorization_id=transport.authorization_id
+                       AND response.operation_id=transport.operation_id
+                       AND response.response_record_id=binding.transport_response_record_id
+                      WHERE binding.semantic_authorization_id=$authorization
+                        AND binding.semantic_operation_id=$operation
+                        AND binding.owner_kind='analysis-run' AND binding.owner_id=$owner
+                        AND binding.stage='candidate-investigation'
+                        AND binding.semantic_response_record_id=$response
+                        AND response.provider_attempt_id=$attempt AND response.request_id=$request
+                        AND response.dispatch_fence_id=$fence
+                        AND transport.prompt_id=$prompt
+                        AND transport.prompt_fingerprint=$prompt_fingerprint);
                     """;
                     authority.Parameters.AddWithValue("$candidate", document.CandidateId.Value);
                     authority.Parameters.AddWithValue("$authorization", request.AuthorizationId);

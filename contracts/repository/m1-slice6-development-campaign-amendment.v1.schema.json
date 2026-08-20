@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.repository.m1-slice6-development-campaign-amendment/1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_identity", "amendment_id", "status", "authorized_at_utc", "owner_authority", "terminal_predecessor", "successor_bounds", "credential_boundary", "failure_evidence", "stop_conditions"],
+  "properties": {
+    "schema_identity": { "const": "infinium.repository.m1-slice6-development-campaign-amendment/1.0.0" },
+    "amendment_id": { "type": "string", "minLength": 1 },
+    "status": { "const": "owner-authorized" },
+    "authorized_at_utc": { "type": "string", "format": "date-time" },
+    "owner_authority": { "type": "string", "minLength": 1 },
+    "terminal_predecessor": {
+      "type": "object", "additionalProperties": false,
+      "required": ["campaign_id", "final_event_hash", "possible_starts", "conservative_nano_usd", "disposition"],
+      "properties": {
+        "campaign_id": { "const": "infinium.m1-s6.finite-live-campaign/ff2d542a-04f0-448a-bcb8-a0ecbedde5b9" },
+        "final_event_hash": { "const": "282c97151dbdcd354288b67f96c4b01d7f7ef43b1bbfb9f247cbd9b510506de9" },
+        "possible_starts": { "const": 1 },
+        "conservative_nano_usd": { "const": 140000000 },
+        "disposition": { "const": "terminal-immutable-never-retry-reuse-erase-or-reinterpret" }
+      }
+    },
+    "successor_bounds": {
+      "type": "object", "additionalProperties": false,
+      "required": ["maximum_possible_starts_per_stage", "maximum_slice_reservation_or_spend_nano_usd", "maximum_successor_cumulative_reservation_nano_usd", "automatic_retry", "parallel_calls", "fresh_attempt_runtime_identity_required", "failure_requires_offline_diagnosis_correction_and_independent_review", "first_valid_wp10_or_wp11_is_authoritative", "semantic_output_selection"],
+      "properties": {
+        "maximum_possible_starts_per_stage": { "const": 5 },
+        "maximum_slice_reservation_or_spend_nano_usd": { "const": 10000000000 },
+        "maximum_successor_cumulative_reservation_nano_usd": { "const": 9860000000 },
+        "automatic_retry": { "const": false }, "parallel_calls": { "const": false },
+        "fresh_attempt_runtime_identity_required": { "const": true },
+        "failure_requires_offline_diagnosis_correction_and_independent_review": { "const": true },
+        "first_valid_wp10_or_wp11_is_authoritative": { "const": true },
+        "semantic_output_selection": { "const": "prohibited" }
+      }
+    },
+    "credential_boundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source", "allowed_native_call_order_per_attempt", "prohibited"],
+      "properties": {
+        "source": { "const": "already-retained-profile-only" },
+        "allowed_native_call_order_per_attempt": { "const": ["CredReadW", "CredFree"] },
+        "prohibited": { "const": ["expose", "enumerate", "replace", "rewrite", "delete", "CredWriteW", "CredDeleteW"] }
+      }
+    },
+    "failure_evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["required_fields", "secret_or_secret_headers"],
+      "properties": {
+        "required_fields": { "const": ["failure_stage", "http_status_when_known", "provider_error_type", "provider_error_code", "request_identifiers", "transport_disposition", "response_bytes_existed"] },
+        "secret_or_secret_headers": { "const": "prohibited" }
+      }
+    },
+    "stop_conditions": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } }
+  }
+}

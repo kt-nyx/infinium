@@ -148,6 +148,46 @@ scope reduction.
 
 ## Effect and campaign boundary
 
+### 2026-08-20 successor amendment
+
+The v4 C2B campaign is now terminal historical evidence. Its final ledger event
+is `282c97151dbdcd354288b67f96c4b01d7f7ef43b1bbfb9f247cbd9b510506de9`.
+Nothing in the successor work reopens that ledger or reuses its campaign,
+stage, attempt, or runtime identity. The terminal WP9 start and USD 0.14
+reservation remain conservatively consumed.
+
+The owner-authorized
+[development-campaign amendment](m1-slice6-development-campaign-amendment.v1.json)
+and [v5 successor campaign](m1-slice6-successor-campaign-authorization.v5.json)
+supersede only the remaining live execution cadence. Each independently
+reviewed and durably admitted fresh attempt permits at most one possible
+provider start and one masked-helper `CredReadW -> CredFree` sequence.
+Automatic retry, parallel calls, credential enumeration/write/delete/
+replacement, and semantic-output selection remain prohibited.
+
+The lineage permits at most five possible starts per stage, including the
+terminal WP9 start. A failed or ambiguous attempt may have a fresh successor
+only after its sanitized evidence is independently accepted and exact offline
+diagnosis/correction review is durably bound. The first structurally valid
+WP10 or WP11 response is permanent stage authority and stops further calls for
+that stage before semantic comparison. Terminal USD 0.14 plus successor
+cumulative reservations may not exceed USD 10.00. With unchanged per-call
+ceilings, the maximum possible lineage reservation is USD 6.70.
+
+The reviewed successor persistence candidate adds migration
+`M1-S6-SUCCESSOR-0007` (schema 6/storage `1.5.0` to schema 7/storage `1.6.0`)
+only at the exact retained product-state root. It preserves historical rows
+and scopes repeated frozen requests to fresh transport-operation and attempt
+identities. Each reviewed runtime candidate also binds an exact logical
+product-state checkpoint: a consistent read-only SQLite backup digest plus
+every retained non-database file. Runtime admission recomputes it before any
+possible start.
+
+The successor live wrapper is `eng/run-m1-slice6-successor.ps1`. It accepts
+only exact digest-bound campaign/stage/runtime/helper inputs and performs one
+coordinator invocation. It contains no loop, retry, fallback, credential
+inspection, authority derivation, or semantic-output selection.
+
 No repository document supplies an API key. The consumed C2A authority permits
 no retry. The recovery package permits no helper/UI launch, native credential
 call, credential-store inspection, DNS/public network, provider contact,

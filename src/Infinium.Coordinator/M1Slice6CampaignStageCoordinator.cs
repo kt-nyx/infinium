@@ -26,7 +26,8 @@ public sealed record M1Slice6CampaignStageAuthority(
     string ValidationProductInputSha256, string ValidationPredecessorManifestPath,
     long ValidationPredecessorManifestBytes, string ValidationPredecessorManifestSha256,
     string ValidationOraclePath, string ValidationOracleSha256,
-    string DeterministicOracleResultSha256, bool SemanticUse);
+    string DeterministicOracleResultSha256, bool SemanticUse,
+    string PredecessorEventHash = "");
 
 public sealed record M1Slice6CampaignCredentialReadReceipt(
     string ProfileId, string GenerationId, string TargetFingerprintSha256,
@@ -39,11 +40,29 @@ public sealed record M1Slice6CampaignStageBoundaryResult(
     byte[] ResponseHeadersBytes, byte[] NativeCallTraceBytes, byte[] CanaryEvidenceBytes,
     DateTimeOffset CompletedAtUtc);
 
+public sealed record M1Slice6CampaignBoundaryFailureReceipt(
+    string FailureStage, string TransportDisposition, string LocalFailureCode,
+    int? HttpStatus, string? ProviderErrorType, string? ProviderErrorCode,
+    string? ProviderResponseId, string ClientRequestId, string? ProviderRequestId,
+    bool? ResponseBytesExisted, long? ResponseBytesObservedLowerBound,
+    int? ProviderSendCount, int? DnsResolutionCount,
+    byte[]? SafeRawResponseBytes, byte[]? SafeResponseHeadersBytes);
+
+public sealed class M1Slice6CampaignBoundaryEvidenceException(
+    string message, M1Slice6CampaignBoundaryFailureReceipt receipt, bool terminalSafety,
+    Exception? innerException = null) : IOException(message, innerException)
+{
+    public M1Slice6CampaignBoundaryFailureReceipt Receipt { get; } = receipt;
+    public bool TerminalSafety { get; } = terminalSafety;
+}
+
 public sealed record M1Slice6CampaignAccountingAdmission(
     string AuthorizationId, string OperationId, string AttemptId, string RequestId,
     string ReservationId, string DispatchFenceId, long CoordinatorFencingEpoch,
     DateTimeOffset EffectiveGateTimeUtc, DateTimeOffset DeadlineUtc,
-    string AccountIdentityId, string BillingScopeIdentityId);
+    string AccountIdentityId, string BillingScopeIdentityId,
+    string SemanticOperationId = "", string SemanticAuthorizationId = "",
+    long ReservedNanoUsd = 0);
 
 public sealed record M1Slice6CampaignAccountingSettlement(
     string ResponseId, string UsageEntryId, string SettlementId, string ReplayEdgeId,
@@ -52,6 +71,12 @@ public sealed record M1Slice6CampaignAccountingSettlement(
     string SemanticValidationId, string SemanticDisposition,
     int SemanticProposalCount, int SemanticAdmissionCount,
     string SemanticResultSha256, M1Slice6CampaignSemanticProvenance SemanticProvenance);
+
+internal sealed record M1Slice6SuccessorAccountingPersistence(
+    string ResponseId, string UsageEntryId, string SettlementId, string ReplayEdgeId,
+    long SettledNanoUsd, long UnresolvedNanoUsd, bool RetryPermitted,
+    bool ResponsePersisted, M1Slice6CampaignSemanticAdmissionReceipt? Semantic,
+    string SemanticFailureCode);
 
 public sealed record M1Slice6CampaignRecoveredSettlement(
     long InputTokens, long OutputTokens, long RawResponseBytes, long SettledNanoUsd);
@@ -70,6 +95,9 @@ public sealed class M1Slice6CampaignKnownSettlementException(
 {
     public M1Slice6CampaignRecoveredSettlement Settlement { get; } = settlement;
 }
+
+public sealed class M1Slice6CampaignSafetyIsolationException(string message)
+    : IOException(message);
 
 public interface IM1Slice6CampaignProviderAccounting
 {
@@ -323,19 +351,35 @@ public sealed class M1Slice6CampaignProductionStageBoundary : IM1Slice6CampaignS
         HelperProcessReceipt process = await executeHelper(bootstrap, assignment, final,
             TimeSpan.FromMilliseconds(authority.Limits.DeadlineMilliseconds), now, cancellationToken)
             .ConfigureAwait(false);
-        ValidateCredentialTrace(process, targetFingerprint);
-        ValidateCanaries(process);
+        try
+        {
+            ValidateCredentialTrace(process, targetFingerprint);
+            ValidateCanaries(process);
+        }
+        catch (M1Slice6CampaignSafetyIsolationException exception)
+        {
+            throw new M1Slice6CampaignBoundaryEvidenceException(
+                "Campaign helper safety evidence failed closed.",
+                FailureReceipt(process, requestId, "security-isolation-evidence", "helper-evidence", false),
+                terminalSafety: true, exception);
+        }
         if (!process.Receipt.TransportMayHaveStarted || process.RetryAttempted
             || process.NetworkOperationCount != 1 || process.ListenerCount != 0
             || !process.ContainmentProbeExecuted || process.TotalContainedProcessCount < 2
             || process.ProcessTreeSurvivorCount != 0 || !process.ProcessTreeTerminated
             || process.ExcludedHandleAccessible || process.StagedResponseBytes.Length == 0)
         {
-            throw new InvalidDataException("Campaign provider helper returned ambiguous containment or transport evidence.");
+            throw new M1Slice6CampaignBoundaryEvidenceException(
+                "Campaign provider helper returned ambiguous containment or transport evidence.",
+                FailureReceipt(process, requestId, "helper-containment-invalid", "helper-evidence", true),
+                terminalSafety: false);
         }
         if (!OpenAiStagedResponseEnvelope.TryRead(process.StagedResponseBytes, out byte[] raw, out byte[] headers))
         {
-            throw new InvalidDataException("Campaign provider helper omitted its canonical staged response envelope.");
+            throw new M1Slice6CampaignBoundaryEvidenceException(
+                "Campaign provider helper omitted its canonical staged response envelope.",
+                FailureReceipt(process, requestId, "staged-envelope-invalid", "helper-evidence", false),
+                terminalSafety: false);
         }
         OpenAiResponsesResult result = OpenAiStagedResponseEnvelope.Replay(raw, headers, requestId) with
         {
@@ -350,51 +394,99 @@ public sealed class M1Slice6CampaignProductionStageBoundary : IM1Slice6CampaignS
             process.NativeCallTraceBytes!, process.NativeCanaryEvidenceBytes!, DateTimeOffset.UtcNow);
     }
 
+    private static M1Slice6CampaignBoundaryFailureReceipt FailureReceipt(
+        HelperProcessReceipt process, string requestId, string localFailureCode, string failureStage,
+        bool retainValidatedResponse)
+    {
+        OpenAiResponsesResult? response = null;
+        if (OpenAiStagedResponseEnvelope.TryRead(process.StagedResponseBytes,
+                out byte[] raw, out byte[] headers))
+        {
+            try { response = OpenAiStagedResponseEnvelope.Replay(raw, headers, requestId); }
+            catch (InvalidDataException) { }
+        }
+        byte[]? safeRaw = null;
+        byte[]? safeHeaders = null;
+        if (retainValidatedResponse && response is not null
+            && OpenAiStagedResponseEnvelope.TryRead(process.StagedResponseBytes,
+                out byte[] retainedRaw, out byte[] retainedHeaders))
+        { safeRaw = retainedRaw; safeHeaders = retainedHeaders; }
+        return new(failureStage, response?.TransportDisposition ?? "helper-evidence-failure",
+            localFailureCode, response?.HttpStatus, response?.ProviderErrorType,
+            response?.RawResponseBytes is null ? null : response.ErrorCode,
+            response?.ProviderResponseId, requestId,
+            response?.ProviderRequestId, response?.ResponseBytesExisted,
+            response?.ResponseBytesObservedLowerBound, process.Receipt.TransportMayHaveStarted ? 1 : null,
+            response?.DnsResolutionCount, safeRaw, safeHeaders);
+    }
+
     private static void ValidateCredentialTrace(HelperProcessReceipt process, string fingerprint)
     {
-        using JsonDocument trace = JsonDocument.Parse(process.NativeCallTraceBytes
-            ?? throw new InvalidDataException("Campaign provider helper omitted its credential trace."));
-        JsonElement[] calls = trace.RootElement.EnumerateArray().ToArray();
-        if (process.NativeCredentialOperationCount != 2 || calls.Length != 2
-            || calls[0].GetProperty("Operation").GetString() != "CredReadW"
-            || calls[0].GetProperty("Result").GetString() != "success"
-            || calls[1].GetProperty("Operation").GetString() != "CredFree"
-            || calls[1].GetProperty("Result").GetString() != "released"
-            || calls.Any(call => call.GetProperty("Scenario").GetString()
-                != "m1-s6-campaign-provider-dispatch")
-            || calls.Any(call => call.GetProperty("TargetFingerprintSha256").GetString() != fingerprint)
-            || calls[0].GetProperty("AllocationId").GetInt64()
-                != calls[1].GetProperty("PairedAllocationId").GetInt64())
+        try
         {
-            throw new InvalidDataException("Campaign provider credential read/free trace is not exact.");
+            using JsonDocument trace = JsonDocument.Parse(process.NativeCallTraceBytes
+                ?? throw new M1Slice6CampaignSafetyIsolationException(
+                    "Campaign provider helper omitted its credential trace."));
+            JsonElement[] calls = trace.RootElement.EnumerateArray().ToArray();
+            if (process.NativeCredentialOperationCount != 2 || calls.Length != 2
+                || calls[0].GetProperty("Operation").GetString() != "CredReadW"
+                || calls[0].GetProperty("Result").GetString() != "success"
+                || calls[1].GetProperty("Operation").GetString() != "CredFree"
+                || calls[1].GetProperty("Result").GetString() != "released"
+                || calls.Any(call => call.GetProperty("Scenario").GetString()
+                    != "m1-s6-campaign-provider-dispatch")
+                || calls.Any(call => call.GetProperty("TargetFingerprintSha256").GetString() != fingerprint)
+                || calls[0].GetProperty("AllocationId").GetInt64()
+                    != calls[1].GetProperty("PairedAllocationId").GetInt64())
+            {
+                throw new M1Slice6CampaignSafetyIsolationException(
+                    "Campaign provider credential read/free trace is not exact.");
+            }
+        }
+        catch (Exception exception) when (exception is JsonException or KeyNotFoundException
+            or InvalidOperationException or FormatException)
+        {
+            throw new M1Slice6CampaignSafetyIsolationException(
+                "Campaign provider credential trace is malformed or incomplete.");
         }
     }
 
     private static void ValidateCanaries(HelperProcessReceipt process)
     {
-        using JsonDocument document = JsonDocument.Parse(process.NativeCanaryEvidenceBytes
-            ?? throw new InvalidDataException("Campaign provider helper omitted canary evidence."));
-        JsonElement root = document.RootElement;
-        string[] encodings = root.GetProperty("RawTargetEncodings").EnumerateArray()
-            .Select(value => value.GetString()!).ToArray();
-        JsonElement[] surfaces = root.GetProperty("ScannedSurfaces").EnumerateArray().ToArray();
-        string[] names = surfaces.Select(value => value.GetProperty("Name").GetString()!).ToArray();
-        string[] exactNames = ["private protocol request", "private protocol response", "native call trace",
-            "process command line", "process environment names"];
-        string[] kinds = surfaces.Select(value => value.GetProperty("Kind").GetString()!).ToArray();
-        string[] exactKinds = ["private-pipe-bytes", "private-pipe-bytes", "canonical-trace-bytes",
-            "captured-text", "captured-text"];
-        if (root.GetProperty("SecretMatches").GetInt32() != 0
-            || root.GetProperty("RawTargetMatches").GetInt32() != 0
-            || !encodings.SequenceEqual(["utf-8", "utf-16le"], StringComparer.Ordinal)
-            || !names.SequenceEqual(exactNames, StringComparer.Ordinal)
-            || !kinds.SequenceEqual(exactKinds, StringComparer.Ordinal)
-            || names.Distinct(StringComparer.Ordinal).Count() != exactNames.Length
-            || surfaces.Any(value => value.GetProperty("SecretMatches").GetInt32() != 0
-                || value.GetProperty("RawTargetMatches").GetInt32() != 0
-                || value.GetProperty("ByteCount").GetInt64() <= 0))
+        try
         {
-            throw new InvalidDataException("Campaign provider helper canary evidence is vacuous, incomplete, or matched secret material.");
+            using JsonDocument document = JsonDocument.Parse(process.NativeCanaryEvidenceBytes
+                ?? throw new M1Slice6CampaignSafetyIsolationException(
+                    "Campaign provider helper omitted canary evidence."));
+            JsonElement root = document.RootElement;
+            string[] encodings = root.GetProperty("RawTargetEncodings").EnumerateArray()
+                .Select(value => value.GetString()!).ToArray();
+            JsonElement[] surfaces = root.GetProperty("ScannedSurfaces").EnumerateArray().ToArray();
+            string[] names = surfaces.Select(value => value.GetProperty("Name").GetString()!).ToArray();
+            string[] exactNames = ["private protocol request", "private protocol response", "native call trace",
+                "process command line", "process environment names"];
+            string[] kinds = surfaces.Select(value => value.GetProperty("Kind").GetString()!).ToArray();
+            string[] exactKinds = ["private-pipe-bytes", "private-pipe-bytes", "canonical-trace-bytes",
+                "captured-text", "captured-text"];
+            if (root.GetProperty("SecretMatches").GetInt32() != 0
+                || root.GetProperty("RawTargetMatches").GetInt32() != 0
+                || !encodings.SequenceEqual(["utf-8", "utf-16le"], StringComparer.Ordinal)
+                || !names.SequenceEqual(exactNames, StringComparer.Ordinal)
+                || !kinds.SequenceEqual(exactKinds, StringComparer.Ordinal)
+                || names.Distinct(StringComparer.Ordinal).Count() != exactNames.Length
+                || surfaces.Any(value => value.GetProperty("SecretMatches").GetInt32() != 0
+                    || value.GetProperty("RawTargetMatches").GetInt32() != 0
+                    || value.GetProperty("ByteCount").GetInt64() <= 0))
+            {
+                throw new M1Slice6CampaignSafetyIsolationException(
+                    "Campaign provider helper canary evidence is vacuous, incomplete, or matched secret material.");
+            }
+        }
+        catch (Exception exception) when (exception is JsonException or KeyNotFoundException
+            or InvalidOperationException or FormatException)
+        {
+            throw new M1Slice6CampaignSafetyIsolationException(
+                "Campaign provider canary evidence is malformed or incomplete.");
         }
     }
 

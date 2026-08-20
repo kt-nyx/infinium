@@ -217,12 +217,19 @@ public sealed class M1Slice6CampaignRehearsalTests
                 "src/Infinium.Coordinator/M1Slice6CampaignSemanticAdmission.cs",
                 "src/Infinium.Coordinator/M1Slice6CampaignStageCoordinator.cs",
                 "src/Infinium.Coordinator/M1Slice6CampaignV2InputAdapter.cs",
+                "src/Infinium.Coordinator/M1Slice6SuccessorCampaign.cs",
                 "src/Infinium.Coordinator/SourceClaimAcquisitionCoordinator.cs",
                 "src/Infinium.Coordinator/Wp9ProductionProfileEnrollmentRunner.cs",
+                "src/Infinium.CredentialHelper/OneShotHelperEngine.cs",
                 "src/Infinium.CredentialHelper/WindowsCredentialNativeQualification.cs",
                 "src/Infinium.Domain/Contracts/ProviderEffectRuntimeAuthority.cs",
+                "src/Infinium.OpenAI/OpenAiResponsesAdapter.cs",
+                "src/Infinium.Persistence/AuthoritativeStore.BackupRestore.cs",
                 "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+                "src/Infinium.Persistence/AuthoritativeStore.ProviderBudget.cs",
                 "src/Infinium.Persistence/AuthoritativeStore.SourceClaims.cs",
+                "src/Infinium.Persistence/AuthoritativeStore.cs",
+                "src/Infinium.Persistence/M1Slice6SuccessorCampaignLedger.cs",
                 "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
                 "src/Infinium.Persistence/M1Slice6FiniteCampaignLedger.cs",
                 "tests/Infinium.IntegrationTests/M1Slice6CampaignRehearsalTests.cs",
@@ -2071,7 +2078,7 @@ public sealed class M1Slice6CampaignRehearsalTests
         }
     }
 
-    private static string StageProductInput(string clone, M1Slice6CampaignStage stage)
+    internal static string StageProductInput(string clone, M1Slice6CampaignStage stage)
     {
         if (stage == M1Slice6CampaignStage.Qualification)
         {
@@ -2180,7 +2187,7 @@ public sealed class M1Slice6CampaignRehearsalTests
                 _ => throw new InvalidOperationException("Unknown source proposal passage."),
             });
 
-    private static byte[] StageOutputSchema(M1Slice6CampaignStage stage)
+    internal static byte[] StageOutputSchema(M1Slice6CampaignStage stage)
     {
         if (stage == M1Slice6CampaignStage.Qualification) { return ProviderAdapterTestData.OutputSchemaBytes; }
         JsonObject identifier = new() { ["type"] = "string", ["minLength"] = 1, ["maxLength"] = 200 };

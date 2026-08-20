@@ -103,6 +103,35 @@ public sealed class ProviderAdapterIntegrationTests
     }
 
     [TestMethod]
+    public async Task ProviderHttpFailureRetainsSanitizedTypeCodeRequestIdAndResponseBytes()
+    {
+        byte[] response = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            error = new { type = "invalid_request_error", code = "invalid_value", message = "not retained separately" },
+        });
+        await using ProviderLoopbackServer server = new(response, statusCode: 400,
+            responseHeaders: new Dictionary<string, string> { ["x-request-id"] = "req_http_failure_1" });
+        using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
+        OpenAiResponsesResult result = await adapter.SendOnceAsync(
+            ProviderAdapterTestData.CanonicalRequest(), Encoding.ASCII.GetBytes("sk-http-failure"),
+            ProviderAdapterTestData.Limits(), "client-http-failure-1", CancellationToken.None);
+
+        Assert.AreEqual(400, result.HttpStatus);
+        Assert.AreEqual("invalid_request_error", result.ProviderErrorType);
+        Assert.AreEqual("invalid_value", result.ErrorCode);
+        Assert.AreEqual("req_http_failure_1", result.ProviderRequestId);
+        CollectionAssert.AreEqual(response, result.RawResponseBytes!);
+        Assert.IsFalse(result.Admitted);
+        Assert.IsFalse(result.RetryPermitted);
+        byte[] envelope = OpenAiStagedResponseEnvelope.Create(result);
+        Assert.IsTrue(OpenAiStagedResponseEnvelope.TryRead(envelope, out byte[] raw, out byte[] headers));
+        OpenAiResponsesResult replay = OpenAiStagedResponseEnvelope.Replay(raw, headers, "client-http-failure-1");
+        Assert.AreEqual(result.ProviderErrorType, replay.ProviderErrorType);
+        Assert.AreEqual(result.ErrorCode, replay.ErrorCode);
+        Assert.AreEqual(result.ProviderRequestId, replay.ProviderRequestId);
+    }
+
+    [TestMethod]
     public void ProviderOfflineRejectsDnsNamesAndAlternatePathsBeforeTransport()
     {
         Assert.ThrowsExactly<InvalidOperationException>(() =>
@@ -363,8 +392,17 @@ public sealed class ProviderAdapterIntegrationTests
         Assert.AreEqual(HelperOutcomeV2.TransportMayHaveStarted, terminal.Receipt.Outcome);
         Assert.IsTrue(terminal.Receipt.TransportMayHaveStarted);
         Assert.AreEqual(UsageReceiptStateV2.Ambiguous, terminal.Receipt.UsageReceiptState);
-        Assert.AreEqual(0, stagedLength);
-        Assert.AreEqual(frameLength + 4, bytes.Length);
+        Assert.IsGreaterThan(0, stagedLength);
+        Assert.AreEqual(frameLength + 4 + stagedLength, bytes.Length);
+        ReadOnlySpan<byte> envelope = bytes.AsSpan(frameLength + 4, stagedLength);
+        Assert.IsTrue(OpenAiStagedResponseEnvelope.TryRead(
+            envelope, out byte[] diagnosticRaw, out byte[] diagnosticHeaders));
+        Assert.HasCount(0, diagnosticRaw);
+        OpenAiResponsesResult replay = OpenAiStagedResponseEnvelope.Replay(
+            diagnosticRaw, diagnosticHeaders, assignment.Assignment.ProviderRequest.RequestId);
+        Assert.AreEqual("security_secret_echo", replay.ErrorCode);
+        Assert.IsTrue(replay.ResponseBytesExisted);
+        Assert.IsNull(replay.RawResponseBytes);
         Assert.IsTrue(bytes.AsSpan().IndexOf(Encoding.UTF8.GetBytes(canary)) < 0);
     }
 

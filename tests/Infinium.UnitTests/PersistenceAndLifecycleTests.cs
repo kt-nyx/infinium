@@ -23,12 +23,12 @@ public sealed class PersistenceAndLifecycleTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
-    public void Schema6ProviderPersistenceAndBackupRestoreDeclarationsAreClosed()
+    public void Schema7ProviderPersistenceAndBackupRestoreDeclarationsAreClosed()
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
 
-        Assert.AreEqual(6, store.GetSchemaVersion());
+        Assert.AreEqual(7, store.GetSchemaVersion());
         CollectionAssert.AreEquivalent(
             ProviderProjectionNames,
             ProviderPersistenceDeclarations.RebuildableProjections.ToArray());
@@ -44,6 +44,8 @@ public sealed class PersistenceAndLifecycleTests
             SELECT
               (SELECT COUNT(*) FROM migration_history
                WHERE migration_id='M1-S6-0006' AND from_version=5 AND to_version=6),
+              (SELECT COUNT(*) FROM migration_history
+               WHERE migration_id='M1-S6-SUCCESSOR-0007' AND from_version=6 AND to_version=7),
               (SELECT COUNT(*) FROM sqlite_schema
                WHERE type='table' AND name LIKE 'provider_%'),
               (SELECT COUNT(*) FROM sqlite_schema
@@ -52,11 +54,16 @@ public sealed class PersistenceAndLifecycleTests
         using SqliteDataReader reader = command.ExecuteReader();
         Assert.IsTrue(reader.Read());
         Assert.AreEqual(1L, reader.GetInt64(0));
-        Assert.AreEqual(36L, reader.GetInt64(1));
-        Assert.AreEqual(66L, reader.GetInt64(2));
+        Assert.AreEqual(1L, reader.GetInt64(1));
+        Assert.AreEqual(36L, reader.GetInt64(2));
+        Assert.AreEqual(66L, reader.GetInt64(3));
         reader.Close();
         command.CommandText = "SELECT COUNT(*) FROM sqlite_schema WHERE type='trigger' AND name='provider_usage_operation_ceiling_guard';";
         Assert.AreEqual(0L, (long)command.ExecuteScalar()!);
+        command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='index' AND name='idx_provider_request_fingerprint';";
+        string requestFingerprintIndex = (string)command.ExecuteScalar()!;
+        StringAssert.Contains(requestFingerprintIndex,
+            "WHERE operation_id NOT GLOB 'm1s6-successor-*'");
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='table' AND name='provider_usage_entries';";
         string usageTableSql = (string)command.ExecuteScalar()!;
         StringAssert.Contains(usageTableSql, "reasoning_tokens <= output_tokens");
@@ -153,7 +160,7 @@ public sealed class PersistenceAndLifecycleTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
-    public void Schema6ProviderPersistenceBackupRestoreRetainsOnlyBlockedAuthorityState()
+    public void Schema7ProviderPersistenceBackupRestoreRetainsOnlyBlockedAuthorityState()
     {
         using TemporaryStore source = new();
         BackupArtifact backup;
@@ -173,7 +180,7 @@ public sealed class PersistenceAndLifecycleTests
                 AuthoritativeStore.RestoreBackup(backup, target);
             }
             using AuthoritativeStore restored = new(new StoragePaths(targetRoot));
-            Assert.AreEqual(6, restored.GetSchemaVersion());
+            Assert.AreEqual(7, restored.GetSchemaVersion());
             using SqliteConnection connection = new($"Data Source={restored.Paths.Database};Mode=ReadOnly;Pooling=False");
             connection.Open();
             using SqliteCommand command = connection.CreateCommand();

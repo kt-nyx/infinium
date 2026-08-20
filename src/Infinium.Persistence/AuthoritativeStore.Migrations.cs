@@ -214,6 +214,11 @@ public sealed partial class AuthoritativeStore
                 transaction.Commit();
             }
 
+            if (current <= 5)
+            {
+                ApplySuccessorAttemptSchema6Extension();
+            }
+
             if (current == 6)
             {
                 ApplyWp2Schema6ExtensionIfRequired();
@@ -225,9 +230,329 @@ public sealed partial class AuthoritativeStore
                 ApplyWp7Schema6ExtensionIfRequired();
                 ApplyWp9CampaignInputBoundCorrectionIfRequired();
                 ApplyR2LiveSemanticSchema6ExtensionIfRequired();
+                ApplySuccessorAttemptSchema6Extension();
+            }
+
+            if (current == 7 && !SuccessorAttemptExtensionApplied())
+            {
+                throw new InvalidOperationException(
+                    "Schema 7 lacks the exact Slice 6 successor attempt-identity migration.");
             }
         }
     }
+
+    private bool SuccessorAttemptExtensionApplied()
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT value FROM store_metadata WHERE key='slice6_successor_attempt_extension_id';";
+        if (command.ExecuteScalar() is not string value)
+        { return false; }
+        if (value != "M1-S6-SUCCESSOR-0007")
+        { throw new InvalidOperationException("The Slice 6 successor storage extension identity is stale."); }
+        using SqliteCommand index = connection.CreateCommand();
+        index.CommandText =
+            "SELECT COUNT(*) FROM sqlite_schema WHERE type='index' AND name='idx_provider_request_fingerprint' "
+            + "AND sql LIKE '%WHERE operation_id NOT GLOB ''m1s6-successor-*''%';";
+        if (Convert.ToInt64(index.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+        { throw new InvalidOperationException("The Slice 6 successor request identity extension is incomplete."); }
+        using SqliteCommand bridge = connection.CreateCommand();
+        bridge.CommandText = "SELECT COUNT(*) FROM sqlite_schema WHERE type='table' "
+            + "AND name='m1_slice6_successor_semantic_response_bindings';";
+        if (Convert.ToInt64(bridge.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+        { throw new InvalidOperationException("The Slice 6 successor semantic response bridge is absent."); }
+        string actual = ComputeSchemaFingerprint(connection);
+        using SqliteCommand metadata = connection.CreateCommand();
+        metadata.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
+        if (actual != ProviderPersistenceDeclarations.SuccessorAttemptSchemaFingerprint
+            || metadata.ExecuteScalar() is not string declared || declared != actual)
+        { throw new InvalidOperationException("The Slice 6 successor storage fingerprint is stale (" + actual + ")."); }
+        using SqliteCommand migration = connection.CreateCommand();
+        migration.CommandText = "SELECT COUNT(*) FROM migration_history "
+            + "WHERE migration_id='M1-S6-SUCCESSOR-0007' AND from_version=6 AND to_version=7 "
+            + "AND sqlite_source_id=$source;";
+        migration.Parameters.AddWithValue("$source", BindingIdentity.SourceId);
+        if (Convert.ToInt64(migration.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+        { throw new InvalidOperationException("The Slice 6 successor storage migration history is stale."); }
+        return true;
+    }
+
+    private void ApplySuccessorAttemptSchema6Extension()
+    {
+        string sourceFingerprint = ComputeSchemaFingerprint(connection);
+        using (SqliteCommand metadata = connection.CreateCommand())
+        {
+            metadata.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
+            if (sourceFingerprint != ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint
+                || metadata.ExecuteScalar() is not string declared || declared != sourceFingerprint)
+            { throw new InvalidOperationException("Schema 7 requires the exact accepted R2 schema-6 source."); }
+        }
+        string proposalTable = ExtractSchemaStatement(SchemaV6,
+            "CREATE TABLE " + "provider_semantic_proposals(");
+        int providerRootMarker = proposalTable.IndexOf(
+            "FOREIGN KEY(authorization_id,operation_id)", StringComparison.Ordinal);
+        int providerRootStart = providerRootMarker < 0 ? -1
+            : proposalTable.LastIndexOf('\n', providerRootMarker) + 1;
+        int tableEnd = proposalTable.LastIndexOf(") STRICT;", StringComparison.Ordinal);
+        if (providerRootStart <= 0 || tableEnd <= providerRootStart)
+        { throw new InvalidOperationException("The successor semantic proposal bridge did not remove only the two direct provider roots."); }
+        proposalTable = proposalTable[..providerRootStart]
+            .TrimEnd().TrimEnd(',') + "\n        ) STRICT;";
+        string candidateOutcomeTable = ExtractSchemaStatement(SchemaV6,
+            "CREATE TABLE " + "candidate_investigation_outcomes(")
+            .Replace("response_record_id TEXT REFERENCES provider_responses(response_record_id) ON DELETE RESTRICT,",
+                "response_record_id TEXT,", StringComparison.Ordinal);
+        int candidateProviderRootMarker = candidateOutcomeTable.IndexOf(
+            "FOREIGN KEY(authorization_id,operation_id)", StringComparison.Ordinal);
+        int candidateProviderRootStart = candidateProviderRootMarker < 0 ? -1
+            : candidateOutcomeTable.LastIndexOf('\n', candidateProviderRootMarker) + 1;
+        int candidateCheckStart = candidateOutcomeTable.IndexOf(
+            "CHECK((transcript_state", candidateProviderRootStart, StringComparison.Ordinal);
+        candidateCheckStart = candidateCheckStart < 0 ? -1
+            : candidateOutcomeTable.LastIndexOf('\n', candidateCheckStart) + 1;
+        if (candidateProviderRootStart <= 0 || candidateCheckStart <= candidateProviderRootStart)
+        { throw new InvalidOperationException("The successor candidate bridge did not remove only its direct provider root."); }
+        candidateOutcomeTable = candidateOutcomeTable[..candidateProviderRootStart]
+            + candidateOutcomeTable[candidateCheckStart..];
+        List<(string Name, string Sql)> proposalTriggers = [];
+        using (SqliteCommand triggers = connection.CreateCommand())
+        {
+            triggers.CommandText = "SELECT name,sql FROM sqlite_schema WHERE type='trigger' "
+                + "AND tbl_name='provider_semantic_proposals' ORDER BY name;";
+            using SqliteDataReader reader = triggers.ExecuteReader();
+            while (reader.Read()) { proposalTriggers.Add((reader.GetString(0), reader.GetString(1))); }
+        }
+        List<(string Name, string Sql)> candidateTriggers = [];
+        using (SqliteCommand triggers = connection.CreateCommand())
+        {
+            triggers.CommandText = "SELECT name,sql FROM sqlite_schema WHERE type='trigger' "
+                + "AND tbl_name='candidate_investigation_outcomes' ORDER BY name;";
+            using SqliteDataReader reader = triggers.ExecuteReader();
+            while (reader.Read()) { candidateTriggers.Add((reader.GetString(0), reader.GetString(1))); }
+        }
+        Execute("PRAGMA foreign_keys=OFF; PRAGMA legacy_alter_table=ON;", null);
+        try
+        {
+            using SqliteTransaction transaction = BeginTransaction();
+            Execute(
+                """
+                DROP INDEX idx_provider_request_fingerprint;
+                CREATE UNIQUE INDEX idx_provider_request_fingerprint
+                  ON provider_requests(request_fingerprint)
+                  WHERE operation_id NOT GLOB 'm1s6-successor-*';
+                CREATE TABLE m1_slice6_successor_semantic_response_bindings(
+                  binding_id TEXT PRIMARY KEY,
+                  campaign_id TEXT NOT NULL CHECK(length(trim(campaign_id)) > 0),
+                  stage TEXT NOT NULL CHECK(stage IN ('source-claim-extraction','candidate-investigation')),
+                  semantic_authorization_id TEXT NOT NULL CHECK(length(trim(semantic_authorization_id)) > 0),
+                  semantic_operation_id TEXT NOT NULL CHECK(length(trim(semantic_operation_id)) > 0),
+                  transport_authorization_id TEXT NOT NULL,
+                  transport_operation_id TEXT NOT NULL CHECK(transport_operation_id GLOB 'm1s6-successor-*'),
+                  provider_attempt_id TEXT NOT NULL,
+                  request_id TEXT NOT NULL,
+                  dispatch_fence_id TEXT NOT NULL,
+                  semantic_response_record_id TEXT NOT NULL,
+                  transport_response_record_id TEXT NOT NULL,
+                  owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
+                  owner_id TEXT NOT NULL CHECK(length(trim(owner_id)) > 0),
+                  created_at TEXT NOT NULL,
+                  UNIQUE(campaign_id,stage),
+                  UNIQUE(semantic_authorization_id,semantic_operation_id,semantic_response_record_id),
+                  UNIQUE(transport_operation_id,provider_attempt_id,request_id,dispatch_fence_id,transport_response_record_id),
+                  FOREIGN KEY(transport_authorization_id,transport_operation_id,owner_kind,owner_id)
+                    REFERENCES provider_operation_authorizations(authorization_id,operation_id,owner_kind,owner_id) ON DELETE RESTRICT,
+                  FOREIGN KEY(transport_operation_id,provider_attempt_id,request_id,dispatch_fence_id,transport_response_record_id)
+                    REFERENCES provider_responses(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id) ON DELETE RESTRICT
+                ) STRICT;
+                ALTER TABLE provider_semantic_proposals RENAME TO provider_semantic_proposals_v6;
+                ALTER TABLE candidate_investigation_outcomes RENAME TO candidate_investigation_outcomes_v6;
+                """, transaction);
+            Execute(proposalTable, transaction);
+            Execute(candidateOutcomeTable, transaction);
+            Execute("INSERT INTO provider_semantic_proposals SELECT * FROM provider_semantic_proposals_v6; "
+                + "INSERT INTO candidate_investigation_outcomes SELECT * FROM candidate_investigation_outcomes_v6; "
+                + "DROP TABLE provider_semantic_proposals_v6; DROP TABLE candidate_investigation_outcomes_v6;",
+                transaction);
+            Execute(SuccessorSemanticProposalRootGuard, transaction);
+            Execute(SuccessorSemanticProposalChronologyGuard, transaction);
+            // Preserve the schema-6 trigger precedence: canonical timestamp validation was
+            // installed after semantic chronology and must reject malformed authority time
+            // before any dependent-row diagnostic can mask it.
+            foreach ((string triggerName, string triggerSql) in proposalTriggers.Where(item =>
+                item.Name is not ("provider_semantic_proposal_root_guard"
+                    or "provider_semantic_proposal_chronology_guard")))
+            {
+                Execute(triggerSql, transaction);
+            }
+            foreach ((string triggerName, string triggerSql) in candidateTriggers.Where(item =>
+                item.Name is not ("candidate_investigation_outcome_candidate_guard"
+                    or "candidate_investigation_outcome_response_guard")))
+            {
+                Execute(triggerSql, transaction);
+            }
+            Execute(SuccessorCandidateOutcomeGuards, transaction);
+            CreateAppendOnlyTriggers(["m1_slice6_successor_semantic_response_bindings"], transaction);
+            string fingerprint = ComputeSchemaFingerprint(connection, transaction);
+            Execute(
+                "UPDATE store_metadata SET value='7' WHERE key='schema_version'; "
+                + "UPDATE store_metadata SET value='1.6.0' WHERE key='storage_contract_version'; "
+                + "UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint'; "
+                + "INSERT INTO store_metadata(key,value) VALUES('slice6_successor_attempt_extension_id','M1-S6-SUCCESSOR-0007'); "
+                + "INSERT INTO migration_history(migration_id,from_version,to_version,applied_at,sqlite_source_id) "
+                + "VALUES('M1-S6-SUCCESSOR-0007',6,7,$now,$sqlite_source); "
+                + "PRAGMA user_version=7;",
+                transaction, ("$fingerprint", fingerprint), ("$now", ToText(DateTimeOffset.UtcNow)),
+                ("$sqlite_source", BindingIdentity.SourceId));
+            transaction.Commit();
+        }
+        finally
+        {
+            Execute("PRAGMA legacy_alter_table=OFF; PRAGMA foreign_keys=ON;", null);
+        }
+    }
+
+    private const string SuccessorSemanticProposalRootGuard =
+        """
+        CREATE TRIGGER provider_semantic_proposal_root_guard
+        BEFORE INSERT ON provider_semantic_proposals
+        BEGIN
+          SELECT CASE
+            WHEN NOT EXISTS(
+              SELECT 1 FROM provider_operation_authorizations a
+              JOIN provider_responses r ON r.authorization_id=a.authorization_id AND r.operation_id=a.operation_id
+              JOIN provider_usage_entries u ON u.response_record_id=r.response_record_id
+                AND u.operation_id=r.operation_id AND u.availability='available'
+              JOIN provider_response_finalizations f ON f.response_record_id=r.response_record_id
+                AND f.usage_entry_id=u.usage_entry_id AND f.validation_state='admitted'
+                AND f.admission_state='admitted' AND f.finalized_at <= NEW.created_at
+              WHERE a.authorization_id=NEW.authorization_id AND a.operation_id=NEW.operation_id
+                AND a.owner_kind=NEW.owner_kind AND a.owner_id=NEW.owner_id
+                AND r.response_record_id=NEW.response_record_id AND r.response_state='completed')
+             AND NOT EXISTS(
+              SELECT 1 FROM m1_slice6_successor_semantic_response_bindings b
+              JOIN provider_operation_authorizations a
+                ON a.authorization_id=b.transport_authorization_id AND a.operation_id=b.transport_operation_id
+              JOIN provider_responses r ON r.response_record_id=b.transport_response_record_id
+                AND r.authorization_id=a.authorization_id AND r.operation_id=a.operation_id
+              JOIN provider_usage_entries u ON u.response_record_id=r.response_record_id
+                AND u.operation_id=r.operation_id AND u.availability='available'
+              JOIN provider_response_finalizations f ON f.response_record_id=r.response_record_id
+                AND f.usage_entry_id=u.usage_entry_id AND f.validation_state='admitted'
+                AND f.admission_state='admitted' AND f.finalized_at <= NEW.created_at
+              WHERE b.semantic_authorization_id=NEW.authorization_id
+                AND b.semantic_operation_id=NEW.operation_id
+                AND b.semantic_response_record_id=NEW.response_record_id
+                AND b.owner_kind=NEW.owner_kind AND b.owner_id=NEW.owner_id
+                AND r.response_state='completed')
+              THEN RAISE(ABORT, 'semantic proposal requires exact completed validated admitted response authority and usage')
+            WHEN NEW.owner_kind='evidence-acquisition-run' AND (
+              NEW.proposal_kind NOT IN ('source-claim','abstention','gap')
+              OR (NOT EXISTS(SELECT 1 FROM provider_operation_authorizations a
+                    WHERE a.authorization_id=NEW.authorization_id AND a.operation_id=NEW.operation_id
+                      AND a.operation_kind='source-claim-extraction' AND a.evidence_acquisition_run_id=NEW.owner_id)
+                  AND NOT EXISTS(SELECT 1 FROM m1_slice6_successor_semantic_response_bindings b
+                    WHERE b.semantic_authorization_id=NEW.authorization_id
+                      AND b.semantic_operation_id=NEW.operation_id AND b.stage='source-claim-extraction'
+                      AND b.owner_kind=NEW.owner_kind AND b.owner_id=NEW.owner_id))
+              OR NOT EXISTS(SELECT 1 FROM documentation_revisions d
+                    WHERE d.documentation_revision_id=NEW.root_subject_id AND d.created_at <= NEW.created_at)
+              OR NOT EXISTS(SELECT 1 FROM evidence_acquisition_runs acquisition
+                    WHERE acquisition.acquisition_run_id=NEW.owner_id AND acquisition.created_at <= NEW.created_at))
+              THEN RAISE(ABORT, 'source-claim, abstention, and gap proposals must bind exact acquisition, source revision, and application roots')
+            WHEN NEW.owner_kind='analysis-run' AND (
+              NEW.proposal_kind NOT IN ('candidate-hypothesis','abstention','gap')
+              OR (NOT EXISTS(SELECT 1 FROM provider_operation_authorizations a
+                    WHERE a.authorization_id=NEW.authorization_id AND a.operation_id=NEW.operation_id
+                      AND a.operation_kind='candidate-investigation' AND a.analysis_run_id=NEW.owner_id)
+                  AND NOT EXISTS(SELECT 1 FROM m1_slice6_successor_semantic_response_bindings b
+                    WHERE b.semantic_authorization_id=NEW.authorization_id
+                      AND b.semantic_operation_id=NEW.operation_id AND b.stage='candidate-investigation'
+                      AND b.owner_kind=NEW.owner_kind AND b.owner_id=NEW.owner_id))
+              OR NOT EXISTS(SELECT 1 FROM analysis_candidates c
+                    WHERE c.candidate_id=NEW.root_subject_id AND c.run_id=NEW.owner_id AND c.created_at <= NEW.created_at)
+              OR NOT EXISTS(SELECT 1 FROM evidence_application_links link
+                    WHERE link.evidence_application_link_id=NEW.semantic_link_id AND link.run_id=NEW.owner_id
+                      AND link.created_at <= NEW.created_at))
+              THEN RAISE(ABORT, 'candidate, abstention, and gap proposals must bind exact analysis, candidate, and application roots')
+          END;
+        END;
+        """;
+
+    private const string SuccessorSemanticProposalChronologyGuard =
+        """
+        CREATE TRIGGER provider_semantic_proposal_chronology_guard
+        BEFORE INSERT ON provider_semantic_proposals
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_response_finalizations finalization
+            WHERE finalization.response_record_id=NEW.response_record_id
+              AND finalization.finalized_at <= NEW.created_at)
+          AND NOT EXISTS(
+            SELECT 1 FROM m1_slice6_successor_semantic_response_bindings binding
+            JOIN provider_response_finalizations finalization
+              ON finalization.response_record_id=binding.transport_response_record_id
+            WHERE binding.semantic_authorization_id=NEW.authorization_id
+              AND binding.semantic_operation_id=NEW.operation_id
+              AND binding.semantic_response_record_id=NEW.response_record_id
+              AND finalization.finalized_at <= NEW.created_at)
+          THEN RAISE(ABORT, 'semantic proposal cannot predate its exact response finalization') END;
+        END;
+        """;
+
+    private const string SuccessorCandidateOutcomeGuards =
+        """
+        CREATE TRIGGER candidate_investigation_outcome_candidate_guard
+        BEFORE INSERT ON candidate_investigation_outcomes
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM analysis_candidates candidate
+            JOIN analysis_hypotheses hypothesis ON hypothesis.hypothesis_id=NEW.hypothesis_id
+              AND hypothesis.candidate_id=candidate.candidate_id AND hypothesis.run_id=candidate.run_id
+            JOIN provider_operation_authorizations authorization
+              ON authorization.authorization_id=NEW.authorization_id
+              AND authorization.operation_id=NEW.operation_id
+              AND authorization.owner_kind='analysis-run' AND authorization.owner_id=NEW.owner_id
+              AND authorization.operation_kind='candidate-investigation'
+            WHERE candidate.candidate_id=NEW.candidate_id AND candidate.run_id=NEW.owner_id)
+          AND NOT EXISTS(
+            SELECT 1 FROM analysis_candidates candidate
+            JOIN analysis_hypotheses hypothesis ON hypothesis.hypothesis_id=NEW.hypothesis_id
+              AND hypothesis.candidate_id=candidate.candidate_id AND hypothesis.run_id=candidate.run_id
+            JOIN m1_slice6_successor_semantic_response_bindings binding
+              ON binding.semantic_authorization_id=NEW.authorization_id
+              AND binding.semantic_operation_id=NEW.operation_id
+              AND binding.owner_kind='analysis-run' AND binding.owner_id=NEW.owner_id
+              AND binding.stage='candidate-investigation'
+            WHERE candidate.candidate_id=NEW.candidate_id AND candidate.run_id=NEW.owner_id)
+          THEN RAISE(ABORT, 'candidate outcome must bind its exact analysis candidate and hypothesis roots') END;
+        END;
+        CREATE TRIGGER candidate_investigation_outcome_response_guard
+        BEFORE INSERT ON candidate_investigation_outcomes
+        WHEN NEW.response_record_id IS NOT NULL
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_responses response
+            WHERE response.response_record_id=NEW.response_record_id
+              AND response.authorization_id=NEW.authorization_id AND response.operation_id=NEW.operation_id
+              AND response.owner_kind='analysis-run' AND response.owner_id=NEW.owner_id
+              AND response.operation_kind='candidate-investigation'
+              AND response.raw_response_fingerprint=NEW.response_fingerprint)
+          AND NOT EXISTS(
+            SELECT 1 FROM m1_slice6_successor_semantic_response_bindings binding
+            JOIN provider_responses response
+              ON response.response_record_id=binding.transport_response_record_id
+              AND response.authorization_id=binding.transport_authorization_id
+              AND response.operation_id=binding.transport_operation_id
+            WHERE binding.semantic_authorization_id=NEW.authorization_id
+              AND binding.semantic_operation_id=NEW.operation_id
+              AND binding.semantic_response_record_id=NEW.response_record_id
+              AND binding.owner_kind='analysis-run' AND binding.owner_id=NEW.owner_id
+              AND binding.stage='candidate-investigation'
+              AND response.operation_kind='candidate-investigation'
+              AND response.raw_response_fingerprint=NEW.response_fingerprint)
+          THEN RAISE(ABORT, 'candidate outcome must bind the exact retained provider response bytes') END;
+        END;
+        """;
 
     private void ApplyR2LiveSemanticSchema6ExtensionIfRequired()
     {
@@ -1190,10 +1515,10 @@ public sealed partial class AuthoritativeStore
         "index:idx_taxonomy_subject",
         "index:idx_provider_active_generation",
         "index:idx_payload_identity_size",
-        "index:idx_provider_request_fingerprint",
         "index:idx_provider_reservation_scope",
         "index:idx_provider_budget_events_scope",
         "index:idx_provider_semantic_admission_artifact_owner",
+        "index:idx_provider_request_fingerprint",
         "table:analysis_candidates",
         "table:analysis_coverage",
         "table:analysis_coverage_failure_links",
@@ -1243,6 +1568,7 @@ public sealed partial class AuthoritativeStore
         "table:logical_cases",
         "table:logical_findings",
         "table:migration_history",
+        "table:m1_slice6_successor_semantic_response_bindings",
         "table:payload_owners",
         "table:payload_backup_pins",
         "table:payloads",
@@ -1304,6 +1630,8 @@ public sealed partial class AuthoritativeStore
         "table:provider_settlements",
         "table:provider_transport_events",
         "table:provider_usage_entries",
+        "trigger:m1_slice6_successor_semantic_response_bindings_append_only_delete",
+        "trigger:m1_slice6_successor_semantic_response_bindings_append_only_update",
         "view:provider_settlement_vector_partitions",
         "trigger:analysis_candidates_append_only_delete",
         "trigger:analysis_candidates_append_only_update",

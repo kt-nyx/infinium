@@ -9338,3 +9338,82 @@ billable operation. The typed runtime manifest and immediate durable-state
 revalidation remain mandatory.
 
 M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=572a3342ac6537d42a1041e9f8a5878cfcba1958 campaign_id=infinium.m1-s6.finite-live-campaign/ff2d542a-04f0-448a-bcb8-a0ecbedde5b9 campaign_sha256=824b344073ed802b5cf78014eb0b425bf27713634086b008831b9ded549ae536 stage_manifest_id=infinium.m1-s6.campaign-stage/Qualification/cf3ba7b9-e2cb-427d-b5cb-ae9f679c19c1 sha256=277a7cb98de222f3b4e10dc37a1d6ac91c01a23ee747e5926fd0885734912b36 predecessor_evidence_sha256=0fe89804afc3aaaa04d59961e711099adbe656466fd033e54c55ad709cb3042a expires_at_utc=2026-08-31T23:59:00.0000000Z
+
+## 2026-08-20 — terminal C2B recovery and successor-campaign amendment
+
+- Recovery began from clean branch `codex/m1-s6-c2-authority` at
+  `96aa3149e7f89d9228be79e5ef50a149f770ffe6`.
+- Read-only terminal forensics confirmed the v4 C2B ledger's final event hash
+  `282c97151dbdcd354288b67f96c4b01d7f7ef43b1bbfb9f247cbd9b510506de9`.
+  The one WP9 possible start, one DNS resolution, and USD 0.14 reservation are
+  conservatively consumed. Retained evidence cannot distinguish transport,
+  provider-response, or helper-evidence failure and does not establish an HTTP
+  status or whether response bytes existed.
+- The terminal campaign and every v4 ledger, manifest, artifact, runtime, and
+  stage identity remain immutable and are not successor authority.
+- The owner authorized the typed
+  `m1-slice6-development-campaign-amendment/1.0.0` and a clean v5 successor
+  campaign: at most five lineage starts per stage, a USD 10.00 total
+  cumulative reservation/spend cap including terminal USD 0.14, one start and
+  no retry per fresh runtime, and mandatory accepted failure evidence plus
+  offline correction review before a later attempt.
+- The failure-evidence correction now stages a closed secret-free receipt for
+  zero-byte transport ambiguity, separately retains local failure codes from
+  provider `error.type`/`error.code`, records nullable HTTP status and safe
+  request identifiers, and distinguishes observed response bytes from retained
+  bytes for oversized or secret-echo responses.
+- The successor credential-access authority references the already accepted
+  v4 enrollment evidence and permits only one masked-helper
+  `CredReadW -> CredFree` sequence per admitted attempt. It authorizes no
+  enumeration, write, delete, replacement, or exposure.
+- Two bounded independent reviews returned `CORRECT` and prohibited another
+  provider call. The review-pending working candidate is being corrected on
+  the same implementation line; no reviewer acceptance, durable campaign
+  admission, runtime authority, credential read, DNS resolution, or successor
+  provider start has yet occurred.
+
+### Successor correction candidate — 2026-08-20
+
+- Sanitized attempt evidence now covers response-received, no-response,
+  malformed, refusal, oversized, containment, and safety-stop paths. Provider
+  type/code and allowlisted request identifiers remain separate from local
+  transport disposition; response bytes observed and bytes retained are
+  separate facts.
+- The successor ledger uses fresh attempt/runtime/request/reservation/fence
+  identities, one start per attempt, no automatic retry, permanent first-valid
+  stage latches, typed failure/correction reviews, and a two-step effect-free
+  composed-evidence handoff and independent C3 acceptance.
+- Additive migration `M1-S6-SUCCESSOR-0007` advances schema 6/storage `1.5.0`
+  to schema 7/storage `1.6.0`, fingerprint
+  `bc281cecc1025f1fa687c735c536967f338b639259b426545a1b60f33b2c846b`.
+  Ordinary request fingerprints retain global uniqueness; only typed
+  `m1s6-successor-*` transport operations use the attempt-scoped exception.
+  Historical rows and terminal campaign evidence remain unchanged.
+- The credential-access contract binds the immutable retained C2A source, a
+  byte-verified fresh successor product-state snapshot, its origin digest, and
+  the exact safety projection. Only the successor snapshot may evolve. Each
+  reviewed runtime candidate additionally binds a deterministic logical-state
+  checkpoint built from a consistent read-only SQLite backup plus every
+  retained non-database file; runtime admission recomputes it before a start.
+- A completed first-valid WP10/WP11 response is permanently latched even when
+  semantic admission initially fails. Acceptance then waits for effect-free
+  retained-response replay and exact semantic recovery; another provider call
+  is never permitted for that stage.
+- Effect-free authoritative recovery now crosses a fresh process boundary: it
+  carries and validates the exact campaign identity, can idempotently converge
+  missing response persistence/settlement, and can recreate the exact semantic
+  bridge before replay and admission without another provider start.
+- Effect-free C3 reopens authoritative SQLite, replays each exact retained
+  response with network disabled, verifies the WP10 application chain, and
+  verifies one positive plus one negative WP11 retained consumption.
+- Focused build, ledger, migration, backup/restore, typed-review,
+  failed-then-valid SQLite replay/semantic admission, security, and fault tests
+  pass. Two bounded independent reviewers accepted the corrected code and
+  authority surfaces, then separately rechecked the exact admitted access
+  digest `e6788d546308a8ec8f7c3374c52cf8700a7a2245f52d213587e6a84d1d779b0d`
+  and campaign digest
+  `ff0a8a1cd499f5639c85fa7d43737643dc4b3494643d150b72d2772fc2fc18ef`.
+  The typed campaign review is retained in
+  `m1-slice6-successor-campaign-independent-review.v1.json`. No stage
+  manifest, runtime authority, credential read, DNS lookup, or provider call
+  is materialized at this checkpoint.

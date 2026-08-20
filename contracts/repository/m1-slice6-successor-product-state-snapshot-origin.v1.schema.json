@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.m1-s6.successor-product-state-snapshot-origin/v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "source_root", "destination_root", "recorded_after_copy_at_utc", "source_post_copy_verified", "files"],
+  "properties": {
+    "schema": { "const": "infinium.m1-s6.successor-product-state-snapshot-origin/v1" },
+    "source_root": { "type": "string", "minLength": 3, "maxLength": 500 },
+    "destination_root": { "type": "string", "minLength": 3, "maxLength": 500 },
+    "recorded_after_copy_at_utc": { "type": "string", "format": "date-time" },
+    "source_post_copy_verified": { "const": true },
+    "files": { "type": "array", "minItems": 7, "maxItems": 7, "items": { "$ref": "#/$defs/file" } }
+  },
+  "$defs": {
+    "file": { "type": "object", "additionalProperties": false, "required": ["path", "bytes", "sha256"], "properties": { "path": { "type": "string", "minLength": 1, "maxLength": 300, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?/)(?!.*\\\\)[^\\r\\n]+$" }, "bytes": { "type": "integer", "minimum": 1 }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } } }
+  }
+}

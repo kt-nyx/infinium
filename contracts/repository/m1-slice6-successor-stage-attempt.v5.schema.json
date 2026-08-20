@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.repository.m1-slice6-successor-stage-attempt/5.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_identity", "manifest_id", "status", "campaign_binding", "stage", "attempt", "predecessor_evidence", "canonical_request", "transport", "limits", "safety_identifier", "validation_package", "execution"],
+  "properties": {
+    "schema_identity": { "const": "infinium.repository.m1-slice6-successor-stage-attempt/5.0.0" },
+    "manifest_id": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["review-pending", "reviewed-and-admitted"] },
+    "campaign_binding": { "type": "object", "additionalProperties": false, "required": ["campaign_id", "campaign_manifest_sha256", "credential_manifest_id", "credential_manifest_sha256"], "properties": { "campaign_id": { "$ref": "#/$defs/identity" }, "campaign_manifest_sha256": { "$ref": "#/$defs/sha256" }, "credential_manifest_id": { "$ref": "#/$defs/identity" }, "credential_manifest_sha256": { "$ref": "#/$defs/sha256" } } },
+    "stage": { "type": "object", "additionalProperties": false, "required": ["ordinal", "work_package", "operation"], "properties": { "ordinal": { "type": "integer", "minimum": 1, "maximum": 3 }, "work_package": { "enum": ["WP9", "WP10", "WP11"] }, "operation": { "enum": ["Qualification", "SourceClaimExtraction", "CandidateInvestigation"] } } },
+    "attempt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ordinal", "attempt_id", "runtime_authority_id", "request_id", "reservation_id", "dispatch_fence_id"],
+      "properties": {
+        "ordinal": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "attempt_id": { "type": "string", "minLength": 1 },
+        "runtime_authority_id": { "type": "string", "minLength": 1 },
+        "request_id": { "type": "string", "minLength": 1 },
+        "reservation_id": { "type": "string", "minLength": 1 },
+        "dispatch_fence_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "predecessor_evidence": { "type": "object", "additionalProperties": false, "required": ["event_hash", "evidence_id", "evidence_sha256"], "properties": { "event_hash": { "$ref": "#/$defs/sha256" }, "evidence_id": { "$ref": "#/$defs/identity" }, "evidence_sha256": { "$ref": "#/$defs/sha256" } } },
+    "canonical_request": { "type": "object", "additionalProperties": false, "required": ["path", "sha256", "bytes", "proved_input_tokens", "maximum_output_tokens"], "properties": { "path": { "$ref": "#/$defs/path" }, "sha256": { "$ref": "#/$defs/sha256" }, "bytes": { "type": "integer", "minimum": 1, "maximum": 65536 }, "proved_input_tokens": { "type": "integer", "minimum": 1, "maximum": 73728 }, "maximum_output_tokens": { "enum": [256, 4096] } } },
+    "transport": {
+      "type": "object", "additionalProperties": false,
+      "required": ["provider", "endpoint", "maximum_provider_starts", "maximum_dns_resolutions", "automatic_retry", "parallel"],
+      "properties": {
+        "provider": { "const": "openai" }, "endpoint": { "const": "https://api.openai.com/v1/responses" },
+        "maximum_provider_starts": { "const": 1 }, "maximum_dns_resolutions": { "const": 1 },
+        "automatic_retry": { "const": false }, "parallel": { "const": false }
+      }
+    },
+    "limits": { "type": "object", "additionalProperties": false, "required": ["maximum_request_bytes", "maximum_input_tokens", "maximum_output_tokens", "maximum_raw_response_bytes", "maximum_nano_usd", "deadline_milliseconds"], "properties": { "maximum_request_bytes": { "enum": [16384, 65536] }, "maximum_input_tokens": { "enum": [20480, 73728] }, "maximum_output_tokens": { "enum": [256, 4096] }, "maximum_raw_response_bytes": { "enum": [262144, 1048576] }, "maximum_nano_usd": { "enum": [140000000, 600000000] }, "deadline_milliseconds": { "enum": [60000, 120000] } } },
+    "safety_identifier": { "type": "object", "additionalProperties": false, "required": ["projection", "raw_seed_present"], "properties": { "projection": { "$ref": "#/$defs/sha256" }, "raw_seed_present": { "const": false } } },
+    "validation_package": { "type": "object", "additionalProperties": false, "required": ["package_id", "manifest_path", "manifest_sha256", "product_input_path", "product_input_bytes", "product_input_sha256", "predecessor_manifest_path", "predecessor_manifest_bytes", "predecessor_manifest_sha256", "oracle_path", "oracle_sha256", "deterministic_oracle_result_sha256", "semantic_use"], "properties": { "package_id": { "$ref": "#/$defs/identity" }, "manifest_path": { "$ref": "#/$defs/path" }, "manifest_sha256": { "$ref": "#/$defs/sha256" }, "product_input_path": { "$ref": "#/$defs/path" }, "product_input_bytes": { "type": "integer", "minimum": 1 }, "product_input_sha256": { "$ref": "#/$defs/sha256" }, "predecessor_manifest_path": { "$ref": "#/$defs/path" }, "predecessor_manifest_bytes": { "type": "integer", "minimum": 1 }, "predecessor_manifest_sha256": { "$ref": "#/$defs/sha256" }, "oracle_path": { "$ref": "#/$defs/path" }, "oracle_sha256": { "$ref": "#/$defs/sha256" }, "deterministic_oracle_result_sha256": { "$ref": "#/$defs/sha256" }, "semantic_use": { "type": "boolean" } } },
+    "execution": { "type": "object", "additionalProperties": false, "required": ["provider_request_permitted", "requires_durable_admission", "requires_typed_runtime_authority", "automatic_retry", "first_structurally_valid_response_stops_stage"], "properties": { "provider_request_permitted": { "const": true }, "requires_durable_admission": { "const": true }, "requires_typed_runtime_authority": { "const": true }, "automatic_retry": { "const": false }, "first_structurally_valid_response_stops_stage": { "const": true } } }
+  },
+  "$defs": { "identity": { "type": "string", "minLength": 1, "maxLength": 256 }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }, "path": { "type": "string", "minLength": 1, "maxLength": 400, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?/)(?!.*\\\\)[^\\r\\n]+$" } }
+}

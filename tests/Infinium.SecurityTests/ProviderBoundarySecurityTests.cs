@@ -100,7 +100,15 @@ public sealed class ProviderBoundarySecurityTests
         Assert.HasCount(0, result.RateHeaders);
         Assert.AreEqual(UsageReceiptState.Ambiguous, result.Usage.ReceiptState);
         Assert.AreEqual(ProviderAvailabilityState.Unavailable, result.Usage.DispatchCount.Availability);
-        Assert.ThrowsExactly<InvalidOperationException>(() => OpenAiStagedResponseEnvelope.Create(result));
+        byte[] diagnosticEnvelope = OpenAiStagedResponseEnvelope.Create(result);
+        Assert.IsTrue(OpenAiStagedResponseEnvelope.TryRead(
+            diagnosticEnvelope, out byte[] diagnosticRaw, out byte[] diagnosticHeaders));
+        Assert.HasCount(0, diagnosticRaw);
+        OpenAiResponsesResult replay = OpenAiStagedResponseEnvelope.Replay(
+            diagnosticRaw, diagnosticHeaders, "client-secret-echo");
+        Assert.AreEqual("security_secret_echo", replay.ErrorCode);
+        Assert.IsNull(replay.ProviderErrorType);
+        Assert.IsTrue(replay.TransportMayHaveStarted);
         Assert.IsFalse(Encoding.UTF8.GetString(result.ToSecretFreeDiagnosticBytes())
             .Contains(canary, StringComparison.Ordinal));
     }

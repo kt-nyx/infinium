@@ -1,0 +1,63 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-development-campaign-amendment/1.0.0",
+  "amendment_id": "infinium.m1-s6.development-campaign-amendment/9e4506cb-6fb5-49bb-b9ad-41d7f7fe8c1b",
+  "status": "owner-authorized",
+  "authorized_at_utc": "2026-08-20T00:00:00.0000000+00:00",
+  "owner_authority": "exact-user-direction-in-codex-task-01a01f68-387b-7722-8991-40aad8dd4f08",
+  "terminal_predecessor": {
+    "campaign_id": "infinium.m1-s6.finite-live-campaign/ff2d542a-04f0-448a-bcb8-a0ecbedde5b9",
+    "final_event_hash": "282c97151dbdcd354288b67f96c4b01d7f7ef43b1bbfb9f247cbd9b510506de9",
+    "possible_starts": 1,
+    "conservative_nano_usd": 140000000,
+    "disposition": "terminal-immutable-never-retry-reuse-erase-or-reinterpret"
+  },
+  "successor_bounds": {
+    "maximum_possible_starts_per_stage": 5,
+    "maximum_slice_reservation_or_spend_nano_usd": 10000000000,
+    "maximum_successor_cumulative_reservation_nano_usd": 9860000000,
+    "automatic_retry": false,
+    "parallel_calls": false,
+    "fresh_attempt_runtime_identity_required": true,
+    "failure_requires_offline_diagnosis_correction_and_independent_review": true,
+    "first_valid_wp10_or_wp11_is_authoritative": true,
+    "semantic_output_selection": "prohibited"
+  },
+  "credential_boundary": {
+    "source": "already-retained-profile-only",
+    "allowed_native_call_order_per_attempt": [
+      "CredReadW",
+      "CredFree"
+    ],
+    "prohibited": [
+      "expose",
+      "enumerate",
+      "replace",
+      "rewrite",
+      "delete",
+      "CredWriteW",
+      "CredDeleteW"
+    ]
+  },
+  "failure_evidence": {
+    "required_fields": [
+      "failure_stage",
+      "http_status_when_known",
+      "provider_error_type",
+      "provider_error_code",
+      "request_identifiers",
+      "transport_disposition",
+      "response_bytes_existed"
+    ],
+    "secret_or_secret_headers": "prohibited"
+  },
+  "stop_conditions": [
+    "secret-or-private-answer-exposure",
+    "attempt-limit-exhausted",
+    "slice-budget-exhausted",
+    "untrustworthy-evidence",
+    "same-defect-recurrence-after-reviewed-correction",
+    "required-model-product-or-architecture-change-beyond-amendment",
+    "destructive-work",
+    "push"
+  ]
+}

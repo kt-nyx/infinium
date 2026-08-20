@@ -45,6 +45,7 @@ public sealed class AnalysisStatePersistenceTests
         "provider_profile_projection", "provider_budget_limits", "provider_budget_events",
         "provider_usage_rollup_references", "provider_budget_settlement_receipts", "provider_budget_projection",
         "source_claim_admitted_artifacts", "source_claim_applicability_facts", "candidate_evidence_authority",
+        "m1_slice6_successor_semantic_response_bindings",
     ];
 
     private static readonly string[] AnalysisTables =
@@ -121,26 +122,26 @@ public sealed class AnalysisStatePersistenceTests
     [TestCategory("Cases")]
     [TestProperty("Category", "Unit")]
     [TestProperty("Category", "Cases")]
-    public void AnalysisStateModelSchema6HasExactMigrationContractAndObjects()
+    public void AnalysisStateModelSchema7HasExactMigrationContractAndObjects()
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
-        Assert.AreEqual(6, store.GetSchemaVersion());
+        Assert.AreEqual(7, store.GetSchemaVersion());
 
         using SqliteConnection connection = temporary.OpenRaw();
-        Assert.AreEqual("6", ScalarText(connection, "PRAGMA user_version;"));
+        Assert.AreEqual("7", ScalarText(connection, "PRAGMA user_version;"));
         Assert.AreEqual(
-            "6",
+            "7",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_version';"));
         Assert.AreEqual(
-            "1.5.0",
+            "1.6.0",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint,
+            ProviderPersistenceDeclarations.SuccessorAttemptSchemaFingerprint,
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
@@ -181,6 +182,15 @@ public sealed class AnalysisStatePersistenceTests
                 SELECT CAST(from_version AS TEXT) || '|' || CAST(to_version AS TEXT)
                 FROM migration_history
                 WHERE migration_id = 'M1-S6-0006';
+                """));
+        Assert.AreEqual(
+            "6|7",
+            ScalarText(
+                connection,
+                """
+                SELECT CAST(from_version AS TEXT) || '|' || CAST(to_version AS TEXT)
+                FROM migration_history
+                WHERE migration_id = 'M1-S6-SUCCESSOR-0007';
                 """));
 
         CollectionAssert.AreEquivalent(
@@ -225,7 +235,7 @@ public sealed class AnalysisStatePersistenceTests
         using TemporaryStore migration = new();
         using (AuthoritativeStore store = migration.Open())
         {
-            Assert.AreEqual(6, store.GetSchemaVersion());
+            Assert.AreEqual(7, store.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = migration.OpenRaw())
@@ -242,6 +252,8 @@ public sealed class AnalysisStatePersistenceTests
 
                 DROP INDEX idx_payload_identity_size;
                 DELETE FROM migration_history WHERE migration_id = 'M1-S6-0006';
+                DELETE FROM migration_history WHERE migration_id = 'M1-S6-SUCCESSOR-0007';
+                DELETE FROM store_metadata WHERE key = 'slice6_successor_attempt_extension_id';
                 DELETE FROM store_metadata WHERE key = 'wp2_schema_extension_id';
                 UPDATE store_metadata SET value = '5' WHERE key = 'schema_version';
                 UPDATE store_metadata SET value = '1.4.0'
@@ -256,7 +268,7 @@ public sealed class AnalysisStatePersistenceTests
 
         using (AuthoritativeStore migrated = migration.Open())
         {
-            Assert.AreEqual(6, migrated.GetSchemaVersion());
+            Assert.AreEqual(7, migrated.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = migration.OpenRaw())
@@ -271,13 +283,13 @@ public sealed class AnalysisStatePersistenceTests
         using TemporaryStore newer = new();
         using (AuthoritativeStore store = newer.Open())
         {
-            Assert.AreEqual(6, store.GetSchemaVersion());
+            Assert.AreEqual(7, store.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = newer.OpenRaw())
         using (SqliteCommand command = connection.CreateCommand())
         {
-            command.CommandText = "PRAGMA user_version = 7;";
+            command.CommandText = "PRAGMA user_version = 8;";
             command.ExecuteNonQuery();
         }
 
@@ -285,7 +297,7 @@ public sealed class AnalysisStatePersistenceTests
         Assert.IsNotNull(exception.InnerException);
         StringAssert.Contains(
             exception.InnerException.Message,
-            "Database schema 7 is newer than supported schema 6.");
+            "Database schema 8 is newer than supported schema 7.");
     }
 
     [TestMethod]

@@ -28,23 +28,32 @@ public static class OpenAiStagedResponseEnvelope
     {
         ArgumentNullException.ThrowIfNull(result);
         byte[] raw = result.RawResponseBytes ?? [];
-        if (raw.Length == 0 && result.State != ProviderResponseState.Oversized)
+        if (raw.Length == 0 && result.State == ProviderResponseState.Completed)
         {
-            throw new InvalidOperationException("A staged response envelope requires raw bytes or an exact oversized observation.");
+            throw new InvalidOperationException("A completed staged response requires retained raw bytes.");
         }
         IReadOnlyList<OpenAiRateHeader> sanitizedHeaders = OpenAiResponsesAdapter.SanitizeRetainedHeaders(result.RateHeaders);
         byte[] headers = JsonSerializer.SerializeToUtf8Bytes(new
         {
-            schema = "infinium.openai.response-headers/v1",
+            schema = "infinium.openai.response-headers/v2",
             state = result.State,
+            failure_stage = result.FailureStage,
+            transport_disposition = result.TransportDisposition,
             http_status = result.HttpStatus,
-            provider_response_id = result.ProviderResponseId,
+            response_bytes_existed = result.ResponseBytesExisted,
+            response_bytes_observed_lower_bound = result.ResponseBytesObservedLowerBound,
+            retained_response_bytes = result.RawResponseBytes?.LongLength ?? 0,
+            provider_response_id = OpenAiResponsesAdapter.SanitizeProviderRequestId(result.ProviderResponseId),
             provider_request_id = OpenAiResponsesAdapter.SanitizeProviderRequestId(result.ProviderRequestId),
-            returned_model = result.ReturnedModel,
-            returned_service_tier = result.ReturnedServiceTier,
-            refusal_code = result.RefusalCode,
-            incomplete_reason = result.IncompleteReason,
-            error_code = result.ErrorCode,
+            returned_model = OpenAiResponsesAdapter.SanitizeProviderErrorField(result.ReturnedModel),
+            returned_service_tier = OpenAiResponsesAdapter.SanitizeProviderErrorField(result.ReturnedServiceTier),
+            refusal_code = OpenAiResponsesAdapter.SanitizeProviderErrorField(result.RefusalCode),
+            incomplete_reason = OpenAiResponsesAdapter.SanitizeProviderErrorField(result.IncompleteReason),
+            provider_error_type = OpenAiResponsesAdapter.SanitizeProviderErrorField(result.ProviderErrorType),
+            provider_error_code = result.RawResponseBytes is null ? null
+                : OpenAiResponsesAdapter.SanitizeProviderErrorField(result.ErrorCode),
+            local_failure_code = result.RawResponseBytes is null
+                ? OpenAiResponsesAdapter.SanitizeProviderErrorField(result.ErrorCode) : null,
             requested_output_schema = result.RequestedOutputSchemaBytes,
             usage = result.Usage,
             dns_resolution_count = result.DnsResolutionCount,
@@ -87,10 +96,11 @@ public static class OpenAiStagedResponseEnvelope
             : null;
     }
 
-    public static int HttpStatus(ReadOnlySpan<byte> headerReceipt)
+    public static int? HttpStatus(ReadOnlySpan<byte> headerReceipt)
     {
         using JsonDocument document = JsonDocument.Parse(headerReceipt.ToArray());
-        return document.RootElement.GetProperty("http_status").GetInt32();
+        JsonElement value = document.RootElement.GetProperty("http_status");
+        return value.ValueKind == JsonValueKind.Null ? null : value.GetInt32();
     }
 
     public static IReadOnlyList<OpenAiRateHeader> RateHeaders(ReadOnlySpan<byte> headerReceipt)
@@ -105,7 +115,7 @@ public static class OpenAiStagedResponseEnvelope
 
     public static OpenAiResponsesResult Replay(ReadOnlySpan<byte> raw, ReadOnlySpan<byte> headerReceipt, string clientRequestId)
     {
-        int status = HttpStatus(headerReceipt);
+        int? status = HttpStatus(headerReceipt);
         IReadOnlyList<OpenAiRateHeader> rateHeaders = RateHeaders(headerReceipt);
         if (!raw.IsEmpty)
         {
@@ -114,24 +124,30 @@ public static class OpenAiStagedResponseEnvelope
                 && schemaValue.ValueKind == JsonValueKind.String
                 ? schemaValue.GetBytesFromBase64()
                 : [];
+            if (status is null)
+            {
+                throw new InvalidDataException("A retained raw provider response requires an HTTP status.");
+            }
             return OpenAiResponsesResponseCodec.Replay(
-                raw, status, clientRequestId, ProviderRequestId(headerReceipt), rateHeaders, retainedSchema) with
+                raw, status.Value, clientRequestId, ProviderRequestId(headerReceipt), rateHeaders, retainedSchema) with
             { DnsResolutionCount = retained.RootElement.GetProperty("dns_resolution_count").GetInt32() };
         }
         using JsonDocument document = JsonDocument.Parse(headerReceipt.ToArray());
         JsonElement root = document.RootElement;
         ProviderResponseState state = root.GetProperty("state").Deserialize<ProviderResponseState>();
-        if (state != ProviderResponseState.Oversized)
-        {
-            throw new InvalidDataException("Only an oversized response may omit retained raw bytes.");
-        }
         ProviderUsageContract usage = root.GetProperty("usage").Deserialize<ProviderUsageContract>()
-            ?? throw new InvalidDataException("The oversized response usage receipt is absent.");
-        return new OpenAiResponsesResult(state, true, false, status, null, String(root, "provider_response_id"), clientRequestId,
+            ?? throw new InvalidDataException("The response usage receipt is absent.");
+        bool transportMayHaveStarted = root.GetProperty("transport_disposition").GetString()
+            is "may-have-started-no-response" or "response-received";
+        return new OpenAiResponsesResult(state, transportMayHaveStarted, false, status, null, String(root, "provider_response_id"), clientRequestId,
             String(root, "provider_request_id"), String(root, "returned_model"), String(root, "returned_service_tier"),
-            String(root, "refusal_code"), String(root, "incomplete_reason"), String(root, "error_code"), usage,
-            rateHeaders, false, "oversized", false, 0)
+            String(root, "refusal_code"), String(root, "incomplete_reason"),
+            String(root, "provider_error_code") ?? String(root, "local_failure_code"), usage,
+            rateHeaders, false, String(root, "failure_stage") ?? "provider-transport", false, 0)
         {
+            ProviderErrorType = String(root, "provider_error_type"),
+            ResponseBytesExisted = root.GetProperty("response_bytes_existed").GetBoolean(),
+            ResponseBytesObservedLowerBound = root.GetProperty("response_bytes_observed_lower_bound").GetInt64(),
             RequestedOutputSchemaBytes = root.TryGetProperty("requested_output_schema", out JsonElement schema)
                 && schema.ValueKind == JsonValueKind.String ? schema.GetBytesFromBase64() : [],
             DnsResolutionCount = root.GetProperty("dns_resolution_count").GetInt32(),
@@ -167,19 +183,39 @@ public sealed record OpenAiResponsesResult(
 {
     public byte[]? RequestedOutputSchemaBytes { get; init; }
     public int DnsResolutionCount { get; init; }
+    public string? ProviderErrorType { get; init; }
+    public bool ResponseBytesExisted { get; init; } = RawResponseBytes is not null;
+    public long ResponseBytesObservedLowerBound { get; init; } = RawResponseBytes?.LongLength ?? 0;
+    public string FailureStage => State == ProviderResponseState.Completed && Admitted
+        ? "none"
+        : HttpStatus is null ? "provider-transport" : "provider-response";
+    public string TransportDisposition => HttpStatus is not null
+        ? "response-received"
+        : TransportMayHaveStarted ? "may-have-started-no-response" : "pre-send-known";
 
     public byte[] ToSecretFreeDiagnosticBytes() => JsonSerializer.SerializeToUtf8Bytes(new
     {
         state = State.ToString(),
         transport_may_have_started = TransportMayHaveStarted,
         retry_permitted = RetryPermitted,
+        failure_stage = FailureStage,
+        transport_disposition = TransportDisposition,
         http_status = HttpStatus,
+        response_bytes_existed = ResponseBytesExisted,
+        response_bytes_observed_lower_bound = ResponseBytesObservedLowerBound,
         raw_response_bytes = RawResponseBytes?.LongLength,
-        provider_response_id = ProviderResponseId,
-        client_request_id = ClientRequestId,
-        provider_request_id = ProviderRequestId,
-        returned_model = ReturnedModel,
-        returned_service_tier = ReturnedServiceTier,
+        provider_response_id = OpenAiResponsesAdapter.SanitizeProviderRequestId(ProviderResponseId),
+        client_request_id = OpenAiResponsesAdapter.SanitizeProviderRequestId(ClientRequestId),
+        provider_request_id = OpenAiResponsesAdapter.SanitizeProviderRequestId(ProviderRequestId),
+        returned_model = OpenAiResponsesAdapter.SanitizeProviderErrorField(ReturnedModel),
+        returned_service_tier = OpenAiResponsesAdapter.SanitizeProviderErrorField(ReturnedServiceTier),
+        refusal_code = OpenAiResponsesAdapter.SanitizeProviderErrorField(RefusalCode),
+        incomplete_reason = OpenAiResponsesAdapter.SanitizeProviderErrorField(IncompleteReason),
+        provider_error_type = OpenAiResponsesAdapter.SanitizeProviderErrorField(ProviderErrorType),
+        provider_error_code = RawResponseBytes is null ? null
+            : OpenAiResponsesAdapter.SanitizeProviderErrorField(ErrorCode),
+        local_failure_code = RawResponseBytes is null
+            ? OpenAiResponsesAdapter.SanitizeProviderErrorField(ErrorCode) : null,
         admitted = Admitted,
         admission_reason = AdmissionReason,
         network_used = NetworkUsed,
@@ -543,12 +579,18 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
                 {
                     return Failure(ProviderResponseState.Unknown, (int)response.StatusCode, true,
                         "security_secret_echo", [], clientRequestId, null, sendCount: 1) with
-                    { DnsResolutionCount = DnsResolutionCount() };
+                    {
+                        ResponseBytesExisted = true,
+                        ResponseBytesObservedLowerBound = checked(limits.MaximumRawResponseBytes + 1),
+                        DnsResolutionCount = DnsResolutionCount(),
+                    };
                 }
                 IReadOnlyList<OpenAiRateHeader> oversizedRateHeaders = CaptureHeaders(response);
                 return Failure(ProviderResponseState.Oversized, (int)response.StatusCode, true, "response_too_large",
                     oversizedRateHeaders, clientRequestId, ProviderRequestId(response), sendCount: 1) with
                 {
+                    ResponseBytesExisted = true,
+                    ResponseBytesObservedLowerBound = checked(limits.MaximumRawResponseBytes + 1),
                     RequestedOutputSchemaBytes = OpenAiResponsesCanonicalSerializer.OutputSchemaBytes(canonicalRequest.Span),
                     DnsResolutionCount = DnsResolutionCount(),
                 };
@@ -556,10 +598,15 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
 
             if (ContainsSecretEcho(response, raw, secret.Span))
             {
+                long observedBytes = raw.LongLength;
                 CryptographicOperations.ZeroMemory(raw);
                 return Failure(ProviderResponseState.Unknown, (int)response.StatusCode, true,
                     "security_secret_echo", [], clientRequestId, null, sendCount: 1) with
-                { DnsResolutionCount = DnsResolutionCount() };
+                {
+                    ResponseBytesExisted = true,
+                    ResponseBytesObservedLowerBound = observedBytes,
+                    DnsResolutionCount = DnsResolutionCount(),
+                };
             }
 
             IReadOnlyList<OpenAiRateHeader> rateHeaders = CaptureHeaders(response);
@@ -983,6 +1030,14 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
             ? value
             : null;
 
+    internal static string? SanitizeProviderErrorField(string? value) =>
+        value is not null
+        && value.Length is > 0 and <= 128
+        && value.All(character => char.IsAsciiLetterOrDigit(character)
+            || character is '.' or '_' or ':' or '-')
+            ? value
+            : null;
+
     internal static ProviderUsageContract UnavailableUsage(UsageReceiptState state)
     {
         ProviderQuantityContract absent = new(ProviderAvailabilityState.Unavailable, null);
@@ -1037,7 +1092,7 @@ public static class OpenAiResponsesResponseCodec
                 MaxDepth = 64,
             });
             JsonElement root = document.RootElement;
-            string? id = String(root, "id");
+            string? id = OpenAiResponsesAdapter.SanitizeProviderRequestId(String(root, "id"));
             string? status = String(root, "status");
             string? model = String(root, "model");
             string? tier = String(root, "service_tier");
@@ -1049,7 +1104,10 @@ public static class OpenAiResponsesResponseCodec
             }
             string? incomplete = root.TryGetProperty("incomplete_details", out JsonElement details)
                 ? String(details, "reason") : null;
-            string? error = root.TryGetProperty("error", out JsonElement errorValue) ? String(errorValue, "code") : null;
+            string? error = root.TryGetProperty("error", out JsonElement errorValue)
+                ? OpenAiResponsesAdapter.SanitizeProviderErrorField(String(errorValue, "code")) : null;
+            string? errorType = root.TryGetProperty("error", out errorValue)
+                ? OpenAiResponsesAdapter.SanitizeProviderErrorField(String(errorValue, "type")) : null;
             ProviderUsageContract usage = ParseUsage(root, state) with
             {
                 RateAvailability = !rateHeaders.Any(OpenAiResponsesAdapter.IsRateHeader)
@@ -1083,7 +1141,7 @@ public static class OpenAiResponsesResponseCodec
 
             return new OpenAiResponsesResult(state, true, false, httpStatus, retained, id, clientRequestId, providerRequestId, model, tier,
                 refusal, incomplete, error, usage, rateHeaders, admitted, reason, true, 1)
-            { RequestedOutputSchemaBytes = requestedOutputSchema.ToArray() };
+            { ProviderErrorType = errorType, RequestedOutputSchemaBytes = requestedOutputSchema.ToArray() };
         }
         catch (Exception exception) when (exception is JsonException or InvalidOperationException
             or OverflowException or FormatException)
