@@ -9096,3 +9096,42 @@ credential enrollment. It authorizes zero provider requests, DNS resolutions,
 billable operations, retries, fallback, parallel dispatch, counter reset,
 ceiling transfer, terminal-identity reuse, C3, Slice 7, private fixtures,
 archives, or push. No effect occurred merely because acceptance was recorded.
+
+## 2026-08-19 — Replacement C2A post-success validator stop
+
+The owner completed the masked credential dialog under runtime authority
+`infinium.m1-s6.runtime-authority/credential/cba8f16d-cfce-4e52-a46a-282f5f8680aa`,
+SHA-256 `69326b6692eb490a696c2bcf8f6ee04b03059083b5ca04cc40acff284d4a5aa0`.
+Sanitized success evidence SHA-256
+`0fe89804afc3aaaa04d59961e711099adbe656466fd033e54c55ad709cb3042a`
+proves `passed-active-verified`, exact native order/results
+`CredReadW(ERROR_NOT_FOUND)`, `CredWriteW(success)`,
+`CredReadW(success)`, `CredFree(released)`, exact allocation/free pairing,
+masked submission, destroyed window, cleared buffer, empty native edit,
+zero secret/raw-target canary matches, no surviving process, and zero DNS,
+network, listener, provider, billable, or retry activity.
+
+After writing that valid success artifact, the coordinator called its accepted-
+evidence validator. The helper and producer use canonical scenario
+`wp9-production-profile-enrollment`; the consumer still required legacy
+assignment scenario `wp9-production-profile/enroll-and-verify`. The resulting
+`InvalidDataException` occurred before credential-evidence ledger handoff. The
+outer fail-closed path wrote conservative failure SHA-256
+`1c83f83842a7a67a22aa658fb61140cf93eb01b23a8b8064167a3e79319c16cb`
+and terminal ledger event hash
+`a1369f547801fa282334585a17f31ebf52f7028ad836b3026738f340ce50b2f9`.
+The final ledger SHA-256 is
+`d69019c4674ca3928011b269053ac672d7cf1163b063d7b26310a3c753453f38`.
+C2B did not open.
+
+The credential is proven written and immediately read back under the exact
+target. No current authority permits a retry, enumeration, read, overwrite, or
+delete. The owner directed implementation to continue and asked the project to
+consider leaving C1 implementation-active until C2 completes. The authorized
+correction is offline: align the success-evidence scenario consumer, add
+end-to-end coverage, and implement a narrowly typed append-only zero-effect
+recovery transition. The C1 process amendment remains proposed until exact
+owner acceptance of the recovery package.
+The retained success, failure, and ledger bytes remain immutable. A separately
+reviewed and owner-accepted recovery authority is still required before the
+terminal ledger may append the accepted success-evidence transition.

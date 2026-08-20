@@ -139,6 +139,36 @@ if (args is ["--wp9-campaign-credential-evidence-acceptance", "--manifest", stri
     }
 }
 
+if (args is ["--wp9-campaign-credential-evidence-recovery", "--manifest", string recoveryWp9Manifest,
+    "--manifest-sha256", string recoveryWp9ManifestSha256,
+    "--campaign-manifest", string recoveryCampaignManifest,
+    "--campaign-manifest-sha256", string recoveryCampaignManifestSha256,
+    "--campaign-reviewed-candidate", string recoveryReviewedCandidate,
+    "--campaign-ledger", string recoveryCampaignLedger,
+    "--evidence", string recoveryCredentialEvidence,
+    "--failure", string recoveryCredentialFailure,
+    "--product-root", string recoveryProductRoot,
+    "--helper", string recoveryHelper,
+    "--runtime-authority", string recoveryRuntimeAuthority,
+    "--runtime-authority-sha256", string recoveryRuntimeAuthoritySha256])
+{
+    try
+    {
+        Wp9ProductionProfileEnrollmentRunner.RecoverCampaignCredentialEvidence(
+            recoveryWp9Manifest, recoveryWp9ManifestSha256, recoveryCampaignManifest,
+            recoveryCampaignManifestSha256, recoveryReviewedCandidate, recoveryCampaignLedger,
+            recoveryCredentialEvidence, recoveryCredentialFailure, recoveryProductRoot, recoveryHelper,
+            recoveryRuntimeAuthority, recoveryRuntimeAuthoritySha256, DateTimeOffset.UtcNow);
+        Console.WriteLine("WP9 credential success evidence recovered with zero credential, provider, or network effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"WP9 credential evidence recovery stopped: {exception.GetType().Name}");
+        return 77;
+    }
+}
+
 if (args is ["--m1-slice6-campaign-stage", "--stage-manifest", string stageManifest,
     "--stage-manifest-sha256", string stageManifestSha256,
     "--campaign-manifest", string stageCampaignManifest,

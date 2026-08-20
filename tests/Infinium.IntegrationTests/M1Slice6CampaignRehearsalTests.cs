@@ -375,19 +375,19 @@ public sealed class M1Slice6CampaignRehearsalTests
             [
                 new { Sequence = 1, Operation = "CredReadW",
                     TargetFingerprintSha256 = identity.CredentialTargetFingerprintSha256,
-                    Scenario = "wp9-production-profile/enroll-and-verify", Result = "ERROR_NOT_FOUND",
+                    Scenario = "wp9-production-profile-enrollment", Result = "ERROR_NOT_FOUND",
                     AllocationId = (long?)null, PairedAllocationId = (long?)null },
                 new { Sequence = 2, Operation = "CredWriteW",
                     TargetFingerprintSha256 = identity.CredentialTargetFingerprintSha256,
-                    Scenario = "wp9-production-profile/enroll-and-verify", Result = "success",
+                    Scenario = "wp9-production-profile-enrollment", Result = "success",
                     AllocationId = (long?)null, PairedAllocationId = (long?)null },
                 new { Sequence = 3, Operation = "CredReadW",
                     TargetFingerprintSha256 = identity.CredentialTargetFingerprintSha256,
-                    Scenario = "wp9-production-profile/enroll-and-verify", Result = "success",
+                    Scenario = "wp9-production-profile-enrollment", Result = "success",
                     AllocationId = (long?)41, PairedAllocationId = (long?)null },
                 new { Sequence = 4, Operation = "CredFree",
                     TargetFingerprintSha256 = identity.CredentialTargetFingerprintSha256,
-                    Scenario = "wp9-production-profile/enroll-and-verify", Result = "released",
+                    Scenario = "wp9-production-profile-enrollment", Result = "released",
                     AllocationId = (long?)null, PairedAllocationId = (long?)41 },
             ];
             object entryEvidence = new

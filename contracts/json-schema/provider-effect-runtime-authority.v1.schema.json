@@ -13,7 +13,7 @@
     "schema_identity": { "const": "infinium.provider.effect-runtime-authority/v1" },
     "authority_id": { "$ref": "#/$defs/identity" },
     "scope": { "enum": ["effect-free-rehearsal", "external-effect"] },
-    "kind": { "enum": ["credential-enrollment", "transport-qualification", "source-claim-extraction", "candidate-investigation"] },
+    "kind": { "enum": ["credential-enrollment", "credential-evidence-recovery", "transport-qualification", "source-claim-extraction", "candidate-investigation"] },
     "status": { "const": "reviewed-and-owner-accepted" },
     "subject_manifest": { "$ref": "#/$defs/manifestBinding" },
     "campaign": { "$ref": "#/$defs/manifestBinding" },
@@ -26,6 +26,38 @@
     "execution": { "$ref": "#/$defs/execution" },
     "limits": { "$ref": "#/$defs/limits" }
   },
+  "allOf": [
+    {
+      "if": {
+        "required": ["kind"],
+        "properties": { "kind": { "const": "credential-evidence-recovery" } }
+      },
+      "then": {
+        "properties": {
+          "scope": { "const": "effect-free-rehearsal" },
+          "predecessor": {
+            "properties": {
+              "ledger_event_hash": { "$ref": "#/$defs/sha256" },
+              "evidence_id": { "$ref": "#/$defs/identity" },
+              "evidence_sha256": { "$ref": "#/$defs/sha256" }
+            }
+          },
+          "limits": {
+            "const": {
+              "helper_launches": 0,
+              "credential_native_calls": 0,
+              "provider_starts": 0,
+              "dns_resolutions": 0,
+              "billable_operations": 0,
+              "literal_loopback_starts": 0,
+              "automatic_retry": false,
+              "fourth_call_permitted": false
+            }
+          }
+        }
+      }
+    }
+  ],
   "$defs": {
     "identity": { "type": "string", "minLength": 1, "maxLength": 200 },
     "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },

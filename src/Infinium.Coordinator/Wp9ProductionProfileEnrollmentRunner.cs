@@ -15,6 +15,7 @@ namespace Infinium.Coordinator;
 
 internal static class Wp9ProductionProfileEnrollmentRunner
 {
+    private const string ProductionEnrollmentScenario = "wp9-production-profile-enrollment";
     private static readonly JsonSerializerOptions IndentedJson = new() { WriteIndented = true };
 
     internal static void ValidateCampaignAdmissionOnly(string credentialManifestPath,
@@ -215,8 +216,205 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             now);
     }
 
+    internal static void RecoverCampaignCredentialEvidence(string credentialManifestPath,
+        string credentialManifestSha256, string campaignManifestPath, string campaignManifestSha256,
+        string reviewedCandidate, string ledgerPath, string evidencePath, string failurePath,
+        string productRoot, string helperBinary, string runtimeAuthorityManifestPath,
+        string runtimeAuthorityManifestSha256, DateTimeOffset now)
+        => RecoverCampaignCredentialEvidenceCore(credentialManifestPath, credentialManifestSha256,
+            campaignManifestPath, campaignManifestSha256, reviewedCandidate, ledgerPath, evidencePath,
+            failurePath, productRoot, helperBinary, runtimeAuthorityManifestPath,
+            runtimeAuthorityManifestSha256, now, null);
+
+    internal static void RecoverCampaignCredentialEvidenceForTesting(string credentialManifestPath,
+        string credentialManifestSha256, string campaignManifestPath, string campaignManifestSha256,
+        string reviewedCandidate, string ledgerPath, string evidencePath, string failurePath,
+        string productRoot, string helperBinary, string runtimeAuthorityManifestPath,
+        string runtimeAuthorityManifestSha256, DateTimeOffset now, string executingCoordinatorBinary)
+        => RecoverCampaignCredentialEvidenceCore(credentialManifestPath, credentialManifestSha256,
+            campaignManifestPath, campaignManifestSha256, reviewedCandidate, ledgerPath, evidencePath,
+            failurePath, productRoot, helperBinary, runtimeAuthorityManifestPath,
+            runtimeAuthorityManifestSha256, now, executingCoordinatorBinary);
+
+    private static void RecoverCampaignCredentialEvidenceCore(string credentialManifestPath,
+        string credentialManifestSha256, string campaignManifestPath, string campaignManifestSha256,
+        string reviewedCandidate, string ledgerPath, string evidencePath, string failurePath,
+        string productRoot, string helperBinary, string runtimeAuthorityManifestPath,
+        string runtimeAuthorityManifestSha256, DateTimeOffset now, string? executingCoordinatorBinary)
+    {
+        byte[] credentialBytes = File.ReadAllBytes(Path.GetFullPath(credentialManifestPath));
+        byte[] campaignBytes = File.ReadAllBytes(Path.GetFullPath(campaignManifestPath));
+        M1Slice6AuthorityContractVersion credentialVersion = M1Slice6AuthorityContracts.Validate(
+            credentialManifestPath, credentialBytes, M1Slice6AuthorityDocumentKind.CredentialProfile);
+        M1Slice6AuthorityContractVersion campaignVersion = M1Slice6AuthorityContracts.Validate(
+            campaignManifestPath, campaignBytes, M1Slice6AuthorityDocumentKind.Campaign);
+        if (credentialVersion != M1Slice6AuthorityContractVersion.FreshC2V4
+            || campaignVersion != M1Slice6AuthorityContractVersion.FreshC2V4
+            || Convert.ToHexStringLower(SHA256.HashData(credentialBytes)) != credentialManifestSha256
+            || Convert.ToHexStringLower(SHA256.HashData(campaignBytes)) != campaignManifestSha256)
+        {
+            throw new InvalidDataException("Credential evidence recovery requires the exact terminal v4 authority bytes.");
+        }
+
+        using JsonDocument credential = JsonDocument.Parse(credentialBytes);
+        using JsonDocument campaign = JsonDocument.Parse(campaignBytes);
+        JsonElement credentialRoot = credential.RootElement;
+        JsonElement profile = credentialRoot.GetProperty("profile");
+        JsonElement providerIntent = credentialRoot.GetProperty("provider_intent");
+        JsonElement campaignRoot = campaign.RootElement;
+        JsonElement envelope = campaignRoot.GetProperty("credential_envelope");
+        JsonElement attachment = campaignRoot.GetProperty("authority_source");
+        if (campaignRoot.GetProperty("candidate_binding").GetProperty("close_ready_implementation_commit")
+                .GetString() != reviewedCandidate
+            || credentialRoot.GetProperty("candidate_binding").GetProperty("close_ready_implementation_commit")
+                .GetString() != reviewedCandidate
+            || envelope.GetProperty("source_manifest_sha256").GetString() != credentialManifestSha256)
+        {
+            throw new InvalidDataException("Credential evidence recovery changed the terminal campaign candidate.");
+        }
+        DateTimeOffset campaignExpiry = DateTimeOffset.Parse(campaignRoot.GetProperty("expires_at_utc").GetString()!,
+            System.Globalization.CultureInfo.InvariantCulture);
+        DateTimeOffset credentialExpiry = DateTimeOffset.Parse(credentialRoot.GetProperty("expires_at_utc").GetString()!,
+            System.Globalization.CultureInfo.InvariantCulture);
+        M1Slice6CampaignIdentity identity = new(campaignRoot.GetProperty("campaign_id").GetString()!,
+            campaignManifestSha256, attachment.GetProperty("attachment_sha256").GetString()!, reviewedCandidate,
+            credentialRoot.GetProperty("manifest_id").GetString()!, credentialManifestSha256,
+            profile.GetProperty("access_profile_id").GetString()!, profile.GetProperty("generation_id").GetString()!,
+            profile.GetProperty("target_fingerprint_sha256").GetString()!);
+        M1Slice6FiniteCampaignLedger ledger = new(Path.GetFullPath(ledgerPath), identity,
+            campaignExpiry, credentialExpiry, now);
+        if (ledger.Current.State != M1Slice6CampaignState.Stopped
+            || ledger.Current.Event != "credential-helper-evidence-ambiguity-terminal-stop")
+        {
+            throw new InvalidOperationException("Credential evidence recovery requires its exact terminal predecessor.");
+        }
+
+        byte[] successBytes = File.ReadAllBytes(Path.GetFullPath(evidencePath));
+        byte[] failureBytes = File.ReadAllBytes(Path.GetFullPath(failurePath));
+        string successSha = Convert.ToHexStringLower(SHA256.HashData(successBytes));
+        string failureSha = Convert.ToHexStringLower(SHA256.HashData(failureBytes));
+        using JsonDocument success = JsonDocument.Parse(successBytes);
+        using JsonDocument failure = JsonDocument.Parse(failureBytes);
+        ValidateAcceptedCampaignCredentialArtifacts(success.RootElement,
+            profile.GetProperty("target_fingerprint_sha256").GetString()!);
+        DateTimeOffset completedAt = ParseEvidenceCompletedAtUtc(success.RootElement);
+        if (success.RootElement.GetProperty("status").GetString() != "passed-active-verified"
+            || success.RootElement.GetProperty("manifest_id").GetString() != identity.CredentialManifestId
+            || success.RootElement.GetProperty("manifest_sha256").GetString() != credentialManifestSha256
+            || success.RootElement.GetProperty("profile_id").GetString() != identity.CredentialProfileId
+            || success.RootElement.GetProperty("generation_id").GetString() != identity.CredentialGenerationId
+            || success.RootElement.GetProperty("campaign_credential_handoff_event_hash").GetString()
+                != ledger.Entries[^2].EventHash
+            || failure.RootElement.GetProperty("status").GetString() != "stopped-ambiguous-effect"
+            || failure.RootElement.GetProperty("manifest_id").GetString() != identity.CredentialManifestId
+            || failure.RootElement.GetProperty("manifest_sha256").GetString() != credentialManifestSha256
+            || failure.RootElement.GetProperty("provider_operation_count").GetInt32() != 0
+            || failure.RootElement.GetProperty("billable_operation_count").GetInt32() != 0
+            || failure.RootElement.GetProperty("retry_permitted").GetBoolean()
+            || completedAt > now || completedAt > credentialExpiry || completedAt > campaignExpiry
+            || ledger.Current.EvidenceId != "wp9-production-profile-enrollment-failure"
+            || ledger.Current.EvidenceSha256 != failureSha)
+        {
+            throw new InvalidDataException("Credential evidence recovery artifacts differ from the exact retained terminal facts.");
+        }
+
+        string helperPath = Path.GetFullPath(helperBinary);
+        string helperSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(helperPath)));
+        if (credentialRoot.GetProperty("release_build").GetProperty("helper_sha256").GetString() != helperSha)
+        {
+            throw new InvalidDataException("Credential evidence recovery changed the accepted helper bytes.");
+        }
+        ProviderEffectRuntimeAuthority authority = ProviderEffectRuntimeAuthorityLoader.LoadAndValidate(
+            runtimeAuthorityManifestPath, runtimeAuthorityManifestSha256, now);
+        ProviderEffectRuntimeAuthorityLoader.RequireEffectFreeRehearsal(authority);
+        if (authority.Kind != ProviderEffectAuthorityKind.CredentialEvidenceRecovery
+            || authority.SubjectManifestId != identity.CredentialManifestId
+            || authority.SubjectManifestSha256 != credentialManifestSha256
+            || authority.CampaignId != identity.CampaignId
+            || authority.CampaignManifestSha256 != campaignManifestSha256
+            || authority.PredecessorLedgerEventHash != ledger.Current.EventHash
+            || authority.PredecessorEvidenceId != ledger.Current.EvidenceId
+            || authority.PredecessorEvidenceSha256 != failureSha
+            || authority.ReviewEvidenceId != "wp9-production-profile-enrollment-evidence-v2"
+            || authority.ReviewEvidenceSha256 != successSha)
+        {
+            throw new InvalidDataException("Credential evidence recovery authority does not bind the exact terminal and success evidence.");
+        }
+        string coordinatorBinary = executingCoordinatorBinary ?? Environment.ProcessPath
+            ?? throw new InvalidOperationException("The executing coordinator binary path is unavailable.");
+        string coordinatorSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(coordinatorBinary)));
+        ProviderEffectRuntimeAuthorityLoader.ValidateExecutableBinding(authority,
+            typeof(Wp9ProductionProfileEnrollmentRunner).Assembly, coordinatorSha, helperSha);
+        string repository = M1Slice6CampaignStageManifestValidator.FindRepositoryRoot(campaignManifestPath);
+        ProviderEffectRuntimeAuthorityLoader.ValidateExecutionBinding(authority, repository,
+            Path.GetDirectoryName(Path.GetFullPath(evidencePath))!, ledgerPath, productRoot,
+            coordinatorBinary, helperPath);
+        string productStateBefore = CaptureReadOnlyProductStateIdentity(productRoot);
+        CredentialProfileProjection durable = AuthoritativeStore.ReadCredentialProfileProjectionReadOnly(
+            Path.GetFullPath(productRoot), identity.CredentialProfileId);
+        string productStateAfter = CaptureReadOnlyProductStateIdentity(productRoot);
+        if (durable.GenerationId != identity.CredentialGenerationId
+            || durable.ProfileId != identity.CredentialProfileId
+            || durable.GenerationOrdinal != profile.GetProperty("generation_ordinal").GetInt64()
+            || durable.RevocationEpoch != profile.GetProperty("revocation_epoch").GetInt64()
+            || durable.LifecycleState != "active-verified" || durable.VerificationState != "available"
+            || durable.CapabilitySnapshotId != M1ProviderCatalog.Capability.Identity.Value
+            || durable.AccountIdentityId != providerIntent.GetProperty("account_identity_id").GetString()
+            || durable.BillingScopeIdentityId != providerIntent.GetProperty("billing_scope_identity_id").GetString()
+            || durable.RecoveryDisposition != "not-required"
+            || durable.CleanupDisposition != "not-requested"
+            || durable.ProjectionVersion != 3 || string.IsNullOrWhiteSpace(durable.IntentId)
+            || durable.UpdatedAt > completedAt
+            || productStateBefore != productStateAfter)
+        {
+            throw new InvalidDataException(
+                "Credential evidence recovery lacks an immutable exact durable active profile projection.");
+        }
+        ledger.RecoverPostSuccessCredentialEvidence(ledger.Current.EventHash, ledger.Current.EvidenceId,
+            failureSha, authority.ReviewEvidenceId, successSha, new(1, 2, 0, 1, 4),
+            authority.AuthorityId, authority.ManifestSha256, now);
+    }
+
     internal static void ValidateAcceptedCampaignCredentialArtifacts(JsonElement root, string targetFingerprint)
     {
+        string[] exactProperties = ["schema", "status", "manifest_id", "manifest_sha256",
+            "campaign_credential_handoff_event_hash", "profile_id", "generation_id",
+            "target_fingerprint_sha256", "lifecycle_state", "verification_state",
+            "native_credential_operation_count", "native_call_trace", "entry_evidence", "canaries",
+            "network_operation_count", "listener_count", "provider_operation_count",
+            "billable_operation_count", "retry_attempted", "containment", "namespace_reuse_blocked",
+            "namespace_reuse_block_reason", "retention", "completed_at_utc"];
+        JsonElement containment = root.GetProperty("containment");
+        if (!root.EnumerateObject().Select(property => property.Name)
+                .SequenceEqual(exactProperties, StringComparer.Ordinal)
+            || root.GetProperty("schema").GetString()
+                != "infinium.m1-s6.wp9.production-profile-enrollment-evidence/v2"
+            || root.GetProperty("status").GetString() != "passed-active-verified"
+            || root.GetProperty("target_fingerprint_sha256").GetString() != targetFingerprint
+            || root.GetProperty("lifecycle_state").GetString() != "active-verified"
+            || root.GetProperty("verification_state").GetString() != "available"
+            || root.GetProperty("native_credential_operation_count").GetInt32() != 4
+            || root.GetProperty("network_operation_count").GetInt32() != 0
+            || root.GetProperty("listener_count").GetInt32() != 0
+            || root.GetProperty("provider_operation_count").GetInt32() != 0
+            || root.GetProperty("billable_operation_count").GetInt32() != 0
+            || root.GetProperty("retry_attempted").GetBoolean()
+            || !containment.EnumerateObject().Select(property => property.Name).SequenceEqual(
+                ["probe_executed", "excluded_handle_accessible", "process_tree_terminated",
+                    "process_tree_survivor_count", "total_contained_process_count"], StringComparer.Ordinal)
+            || !containment.GetProperty("probe_executed").GetBoolean()
+            || containment.GetProperty("excluded_handle_accessible").GetBoolean()
+            || !containment.GetProperty("process_tree_terminated").GetBoolean()
+            || containment.GetProperty("process_tree_survivor_count").GetInt32() != 0
+            || containment.GetProperty("total_contained_process_count").GetInt32() != 2
+            || root.GetProperty("namespace_reuse_blocked").GetBoolean()
+            || root.GetProperty("namespace_reuse_block_reason").ValueKind != JsonValueKind.Null
+            || root.GetProperty("retention").GetString() != "exact-generation-retained-no-delete-authority")
+        {
+            throw new InvalidDataException(
+                "Accepted credential evidence changed its exact success, zero-effect, containment, or retention facts.");
+        }
+
         JsonElement traceValue = root.GetProperty("native_call_trace");
         if (traceValue.ValueKind != JsonValueKind.Array || traceValue.GetArrayLength() != 4)
         {
@@ -235,8 +433,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
                 || trace[index].GetProperty("Operation").GetString() != operations[index]
                 || trace[index].GetProperty("Result").GetString() != results[index]
                 || trace[index].GetProperty("TargetFingerprintSha256").GetString() != targetFingerprint
-                || trace[index].GetProperty("Scenario").GetString()
-                    != "wp9-production-profile/enroll-and-verify")
+                || trace[index].GetProperty("Scenario").GetString() != ProductionEnrollmentScenario)
             {
                 throw new InvalidDataException("Accepted credential evidence changed its native operation, result, target, order, or scenario.");
             }
@@ -252,6 +449,46 @@ internal static class Wp9ProductionProfileEnrollmentRunner
             entry.GetRawText(), "submitted");
         ValidateEntryElement(entry, "submitted");
         ValidateCanaryElement(root.GetProperty("canaries"));
+        _ = ParseEvidenceCompletedAtUtc(root);
+    }
+
+    private static DateTimeOffset ParseEvidenceCompletedAtUtc(JsonElement root)
+    {
+        if (!DateTimeOffset.TryParseExact(root.GetProperty("completed_at_utc").GetString(), "O",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out DateTimeOffset completedAt)
+            || completedAt.Offset != TimeSpan.Zero)
+        {
+            throw new InvalidDataException("Accepted credential evidence completion time is not exact UTC.");
+        }
+        return completedAt;
+    }
+
+    private static string CaptureReadOnlyProductStateIdentity(string productRoot)
+    {
+        string root = Path.GetFullPath(productRoot);
+        if (!Directory.Exists(root))
+        {
+            throw new InvalidDataException("The durable product-state root is absent.");
+        }
+        using IncrementalHash inventory = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        foreach (string file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
+                     .OrderBy(path => Path.GetRelativePath(root, path).Replace('\\', '/'),
+                         StringComparer.Ordinal))
+        {
+            string relative = Path.GetRelativePath(root, file).Replace('\\', '/');
+            byte[] identity = Encoding.UTF8.GetBytes(relative + "\0" + new FileInfo(file).Length + "\0");
+            inventory.AppendData(identity);
+            using FileStream stream = new(file, FileMode.Open, FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete);
+            byte[] buffer = new byte[64 * 1024];
+            int read;
+            while ((read = stream.Read(buffer)) > 0)
+            {
+                inventory.AppendData(buffer, 0, read);
+            }
+        }
+        return Convert.ToHexStringLower(inventory.GetHashAndReset());
     }
 
     internal static string ProduceV2SuccessEvidence(string evidencePath,
@@ -478,7 +715,7 @@ internal static class Wp9ProductionProfileEnrollmentRunner
         HelperPrivateFrameV2 assignment = Assignment(profileId, generationId);
         (CoordinatedHelperReceipt helper, CredentialProfileProjection projection) =
             await coordinator.ExecuteVerifiedEnrollmentAsync(
-                "wp9-production-profile-enrollment", bootstrap, assignment, now.AddTicks(2)).ConfigureAwait(false);
+                ProductionEnrollmentScenario, bootstrap, assignment, now.AddTicks(2)).ConfigureAwait(false);
         string disposition = ValidateEffectReceipt(helper.Process, projection, targetFingerprint);
         if (disposition == "stopped-ambiguous-effect"
             && projection.LifecycleState != "recovery-required")

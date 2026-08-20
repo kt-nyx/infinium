@@ -204,6 +204,40 @@ public sealed class M1Slice6FiniteCampaignLedger
             Current.ObservedOutputTokens, Current.ObservedRawResponseBytes, now);
     }
 
+    public void RecoverPostSuccessCredentialEvidence(string terminalEventHash,
+        string terminalFailureId, string terminalFailureSha256, string successEvidenceId,
+        string successEvidenceSha256, M1Slice6CampaignNativeEnvelope nativeEnvelope,
+        string runtimeAuthorityId, string runtimeAuthoritySha256, DateTimeOffset now)
+    {
+        string exactTerminalHash = RequireHex(terminalEventHash, 64);
+        string exactFailureId = RequireIdentity(terminalFailureId);
+        string exactFailureSha = RequireHex(terminalFailureSha256, 64);
+        string exactEvidenceId = RequireIdentity(successEvidenceId);
+        string exactEvidenceSha = RequireHex(successEvidenceSha256, 64);
+        string exactAuthorityId = RequireIdentity(runtimeAuthorityId);
+        string exactAuthoritySha = RequireHex(runtimeAuthoritySha256, 64);
+        M1Slice6CampaignNativeEnvelope exactNative = ValidateNativeEnvelope(nativeEnvelope, credential: true);
+        if (Current.State != M1Slice6CampaignState.Stopped
+            || Current.Event != "credential-helper-evidence-ambiguity-terminal-stop"
+            || Current.EventHash != exactTerminalHash
+            || Current.EvidenceId != exactFailureId || Current.EvidenceSha256 != exactFailureSha
+            || Current.ProviderCallCount != 0 || Current.DnsResolutionCount != 0
+            || Current.AggregateRequestBytes != 0 || Current.AggregateInputTokens != 0
+            || Current.AggregateOutputTokens != 0 || Current.AggregateRawResponseBytes != 0
+            || Current.ReservedNanoUsd != 0 || Current.SettledNanoUsd != 0
+            || Current.ObservedInputTokens != 0 || Current.ObservedOutputTokens != 0
+            || Current.ObservedRawResponseBytes != 0 || Current.PossibleStartLatched
+            || Current.NativeEnvelope != new M1Slice6CampaignNativeEnvelope(0, 0, 0, 0, 0))
+        {
+            throw new InvalidOperationException(
+                "Only the exact zero-provider post-success evidence-validator terminal may be recovered.");
+        }
+        Append(M1Slice6CampaignState.CredentialEvidenceAccepted, M1Slice6CampaignStage.None,
+            "credential-post-success-validator-defect-evidence-accepted", "", "",
+            exactEvidenceId, exactEvidenceSha, 0, 0, 0, 0, 0, 0, 0, 0, null, false, "",
+            0, 0, 0, now, exactNative, exactAuthorityId, exactAuthoritySha);
+    }
+
     public void ReserveStage(M1Slice6CampaignStage stage, M1Slice6CampaignStageReservation reservation, DateTimeOffset now)
         => ReserveStage(stage, reservation, "", "", now);
 
@@ -660,6 +694,23 @@ public sealed class M1Slice6FiniteCampaignLedger
             && current.Event == "credential-evidence-independently-accepted")
         {
             return sameVector && current.Stage == M1Slice6CampaignStage.None;
+        }
+        if (previous.State == M1Slice6CampaignState.Stopped
+            && previous.Event == "credential-helper-evidence-ambiguity-terminal-stop"
+            && current.State == M1Slice6CampaignState.CredentialEvidenceAccepted
+            && current.Event == "credential-post-success-validator-defect-evidence-accepted")
+        {
+            return SameVector(previous, current, ignoreEvidence: true, ignoreNative: true,
+                    ignoreRuntimeAuthority: true)
+                && previous.ProviderCallCount == 0 && previous.DnsResolutionCount == 0
+                && previous.ReservedNanoUsd == 0 && previous.SettledNanoUsd == 0
+                && !previous.PossibleStartLatched
+                && previous.NativeEnvelope == new M1Slice6CampaignNativeEnvelope(0, 0, 0, 0, 0)
+                && current.NativeEnvelope == new M1Slice6CampaignNativeEnvelope(1, 2, 0, 1, 4)
+                && current.Stage == M1Slice6CampaignStage.None
+                && current.RequestManifestId.Length == 0 && current.RequestManifestSha256.Length == 0
+                && current.EvidenceId.Length > 0 && current.EvidenceSha256.Length == 64
+                && current.RuntimeAuthorityId.Length > 0 && current.RuntimeAuthoritySha256.Length == 64;
         }
         if (current.State == M1Slice6CampaignState.StageReserved && current.Event == "stage-reserved"
             && previous.State is M1Slice6CampaignState.CredentialEvidenceAccepted or M1Slice6CampaignState.StageAccepted)

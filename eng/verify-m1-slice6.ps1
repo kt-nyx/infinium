@@ -2851,7 +2851,8 @@ function Invoke-C1ReadinessGate {
 
     $credentialScript = Get-Content -LiteralPath (Join-Path $repoRoot 'eng/run-m1-slice6-credential.ps1') -Raw
     $stageScript = Get-Content -LiteralPath (Join-Path $repoRoot 'eng/run-m1-slice6-live.ps1') -Raw
-    foreach ($script in @($credentialScript, $stageScript)) {
+    $recoveryScript = Get-Content -LiteralPath (Join-Path $repoRoot 'eng/run-m1-slice6-credential-recovery.ps1') -Raw
+    foreach ($script in @($credentialScript, $stageScript, $recoveryScript)) {
         foreach ($forbidden in @('branch --show-current', 'rev-parse HEAD', 'git log', 'git show',
                 'merge-base', 'record.md', 'OWNER_ACCEPTANCE', 'STAGE_ADMISSION')) {
             if ($script.Contains($forbidden, [StringComparison]::OrdinalIgnoreCase)) {
@@ -2866,8 +2867,9 @@ function Invoke-C1ReadinessGate {
     }
     $program = Get-Content -LiteralPath (Join-Path $repoRoot 'src/Infinium.Coordinator/Program.cs') -Raw
     if (-not $program.Contains('"--runtime-authority", string credentialRuntimeAuthority', [StringComparison]::Ordinal) -or
+        -not $program.Contains('"--runtime-authority", string recoveryRuntimeAuthority', [StringComparison]::Ordinal) -or
         -not $program.Contains('"--runtime-authority", string stageRuntimeAuthority', [StringComparison]::Ordinal)) {
-        throw 'C1Readiness requires typed runtime authority at credential and provider-stage executable entry points.'
+        throw 'C1Readiness requires typed runtime authority at credential, recovery, and provider-stage executable entry points.'
     }
 
     $forbiddenMaterialized = @(

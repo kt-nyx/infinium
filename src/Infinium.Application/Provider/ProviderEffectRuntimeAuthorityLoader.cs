@@ -53,6 +53,7 @@ public static class ProviderEffectRuntimeAuthorityLoader
         ProviderEffectAuthorityKind kind = root.GetProperty("kind").GetString() switch
         {
             "credential-enrollment" => ProviderEffectAuthorityKind.CredentialEnrollment,
+            "credential-evidence-recovery" => ProviderEffectAuthorityKind.CredentialEvidenceRecovery,
             "transport-qualification" => ProviderEffectAuthorityKind.TransportQualification,
             "source-claim-extraction" => ProviderEffectAuthorityKind.SourceClaimExtraction,
             "candidate-investigation" => ProviderEffectAuthorityKind.CandidateInvestigation,
@@ -106,8 +107,8 @@ public static class ProviderEffectRuntimeAuthorityLoader
         string predecessorHash = predecessor.GetProperty("ledger_event_hash").GetString() ?? string.Empty;
         string predecessorEvidenceId = predecessor.GetProperty("evidence_id").GetString() ?? string.Empty;
         string predecessorEvidenceSha = predecessor.GetProperty("evidence_sha256").GetString() ?? string.Empty;
-        bool credential = kind == ProviderEffectAuthorityKind.CredentialEnrollment;
-        if (credential
+        bool initialCredentialEnrollment = kind == ProviderEffectAuthorityKind.CredentialEnrollment;
+        if (initialCredentialEnrollment
             ? predecessorHash != "none" || predecessorEvidenceId != "none" || predecessorEvidenceSha != "none"
             : !IsHex(predecessorHash, 64) || !IsIdentity(predecessorEvidenceId)
                 || !IsHex(predecessorEvidenceSha, 64))
@@ -253,10 +254,16 @@ public static class ProviderEffectRuntimeAuthorityLoader
         {
             throw new InvalidDataException("Retry and fourth-call authority are prohibited.");
         }
+        if (kind == ProviderEffectAuthorityKind.CredentialEvidenceRecovery
+            && scope != ProviderEffectAuthorityScope.EffectFreeRehearsal)
+        {
+            throw new InvalidDataException("Credential evidence recovery can never authorize an external effect.");
+        }
         ProviderEffectAuthorityLimits expected = scope switch
         {
             ProviderEffectAuthorityScope.EffectFreeRehearsal => new(0, 0, 0, 0, 0,
-                kind == ProviderEffectAuthorityKind.CredentialEnrollment ? 0 : 1, false, false),
+                kind is ProviderEffectAuthorityKind.CredentialEnrollment
+                    or ProviderEffectAuthorityKind.CredentialEvidenceRecovery ? 0 : 1, false, false),
             _ when kind == ProviderEffectAuthorityKind.CredentialEnrollment =>
                 new(1, 4, 0, 0, 0, 0, false, false),
             _ => new(1, 2, 1, 1, 1, 0, false, false),

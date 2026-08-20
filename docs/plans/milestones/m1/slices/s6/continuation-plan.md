@@ -232,6 +232,32 @@ C1 acceptance requires:
 C1 acceptance does not open an effect. It makes preparation and owner review of
 the fresh C2 authority package eligible.
 
+#### 6.5.1 Proposed owner amendment — C1 remains implementation-active through C2
+
+On 2026-08-19 the owner asked the project to consider leaving C1 unfrozen until
+C2 is complete. The recovery package therefore proposes treating C1 acceptance
+as an accepted readiness baseline, not a contract or implementation freeze.
+This proposal does not become process authority until the owner accepts its
+exact package bytes. If accepted, real C2 integration evidence may correct the
+C1-owned producer, consumer, persistence, validator, and evidence path on one
+active vertical candidate, provided that:
+
+- every correction remains offline until its exact implementation and
+  executable bytes are reviewed and rebound by a fresh typed authority;
+- prior manifests, runtime authorities, ledger events, and effect evidence stay
+  immutable and are never silently reinterpreted, retried, or reused;
+- a terminal campaign may advance only through a separately owner-accepted,
+  append-only, zero-effect recovery authority that binds its exact terminal and
+  success evidence;
+- external-effect ceilings, predecessor gates, no-retry/no-fourth-call rules,
+  answer isolation, and provider/evaluator separation are not broadened; and
+- the final C1 implementation binding is established only after C2 completes,
+  before C3 closeout and final Slice 6 contract-maturity review.
+
+If accepted, this amendment removes premature implementation-freeze churn. It does not make
+C2 self-authorizing, erase a terminal event, or permit a helper, credential,
+network, provider, or billable operation without the exact existing gates.
+
 ## 7. `M1/S6/C2` — One bounded live campaign
 
 ### 7.1 Objective and authority

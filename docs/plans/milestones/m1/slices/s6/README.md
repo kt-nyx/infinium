@@ -95,6 +95,26 @@ failure summaries. Its exact clean-commit readiness floor and reproducible
 is now owner-accepted. That decision opens C2A runtime-authority preparation
 and one masked credential enrollment, but creates no effect automatically.
 
+C1 effect-free readiness closure is accepted. That retained readiness evidence
+does not itself decide the proposed implementation-active-through-C2 amendment.
+
+That enrollment submitted successfully and retained success evidence proves
+the credential write/read-back, active verified profile, exact four-call native
+trace, UI cleanup, and zero network/provider/billable operations. The
+coordinator then rejected the helper's canonical
+`wp9-production-profile-enrollment` scenario because one downstream validator
+still expected `wp9-production-profile/enroll-and-verify`. The conservative
+failure path terminalized the ledger. The credential operation must not be
+retried and Credential Manager must not be inspected or modified.
+
+The owner asked the project to consider keeping C1 implementation-active until
+C2 completes. The recovery package includes that proposal for exact acceptance;
+it is not current process authority yet. Current work is the offline
+scenario-contract correction and a closed append-only recovery path. Before
+that path changes durable campaign state, its corrected executable, proposed
+process amendment, and zero-effect runtime authority must be independently
+reviewed, exactly bound, and separately owner-accepted.
+
 ## Lean continuation
 
 The remaining accepted R3-R7 obligations are preserved through three outcome
@@ -119,12 +139,11 @@ scope reduction.
 
 ## Effect and campaign boundary
 
-No repository document supplies an API key. The accepted package and owner
-decision permit the exact C2A helper/UI and native enrollment only after they
-are intersected with independently reviewed, digest-bound, durably admitted,
-and immediately revalidated typed runtime authority. DNS/public network,
-provider contact, billing, private-fixture access, archive work, destructive
-action, push, and later-slice implementation remain unauthorized in C2A.
+No repository document supplies an API key. The consumed C2A authority permits
+no retry. Current recovery work permits no helper/UI launch, native credential
+call, credential-store inspection, DNS/public network, provider contact,
+billing, private-fixture access, archive work, destructive action, push, or
+later-slice implementation.
 
 The old dormant campaign and credential authorization IDs named in the lean
 continuation plan are retired without execution and cannot be inherited or

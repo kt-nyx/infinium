@@ -4,6 +4,94 @@ namespace Infinium.Persistence;
 
 public sealed partial class AuthoritativeStore
 {
+    public static CredentialProfileProjection ReadCredentialProfileProjectionReadOnly(
+        string productRoot,
+        string profileId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(productRoot);
+        ValidateCredentialIdentity(profileId, nameof(profileId));
+        if (!Path.IsPathFullyQualified(productRoot))
+        {
+            throw new ArgumentException("The product root must be absolute.", nameof(productRoot));
+        }
+
+        string databasePath = Path.Combine(Path.GetFullPath(productRoot), "data", "infinium.sqlite3");
+        if (!File.Exists(databasePath))
+        {
+            throw new InvalidDataException("The authoritative product database is absent.");
+        }
+
+        string snapshotRoot = Path.Combine(Path.GetTempPath(),
+            "infinium-credential-projection-readonly-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(snapshotRoot);
+        string snapshotDatabase = Path.Combine(snapshotRoot, "infinium.sqlite3");
+        try
+        {
+            CopyForReadOnlyInspection(databasePath, snapshotDatabase);
+            foreach (string suffix in new[] { "-wal", "-shm" })
+            {
+                string source = databasePath + suffix;
+                if (File.Exists(source)) { CopyForReadOnlyInspection(source, snapshotDatabase + suffix); }
+            }
+
+            using SqliteConnection readOnly = new(new SqliteConnectionStringBuilder
+            {
+                DataSource = snapshotDatabase,
+                Mode = SqliteOpenMode.ReadOnly,
+                Pooling = false,
+            }.ToString());
+            readOnly.Open();
+            using (SqliteCommand queryOnly = readOnly.CreateCommand())
+            {
+                queryOnly.CommandText = "PRAGMA query_only=ON;";
+                queryOnly.ExecuteNonQuery();
+            }
+            using SqliteCommand command = readOnly.CreateCommand();
+            command.CommandText =
+                """
+                SELECT p.profile_id,p.generation_id,g.generation_ordinal,p.revocation_epoch,
+                       p.lifecycle_state,p.verification_state,p.capability_snapshot_id,
+                       p.account_identity_id,p.billing_scope_identity_id,p.intent_id,
+                       p.recovery_disposition,p.cleanup_disposition,p.projection_version,p.updated_at
+                FROM provider_profile_projection p
+                JOIN provider_generations g ON g.profile_id=p.profile_id AND g.generation_id=p.generation_id
+                WHERE p.profile_id=$profile;
+                """;
+            command.Parameters.AddWithValue("$profile", profileId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                throw new InvalidDataException("The authoritative credential profile projection is absent.");
+            }
+            CredentialProfileProjection projection = new(
+                reader.GetString(0), reader.GetString(1), reader.GetInt64(2), reader.GetInt64(3), reader.GetString(4),
+                reader.GetString(5), reader.IsDBNull(6) ? null : reader.GetString(6),
+                reader.IsDBNull(7) ? null : reader.GetString(7), reader.IsDBNull(8) ? null : reader.GetString(8),
+                reader.IsDBNull(9) ? null : reader.GetString(9), reader.GetString(10), reader.GetString(11),
+                reader.GetInt64(12), DateTimeOffset.Parse(reader.GetString(13),
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.RoundtripKind));
+            if (reader.Read())
+            {
+                throw new InvalidDataException("The authoritative credential profile projection is ambiguous.");
+            }
+            return projection;
+        }
+        finally
+        {
+            Directory.Delete(snapshotRoot, recursive: true);
+        }
+    }
+
+    private static void CopyForReadOnlyInspection(string sourcePath, string destinationPath)
+    {
+        using FileStream source = new(sourcePath, FileMode.Open, FileAccess.Read,
+            FileShare.ReadWrite | FileShare.Delete);
+        using FileStream destination = new(destinationPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        source.CopyTo(destination);
+        destination.Flush(flushToDisk: true);
+    }
+
     public (string? AccountIdentityId, string? BillingScopeIdentityId) ReadCredentialIdentityBinding(string profileId)
     {
         ValidateCredentialIdentity(profileId, nameof(profileId));

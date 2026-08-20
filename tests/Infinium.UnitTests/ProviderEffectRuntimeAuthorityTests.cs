@@ -55,6 +55,40 @@ public sealed class ProviderEffectRuntimeAuthorityTests
     }
 
     [TestMethod]
+    public void CredentialEvidenceRecoveryRequiresAnExactPredecessorAndCanNeverBecomeExternalEffectAuthority()
+    {
+        string root = TempRoot();
+        try
+        {
+            (string path, string sha) = WriteAuthority(root, "credential-recovery-authority",
+                "credential-evidence-recovery", Identity.CredentialManifestId,
+                Identity.CredentialManifestSha256, new string('8', 64), "terminal-failure",
+                new string('9', 64), credential: true);
+            ProviderEffectRuntimeAuthority authority = ProviderEffectRuntimeAuthorityLoader.LoadAndValidate(
+                path, sha, Now);
+            ProviderEffectRuntimeAuthorityLoader.RequireEffectFreeRehearsal(authority);
+            Assert.AreEqual(ProviderEffectAuthorityKind.CredentialEvidenceRecovery, authority.Kind);
+            Assert.AreEqual(0, authority.Limits.HelperLaunches);
+            Assert.AreEqual(0, authority.Limits.CredentialNativeCalls);
+            Assert.AreEqual(new string('8', 64), authority.PredecessorLedgerEventHash);
+
+            string external = File.ReadAllText(path).Replace(
+                "\"scope\":\"effect-free-rehearsal\"", "\"scope\":\"external-effect\"",
+                StringComparison.Ordinal);
+            File.WriteAllText(path, external, new UTF8Encoding(false));
+            Assert.ThrowsExactly<InvalidDataException>(() => ProviderEffectRuntimeAuthorityLoader.LoadAndValidate(
+                path, Sha(path), Now));
+
+            (_, sha) = WriteAuthority(root, "credential-recovery-authority",
+                "credential-evidence-recovery", Identity.CredentialManifestId,
+                Identity.CredentialManifestSha256, "none", "none", "none", credential: true);
+            Assert.ThrowsExactly<InvalidDataException>(() => ProviderEffectRuntimeAuthorityLoader.LoadAndValidate(
+                path, sha, Now));
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    [TestMethod]
     public void DurableLedgerBindsCredentialAndStageAuthoritiesAcrossReopenAndRejectsTamper()
     {
         string root = TempRoot();

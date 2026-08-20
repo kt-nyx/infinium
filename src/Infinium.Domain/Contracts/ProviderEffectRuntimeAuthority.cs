@@ -9,6 +9,7 @@ public enum ProviderEffectAuthorityScope
 public enum ProviderEffectAuthorityKind
 {
     CredentialEnrollment,
+    CredentialEvidenceRecovery,
     TransportQualification,
     SourceClaimExtraction,
     CandidateInvestigation,

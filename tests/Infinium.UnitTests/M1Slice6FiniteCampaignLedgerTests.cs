@@ -68,6 +68,43 @@ public sealed class M1Slice6FiniteCampaignLedgerTests
     }
 
     [TestMethod]
+    public void ExactPostSuccessValidatorDefectMayBeAppendOnlyRecoveredWithoutProviderEffect()
+    {
+        string path = TempPath();
+        try
+        {
+            M1Slice6FiniteCampaignLedger ledger = new(path, Identity, CampaignExpiry, CredentialExpiry, Start);
+            ledger.RecordIndependentReview("runtime-original", new string('a', 64), Start.AddMinutes(1));
+            ledger.AdmitCampaign(Start.AddMinutes(2));
+            ledger.BeginCredentialExecutionHandoff(Start.AddMinutes(3));
+            ledger.StopCredentialHandoff("helper-evidence-ambiguity", "credential-failure",
+                new string('6', 64), Start.AddMinutes(4));
+            string terminal = ledger.Current.EventHash;
+
+            Assert.ThrowsExactly<InvalidOperationException>(() => ledger.RecoverPostSuccessCredentialEvidence(
+                new string('0', 64), "credential-failure", new string('6', 64), "credential-success",
+                new string('7', 64), new(1, 2, 0, 1, 4), "runtime-recovery", new string('8', 64),
+                Start.AddMinutes(5)));
+            Assert.AreEqual(M1Slice6CampaignState.Stopped, ledger.Current.State);
+
+            ledger.RecoverPostSuccessCredentialEvidence(terminal, "credential-failure", new string('6', 64),
+                "credential-success", new string('7', 64), new(1, 2, 0, 1, 4), "runtime-recovery",
+                new string('8', 64), Start.AddMinutes(5));
+            Assert.AreEqual(M1Slice6CampaignState.CredentialEvidenceAccepted, ledger.Current.State);
+            Assert.AreEqual("credential-post-success-validator-defect-evidence-accepted", ledger.Current.Event);
+            Assert.AreEqual(new M1Slice6CampaignNativeEnvelope(1, 2, 0, 1, 4), ledger.Current.NativeEnvelope);
+            Assert.AreEqual(0L, ledger.Current.ProviderCallCount);
+            Assert.AreEqual(0L, ledger.Current.DnsResolutionCount);
+
+            M1Slice6FiniteCampaignLedger reopened = new(path, Identity, CampaignExpiry, CredentialExpiry,
+                Start.AddMinutes(6));
+            Assert.AreEqual(ledger.Current.EventHash, reopened.Current.EventHash);
+            Assert.AreEqual(M1Slice6CampaignState.CredentialEvidenceAccepted, reopened.Current.State);
+        }
+        finally { Cleanup(path); }
+    }
+
+    [TestMethod]
     public void ExpiryIsCheckedAtAdmissionCredentialHandoffReservationAndPossibleStartNotEvidenceReview()
     {
         string path = TempPath();
