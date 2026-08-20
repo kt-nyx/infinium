@@ -175,6 +175,13 @@ only after independent evidence acceptance, then establish the final C1
 binding and complete effect-free C3. Every existing per-stage admission,
 one-start, ceiling, no-retry, settlement, and stop condition remains exact.
 
+The exact C2B two-file candidate
+`572a3342ac6537d42a1041e9f8a5878cfcba1958` passed independent security,
+semantic, budget, answer-isolation, and diff review. This review creates no
+runtime authority or durable admission; the exact admission transition and a
+separately derived and reviewed typed runtime manifest remain mandatory before
+the one-shot request can become eligible.
+
 Runtime effect authority comes from a closed typed manifest and durable
 coordinator state, never Git history, current HEAD, commit subjects, log order,
 pickaxe, line attribution, or historical marker discovery.
