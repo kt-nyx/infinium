@@ -1,0 +1,88 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-campaign-stage-request/4.0.0",
+  "manifest_id": "infinium.m1-s6.campaign-stage/Qualification/cf3ba7b9-e2cb-427d-b5cb-ae9f679c19c1",
+  "status": "reviewed-and-admitted",
+  "candidate_binding": {
+    "close_ready_implementation_commit": "b7ce3446cdf23b2038a6803931f16ad8d6735733",
+    "review_candidate_resolution": "exact-clean-committed-two-file-stage-candidate"
+  },
+  "campaign_binding": {
+    "campaign_id": "infinium.m1-s6.finite-live-campaign/ff2d542a-04f0-448a-bcb8-a0ecbedde5b9",
+    "campaign_manifest_sha256": "824b344073ed802b5cf78014eb0b425bf27713634086b008831b9ded549ae536",
+    "campaign_review_candidate_commit": "356ce66c18bb67d5b1de8815970e04bf88195a86",
+    "credential_manifest_id": "infinium.m1-s6.wp9.production-profile-authorization/234b5227-0ad4-4f5e-acf5-5ac6b89fca2b",
+    "credential_manifest_sha256": "2ad6eb68ac9f569c358da99989939993b29744f612ab2a22f533e5049ed865df"
+  },
+  "stage": {
+    "ordinal": 1,
+    "work_package": "WP9",
+    "operation": "Qualification"
+  },
+  "predecessor_evidence": {
+    "ledger_event_hash": "a56e6accea6bb34fd983492791dc3b02cd1df4f05c1d128edec7782898433e1a",
+    "evidence_id": "wp9-production-profile-enrollment-evidence-v2",
+    "evidence_sha256": "0fe89804afc3aaaa04d59961e711099adbe656466fd033e54c55ad709cb3042a"
+  },
+  "canonical_request": {
+    "path": "wp9-qualification-request.v4.json",
+    "sha256": "738ac12bef0d0755e7dece88e302a076d79e61e240ffe3d1c8e1237c4736a4d9",
+    "bytes": 863,
+    "campaign_input_bytes": 26,
+    "campaign_input_sha256": "519fde388f5f656e7cac0556a255dc775001b0326af80d93fd75316964bc9443",
+    "request_template_sha256": "a941eb31572aa25bef51ce3467ecc9268382e400d7642f32ce35ab97951c0b24",
+    "input_bound_policy_id": "openai-responses-o200k-byte-envelope",
+    "input_bound_policy_version": "v2",
+    "o200k_token_count": 235,
+    "token_ids_sha256": "b67ebf13e8ca60bcb9d30889f2c145cd5b2caccd2e8d1c9f7c22d1e02d613dbd",
+    "structural_allowance_tokens": 4096,
+    "proved_input_tokens": 4959,
+    "maximum_output_tokens": 256
+  },
+  "transport": {
+    "scheme": "https",
+    "host": "api.openai.com",
+    "path": "/v1/responses",
+    "method": "POST",
+    "tool_choice": "none",
+    "tool_count": 0,
+    "retry_count": 0,
+    "parallel": false,
+    "maximum_provider_calls": 1,
+    "maximum_dns_resolutions": 1
+  },
+  "limits": {
+    "maximum_request_bytes": 16384,
+    "maximum_input_tokens": 20480,
+    "maximum_output_tokens": 256,
+    "maximum_raw_response_bytes": 262144,
+    "maximum_nano_usd": 140000000,
+    "deadline_milliseconds": 60000
+  },
+  "safety_identifier": {
+    "projection": "d0173a008b80c182c9e6c40ef7d69d12fd154f6167b86cf607d3e83c29fa5e14",
+    "state_version": "infinium.product-user-safety-identifier/1.0.0",
+    "raw_seed_present": false
+  },
+  "validation_package": {
+    "package_id": "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1",
+    "manifest_path": "fixtures/public/platform/provider-budget/capability-val/public-manifest.json",
+    "manifest_sha256": "3fa9f56a2ad1f815638ed7f4ce198b499cc072604e2a29b3bf5e418d6d33389c",
+    "product_input_path": "fixtures/public/platform/provider-budget/capability-val/input.json",
+    "product_input_bytes": 190,
+    "product_input_sha256": "c9cb054a578a244bca1a1d77bcc2ca7f2898ada42f4250da88588ddf6472b55a",
+    "predecessor_manifest_path": "fixtures/public/platform/provider-budget/capability-val/public-manifest.json",
+    "predecessor_manifest_bytes": 526,
+    "predecessor_manifest_sha256": "3fa9f56a2ad1f815638ed7f4ce198b499cc072604e2a29b3bf5e418d6d33389c",
+    "oracle_path": "fixtures/public/platform/provider-budget/capability-val/oracle.json",
+    "oracle_sha256": "7ce656a0d056239cedcbfc75ec44b21ca7be79946da2613a109dfd233f6b8bda",
+    "deterministic_oracle_result_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "semantic_use": false
+  },
+  "execution": {
+    "provider_request_permitted": true,
+    "requires_typed_runtime_authority": true,
+    "requires_durable_admission": true,
+    "automatic_retry": false,
+    "fourth_call_permitted": false
+  }
+}
