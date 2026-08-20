@@ -9203,3 +9203,35 @@ authorizes zero helper/UI/native credential, Credential Manager, DNS/network,
 provider, or billable operations and no product-state or existing-evidence
 mutation. The owner required a stop after C2A acceptance and explicitly did not
 authorize C2B preparation, materialization, runtime authority, or execution.
+
+## 2026-08-20 — C2A zero-effect recovery and independent acceptance
+
+Runtime authority
+`infinium.m1-s6.runtime-authority/credential-evidence-recovery/d433e048-da99-4acb-ac74-7bc4ce512e50`,
+SHA-256 `7003d3dcc061c94a7c8b3bd398ad67b2313ed93bf62a918e1bc40ff7abd38b2f`,
+passed schema and independent byte review with every operational limit zero.
+The exact 126-file executable closure and runtime bytes were staged into the
+tracked-clean full execution clone at detached activation commit
+`ccb1934b3627a7bf9bd93c54a626ed1e3db20aaa`. Activated pre-invocation
+validation returned `valid-activated-zero-effect-pre-invocation`.
+
+The recovery runner executed once and appended sequence 6, state
+`credential-evidence-accepted`, event
+`credential-post-success-validator-defect-evidence-accepted`. The post-ledger
+SHA-256 is
+`add1f5f7f3e5b8c010a988de2130647172dd3efdd1cd8ad9b8c67dbeae20e0ff`
+and the appended event hash is
+`a56e6accea6bb34fd983492791dc3b02cd1df4f05c1d128edec7782898433e1a`.
+Independent review recomputed that event hash and proved the exact byte prefix
+before line six hashes to the complete pre-recovery ledger
+`d69019c4674ca3928011b269053ac672d7cf1163b063d7b26310a3c753453f38`.
+Success/failure evidence, the four-file durable product state, runtime,
+coordinator, helper, runner, and binary inventory retained their exact hashes.
+The recovery performed zero helper/UI/native-store/DNS/network/provider/billable
+operations, retries, product mutations, or existing-evidence mutations.
+
+Acceptance
+`infinium.m1-s6.c2a.recovery-evidence-acceptance/4bb53ecd-197f-4aca-ad33-008fe42c6c53`
+records independent PASS and closes C2A. Per the owner's exact direction, the
+mandatory stop now applies. No C2B preparation, materialization, authority, or
+execution is permitted without a fresh explicit owner direction.

@@ -1,0 +1,52 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-c2a-post-success-recovery-evidence-acceptance/1.0.0",
+  "acceptance_id": "infinium.m1-s6.c2a.recovery-evidence-acceptance/4bb53ecd-197f-4aca-ad33-008fe42c6c53",
+  "status": "accepted",
+  "accepted_at_utc": "2026-08-20T04:22:05.2749827Z",
+  "authority": {
+    "package_commit": "dde661235533eb1b90a7330aed44e53e66b906d8",
+    "package_sha256": "1a53d48959ba03c26d99068263c274062b4f17ac9902effb4b15afcb9dd1b345",
+    "owner_decision_id": "infinium.m1-s6.c2a.recovery-owner-acceptance/805329e9-65e0-4e9d-9b38-84df7fc90b44",
+    "owner_decision_sha256": "a68092a765400db6092d6702722e9022701357e81fe10cc9fa2f44f70fdbffb1",
+    "activation_commit": "ccb1934b3627a7bf9bd93c54a626ed1e3db20aaa",
+    "runtime_authority_id": "infinium.m1-s6.runtime-authority/credential-evidence-recovery/d433e048-da99-4acb-ac74-7bc4ce512e50",
+    "runtime_authority_sha256": "7003d3dcc061c94a7c8b3bd398ad67b2313ed93bf62a918e1bc40ff7abd38b2f"
+  },
+  "evidence": {
+    "report_path": "docs/plans/milestones/m1/slices/s6/c2a-post-success-recovery-evidence-report.md",
+    "report_sha256": "d7eab94c013708d74c12c227b20da7d5fe7e50a6e5511cf52d2096bd96950c73",
+    "ledger_path": "artifacts/m1-slice6/wp9-profile/finite-campaign-ledger.v1.jsonl",
+    "pre_recovery_ledger_sha256": "d69019c4674ca3928011b269053ac672d7cf1163b063d7b26310a3c753453f38",
+    "post_recovery_ledger_sha256": "add1f5f7f3e5b8c010a988de2130647172dd3efdd1cd8ad9b8c67dbeae20e0ff",
+    "appended_event_hash": "a56e6accea6bb34fd983492791dc3b02cd1df4f05c1d128edec7782898433e1a",
+    "accepted_success_sha256": "0fe89804afc3aaaa04d59961e711099adbe656466fd033e54c55ad709cb3042a",
+    "retained_failure_sha256": "1c83f83842a7a67a22aa658fb61140cf93eb01b23a8b8064167a3e79319c16cb",
+    "product_state_identity_sha256": "6154788ac6fa8a9c2858b3451b4d35a11448b234672c0892ff49b86763058b56"
+  },
+  "independent_review": {
+    "verdict": "pass-no-remaining-must-fix",
+    "proof": "canonical-event-hash-recomputed-exact-prefix-and-retained-identities-reverified",
+    "one_append_only": true,
+    "existing_bytes_preserved": true
+  },
+  "recovery_effects": {
+    "ledger_appends": 1,
+    "helper_launches": 0,
+    "ui_launches": 0,
+    "credential_native_calls": 0,
+    "credential_store_inspections": 0,
+    "dns_resolutions": 0,
+    "public_network_operations": 0,
+    "provider_requests": 0,
+    "billable_operations": 0,
+    "product_state_mutations": 0,
+    "existing_evidence_mutations": 0,
+    "retries": 0
+  },
+  "disposition": {
+    "c2a": "accepted",
+    "mandatory_stop": true,
+    "c2b": "prohibited-requires-fresh-explicit-owner-direction",
+    "automatic_handoff": false
+  }
+}

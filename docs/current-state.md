@@ -1,9 +1,9 @@
 # Current project state
 
 Status: Accepted
-Disposition: The owner accepted the exact zero-effect C2A recovery package and C1-implementation-active-through-C2 amendment; recovery runtime-authority derivation, independent review, and one append-only ledger recovery are active; stop after independent C2A acceptance and do not prepare or authorize C2B
+Disposition: C2A post-success recovery completed and is independently accepted with exactly one zero-effect ledger append; the mandatory owner-directed stop is active; C2B preparation, materialization, authority, and execution are prohibited pending a fresh explicit owner direction
 
-Last reviewed: 2026-08-19
+Last reviewed: 2026-08-20
 Owner: Project owner
 
 This is the only document that states the live milestone, slice, work package,
@@ -27,8 +27,9 @@ chronology and evidence.
 | Terminal replacement C2A evidence | Under activation commit `bce84c12f7550ec679f82b2a970c5f13dcbb39b0`, the owner submitted the masked dialog. Sanitized success evidence SHA-256 `0fe89804afc3aaaa04d59961e711099adbe656466fd033e54c55ad709cb3042a` proves exact `CredReadW(ERROR_NOT_FOUND) -> CredWriteW(success) -> CredReadW(success) -> CredFree(released)`, active/verified durable state, cleared UI/buffer, zero canary matches, and zero DNS/network/provider/billable operations. A coordinator-only scenario-name mismatch then produced conservative failure SHA-256 `1c83f83842a7a67a22aa658fb61140cf93eb01b23a8b8064167a3e79319c16cb` and terminal ledger event hash `a1369f547801fa282334585a17f31ebf52f7028ad836b3026738f340ce50b2f9`. No retry or credential-store inspection is permitted. |
 | Corrected recovery implementation | Commit `c8cc455c8320f50bc87a160e3523f34eceb2ad13` aligns the canonical scenario, adds a closed effect-free recovery authority and append-only transition, independently validates the retained success semantics and read-only durable product projection, and permits no helper/native/network/provider effect. Its complete readiness receipt SHA-256 is `c2524db81fe448e75478bb108bf53231a1f086f299ba9676580e5e47094b1646`; independent affected-surface review passed. |
 | Accepted C2A recovery authority | The owner accepted commit `dde661235533eb1b90a7330aed44e53e66b906d8`, package SHA-256 `1a53d48959ba03c26d99068263c274062b4f17ac9902effb4b15afcb9dd1b345`, and the included process amendment. Decision `infinium.m1-s6.c2a.recovery-owner-acceptance/805329e9-65e0-4e9d-9b38-84df7fc90b44` authorizes only runtime-byte derivation/review and one zero-effect ledger append. |
-| Current authorized work | Derive and independently review the all-zero recovery runtime authority, activate the exact clean execution clone, apply one append-only recovery, and independently verify C2A. No helper/UI/native credential, Credential Manager read/delete/enumeration, DNS/public-network, provider, or billable operation is authorized. |
-| Next gate | Independent acceptance of the exact appended C2A ledger evidence, followed by a mandatory stop. C2B preparation, materialization, authority, and execution are explicitly prohibited by the current owner direction. |
+| Accepted C2A recovery evidence | Runtime SHA-256 `7003d3dcc061c94a7c8b3bd398ad67b2313ed93bf62a918e1bc40ff7abd38b2f` appended exactly one event. Post-ledger SHA-256 is `add1f5f7f3e5b8c010a988de2130647172dd3efdd1cd8ad9b8c67dbeae20e0ff`; event hash is `a56e6accea6bb34fd983492791dc3b02cd1df4f05c1d128edec7782898433e1a`. Independent review recomputed the event hash and proved the prior ledger prefix and every retained evidence/product identity unchanged, with all recovery effects except the append equal to zero. |
+| Current authorized work | Documentation/schema validation and local commit of the accepted C2A recovery closeout only. No helper/UI/native credential, Credential Manager read/delete/enumeration, DNS/public-network, provider, billable, or C2B operation is authorized. |
+| Next gate | Mandatory stop. A fresh explicit owner direction is required before even C2B preparation; nothing proceeds automatically. |
 | Later packages | C2B-C2D remain unavailable. This run must stop after independent C2A acceptance; even C2B preparation requires a fresh explicit owner direction after that stop, in addition to its request/runtime authority and accepted predecessor gates. `C3` remains inactive. |
 | Final Slice 6 gate | After C3, the project owner decides Slice 6 acceptance and contract freeze. Slice 7 does not start automatically. |
 | External-effect authority | None. The accepted replacement C2A runtime authority was consumed and its campaign is terminal. The proven credential remains retained under its exact generation with no delete authority. Recovery preparation and application are effect-free and authorize zero helper launches, native credential calls, credential-store inspection, DNS, provider requests, or billable operations. |
@@ -48,6 +49,8 @@ chronology and evidence.
 - [C2A post-success recovery authority report](plans/milestones/m1/slices/s6/c2a-post-success-recovery-authority-report.md)
 - [C2A post-success recovery typed package](plans/milestones/m1/slices/s6/m1-slice6-c2a-post-success-recovery-authority-package.v1.json)
 - [C2A post-success recovery owner acceptance](plans/milestones/m1/slices/s6/c2a-post-success-recovery-owner-acceptance.v1.json)
+- [Accepted C2A post-success recovery evidence](plans/milestones/m1/slices/s6/c2a-post-success-recovery-evidence-acceptance.v1.json)
+- [C2A post-success recovery evidence report](plans/milestones/m1/slices/s6/c2a-post-success-recovery-evidence-report.md)
 - [Terminal predecessor C2 report](plans/milestones/m1/slices/s6/c2-authority-package-report.md)
 - [Terminal predecessor owner acceptance record](plans/milestones/m1/slices/s6/c2-owner-acceptance.v1.json)
 - [Accepted Slice 6 remainder plan through R2](plans/milestones/m1/slices/s6/remainder-plan.md)

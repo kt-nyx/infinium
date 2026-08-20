@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active slice navigation; live authority remains in current state
 
-Last reviewed: 2026-08-19
+Last reviewed: 2026-08-20
 
 Live authorization is stated only in
 [current project state](../../../../../current-state.md). This entry routes to
@@ -29,6 +29,9 @@ chronology.
   and [typed package](m1-slice6-c2a-post-success-recovery-authority-package.v1.json),
   plus its [owner acceptance record](c2a-post-success-recovery-owner-acceptance.v1.json),
   which opens only one independently reviewed all-zero ledger recovery
+- [Accepted C2A recovery evidence](c2a-post-success-recovery-evidence-acceptance.v1.json)
+  and [evidence report](c2a-post-success-recovery-evidence-report.md), after
+  which the owner-directed mandatory stop applies
 - [Terminal predecessor C2 report](c2-authority-package-report.md) and
   [acceptance record](c2-owner-acceptance.v1.json), retained only as terminal
   chronology and never reusable authority
@@ -162,6 +165,12 @@ evidence. The helper cannot run again. Before the ledger recovery can run, the
 fresh zero-effect recovery runtime authority must be derived from the accepted
 package and decision, independently reviewed, digest-bound, durably admitted,
 and immediately revalidated.
+
+That recovery is now complete and independently accepted. It appended exactly
+one `credential-post-success-validator-defect-evidence-accepted` event while
+preserving the prior ledger prefix, success/failure evidence, and durable
+product state. All recovery-effect counters except the one ledger append are
+zero. The mandatory stop is active; C2B requires fresh explicit owner direction.
 
 Runtime effect authority comes from a closed typed manifest and durable
 coordinator state, never Git history, current HEAD, commit subjects, log order,
