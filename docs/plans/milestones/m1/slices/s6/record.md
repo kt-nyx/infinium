@@ -9235,3 +9235,24 @@ Acceptance
 records independent PASS and closes C2A. Per the owner's exact direction, the
 mandatory stop now applies. No C2B preparation, materialization, authority, or
 execution is permitted without a fresh explicit owner direction.
+
+## 2026-08-20 — Owner direction opens C2B through C3
+
+Starting from commit `50d202d6f02c519ec44c05f661c200e95564abe7` on
+`codex/m1-s6-c2-authority`, the project owner supplied the required fresh
+direction to execute C2B, C2C, and C2D sequentially under the accepted
+replacement C2 campaign. The exact per-stage maximum costs remain USD 0.14,
+USD 0.60, and USD 0.60, with USD 1.34 aggregate and one possible provider
+start per stage. Each successor may be prepared only after independent
+acceptance of its predecessor evidence.
+
+The owner also accepted ordinary offline corrections on the same candidate,
+kept C1 implementation-active through C2, required its final binding before
+C3, and authorized effect-free C3 closeout. Credential exposure, enumeration,
+replacement, or deletion; retry of a known or possible start; a fourth
+request; ceiling/model/profile/product-meaning changes; private fixture or
+archive access; push; and destructive work remain prohibited. Material
+official-model, capability, or pricing drift, ambiguous effect state, invalid
+authority/evidence, or a required architecture/authority expansion stops the
+affected path. Otherwise the next owner gate is the final Slice 6 acceptance
+decision after C3.

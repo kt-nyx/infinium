@@ -30,8 +30,8 @@ chronology.
   plus its [owner acceptance record](c2a-post-success-recovery-owner-acceptance.v1.json),
   which opens only one independently reviewed all-zero ledger recovery
 - [Accepted C2A recovery evidence](c2a-post-success-recovery-evidence-acceptance.v1.json)
-  and [evidence report](c2a-post-success-recovery-evidence-report.md), after
-  which the owner-directed mandatory stop applies
+  and [evidence report](c2a-post-success-recovery-evidence-report.md), which
+  supply the accepted predecessor for the newly opened sequential C2B-C2D handoff
 - [Terminal predecessor C2 report](c2-authority-package-report.md) and
   [acceptance record](c2-owner-acceptance.v1.json), retained only as terminal
   chronology and never reusable authority
@@ -170,7 +170,11 @@ That recovery is now complete and independently accepted. It appended exactly
 one `credential-post-success-validator-defect-evidence-accepted` event while
 preserving the prior ledger prefix, success/failure evidence, and durable
 product state. All recovery-effect counters except the one ledger append are
-zero. The mandatory stop is active; C2B requires fresh explicit owner direction.
+zero. The owner has now supplied the required fresh direction: execute C2B,
+C2C, and C2D sequentially under the accepted campaign, automatically continue
+only after independent evidence acceptance, then establish the final C1
+binding and complete effect-free C3. Every existing per-stage admission,
+one-start, ceiling, no-retry, settlement, and stop condition remains exact.
 
 Runtime effect authority comes from a closed typed manifest and durable
 coordinator state, never Git history, current HEAD, commit subjects, log order,
