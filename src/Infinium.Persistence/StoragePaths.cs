@@ -412,6 +412,21 @@ public sealed class StoragePaths : IDisposable
         return writeAuthority.GetCurrentClassCapability(productCapability, writeClass);
     }
 
+    internal void BindExistingWriteClass(ProductWriteClass writeClass)
+    {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        if (writeAuthority is null || productCapability is null)
+        {
+            throw new PlatformNotSupportedException(
+                "Opened-object write authority currently requires Windows.");
+        }
+
+        writeAuthority.BindExistingClassDirectory(
+            productCapability,
+            writeClass,
+            GetClassDirectory(writeClass));
+    }
+
     private static void ValidateOpaqueLeaf(string value, string parameterName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(value, parameterName);

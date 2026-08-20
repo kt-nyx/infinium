@@ -533,7 +533,31 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
         ProductRootCapability capability,
         ProductWriteClass writeClass,
         string configuredPath,
-        byte[] securityDescriptor)
+        byte[] securityDescriptor) =>
+        BindClassDirectory(
+            capability,
+            writeClass,
+            configuredPath,
+            create: true,
+            securityDescriptor);
+
+    internal void BindExistingClassDirectory(
+        ProductRootCapability capability,
+        ProductWriteClass writeClass,
+        string configuredPath) =>
+        BindClassDirectory(
+            capability,
+            writeClass,
+            configuredPath,
+            create: false,
+            securityDescriptor: null);
+
+    private void BindClassDirectory(
+        ProductRootCapability capability,
+        ProductWriteClass writeClass,
+        string configuredPath,
+        bool create,
+        byte[]? securityDescriptor)
     {
         ArgumentNullException.ThrowIfNull(capability);
         lock (gate)
@@ -557,7 +581,7 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
                 capability.RootHandle!,
                 root,
                 relative,
-                create: true,
+                create,
                 securityDescriptor);
             try
             {

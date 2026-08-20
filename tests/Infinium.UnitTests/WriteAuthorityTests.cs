@@ -15,6 +15,37 @@ public sealed class WriteAuthorityTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
+    public void ExistingWriteClassBindingNeverCreatesTheMissingClassDirectory()
+    {
+        string root = Temp();
+        string productRoot = Path.Combine(root, "product");
+        try
+        {
+            Directory.CreateDirectory(productRoot);
+            using WindowsWriteAuthorityRegistry registry = new([]);
+            using StoragePaths paths = new(productRoot, registry);
+
+            Assert.Throws<IOException>(
+                () => paths.BindExistingWriteClass(ProductWriteClass.Data));
+            Assert.IsFalse(Directory.Exists(paths.Data));
+
+            Directory.CreateDirectory(paths.Data);
+            paths.BindExistingWriteClass(ProductWriteClass.Data);
+            Assert.IsTrue(Directory.Exists(paths.Data));
+        }
+        finally
+        {
+            Delete(root);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
     [TestProperty("Category", "Unit")]
     [TestProperty("Category", "Security")]
     public void RegisteredProtectedRootRejectsDescendantsAndCaseAliases()
