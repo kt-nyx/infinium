@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/m1-slice6-c2a-post-success-recovery-authority-package.v1.schema.json",
+  "type": "object",
+  "const": {
+    "schema_identity": "infinium.repository.m1-slice6-c2a-post-success-recovery-authority-package/1.0.0",
+    "package_id": "infinium.m1-s6.c2a.recovery-authority-package/50a1b244-40d9-4a7f-8175-c79929b0d8b9",
+    "status": "ready-for-owner-review-not-accepted",
+    "effect_authority": "none",
+    "prepared_at_utc": "2026-08-20T00:54:44.5825572Z",
+    "expires_at_utc": "2026-09-15T22:30:00.0000000Z",
+    "accepted_replacement_authority": {
+      "package_commit": "ad5277fa3c5861f4f6115fe26215e55b61e30728",
+      "package_sha256": "c19248fcc843808588860968a04828cfab5105e5cf08ca98228fbc98419be2bf",
+      "activation_commit": "bce84c12f7550ec679f82b2a970c5f13dcbb39b0",
+      "profile_path": "docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v4.json",
+      "profile_id": "infinium.m1-s6.wp9.production-profile-authorization/234b5227-0ad4-4f5e-acf5-5ac6b89fca2b",
+      "profile_sha256": "2ad6eb68ac9f569c358da99989939993b29744f612ab2a22f533e5049ed865df",
+      "campaign_path": "docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v4.json",
+      "campaign_id": "infinium.m1-s6.finite-live-campaign/ff2d542a-04f0-448a-bcb8-a0ecbedde5b9",
+      "campaign_sha256": "824b344073ed802b5cf78014eb0b425bf27713634086b008831b9ded549ae536",
+      "credential_runtime_authority_id": "infinium.m1-s6.runtime-authority/credential/cba8f16d-cfce-4e52-a46a-282f5f8680aa",
+      "credential_runtime_authority_sha256": "69326b6692eb490a696c2bcf8f6ee04b03059083b5ca04cc40acff284d4a5aa0"
+    },
+    "terminal_c2a": {
+      "execution_repository": "C:/Users/vex/.codex/worktrees/223b/infinium-c2a-execution-bce84c1",
+      "ledger_path": "artifacts/m1-slice6/wp9-profile/finite-campaign-ledger.v1.jsonl",
+      "ledger_sha256": "d69019c4674ca3928011b269053ac672d7cf1163b063d7b26310a3c753453f38",
+      "terminal_event_hash": "a1369f547801fa282334585a17f31ebf52f7028ad836b3026738f340ce50b2f9",
+      "terminal_event": "credential-helper-evidence-ambiguity-terminal-stop",
+      "failure_path": "artifacts/m1-slice6/wp9-profile/profile-enrollment-failure.json",
+      "failure_id": "wp9-production-profile-enrollment-failure",
+      "failure_sha256": "1c83f83842a7a67a22aa658fb61140cf93eb01b23a8b8064167a3e79319c16cb",
+      "success_path": "artifacts/m1-slice6/wp9-profile/profile-enrollment-evidence.json",
+      "success_id": "wp9-production-profile-enrollment-evidence-v2",
+      "success_sha256": "0fe89804afc3aaaa04d59961e711099adbe656466fd033e54c55ad709cb3042a",
+      "product_state_root": "artifacts/m1-slice6/wp9-production-profile-state",
+      "product_state_file_count": 4,
+      "product_state_identity_sha256": "6154788ac6fa8a9c2858b3451b4d35a11448b234672c0892ff49b86763058b56",
+      "native_history": {
+        "CredWriteW": 1,
+        "CredReadW": 2,
+        "CredDeleteW": 0,
+        "CredFree": 1,
+        "total": 4
+      },
+      "helper_launches": 1,
+      "ui_submissions": 1,
+      "dns_operations": 0,
+      "public_network_operations": 0,
+      "provider_requests": 0,
+      "billable_operations": 0,
+      "retry_permitted": false,
+      "credential_retention": "exact-generation-retained-no-delete-authority"
+    },
+    "corrected_implementation": {
+      "commit": "c8cc455c8320f50bc87a160e3523f34eceb2ad13",
+      "build_command": "dotnet build Infinium.sln -c Release --no-restore --nologo --no-incremental -p:SourceRevisionId=c8cc455c8320f50bc87a160e3523f34eceb2ad13",
+      "readiness_receipt_path": "docs/plans/milestones/m1/slices/s6/c2a-recovery-c1-readiness-receipt.v1.json",
+      "readiness_receipt_sha256": "c2524db81fe448e75478bb108bf53231a1f086f299ba9676580e5e47094b1646",
+      "coordinator_path": "src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe",
+      "coordinator_sha256": "8aa7d7873f24495c0caebad8ad84afef5cfa9d7d60e524d80455d65a85d0d191",
+      "helper_path": "src/Infinium.Coordinator/bin/Release/net10.0/CredentialHelper/Infinium.CredentialHelper.exe",
+      "helper_sha256": "60b51d2e46508560409553ab898a4cf45ef46f75a0cf3d77fc01dcf4bd00a9a5",
+      "runner_path": "eng/run-m1-slice6-credential-recovery.ps1",
+      "runner_sha256": "bc124063de91fc95d561408453f45793fcc032f62e3908175c5ccc2a46a26d35",
+      "helper_source": "exact-accepted-c1.2-helper-bytes-no-rebuild-substitution",
+      "binary_inventory_file_count": 126,
+      "binary_inventory_sha256": "18f6c8da8b66e02c2100439272b58a5d6e2353ca454f9d0832a626f870d4fe71",
+      "scenario_contract": "wp9-production-profile-enrollment",
+      "recovery_transition": "stopped-post-success-validator-defect-to-credential-evidence-accepted-only",
+      "external_effects": 0
+    },
+    "proposed_process_amendment": {
+      "path": "docs/plans/milestones/m1/slices/s6/continuation-plan.md",
+      "sha256": "ff508a6c01d4f9c0de15b865ea2e6771bc5aea0ee74261af53e82590e85dd696",
+      "status": "proposed-not-accepted",
+      "proposal": "keep-c1-implementation-active-through-c2-then-bind-final-c1-before-c3",
+      "guardrail": "every-correction-remains-offline-until-exact-reviewed-bytes-and-fresh-typed-authority"
+    },
+    "recovery_runtime_authority_derivation": {
+      "future_path": "artifacts/m1-slice6/c2a-recovery-authority/runtime/recovery.v1.json",
+      "authority_id": "infinium.m1-s6.runtime-authority/credential-evidence-recovery/d433e048-da99-4acb-ac74-7bc4ce512e50",
+      "schema_identity": "infinium.provider.effect-runtime-authority/v1",
+      "scope": "effect-free-rehearsal",
+      "kind": "credential-evidence-recovery",
+      "status_after_acceptance": "reviewed-and-owner-accepted",
+      "subject_manifest": {
+        "id": "infinium.m1-s6.wp9.production-profile-authorization/234b5227-0ad4-4f5e-acf5-5ac6b89fca2b",
+        "sha256": "2ad6eb68ac9f569c358da99989939993b29744f612ab2a22f533e5049ed865df"
+      },
+      "campaign": {
+        "id": "infinium.m1-s6.finite-live-campaign/ff2d542a-04f0-448a-bcb8-a0ecbedde5b9",
+        "sha256": "824b344073ed802b5cf78014eb0b425bf27713634086b008831b9ded549ae536"
+      },
+      "predecessor": {
+        "ledger_event_hash": "a1369f547801fa282334585a17f31ebf52f7028ad836b3026738f340ce50b2f9",
+        "evidence_id": "wp9-production-profile-enrollment-failure",
+        "evidence_sha256": "1c83f83842a7a67a22aa658fb61140cf93eb01b23a8b8064167a3e79319c16cb"
+      },
+      "candidate_binding": {
+        "implementation_commit": "c8cc455c8320f50bc87a160e3523f34eceb2ad13",
+        "coordinator_sha256": "8aa7d7873f24495c0caebad8ad84afef5cfa9d7d60e524d80455d65a85d0d191",
+        "helper_sha256": "60b51d2e46508560409553ab898a4cf45ef46f75a0cf3d77fc01dcf4bd00a9a5"
+      },
+      "review": {
+        "evidence_id": "wp9-production-profile-enrollment-evidence-v2",
+        "evidence_sha256": "0fe89804afc3aaaa04d59961e711099adbe656466fd033e54c55ad709cb3042a"
+      },
+      "owner_decision": "derive-fresh-id-and-sha-only-after-exact-package-acceptance-never-inherit-or-preassign",
+      "not_before": "after-owner-decision-and-independent-runtime-byte-review",
+      "expires_at_or_before_utc": "2026-09-15T22:30:00.0000000Z",
+      "execution": {
+        "output_root_relative": "artifacts/m1-slice6/wp9-profile",
+        "ledger_path_relative": "artifacts/m1-slice6/wp9-profile/finite-campaign-ledger.v1.jsonl",
+        "product_state_root_relative": "artifacts/m1-slice6/wp9-production-profile-state",
+        "coordinator_path_relative": "src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe",
+        "helper_path_relative": "src/Infinium.Coordinator/bin/Release/net10.0/CredentialHelper/Infinium.CredentialHelper.exe"
+      },
+      "limits": {
+        "helper_launches": 0,
+        "credential_native_calls": 0,
+        "provider_starts": 0,
+        "dns_resolutions": 0,
+        "billable_operations": 0,
+        "literal_loopback_starts": 0,
+        "automatic_retry": false,
+        "fourth_call_permitted": false
+      }
+    },
+    "execution": {
+      "working_repository": "C:/Users/vex/.codex/worktrees/223b/infinium-c2a-execution-bce84c1",
+      "working_directory": "repository-root",
+      "tracked_activation": "after-owner-acceptance-checkout-exact-package-activation-commit-containing-c8cc455-as-ancestor-without-rebuild",
+      "tracked_status_required": "clean-at-pre-invocation-validation-and-immediately-before-recovery",
+      "binary_staging": "copy-exact-c8cc455-126-file-release-closure-then-preserve-exact-accepted-c1.2-helper-subtree-and-verify-count-inventory-coordinator-and-helper-digests",
+      "pre_invocation_validation": "powershell -NoProfile -ExecutionPolicy Bypass -File eng/validate-m1-slice6-c2a-post-success-recovery-authority.ps1 -RequireClean -ActivatedExecutionCommit <exact-owner-accepted-package-activation-commit> -ExpectedRuntimeAuthoritySha256 <exact-owner-derived-runtime-authority-sha256>",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File eng/run-m1-slice6-credential-recovery.ps1 -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v4.json -CampaignManifest docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v4.json -CampaignReviewedCandidate 356ce66c18bb67d5b1de8815970e04bf88195a86 -CampaignLedger artifacts/m1-slice6/wp9-profile/finite-campaign-ledger.v1.jsonl -Evidence artifacts/m1-slice6/wp9-profile/profile-enrollment-evidence.json -Failure artifacts/m1-slice6/wp9-profile/profile-enrollment-failure.json -ProductStateRoot artifacts/m1-slice6/wp9-production-profile-state -CoordinatorBinary src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe -HelperBinary src/Infinium.Coordinator/bin/Release/net10.0/CredentialHelper/Infinium.CredentialHelper.exe -RuntimeAuthorityManifest artifacts/m1-slice6/c2a-recovery-authority/runtime/recovery.v1.json -RuntimeAuthoritySha256 <exact-owner-derived-runtime-authority-sha256>",
+      "allowed_mutation": "append-one-exact-ledger-event-only",
+      "forbidden_mutations": [
+        "success-evidence",
+        "failure-evidence",
+        "existing-ledger-prefix",
+        "product-state",
+        "credential-store",
+        "campaign-or-profile-authority"
+      ]
+    },
+    "subsequent_gate": {
+      "c2b_status": "closed",
+      "open_condition": "recovery-applied-and-independently-accepted-with-exact-appended-ledger-sha",
+      "before_c2b_materialization": [
+        "fresh-official-openai-document-drift-check",
+        "exact-request-derivation",
+        "fresh-stage-runtime-authority",
+        "immediate-pre-effect-revalidation"
+      ],
+      "provider_effect_proceeds_automatically": false
+    },
+    "prohibitions": [
+      "helper-launch",
+      "ui-launch",
+      "credential-manager-read-write-delete-enumeration",
+      "credential-retry",
+      "dns",
+      "public-network",
+      "provider-request",
+      "billable-operation",
+      "fallback",
+      "parallel-dispatch",
+      "counter-reset",
+      "ceiling-transfer",
+      "inherited-authority",
+      "terminal-identity-reuse",
+      "git-head-or-history-runtime-authority",
+      "c2b-before-recovery-acceptance",
+      "c3",
+      "slice7",
+      "private-fixture-access",
+      "evaluator-or-archive-access",
+      "push"
+    ],
+    "materialization_state": {
+      "retained_success_evidence": true,
+      "retained_failure_evidence": true,
+      "terminal_ledger": true,
+      "durable_product_profile_projection": true,
+      "recovery_runtime_authority": false,
+      "recovery_transition_applied": false,
+      "c2b_stage_request": false,
+      "provider_requests": 0,
+      "billable_operations": 0
+    },
+    "independent_review": {
+      "verdict": "pass-no-remaining-must-fix",
+      "scope": "package-schema-validator-report-navigation-receipt-scenario-seam-typed-recovery-terminal-success-failure-chronology-runner-binaries-paths-readonly-durable-state-ledger-grammar-tests-docs-diff",
+      "external_effects_observed": 0
+    },
+    "acceptance": {
+      "required": true,
+      "scope": "accept-exact-package-commit-and-sha-plus-proposed-c1-active-through-c2-amendment-then-permit-runtime-byte-derivation-and-one-zero-effect-ledger-recovery",
+      "does_not_execute": true,
+      "does_not_accept_itself": true,
+      "does_not_open_c2b": true,
+      "automatic_handoff": false
+    }
+  }
+}

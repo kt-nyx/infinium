@@ -25,6 +25,9 @@ chronology.
   which grants no effect authority by itself
 - [Replacement C2 owner acceptance record](c2-replacement-owner-acceptance.v2.json),
   opening only the package-defined C2A handoff and predecessor-gated C2B-C2D envelope
+- [C2A post-success recovery authority report](c2a-post-success-recovery-authority-report.md)
+  and [typed package](m1-slice6-c2a-post-success-recovery-authority-package.v1.json),
+  which are inert and require fresh exact owner acceptance
 - [Terminal predecessor C2 report](c2-authority-package-report.md) and
   [acceptance record](c2-owner-acceptance.v1.json), retained only as terminal
   chronology and never reusable authority
@@ -109,11 +112,15 @@ retried and Credential Manager must not be inspected or modified.
 
 The owner asked the project to consider keeping C1 implementation-active until
 C2 completes. The recovery package includes that proposal for exact acceptance;
-it is not current process authority yet. Current work is the offline
-scenario-contract correction and a closed append-only recovery path. Before
-that path changes durable campaign state, its corrected executable, proposed
-process amendment, and zero-effect runtime authority must be independently
-reviewed, exactly bound, and separately owner-accepted.
+it is not current process authority yet. Corrected implementation
+`c8cc455c8320f50bc87a160e3523f34eceb2ad13` now aligns the scenario contract,
+validates the retained success and read-only durable product projection, and
+provides a closed append-only recovery path. Its complete non-live floor and
+independent affected-surface review passed. The inert authority package is the
+current owner-review gate and its consolidated package review passed with no
+remaining must-fix. Before the path changes durable campaign state, its fresh
+owner decision and zero-effect runtime authority must still be derived,
+independently reviewed, exactly bound, and admitted.
 
 ## Lean continuation
 
@@ -140,10 +147,12 @@ scope reduction.
 ## Effect and campaign boundary
 
 No repository document supplies an API key. The consumed C2A authority permits
-no retry. Current recovery work permits no helper/UI launch, native credential
+no retry. The recovery package permits no helper/UI launch, native credential
 call, credential-store inspection, DNS/public network, provider contact,
 billing, private-fixture access, archive work, destructive action, push, or
-later-slice implementation.
+later-slice implementation. Even after package acceptance, the only proposed
+mutation is one append-only ledger event under a separately derived and
+reviewed all-zero runtime authority.
 
 The old dormant campaign and credential authorization IDs named in the lean
 continuation plan are retired without execution and cannot be inherited or

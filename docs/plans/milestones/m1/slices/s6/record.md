@@ -9135,3 +9135,53 @@ owner acceptance of the recovery package.
 The retained success, failure, and ledger bytes remain immutable. A separately
 reviewed and owner-accepted recovery authority is still required before the
 terminal ledger may append the accepted success-evidence transition.
+
+## 2026-08-19 — C2A post-success recovery correction and owner-review package
+
+Corrected implementation `c8cc455c8320f50bc87a160e3523f34eceb2ad13`
+aligns the accepted-evidence consumer with canonical helper scenario
+`wp9-production-profile-enrollment`. It adds the closed
+`credential-evidence-recovery` authority kind, an exact terminal-predecessor
+grammar, independent top-level success/zero-effect/chronology validation,
+snapshot-based no-create read-only product-state inspection, and one append-only
+`credential-post-success-validator-defect-evidence-accepted` ledger transition.
+The recovery path cannot launch the helper or UI, call Credential Manager,
+perform DNS/network/provider/billable work, retry enrollment, change the stored
+credential, mutate product state, or rewrite the existing ledger prefix.
+
+Focused verification passed 15 unit, 2 contract, and 10 integration cases,
+including success and mutated terminal/failure/success/runtime/durable-state
+denials with byte-identical retained state on failure. The final C1 readiness
+floor passed 21 authority/ledger/safety unit, 1 schema, 4 fresh-clone
+integration, and 4 security cases. Its retained receipt SHA-256 is
+`c2524db81fe448e75478bb108bf53231a1f086f299ba9676580e5e47094b1646`.
+The exact mixed Release closure has 126 files, inventory SHA-256
+`18f6c8da8b66e02c2100439272b58a5d6e2353ca454f9d0832a626f870d4fe71`,
+coordinator SHA-256
+`8aa7d7873f24495c0caebad8ad84afef5cfa9d7d60e524d80455d65a85d0d191`,
+and unchanged accepted helper SHA-256
+`60b51d2e46508560409553ab898a4cf45ef46f75a0cf3d77fc01dcf4bd00a9a5`.
+The invoked recovery runner is separately bound at SHA-256
+`bc124063de91fc95d561408453f45793fcc032f62e3908175c5ccc2a46a26d35`;
+the future execution clone must be at the exact owner-accepted activation
+commit with clean tracked status and matching package/profile/campaign/runner
+bytes immediately before invocation.
+Independent affected-surface review returned PASS with no must-fix finding.
+
+The inert owner-review package ID is
+`infinium.m1-s6.c2a.recovery-authority-package/50a1b244-40d9-4a7f-8175-c79929b0d8b9`.
+It binds the retained terminal event, failure, successful enrollment evidence,
+product-state identity, corrected implementation, exact executable closure,
+and future all-zero recovery-authority derivation. It also presents, without
+claiming prior acceptance, the owner's requested option to keep C1
+implementation-active through C2 and bind final C1 before C3. No owner decision
+or recovery runtime manifest has been created, no ledger append has occurred,
+and C2B remains closed.
+
+Consolidated package review returned PASS after two corrections on the same
+candidate. The package now binds the invoked recovery wrapper's exact path and
+SHA-256 and requires clean tracked execution. Its validator separates inert
+owner-review mode from activated pre-invocation mode; the latter requires the
+exact present schema-valid runtime manifest, owner-accepted activation commit,
+terminal evidence and product identities, runner and binary closure, all-zero
+limits, live bounded interval, and continued C2B absence.
