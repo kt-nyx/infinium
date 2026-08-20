@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Infinium.Application.Evaluation;
 using Infinium.Coordinator;
 using Infinium.Domain.Contracts;
 
@@ -97,7 +98,8 @@ public sealed class M1Slice6FreshAuthorityVersionTests
         string combined = string.Join('\n', files.Select(file =>
         {
             string text = File.ReadAllText(Path.Combine(repositoryContracts, file));
-            using JsonDocument _ = JsonDocument.Parse(text);
+            using JsonDocument document = JsonDocument.Parse(text);
+            BoundedJsonDocumentReader.RejectDuplicateProperties(document.RootElement, file);
             return text;
         }));
 

@@ -95,9 +95,7 @@
           "semantic_validation": { "properties": { "validation_id": { "const": "infinium.host.candidate-investigation-admission/v1" }, "proposal_count": { "const": 1 }, "admission_count": { "const": 1 } } }
         }
       }
-    }
-  ],
-  "allOf": [
+    },
     {
       "if": { "properties": { "stage": { "const": "Qualification" } } },
       "then": { "properties": { "stage_manifest_id": { "const": "infinium.m1-s6.campaign-stage/Qualification/cf3ba7b9-e2cb-427d-b5cb-ae9f679c19c1" } } }
