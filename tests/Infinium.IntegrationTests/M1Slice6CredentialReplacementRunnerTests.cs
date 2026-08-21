@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Infinium.Application.Evaluation;
 using Infinium.Application.Provider;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Helper.V2;
@@ -21,6 +22,30 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         "win32-error:05", "win32-error:-5", "win32-error:5 secret", "win32-error:2147483648",
     ];
     private enum FixtureMode { Initial, ReplacingRecovery, DeletePendingRecovery }
+
+    [TestMethod]
+    public void TypedFailureRecoveryOwnerBindsExactRetainedAttemptAndConsumedLaunch()
+    {
+        string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(AppContext.BaseDirectory);
+        string ownerPath = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "m1-slice6-development-campaign-amendment.v6.json");
+        byte[] ownerBytes = File.ReadAllBytes(ownerPath);
+        ActiveRepositoryJsonSchemaValidator.Validate(ownerBytes,
+            File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                "m1-slice6-development-campaign-amendment.v6.schema.json")),
+            M1Slice6SuccessorCredentialReplacementRunner.TypedFailureRecoveryAmendmentSchema);
+        using JsonDocument owner = JsonDocument.Parse(ownerBytes);
+        M1Slice6SuccessorCredentialReplacementRunner.ValidateTypedFailureRecoveryOwner(
+            repository, owner.RootElement, "g-e6b6a3f21ad74108ba65955850349f83");
+
+        JsonObject tampered = JsonNode.Parse(ownerBytes)!.AsObject();
+        tampered["correction"]!["consumed_helper_launches"] = 2;
+        using JsonDocument tamperedDocument = JsonDocument.Parse(
+            JsonSerializer.SerializeToUtf8Bytes(tampered));
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            M1Slice6SuccessorCredentialReplacementRunner.ValidateTypedFailureRecoveryOwner(
+                repository, tamperedDocument.RootElement, "g-e6b6a3f21ad74108ba65955850349f83"));
+    }
 
     [TestMethod]
     public async Task InitialNoNativeRunnerAtomicallyBeginsFreshReplacement()

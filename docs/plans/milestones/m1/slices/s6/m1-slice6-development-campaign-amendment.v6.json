@@ -1,0 +1,52 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-development-campaign-amendment/6.0.0",
+  "amendment_id": "infinium.m1-s6.credential-replacement-cleanup-recovery/20260821-typed-native-failure-settlement",
+  "status": "owner-authorized-credential-replacement-cleanup-recovery",
+  "owner_authority_source": {
+    "kind": "current-owner-task-message",
+    "summary": "use the confirmed-working fresh key through the masked credential enrollment surface"
+  },
+  "prior_owner_authority": {
+    "id": "infinium.m1-s6.credential-replacement-cleanup-recovery/20260821-pre-entry-assignment-prefix",
+    "path": "docs/plans/milestones/m1/slices/s6/m1-slice6-development-campaign-amendment.v5.json",
+    "sha256": "1970893a8a7f31ce15dec7bfa71b17a83512098ab3b6f0bda5f7c0424899ddd1"
+  },
+  "retained_failure": {
+    "id": "infinium.m1-s6.successor-credential-replacement-evidence/725cedc6-c2ee-4707-a6a0-066caf9c47f9",
+    "path": "artifacts/m1-slice6/successor-credential-replacement-cleanup-recovery/ca6a6e5f-966f-467f-be55-c2320896a092/replacement-evidence.v2.json",
+    "sha256": "4ae72405d2611e53ec94e1e0015704c1444b2915b7b730bacf7f6568eda02d23"
+  },
+  "correction": {
+    "diagnosis": "replacement-specific-failure-envelope-was-rejected-by-enrollment-only-settlement-validation",
+    "implementation_commit": "65f68f13ede2745e63026d31073740c5e9327c90",
+    "retained_operation_id": "m1s6-credential-replacement-5bba03b2f399640c13c0432cab823a05",
+    "consumed_helper_launches": 1,
+    "validated_boundary": "absent",
+    "terminal_receipt": "absent"
+  },
+  "recovery": {
+    "mode": "run-fresh-exact-replace-helper-from-delete-pending-with-typed-failure-settlement",
+    "predecessor_state": "ordinal1-delete-pending-unavailable-cleanup-failed",
+    "successor_generation_id": "g-e6b6a3f21ad74108ba65955850349f83",
+    "fresh_generation_creation": "prohibited-already-durably-reserved",
+    "assignment_kind": "Replace",
+    "helper_launches": 1,
+    "prior_authority_replay": "prohibited",
+    "typed_failure_settlement": "required-before-stopped-evidence-publication",
+    "dns_resolutions": 0,
+    "network_operations": 0,
+    "provider_operations": 0,
+    "billable_operations": 0,
+    "provider_effect": "prohibited"
+  },
+  "preserved_boundaries": {
+    "hard_budget_nano_usd": 10000000000,
+    "historical_evidence_immutable": true,
+    "secret_isolation": true,
+    "private_answer_isolation": true,
+    "enumeration": "prohibited",
+    "exposure": "prohibited",
+    "slice7": "not-authorized"
+  },
+  "authorized_at_utc": "2026-08-21T23:42:34.7330112Z"
+}
