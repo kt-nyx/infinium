@@ -1,0 +1,25 @@
+{
+  "schema_identity": "infinium.m1-s6.successor-credential-replacement-failure-evidence/v1",
+  "evidence_id": "infinium.m1-s6.successor-credential-replacement-evidence/725cedc6-c2ee-4707-a6a0-066caf9c47f9",
+  "operation_id": "m1s6-credential-replacement-5bba03b2f399640c13c0432cab823a05",
+  "status": "stopped-ambiguous-effect-recovery-required",
+  "authority": {
+    "id": "infinium.m1-s6.successor-credential-replacement-cleanup-recovery/ca6a6e5f-966f-467f-be55-c2320896a092",
+    "sha256": "5bba03b2f399640c13c0432cab823a052d3dc000a05524c9826fb2ce9f3d242e"
+  },
+  "independent_review": {
+    "id": "infinium.m1-s6.successor-credential-replacement-cleanup-recovery-review/a6589a9f-c1a3-45be-84f4-628dee94a16b",
+    "sha256": "135694b199e72deef3c5feb9e4c75c45f8a6cedb3fb1dc66de1eb85b3c2d6cad"
+  },
+  "product_state": {
+    "checkpoint_sha256": "8baa3e0f2be9fc0b30323c394e1e14cd2505395514d4fa2dfd8a9fda3b50ea79",
+    "profile_id": "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e",
+    "generation_id": "g-ff6d82e7a7d244f6b8a9d0164991be37",
+    "generation_ordinal": 1,
+    "lifecycle_state": "delete-pending"
+  },
+  "observed_effect_facts": "unknown-conservatively-blocked",
+  "typed_failure": "CredentialNativeHelperEvidenceAmbiguityException",
+  "isolation_observation": "fallback-fields-are-secret-free-effect-isolation-unverified-stop-condition",
+  "completed_at_utc": "2026-08-21T22:56:43.4382526\u002B00:00"
+}
