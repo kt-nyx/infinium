@@ -104,6 +104,7 @@ public sealed class ProviderAdapterIntegrationTests
         {
             Assert.IsNotNull(result.ProviderErrorType);
             StringAssert.StartsWith(result.ProviderErrorType, "HttpRequestError.");
+            StringAssert.Contains(result.ProviderErrorType, ".SocketError.");
             byte[] envelope = OpenAiStagedResponseEnvelope.Create(result);
             Assert.IsTrue(OpenAiStagedResponseEnvelope.TryRead(envelope, out byte[] raw, out byte[] headers));
             OpenAiResponsesResult replay = OpenAiStagedResponseEnvelope.ReplaySuccessorV6(

@@ -705,9 +705,25 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport,
                 with
             {
                 DnsResolutionCount = DnsResolutionCount(),
-                ProviderErrorType = "HttpRequestError." + error.HttpRequestError,
+                ProviderErrorType = TransportErrorType(error),
             };
         }
+    }
+
+    private static string TransportErrorType(HttpRequestException error)
+    {
+        string result = "HttpRequestError." + error.HttpRequestError;
+        Exception? current = error.InnerException;
+        for (int depth = 0; current is not null && depth < 4; depth++, current = current.InnerException)
+        {
+            if (current is SocketException socket)
+            {
+                return Enum.IsDefined(socket.SocketErrorCode) && socket.SocketErrorCode != SocketError.Success
+                    ? result + ".SocketError." + socket.SocketErrorCode
+                    : result;
+            }
+        }
+        return result;
     }
 
     private int DnsResolutionCount() => productionObservation?.DnsResolutionCount ?? 0;

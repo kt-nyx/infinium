@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -2257,14 +2258,20 @@ internal static class M1Slice6SuccessorCampaignRunner
         string? providerErrorType = providerErrorTypeElement.ValueKind == JsonValueKind.Null
             ? null
             : M1Slice6SuccessorAuthorityLoader.Text(root, "provider_error_type");
-        string? httpRequestErrorName = providerErrorType?.StartsWith(
-            "HttpRequestError.", StringComparison.Ordinal) == true
-                ? providerErrorType["HttpRequestError.".Length..]
-                : null;
-        bool providerErrorTypeValid = providerErrorType is null
-            || (Enum.TryParse(httpRequestErrorName, ignoreCase: false, out HttpRequestError parsedError)
-                && Enum.IsDefined(parsedError)
-                && providerErrorType == "HttpRequestError." + parsedError);
+        string[] providerErrorParts = providerErrorType?.Split('.') ?? [];
+        bool httpErrorValid = providerErrorParts.Length is 2 or 4
+            && providerErrorParts[0] == "HttpRequestError"
+            && Enum.TryParse(providerErrorParts[1], ignoreCase: false, out HttpRequestError parsedError)
+            && Enum.IsDefined(parsedError)
+            && providerErrorParts[1] == parsedError.ToString();
+        bool socketErrorValid = providerErrorParts.Length == 2
+            || (providerErrorParts.Length == 4
+                && providerErrorParts[2] == "SocketError"
+                && Enum.TryParse(providerErrorParts[3], ignoreCase: false, out SocketError parsedSocketError)
+                && Enum.IsDefined(parsedSocketError)
+                && parsedSocketError != SocketError.Success
+                && providerErrorParts[3] == parsedSocketError.ToString());
+        bool providerErrorTypeValid = providerErrorType is null || (httpErrorValid && socketErrorValid);
         if (M1Slice6SuccessorAuthorityLoader.Text(root, "schema")
                 != "infinium.openai.response-headers/v2"
             || root.GetProperty("state").GetInt32() != (int)ProviderResponseState.Unknown

@@ -23,6 +23,12 @@ public sealed class M1Slice6SuccessorAuthorityTests
         ["actual-adapter-send-count-unverified", "credential-read-free-trace-not-independently-retained",
             "exact-containment-predicate-unavailable"];
     private static readonly string[] RawTargetEncodings = ["utf-8", "utf-16le"];
+    private static readonly string[] InvalidTransportDiagnosticTypes =
+    [
+        "HttpRequestError.ConnectionError.SocketError.NotCanonical",
+        "HttpRequestError.ConnectionError.SocketError.Success",
+        "HttpRequestError.ConnectionError.SocketError.999",
+    ];
     [TestMethod]
     public void CheckedInSuccessorAuthorityIsSchemaValidAndBindsTheReviewedSnapshot()
     {
@@ -316,7 +322,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
             File.WriteAllBytes(Path.Combine(attemptDirectory, stem + ".canonical-request.json"),
                 authority.CanonicalRequest);
             File.WriteAllBytes(Path.Combine(attemptDirectory, stem + ".response-headers.json"),
-                AmbiguousResponseHeaders("HttpRequestError.ConnectionError"));
+                AmbiguousResponseHeaders("HttpRequestError.ConnectionError.SocketError.ConnectionRefused"));
             File.WriteAllBytes(Path.Combine(attemptDirectory, stem + ".native-trace.json"),
                 SyntheticTrace(campaign.CredentialTargetFingerprintSha256));
             File.WriteAllBytes(Path.Combine(attemptDirectory, stem + ".canaries.json"),
@@ -366,12 +372,15 @@ public sealed class M1Slice6SuccessorAuthorityTests
                     credentialPath, credentialSha, runtimePath, runtimeSha, ledgerPath,
                     evidencePath, now.AddMinutes(6)));
             File.WriteAllBytes(headersPath, exactHeaders);
-            File.WriteAllBytes(headersPath, AmbiguousResponseHeaders("HttpRequestError.NotCanonical"));
-            Assert.ThrowsExactly<InvalidDataException>(() =>
-                M1Slice6SuccessorCampaignRunner.RecoverStartedAmbiguousAttempt(
-                    campaignPath, campaignSha, amendmentPath, amendmentSha, stagePath, stageSha,
-                    credentialPath, credentialSha, runtimePath, runtimeSha, ledgerPath,
-                    evidencePath, now.AddMinutes(6)));
+            foreach (string invalidDiagnostic in InvalidTransportDiagnosticTypes)
+            {
+                File.WriteAllBytes(headersPath, AmbiguousResponseHeaders(invalidDiagnostic));
+                Assert.ThrowsExactly<InvalidDataException>(() =>
+                    M1Slice6SuccessorCampaignRunner.RecoverStartedAmbiguousAttempt(
+                        campaignPath, campaignSha, amendmentPath, amendmentSha, stagePath, stageSha,
+                        credentialPath, credentialSha, runtimePath, runtimeSha, ledgerPath,
+                        evidencePath, now.AddMinutes(6)));
+            }
             File.WriteAllBytes(headersPath, exactHeaders);
 
             M1Slice6CampaignBoundaryFailureReceipt historicalReceipt =
@@ -410,7 +419,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
                 JsonElement root = evidence.RootElement;
                 Assert.IsFalse(root.GetProperty("retry_permitted").GetBoolean());
                 Assert.AreEqual(1, root.GetProperty("provider_send_count").GetInt32());
-                Assert.AreEqual("HttpRequestError.ConnectionError",
+                Assert.AreEqual("HttpRequestError.ConnectionError.SocketError.ConnectionRefused",
                     root.GetProperty("provider_error_type").GetString());
                 JsonElement observation = root.GetProperty("helper_boundary_observation");
                 Assert.IsFalse(observation.GetProperty("receipt_available").GetBoolean());
