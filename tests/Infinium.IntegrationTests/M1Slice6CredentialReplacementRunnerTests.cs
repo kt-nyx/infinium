@@ -566,6 +566,52 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                         midTracePredecessor, midTraceSuccessor, requireCompleted: false));
             }
 
+            ReplacementFixture failureEnvelope = CreateFixture(
+                repository, testRoot, "failure-envelope", FixtureMode.DeletePendingRecovery);
+            using JsonDocument failureAuthority = JsonDocument.Parse(
+                File.ReadAllBytes(failureEnvelope.AuthorityPath));
+            (HelperPrivateFrameV2 failureBootstrap, HelperPrivateFrameV2 failureAssignment) = CleanupFrames(
+                failureEnvelope.ProfileId, failureEnvelope.SuccessorGeneration,
+                "cleanup-failure-envelope", failureAuthority.RootElement
+                    .GetProperty("authority_id").GetString());
+            HelperProcessReceipt failureProcess = MidTraceReadFailureProcess(
+                Sha(Encoding.UTF8.GetBytes(
+                    $"Infinium:{failureEnvelope.ProfileId}:{failureEnvelope.SuccessorGeneration}")),
+                forgedAllocation: false);
+            NativeHelperFailureEnvelope exactFailure = new(
+                "engine-execution", "win32-failure", true,
+                CredWriteW: 1, CredReadW: 2, CredDeleteW: 0, CredFree: 0, Total: 3,
+                NetworkFactsKnown: true, ListenerCount: 0, NetworkOperationCount: 0,
+                ExternalEffectFactsKnown: true, DnsOperationCount: 0,
+                ProviderOperationCount: 0, BillableOperationCount: 0,
+                Encoding.UTF8.GetString(failureProcess.NativeCallTraceBytes!),
+                Encoding.UTF8.GetString(failureProcess.NativeEntryCleanupBytes!),
+                JsonSerializer.Serialize(Canary("private protocol partial response")),
+                ManualUiAttempted: true, ContainmentDescendantStarted: true,
+                ContainmentDescendantProcessId: 2,
+                NamespaceReuseBlocked: false, NamespaceReuseBlockReason: null);
+            CredentialNativeQualificationSupervisor.ValidateNativeHelperFailureEnvelope(
+                exactFailure, failureBootstrap.Bootstrap, failureAssignment.Assignment,
+                failureEnvelope.AuthorityPath, helperProcessId: 1);
+            HelperAssignmentV2 wrongReplacement = failureAssignment.Assignment.Clone();
+            wrongReplacement.AssignmentId += "-drift";
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                CredentialNativeQualificationSupervisor.ValidateNativeHelperFailureEnvelope(
+                    exactFailure, failureBootstrap.Bootstrap, wrongReplacement,
+                    failureEnvelope.AuthorityPath, helperProcessId: 1));
+            HelperAssignmentV2 wrongCommand = failureAssignment.Assignment.Clone();
+            wrongCommand.CommandId += "-drift";
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                CredentialNativeQualificationSupervisor.ValidateNativeHelperFailureEnvelope(
+                    exactFailure, failureBootstrap.Bootstrap, wrongCommand,
+                    failureEnvelope.AuthorityPath, helperProcessId: 1));
+            HelperBootstrapV2 wrongPredecessor = failureBootstrap.Bootstrap.Clone();
+            wrongPredecessor.Credential.GenerationId.Value += "-drift";
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                CredentialNativeQualificationSupervisor.ValidateNativeHelperFailureEnvelope(
+                    exactFailure, wrongPredecessor, failureAssignment.Assignment,
+                    failureEnvelope.AuthorityPath, helperProcessId: 1));
+
             ReplacementFixture launchGuard = CreateFixture(
                 repository, testRoot, "launch-guard", FixtureMode.DeletePendingRecovery);
             (HelperPrivateFrameV2 guardBootstrap, HelperPrivateFrameV2 guardAssignment) =
@@ -1252,9 +1298,9 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         };
     }
 
-    private static object Canary()
+    private static object Canary(string responseSurface = "private protocol response")
     {
-        string[] names = ["private protocol request", "private protocol response", "native call trace",
+        string[] names = ["private protocol request", responseSurface, "native call trace",
             "process command line", "process environment names"];
         string[] kinds = ["private-pipe-bytes", "private-pipe-bytes", "canonical-trace-bytes", "captured-text", "captured-text"];
         return new { SecretMatches = 0, RawTargetMatches = 0, RawTargetEncodings = new[] { "utf-8", "utf-16le" },

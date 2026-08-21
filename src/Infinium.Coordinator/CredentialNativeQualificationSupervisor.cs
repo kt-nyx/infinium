@@ -1796,16 +1796,28 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         byte[] traceBytes = System.Text.Encoding.UTF8.GetBytes(evidence.NativeCallTraceJson);
         IReadOnlyList<CredentialNativeCallTraceEntry> trace = ParseAndValidateTrace(
             traceBytes, evidence.Total, requireTrace: true);
+        using System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(
+            File.ReadAllBytes(nativeManifestPath));
+        bool successorReplacement = document.RootElement.TryGetProperty(
+                "schema_identity", out System.Text.Json.JsonElement schemaIdentity)
+            && schemaIdentity.GetString()
+                == "infinium.repository.m1-slice6-successor-credential-replacement-authorization/1.0.0";
         if (trace.Count(item => item.Operation == "CredWriteW") != evidence.CredWriteW
             || trace.Count(item => item.Operation == "CredReadW") != evidence.CredReadW
             || trace.Count(item => item.Operation == "CredDeleteW") != evidence.CredDeleteW
             || trace.Count(item => item.Operation == "CredFree") != evidence.CredFree
-            || trace.Any(item => item.Scenario != assignment.AssignmentId))
+            || trace.Any(item => item.Scenario != (successorReplacement
+                ? "m1-slice6-successor-credential-replacement"
+                : assignment.AssignmentId)))
         {
             throw new InvalidDataException("The native helper failure trace disagrees with its assignment or counts.");
         }
-        using System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(
-            File.ReadAllBytes(nativeManifestPath));
+        if (successorReplacement)
+        {
+            M1Slice6SuccessorCredentialReplacementRunner.ValidateReplacementFailureEnvelope(
+                evidence, bootstrap, assignment, document.RootElement);
+            return;
+        }
         if (document.RootElement.TryGetProperty("packet_kind", out System.Text.Json.JsonElement packetKind)
             && packetKind.GetString() == "EnrollOrVerifyProfile")
         {

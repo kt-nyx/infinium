@@ -743,6 +743,85 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         }
     }
 
+    internal static void ValidateReplacementFailureEnvelope(
+        NativeHelperFailureEnvelope evidence,
+        HelperBootstrapV2 bootstrap,
+        HelperAssignmentV2 assignment,
+        JsonElement manifest)
+    {
+        JsonElement profile = manifest.GetProperty("profile");
+        JsonElement maxima = manifest.GetProperty("native_boundary").GetProperty("maximum_calls");
+        string authorityId = manifest.GetProperty("authority_id").GetString()!;
+        string profileId = profile.GetProperty("access_profile_id").GetString()!;
+        string predecessorGeneration = profile.GetProperty("predecessor_generation_id").GetString()!;
+        string successorGeneration = profile.GetProperty("successor_generation_id").GetString()!;
+        string predecessorFingerprint = profile.GetProperty(
+            "predecessor_target_fingerprint_sha256").GetString()!;
+        string successorFingerprint = profile.GetProperty(
+            "successor_target_fingerprint_sha256").GetString()!;
+        if (assignment.AssignmentKind != HelperAssignmentKindV2.Replace
+            || assignment.AssignmentId != authorityId + "/replace"
+            || assignment.CommandId != authorityId + "/command"
+            || bootstrap.CommandId != authorityId + "/command"
+            || bootstrap.Credential?.AccessProfileId?.Value != profileId
+            || bootstrap.Credential?.GenerationId?.Value != predecessorGeneration
+            || assignment.AccessProfileId?.Value != profileId
+            || assignment.GenerationId?.Value != successorGeneration
+            || assignment.GenerationOrdinal != 2
+            || assignment.Credential?.AccessProfileId?.Value != profileId
+            || assignment.Credential?.GenerationId?.Value != successorGeneration
+            || predecessorGeneration == successorGeneration
+            || evidence.CredWriteW > maxima.GetProperty("CredWriteW").GetInt32()
+            || evidence.CredReadW > maxima.GetProperty("CredReadW").GetInt32()
+            || evidence.CredDeleteW > maxima.GetProperty("CredDeleteW").GetInt32()
+            || evidence.CredFree > maxima.GetProperty("CredFree").GetInt32()
+            || evidence.Total > maxima.GetProperty("total").GetInt32())
+        {
+            throw new InvalidDataException(
+                "The replacement helper failure exceeds its exact authority, identity, or native bounds.");
+        }
+        JsonElement trace = ParseOptional(Encoding.UTF8.GetBytes(evidence.NativeCallTraceJson!))
+            ?? throw new InvalidDataException("The replacement failure native trace is absent.");
+        JsonElement canaries = ParseOptional(Encoding.UTF8.GetBytes(evidence.CanaryEvidenceJson!))
+            ?? throw new InvalidDataException("The replacement failure canary evidence is absent.");
+        JsonElement? entry = evidence.EntryCleanupJson is null
+            ? null
+            : ParseOptional(Encoding.UTF8.GetBytes(evidence.EntryCleanupJson));
+        ValidateStoppedTrace(
+            trace, predecessorFingerprint, successorFingerprint,
+            evidence.Total, HelperOutcomeV2.FailedKnown);
+        bool collision = trace.GetArrayLength() == 2
+            && trace[0].GetProperty("Operation").GetString() == "CredReadW"
+            && trace[0].GetProperty("Result").GetString() == "success";
+        if (evidence.NamespaceReuseBlocked != collision
+            || collision && evidence.NamespaceReuseBlockReason != "preflight-collision"
+            || !collision && evidence.NamespaceReuseBlockReason is not null)
+        {
+            throw new InvalidDataException(
+                "The replacement helper failure collision facts are not exact.");
+        }
+        if (!evidence.ManualUiAttempted)
+        {
+            if (entry is not null || evidence.CredWriteW != 0 || trace.GetArrayLength() != 0)
+            {
+                throw new InvalidDataException(
+                    "A pre-entry replacement failure contains impossible UI or native mutation evidence.");
+            }
+        }
+        else
+        {
+            JsonElement exactEntry = entry
+                ?? throw new InvalidDataException("A replacement UI failure lacks exact cleanup evidence.");
+            CredentialNativeQualificationSupervisor.ValidateWp9ProductionEntryEvidence(
+                evidence.EntryCleanupJson!);
+            ValidateEntryProperties(exactEntry);
+        }
+        string responseSurface = evidence.Stage == "metrics-write"
+            ? "private protocol response"
+            : "private protocol partial response";
+        ValidateCanaries(canaries, responseSurface, allowEmptyResponse: true);
+    }
+
     private static void ValidatePreEntryStoppedBoundary(HelperProcessReceipt process, JsonElement canaries)
     {
         if (process.Receipt.Outcome != HelperOutcomeV2.FailedKnown
@@ -1034,7 +1113,10 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         }
     }
 
-    private static void ValidateCanaries(JsonElement canaries)
+    private static void ValidateCanaries(
+        JsonElement canaries,
+        string responseSurface = "private protocol response",
+        bool allowEmptyResponse = false)
     {
         string[] names = ["SecretMatches", "RawTargetMatches", "RawTargetEncodings", "ScannedSurfaces"];
         if (!canaries.EnumerateObject().Select(property => property.Name).SequenceEqual(names, StringComparer.Ordinal)
@@ -1046,7 +1128,7 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             throw new InvalidDataException("The replacement canary root is malformed or nonzero.");
         }
         JsonElement[] surfaces = canaries.GetProperty("ScannedSurfaces").EnumerateArray().ToArray();
-        string[] expectedNames = ["private protocol request", "private protocol response", "native call trace",
+        string[] expectedNames = ["private protocol request", responseSurface, "native call trace",
             "process command line", "process environment names"];
         string[] expectedKinds = ["private-pipe-bytes", "private-pipe-bytes", "canonical-trace-bytes",
             "captured-text", "captured-text"];
@@ -1058,7 +1140,9 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                     .SequenceEqual(surfaceNames, StringComparer.Ordinal)
                 || surfaces[index].GetProperty("Name").GetString() != expectedNames[index]
                 || surfaces[index].GetProperty("Kind").GetString() != expectedKinds[index]
-                || surfaces[index].GetProperty("ByteCount").GetInt64() <= 0
+                || surfaces[index].GetProperty("ByteCount").GetInt64() < 0
+                || surfaces[index].GetProperty("ByteCount").GetInt64() == 0
+                    && !(allowEmptyResponse && index == 1)
                 || surfaces[index].GetProperty("SecretMatches").GetInt32() != 0
                 || surfaces[index].GetProperty("RawTargetMatches").GetInt32() != 0)
             {
