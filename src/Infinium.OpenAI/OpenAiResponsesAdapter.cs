@@ -699,11 +699,14 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport,
                 with
             { DnsResolutionCount = DnsResolutionCount() };
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException error)
         {
             return Failure(ProviderResponseState.Unknown, null, true, "transport_ambiguous", [], clientRequestId, null, 1)
                 with
-            { DnsResolutionCount = DnsResolutionCount() };
+            {
+                DnsResolutionCount = DnsResolutionCount(),
+                ProviderErrorType = "HttpRequestError." + error.HttpRequestError,
+            };
         }
     }
 

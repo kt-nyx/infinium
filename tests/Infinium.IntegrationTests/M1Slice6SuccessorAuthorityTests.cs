@@ -316,7 +316,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
             File.WriteAllBytes(Path.Combine(attemptDirectory, stem + ".canonical-request.json"),
                 authority.CanonicalRequest);
             File.WriteAllBytes(Path.Combine(attemptDirectory, stem + ".response-headers.json"),
-                AmbiguousResponseHeaders());
+                AmbiguousResponseHeaders("HttpRequestError.ConnectionError"));
             File.WriteAllBytes(Path.Combine(attemptDirectory, stem + ".native-trace.json"),
                 SyntheticTrace(campaign.CredentialTargetFingerprintSha256));
             File.WriteAllBytes(Path.Combine(attemptDirectory, stem + ".canaries.json"),
@@ -366,6 +366,19 @@ public sealed class M1Slice6SuccessorAuthorityTests
                     credentialPath, credentialSha, runtimePath, runtimeSha, ledgerPath,
                     evidencePath, now.AddMinutes(6)));
             File.WriteAllBytes(headersPath, exactHeaders);
+            File.WriteAllBytes(headersPath, AmbiguousResponseHeaders("HttpRequestError.NotCanonical"));
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorCampaignRunner.RecoverStartedAmbiguousAttempt(
+                    campaignPath, campaignSha, amendmentPath, amendmentSha, stagePath, stageSha,
+                    credentialPath, credentialSha, runtimePath, runtimeSha, ledgerPath,
+                    evidencePath, now.AddMinutes(6)));
+            File.WriteAllBytes(headersPath, exactHeaders);
+
+            M1Slice6CampaignBoundaryFailureReceipt historicalReceipt =
+                M1Slice6SuccessorCampaignRunner.RecoveredAmbiguousReceipt(
+                    AmbiguousResponseHeaders(), SyntheticTrace(campaign.CredentialTargetFingerprintSha256),
+                    SyntheticCanaries(), attempt, campaign.CredentialTargetFingerprintSha256);
+            Assert.IsNull(historicalReceipt.ProviderErrorType);
 
             M1Slice6SuccessorCampaignRunner.RecoverStartedAmbiguousAttempt(
                 campaignPath, campaignSha, amendmentPath, amendmentSha, stagePath, stageSha,
@@ -397,6 +410,8 @@ public sealed class M1Slice6SuccessorAuthorityTests
                 JsonElement root = evidence.RootElement;
                 Assert.IsFalse(root.GetProperty("retry_permitted").GetBoolean());
                 Assert.AreEqual(1, root.GetProperty("provider_send_count").GetInt32());
+                Assert.AreEqual("HttpRequestError.ConnectionError",
+                    root.GetProperty("provider_error_type").GetString());
                 JsonElement observation = root.GetProperty("helper_boundary_observation");
                 Assert.IsFalse(observation.GetProperty("receipt_available").GetBoolean());
                 Assert.AreEqual(JsonValueKind.Null,
@@ -879,7 +894,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
         finally { Directory.Delete(root, recursive: true); }
     }
 
-    private static byte[] AmbiguousResponseHeaders()
+    private static byte[] AmbiguousResponseHeaders(string? providerErrorType = null)
     {
         object unavailable = new { Availability = 2, Value = (long?)null };
         return JsonSerializer.SerializeToUtf8Bytes(new
@@ -898,7 +913,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
             returned_service_tier = (string?)null,
             refusal_code = (string?)null,
             incomplete_reason = (string?)null,
-            provider_error_type = (string?)null,
+            provider_error_type = providerErrorType,
             provider_error_code = (string?)null,
             local_failure_code = "transport_ambiguous",
             requested_output_schema = (string?)null,

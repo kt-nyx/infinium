@@ -1,3 +1,4 @@
+using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -2220,7 +2221,7 @@ internal static class M1Slice6SuccessorCampaignRunner
         { throw new InvalidDataException("Started-failure preflight evidence is stale."); }
     }
 
-    private static M1Slice6CampaignBoundaryFailureReceipt RecoveredAmbiguousReceipt(
+    internal static M1Slice6CampaignBoundaryFailureReceipt RecoveredAmbiguousReceipt(
         byte[] headers, byte[] trace, byte[] canaries, M1Slice6SuccessorAttemptIdentity attempt,
         string targetFingerprint)
     {
@@ -2251,7 +2252,19 @@ internal static class M1Slice6SuccessorCampaignRunner
         }
         string[] nullFields = ["http_status", "provider_response_id", "provider_request_id",
             "returned_model", "returned_service_tier", "refusal_code", "incomplete_reason",
-            "provider_error_type", "provider_error_code", "requested_output_schema"];
+            "provider_error_code", "requested_output_schema"];
+        JsonElement providerErrorTypeElement = root.GetProperty("provider_error_type");
+        string? providerErrorType = providerErrorTypeElement.ValueKind == JsonValueKind.Null
+            ? null
+            : M1Slice6SuccessorAuthorityLoader.Text(root, "provider_error_type");
+        string? httpRequestErrorName = providerErrorType?.StartsWith(
+            "HttpRequestError.", StringComparison.Ordinal) == true
+                ? providerErrorType["HttpRequestError.".Length..]
+                : null;
+        bool providerErrorTypeValid = providerErrorType is null
+            || (Enum.TryParse(httpRequestErrorName, ignoreCase: false, out HttpRequestError parsedError)
+                && Enum.IsDefined(parsedError)
+                && providerErrorType == "HttpRequestError." + parsedError);
         if (M1Slice6SuccessorAuthorityLoader.Text(root, "schema")
                 != "infinium.openai.response-headers/v2"
             || root.GetProperty("state").GetInt32() != (int)ProviderResponseState.Unknown
@@ -2259,6 +2272,7 @@ internal static class M1Slice6SuccessorCampaignRunner
             || M1Slice6SuccessorAuthorityLoader.Text(root, "transport_disposition")
                 != "may-have-started-no-response"
             || nullFields.Any(name => root.GetProperty(name).ValueKind != JsonValueKind.Null)
+            || !providerErrorTypeValid
             || root.GetProperty("response_bytes_existed").GetBoolean()
             || root.GetProperty("response_bytes_observed_lower_bound").GetInt64() != 0
             || root.GetProperty("retained_response_bytes").GetInt64() != 0
@@ -2280,7 +2294,7 @@ internal static class M1Slice6SuccessorCampaignRunner
             null, null, null, null, null, null, null, null, null, 2,
             ["helper-receipt-unavailable"]);
         return new("provider-transport", "may-have-started-no-response", "transport_ambiguous",
-            null, null, null, null, attempt.RequestId, null, false, 0, 1, 1,
+            null, providerErrorType, null, null, attempt.RequestId, null, false, 0, 1, 1,
             null, headers, observation, trace, canaries);
     }
 

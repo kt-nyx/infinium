@@ -100,6 +100,16 @@ public sealed class ProviderAdapterIntegrationTests
         Assert.IsTrue(
             result.ErrorCode is "transport_ambiguous" or "deadline_ambiguous",
             $"Unexpected typed offline outcome: {result.ErrorCode}");
+        if (result.ErrorCode == "transport_ambiguous")
+        {
+            Assert.IsNotNull(result.ProviderErrorType);
+            StringAssert.StartsWith(result.ProviderErrorType, "HttpRequestError.");
+            byte[] envelope = OpenAiStagedResponseEnvelope.Create(result);
+            Assert.IsTrue(OpenAiStagedResponseEnvelope.TryRead(envelope, out byte[] raw, out byte[] headers));
+            OpenAiResponsesResult replay = OpenAiStagedResponseEnvelope.ReplaySuccessorV6(
+                raw, headers, "client-offline");
+            Assert.AreEqual(result.ProviderErrorType, replay.ProviderErrorType);
+        }
     }
 
     [TestMethod]
