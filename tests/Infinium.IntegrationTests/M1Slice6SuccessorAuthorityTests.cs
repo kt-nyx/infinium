@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -76,6 +77,9 @@ public sealed class M1Slice6SuccessorAuthorityTests
             Assert.AreEqual(M1Slice6SuccessorCampaignV3State.HardBudgetAmended,
                 expiredReopen.Current.State);
             string coordinator = typeof(M1Slice6SuccessorCampaignRunner).Assembly.Location;
+            string implementationCommit = typeof(M1Slice6SuccessorCampaignRunner).Assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion
+                .Split('+')[^1];
             string helper = Path.Combine(repository, "src", "Infinium.CredentialHelper", "bin",
                 "Debug", "net10.0", "Infinium.CredentialHelper.dll");
             string rejected = Path.Combine(directory, "wrong-ordinal");
@@ -88,7 +92,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
             string output = Path.Combine(directory, "wp9-attempt-3-rederived");
             M1Slice6SuccessorAttemptMaterializer.Materialize(campaignPath, campaignSha,
                 amendmentPath, amendmentSha, ledgerPath, "Qualification", 3, output,
-                new string('b', 40), coordinator, helper, now.AddTicks(2));
+                implementationCommit, coordinator, helper, now.AddTicks(2));
             string stagePath = Path.Combine(output, "stage-attempt.v6.json");
             string candidatePath = Path.Combine(output, "runtime-candidate.v2.json");
             ActiveRepositoryJsonSchemaValidator.Validate(File.ReadAllBytes(stagePath),
@@ -100,6 +104,45 @@ public sealed class M1Slice6SuccessorAuthorityTests
                     "m1-slice6-successor-runtime-candidate.v2.schema.json")),
                 M1Slice6SuccessorAuthorityLoader.RuntimeCandidateSchema);
             Assert.AreEqual(3, JsonNode.Parse(File.ReadAllBytes(stagePath))!["attempt"]!["ordinal"]!.GetValue<int>());
+            JsonNode candidateNode = JsonNode.Parse(File.ReadAllBytes(candidatePath))!;
+            string candidateId = candidateNode["candidate_id"]!.GetValue<string>();
+            string candidateSha = M1Slice6SuccessorAuthorityLoader.HashFile(candidatePath);
+            string reviewPath = Path.Combine(output, "runtime-review.v3.json");
+            File.WriteAllBytes(reviewPath, JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                schema_identity = M1Slice6SuccessorAuthorityLoader.IndependentReviewSchemaV3,
+                review_id = "/root/review/runtime-attempt-v6-test",
+                review_kind = "runtime-attempt",
+                verdict = "accept",
+                reviewer_id = "/root/successor-authority-review",
+                independent = true,
+                provider_effect_used = false,
+                subject = new { id = candidateId, sha256 = candidateSha },
+                correction = new
+                {
+                    required = false,
+                    defect_id = (string?)null,
+                    diagnosis_disposition = (string?)null,
+                    failure_evidence_id = (string?)null,
+                    failure_evidence_sha256 = (string?)null,
+                    candidate_commit = (string?)null,
+                },
+                findings = Array.Empty<string>(),
+                reviewed_at_utc = "2026-08-21T18:00:00.0000000+00:00",
+            }));
+            string runtimePath = Path.Combine(output, "runtime-authority.v3.json");
+            M1Slice6SuccessorAttemptMaterializer.FinalizeRuntime(campaignPath, campaignSha,
+                amendmentPath, amendmentSha, stagePath, candidatePath, reviewPath, runtimePath,
+                now.AddTicks(3), now.AddMinutes(5));
+            ActiveRepositoryJsonSchemaValidator.Validate(File.ReadAllBytes(runtimePath),
+                File.ReadAllBytes(Path.Combine(repository, "contracts", "json-schema",
+                    "provider-effect-runtime-authority.v3.schema.json")),
+                M1Slice6SuccessorAuthorityLoader.RuntimeSchema);
+            M1Slice6SuccessorRuntimeAuthority runtime = M1Slice6SuccessorAuthorityLoader.Runtime(
+                runtimePath, M1Slice6SuccessorAuthorityLoader.HashFile(runtimePath), coordinator,
+                helper, amendment, now.AddMinutes(10), requireEffectAdmission: false);
+            Assert.AreEqual(3, runtime.AttemptOrdinal);
+            Assert.AreEqual("/root/review/runtime-attempt-v6-test", runtime.ReviewEvidenceId);
         }
         finally { Directory.Delete(directory, recursive: true); }
     }

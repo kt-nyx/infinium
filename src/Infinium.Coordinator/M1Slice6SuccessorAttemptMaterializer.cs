@@ -207,7 +207,7 @@ internal static class M1Slice6SuccessorAttemptMaterializer
         string candidateId = M1Slice6SuccessorAuthorityLoader.Text(cr, "candidate_id");
         string candidateSha = M1Slice6SuccessorAuthorityLoader.HashFile(candidatePath);
         M1Slice6SuccessorIndependentReview review = M1Slice6SuccessorAuthorityLoader.Review(
-            reviewPath, "runtime-attempt", candidateId, candidateSha, false);
+            reviewPath, "runtime-attempt", candidateId, candidateSha, false, successorV6: true);
         JsonElement stageNode = sr.GetProperty("stage");
         string kind = stageNode.GetProperty("ordinal").GetInt32() switch
         { 1 => "transport-qualification", 2 => "source-claim-extraction", _ => "candidate-investigation" };

@@ -81,7 +81,8 @@ internal static class M1Slice6SuccessorAuthorityLoader
 
     internal static M1Slice6SuccessorIndependentReview Review(
         string path, string kind, string subjectId, string subjectSha256, bool? correctionRequired,
-        string? failureEvidenceId = null, string? failureEvidenceSha256 = null)
+        string? failureEvidenceId = null, string? failureEvidenceSha256 = null,
+        bool successorV6 = false)
     {
         byte[] bytes = File.ReadAllBytes(Path.GetFullPath(path));
         string repository = FindRepositoryRoot(path);
@@ -95,10 +96,10 @@ internal static class M1Slice6SuccessorAuthorityLoader
         { throw new InvalidDataException("The independent review is not valid closed JSON.", exception); }
         bool supplementReview = kind == "attempt-evidence-supplement";
         bool hardBudgetReview = kind == "hard-budget-amendment";
-        string expectedReviewSchema = hardBudgetReview ? IndependentReviewSchemaV3
+        string expectedReviewSchema = hardBudgetReview || successorV6 ? IndependentReviewSchemaV3
             : supplementReview ? IndependentReviewSchema : IndependentReviewSchemaV1;
         string schemaPath = Path.Combine(repository, "contracts", "repository",
-            hardBudgetReview ? "m1-slice6-successor-independent-review.v3.schema.json"
+            hardBudgetReview || successorV6 ? "m1-slice6-successor-independent-review.v3.schema.json"
                 : supplementReview ? "m1-slice6-successor-independent-review.v2.schema.json"
                 : "m1-slice6-successor-independent-review.v1.schema.json");
         if (reviewSchema != expectedReviewSchema)
@@ -746,7 +747,8 @@ internal static class M1Slice6SuccessorAuthorityLoader
             || runtimeCandidate.GetProperty("limits").GetRawText() != limits.GetRawText())
         { throw new InvalidDataException("The independently reviewed runtime candidate differs from runtime authority."); }
         M1Slice6SuccessorIndependentReview typedReview = Review(reviewPath, "runtime-attempt",
-            Text(candidate, "candidate_id"), Text(candidate, "candidate_sha256"), false);
+            Text(candidate, "candidate_id"), Text(candidate, "candidate_sha256"), false,
+            successorV6: true);
         if (typedReview.ReviewId != Text(review, "evidence_id"))
         { throw new InvalidDataException("The runtime authority review identity is stale."); }
         return new(Text(root, "authority_id"), sha, Text(campaign, "id"), Text(campaign, "sha256"),
@@ -1253,7 +1255,7 @@ internal static class M1Slice6SuccessorCampaignRunner
             ? ValidateRecoveryEvidence(campaignPath, campaign, ledger, attempt, evidencePath)
             : ValidateAttemptEvidence(campaignPath, campaign, ledger, attempt, evidencePath);
         M1Slice6SuccessorIndependentReview review = M1Slice6SuccessorAuthorityLoader.Review(
-            reviewPath, "attempt-evidence", evidenceId, evidenceSha, false);
+            reviewPath, "attempt-evidence", evidenceId, evidenceSha, false, successorV6: true);
         ledger.AcceptAttemptEvidence(attempt, evidenceId, evidenceSha,
             review.ReviewId, review.ManifestSha256, now.AddTicks(1));
     }
@@ -1450,7 +1452,7 @@ internal static class M1Slice6SuccessorCampaignRunner
             && entry.State == M1Slice6SuccessorCampaignV3State.AttemptEvidenceHandoff);
         M1Slice6SuccessorIndependentReview review = M1Slice6SuccessorAuthorityLoader.Review(
             reviewPath, "offline-correction", failure.EvidenceId, failure.EvidenceSha256, null,
-            failure.EvidenceId, failure.EvidenceSha256);
+            failure.EvidenceId, failure.EvidenceSha256, successorV6: true);
         if (review.DefectId is null)
         { throw new InvalidOperationException("The accepted failure review has no defect identity."); }
         ledger.RecordOfflineCorrectionReview(review.ReviewId, review.ManifestSha256,
@@ -1494,7 +1496,7 @@ internal static class M1Slice6SuccessorCampaignRunner
             if (ledger.Current.EvidenceId != evidenceId || ledger.Current.EvidenceSha256 != composedSha)
             { throw new InvalidDataException("C3 resumed with different composed evidence bytes."); }
             M1Slice6SuccessorIndependentReview resumedReview = M1Slice6SuccessorAuthorityLoader.Review(
-                reviewPath, "composed-closeout", evidenceId, composedSha, false);
+                reviewPath, "composed-closeout", evidenceId, composedSha, false, successorV6: true);
             ledger.Complete(evidenceId, composedSha, resumedReview.ReviewId,
                 resumedReview.ManifestSha256, now.AddTicks(1));
             return;
