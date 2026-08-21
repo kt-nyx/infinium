@@ -1,0 +1,73 @@
+{
+  "schema_identity": "infinium.provider.effect-runtime-authority/v3",
+  "authority_id": "m1-s6-successor-v6-wp9-runtime-6/77a0dccf-1017-47b2-ace3-85ccc17946af",
+  "scope": "external-effect",
+  "kind": "transport-qualification",
+  "status": "reviewed-and-owner-accepted",
+  "subject_manifest": {
+    "id": "infinium.m1-s6.successor-stage-v6/WP9/attempt-6/ce526bfc-21cb-48ae-b8c9-7b9d9e23af84",
+    "sha256": "0ce5bcf290db67f412be993cc70e962c5e04cb244c0b70ff7b753cca7e410768"
+  },
+  "campaign": {
+    "id": "infinium.m1-s6.successor-campaign-v6/20260821-hard-budget",
+    "sha256": "41dc8f4c31461f10ec4da68ff8a0c65284b23bbdeec6489cc6d09347c6643a98"
+  },
+  "predecessor": {
+    "ledger_event_hash": "dfd716493fa20af2c2d2d3eb592429acec51b163ae3d265aa96b2157bff5f670",
+    "evidence_id": "infinium.m1-s6.successor-offline-correction-review-v3/WP9/attempt-5/075cdd79-b966-4fbc-888a-13face5e7156",
+    "evidence_sha256": "12987c9167bf658497f59d834e25083fd9223f5943fd157534a2c8a584bce172"
+  },
+  "attempt": {
+    "attempt_id": "m1-s6-successor-v6-wp9-attempt-6/c887282a-0caf-4508-a38e-60256241f612",
+    "attempt_ordinal": 6,
+    "request_id": "m1-s6-successor-v6-wp9-request-6/f266e7aa-275d-4d9e-94dd-122c92c0d63d",
+    "reservation_id": "m1-s6-successor-v6-wp9-reservation-6/ec5c2c13-b2ee-412e-8df8-e8a7f3423d78",
+    "dispatch_fence_id": "m1-s6-successor-v6-wp9-fence-6/06e614ae-a841-4ad0-928e-2b250ec09035"
+  },
+  "credential_access": {
+    "id": "infinium.m1-s6.successor-credential-access-v2/20260821-hard-budget",
+    "sha256": "5c76484a5835bb118a7143da25369b9571d96c39d8f533dcce1534f0b3ec84a6"
+  },
+  "candidate_binding": {
+    "candidate_id": "m1-s6-successor-v6-wp9-runtime-candidate-6/798adf17-3a50-4d9f-81cc-850143e498e4",
+    "candidate_path": "artifacts/m1-slice6/successor-campaign/wp9-attempt-6-2aff9eeab96e4859808bb6a5f9af7ff0/runtime-candidate.v2.json",
+    "candidate_sha256": "b24ca2a9c2f59d8b4a7483a1868ac0396b111d79f91aca5db6e38137f4f4fceb",
+    "implementation_commit": "b368f6e36fad6f3ea981336762cb9eea61c3d0fc",
+    "coordinator_sha256": "ab973666cddc7e4eeaf5db5e6bb0fe2356b5c009464f0d6262436bd14b2cf2a9",
+    "helper_sha256": "f42e13a17594635f2634119310990ba6344a6835808180211d89edf981525f08"
+  },
+  "review": {
+    "evidence_id": "infinium.m1-s6.successor-runtime-review-v3/WP9/attempt-6/ce526bfc-21cb-48ae-b8c9-7b9d9e23af84",
+    "evidence_path": "artifacts/m1-slice6/successor-campaign/wp9-attempt-6-2aff9eeab96e4859808bb6a5f9af7ff0/runtime-candidate-review.v3.json",
+    "evidence_sha256": "5ef7db6351d26f6f64c951d440c72447f2d9682aa366716b07d1c5b8997ea75d"
+  },
+  "owner_decision": {
+    "decision_id": "infinium.m1-s6.hard-budget-continuation/20260821-c2b-c3",
+    "decision_path": "docs/plans/milestones/m1/slices/s6/m1-slice6-development-campaign-amendment.v2.json",
+    "decision_sha256": "a79502da0ebea9ded5f6b10b72ad70f8b482d9de28e97e3bd09541936683a5b3"
+  },
+  "owner_amendment": {
+    "id": "infinium.m1-s6.hard-budget-continuation/20260821-c2b-c3",
+    "sha256": "a79502da0ebea9ded5f6b10b72ad70f8b482d9de28e97e3bd09541936683a5b3"
+  },
+  "not_before_utc": "2026-08-21T19:03:38.2400778Z",
+  "expires_at_utc": "2026-08-21T23:04:38.2400778Z",
+  "execution": {
+    "output_root_relative": "artifacts/m1-slice6/successor-campaign",
+    "ledger_path_relative": "artifacts/m1-slice6/successor-campaign/ledger.v3.jsonl",
+    "evidence_path_relative": "artifacts/m1-slice6/successor-campaign/wp9-attempt-6-2aff9eeab96e4859808bb6a5f9af7ff0/attempt-evidence.v3.json",
+    "product_state_root_absolute": "C:/Users/vex/.codex/worktrees/223b/infinium/artifacts/m1-slice6/successor-product-state",
+    "product_state_snapshot_origin_sha256": "e3d23f0a11d66c243fd857e66e741d957abb8d470b45d653ae53f17d74fe4945",
+    "product_state_checkpoint_sha256": "c017ee2e897ad73b5fdf6d164cdb64a169d1367d17a40f4baf18961f0344d8e1",
+    "coordinator_path_relative": "src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe",
+    "helper_path_relative": "src/Infinium.CredentialHelper/bin/Release/net10.0/Infinium.CredentialHelper.exe"
+  },
+  "limits": {
+    "helper_launches": 1,
+    "credential_native_calls": 2,
+    "provider_starts": 1,
+    "dns_resolutions": 1,
+    "billable_operations": 1,
+    "automatic_retry": false
+  }
+}
