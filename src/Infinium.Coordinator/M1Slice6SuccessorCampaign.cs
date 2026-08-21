@@ -53,6 +53,8 @@ internal static class M1Slice6SuccessorAuthorityLoader
     internal const string StageSchema = "infinium.repository.m1-slice6-successor-stage-attempt/5.0.0";
     internal const string RuntimeSchema = "infinium.provider.effect-runtime-authority/v2";
     internal const string AttemptEvidenceSchemaV1 = "infinium.m1-s6.successor-attempt-evidence/v1";
+    internal const string HistoricalNormalizedAttemptEvidenceSchema =
+        "infinium.m1-s6.successor-attempt-evidence-normalized-view/v1";
     internal const string AttemptEvidenceSchema = "infinium.m1-s6.successor-attempt-evidence/v2";
     internal const string AttemptEvidenceSupplementSchema =
         "infinium.m1-s6.successor-attempt-evidence-supplement/v1";
@@ -1350,7 +1352,7 @@ internal static class M1Slice6SuccessorCampaignRunner
             : M1Slice6SuccessorAuthorityLoader.AttemptEvidenceSchema;
         string schemaFile = schemaIdentity == expectedSchema
             ? historicalNormalizedV1
-                ? "m1-slice6-successor-attempt-evidence.v1.schema.json"
+                ? "m1-slice6-successor-attempt-evidence-normalized-view.v1.schema.json"
                 : "m1-slice6-successor-attempt-evidence.v2.schema.json"
             : throw new InvalidDataException(historicalNormalizedV1
                 ? "The normalized historical evidence is not exact v1."
@@ -1358,7 +1360,9 @@ internal static class M1Slice6SuccessorCampaignRunner
         string schemaPath = Path.Combine(repository, "contracts", "repository",
             schemaFile);
         ActiveRepositoryJsonSchemaValidator.Validate(bytes, File.ReadAllBytes(schemaPath),
-            expectedSchema);
+            historicalNormalizedV1
+                ? M1Slice6SuccessorAuthorityLoader.HistoricalNormalizedAttemptEvidenceSchema
+                : expectedSchema);
         using JsonDocument document = JsonDocument.Parse(bytes);
         JsonElement root = document.RootElement;
         string expectedStatus = string.IsNullOrEmpty(ledger.Current.FailureDisposition)

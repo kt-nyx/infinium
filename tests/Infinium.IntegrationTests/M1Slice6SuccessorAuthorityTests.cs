@@ -224,7 +224,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
                     dispatch_fence_id = attempt.DispatchFenceId,
                     response_id = "",
                     usage_entry_id = "",
-                    settlement_id = "supplement-settlement-2",
+                    settlement_id = "m1s6-successor-m1-s6-successor-wp9-attempt-2/87920f3f-dc97-4c43-ac73-d0d819f0d646-settlement",
                     replay_edge_id = "",
                     response_persisted = false,
                     semantic_validation_id = (string?)null,
@@ -250,6 +250,16 @@ public sealed class M1Slice6SuccessorAuthorityTests
             File.WriteAllText(normalizedPath, M1Slice6SuccessorCampaignRunner
                 .NormalizeKnownV1AbsentValues(originalBytes).ToJsonString(IndentedJson));
             string normalizedSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(normalizedPath)));
+            byte[] normalizedBytes = File.ReadAllBytes(normalizedPath);
+            Assert.ThrowsExactly<InvalidDataException>(() => ActiveRepositoryJsonSchemaValidator.Validate(
+                normalizedBytes,
+                File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                    "m1-slice6-successor-attempt-evidence.v1.schema.json")),
+                M1Slice6SuccessorAuthorityLoader.AttemptEvidenceSchemaV1));
+            ActiveRepositoryJsonSchemaValidator.Validate(normalizedBytes,
+                File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                    "m1-slice6-successor-attempt-evidence-normalized-view.v1.schema.json")),
+                M1Slice6SuccessorAuthorityLoader.HistoricalNormalizedAttemptEvidenceSchema);
             string supplementId = "successor-attempt-evidence-supplement-test";
             string supplementPath = Path.Combine(directory, "historical.supplement.v1.json");
             byte[] supplementBytes = JsonSerializer.SerializeToUtf8Bytes(new
@@ -327,6 +337,14 @@ public sealed class M1Slice6SuccessorAuthorityTests
             Assert.ThrowsExactly<InvalidDataException>(() =>
                 M1Slice6SuccessorCampaignRunner.ValidateAttemptEvidence(campaignPath, campaign,
                     ledger, attempt, staleAccountingPath, historicalNormalizedV1: true));
+
+            JsonObject staleSettlement = JsonNode.Parse(File.ReadAllBytes(normalizedPath))!.AsObject();
+            staleSettlement["accounting"]!["settlement_id"] = "different-settlement";
+            string staleSettlementPath = Path.Combine(directory, "historical.stale-settlement.v1.json");
+            File.WriteAllText(staleSettlementPath, staleSettlement.ToJsonString(IndentedJson));
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorCampaignRunner.ValidateAttemptEvidence(campaignPath, campaign,
+                    ledger, attempt, staleSettlementPath, historicalNormalizedV1: true));
 
             JsonObject transformed = JsonNode.Parse(File.ReadAllBytes(normalizedPath))!.AsObject();
             transformed["campaign_id"] = "stale-campaign";

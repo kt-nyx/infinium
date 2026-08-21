@@ -9450,7 +9450,11 @@ M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=572a3342ac6537d42a1041e9f8a5878c
   supplement normalizes only `response_id`, `usage_entry_id`,
   `replay_edge_id`, and `semantic_failure_code` to null, then reruns the full
   campaign/attempt/artifact/accounting validation while the ledger remains
-  bound to the original SHA.
+  bound to the original SHA. Exact artifact review additionally found that the
+  immutable slash-bearing `settlement_id` is outside the ordinary v1 safe-token
+  pattern. A separate normalized-view schema preserves and requires that exact
+  historical identity without changing the v1 schema or adding a fifth
+  normalization.
 - Claims eligible for append-only acceptance are intentionally weakened:
   possible-start and reservation accounting are trustworthy; the recorded adapter send count is unverified,
   the exact failed containment predicate is unavailable, and the credential
