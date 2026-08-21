@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.repository.m1-slice6-development-campaign-amendment/3.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_identity", "amendment_id", "status", "owner_authority_source", "supersedes", "credential_replacement", "preserved_boundaries", "authorized_at_utc"],
+  "properties": {
+    "schema_identity": { "const": "infinium.repository.m1-slice6-development-campaign-amendment/3.0.0" },
+    "amendment_id": { "$ref": "#/$defs/id" },
+    "status": { "const": "owner-authorized-credential-replacement" },
+    "owner_authority_source": { "type": "object", "additionalProperties": false, "required": ["kind", "exact_message_sha256", "summary"], "properties": { "kind": { "const": "current-owner-task-message" }, "exact_message_sha256": { "$ref": "#/$defs/sha" }, "summary": { "const": "please go ahead with credential enrollment, I'll try a fresh key" } } },
+    "supersedes": { "type": "object", "additionalProperties": false, "required": ["credential_access_v2_replacement_clause", "scope"], "properties": { "credential_access_v2_replacement_clause": { "const": "replacement-prohibited" }, "scope": { "const": "one-reviewed-same-profile-fresh-generation-replacement-ceremony" } } },
+    "credential_replacement": { "type": "object", "additionalProperties": false, "required": ["masked_helper_only", "fresh_generation_required", "successor_verified_before_predecessor_delete", "predecessor_absence_required", "recovery_on_ambiguity", "enumeration", "exposure", "provider_effect"], "properties": { "masked_helper_only": { "const": true }, "fresh_generation_required": { "const": true }, "successor_verified_before_predecessor_delete": { "const": true }, "predecessor_absence_required": { "const": true }, "recovery_on_ambiguity": { "const": "non-dispatchable-fail-closed" }, "enumeration": { "const": "prohibited" }, "exposure": { "const": "prohibited" }, "provider_effect": { "const": "prohibited" } } },
+    "preserved_boundaries": { "type": "object", "additionalProperties": false, "required": ["hard_budget_nano_usd", "historical_evidence_immutable", "private_answer_isolation", "product_evaluator_separation", "slice7"], "properties": { "hard_budget_nano_usd": { "const": 10000000000 }, "historical_evidence_immutable": { "const": true }, "private_answer_isolation": { "const": true }, "product_evaluator_separation": { "const": true }, "slice7": { "const": "not-authorized" } } },
+    "authorized_at_utc": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{7}Z$" }
+  },
+  "$defs": { "id": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9._:/-]+$" }, "sha": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+}

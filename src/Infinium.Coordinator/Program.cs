@@ -555,6 +555,31 @@ if (args is ["--m1-slice6-successor-composed-evidence-acceptance",
     }
 }
 
+if (args is ["--m1-slice6-successor-credential-replacement",
+    "--authority", string replacementAuthority,
+    "--authority-sha256", string replacementAuthoritySha,
+    "--review", string replacementReview,
+    "--review-sha256", string replacementReviewSha,
+    "--product-state-root", string replacementProductState,
+    "--ledger", string replacementLedger,
+    "--helper", string replacementHelper,
+    "--helper-sha256", string replacementHelperSha,
+    "--evidence", string replacementEvidence])
+{
+    try
+    {
+        return await M1Slice6SuccessorCredentialReplacementRunner.RunAsync(
+            replacementAuthority, replacementAuthoritySha, replacementReview, replacementReviewSha,
+            replacementProductState, replacementLedger, replacementHelper, replacementHelperSha,
+            replacementEvidence, CancellationToken.None).ConfigureAwait(false);
+    }
+    catch (Exception exception)
+    {
+        Console.Error.WriteLine($"M1 Slice 6 successor credential replacement stopped: {exception.GetType().Name}");
+        return 2;
+    }
+}
+
 if (args is ["--credential-native-qualification-v2", "--manifest", string nativeManifest,
     "--manifest-sha256", string nativeManifestSha256,
     "--output-root", string nativeOutputRoot])

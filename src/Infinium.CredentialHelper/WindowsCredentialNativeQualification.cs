@@ -902,6 +902,11 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         {
             using JsonDocument document = JsonDocument.Parse(bytes);
             JsonElement root = document.RootElement;
+            if (root.GetProperty("schema_identity").GetString()
+                == "infinium.repository.m1-slice6-successor-credential-replacement-authorization/1.0.0")
+            {
+                return FromProductionReplacementManifest(root, expectedManifestId);
+            }
             JsonElement profile = root.GetProperty("profile");
             JsonElement boundary = root.GetProperty("native_boundary");
             string manifestId = root.GetProperty("manifest_id").GetString()!;
@@ -972,6 +977,74 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         }
     }
 
+    private static WindowsCredentialManagerStore FromProductionReplacementManifest(
+        JsonElement root,
+        string expectedManifestId)
+    {
+        JsonElement profile = root.GetProperty("profile");
+        JsonElement boundary = root.GetProperty("native_boundary");
+        NativeTarget predecessor = new(
+            "successor-replacement-predecessor",
+            profile.GetProperty("access_profile_id").GetString()!,
+            profile.GetProperty("predecessor_generation_id").GetString()!,
+            profile.GetProperty("predecessor_target_fingerprint_sha256").GetString()!);
+        NativeTarget successor = new(
+            "successor-replacement-successor",
+            profile.GetProperty("access_profile_id").GetString()!,
+            profile.GetProperty("successor_generation_id").GetString()!,
+            profile.GetProperty("successor_target_fingerprint_sha256").GetString()!);
+        string predecessorFingerprint = Convert.ToHexStringLower(
+            SHA256.HashData(Encoding.UTF8.GetBytes(predecessor.RawTarget)));
+        string successorFingerprint = Convert.ToHexStringLower(
+            SHA256.HashData(Encoding.UTF8.GetBytes(successor.RawTarget)));
+        JsonElement maxima = boundary.GetProperty("maximum_calls");
+        if (root.GetProperty("authority_id").GetString() != expectedManifestId
+            || root.GetProperty("status").GetString() != "independently-reviewed-ready-for-owner-effect"
+            || predecessor.AccessProfileId != successor.AccessProfileId
+            || predecessor.GenerationId == successor.GenerationId
+            || IsRetiredProductionIdentity(expectedManifestId, successor.AccessProfileId,
+                successor.GenerationId, successor.TargetFingerprintSha256)
+            || profile.GetProperty("successor_generation_ordinal").GetInt32() != 2
+            || profile.GetProperty("target_derivation").GetString()
+                != "Infinium:<access_profile_id>:<generation_id>"
+            || profile.GetProperty("target_encoding").GetString() != "utf-8"
+            || predecessor.TargetFingerprintSha256 != predecessorFingerprint
+            || successor.TargetFingerprintSha256 != successorFingerprint
+            || maxima.GetProperty("CredWriteW").GetInt32() != 1
+            || maxima.GetProperty("CredReadW").GetInt32() != 6
+            || maxima.GetProperty("CredDeleteW").GetInt32() != 1
+            || maxima.GetProperty("CredFree").GetInt32() != 3
+            || maxima.GetProperty("total").GetInt32() != 11
+            || boundary.GetProperty("enumeration").GetString() != "prohibited"
+            || boundary.GetProperty("overwrite").GetString() != "prohibited"
+            || boundary.GetProperty("predecessor_delete").GetString()
+                != "required-after-successor-write-readback-verification"
+            || !ValidProductionReplacementWindow(root)
+            || !ValidProductionEntrySurface(root.GetProperty("m1_entry_surface")))
+        {
+            throw new InvalidDataException("The production replacement manifest does not preserve its exact finite authority.");
+        }
+        Validate(predecessor);
+        Validate(successor);
+        DateTimeOffset expires = DateTimeOffset.ParseExact(root.GetProperty("expires_at_utc").GetString()!,
+            "yyyy-MM-ddTHH:mm:ss.fffffff'Z'", System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal);
+        TimeSpan remaining = expires - DateTimeOffset.UtcNow;
+        if (remaining <= TimeSpan.Zero || remaining > TimeSpan.FromDays(1))
+        {
+            throw new InvalidDataException("The production replacement native-effect window is not live and finite.");
+        }
+        WindowsCredentialManagerStore store = new(
+            new NativeNamespaceReuseGuard(), FiniteNativeDeadline.Start(remaining))
+            { IsProductionEnrollment = true };
+        store.manifestTargets.Add(new(predecessor.AccessProfileId, predecessor.GenerationId), predecessor);
+        store.manifestTargetOrder.Add(predecessor);
+        store.manifestTargets.Add(new(successor.AccessProfileId, successor.GenerationId), successor);
+        store.manifestTargetOrder.Add(successor);
+        store.BeginScenario("m1-slice6-successor-credential-replacement");
+        return store;
+    }
+
     internal static bool IsRetiredProductionIdentity(
         string manifestId,
         string profileId,
@@ -994,6 +1067,28 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
             return false;
         }
         return prepared.Offset == TimeSpan.Zero && expires.Offset == TimeSpan.Zero && prepared < expires;
+    }
+
+    private static bool ValidProductionReplacementWindow(JsonElement root)
+    {
+        const string format = "yyyy-MM-ddTHH:mm:ss.fffffff'Z'";
+        if (!DateTimeOffset.TryParseExact(root.GetProperty("prepared_at_utc").GetString(), format,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal,
+                out DateTimeOffset prepared)
+            || !DateTimeOffset.TryParseExact(root.GetProperty("not_before_utc").GetString(), format,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal,
+                out DateTimeOffset notBefore)
+            || !DateTimeOffset.TryParseExact(root.GetProperty("expires_at_utc").GetString(), format,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal,
+                out DateTimeOffset expires))
+        {
+            return false;
+        }
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        return prepared <= notBefore && notBefore <= now && now < expires;
     }
 
     private static bool ValidProductionEntrySurface(JsonElement surface) =>

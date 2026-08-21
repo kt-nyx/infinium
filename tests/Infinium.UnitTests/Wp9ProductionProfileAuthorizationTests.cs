@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infinium.CredentialHelper;
+using Infinium.Contracts.Protobuf.Helper.V2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infinium.Tests;
@@ -213,6 +214,112 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             int uiSource = program.IndexOf("productionSecretSource = new();", validation, StringComparison.Ordinal);
             Assert.IsTrue(validation >= 0 && containment > validation && uiSource > containment,
                 "The compiled helper must reject a manifest before containment, UI, or native-store execution.");
+        }
+        finally
+        {
+            Directory.Delete(temporary, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void CompiledHelperAdmitsExactSuccessorReplacementWithoutNativeEffect()
+    {
+        string temporary = Path.Combine(Path.GetTempPath(),
+            "infinium-successor-replacement-contract-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(temporary);
+        try
+        {
+            const string authorityId = "infinium.m1-s6.successor-credential-replacement/test";
+            const string profileId = "openai-platform-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+            const string predecessor = "g-11111111111141118111111111111111";
+            const string successor = "g-22222222222242228222222222222222";
+            static string Fingerprint(string profile, string generation) => Convert.ToHexStringLower(
+                System.Security.Cryptography.SHA256.HashData(
+                    System.Text.Encoding.UTF8.GetBytes($"Infinium:{profile}:{generation}")));
+            object manifest = new
+            {
+                schema_identity = "infinium.repository.m1-slice6-successor-credential-replacement-authorization/1.0.0",
+                authority_id = authorityId,
+                status = "independently-reviewed-ready-for-owner-effect",
+                prepared_at_utc = DateTimeOffset.UtcNow.AddMinutes(-2).ToString(
+                    "yyyy-MM-ddTHH:mm:ss.fffffff'Z'", System.Globalization.CultureInfo.InvariantCulture),
+                not_before_utc = DateTimeOffset.UtcNow.AddMinutes(-1).ToString(
+                    "yyyy-MM-ddTHH:mm:ss.fffffff'Z'", System.Globalization.CultureInfo.InvariantCulture),
+                expires_at_utc = DateTimeOffset.UtcNow.AddHours(1).ToString(
+                    "yyyy-MM-ddTHH:mm:ss.fffffff'Z'", System.Globalization.CultureInfo.InvariantCulture),
+                profile = new
+                {
+                    access_profile_id = profileId,
+                    predecessor_generation_id = predecessor,
+                    predecessor_target_fingerprint_sha256 = Fingerprint(profileId, predecessor),
+                    successor_generation_id = successor,
+                    successor_generation_ordinal = 2,
+                    successor_target_fingerprint_sha256 = Fingerprint(profileId, successor),
+                    target_derivation = "Infinium:<access_profile_id>:<generation_id>",
+                    target_encoding = "utf-8",
+                },
+                native_boundary = new
+                {
+                    maximum_calls = new { CredWriteW = 1, CredReadW = 6, CredDeleteW = 1, CredFree = 3, total = 11 },
+                    enumeration = "prohibited",
+                    overwrite = "prohibited",
+                    predecessor_delete = "required-after-successor-write-readback-verification",
+                },
+                m1_entry_surface = new
+                {
+                    owner = "one-shot-credential-helper",
+                    presentation = "direct-helper-owned-native-modal",
+                    masked = true,
+                    paste_permitted = true,
+                    renderer_receives_or_retains_secret = false,
+                    readiness_deadline_seconds = 10,
+                    response_deadline_seconds = 600,
+                    input_bound = "live-character-length-1-through-2560-and-utf8-byte-length-1-through-2560-no-truncation",
+                },
+            };
+            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(manifest);
+            string path = Path.Combine(temporary, "replacement.json");
+            File.WriteAllBytes(path, bytes);
+            string sha = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(bytes));
+            using WindowsCredentialManagerStore store =
+                WindowsCredentialManagerStore.FromProductionEnrollmentManifest(path, sha, authorityId);
+            Assert.IsTrue(store.IsProductionEnrollment);
+            Assert.AreEqual(0, store.CallTrace.Count);
+            Assert.IsTrue(Wp9ProductionSecretSource.AcceptsAssignment(new HelperAssignmentV2
+            {
+                AssignmentKind = HelperAssignmentKindV2.Replace,
+                AssignmentId = authorityId + "/replace",
+            }));
+            Assert.IsFalse(Wp9ProductionSecretSource.AcceptsAssignment(new HelperAssignmentV2
+            {
+                AssignmentKind = HelperAssignmentKindV2.Replace,
+                AssignmentId = "wp9-production-profile/replace",
+            }));
+
+            JsonObject invalid = JsonNode.Parse(bytes)!.AsObject();
+            invalid["native_boundary"]!["maximum_calls"]!["CredReadW"] = 5;
+            byte[] invalidBytes = JsonSerializer.SerializeToUtf8Bytes(invalid);
+            string invalidPath = Path.Combine(temporary, "invalid.json");
+            File.WriteAllBytes(invalidPath, invalidBytes);
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                WindowsCredentialManagerStore.FromProductionEnrollmentManifest(
+                    invalidPath,
+                    Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(invalidBytes)),
+                    authorityId));
+
+            JsonObject retired = JsonNode.Parse(bytes)!.AsObject();
+            const string retiredGeneration = "g-cb0c3748ef2b4745b97a9311c89f2b65";
+            retired["profile"]!["successor_generation_id"] = retiredGeneration;
+            retired["profile"]!["successor_target_fingerprint_sha256"] =
+                Fingerprint(profileId, retiredGeneration);
+            byte[] retiredBytes = JsonSerializer.SerializeToUtf8Bytes(retired);
+            string retiredPath = Path.Combine(temporary, "retired-successor.json");
+            File.WriteAllBytes(retiredPath, retiredBytes);
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                WindowsCredentialManagerStore.FromProductionEnrollmentManifest(
+                    retiredPath,
+                    Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(retiredBytes)),
+                    authorityId));
         }
         finally
         {

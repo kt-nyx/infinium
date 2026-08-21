@@ -459,6 +459,57 @@ public sealed class CredentialHelperIntegrationTests
     }
 
     [TestMethod]
+    public void AtomicCredentialReplacementCreatesFreshGenerationAndMakesPredecessorIneligible()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Replacement-Atomic-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string product = Path.Combine(root, "product");
+        try
+        {
+            BackupArtifact backup;
+            using (AuthoritativeStore store = new(new StoragePaths(product)))
+            {
+                store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
+                _ = store.BeginCredentialEnrollment("profile-atomic", "generation-1", "Atomic", BaseTime.AddSeconds(1),
+                    "account-1", "billing-1");
+                _ = Transition(store, "atomic-enroll", "profile-atomic", "generation-1", "enroll",
+                    "pending-enrollment", "active-unverified", BaseTime.AddSeconds(2));
+                _ = Transition(store, "atomic-verify", "profile-atomic", "generation-1", "verify",
+                    "active-unverified", "active-verified", BaseTime.AddSeconds(4));
+
+                CredentialProfileProjection replacing = store.BeginCredentialReplacement(
+                    "atomic-replace", "profile-atomic", "generation-1", "generation-2", 2,
+                    BaseTime.AddSeconds(6));
+                Assert.AreEqual("generation-1", replacing.GenerationId);
+                Assert.AreEqual("replacing", replacing.LifecycleState);
+                Assert.AreEqual("unavailable", replacing.VerificationState);
+                Assert.IsTrue(store.CredentialGenerationExists("profile-atomic", "generation-2"));
+                Assert.IsFalse(store.CredentialGenerationExists("profile-atomic", "generation-3"));
+                Assert.ThrowsExactly<InvalidOperationException>(() => store.BeginCredentialReplacement(
+                    "atomic-replace-stale", "profile-atomic", "generation-1", "generation-3", 3,
+                    BaseTime.AddSeconds(8)));
+                Assert.IsFalse(store.CredentialGenerationExists("profile-atomic", "generation-3"));
+                backup = store.CreateBackup("AtomicReplacement", BaseTime.AddSeconds(10));
+            }
+            string restoredRoot = Path.Combine(root, "restored");
+            using (StoragePaths restoredPaths = new(restoredRoot))
+            {
+                AuthoritativeStore.RestoreBackup(backup, restoredPaths);
+            }
+            using (AuthoritativeStore restored = new(new StoragePaths(restoredRoot)))
+            {
+                CredentialProfileProjection restoredProjection = restored.GetCredentialProfile("profile-atomic");
+                Assert.AreEqual("recovery-required", restoredProjection.LifecycleState);
+                Assert.IsTrue(restored.CredentialGenerationExists("profile-atomic", "generation-2"));
+            }
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void CredentialIntentLifecyclePersistsReplacementRevocationRecoveryAndBackupReauthentication()
     {
         string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-Credential-" + Guid.NewGuid().ToString("N"));

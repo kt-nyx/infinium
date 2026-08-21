@@ -199,6 +199,54 @@ public sealed class CredentialHelperCoordinator
     }
 
     internal async Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>
+        ExecuteVerifiedReplacementAsync(
+            string attemptId,
+            HelperPrivateFrameV2 bootstrap,
+            HelperPrivateFrameV2 assignment,
+            DateTimeOffset now,
+            CancellationToken cancellationToken = default)
+    {
+        if (assignment.Assignment.AssignmentKind != HelperAssignmentKindV2.Replace)
+        {
+            throw new InvalidDataException("Verified replacement accepts only an exact replacement assignment.");
+        }
+        (CoordinatedHelperReceipt helper, CredentialProfileProjection replaced) =
+            await ExecuteCredentialTransitionCoreAsync(
+                attemptId, bootstrap, assignment, now, CredentialLifecycleFaultPoint.None, cancellationToken)
+                .ConfigureAwait(false);
+        if (helper.Process.Receipt.Outcome != HelperOutcomeV2.Completed)
+        {
+            return (helper, replaced);
+        }
+        if (replaced.LifecycleState != "active-unverified"
+            || replaced.GenerationId != assignment.Assignment.GenerationId?.Value)
+        {
+            throw new InvalidOperationException(
+                "A completed production replacement did not reach the exact durable verification predecessor.");
+        }
+        CredentialProfileProjection verified = store.ApplyCredentialTransition(new(
+            attemptId + "-verified-generation",
+            replaced.ProfileId,
+            replaced.GenerationId,
+            "verify",
+            "active-unverified",
+            "active-verified",
+            "active-verified",
+            replaced.CapabilitySnapshotId,
+            replaced.AccountIdentityId,
+            replaced.BillingScopeIdentityId,
+            now.AddTicks(5),
+            now.AddTicks(6)));
+        if (verified.LifecycleState != "active-verified"
+            || verified.VerificationState != "available"
+            || verified.GenerationId != replaced.GenerationId)
+        {
+            throw new InvalidOperationException("Production replacement failed to publish one exact verified generation.");
+        }
+        return (helper, verified);
+    }
+
+    internal async Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>
         ExecuteCredentialTransitionWithFaultAsync(
             string attemptId,
             HelperPrivateFrameV2 bootstrap,
@@ -242,7 +290,7 @@ public sealed class CredentialHelperCoordinator
             && bootstrapGenerationId == current.GenerationId
             && work.GenerationOrdinal == checked((ulong)(current.GenerationOrdinal + 1))
             && (work.AssignmentKind == HelperAssignmentKindV2.Replace
-                    && current.LifecycleState is "active-unverified" or "active-verified"
+                    && current.LifecycleState is "active-unverified" or "active-verified" or "replacing"
                 || work.AssignmentKind == HelperAssignmentKindV2.Recover
                     && current.LifecycleState is "secure-store-unavailable" or "recovery-required"
                 || replacementCleanupRecovery);
@@ -259,7 +307,8 @@ public sealed class CredentialHelperCoordinator
         {
             throw new InvalidDataException("The helper credential subject is not the authoritative lifecycle subject.");
         }
-        if (work.AssignmentKind == HelperAssignmentKindV2.Replace)
+        if (work.AssignmentKind == HelperAssignmentKindV2.Replace
+            && current.LifecycleState != "replacing")
         {
             current = store.ApplyCredentialTransition(new(
                 attemptId + "-replacement-ineligible",

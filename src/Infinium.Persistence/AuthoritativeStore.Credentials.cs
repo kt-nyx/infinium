@@ -174,6 +174,81 @@ public sealed partial class AuthoritativeStore
         }
     }
 
+    public bool CredentialGenerationExists(string profileId, string generationId)
+    {
+        ValidateCredentialIdentity(profileId, nameof(profileId));
+        ValidateCredentialIdentity(generationId, nameof(generationId));
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT COUNT(*) FROM provider_generations WHERE profile_id=$profile AND generation_id=$generation;";
+            command.Parameters.AddWithValue("$profile", profileId);
+            command.Parameters.AddWithValue("$generation", generationId);
+            return Convert.ToInt64(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) == 1;
+        }
+    }
+
+    public CredentialProfileProjection BeginCredentialReplacement(
+        string rootId,
+        string profileId,
+        string predecessorGenerationId,
+        string successorGenerationId,
+        long successorGenerationOrdinal,
+        DateTimeOffset now)
+    {
+        ValidateCredentialIdentity(rootId, nameof(rootId));
+        ValidateCredentialIdentity(profileId, nameof(profileId));
+        ValidateCredentialIdentity(predecessorGenerationId, nameof(predecessorGenerationId));
+        ValidateCredentialIdentity(successorGenerationId, nameof(successorGenerationId));
+        RequirePositive(successorGenerationOrdinal, nameof(successorGenerationOrdinal));
+        if (predecessorGenerationId == successorGenerationId)
+        {
+            throw new ArgumentException("Credential replacement requires a fresh generation identity.",
+                nameof(successorGenerationId));
+        }
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginImmediateTransaction();
+            CredentialProfileProjection current = GetCredentialProfileCore(profileId, transaction);
+            if (current.GenerationId != predecessorGenerationId
+                || current.GenerationOrdinal + 1 != successorGenerationOrdinal
+                || current.LifecycleState is not ("active-unverified" or "active-verified"))
+            {
+                throw new InvalidOperationException("The atomic replacement predecessor is stale or ineligible.");
+            }
+            Execute("INSERT INTO provider_generations VALUES($generation,$profile,$ordinal,$epoch,$now);", transaction,
+                ("$generation", successorGenerationId), ("$profile", profileId),
+                ("$ordinal", successorGenerationOrdinal), ("$epoch", current.RevocationEpoch), ("$now", ToText(now)));
+            InsertCredentialIntent(transaction, rootId + ":pending", profileId, predecessorGenerationId,
+                "replace", "pending", current.LifecycleState, "replacing", current.LifecycleState,
+                current.CapabilitySnapshotId, current.AccountIdentityId, current.BillingScopeIdentityId, now,
+                "unavailable", "not-required", "not-requested");
+            Execute("INSERT INTO provider_credential_intent_events VALUES($event,$root,$intent,1,NULL,$now);", transaction,
+                ("$event", rootId + ":event:1"), ("$root", rootId),
+                ("$intent", rootId + ":pending"), ("$now", ToText(now)));
+            InsertCredentialIntent(transaction, rootId + ":terminal", profileId, predecessorGenerationId,
+                "replace", "completed", current.LifecycleState, "replacing", "replacing",
+                current.CapabilitySnapshotId, current.AccountIdentityId, current.BillingScopeIdentityId, now.AddTicks(1),
+                "unavailable", "not-required", "not-requested");
+            Execute("INSERT INTO provider_credential_intent_events VALUES($event,$root,$intent,2,$prior,$now);", transaction,
+                ("$event", rootId + ":event:2"), ("$root", rootId),
+                ("$intent", rootId + ":terminal"), ("$prior", rootId + ":event:1"),
+                ("$now", ToText(now.AddTicks(1))));
+            Execute(
+                """
+                UPDATE provider_profile_projection SET lifecycle_state='replacing',verification_state='unavailable',
+                  intent_id=$intent,recovery_disposition='not-required',
+                  cleanup_disposition='not-requested',projection_version=projection_version+1,updated_at=$now
+                WHERE profile_id=$profile;
+                """,
+                transaction, ("$intent", rootId + ":terminal"), ("$now", ToText(now.AddTicks(1))),
+                ("$profile", profileId));
+            transaction.Commit();
+        }
+        return GetCredentialProfile(profileId);
+    }
+
     public CredentialProfileProjection ApplyCredentialTransition(CredentialTransitionRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
