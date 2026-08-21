@@ -12,6 +12,12 @@ namespace Infinium.Tests;
 [TestCategory("Integration")]
 public sealed class M1Slice6SuccessorAuthorityTests
 {
+    private static readonly JsonSerializerOptions IndentedJson = new() { WriteIndented = true };
+    private static readonly string[] NormalizedAbsentFields =
+        ["response_id", "usage_entry_id", "replay_edge_id", "semantic_failure_code"];
+    private static readonly string[] HistoricalEvidenceLimitations =
+        ["actual-adapter-send-count-unverified", "credential-read-free-trace-not-independently-retained",
+            "exact-containment-predicate-unavailable"];
     [TestMethod]
     public void CheckedInSuccessorAuthorityIsSchemaValidAndBindsTheReviewedSnapshot()
     {
@@ -47,7 +53,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
             string path = Path.Combine(directory, "review.json");
             byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new
             {
-                schema_identity = M1Slice6SuccessorAuthorityLoader.IndependentReviewSchema,
+                schema_identity = M1Slice6SuccessorAuthorityLoader.IndependentReviewSchemaV1,
                 review_id = "/root/review/independent-review-test",
                 review_kind = "campaign-authority",
                 verdict = "accept",
@@ -77,6 +83,269 @@ public sealed class M1Slice6SuccessorAuthorityTests
             Assert.ThrowsExactly<InvalidDataException>(() => M1Slice6SuccessorAuthorityLoader.Review(
                 Path.Combine(directory, "prose.md"), "campaign-authority", "campaign-test",
                 new string('a', 64), false));
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
+    [TestMethod]
+    public void EvidenceSupplementReviewRequiresTheVersionedV2ReviewContract()
+    {
+        string directory = Path.Combine(RepositoryRoot(),
+            ".infinium-successor-supplement-review-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string path = Path.Combine(directory, "review.json");
+            string[] limitations = ["actual-adapter-send-count-unverified",
+                "credential-read-free-trace-not-independently-retained",
+                "exact-containment-predicate-unavailable"];
+            void Write(string schema) => File.WriteAllBytes(path, JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                schema_identity = schema,
+                review_id = "/root/review/supplement-test",
+                review_kind = "attempt-evidence-supplement",
+                verdict = "accept",
+                reviewer_id = "/root/successor-authority-review",
+                independent = true,
+                provider_effect_used = false,
+                subject = new { id = "supplement-test", sha256 = new string('b', 64) },
+                correction = new
+                {
+                    required = false,
+                    defect_id = (string?)null,
+                    diagnosis_disposition = (string?)null,
+                    failure_evidence_id = (string?)null,
+                    failure_evidence_sha256 = (string?)null,
+                    candidate_commit = (string?)null,
+                },
+                findings = schema == M1Slice6SuccessorAuthorityLoader.IndependentReviewSchema
+                    ? limitations : Array.Empty<string>(),
+                reviewed_at_utc = "2026-08-21T01:00:00.0000000+00:00",
+            }));
+            Write(M1Slice6SuccessorAuthorityLoader.IndependentReviewSchemaV1);
+            Assert.ThrowsExactly<InvalidDataException>(() => M1Slice6SuccessorAuthorityLoader.Review(
+                path, "attempt-evidence-supplement", "supplement-test", new string('b', 64), false));
+            Write(M1Slice6SuccessorAuthorityLoader.IndependentReviewSchema);
+            M1Slice6SuccessorIndependentReview accepted = M1Slice6SuccessorAuthorityLoader.Review(
+                path, "attempt-evidence-supplement", "supplement-test", new string('b', 64), false);
+            Assert.AreEqual("/root/review/supplement-test", accepted.ReviewId);
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
+    [TestMethod]
+    public void HistoricalEvidenceSupplementRevalidatesFactsAndAcceptsOriginalLedgerBinding()
+    {
+        string repository = RepositoryRoot();
+        string directory = Path.Combine(repository,
+            ".infinium-successor-supplement-acceptance-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string campaignPath = Path.Combine(repository, "docs", "plans", "milestones", "m1",
+                "slices", "s6", "m1-slice6-successor-campaign-authorization.v5.json");
+            string campaignSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(campaignPath)));
+            M1Slice6SuccessorCampaignAuthority campaign =
+                M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+            DateTimeOffset start = new(2026, 8, 21, 1, 0, 0, TimeSpan.Zero);
+            string ledgerPath = Path.Combine(directory, "ledger.jsonl");
+            M1Slice6SuccessorCampaignLedger ledger = new(ledgerPath, campaign.CampaignId,
+                campaign.ManifestSha256, campaign.TerminalCampaignId, campaign.TerminalEventHash, start);
+            ledger.RecordIndependentReview("review-test", new string('1', 64), start.AddTicks(1));
+            ledger.Admit(start.AddTicks(2));
+            M1Slice6SuccessorAttemptIdentity attempt = new(M1Slice6CampaignStage.Qualification, 2,
+                "supplement-attempt-2", "supplement-stage-2", new string('2', 64),
+                "supplement-runtime-2", new string('3', 64), "supplement-request-2",
+                "supplement-reservation-2", "supplement-fence-2");
+            const long reservation = 110_080_000;
+            ledger.ReserveAttempt(attempt, reservation, start.AddTicks(3));
+            ledger.LatchPossibleStart(attempt, start.AddTicks(4));
+
+            string canonicalName = "historical.canonical-request.json";
+            string canonicalPath = Path.Combine(directory, canonicalName);
+            byte[] canonical = "{}"u8.ToArray();
+            File.WriteAllBytes(canonicalPath, canonical);
+            string canonicalSha = Convert.ToHexStringLower(SHA256.HashData(canonical));
+            byte[] originalBytes = JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                schema = M1Slice6SuccessorAuthorityLoader.AttemptEvidenceSchemaV1,
+                status = "failure-review-pending",
+                campaign_id = campaign.CampaignId,
+                campaign_manifest_sha256 = campaign.ManifestSha256,
+                stage = "Qualification",
+                work_package = "WP9",
+                attempt_id = attempt.AttemptId,
+                attempt_ordinal = attempt.AttemptOrdinal,
+                stage_manifest_id = attempt.StageManifestId,
+                stage_manifest_sha256 = attempt.StageManifestSha256,
+                runtime_authority_id = attempt.RuntimeAuthorityId,
+                runtime_authority_sha256 = attempt.RuntimeAuthoritySha256,
+                failure_stage = "helper-evidence",
+                failure_disposition = "helper-evidence-failure",
+                transport_disposition = "may-have-started-no-response",
+                http_status = (int?)null,
+                provider_error_type = (string?)null,
+                provider_error_code = (string?)null,
+                local_failure_code = "helper-containment-invalid",
+                provider_response_id = (string?)null,
+                client_request_id = attempt.RequestId,
+                provider_request_id = (string?)null,
+                response_bytes_existed = false,
+                response_bytes_observed_lower_bound = 0,
+                retained_response_bytes = (long?)null,
+                provider_send_count = 1,
+                dns_resolution_count = 1,
+                retry_permitted = false,
+                reserved_nano_usd = reservation,
+                settled_nano_usd = 0,
+                unresolved_hold_nano_usd = reservation,
+                usage = (object?)null,
+                rate_facts = Array.Empty<object>(),
+                retained_artifacts = new
+                {
+                    canonical_request_path = canonicalName,
+                    canonical_request_sha256 = canonicalSha,
+                    raw_response_path = (string?)null,
+                    raw_response_sha256 = (string?)null,
+                    response_headers_path = (string?)null,
+                    response_headers_sha256 = (string?)null,
+                    native_trace_path = (string?)null,
+                    native_trace_sha256 = (string?)null,
+                    canary_evidence_path = (string?)null,
+                    canary_evidence_sha256 = (string?)null,
+                },
+                accounting = new
+                {
+                    authorization_id = "supplement-authorization-2",
+                    operation_id = "supplement-operation-2",
+                    attempt_id = attempt.AttemptId,
+                    request_id = attempt.RequestId,
+                    reservation_id = attempt.ReservationId,
+                    dispatch_fence_id = attempt.DispatchFenceId,
+                    response_id = "",
+                    usage_entry_id = "",
+                    settlement_id = "supplement-settlement-2",
+                    replay_edge_id = "",
+                    response_persisted = false,
+                    semantic_validation_id = (string?)null,
+                    semantic_disposition = (string?)null,
+                    semantic_result_sha256 = (string?)null,
+                    semantic_provenance = new
+                    {
+                        source_acquisition_id = "", source_admission_id = "", admitted_artifact_id = "",
+                        source_application_link_id = "", evidence_application_link_id = "",
+                        candidate_id = "", hypothesis_id = "",
+                    },
+                    semantic_failure_code = "",
+                },
+            }, IndentedJson);
+            string originalPath = Path.Combine(directory, "historical.v1.json");
+            File.WriteAllBytes(originalPath, originalBytes);
+            string originalSha = Convert.ToHexStringLower(SHA256.HashData(originalBytes));
+            string evidenceId = "successor-attempt-evidence-" + attempt.AttemptId;
+            ledger.RecordAttemptEvidence(attempt, evidenceId, originalSha,
+                "helper-evidence-failure", false, reservation, 0, reservation, start.AddTicks(5));
+
+            string normalizedPath = Path.Combine(directory, "historical.normalized.v1.json");
+            File.WriteAllText(normalizedPath, M1Slice6SuccessorCampaignRunner
+                .NormalizeKnownV1AbsentValues(originalBytes).ToJsonString(IndentedJson));
+            string normalizedSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(normalizedPath)));
+            string supplementId = "successor-attempt-evidence-supplement-test";
+            string supplementPath = Path.Combine(directory, "historical.supplement.v1.json");
+            byte[] supplementBytes = JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                schema = M1Slice6SuccessorAuthorityLoader.AttemptEvidenceSupplementSchema,
+                supplement_id = supplementId,
+                campaign_id = campaign.CampaignId,
+                attempt_id = attempt.AttemptId,
+                original_evidence_id = evidenceId,
+                original_evidence_sha256 = originalSha,
+                normalized_evidence_path = Path.GetFileName(normalizedPath),
+                normalized_evidence_sha256 = normalizedSha,
+                normalized_fields = NormalizedAbsentFields,
+                accepted_claims = new
+                {
+                    possible_start_and_accounting = "accepted",
+                    actual_adapter_send_count = "unverified",
+                    exact_containment_predicate = "unavailable",
+                    credential_read_free_trace = "not-independently-retained",
+                },
+                limitations = HistoricalEvidenceLimitations,
+                provider_effect_used = false,
+                created_at_utc = "2026-08-21T01:00:00.0000000+00:00",
+            }, IndentedJson);
+            File.WriteAllBytes(supplementPath, supplementBytes);
+            string supplementSha = Convert.ToHexStringLower(SHA256.HashData(supplementBytes));
+            string reviewPath = Path.Combine(directory, "supplement-review.v2.json");
+            File.WriteAllBytes(reviewPath, JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                schema_identity = M1Slice6SuccessorAuthorityLoader.IndependentReviewSchema,
+                review_id = "/root/review/supplement-acceptance-test",
+                review_kind = "attempt-evidence-supplement",
+                verdict = "accept",
+                reviewer_id = "/root/successor-authority-review",
+                independent = true,
+                provider_effect_used = false,
+                subject = new { id = supplementId, sha256 = supplementSha },
+                correction = new
+                {
+                    required = false, defect_id = (string?)null,
+                    diagnosis_disposition = (string?)null, failure_evidence_id = (string?)null,
+                    failure_evidence_sha256 = (string?)null, candidate_commit = (string?)null,
+                },
+                findings = HistoricalEvidenceLimitations,
+                reviewed_at_utc = "2026-08-21T01:00:00.0000000+00:00",
+            }, IndentedJson));
+
+            string otherDirectory = Path.Combine(directory, "other");
+            Directory.CreateDirectory(otherDirectory);
+            string displaced = Path.Combine(otherDirectory, Path.GetFileName(normalizedPath));
+            File.Copy(normalizedPath, displaced);
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorCampaignRunner.AcceptAttemptSupplement(campaignPath, campaignSha,
+                    ledgerPath, originalPath, displaced, supplementPath, reviewPath, start.AddTicks(6)));
+
+            byte[] canonicalOriginal = File.ReadAllBytes(canonicalPath);
+            File.WriteAllText(canonicalPath, "tampered");
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorCampaignRunner.AcceptAttemptSupplement(campaignPath, campaignSha,
+                    ledgerPath, originalPath, normalizedPath, supplementPath, reviewPath, start.AddTicks(6)));
+            File.WriteAllBytes(canonicalPath, canonicalOriginal);
+
+            JsonObject staleIdentity = JsonNode.Parse(File.ReadAllBytes(normalizedPath))!.AsObject();
+            staleIdentity["campaign_id"] = "stale-campaign";
+            string staleIdentityPath = Path.Combine(directory, "historical.stale-identity.v1.json");
+            File.WriteAllText(staleIdentityPath, staleIdentity.ToJsonString(IndentedJson));
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorCampaignRunner.ValidateAttemptEvidence(campaignPath, campaign,
+                    ledger, attempt, staleIdentityPath, historicalNormalizedV1: true));
+
+            JsonObject staleAccounting = JsonNode.Parse(File.ReadAllBytes(normalizedPath))!.AsObject();
+            staleAccounting["reserved_nano_usd"] = reservation - 1;
+            string staleAccountingPath = Path.Combine(directory, "historical.stale-accounting.v1.json");
+            File.WriteAllText(staleAccountingPath, staleAccounting.ToJsonString(IndentedJson));
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorCampaignRunner.ValidateAttemptEvidence(campaignPath, campaign,
+                    ledger, attempt, staleAccountingPath, historicalNormalizedV1: true));
+
+            JsonObject transformed = JsonNode.Parse(File.ReadAllBytes(normalizedPath))!.AsObject();
+            transformed["campaign_id"] = "stale-campaign";
+            File.WriteAllText(normalizedPath, transformed.ToJsonString(IndentedJson));
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorCampaignRunner.AcceptAttemptSupplement(campaignPath, campaignSha,
+                    ledgerPath, originalPath, normalizedPath, supplementPath, reviewPath, start.AddTicks(6)));
+            File.WriteAllText(normalizedPath, M1Slice6SuccessorCampaignRunner
+                .NormalizeKnownV1AbsentValues(originalBytes).ToJsonString(IndentedJson));
+
+            M1Slice6SuccessorCampaignRunner.AcceptAttemptSupplement(campaignPath, campaignSha,
+                ledgerPath, originalPath, normalizedPath, supplementPath, reviewPath, start.AddTicks(6));
+            M1Slice6SuccessorCampaignLedger accepted = new(ledgerPath, campaign.CampaignId,
+                campaign.ManifestSha256, campaign.TerminalCampaignId, campaign.TerminalEventHash,
+                start.AddTicks(7));
+            Assert.AreEqual(M1Slice6SuccessorCampaignState.AttemptFailureAccepted, accepted.Current.State);
+            Assert.AreEqual("/root/review/supplement-acceptance-test", accepted.Current.EvidenceId);
+            Assert.AreEqual(originalSha, accepted.Entries[^2].EvidenceSha256);
+            CollectionAssert.AreEqual(originalBytes, File.ReadAllBytes(originalPath));
         }
         finally { Directory.Delete(directory, recursive: true); }
     }

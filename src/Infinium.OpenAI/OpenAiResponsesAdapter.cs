@@ -57,6 +57,8 @@ public static class OpenAiStagedResponseEnvelope
             requested_output_schema = result.RequestedOutputSchemaBytes,
             usage = result.Usage,
             dns_resolution_count = result.DnsResolutionCount,
+            network_used = result.NetworkUsed,
+            send_count = result.SendCount,
             headers = sanitizedHeaders.Select(item => new { name = item.Name, value = item.Value }).ToArray(),
         });
         byte[] envelope = new byte[checked(Magic.Length + 8 + raw.Length + headers.Length)];
@@ -117,10 +119,15 @@ public static class OpenAiStagedResponseEnvelope
     {
         int? status = HttpStatus(headerReceipt);
         IReadOnlyList<OpenAiRateHeader> rateHeaders = RateHeaders(headerReceipt);
+        using JsonDocument document = JsonDocument.Parse(headerReceipt.ToArray());
+        JsonElement root = document.RootElement;
+        bool networkUsed = root.TryGetProperty("network_used", out JsonElement networkValue)
+            && networkValue.ValueKind == JsonValueKind.True;
+        int sendCount = root.TryGetProperty("send_count", out JsonElement sendValue)
+            && sendValue.ValueKind == JsonValueKind.Number ? sendValue.GetInt32() : 0;
         if (!raw.IsEmpty)
         {
-            using JsonDocument retained = JsonDocument.Parse(headerReceipt.ToArray());
-            byte[] retainedSchema = retained.RootElement.TryGetProperty("requested_output_schema", out JsonElement schemaValue)
+            byte[] retainedSchema = root.TryGetProperty("requested_output_schema", out JsonElement schemaValue)
                 && schemaValue.ValueKind == JsonValueKind.String
                 ? schemaValue.GetBytesFromBase64()
                 : [];
@@ -130,10 +137,12 @@ public static class OpenAiStagedResponseEnvelope
             }
             return OpenAiResponsesResponseCodec.Replay(
                 raw, status.Value, clientRequestId, ProviderRequestId(headerReceipt), rateHeaders, retainedSchema) with
-            { DnsResolutionCount = retained.RootElement.GetProperty("dns_resolution_count").GetInt32() };
+            {
+                DnsResolutionCount = root.GetProperty("dns_resolution_count").GetInt32(),
+                NetworkUsed = networkUsed,
+                SendCount = sendCount,
+            };
         }
-        using JsonDocument document = JsonDocument.Parse(headerReceipt.ToArray());
-        JsonElement root = document.RootElement;
         ProviderResponseState state = root.GetProperty("state").Deserialize<ProviderResponseState>();
         ProviderUsageContract usage = root.GetProperty("usage").Deserialize<ProviderUsageContract>()
             ?? throw new InvalidDataException("The response usage receipt is absent.");
@@ -143,7 +152,7 @@ public static class OpenAiStagedResponseEnvelope
             String(root, "provider_request_id"), String(root, "returned_model"), String(root, "returned_service_tier"),
             String(root, "refusal_code"), String(root, "incomplete_reason"),
             String(root, "provider_error_code") ?? String(root, "local_failure_code"), usage,
-            rateHeaders, false, String(root, "failure_stage") ?? "provider-transport", false, 0)
+            rateHeaders, false, String(root, "failure_stage") ?? "provider-transport", networkUsed, sendCount)
         {
             ProviderErrorType = String(root, "provider_error_type"),
             ResponseBytesExisted = root.GetProperty("response_bytes_existed").GetBoolean(),

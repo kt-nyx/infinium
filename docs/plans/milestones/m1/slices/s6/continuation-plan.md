@@ -2,8 +2,7 @@
 
 Status: Accepted
 
-Disposition: Owner-authorized successor execution model; corrected authority candidate remains review-pending
-candidate pending final owner acceptance before C1 becomes eligible
+Disposition: Owner-authorized successor execution model; successor WP9 attempt 2 is an ambiguous consumed start pending append-only evidence-supplement and offline-correction acceptance before any fresh authority
 
 Owner: Project owner
 

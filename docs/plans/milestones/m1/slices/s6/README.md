@@ -188,6 +188,22 @@ only exact digest-bound campaign/stage/runtime/helper inputs and performs one
 coordinator invocation. It contains no loop, retry, fallback, credential
 inspection, authority derivation, or semantic-output selection.
 
+Successor WP9 attempt 2 crossed one possible-start latch and stopped without a
+retained response, HTTP status, provider identifier, or usage receipt. Its full
+USD 0.11008 reservation remains unresolved; together with terminal WP9 the
+conservative lineage total is USD 0.25008, leaving USD 9.74992 under the owner
+cap and three WP9 starts under the lineage ceiling. Immutable evidence
+`c642571f81670346e56e61902306df982a235d591bd0da50ccb2082e6d20690e`
+supports only the possible-start and accounting claims. Its recorded adapter
+send count is not independently verified, the exact containment predicate is
+unavailable, and the credential read/free trace was not independently
+retained. The versioned supplement repairs four empty optional accounting
+values without rewriting that evidence, records those weakened claims, and
+requires full identity/artifact/accounting validation plus independent review.
+Every fresh attempt must use v2 evidence retaining the closed helper outcome,
+adapter transport/send/DNS facts, TCP snapshot, containment predicates, and
+validated trace/canary sidecars when safe.
+
 No repository document supplies an API key. The consumed C2A authority permits
 no retry. The recovery package permits no helper/UI launch, native credential
 call, credential-store inspection, DNS/public network, provider contact,

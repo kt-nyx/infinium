@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.repository.m1-slice6-successor-independent-review/2.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_identity", "review_id", "review_kind", "verdict", "reviewer_id", "independent", "provider_effect_used", "subject", "correction", "findings", "reviewed_at_utc"],
+  "properties": {
+    "schema_identity": { "const": "infinium.repository.m1-slice6-successor-independent-review/2.0.0" },
+    "review_id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:/-]+$" },
+    "review_kind": { "enum": ["campaign-authority", "attempt-evidence", "attempt-evidence-supplement", "offline-correction", "runtime-attempt", "composed-closeout"] },
+    "verdict": { "enum": ["accept", "correct"] },
+    "reviewer_id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:/-]+$" },
+    "independent": { "const": true },
+    "provider_effect_used": { "const": false },
+    "subject": { "type": "object", "additionalProperties": false, "required": ["id", "sha256"], "properties": {
+      "id": { "type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[A-Za-z0-9._:/-]+$" },
+      "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    }},
+    "correction": { "type": "object", "additionalProperties": false, "required": ["required", "defect_id", "diagnosis_disposition", "failure_evidence_id", "failure_evidence_sha256", "candidate_commit"], "properties": {
+      "required": { "type": "boolean" },
+      "defect_id": { "type": ["string", "null"], "minLength": 1, "maxLength": 128, "pattern": "^[a-z0-9.-]+$" },
+      "diagnosis_disposition": { "type": ["string", "null"], "enum": [null, "external-transient-no-correction", "local-defect-corrected"] },
+      "failure_evidence_id": { "type": ["string", "null"], "minLength": 1, "maxLength": 200, "pattern": "^[A-Za-z0-9._:/-]+$" },
+      "failure_evidence_sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+      "candidate_commit": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$" }
+    }},
+    "findings": { "type": "array", "minItems": 0, "maxItems": 32, "items": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z0-9-]+$" } },
+    "reviewed_at_utc": { "type": "string", "format": "date-time" }
+  }
+}

@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Infinium.Application.Evaluation;
 using Infinium.Application.Provider;
@@ -42,14 +43,25 @@ internal sealed record M1Slice6SuccessorIndependentReview(
 
 internal static class M1Slice6SuccessorAuthorityLoader
 {
+    internal static readonly string[] SupplementLimitations =
+    [
+        "actual-adapter-send-count-unverified",
+        "credential-read-free-trace-not-independently-retained",
+        "exact-containment-predicate-unavailable",
+    ];
     internal const string CampaignSchema = "infinium.repository.m1-slice6-successor-campaign-authorization/5.0.0";
     internal const string StageSchema = "infinium.repository.m1-slice6-successor-stage-attempt/5.0.0";
     internal const string RuntimeSchema = "infinium.provider.effect-runtime-authority/v2";
-    internal const string AttemptEvidenceSchema = "infinium.m1-s6.successor-attempt-evidence/v1";
+    internal const string AttemptEvidenceSchemaV1 = "infinium.m1-s6.successor-attempt-evidence/v1";
+    internal const string AttemptEvidenceSchema = "infinium.m1-s6.successor-attempt-evidence/v2";
+    internal const string AttemptEvidenceSupplementSchema =
+        "infinium.m1-s6.successor-attempt-evidence-supplement/v1";
     internal const string RecoveryEvidenceSchema =
         "infinium.m1-s6.successor-authoritative-recovery/v1";
-    internal const string IndependentReviewSchema =
+    internal const string IndependentReviewSchemaV1 =
         "infinium.repository.m1-slice6-successor-independent-review/1.0.0";
+    internal const string IndependentReviewSchema =
+        "infinium.repository.m1-slice6-successor-independent-review/2.0.0";
 
     internal static M1Slice6SuccessorIndependentReview Review(
         string path, string kind, string subjectId, string subjectSha256, bool? correctionRequired,
@@ -57,11 +69,24 @@ internal static class M1Slice6SuccessorAuthorityLoader
     {
         byte[] bytes = File.ReadAllBytes(Path.GetFullPath(path));
         string repository = FindRepositoryRoot(path);
-        string schemaPath = Path.Combine(repository, "contracts", "repository",
-            "m1-slice6-successor-independent-review.v1.schema.json");
+        string reviewSchema;
         try
         {
-            ActiveRepositoryJsonSchemaValidator.Validate(bytes, File.ReadAllBytes(schemaPath), IndependentReviewSchema);
+            using JsonDocument identityDocument = JsonDocument.Parse(bytes);
+            reviewSchema = Text(identityDocument.RootElement, "schema_identity");
+        }
+        catch (JsonException exception)
+        { throw new InvalidDataException("The independent review is not valid closed JSON.", exception); }
+        bool supplementReview = kind == "attempt-evidence-supplement";
+        string expectedReviewSchema = supplementReview ? IndependentReviewSchema : IndependentReviewSchemaV1;
+        string schemaPath = Path.Combine(repository, "contracts", "repository",
+            supplementReview ? "m1-slice6-successor-independent-review.v2.schema.json"
+                : "m1-slice6-successor-independent-review.v1.schema.json");
+        if (reviewSchema != expectedReviewSchema)
+        { throw new InvalidDataException("The independent review schema version is not valid for this subject kind."); }
+        try
+        {
+            ActiveRepositoryJsonSchemaValidator.Validate(bytes, File.ReadAllBytes(schemaPath), expectedReviewSchema);
         }
         catch (JsonException exception)
         {
@@ -82,7 +107,7 @@ internal static class M1Slice6SuccessorAuthorityLoader
         string? actualFailureId = NullableText(correction, "failure_evidence_id");
         string? actualFailureSha = NullableText(correction, "failure_evidence_sha256");
         string? candidateCommit = NullableText(correction, "candidate_commit");
-        if (Text(root, "schema_identity") != IndependentReviewSchema
+        if (Text(root, "schema_identity") != expectedReviewSchema
             || Text(root, "review_kind") != kind || Text(root, "verdict") != "accept"
             || !root.GetProperty("independent").GetBoolean()
             || root.GetProperty("provider_effect_used").GetBoolean()
@@ -95,7 +120,10 @@ internal static class M1Slice6SuccessorAuthorityLoader
             || (failureEvidenceId is not null
                 && diagnosisDisposition is not ("external-transient-no-correction" or "local-defect-corrected"))
             || (diagnosisDisposition == "local-defect-corrected") != actualCorrectionRequired
-            || root.GetProperty("findings").GetArrayLength() != 0)
+            || !root.GetProperty("findings").EnumerateArray().Select(item => item.GetString()!).SequenceEqual(
+                supplementReview
+                    ? SupplementLimitations
+                    : Array.Empty<string>(), StringComparer.Ordinal))
         {
             throw new InvalidDataException("The independent review does not accept the exact closed successor subject.");
         }
@@ -705,12 +733,12 @@ internal static class M1Slice6SuccessorAuthorityLoader
         ?? throw new InvalidDataException("An authority text field is absent.");
     private static string? NullableText(JsonElement node, string name) =>
         node.GetProperty(name).ValueKind == JsonValueKind.Null ? null : Text(node, name);
-    private static DateTimeOffset Utc(string value)
+    internal static DateTimeOffset Utc(string value)
     {
         DateTimeOffset result = DateTimeOffset.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
         return result.Offset == TimeSpan.Zero ? result : throw new InvalidDataException("An authority timestamp is not UTC.");
     }
-    private static void Exact(JsonElement node, params string[] names)
+    internal static void Exact(JsonElement node, params string[] names)
     {
         if (node.ValueKind != JsonValueKind.Object
             || !node.EnumerateObject().Select(property => property.Name).SequenceEqual(names, StringComparer.Ordinal))
@@ -953,6 +981,86 @@ internal static class M1Slice6SuccessorCampaignRunner
         M1Slice6SuccessorIndependentReview review = M1Slice6SuccessorAuthorityLoader.Review(
             reviewPath, "attempt-evidence", evidenceId, evidenceSha, false);
         ledger.AcceptAttemptEvidence(attempt, evidenceId, evidenceSha,
+            review.ReviewId, review.ManifestSha256, now.AddTicks(1));
+    }
+
+    internal static void AcceptAttemptSupplement(string campaignPath, string campaignSha,
+        string ledgerPath, string originalEvidencePath, string normalizedEvidencePath,
+        string supplementPath, string reviewPath, DateTimeOffset now)
+    {
+        M1Slice6SuccessorCampaignAuthority campaign =
+            M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+        M1Slice6SuccessorCampaignLedger ledger = new(ledgerPath, campaign.CampaignId,
+            campaign.ManifestSha256, campaign.TerminalCampaignId, campaign.TerminalEventHash, now);
+        M1Slice6SuccessorAttemptIdentity attempt = ledger.Current.Attempt
+            ?? throw new InvalidOperationException("The successor ledger has no attempt evidence handoff.");
+        if (ledger.Current.State != M1Slice6SuccessorCampaignState.AttemptEvidenceHandoff)
+        { throw new InvalidOperationException("A supplement requires the exact pending attempt evidence handoff."); }
+        byte[] originalBytes = File.ReadAllBytes(Path.GetFullPath(originalEvidencePath));
+        string originalDirectory = Path.GetDirectoryName(Path.GetFullPath(originalEvidencePath))!;
+        if (!string.Equals(originalDirectory, Path.GetDirectoryName(Path.GetFullPath(normalizedEvidencePath)),
+                StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(originalDirectory, Path.GetDirectoryName(Path.GetFullPath(supplementPath)),
+                StringComparison.OrdinalIgnoreCase))
+        { throw new InvalidDataException("The immutable evidence, normalized view, and supplement must share one retained directory."); }
+        string originalSha = M1Slice6SuccessorAuthorityLoader.Hash(originalBytes);
+        if (originalSha != ledger.Current.EvidenceSha256)
+        { throw new InvalidDataException("The immutable original evidence differs from the ledger handoff."); }
+
+        byte[] normalizedBytes = File.ReadAllBytes(Path.GetFullPath(normalizedEvidencePath));
+        string normalizedSha = M1Slice6SuccessorAuthorityLoader.Hash(normalizedBytes);
+        string repository = RepositoryRoot(campaignPath);
+        _ = ValidateAttemptEvidence(campaignPath, campaign, ledger, attempt,
+            normalizedEvidencePath, historicalNormalizedV1: true);
+        string[] normalizedFields = ["response_id", "usage_entry_id", "replay_edge_id", "semantic_failure_code"];
+        JsonNode expectedNormalized = NormalizeKnownV1AbsentValues(originalBytes);
+        JsonNode actualNormalized = JsonNode.Parse(normalizedBytes)
+            ?? throw new InvalidDataException("The normalized attempt evidence is empty.");
+        if (!JsonNode.DeepEquals(expectedNormalized, actualNormalized))
+        { throw new InvalidDataException("The normalized evidence changes facts beyond the exact absent-value repair."); }
+
+        byte[] supplementBytes = File.ReadAllBytes(Path.GetFullPath(supplementPath));
+        string supplementSha = M1Slice6SuccessorAuthorityLoader.Hash(supplementBytes);
+        ActiveRepositoryJsonSchemaValidator.Validate(supplementBytes, File.ReadAllBytes(Path.Combine(repository,
+            "contracts", "repository", "m1-slice6-successor-attempt-evidence-supplement.v1.schema.json")),
+            M1Slice6SuccessorAuthorityLoader.AttemptEvidenceSupplementSchema);
+        using JsonDocument supplementDocument = JsonDocument.Parse(supplementBytes);
+        JsonElement supplement = supplementDocument.RootElement;
+        M1Slice6SuccessorAuthorityLoader.Exact(supplement, "schema", "supplement_id",
+            "campaign_id", "attempt_id", "original_evidence_id", "original_evidence_sha256",
+            "normalized_evidence_path", "normalized_evidence_sha256", "normalized_fields",
+            "accepted_claims", "limitations",
+            "provider_effect_used", "created_at_utc");
+        string supplementId = M1Slice6SuccessorAuthorityLoader.Text(supplement, "supplement_id");
+        string[] fields = supplement.GetProperty("normalized_fields").EnumerateArray()
+            .Select(item => item.GetString()!).ToArray();
+        JsonElement acceptedClaims = supplement.GetProperty("accepted_claims");
+        M1Slice6SuccessorAuthorityLoader.Exact(acceptedClaims, "possible_start_and_accounting",
+            "actual_adapter_send_count", "exact_containment_predicate", "credential_read_free_trace");
+        string[] limitations = supplement.GetProperty("limitations").EnumerateArray()
+            .Select(item => item.GetString()!).ToArray();
+        if (M1Slice6SuccessorAuthorityLoader.Text(supplement, "campaign_id") != campaign.CampaignId
+            || M1Slice6SuccessorAuthorityLoader.Text(supplement, "attempt_id") != attempt.AttemptId
+            || M1Slice6SuccessorAuthorityLoader.Text(supplement, "original_evidence_id") != ledger.Current.EvidenceId
+            || M1Slice6SuccessorAuthorityLoader.Text(supplement, "original_evidence_sha256") != originalSha
+            || M1Slice6SuccessorAuthorityLoader.Text(supplement, "normalized_evidence_path")
+                != Path.GetFileName(normalizedEvidencePath)
+            || M1Slice6SuccessorAuthorityLoader.Text(supplement, "normalized_evidence_sha256") != normalizedSha
+            || !fields.SequenceEqual(normalizedFields, StringComparer.Ordinal)
+            || M1Slice6SuccessorAuthorityLoader.Text(acceptedClaims, "possible_start_and_accounting") != "accepted"
+            || M1Slice6SuccessorAuthorityLoader.Text(acceptedClaims, "actual_adapter_send_count") != "unverified"
+            || M1Slice6SuccessorAuthorityLoader.Text(acceptedClaims, "exact_containment_predicate") != "unavailable"
+            || M1Slice6SuccessorAuthorityLoader.Text(acceptedClaims, "credential_read_free_trace")
+                != "not-independently-retained"
+            || !limitations.SequenceEqual(M1Slice6SuccessorAuthorityLoader.SupplementLimitations,
+                StringComparer.Ordinal)
+            || supplement.GetProperty("provider_effect_used").GetBoolean())
+        { throw new InvalidDataException("The supplement does not bind the exact immutable evidence repair."); }
+        _ = M1Slice6SuccessorAuthorityLoader.Utc(
+            M1Slice6SuccessorAuthorityLoader.Text(supplement, "created_at_utc"));
+        M1Slice6SuccessorIndependentReview review = M1Slice6SuccessorAuthorityLoader.Review(
+            reviewPath, "attempt-evidence-supplement", supplementId, supplementSha, false);
+        ledger.AcceptAttemptEvidence(attempt, ledger.Current.EvidenceId, originalSha,
             review.ReviewId, review.ManifestSha256, now.AddTicks(1));
     }
 
@@ -1224,25 +1332,33 @@ internal static class M1Slice6SuccessorCampaignRunner
         ledger.RecordComposedEvidence(evidenceId, composedSha, now.AddTicks(1));
     }
 
-    private static string ValidateAttemptEvidence(string campaignPath,
+    internal static string ValidateAttemptEvidence(string campaignPath,
         M1Slice6SuccessorCampaignAuthority campaign, M1Slice6SuccessorCampaignLedger ledger,
-        M1Slice6SuccessorAttemptIdentity attempt, string evidencePath)
+        M1Slice6SuccessorAttemptIdentity attempt, string evidencePath,
+        bool historicalNormalizedV1 = false)
     {
         byte[] bytes = File.ReadAllBytes(Path.GetFullPath(evidencePath));
         string sha = M1Slice6SuccessorAuthorityLoader.Hash(bytes);
         if (ledger.Current.State != M1Slice6SuccessorCampaignState.AttemptEvidenceHandoff
-            || ledger.Current.EvidenceSha256 != sha)
+            || !historicalNormalizedV1 && ledger.Current.EvidenceSha256 != sha)
         { throw new InvalidDataException("Attempt evidence bytes differ from the durable handoff."); }
-        string repository = Path.GetDirectoryName(Path.GetFullPath(campaignPath))!;
-        while (!File.Exists(Path.Combine(repository, "Infinium.sln")))
-        {
-            repository = Directory.GetParent(repository)?.FullName
-                ?? throw new InvalidDataException("Attempt evidence has no repository contract root.");
-        }
+        string repository = RepositoryRoot(campaignPath);
+        using JsonDocument identityDocument = JsonDocument.Parse(bytes);
+        string schemaIdentity = M1Slice6SuccessorAuthorityLoader.Text(identityDocument.RootElement, "schema");
+        string expectedSchema = historicalNormalizedV1
+            ? M1Slice6SuccessorAuthorityLoader.AttemptEvidenceSchemaV1
+            : M1Slice6SuccessorAuthorityLoader.AttemptEvidenceSchema;
+        string schemaFile = schemaIdentity == expectedSchema
+            ? historicalNormalizedV1
+                ? "m1-slice6-successor-attempt-evidence.v1.schema.json"
+                : "m1-slice6-successor-attempt-evidence.v2.schema.json"
+            : throw new InvalidDataException(historicalNormalizedV1
+                ? "The normalized historical evidence is not exact v1."
+                : "Fresh successor attempt evidence must use the v2 diagnostic contract.");
         string schemaPath = Path.Combine(repository, "contracts", "repository",
-            "m1-slice6-successor-attempt-evidence.v1.schema.json");
+            schemaFile);
         ActiveRepositoryJsonSchemaValidator.Validate(bytes, File.ReadAllBytes(schemaPath),
-            M1Slice6SuccessorAuthorityLoader.AttemptEvidenceSchema);
+            expectedSchema);
         using JsonDocument document = JsonDocument.Parse(bytes);
         JsonElement root = document.RootElement;
         string expectedStatus = string.IsNullOrEmpty(ledger.Current.FailureDisposition)
@@ -1274,6 +1390,11 @@ internal static class M1Slice6SuccessorCampaignRunner
         RequireArtifact(artifacts, directory, "response_headers_path", "response_headers_sha256", required: false);
         RequireArtifact(artifacts, directory, "native_trace_path", "native_trace_sha256", required: false);
         RequireArtifact(artifacts, directory, "canary_evidence_path", "canary_evidence_sha256", required: false);
+        if (!historicalNormalizedV1)
+        {
+            ValidateHelperBoundaryObservation(root, root.GetProperty("helper_boundary_observation"),
+                artifacts, ledger.Current.FailureDisposition);
+        }
         long reserved = root.GetProperty("reserved_nano_usd").GetInt64();
         long settled = root.GetProperty("settled_nano_usd").GetInt64();
         long unresolved = root.GetProperty("unresolved_hold_nano_usd").GetInt64();
@@ -1445,6 +1566,9 @@ internal static class M1Slice6SuccessorCampaignRunner
             unresolved_hold_nano_usd = unresolved,
             usage = response?.Usage,
             rate_facts = response?.RateHeaders.Select(item => new { name = item.Name, value = item.Value }).ToArray() ?? [],
+            helper_boundary_observation = result?.HelperBoundaryObservation
+                ?? failureReceipt?.HelperBoundaryObservation
+                ?? M1Slice6CampaignProductionStageBoundary.UnavailableHelperObservation(),
             retained_artifacts = new
             {
                 canonical_request_path = artifacts.CanonicalRequestPath,
@@ -1466,17 +1590,17 @@ internal static class M1Slice6SuccessorCampaignRunner
                 request_id = admission.RequestId,
                 reservation_id = admission.ReservationId,
                 dispatch_fence_id = admission.DispatchFenceId,
-                response_id = persistence?.ResponseId,
-                usage_entry_id = persistence?.UsageEntryId,
-                settlement_id = persistence?.SettlementId,
-                replay_edge_id = persistence?.ReplayEdgeId,
+                response_id = NonEmpty(persistence?.ResponseId),
+                usage_entry_id = NonEmpty(persistence?.UsageEntryId),
+                settlement_id = NonEmpty(persistence?.SettlementId),
+                replay_edge_id = NonEmpty(persistence?.ReplayEdgeId),
                 response_persisted = persistence?.ResponsePersisted ?? false,
                 semantic_validation_id = persistence?.Semantic?.ValidationId,
                 semantic_disposition = persistence?.Semantic?.Disposition,
                 semantic_result_sha256 = persistence?.Semantic?.ResultSha256,
                 semantic_provenance = persistence?.Semantic?.Provenance
                     ?? M1Slice6CampaignSemanticProvenance.Empty,
-                semantic_failure_code = persistence?.SemanticFailureCode,
+                semantic_failure_code = NonEmpty(persistence?.SemanticFailureCode),
             },
         };
         return JsonSerializer.SerializeToUtf8Bytes(evidence, EvidenceJson);
@@ -1504,11 +1628,144 @@ internal static class M1Slice6SuccessorCampaignRunner
         (string? headersName, string? headersSha) = Retain(directory, stem + ".response-headers.json",
             result?.ResponseHeadersBytes ?? failureReceipt?.SafeResponseHeadersBytes);
         (string? traceName, string? traceSha) = Retain(directory, stem + ".native-trace.json",
-            result?.NativeCallTraceBytes);
+            result?.NativeCallTraceBytes ?? failureReceipt?.ValidatedNativeCallTraceBytes);
         (string? canaryName, string? canarySha) = Retain(directory, stem + ".canaries.json",
-            result?.CanaryEvidenceBytes);
+            result?.CanaryEvidenceBytes ?? failureReceipt?.ValidatedCanaryEvidenceBytes);
         return new(requestName, authority.CanonicalRequestSha256, rawName, rawSha,
             headersName, headersSha, traceName, traceSha, canaryName, canarySha);
+    }
+
+    private static string? NonEmpty(string? value) => string.IsNullOrEmpty(value) ? null : value;
+
+    internal static JsonNode NormalizeKnownV1AbsentValues(byte[] originalBytes)
+    {
+        JsonNode originalNode = JsonNode.Parse(originalBytes)
+            ?? throw new InvalidDataException("The original attempt evidence is empty.");
+        JsonNode normalized = originalNode.DeepClone();
+        JsonObject accounting = normalized["accounting"]?.AsObject()
+            ?? throw new InvalidDataException("The original attempt accounting is absent.");
+        foreach (string field in new[] { "response_id", "usage_entry_id", "replay_edge_id", "semantic_failure_code" })
+        {
+            if (accounting[field]?.GetValue<string>() != "")
+            { throw new InvalidDataException("The supplement may normalize only the four known empty accounting fields."); }
+            accounting[field] = null;
+        }
+        return normalized;
+    }
+
+    private static string RepositoryRoot(string path)
+    {
+        string repository = Path.GetDirectoryName(Path.GetFullPath(path))!;
+        while (!File.Exists(Path.Combine(repository, "Infinium.sln")))
+        {
+            repository = Directory.GetParent(repository)?.FullName
+                ?? throw new InvalidDataException("Successor evidence has no repository contract root.");
+        }
+        return repository;
+    }
+
+    internal static void ValidateHelperBoundaryObservation(JsonElement root, JsonElement observation,
+        JsonElement artifacts, string failureDisposition)
+    {
+        string[] failed = observation.GetProperty("failed_predicate_ids").EnumerateArray()
+            .Select(item => item.GetString()!).ToArray();
+        if (failed.Distinct(StringComparer.Ordinal).Count() != failed.Length
+            || !failed.SequenceEqual(failed.Order(StringComparer.Ordinal), StringComparer.Ordinal))
+        { throw new InvalidDataException("Helper failed-predicate IDs are not deterministic and unique."); }
+        bool receiptAvailable = observation.GetProperty("receipt_available").GetBoolean();
+        int? send = observation.GetProperty("adapter_send_count").ValueKind == JsonValueKind.Null
+            ? null : observation.GetProperty("adapter_send_count").GetInt32();
+        int? dns = observation.GetProperty("adapter_dns_resolution_count").ValueKind == JsonValueKind.Null
+            ? null : observation.GetProperty("adapter_dns_resolution_count").GetInt32();
+        bool? parsed = observation.GetProperty("staged_envelope_parsed").ValueKind == JsonValueKind.Null
+            ? null : observation.GetProperty("staged_envelope_parsed").GetBoolean();
+        bool securityFailure = failureDisposition == "safety-isolation-breach";
+        bool helperFailure = failureDisposition == "helper-evidence-failure";
+        bool hasTrace = artifacts.GetProperty("native_trace_path").ValueKind == JsonValueKind.String;
+        bool hasCanary = artifacts.GetProperty("canary_evidence_path").ValueKind == JsonValueKind.String;
+        static bool? Boolean(JsonElement node, string name) => node.GetProperty(name).ValueKind switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => null,
+        };
+        static int? Integer(JsonElement node, string name) =>
+            node.GetProperty(name).ValueKind == JsonValueKind.Number
+                ? node.GetProperty(name).GetInt32() : null;
+        List<string> expected = [];
+        int? topSend = root.GetProperty("provider_send_count").ValueKind == JsonValueKind.Null
+            ? null : root.GetProperty("provider_send_count").GetInt32();
+        int? topDns = root.GetProperty("dns_resolution_count").ValueKind == JsonValueKind.Null
+            ? null : root.GetProperty("dns_resolution_count").GetInt32();
+        string topTransport = M1Slice6SuccessorAuthorityLoader.Text(root, "transport_disposition");
+        string helperOutcome = M1Slice6SuccessorAuthorityLoader.Text(observation, "helper_outcome");
+        string? adapterTransport = observation.GetProperty("adapter_transport_disposition").ValueKind
+            == JsonValueKind.Null ? null
+                : M1Slice6SuccessorAuthorityLoader.Text(observation, "adapter_transport_disposition");
+        if (receiptAvailable)
+        {
+            int? stagedBytes = Integer(observation, "staged_envelope_bytes");
+            bool? transport = Boolean(observation, "transport_may_have_started");
+            bool? retry = Boolean(observation, "retry_attempted");
+            bool? network = Boolean(observation, "adapter_network_used");
+            int? listeners = Integer(observation, "listener_snapshot_count");
+            int? tcp = Integer(observation, "tcp_non_listener_snapshot_count");
+            bool? probe = Boolean(observation, "containment_probe_executed");
+            int? total = Integer(observation, "total_contained_process_count");
+            int? survivors = Integer(observation, "process_tree_survivor_count");
+            bool? terminated = Boolean(observation, "process_tree_terminated");
+            bool? excluded = Boolean(observation, "excluded_handle_accessible");
+            int? exitCode = Integer(observation, "helper_exit_code");
+            int? active = Integer(observation, "active_contained_process_count_before_job_close");
+            int? native = Integer(observation, "native_credential_operation_count");
+            if (new int?[] { stagedBytes, listeners, tcp, total, survivors, exitCode, active, native }
+                    .Any(value => value is null)
+                || transport is null || retry is null || parsed is null || network is null
+                || probe is null || terminated is null || excluded is null)
+            { throw new InvalidDataException("An available helper receipt has null raw containment facts."); }
+            if (transport == false) { expected.Add("transport-may-have-started-false"); }
+            if (retry == true) { expected.Add("retry-attempted"); }
+            if (stagedBytes == 0) { expected.Add("staged-envelope-empty"); }
+            else if (parsed == false) { expected.Add("staged-envelope-invalid"); }
+            if (send != 1) { expected.Add("adapter-send-count-not-one"); }
+            if (network != true) { expected.Add("adapter-network-used-false"); }
+            if (dns != 1) { expected.Add("adapter-dns-count-not-one"); }
+            if (listeners != 0) { expected.Add("listener-snapshot-nonzero"); }
+            if (tcp is < 0 or > 1) { expected.Add("tcp-snapshot-count-out-of-range"); }
+            if (probe != true) { expected.Add("containment-probe-missing"); }
+            if (total < 2) { expected.Add("contained-process-count-too-small"); }
+            if (survivors != 0) { expected.Add("process-tree-survivor-present"); }
+            if (terminated != true) { expected.Add("process-tree-not-terminated"); }
+            if (excluded == true) { expected.Add("excluded-handle-accessible"); }
+            expected.Sort(StringComparer.Ordinal);
+        }
+        if (receiptAvailable && parsed != (observation.GetProperty("staged_raw_bytes").ValueKind == JsonValueKind.Number
+                && observation.GetProperty("staged_header_bytes").ValueKind == JsonValueKind.Number)
+            || receiptAvailable && !failed.SequenceEqual(expected, StringComparer.Ordinal)
+            || failureDisposition.Length == 0 && failed.Length != 0
+            || receiptAvailable && helperFailure && failed.Length == 0
+            || receiptAvailable && !helperFailure && !securityFailure && failed.Length != 0
+            || receiptAvailable && (topSend != send || topDns != dns)
+            || receiptAvailable && helperOutcome == "receipt-unavailable"
+            || receiptAvailable && helperOutcome is not ("Unspecified" or "Completed" or "FailedKnown"
+                or "TransportMayHaveStarted" or "Unavailable" or "Cancelled" or "Oversized" or "Malformed")
+            || receiptAvailable && adapterTransport is not null && topTransport != adapterTransport
+            || receiptAvailable && adapterTransport is null
+                && Boolean(observation, "transport_may_have_started") == false && topTransport != "pre-send-known"
+            || receiptAvailable && adapterTransport is null
+                && Boolean(observation, "transport_may_have_started") == true
+                && topTransport != "may-have-started-no-response"
+            || !receiptAvailable && (failed.Length != 1 || failed[0] != "helper-receipt-unavailable"
+                || helperOutcome != "receipt-unavailable" || parsed is not null || send is not null || dns is not null
+                || topSend is not null || topDns is not null)
+            || !receiptAvailable && observation.EnumerateObject().Any(property =>
+                property.Name is not ("receipt_available" or "helper_outcome" or "failed_predicate_ids")
+                && property.Value.ValueKind != JsonValueKind.Null)
+            || !receiptAvailable && (hasTrace || hasCanary)
+            || (send is < 0 or > 1) || (dns is < 0 or > 1)
+            || (securityFailure && (hasTrace || hasCanary))
+            || (!securityFailure && receiptAvailable && (!hasTrace || !hasCanary)))
+        { throw new InvalidDataException("Helper-boundary observation or validated security sidecars are inconsistent."); }
     }
 
     private static void PreflightEvidence(string evidencePath,

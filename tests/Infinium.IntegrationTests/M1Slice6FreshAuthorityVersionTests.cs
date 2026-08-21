@@ -75,7 +75,7 @@ public sealed class M1Slice6FreshAuthorityVersionTests
             M1Slice6AuthorityContracts.StageEvidenceSchema(M1Slice6AuthorityContractVersion.RetiredC2V3));
         Assert.AreEqual("infinium.m1-s6.campaign-stage-evidence/v4",
             M1Slice6AuthorityContracts.StageEvidenceSchema(M1Slice6AuthorityContractVersion.FreshC2V4));
-        Assert.AreEqual("infinium.m1-s6.successor-attempt-evidence/v1",
+        Assert.AreEqual("infinium.m1-s6.successor-attempt-evidence/v2",
             M1Slice6AuthorityContracts.StageEvidenceSchema(M1Slice6AuthorityContractVersion.SuccessorV5));
         Assert.AreEqual("infinium.m1-s6.campaign-composed-evidence/v3",
             M1Slice6AuthorityContracts.ComposedEvidenceSchema(M1Slice6AuthorityContractVersion.RetiredC2V3));

@@ -9417,3 +9417,56 @@ M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=572a3342ac6537d42a1041e9f8a5878c
   `m1-slice6-successor-campaign-independent-review.v1.json`. No stage
   manifest, runtime authority, credential read, DNS lookup, or provider call
   is materialized at this checkpoint.
+
+## 2026-08-21 successor WP9 attempt 2 and diagnostic correction
+
+- The immutable terminal v4 campaign remained untouched at final event
+  `282c97151dbdcd354288b67f96c4b01d7f7ef43b1bbfb9f247cbd9b510506de9`.
+- Pre-invocation independent review rejected runtime candidate
+  `50b91348639ab1211214548df1917e996db5edf00f77f1e5680db3fcbdb95d21`
+  because its output root did not contain the ledger. Corrected candidate
+  `f9c0a7b95088be64cf65a088033788f7c3eb55d21c9cb16a2866bf3957ed66f4`
+  fixed only that containment binding and used no runtime, credential, DNS, or
+  provider effect.
+- Three successor wrapper pre-admission packaging failures used zero reservation,
+  credential, DNS, or provider effects: transient SQLite SHM comparison
+  (`151252b3d83455f85c0cfe419d55fc0e5384b05532e75dfeb2d01d042d220dd1`),
+  a noncanonical review timestamp
+  (`4ee44463a3411c0f354232990fa32f0453d72fc1035bcbf70ec0d3b869d5e3c0`),
+  and unprotected successor storage ACLs
+  (`8931e5913b204a45eb9fa31ea01134f4a370c459f746881c6012044ae957b17b`).
+  Each was diagnosed and corrected offline; the same still-unconsumed attempt
+  identity was retained until durable admission.
+- WP9 successor attempt 2 then reserved 110,080,000 nano-USD at ledger seq 4,
+  crossed exactly one possible-start latch at seq 5, and stopped at seq 6 with
+  event hash
+  `ae08176622c9bdeda8cf7a9e4659415b9f9c3939826d9729b20f2c09be9dfc37`.
+  The full reservation remains unresolved, no automatic retry occurred, and no
+  provider response bytes, HTTP status, provider identifier, or usage receipt
+  was retained. Immutable evidence SHA-256 is
+  `c642571f81670346e56e61902306df982a235d591bd0da50ccb2082e6d20690e`.
+- The v1 evidence used four empty strings where its closed schema requires
+  absent optional values. The bytes were preserved. A versioned append-only
+  supplement normalizes only `response_id`, `usage_entry_id`,
+  `replay_edge_id`, and `semantic_failure_code` to null, then reruns the full
+  campaign/attempt/artifact/accounting validation while the ledger remains
+  bound to the original SHA.
+- Claims eligible for append-only acceptance are intentionally weakened:
+  possible-start and reservation accounting are trustworthy; the recorded adapter send count is unverified,
+  the exact failed containment predicate is unavailable, and the credential
+  read/free trace was not independently retained. Terminal plus successor
+  conservative reservation/spend is USD 0.25008, leaving USD 9.74992 and three
+  WP9 possible starts.
+- The corrected v2 evidence contract records the closed helper outcome,
+  process transport claim, staged adapter transport/send/DNS facts, terminal
+  TCP snapshot, every containment input, deterministic failed-predicate IDs,
+  and already-validated trace/canary sidecars. Malformed envelopes converge to
+  typed evidence without discarding those facts. Historical v1 evidence and
+  review schemas remain separate and unchanged.
+- Bounded independent code and authority reviews accepted the correction.
+  Authority review `/root/v2-authority-review/final-20260821` bound reviewed
+  snapshot SHA-256
+  `083e1cf58a349307fdb3b2050abddc74e395ac60d93ccfdd765e55ca896ca6c4`
+  over baseline `c71d45733781c07f70febc726bdc94822b975aa5`. No provider,
+  credential, private-fixture, archive, or destructive effect was used during
+  correction or review.

@@ -324,6 +324,31 @@ if (args is ["--m1-slice6-successor-attempt-evidence-acceptance",
     }
 }
 
+if (args is ["--m1-slice6-successor-attempt-evidence-supplement-acceptance",
+    "--campaign-manifest", string successorSupplementCampaign,
+    "--campaign-manifest-sha256", string successorSupplementCampaignSha,
+    "--ledger", string successorSupplementLedger,
+    "--original-evidence", string successorSupplementOriginal,
+    "--normalized-evidence", string successorSupplementNormalized,
+    "--supplement", string successorSupplement,
+    "--review", string successorSupplementReview])
+{
+    try
+    {
+        M1Slice6SuccessorCampaignRunner.AcceptAttemptSupplement(successorSupplementCampaign,
+            successorSupplementCampaignSha, successorSupplementLedger, successorSupplementOriginal,
+            successorSupplementNormalized, successorSupplement, successorSupplementReview,
+            DateTimeOffset.UtcNow);
+        Console.WriteLine("M1 Slice 6 immutable attempt evidence supplement independently accepted with zero provider effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"M1 Slice 6 attempt evidence supplement acceptance stopped: {exception.GetType().Name}");
+        return 86;
+    }
+}
+
 if (args is ["--m1-slice6-successor-authoritative-recovery",
     "--campaign-manifest", string successorRecoveryCampaign,
     "--campaign-manifest-sha256", string successorRecoveryCampaignSha,

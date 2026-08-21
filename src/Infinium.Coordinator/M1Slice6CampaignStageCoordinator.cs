@@ -38,7 +38,20 @@ public sealed record M1Slice6CampaignStageBoundaryResult(
     OpenAiResponsesResult Response, M1Slice6CampaignCredentialReadReceipt CredentialRead,
     string CanonicalRequestSha256, string SafetyIdentifierProjection, int DnsResolutionCount,
     byte[] ResponseHeadersBytes, byte[] NativeCallTraceBytes, byte[] CanaryEvidenceBytes,
-    DateTimeOffset CompletedAtUtc);
+    DateTimeOffset CompletedAtUtc,
+    M1Slice6HelperBoundaryObservation? HelperBoundaryObservation = null);
+
+public sealed record M1Slice6HelperBoundaryObservation(
+    bool ReceiptAvailable, int? HelperExitCode, string HelperOutcome,
+    bool? TransportMayHaveStarted, int? StagedEnvelopeBytes, bool? StagedEnvelopeParsed, int? StagedRawBytes,
+    int? StagedHeaderBytes, string? AdapterTransportDisposition,
+    bool? AdapterNetworkUsed, int? AdapterSendCount,
+    int? AdapterDnsResolutionCount, bool? RetryAttempted, int? ListenerSnapshotCount,
+    int? TcpNonListenerSnapshotCount, bool? ContainmentProbeExecuted,
+    int? ActiveContainedProcessCountBeforeJobClose, int? TotalContainedProcessCount,
+    int? ProcessTreeSurvivorCount, bool? ProcessTreeTerminated,
+    bool? ExcludedHandleAccessible, int? NativeCredentialOperationCount,
+    IReadOnlyList<string> FailedPredicateIds);
 
 public sealed record M1Slice6CampaignBoundaryFailureReceipt(
     string FailureStage, string TransportDisposition, string LocalFailureCode,
@@ -46,7 +59,10 @@ public sealed record M1Slice6CampaignBoundaryFailureReceipt(
     string? ProviderResponseId, string ClientRequestId, string? ProviderRequestId,
     bool? ResponseBytesExisted, long? ResponseBytesObservedLowerBound,
     int? ProviderSendCount, int? DnsResolutionCount,
-    byte[]? SafeRawResponseBytes, byte[]? SafeResponseHeadersBytes);
+    byte[]? SafeRawResponseBytes, byte[]? SafeResponseHeadersBytes,
+    M1Slice6HelperBoundaryObservation? HelperBoundaryObservation = null,
+    byte[]? ValidatedNativeCallTraceBytes = null,
+    byte[]? ValidatedCanaryEvidenceBytes = null);
 
 public sealed class M1Slice6CampaignBoundaryEvidenceException(
     string message, M1Slice6CampaignBoundaryFailureReceipt receipt, bool terminalSafety,
@@ -358,66 +374,134 @@ public sealed class M1Slice6CampaignProductionStageBoundary : IM1Slice6CampaignS
         }
         catch (M1Slice6CampaignSafetyIsolationException exception)
         {
+            M1Slice6HelperBoundaryObservation safetyObservation = ObserveHelper(process, requestId);
             throw new M1Slice6CampaignBoundaryEvidenceException(
                 "Campaign helper safety evidence failed closed.",
-                FailureReceipt(process, requestId, "security-isolation-evidence", "helper-evidence", false),
+                FailureReceipt(process, requestId, "security-isolation-evidence", "helper-evidence", false,
+                    safetyObservation, validatedSecurityEvidence: false),
                 terminalSafety: true, exception);
         }
-        if (!process.Receipt.TransportMayHaveStarted || process.RetryAttempted
-            || process.NetworkOperationCount != 1 || process.ListenerCount != 0
-            || !process.ContainmentProbeExecuted || process.TotalContainedProcessCount < 2
-            || process.ProcessTreeSurvivorCount != 0 || !process.ProcessTreeTerminated
-            || process.ExcludedHandleAccessible || process.StagedResponseBytes.Length == 0)
+        bool stagedParsed = TryReplayStagedResponse(process.StagedResponseBytes, requestId,
+            out byte[] stagedRaw, out byte[] stagedHeaders, out OpenAiResponsesResult? stagedResponse);
+        M1Slice6HelperBoundaryObservation observation = ObserveHelper(
+            process, stagedParsed, stagedRaw, stagedHeaders, stagedResponse);
+        if (observation.FailedPredicateIds.Count != 0)
         {
             throw new M1Slice6CampaignBoundaryEvidenceException(
                 "Campaign provider helper returned ambiguous containment or transport evidence.",
-                FailureReceipt(process, requestId, "helper-containment-invalid", "helper-evidence", true),
+                FailureReceipt(process, requestId, "helper-containment-invalid", "helper-evidence", true,
+                    observation, validatedSecurityEvidence: true),
                 terminalSafety: false);
         }
-        if (!OpenAiStagedResponseEnvelope.TryRead(process.StagedResponseBytes, out byte[] raw, out byte[] headers))
+        if (!stagedParsed || stagedResponse is null)
         {
             throw new M1Slice6CampaignBoundaryEvidenceException(
                 "Campaign provider helper omitted its canonical staged response envelope.",
-                FailureReceipt(process, requestId, "staged-envelope-invalid", "helper-evidence", false),
+                FailureReceipt(process, requestId, "staged-envelope-invalid", "helper-evidence", false,
+                    observation, validatedSecurityEvidence: true),
                 terminalSafety: false);
         }
-        OpenAiResponsesResult result = OpenAiStagedResponseEnvelope.Replay(raw, headers, requestId) with
+        OpenAiResponsesResult result = stagedResponse with
         {
             TransportMayHaveStarted = process.Receipt.TransportMayHaveStarted,
-            NetworkUsed = process.NetworkOperationCount == 1,
-            SendCount = 1,
         };
         M1Slice6CampaignCredentialReadReceipt observedRead = new(profileId, generationId,
             targetFingerprint, 1, 1, 0, 0, "success", "released");
         return new(result, observedRead, authority.CanonicalRequestSha256,
-            authority.SafetyIdentifierProjection, result.DnsResolutionCount, headers,
-            process.NativeCallTraceBytes!, process.NativeCanaryEvidenceBytes!, DateTimeOffset.UtcNow);
+            authority.SafetyIdentifierProjection, result.DnsResolutionCount, stagedHeaders,
+            process.NativeCallTraceBytes!, process.NativeCanaryEvidenceBytes!, DateTimeOffset.UtcNow,
+            observation);
     }
 
-    private static M1Slice6CampaignBoundaryFailureReceipt FailureReceipt(
-        HelperProcessReceipt process, string requestId, string localFailureCode, string failureStage,
-        bool retainValidatedResponse)
+    internal static M1Slice6HelperBoundaryObservation ObserveHelper(HelperProcessReceipt process,
+        bool stagedParsed, byte[] raw, byte[] headers, OpenAiResponsesResult? response)
     {
-        OpenAiResponsesResult? response = null;
-        if (OpenAiStagedResponseEnvelope.TryRead(process.StagedResponseBytes,
-                out byte[] raw, out byte[] headers))
+        List<string> failed = [];
+        if (!process.Receipt.TransportMayHaveStarted) { failed.Add("transport-may-have-started-false"); }
+        if (process.RetryAttempted) { failed.Add("retry-attempted"); }
+        if (process.StagedResponseBytes.Length == 0) { failed.Add("staged-envelope-empty"); }
+        else if (!stagedParsed) { failed.Add("staged-envelope-invalid"); }
+        if (response?.SendCount != 1) { failed.Add("adapter-send-count-not-one"); }
+        if (response?.NetworkUsed != true) { failed.Add("adapter-network-used-false"); }
+        if (response?.DnsResolutionCount != 1) { failed.Add("adapter-dns-count-not-one"); }
+        if (process.ListenerCount != 0) { failed.Add("listener-snapshot-nonzero"); }
+        // A completed one-send transport may have no live socket row. One terminal non-listener
+        // row is also permitted; multiple rows are not consistent with the one-use adapter.
+        if (process.NetworkOperationCount is < 0 or > 1) { failed.Add("tcp-snapshot-count-out-of-range"); }
+        if (!process.ContainmentProbeExecuted) { failed.Add("containment-probe-missing"); }
+        if (process.TotalContainedProcessCount < 2) { failed.Add("contained-process-count-too-small"); }
+        if (process.ProcessTreeSurvivorCount != 0) { failed.Add("process-tree-survivor-present"); }
+        if (!process.ProcessTreeTerminated) { failed.Add("process-tree-not-terminated"); }
+        if (process.ExcludedHandleAccessible) { failed.Add("excluded-handle-accessible"); }
+        failed.Sort(StringComparer.Ordinal);
+        return new(true, process.ExitCode, process.Receipt.Outcome.ToString(),
+            process.Receipt.TransportMayHaveStarted, process.StagedResponseBytes.Length,
+            stagedParsed, stagedParsed ? raw.Length : null, stagedParsed ? headers.Length : null,
+            response?.TransportDisposition, response?.NetworkUsed, response?.SendCount, response?.DnsResolutionCount,
+            process.RetryAttempted, process.ListenerCount, process.NetworkOperationCount,
+            process.ContainmentProbeExecuted, process.ActiveProcessCountBeforeJobClose,
+            process.TotalContainedProcessCount, process.ProcessTreeSurvivorCount,
+            process.ProcessTreeTerminated, process.ExcludedHandleAccessible,
+            process.NativeCredentialOperationCount, failed);
+    }
+
+    internal static M1Slice6HelperBoundaryObservation ObserveHelper(
+        HelperProcessReceipt process, string requestId)
+    {
+        bool parsed = TryReplayStagedResponse(process.StagedResponseBytes, requestId,
+            out byte[] raw, out byte[] headers, out OpenAiResponsesResult? response);
+        return ObserveHelper(process, parsed, raw, headers, response);
+    }
+
+    internal static bool TryReplayStagedResponse(byte[] stagedBytes, string requestId,
+        out byte[] raw, out byte[] headers, out OpenAiResponsesResult? response)
+    {
+        raw = [];
+        headers = [];
+        response = null;
+        try
         {
-            try { response = OpenAiStagedResponseEnvelope.Replay(raw, headers, requestId); }
-            catch (InvalidDataException) { }
+            if (!OpenAiStagedResponseEnvelope.TryRead(stagedBytes, out raw, out headers))
+            { return false; }
+            response = OpenAiStagedResponseEnvelope.Replay(raw, headers, requestId);
+            return true;
         }
+        catch (Exception exception) when (exception is InvalidDataException or JsonException
+            or FormatException or KeyNotFoundException or InvalidOperationException)
+        {
+            raw = [];
+            headers = [];
+            response = null;
+            return false;
+        }
+    }
+
+    internal static M1Slice6HelperBoundaryObservation UnavailableHelperObservation() => new(
+        false, null, "receipt-unavailable", null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        ["helper-receipt-unavailable"]);
+
+    internal static M1Slice6CampaignBoundaryFailureReceipt FailureReceipt(
+        HelperProcessReceipt process, string requestId, string localFailureCode, string failureStage,
+        bool retainValidatedResponse, M1Slice6HelperBoundaryObservation? observation = null,
+        bool validatedSecurityEvidence = false)
+    {
+        bool parsed = TryReplayStagedResponse(process.StagedResponseBytes, requestId,
+            out byte[] parsedRaw, out byte[] parsedHeaders, out OpenAiResponsesResult? response);
         byte[]? safeRaw = null;
         byte[]? safeHeaders = null;
-        if (retainValidatedResponse && response is not null
-            && OpenAiStagedResponseEnvelope.TryRead(process.StagedResponseBytes,
-                out byte[] retainedRaw, out byte[] retainedHeaders))
-        { safeRaw = retainedRaw; safeHeaders = retainedHeaders; }
-        return new(failureStage, response?.TransportDisposition ?? "helper-evidence-failure",
+        if (retainValidatedResponse && parsed && response is not null)
+        { safeRaw = parsedRaw; safeHeaders = parsedHeaders; }
+        return new(failureStage, response?.TransportDisposition
+                ?? (process.Receipt.TransportMayHaveStarted ? "may-have-started-no-response" : "pre-send-known"),
             localFailureCode, response?.HttpStatus, response?.ProviderErrorType,
             response?.RawResponseBytes is null ? null : response.ErrorCode,
             response?.ProviderResponseId, requestId,
             response?.ProviderRequestId, response?.ResponseBytesExisted,
-            response?.ResponseBytesObservedLowerBound, process.Receipt.TransportMayHaveStarted ? 1 : null,
-            response?.DnsResolutionCount, safeRaw, safeHeaders);
+            response?.ResponseBytesObservedLowerBound, response?.SendCount,
+            response?.DnsResolutionCount, safeRaw, safeHeaders, observation,
+            validatedSecurityEvidence ? process.NativeCallTraceBytes : null,
+            validatedSecurityEvidence ? process.NativeCanaryEvidenceBytes : null);
     }
 
     private static void ValidateCredentialTrace(HelperProcessReceipt process, string fingerprint)

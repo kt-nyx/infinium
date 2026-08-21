@@ -25,8 +25,8 @@ public sealed class ProviderTransportFaultTests
         OpenAiResponsesResult replay = OpenAiStagedResponseEnvelope.Replay(raw, headers, "client-size");
         Assert.AreEqual(ProviderResponseState.Oversized, replay.State);
         Assert.AreEqual(UsageReceiptState.Partial, replay.Usage.ReceiptState);
-        Assert.AreEqual(0, replay.SendCount);
-        Assert.IsFalse(replay.NetworkUsed);
+        Assert.AreEqual(1, replay.SendCount);
+        Assert.IsTrue(replay.NetworkUsed);
     }
 
     [TestMethod]
