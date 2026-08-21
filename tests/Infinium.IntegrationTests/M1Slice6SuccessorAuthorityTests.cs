@@ -76,12 +76,20 @@ public sealed class M1Slice6SuccessorAuthorityTests
                     ledgerPath, amendment.ExpiresAtUtc.AddTicks(1), requireExisting: true);
             Assert.AreEqual(M1Slice6SuccessorCampaignV3State.HardBudgetAmended,
                 expiredReopen.Current.State);
-            string coordinator = typeof(M1Slice6SuccessorCampaignRunner).Assembly.Location;
+            string coordinatorAssembly = typeof(M1Slice6SuccessorCampaignRunner).Assembly.Location;
+            string coordinator = Path.Combine(repository, "src", "Infinium.Coordinator", "bin",
+                "Debug", "net10.0", "Infinium.Coordinator.exe");
             string implementationCommit = typeof(M1Slice6SuccessorCampaignRunner).Assembly
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion
                 .Split('+')[^1];
             string helper = Path.Combine(repository, "src", "Infinium.CredentialHelper", "bin",
-                "Debug", "net10.0", "Infinium.CredentialHelper.dll");
+                "Debug", "net10.0", "Infinium.CredentialHelper.exe");
+            string wrongBinary = Path.Combine(directory, "wrong-binary");
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorAttemptMaterializer.Materialize(campaignPath, campaignSha,
+                    amendmentPath, amendmentSha, ledgerPath, "Qualification", 3, wrongBinary,
+                    implementationCommit, coordinatorAssembly, helper, now.AddTicks(1)));
+            Assert.IsFalse(Directory.Exists(wrongBinary));
             string rejected = Path.Combine(directory, "wrong-ordinal");
             Assert.ThrowsExactly<InvalidOperationException>(() =>
                 M1Slice6SuccessorAttemptMaterializer.Materialize(campaignPath, campaignSha,

@@ -24,6 +24,17 @@ internal static class M1Slice6SuccessorAttemptMaterializer
         string coordinatorPath, string helperPath, DateTimeOffset now)
     {
         string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(campaignPath);
+        coordinatorPath = Path.GetFullPath(coordinatorPath);
+        helperPath = Path.GetFullPath(helperPath);
+        if (!File.Exists(coordinatorPath) || !File.Exists(helperPath)
+            || !string.Equals(Path.GetFileName(coordinatorPath), "Infinium.Coordinator.exe",
+                StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(Path.GetFileName(helperPath), "Infinium.CredentialHelper.exe",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidDataException(
+                "Attempt materialization requires the exact directly executable coordinator and helper apphosts.");
+        }
         M1Slice6SuccessorCampaignAuthority campaign =
             M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
         M1Slice6HardBudgetAuthority amendment =
