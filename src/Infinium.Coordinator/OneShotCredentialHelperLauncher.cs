@@ -112,6 +112,7 @@ public sealed class OneShotCredentialHelperLauncher
             ? TimeSpan.FromSeconds(30)
             : CredentialNativeQualificationSupervisor.PrimaryPhaseTimeout;
     internal int ExpectedInheritedPrivateHandleCount => nativeQualificationManifestPath is null ? 3 : 2;
+    internal string ReviewedBinarySha256 => expectedBinarySha256;
 
     internal async Task<Wp9NonLiveProbeResult> ExecuteWp9NonLiveProbeAsync(
         string mode,

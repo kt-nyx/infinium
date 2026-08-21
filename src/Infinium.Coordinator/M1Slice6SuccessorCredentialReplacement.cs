@@ -24,7 +24,7 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
     internal const string FailureEvidenceSchema =
         "infinium.m1-s6.successor-credential-replacement-failure-evidence/v1";
     internal const string BoundarySchema =
-        "infinium.m1-s6.successor-credential-replacement-helper-boundary/v1";
+        "infinium.m1-s6.successor-credential-replacement-helper-boundary/v2";
     internal const string RecoveryAmendmentSchema =
         "infinium.repository.m1-slice6-development-campaign-amendment/4.0.0";
     internal const string CleanupRecoveryAmendmentSchema =
@@ -514,25 +514,46 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                 final_lifecycle_state = projection.LifecycleState,
                 final_verification_state = projection.VerificationState,
             };
-        object evidence = new
-        {
-            schema_identity = evidenceSchema,
-            evidence_id = evidenceId,
-            status,
-            authority = new { id = authorityId, sha256 = authoritySha256 },
-            independent_review = new
+        NativeHelperFailureEnvelope? validatedFailure = helper.ValidatedNativeFailureEnvelopeBytes is null
+            ? null
+            : NativeHelperFailureProtocol.DecodeCanonical(helper.ValidatedNativeFailureEnvelopeBytes);
+        object effectEvidence = mode == ReplacementMode.DeletePendingRecovery
+            ? new
             {
-                id = review.GetProperty("review_id").GetString(),
-                sha256 = reviewSha256,
-            },
-            profile = profileEvidence,
-            product_state = new
-            {
-                root_projection_sha256 = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(productStateRoot))),
-                checkpoint_before_sha256 = beforeCheckpoint,
-                checkpoint_after_sha256 = M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(productStateRoot),
-            },
-            effect = new
+                helper_launch_count = 1,
+                native_credential_operation_count = helper.Process.NativeCredentialOperationCount,
+                native_call_trace = trace,
+                entry_evidence = entry,
+                canaries,
+                staged_response_byte_length = helper.Process.StagedResponseBytes.Length,
+                network_operation_count = helper.Process.NetworkOperationCount,
+                listener_count = helper.Process.ListenerCount,
+                provider_operation_count = 0,
+                billable_operation_count = 0,
+                retry_attempted = helper.Process.RetryAttempted,
+                helper_outcome = helper.Process.Receipt.Outcome.ToString(),
+                terminal_origin = validatedFailure is null
+                    ? "helper-terminal-receipt"
+                    : "validated-native-failure-envelope",
+                validated_failure_envelope_sha256 = helper.ValidatedNativeFailureEnvelopeBytes is null
+                    ? null
+                    : Convert.ToHexStringLower(SHA256.HashData(
+                        helper.ValidatedNativeFailureEnvelopeBytes)),
+                failure_stage = validatedFailure?.Stage,
+                failure_reason = validatedFailure?.Reason,
+                namespace_reuse_blocked = helper.Process.NativeNamespaceReuseBlocked,
+                namespace_reuse_block_reason = helper.Process.NativeNamespaceReuseBlockReason,
+                containment = new
+                {
+                    probe_executed = helper.Process.ContainmentProbeExecuted,
+                    process_tree_terminated = helper.Process.ProcessTreeTerminated,
+                    process_tree_survivor_count = helper.Process.ProcessTreeSurvivorCount,
+                    active_process_count_before_job_close = helper.Process.ActiveProcessCountBeforeJobClose,
+                    total_contained_process_count = helper.Process.TotalContainedProcessCount,
+                    excluded_handle_accessible = helper.Process.ExcludedHandleAccessible,
+                },
+            }
+            : new
             {
                 helper_launch_count = 1,
                 native_credential_operation_count = helper.Process.NativeCredentialOperationCount,
@@ -557,7 +578,26 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                     total_contained_process_count = helper.Process.TotalContainedProcessCount,
                     excluded_handle_accessible = helper.Process.ExcludedHandleAccessible,
                 },
+            };
+        object evidence = new
+        {
+            schema_identity = evidenceSchema,
+            evidence_id = evidenceId,
+            status,
+            authority = new { id = authorityId, sha256 = authoritySha256 },
+            independent_review = new
+            {
+                id = review.GetProperty("review_id").GetString(),
+                sha256 = reviewSha256,
             },
+            profile = profileEvidence,
+            product_state = new
+            {
+                root_projection_sha256 = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(productStateRoot))),
+                checkpoint_before_sha256 = beforeCheckpoint,
+                checkpoint_after_sha256 = M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(productStateRoot),
+            },
+            effect = effectEvidence,
             completed_at_utc = mode == ReplacementMode.DeletePendingRecovery
                 ? CanonicalZ(DateTimeOffset.UtcNow)
                 : DateTimeOffset.UtcNow.ToString("O"),
@@ -701,7 +741,7 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         string successorFingerprint,
         bool requireCompleted)
     {
-        if (process.ExitCode != 0 || process.InheritedPrivateHandleCount != 2
+        if (process.ExitCode is not (0 or 72) || process.InheritedPrivateHandleCount != 2
             || process.StandardProtocolHandleCount != 0)
         {
             throw new InvalidDataException("The replacement helper launcher facts are not exact.");
@@ -771,6 +811,8 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             || assignment.Credential?.AccessProfileId?.Value != profileId
             || assignment.Credential?.GenerationId?.Value != successorGeneration
             || predecessorGeneration == successorGeneration
+            || evidence.ContainmentProbeExecuted != true || evidence.ExcludedHandleAccessible != false
+            || !evidence.ContainmentDescendantStarted || evidence.ContainmentDescendantProcessId <= 0
             || evidence.CredWriteW > maxima.GetProperty("CredWriteW").GetInt32()
             || evidence.CredReadW > maxima.GetProperty("CredReadW").GetInt32()
             || evidence.CredDeleteW > maxima.GetProperty("CredDeleteW").GetInt32()
@@ -833,7 +875,7 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         {
             throw new InvalidDataException("The pre-entry replacement failure boundary is not exact or contained.");
         }
-        ValidateCanaries(canaries);
+        ValidateProcessCanaries(process, canaries);
     }
 
     internal static byte[] CreateValidatedReplacementBoundary(
@@ -874,6 +916,23 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                 "The replacement helper terminal frame does not contain the validated process receipt.");
         }
         string canonicalSha = Convert.ToHexStringLower(SHA256.HashData(canonicalReceipt));
+        byte[]? failureEnvelopeBytes = helper.ValidatedNativeFailureEnvelopeBytes;
+        NativeHelperFailureEnvelope? failureEnvelope = failureEnvelopeBytes is null
+            ? null : NativeHelperFailureProtocol.DecodeCanonical(failureEnvelopeBytes);
+        bool typedFailure = failureEnvelope is not null;
+        if (!typedFailure && helper.Process.ExitCode != 0
+            || typedFailure && (helper.Process.ExitCode != 72
+                || helper.Process.Receipt.Outcome != HelperOutcomeV2.FailedKnown
+                || failureEnvelope!.ContainmentProbeExecuted != true
+                || failureEnvelope.ExcludedHandleAccessible != false))
+        {
+            throw new InvalidDataException(
+                "The replacement terminal origin and helper exit facts disagree.");
+        }
+        if (failureEnvelope is not null)
+        {
+            ValidateFailureEnvelopeProcessLinkage(failureEnvelope, helper.Process);
+        }
         string exactReceiptRelative = Path.Combine(attemptId, "helper-receipt.v2.pb");
         if (helper.Staging.AttemptId != attemptId
             || helper.Staging.RelativePath != exactReceiptRelative
@@ -889,6 +948,21 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             schema_identity = BoundarySchema,
             attempt_id = attemptId,
             assignment_id = helper.Process.Receipt.AssignmentId,
+            terminal_origin = typedFailure
+                ? "validated-native-failure-envelope"
+                : "helper-terminal-receipt",
+            validated_failure_envelope = failureEnvelopeBytes is null ? null : new
+            {
+                sha256 = Convert.ToHexStringLower(SHA256.HashData(failureEnvelopeBytes)),
+                base64 = Convert.ToBase64String(failureEnvelopeBytes),
+                stage = failureEnvelope!.Stage,
+                reason = failureEnvelope.Reason,
+                network_facts_known = failureEnvelope.NetworkFactsKnown,
+                external_effect_facts_known = failureEnvelope.ExternalEffectFactsKnown,
+                dns_operation_count = failureEnvelope.DnsOperationCount,
+                provider_operation_count = failureEnvelope.ProviderOperationCount,
+                billable_operation_count = failureEnvelope.BillableOperationCount,
+            },
             terminal_receipt = new
             {
                 relative_path = helper.Staging.RelativePath.Replace('\\', '/'),
@@ -926,7 +1000,7 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(boundary, Json);
         ActiveRepositoryJsonSchemaValidator.Validate(bytes,
             File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
-                "m1-slice6-successor-credential-replacement-helper-boundary.v1.schema.json")),
+                "m1-slice6-successor-credential-replacement-helper-boundary.v2.schema.json")),
             BoundarySchema);
         return bytes;
     }
@@ -945,12 +1019,38 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         byte[] boundaryBytes = store.ReadCredentialReplacementBoundary(attemptId);
         ActiveRepositoryJsonSchemaValidator.Validate(boundaryBytes,
             File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
-                "m1-slice6-successor-credential-replacement-helper-boundary.v1.schema.json")),
+                "m1-slice6-successor-credential-replacement-helper-boundary.v2.schema.json")),
             BoundarySchema);
         using JsonDocument document = JsonDocument.Parse(boundaryBytes);
         JsonElement root = document.RootElement;
         JsonElement terminalNode = root.GetProperty("terminal_receipt");
         JsonElement processNode = root.GetProperty("process");
+        string terminalOrigin = root.GetProperty("terminal_origin").GetString()!;
+        JsonElement failureNode = root.GetProperty("validated_failure_envelope");
+        byte[]? failureEnvelopeBytes = failureNode.ValueKind == JsonValueKind.Null
+            ? null : Convert.FromBase64String(failureNode.GetProperty("base64").GetString()!);
+        NativeHelperFailureEnvelope? failureEnvelope = failureEnvelopeBytes is null
+            ? null : NativeHelperFailureProtocol.DecodeCanonical(failureEnvelopeBytes);
+        if (failureEnvelopeBytes is null && terminalOrigin != "helper-terminal-receipt"
+            || failureEnvelopeBytes is not null
+                && (terminalOrigin != "validated-native-failure-envelope"
+                    || Convert.ToHexStringLower(SHA256.HashData(failureEnvelopeBytes))
+                        != failureNode.GetProperty("sha256").GetString()
+                    || failureEnvelope!.Stage != failureNode.GetProperty("stage").GetString()
+                    || failureEnvelope.Reason != failureNode.GetProperty("reason").GetString()
+                    || failureEnvelope.NetworkFactsKnown
+                        != failureNode.GetProperty("network_facts_known").GetBoolean()
+                    || failureEnvelope.ExternalEffectFactsKnown
+                        != failureNode.GetProperty("external_effect_facts_known").GetBoolean()
+                    || failureEnvelope.DnsOperationCount
+                        != failureNode.GetProperty("dns_operation_count").GetInt32()
+                    || failureEnvelope.ProviderOperationCount
+                        != failureNode.GetProperty("provider_operation_count").GetInt32()
+                    || failureEnvelope.BillableOperationCount
+                        != failureNode.GetProperty("billable_operation_count").GetInt32()))
+        {
+            throw new InvalidDataException("The replacement boundary failure-envelope provenance is stale.");
+        }
         string receiptRelative = terminalNode.GetProperty("relative_path").GetString()!.Replace('/', Path.DirectorySeparatorChar);
         string exactReceiptRelative = Path.Combine(attemptId, "helper-receipt.v2.pb");
         byte[] receiptBytes = Convert.FromBase64String(terminalNode.GetProperty("base64").GetString()!);
@@ -1011,6 +1111,10 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         {
             throw new InvalidDataException("The staged replacement boundary helper binary is not the reviewed build.");
         }
+        if (failureEnvelope is not null)
+        {
+            ValidateFailureEnvelopeProcessLinkage(failureEnvelope, process);
+        }
         ValidateReplacementHelperBoundary(
             process, predecessorFingerprint, successorFingerprint,
             requireCompleted: process.Receipt.Outcome == HelperOutcomeV2.Completed);
@@ -1025,7 +1129,66 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             staging = store.StageAndAdmitHelperReceipt(
                 attemptId, receiptBytes, now);
         }
-        return new(process, staging);
+        return new(process, staging, failureEnvelopeBytes);
+    }
+
+    private static void ValidateFailureEnvelopeProcessLinkage(
+        NativeHelperFailureEnvelope envelope,
+        HelperProcessReceipt process)
+    {
+        byte[] traceBytes = Encoding.UTF8.GetBytes(envelope.NativeCallTraceJson
+            ?? throw new InvalidDataException(
+                "The typed replacement failure envelope omits its native trace."));
+        byte[] canaryBytes = Encoding.UTF8.GetBytes(envelope.CanaryEvidenceJson
+            ?? throw new InvalidDataException(
+                "The typed replacement failure envelope omits its canary evidence."));
+        byte[]? entryBytes = envelope.EntryCleanupJson is null
+            ? null
+            : Encoding.UTF8.GetBytes(envelope.EntryCleanupJson);
+        JsonElement trace = ParseOptional(traceBytes)
+            ?? throw new InvalidDataException(
+                "The typed replacement failure envelope native trace is absent.");
+        JsonElement[] calls = trace.EnumerateArray().ToArray();
+        int credWriteW = calls.Count(call =>
+            call.GetProperty("Operation").GetString() == "CredWriteW");
+        int credReadW = calls.Count(call =>
+            call.GetProperty("Operation").GetString() == "CredReadW");
+        int credDeleteW = calls.Count(call =>
+            call.GetProperty("Operation").GetString() == "CredDeleteW");
+        int credFree = calls.Count(call =>
+            call.GetProperty("Operation").GetString() == "CredFree");
+        bool entryMatches = entryBytes is null
+            ? process.NativeEntryCleanupBytes is null
+            : process.NativeEntryCleanupBytes is not null
+                && entryBytes.AsSpan().SequenceEqual(process.NativeEntryCleanupBytes);
+        if (!envelope.CallCountsKnown
+            || !envelope.NetworkFactsKnown
+            || !envelope.ExternalEffectFactsKnown
+            || envelope.ContainmentProbeExecuted != process.ContainmentProbeExecuted
+            || envelope.ExcludedHandleAccessible != process.ExcludedHandleAccessible
+            || !envelope.ContainmentDescendantStarted
+            || envelope.ContainmentDescendantProcessId <= 0
+            || envelope.ListenerCount != process.ListenerCount
+            || envelope.NetworkOperationCount != process.NetworkOperationCount
+            || envelope.DnsOperationCount != 0
+            || envelope.ProviderOperationCount != 0
+            || envelope.BillableOperationCount != 0
+            || envelope.Total != process.NativeCredentialOperationCount
+            || envelope.Total != calls.Length
+            || envelope.CredWriteW != credWriteW
+            || envelope.CredReadW != credReadW
+            || envelope.CredDeleteW != credDeleteW
+            || envelope.CredFree != credFree
+            || !traceBytes.AsSpan().SequenceEqual(process.NativeCallTraceBytes)
+            || !entryMatches
+            || !canaryBytes.AsSpan().SequenceEqual(process.NativeCanaryEvidenceBytes)
+            || envelope.ManualUiAttempted != (process.NativeEntryCleanupBytes is not null)
+            || envelope.NamespaceReuseBlocked != process.NativeNamespaceReuseBlocked
+            || envelope.NamespaceReuseBlockReason != process.NativeNamespaceReuseBlockReason)
+        {
+            throw new InvalidDataException(
+                "The typed replacement failure envelope and retained process facts disagree.");
+        }
     }
 
     private static void ValidateCollisionTrace(JsonElement[] calls, string successor, int count)
@@ -1065,7 +1228,7 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         {
             throw new InvalidDataException("The stopped replacement boundary is not exact or safely contained.");
         }
-        ValidateCanaries(canaries);
+        ValidateProcessCanaries(process, canaries);
         string terminal = entry.GetProperty("TerminalState").GetString() ?? "";
         if (process.Receipt.Outcome == HelperOutcomeV2.Cancelled && terminal != "cancelled"
             || process.Receipt.Outcome != HelperOutcomeV2.Cancelled
@@ -1090,7 +1253,7 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         {
             throw new InvalidDataException("The successful replacement helper containment or zero-network boundary failed.");
         }
-        ValidateCanaries(canaries);
+        ValidateProcessCanaries(process, canaries);
         string entryJson = Encoding.UTF8.GetString(process.NativeEntryCleanupBytes!);
         CredentialNativeQualificationSupervisor.ValidateWp9ProductionEntryEvidence(entryJson, "submitted");
         ValidateEntryProperties(entry);
@@ -1149,6 +1312,27 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                 throw new InvalidDataException("A replacement canary surface is vacuous or nonzero.");
             }
         }
+    }
+
+    private static void ValidateProcessCanaries(
+        HelperProcessReceipt process,
+        JsonElement canaries)
+    {
+        if (process.ExitCode == 72)
+        {
+            JsonElement[] surfaces = canaries.GetProperty("ScannedSurfaces").EnumerateArray().ToArray();
+            string responseSurface = surfaces.Length > 1
+                ? surfaces[1].GetProperty("Name").GetString() ?? ""
+                : "";
+            if (responseSurface is not ("private protocol partial response" or "private protocol response"))
+            {
+                throw new InvalidDataException(
+                    "The typed replacement failure response canary surface is invalid.");
+            }
+            ValidateCanaries(canaries, responseSurface, allowEmptyResponse: true);
+            return;
+        }
+        ValidateCanaries(canaries);
     }
 
     private static void ValidateEntryProperties(JsonElement entry)

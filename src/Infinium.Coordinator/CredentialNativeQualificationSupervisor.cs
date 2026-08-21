@@ -1772,6 +1772,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         if (evidence.Stage is "handle-inheritance" or "launch-boundary" or "manifest-validation")
         {
             if (evidence.ContainmentDescendantStarted || evidence.EntryCleanupJson is not null
+                || evidence.ContainmentProbeExecuted == true || evidence.ExcludedHandleAccessible == true
                 || evidence.CanaryEvidenceJson is not null
                 || evidence.ManualUiAttempted || !evidence.CallCountsKnown || evidence.Total != 0
                 || evidence.CredWriteW != 0 || evidence.CredReadW != 0 || evidence.CredDeleteW != 0

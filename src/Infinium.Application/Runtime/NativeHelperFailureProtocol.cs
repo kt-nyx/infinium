@@ -26,7 +26,13 @@ public sealed record NativeHelperFailureEnvelope(
     bool ContainmentDescendantStarted,
     int ContainmentDescendantProcessId,
     bool NamespaceReuseBlocked,
-    string? NamespaceReuseBlockReason);
+    string? NamespaceReuseBlockReason,
+    [property: System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    bool? ContainmentProbeExecuted = null,
+    [property: System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    bool? ExcludedHandleAccessible = null);
 
 public static class NativeHelperRuntimeMetricsProtocol
 {
@@ -72,6 +78,14 @@ public static class NativeHelperFailureProtocol
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(stream);
+        byte[] frame = EncodeCanonical(envelope);
+        await stream.WriteAsync(frame, cancellationToken).ConfigureAwait(false);
+        await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public static byte[] EncodeCanonical(NativeHelperFailureEnvelope envelope)
+    {
+        ArgumentNullException.ThrowIfNull(envelope);
         Validate(envelope);
         byte[] payload = JsonSerializer.SerializeToUtf8Bytes(envelope, Json);
         if (payload.Length is 0 or > MaximumBytes)
@@ -82,8 +96,29 @@ public static class NativeHelperFailureProtocol
         Magic.CopyTo(frame, 0);
         BinaryPrimitives.WriteUInt32LittleEndian(frame.AsSpan(4), checked((uint)payload.Length));
         payload.CopyTo(frame, 8);
-        await stream.WriteAsync(frame, cancellationToken).ConfigureAwait(false);
-        await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+        return frame;
+    }
+
+    public static NativeHelperFailureEnvelope DecodeCanonical(ReadOnlySpan<byte> frame)
+    {
+        if (frame.Length < 9 || !frame[..4].SequenceEqual(Magic))
+        {
+            throw new InvalidDataException("The native helper failure envelope frame magic is invalid.");
+        }
+        uint length = BinaryPrimitives.ReadUInt32LittleEndian(frame.Slice(4, 4));
+        if (length is 0 or > MaximumBytes || frame.Length != checked(8 + (int)length))
+        {
+            throw new InvalidDataException("The native helper failure envelope frame length is invalid.");
+        }
+        ReadOnlySpan<byte> payload = frame[8..];
+        NativeHelperFailureEnvelope envelope = JsonSerializer.Deserialize<NativeHelperFailureEnvelope>(payload, Json)
+            ?? throw new InvalidDataException("The native helper failure envelope is absent.");
+        Validate(envelope);
+        if (!frame.SequenceEqual(EncodeCanonical(envelope)))
+        {
+            throw new InvalidDataException("The native helper failure envelope is not canonical.");
+        }
+        return envelope;
     }
 
     public static async Task<NativeHelperFailureEnvelope> ReadAfterMagicAsync(
@@ -129,6 +164,8 @@ public static class NativeHelperFailureProtocol
             || value.CallCountsKnown && value.NativeCallTraceJson is null
             || !value.ManualUiAttempted && value.EntryCleanupJson is not null
             || value.ContainmentDescendantStarted != (value.ContainmentDescendantProcessId > 0)
+            || (value.ContainmentProbeExecuted is null) != (value.ExcludedHandleAccessible is null)
+            || value.ContainmentProbeExecuted == false && value.ExcludedHandleAccessible == true
             || value.NamespaceReuseBlockReason is not (null or "preflight-collision"
                 or "cleanup-outcome-ambiguous-or-failed" or "injected-control-flow-proof")
             || value.NamespaceReuseBlocked != (value.NamespaceReuseBlockReason is not null))

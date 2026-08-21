@@ -589,7 +589,8 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                 JsonSerializer.Serialize(Canary("private protocol partial response")),
                 ManualUiAttempted: true, ContainmentDescendantStarted: true,
                 ContainmentDescendantProcessId: 2,
-                NamespaceReuseBlocked: false, NamespaceReuseBlockReason: null);
+                NamespaceReuseBlocked: false, NamespaceReuseBlockReason: null,
+                ContainmentProbeExecuted: true, ExcludedHandleAccessible: false);
             CredentialNativeQualificationSupervisor.ValidateNativeHelperFailureEnvelope(
                 exactFailure, failureBootstrap.Bootstrap, failureAssignment.Assignment,
                 failureEnvelope.AuthorityPath, helperProcessId: 1);
@@ -611,6 +612,100 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                 CredentialNativeQualificationSupervisor.ValidateNativeHelperFailureEnvelope(
                     exactFailure, wrongPredecessor, failureAssignment.Assignment,
                     failureEnvelope.AuthorityPath, helperProcessId: 1));
+            using (AuthoritativeStore store = new(new StoragePaths(failureEnvelope.ProductRoot)))
+            {
+                CredentialNativeHelperFailureException typedFailure = new(
+                    exactFailure, failureAssignment.Assignment.AssignmentId);
+                typedFailure.AttachContainment(new(
+                    ProcessId: 71,
+                    ExitCode: 72,
+                    TotalContainedProcessCount: 2,
+                    ActiveProcessCountBeforeJobClose: 1,
+                    ProcessTreeSurvivorCount: 0,
+                    ProcessTreeTerminated: true));
+                OneShotCredentialHelperLauncher launcher =
+                    OneShotCredentialHelperLauncher.CreateSuccessorCredentialReplacement(
+                        failureEnvelope.HelperPath, failureEnvelope.HelperSha256,
+                        failureEnvelope.AuthorityPath, failureEnvelope.AuthoritySha256,
+                        failureAuthority.RootElement.GetProperty("authority_id").GetString()!);
+                CredentialHelperCoordinator coordinator = new(store, launcher);
+                (CoordinatedHelperReceipt stoppedHelper, CredentialProfileProjection stoppedProjection) =
+                    await coordinator.ExecuteVerifiedReplacementCleanupAsync(
+                        "cleanup-failure-envelope", failureBootstrap, failureAssignment,
+                        failureEnvelope.Now,
+                        _ => Task.FromException<HelperProcessReceipt>(typedFailure),
+                        cancellationToken: CancellationToken.None);
+                Assert.AreEqual(72, stoppedHelper.Process.ExitCode);
+                Assert.AreEqual(HelperOutcomeV2.FailedKnown, stoppedHelper.Process.Receipt.Outcome);
+                Assert.IsNotNull(stoppedHelper.ValidatedNativeFailureEnvelopeBytes);
+                Assert.AreEqual("delete-pending", stoppedProjection.LifecycleState);
+                string boundaryPath = Path.Combine(
+                    store.Paths.Staging, "cleanup-failure-envelope",
+                    AuthoritativeStore.CredentialReplacementBoundaryFileName);
+                using JsonDocument boundary = JsonDocument.Parse(File.ReadAllBytes(boundaryPath));
+                Assert.AreEqual(
+                    "validated-native-failure-envelope",
+                    boundary.RootElement.GetProperty("terminal_origin").GetString());
+                Assert.AreEqual(
+                    "engine-execution",
+                    boundary.RootElement.GetProperty("validated_failure_envelope")
+                        .GetProperty("stage").GetString());
+                byte[] exactBoundaryBytes = File.ReadAllBytes(boundaryPath);
+                void AssertEnvelopeProcessTamperRejected(NativeHelperFailureEnvelope tampered)
+                {
+                    JsonObject tamperedBoundary = JsonNode.Parse(exactBoundaryBytes)!.AsObject();
+                    JsonObject failureNode = tamperedBoundary["validated_failure_envelope"]!.AsObject();
+                    byte[] tamperedEnvelope = NativeHelperFailureProtocol.EncodeCanonical(tampered);
+                    failureNode["sha256"] = Sha(tamperedEnvelope);
+                    failureNode["base64"] = Convert.ToBase64String(tamperedEnvelope);
+                    failureNode["stage"] = tampered.Stage;
+                    failureNode["reason"] = tampered.Reason;
+                    failureNode["network_facts_known"] = tampered.NetworkFactsKnown;
+                    failureNode["external_effect_facts_known"] = tampered.ExternalEffectFactsKnown;
+                    failureNode["dns_operation_count"] = tampered.DnsOperationCount;
+                    failureNode["provider_operation_count"] = tampered.ProviderOperationCount;
+                    failureNode["billable_operation_count"] = tampered.BillableOperationCount;
+                    File.WriteAllBytes(boundaryPath,
+                        JsonSerializer.SerializeToUtf8Bytes(tamperedBoundary, Json));
+                    Assert.ThrowsExactly<InvalidDataException>(() =>
+                        coordinator.RecoverVerifiedReplacementCleanup(
+                            repository, "cleanup-failure-envelope", failureAssignment,
+                            midTracePredecessor, midTraceSuccessor, failureEnvelope.HelperSha256,
+                            failureEnvelope.Now.AddHours(2)));
+                    File.WriteAllBytes(boundaryPath, exactBoundaryBytes);
+                }
+                AssertEnvelopeProcessTamperRejected(exactFailure with
+                {
+                    ContainmentProbeExecuted = false,
+                    ExcludedHandleAccessible = false,
+                });
+                AssertEnvelopeProcessTamperRejected(exactFailure with
+                {
+                    CredReadW = 1,
+                    Total = 2,
+                });
+                JsonObject alteredCanaries = JsonNode.Parse(exactFailure.CanaryEvidenceJson!)!.AsObject();
+                alteredCanaries["ScannedSurfaces"]!.AsArray()[1]!["ByteCount"] = 2;
+                AssertEnvelopeProcessTamperRejected(exactFailure with
+                {
+                    CanaryEvidenceJson = alteredCanaries.ToJsonString(),
+                });
+                AssertEnvelopeProcessTamperRejected(exactFailure with
+                {
+                    NamespaceReuseBlocked = true,
+                    NamespaceReuseBlockReason = "preflight-collision",
+                });
+                (CoordinatedHelperReceipt replayed, CredentialProfileProjection replayedProjection) =
+                    coordinator.RecoverVerifiedReplacementCleanup(
+                        repository, "cleanup-failure-envelope", failureAssignment,
+                        midTracePredecessor, midTraceSuccessor, failureEnvelope.HelperSha256,
+                        failureEnvelope.Now.AddHours(2));
+                Assert.AreEqual(72, replayed.Process.ExitCode);
+                CollectionAssert.AreEqual(
+                    stoppedHelper.ValidatedNativeFailureEnvelopeBytes!,
+                    replayed.ValidatedNativeFailureEnvelopeBytes!);
+                Assert.AreEqual(stoppedProjection, replayedProjection);
+            }
 
             ReplacementFixture launchGuard = CreateFixture(
                 repository, testRoot, "launch-guard", FixtureMode.DeletePendingRecovery);

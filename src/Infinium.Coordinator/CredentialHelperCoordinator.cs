@@ -11,7 +11,8 @@ namespace Infinium.Coordinator;
 
 public sealed record CoordinatedHelperReceipt(
     HelperProcessReceipt Process,
-    HelperStagingReceipt Staging);
+    HelperStagingReceipt Staging,
+    byte[]? ValidatedNativeFailureEnvelopeBytes = null);
 
 internal enum ProviderDispatchFaultPoint
 {
@@ -310,11 +311,21 @@ public sealed class CredentialHelperCoordinator
             throw new InvalidOperationException(
                 "This replacement cleanup helper launch was already admitted and cannot be retried.");
         }
-        HelperProcessReceipt process = testEffectExecutor is null
-            ? await EffectLauncher.ExecuteAsync(
-                bootstrap, assignment, null, EffectLauncher.OperationTimeout,
-                now.AddTicks(2), cancellationToken).ConfigureAwait(false)
-            : await testEffectExecutor(cancellationToken).ConfigureAwait(false);
+        HelperProcessReceipt process;
+        byte[]? validatedFailureEnvelopeBytes = null;
+        try
+        {
+            process = testEffectExecutor is null
+                ? await EffectLauncher.ExecuteAsync(
+                    bootstrap, assignment, null, EffectLauncher.OperationTimeout,
+                    now.AddTicks(2), cancellationToken).ConfigureAwait(false)
+                : await testEffectExecutor(cancellationToken).ConfigureAwait(false);
+        }
+        catch (CredentialNativeHelperFailureException typedFailure)
+        {
+            (process, validatedFailureEnvelopeBytes) =
+                ConvertValidatedReplacementFailure(typedFailure, assignment);
+        }
         if (testInterruptAfterEffect)
         {
             throw new IOException("Injected interruption after replacement helper return and before boundary staging.");
@@ -326,7 +337,8 @@ public sealed class CredentialHelperCoordinator
             attemptId, relativePath, canonical.Length,
             Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(canonical)),
             null, 0, null, true, true);
-        CoordinatedHelperReceipt prepared = new(process, expectedStaging);
+        CoordinatedHelperReceipt prepared = new(
+            process, expectedStaging, validatedFailureEnvelopeBytes);
         string predecessorFingerprint = Convert.ToHexStringLower(
             System.Security.Cryptography.SHA256.HashData(
                 System.Text.Encoding.UTF8.GetBytes($"Infinium:{profileId}:{predecessorGeneration}")));
@@ -346,10 +358,81 @@ public sealed class CredentialHelperCoordinator
         {
             throw new InvalidDataException("The staged replacement cleanup receipt identity drifted after boundary publication.");
         }
-        CoordinatedHelperReceipt helper = new(process, staging);
+        CoordinatedHelperReceipt helper = new(
+            process, staging, validatedFailureEnvelopeBytes);
         return CompleteVerifiedReplacementCleanup(
             M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(store.Paths.ProductRoot),
             attemptId, bootstrap, assignment, helper, now);
+    }
+
+    private (HelperProcessReceipt Process, byte[] EnvelopeBytes)
+        ConvertValidatedReplacementFailure(
+            CredentialNativeHelperFailureException failure,
+            HelperPrivateFrameV2 assignment)
+    {
+        HelperAssignmentV2 work = assignment.Assignment;
+        NativeHelperFailureEnvelope evidence = failure.Evidence;
+        NativeHelperFailureContainmentEvidence containment = failure.Containment
+            ?? throw new InvalidDataException(
+                "A typed replacement failure lacks exact launcher containment evidence.");
+        if (failure.AssignmentId != work.AssignmentId
+            || containment.ExitCode != 72
+            || containment.TotalContainedProcessCount < 2
+            || containment.ActiveProcessCountBeforeJobClose < 1
+            || containment.ProcessTreeSurvivorCount != 0
+            || !containment.ProcessTreeTerminated
+            || evidence.ContainmentProbeExecuted != true || evidence.ExcludedHandleAccessible != false
+            || !evidence.NetworkFactsKnown || evidence.ListenerCount != 0
+            || evidence.NetworkOperationCount != 0
+            || !evidence.ExternalEffectFactsKnown || evidence.DnsOperationCount != 0
+            || evidence.ProviderOperationCount != 0 || evidence.BillableOperationCount != 0)
+        {
+            throw new InvalidDataException(
+                "A typed replacement failure is not safely contained and effect-free.");
+        }
+        byte[] digestInput = System.Text.Encoding.UTF8.GetBytes(
+            $"{work.AssignmentId}/{work.CommandId}/{HelperOutcomeV2.FailedKnown}");
+        HelperReceiptV2 receipt = new()
+        {
+            Outcome = HelperOutcomeV2.FailedKnown,
+            AssignmentId = work.AssignmentId,
+            CommandId = work.CommandId,
+            AssignmentKind = HelperAssignmentKindV2.Replace,
+            Credential = work.Credential.Clone(),
+            UsageReceiptState = UsageReceiptStateV2.NotDispatched,
+            NonSecretReceipt = new()
+            {
+                Algorithm = DigestAlgorithm.Sha256,
+                Value = ByteString.CopyFrom(
+                    System.Security.Cryptography.SHA256.HashData(digestInput)),
+                SizeBytes = checked((ulong)digestInput.Length),
+            },
+        };
+        byte[] envelopeBytes = NativeHelperFailureProtocol.EncodeCanonical(evidence);
+        return (new HelperProcessReceipt(
+            containment.ProcessId,
+            containment.ExitCode,
+            EffectLauncher.ReviewedBinarySha256,
+            receipt,
+            [],
+            EffectLauncher.ExpectedInheritedPrivateHandleCount,
+            0,
+            evidence.ListenerCount,
+            evidence.NetworkOperationCount,
+            evidence.Total,
+            containment.ProcessTreeSurvivorCount,
+            containment.ProcessTreeTerminated,
+            false,
+            System.Text.Encoding.UTF8.GetBytes(evidence.NativeCallTraceJson!),
+            evidence.EntryCleanupJson is null
+                ? null : System.Text.Encoding.UTF8.GetBytes(evidence.EntryCleanupJson),
+            System.Text.Encoding.UTF8.GetBytes(evidence.CanaryEvidenceJson!),
+            evidence.ContainmentProbeExecuted.Value,
+            evidence.ExcludedHandleAccessible.Value,
+            containment.ActiveProcessCountBeforeJobClose,
+            containment.TotalContainedProcessCount,
+            evidence.NamespaceReuseBlocked,
+            evidence.NamespaceReuseBlockReason), envelopeBytes);
     }
 
     internal (CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)

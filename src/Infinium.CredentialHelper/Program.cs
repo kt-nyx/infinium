@@ -240,6 +240,8 @@ if (args is ["--wp9-production-enrollment-request-handle", string productionRequ
     string productionFailureStage = "handle-inheritance";
     string? productionFailureReasonOverride = null;
     string? productionCanaryEvidenceJson = null;
+    bool productionContainmentProbeExecuted = false;
+    bool productionExcludedHandleAccessible = false;
     try
     {
         using AnonymousPipeClientStream request = new(PipeDirection.In, productionRequestHandle);
@@ -253,6 +255,8 @@ if (args is ["--wp9-production-enrollment-request-handle", string productionRequ
         }
         nint excludedHandle = launchOptions!.ExcludedHandle;
         bool excludedHandleAccessible = excludedHandle != 0 && GetHandleInformation(excludedHandle, out _);
+        productionContainmentProbeExecuted = true;
+        productionExcludedHandleAccessible = excludedHandleAccessible;
         productionFailureStage = "manifest-validation";
         productionStore = WindowsCredentialManagerStore.FromProductionEnrollmentManifest(
             productionManifestPath, productionManifestSha256, productionManifestId);
@@ -384,7 +388,9 @@ if (args is ["--wp9-production-enrollment-request-handle", string productionRequ
             productionDescendant is not null,
             productionDescendant?.Id ?? 0,
             productionStore?.NamespaceReuseBlocked ?? false,
-            productionStore?.NamespaceReuseBlockReason);
+            productionStore?.NamespaceReuseBlockReason,
+            productionContainmentProbeExecuted,
+            productionExcludedHandleAccessible);
         if (productionResponse is not null)
         {
             try { await NativeHelperFailureProtocol.WriteAsync(productionResponse, failure, CancellationToken.None); }
