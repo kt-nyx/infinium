@@ -9474,3 +9474,43 @@ M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=572a3342ac6537d42a1041e9f8a5878c
   over baseline `c71d45733781c07f70febc726bdc94822b975aa5`. No provider,
   credential, private-fixture, archive, or destructive effect was used during
   correction or review.
+
+## 2026-08-21 hard-budget WP9 continuation through credential rejection
+
+- Owner amendment v2 superseded the obsolete five-start, repeated-defect, and
+  cumulative-reservation restrictions without changing the USD 10.00 aggregate
+  hard limit, one-start-per-fresh-attempt rule, credential isolation, or
+  first-structurally-valid latch. Frozen ledger v2 sequence 8 was imported by
+  ledger v3 sequence 9 with exact predecessor and review bindings.
+- Fresh WP9 ordinals 3 through 7 retained typed one-start transport failures.
+  Offline corrections closed evidence/recovery routing, successor-only
+  persistence and replay, bounded transport diagnostics, a canonical nested
+  socket-error diagnostic, executable apphost binding, and the Windows
+  contained-socket wildcard pre-bind/SystemRoot boundary. Every failed effect
+  was retained and conservatively accounted before a fresh identity was used.
+- One ordinal-8 runtime invocation supplied the credential-access authority
+  where the effect wrapper requires the inherited credential manifest. It was
+  rejected before attempt evidence or durable admission, reservation,
+  credential access, DNS, or provider effect and was not reused. A wholly
+  fresh ordinal-8 package then used the exact inherited manifest and crossed
+  one possible-start latch.
+- Corrected ordinal 8 reached the provider once and retained HTTP 401 with
+  typed code `invalid_api_key`. Evidence SHA-256
+  `ea299565dc60604afa2bef9ae8f54205e591c78c24f1b0a746bdc2149c60604c`
+  proves one send, one DNS resolution, no retry, exact `CredReadW -> CredFree`,
+  zero credential/target canary matches, zero process survivors, a retained
+  bounded response, and no semantic result or stage latch. The provider-masked
+  credential identifier is non-authenticating; the full-secret and normalized
+  secret scans passed, so no secret breach occurred.
+- Independent evidence and offline-diagnosis reviews advance ledger v3 to
+  current sequence 39, event
+  `b5292326a65791731614a6ab75a0b838de121ea721d01d5489f4c2897f88dcc0`.
+  Eight WP9 possible starts and USD 0.77056 successor unresolved exposure are
+  retained. Including the USD 0.14 predecessor, total committed exposure is
+  USD 0.91056, outstanding reservation is zero, and USD 9.08944 remains.
+- The local transport, credential target, byte-preserving header path, native
+  read/free boundary, and isolation evidence are exact. The retained project
+  key is externally invalid or revoked. Active credential-access v2 prohibits
+  replacement, so no further provider attempt is safe or useful until the
+  owner authorizes replacement/re-enrollment under fresh credential and
+  attempt authority. C2C, C2D, C3, and Slice 7 remain unopened.
