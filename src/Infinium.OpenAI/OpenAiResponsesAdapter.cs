@@ -116,6 +116,14 @@ public static class OpenAiStagedResponseEnvelope
     }
 
     public static OpenAiResponsesResult Replay(ReadOnlySpan<byte> raw, ReadOnlySpan<byte> headerReceipt, string clientRequestId)
+        => ReplayCore(raw, headerReceipt, clientRequestId, successorV6: false);
+
+    public static OpenAiResponsesResult ReplaySuccessorV6(
+        ReadOnlySpan<byte> raw, ReadOnlySpan<byte> headerReceipt, string clientRequestId)
+        => ReplayCore(raw, headerReceipt, clientRequestId, successorV6: true);
+
+    private static OpenAiResponsesResult ReplayCore(ReadOnlySpan<byte> raw,
+        ReadOnlySpan<byte> headerReceipt, string clientRequestId, bool successorV6)
     {
         int? status = HttpStatus(headerReceipt);
         IReadOnlyList<OpenAiRateHeader> rateHeaders = RateHeaders(headerReceipt);
@@ -135,8 +143,12 @@ public static class OpenAiStagedResponseEnvelope
             {
                 throw new InvalidDataException("A retained raw provider response requires an HTTP status.");
             }
-            return OpenAiResponsesResponseCodec.Replay(
-                raw, status.Value, clientRequestId, ProviderRequestId(headerReceipt), rateHeaders, retainedSchema) with
+            OpenAiResponsesResult replay = successorV6
+                ? OpenAiResponsesResponseCodec.ReplaySuccessorV6(raw, status.Value, clientRequestId,
+                    ProviderRequestId(headerReceipt), rateHeaders, retainedSchema)
+                : OpenAiResponsesResponseCodec.Replay(raw, status.Value, clientRequestId,
+                    ProviderRequestId(headerReceipt), rateHeaders, retainedSchema);
+            return replay with
             {
                 DnsResolutionCount = root.GetProperty("dns_resolution_count").GetInt32(),
                 NetworkUsed = networkUsed,
@@ -242,6 +254,16 @@ public interface IOpenAiResponsesTransport
         CancellationToken cancellationToken);
 }
 
+public interface IOpenAiResponsesSuccessorV6Transport
+{
+    public Task<OpenAiResponsesResult> SendSuccessorV6OnceAsync(
+        ReadOnlyMemory<byte> canonicalRequest,
+        ReadOnlyMemory<byte> secret,
+        ProviderFiniteLimitsContract limits,
+        string clientRequestId,
+        CancellationToken cancellationToken);
+}
+
 public static class OpenAiResponsesCanonicalSerializer
 {
     public const string Model = "gpt-5.6-sol";
@@ -257,6 +279,12 @@ public static class OpenAiResponsesCanonicalSerializer
     };
 
     public static byte[] Serialize(OpenAiResponsesRequest request)
+        => SerializeCore(request, successorV6: false);
+
+    public static byte[] SerializeSuccessorV6(OpenAiResponsesRequest request)
+        => SerializeCore(request, successorV6: true);
+
+    private static byte[] SerializeCore(OpenAiResponsesRequest request, bool successorV6)
     {
         ArgumentNullException.ThrowIfNull(request);
         string operationName = request.OperationKind switch
@@ -266,9 +294,11 @@ public static class OpenAiResponsesCanonicalSerializer
             ProviderOperationKind.CandidateInvestigation => "candidate_investigation",
             _ => throw new InvalidOperationException("The Responses operation is not part of the closed M1 profile."),
         };
-        long maximumOutputTokens = request.OperationKind == ProviderOperationKind.TransportQualification ? 256 : 4_096;
+        long maximumOutputTokens = successorV6 ? 128_000
+            : request.OperationKind == ProviderOperationKind.TransportQualification ? 256 : 4_096;
+        int maximumUntrustedInputCharacters = successorV6 ? 900_000 : 48_000;
         if (string.IsNullOrWhiteSpace(request.Instructions) || string.IsNullOrWhiteSpace(request.UntrustedInput)
-            || request.Instructions.Length > 8_192 || request.UntrustedInput.Length > 48_000
+            || request.Instructions.Length > 8_192 || request.UntrustedInput.Length > maximumUntrustedInputCharacters
             || request.MaximumOutputTokens <= 0 || request.MaximumOutputTokens > maximumOutputTokens
             || !ProductUserSafetyIdentifier.IsValidProjection(request.SafetyIdentifier)
             || request.OutputSchema.ValueKind != JsonValueKind.Object)
@@ -332,6 +362,13 @@ public static class OpenAiResponsesCanonicalSerializer
         Convert.ToHexStringLower(SHA256.HashData(canonicalRequest));
 
     public static void ValidateExactProfile(ReadOnlySpan<byte> requestBytes, long maximumOutputTokens)
+        => ValidateProfile(requestBytes, maximumOutputTokens, successorV6: false);
+
+    public static void ValidateSuccessorV6Profile(ReadOnlySpan<byte> requestBytes, long maximumOutputTokens)
+        => ValidateProfile(requestBytes, maximumOutputTokens, successorV6: true);
+
+    private static void ValidateProfile(ReadOnlySpan<byte> requestBytes, long maximumOutputTokens,
+        bool successorV6)
     {
         using JsonDocument document = JsonDocument.Parse(requestBytes.ToArray());
         JsonElement root = document.RootElement;
@@ -355,7 +392,7 @@ public static class OpenAiResponsesCanonicalSerializer
         JsonElement cache = root.GetProperty("prompt_cache_options");
         JsonElement text = root.GetProperty("text");
         JsonElement format = text.GetProperty("format");
-        long operationCeiling = format.GetProperty("name").GetString() switch
+        long operationCeiling = successorV6 ? 128_000 : format.GetProperty("name").GetString() switch
         {
             "transport_qualification" => 256,
             "source_claim_extraction" or "candidate_investigation" => 4_096,
@@ -470,7 +507,8 @@ public static class OpenAiResponsesCanonicalSerializer
     }
 }
 
-public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposable
+public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport,
+    IOpenAiResponsesSuccessorV6Transport, IDisposable
 {
     private static readonly Uri ProductionEndpoint = new("https://api.openai.com/v1/responses", UriKind.Absolute);
     private static readonly HashSet<string> NumericResponseHeaders = new(StringComparer.OrdinalIgnoreCase)
@@ -547,6 +585,23 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
         ReadOnlyMemory<byte> secret,
         ProviderFiniteLimitsContract limits,
         string clientRequestId,
+        CancellationToken cancellationToken) => await SendOnceCoreAsync(canonicalRequest, secret, limits,
+            clientRequestId, successorV6: false, cancellationToken).ConfigureAwait(false);
+
+    public async Task<OpenAiResponsesResult> SendSuccessorV6OnceAsync(
+        ReadOnlyMemory<byte> canonicalRequest,
+        ReadOnlyMemory<byte> secret,
+        ProviderFiniteLimitsContract limits,
+        string clientRequestId,
+        CancellationToken cancellationToken) => await SendOnceCoreAsync(canonicalRequest, secret, limits,
+            clientRequestId, successorV6: true, cancellationToken).ConfigureAwait(false);
+
+    private async Task<OpenAiResponsesResult> SendOnceCoreAsync(
+        ReadOnlyMemory<byte> canonicalRequest,
+        ReadOnlyMemory<byte> secret,
+        ProviderFiniteLimitsContract limits,
+        string clientRequestId,
+        bool successorV6,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(limits);
@@ -562,7 +617,16 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
             throw new InvalidOperationException("The one-shot request, credential, or dispatch bound is invalid.");
         }
 
-        OpenAiResponsesCanonicalSerializer.ValidateExactProfile(canonicalRequest.Span, limits.MaximumOutputTokens);
+        if (successorV6)
+        {
+            OpenAiResponsesCanonicalSerializer.ValidateSuccessorV6Profile(
+                canonicalRequest.Span, limits.MaximumOutputTokens);
+        }
+        else
+        {
+            OpenAiResponsesCanonicalSerializer.ValidateExactProfile(
+                canonicalRequest.Span, limits.MaximumOutputTokens);
+        }
 
         using HttpRequestMessage request = new(HttpMethod.Post, endpoint);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -619,9 +683,14 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
             }
 
             IReadOnlyList<OpenAiRateHeader> rateHeaders = CaptureHeaders(response);
-            return OpenAiResponsesResponseCodec.Parse(raw, (int)response.StatusCode, clientRequestId,
-                ProviderRequestId(response), rateHeaders,
-                OpenAiResponsesCanonicalSerializer.OutputSchemaBytes(canonicalRequest.Span)) with
+            OpenAiResponsesResult parsed = successorV6
+                ? OpenAiResponsesResponseCodec.ParseSuccessorV6(raw, (int)response.StatusCode,
+                    clientRequestId, ProviderRequestId(response), rateHeaders,
+                    OpenAiResponsesCanonicalSerializer.OutputSchemaBytes(canonicalRequest.Span))
+                : OpenAiResponsesResponseCodec.Parse(raw, (int)response.StatusCode, clientRequestId,
+                    ProviderRequestId(response), rateHeaders,
+                    OpenAiResponsesCanonicalSerializer.OutputSchemaBytes(canonicalRequest.Span));
+            return parsed with
             { DnsResolutionCount = DnsResolutionCount() };
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
@@ -1081,13 +1150,45 @@ public static class OpenAiResponsesResponseCodec
         Parse(retainedRawResponse, httpStatus, clientRequestId, providerRequestId, retainedRateHeaders ?? [], requestedOutputSchema) with
         { NetworkUsed = false, SendCount = 0, TransportMayHaveStarted = false };
 
+    public static OpenAiResponsesResult ReplaySuccessorV6(
+        ReadOnlySpan<byte> retainedRawResponse,
+        int httpStatus,
+        string clientRequestId,
+        string? providerRequestId,
+        IReadOnlyList<OpenAiRateHeader>? retainedRateHeaders = null,
+        ReadOnlyMemory<byte> requestedOutputSchema = default) =>
+        ParseSuccessorV6(retainedRawResponse, httpStatus, clientRequestId, providerRequestId,
+            retainedRateHeaders ?? [], requestedOutputSchema) with
+        { NetworkUsed = false, SendCount = 0, TransportMayHaveStarted = false };
+
     public static OpenAiResponsesResult Parse(
         ReadOnlySpan<byte> raw,
         int httpStatus,
         string clientRequestId,
         string? providerRequestId,
         IReadOnlyList<OpenAiRateHeader> rateHeaders,
-        ReadOnlyMemory<byte> requestedOutputSchema = default)
+        ReadOnlyMemory<byte> requestedOutputSchema = default) =>
+        ParseCore(raw, httpStatus, clientRequestId, providerRequestId, rateHeaders,
+            requestedOutputSchema, successorV6: false);
+
+    public static OpenAiResponsesResult ParseSuccessorV6(
+        ReadOnlySpan<byte> raw,
+        int httpStatus,
+        string clientRequestId,
+        string? providerRequestId,
+        IReadOnlyList<OpenAiRateHeader> rateHeaders,
+        ReadOnlyMemory<byte> requestedOutputSchema = default) =>
+        ParseCore(raw, httpStatus, clientRequestId, providerRequestId, rateHeaders,
+            requestedOutputSchema, successorV6: true);
+
+    private static OpenAiResponsesResult ParseCore(
+        ReadOnlySpan<byte> raw,
+        int httpStatus,
+        string clientRequestId,
+        string? providerRequestId,
+        IReadOnlyList<OpenAiRateHeader> rateHeaders,
+        ReadOnlyMemory<byte> requestedOutputSchema,
+        bool successorV6)
     {
         byte[] retained = raw.ToArray();
         providerRequestId = OpenAiResponsesAdapter.SanitizeProviderRequestId(providerRequestId);
@@ -1117,7 +1218,7 @@ public static class OpenAiResponsesResponseCodec
                 ? OpenAiResponsesAdapter.SanitizeProviderErrorField(String(errorValue, "code")) : null;
             string? errorType = root.TryGetProperty("error", out errorValue)
                 ? OpenAiResponsesAdapter.SanitizeProviderErrorField(String(errorValue, "type")) : null;
-            ProviderUsageContract usage = ParseUsage(root, state) with
+            ProviderUsageContract usage = ParseUsage(root, state, successorV6) with
             {
                 RateAvailability = !rateHeaders.Any(OpenAiResponsesAdapter.IsRateHeader)
                     ? ProviderAvailabilityState.Unavailable
@@ -1164,7 +1265,8 @@ public static class OpenAiResponsesResponseCodec
         }
     }
 
-    private static ProviderUsageContract ParseUsage(JsonElement root, ProviderResponseState state)
+    private static ProviderUsageContract ParseUsage(JsonElement root, ProviderResponseState state,
+        bool successorV6)
     {
         if (!root.TryGetProperty("usage", out JsonElement usage) || usage.ValueKind != JsonValueKind.Object)
         {
@@ -1190,10 +1292,14 @@ public static class OpenAiResponsesResponseCodec
             : new(ProviderAvailabilityState.Unavailable, null);
         bool complete = input.HasValue && output.HasValue && total.HasValue && reasoning.HasValue
             && cached.HasValue && cacheWrite.HasValue && total == input + output;
-        complete = complete && input <= 147_456 && output <= 8_192 && total <= 155_648
-            && reasoning <= output && cached <= 147_456 && cacheWrite <= 147_456;
+        long maximumInput = successorV6 ? 922_000 : 147_456;
+        long maximumOutput = successorV6 ? 128_000 : 8_192;
+        long maximumTotal = successorV6 ? 1_050_000 : 155_648;
+        complete = complete && input <= maximumInput && output <= maximumOutput && total <= maximumTotal
+            && reasoning <= output && cached <= maximumInput && cacheWrite <= maximumInput;
         long? calculatedNanoUsd = complete
-            ? checked(checked(input!.Value * 5_000L) + checked(output!.Value * 30_000L))
+            ? checked(checked(input!.Value * (successorV6 && input.Value > 272_000 ? 10_000L : 5_000L))
+                + checked(output!.Value * (successorV6 && input.Value > 272_000 ? 45_000L : 30_000L)))
             : null;
         return new(complete ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
             Quantity(1), Quantity(input), Quantity(output), Quantity(total), Quantity(reasoning), Quantity(cached),

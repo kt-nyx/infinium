@@ -57,6 +57,7 @@ public sealed partial class SchemaCompatibilityTests
         "provider-execution-input.v1.schema.json",
         "provider-effect-runtime-authority.v1.schema.json",
         "provider-effect-runtime-authority.v2.schema.json",
+        "provider-effect-runtime-authority.v3.schema.json",
         "effective-scan-configuration.v2.schema.json",
         "run-output.v2.schema.json",
         "cli-summary.v2.schema.json",

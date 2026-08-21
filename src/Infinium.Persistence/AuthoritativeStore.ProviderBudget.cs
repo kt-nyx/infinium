@@ -966,6 +966,8 @@ public sealed partial class AuthoritativeStore
         ArgumentException.ThrowIfNullOrWhiteSpace(operationId);
         lock (gate)
         {
+            if (operationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal))
+            { return ReadM1Slice6SuccessorV6Operation(operationId); }
             using SqliteCommand command = connection.CreateCommand();
             command.CommandText =
                 """
@@ -1495,17 +1497,23 @@ public sealed partial class AuthoritativeStore
         }
         string ownerKind = reader.GetString(0);
         string ownerId = reader.GetString(1);
+        bool hardBudget = operationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal);
         bool successor = operationId.StartsWith("m1s6-successor-", StringComparison.Ordinal);
         Dictionary<string, string> result = new(StringComparer.Ordinal)
         {
             ["request"] = requestId,
             ["operation"] = operationId,
             [ownerKind] = ownerId,
-            ["analysis-run"] = successor ? "m1s6-successor-campaign-budget" : reader.GetString(5),
-            ["provider-profile"] = successor ? "m1s6-successor-profile-budget" : reader.GetString(2),
-            ["provider-account"] = successor ? "m1s6-successor-account-budget" : reader.GetString(3),
-            ["billing-scope"] = successor ? "m1s6-successor-billing-budget" : reader.GetString(4),
-            ["global"] = successor ? "m1s6-successor-global" : "provider-global",
+            ["analysis-run"] = hardBudget ? "m1s6-hard-budget-v2-campaign"
+                : successor ? "m1s6-successor-campaign-budget" : reader.GetString(5),
+            ["provider-profile"] = hardBudget ? "m1s6-hard-budget-v2-profile"
+                : successor ? "m1s6-successor-profile-budget" : reader.GetString(2),
+            ["provider-account"] = hardBudget ? "m1s6-hard-budget-v2-account"
+                : successor ? "m1s6-successor-account-budget" : reader.GetString(3),
+            ["billing-scope"] = hardBudget ? "m1s6-hard-budget-v2-billing"
+                : successor ? "m1s6-successor-billing-budget" : reader.GetString(4),
+            ["global"] = hardBudget ? "m1s6-hard-budget-v2-global"
+                : successor ? "m1s6-successor-global" : "provider-global",
         };
         return result;
     }

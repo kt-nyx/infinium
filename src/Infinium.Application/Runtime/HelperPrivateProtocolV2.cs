@@ -12,8 +12,9 @@ namespace Infinium.Application.Runtime;
 public static class HelperPrivateProtocolV2
 {
     public const int PrefixBytes = sizeof(uint);
-    public const int MaximumMessageBytes = 1_000_000;
-    public const int MaximumStagingBytes = 1_048_576;
+    public const int HistoricalMaximumMessageBytes = 1_000_000;
+    public const int MaximumMessageBytes = 1_100_000;
+    public const int MaximumStagingBytes = 4_194_304;
 
     private static readonly byte[] ProtocolFingerprint =
         Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256);
@@ -23,7 +24,8 @@ public static class HelperPrivateProtocolV2
         ArgumentNullException.ThrowIfNull(message);
         ValidateEnvelope(message);
         byte[] payload = message.ToByteArray();
-        if (payload.Length is 0 or > MaximumMessageBytes)
+        int maximum = IsSuccessorV6(message) ? MaximumMessageBytes : HistoricalMaximumMessageBytes;
+        if (payload.Length is 0 || payload.Length > maximum)
         {
             throw new InvalidDataException("The helper message exceeds its closed byte bound.");
         }
@@ -60,6 +62,9 @@ public static class HelperPrivateProtocolV2
         }
 
         ValidateEnvelope(result);
+        int semanticMaximum = IsSuccessorV6(result) ? MaximumMessageBytes : HistoricalMaximumMessageBytes;
+        if (payload.Length > semanticMaximum)
+        { throw new InvalidDataException("The helper message exceeds its authority-version byte bound."); }
         if (result.Sequence != expectedSequence)
         {
             throw new InvalidDataException("The helper sequence is stale, skipped, or replayed.");
@@ -139,6 +144,18 @@ public static class HelperPrivateProtocolV2
         {
             throw new InvalidDataException("The helper protocol fingerprint is incompatible.");
         }
+    }
+
+    private static bool IsSuccessorV6(HelperPrivateFrameV2 message)
+    {
+        string? requestId = message.PayloadCase switch
+        {
+            HelperPrivateFrameV2.PayloadOneofCase.Assignment => message.Assignment.ProviderRequest?.RequestId,
+            HelperPrivateFrameV2.PayloadOneofCase.DispatchRevalidation => message.DispatchRevalidation.RequestId,
+            HelperPrivateFrameV2.PayloadOneofCase.Receipt => message.Receipt.RequestId,
+            _ => null,
+        };
+        return requestId?.StartsWith("m1-s6-successor-v6-", StringComparison.Ordinal) == true;
     }
 
     private static void RejectUnknownDuplicateAndNonCanonical(byte[] payload, MessageDescriptor descriptor)

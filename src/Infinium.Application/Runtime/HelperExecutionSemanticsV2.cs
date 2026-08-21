@@ -138,7 +138,8 @@ public static class HelperExecutionSemanticsV2
         {
             throw new InvalidDataException("The helper provider request is not canonical, bounded, or proved.");
         }
-        ValidateLimits(assignment.OperationKind, assignment.Limits);
+        ValidateLimits(assignment.OperationKind, assignment.Limits,
+            request.RequestId.StartsWith("m1-s6-successor-v6-", StringComparison.Ordinal));
     }
 
     private static readonly InputBoundProofV2 AcceptedProof = new()
@@ -148,19 +149,30 @@ public static class HelperExecutionSemanticsV2
         Status = InputBoundProofStatusV2.Proved,
     };
 
-    private static void ValidateLimits(ProviderOperationKindV2 kind, HelperLimitsV2 value)
+    private static void ValidateLimits(ProviderOperationKindV2 kind, HelperLimitsV2 value,
+        bool successorV6)
     {
-        (ulong request, ulong input, ulong output, ulong response, long cost, ulong duration) = kind switch
-        {
-            ProviderOperationKindV2.TransportQualification => (16_384UL, 20_480UL, 256UL, 262_144UL, 140_000_000L, 60_000UL),
-            ProviderOperationKindV2.SourceClaimExtraction or ProviderOperationKindV2.CandidateInvestigation =>
-                (65_536UL, 73_728UL, 4_096UL, 1_048_576UL, 600_000_000L, 120_000UL),
-            _ => throw new InvalidDataException("The helper provider operation kind is unknown."),
-        };
-        if (value.MaximumFrameBytes is 0 or > HelperProtocolV2Constants.MaximumFrameBytes
+        (ulong request, ulong input, ulong output, ulong response, long cost, ulong duration) = successorV6
+            ? kind is ProviderOperationKindV2.TransportQualification
+                or ProviderOperationKindV2.SourceClaimExtraction
+                or ProviderOperationKindV2.CandidateInvestigation
+                ? (1_000_000UL, 922_000UL, 128_000UL, 1_048_576UL, 9_749_920_000L, 900_000UL)
+                : throw new InvalidDataException("The successor v6 helper operation kind is unknown.")
+            : kind switch
+            {
+                ProviderOperationKindV2.TransportQualification => (16_384UL, 20_480UL, 256UL, 262_144UL, 140_000_000L, 60_000UL),
+                ProviderOperationKindV2.SourceClaimExtraction or ProviderOperationKindV2.CandidateInvestigation =>
+                    (65_536UL, 73_728UL, 4_096UL, 1_048_576UL, 600_000_000L, 120_000UL),
+                _ => throw new InvalidDataException("The helper provider operation kind is unknown."),
+            };
+        ulong maximumFrame = successorV6 ? HelperProtocolV2Constants.SuccessorV6MaximumFrameBytes
+            : HelperProtocolV2Constants.MaximumFrameBytes;
+        ulong maximumStaged = successorV6 ? HelperProtocolV2Constants.SuccessorV6MaximumStagedOutputBytes
+            : response;
+        if (value.MaximumFrameBytes is 0 || value.MaximumFrameBytes > maximumFrame
             || value.MaximumRequestBytes is 0 || value.MaximumRequestBytes > request
             || value.MaximumResponseBytes is 0 || value.MaximumResponseBytes > response
-            || value.MaximumStagedOutputBytes is 0 || value.MaximumStagedOutputBytes > response
+            || value.MaximumStagedOutputBytes is 0 || value.MaximumStagedOutputBytes > maximumStaged
             || value.MaximumInputTokens is 0 || value.MaximumInputTokens > input
             || value.MaximumOutputTokens is 0 || value.MaximumOutputTokens > output
             || value.MaximumCalculatedNanoUsd is <= 0 || value.MaximumCalculatedNanoUsd > cost

@@ -254,12 +254,12 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
             {
                 throw new InvalidDataException("Successor SQLite final gate did not admit the exact attempt.");
             }
-        reservations.Add(attempt.ReservationId, vector);
-        successorCampaignIdsByAttempt.Add(attempt.AttemptId, campaignIdentity.CampaignId);
-        return new(authorizationId, operationId, attempt.AttemptId, attempt.RequestId,
-                attempt.ReservationId, attempt.DispatchFenceId, coordinator.FencingEpoch,
-                gate.EffectiveGateTime, gate.Deadline, accountIdentityId, billingScopeIdentityId,
-                semanticOperationId, semanticAuthorizationId, vector.NanoUsd);
+            reservations.Add(attempt.ReservationId, vector);
+            successorCampaignIdsByAttempt.Add(attempt.AttemptId, campaignIdentity.CampaignId);
+            return new(authorizationId, operationId, attempt.AttemptId, attempt.RequestId,
+                    attempt.ReservationId, attempt.DispatchFenceId, coordinator.FencingEpoch,
+                    gate.EffectiveGateTime, gate.Deadline, accountIdentityId, billingScopeIdentityId,
+                    semanticOperationId, semanticAuthorizationId, vector.NanoUsd);
         }
         catch
         {
@@ -273,14 +273,91 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         }
     }
 
+    public M1Slice6CampaignAccountingAdmission PrepareSuccessorV6(
+        M1Slice6CampaignStageAuthority authority, M1Slice6CampaignIdentity campaignIdentity,
+        M1Slice6SuccessorAttemptIdentity attempt, DateTimeOffset now)
+    {
+        if (campaignIdentity.CredentialProfileId != profileId
+            || campaignIdentity.CredentialGenerationId != generationId
+            || attempt.Stage != authority.Stage || attempt.AttemptOrdinal <= 0)
+        {
+            throw new InvalidDataException("Successor accounting rejected a cross-profile or cross-stage attempt.");
+        }
+        string canonicalInput = M1Slice6CampaignSemanticAdmission.ExtractUntrustedInput(
+            authority.CanonicalRequest);
+        SourceClaimExecutionInput? sourceInput = authority.Stage == M1Slice6CampaignStage.SourceClaimExtraction
+            ? M1Slice6CampaignV2InputAdapter.ReadSourceClaim(canonicalInput) : null;
+        CandidateInvestigationExecutionInput? candidateInput =
+            authority.Stage == M1Slice6CampaignStage.CandidateInvestigation
+                ? M1Slice6CampaignV2InputAdapter.ReadCandidate(canonicalInput).ProductInput : null;
+        string semanticOperationId = sourceInput?.OperationId ?? candidateInput?.OperationId
+            ?? "m1s6-campaign-stage-1-operation";
+        string semanticAuthorizationId = sourceInput?.HostAuthorizationId
+            ?? candidateInput?.HostAuthorizationId ?? "m1s6-campaign-stage-1-authorization";
+        string prefix = "m1s6-successor-v6-" + attempt.AttemptId;
+        string operationId = prefix + "-transport-operation";
+        string authorizationId = prefix + "-transport-authorization";
+        string ownerKind = authority.Stage == M1Slice6CampaignStage.SourceClaimExtraction
+            ? "evidence-acquisition-run" : "analysis-run";
+        string ownerId = sourceInput?.AcquisitionRunId ?? candidateInput?.AnalysisRunId
+            ?? prefix + "-run";
+        CoordinatorAuthority coordinator = store.AcquireCoordinatorAuthorityAfterProcessExclusion(
+            "m1-s6-successor-campaign", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(10));
+        DateTimeOffset deadline = now.AddMilliseconds(authority.Limits.DeadlineMilliseconds);
+        M1Slice6CampaignSemanticAdmission.PreparePrerequisites(store, authority, now);
+        ProviderFiniteLimitsContract finiteLimits = new(
+            authority.Limits.MaximumRequestBytes, authority.Limits.MaximumInputTokens,
+            authority.Limits.MaximumOutputTokens, authority.Limits.MaximumRawResponseBytes,
+            1, authority.Limits.MaximumNanoUsd, authority.Limits.DeadlineMilliseconds);
+        long catalogWorstCaseNanoUsd = M1Slice6SuccessorPricing.Calculate(finiteLimits);
+        ProviderBudgetVectorContract vector = new(1, authority.Limits.MaximumInputTokens,
+            authority.Limits.MaximumOutputTokens,
+            checked(authority.Limits.MaximumInputTokens + authority.Limits.MaximumOutputTokens),
+            authority.Limits.MaximumOutputTokens, 0, 0, 0, catalogWorstCaseNanoUsd);
+        string stage = authority.Stage switch
+        {
+            M1Slice6CampaignStage.Qualification => "qualification",
+            M1Slice6CampaignStage.SourceClaimExtraction => "source-claim-extraction",
+            _ => "candidate-investigation",
+        };
+        string operationKind = authority.Operation switch
+        {
+            ProviderOperationKind.TransportQualification => "transport-qualification",
+            ProviderOperationKind.SourceClaimExtraction => "source-claim-extraction",
+            _ => "candidate-investigation",
+        };
+        M1Slice6SuccessorV6AdmissionReceipt gate = store.AdmitM1Slice6SuccessorV6(new(
+            authorizationId, operationId, campaignIdentity.CampaignId, stage, operationKind,
+            attempt.AttemptId, attempt.RequestId, attempt.ReservationId, attempt.DispatchFenceId,
+            ownerKind, ownerId, semanticAuthorizationId, semanticOperationId,
+            authority.CanonicalRequestSha256, authority.Limits.MaximumRequestBytes,
+            authority.Limits.MaximumInputTokens, authority.Limits.MaximumOutputTokens,
+            authority.Limits.MaximumRawResponseBytes, authority.Limits.DeadlineMilliseconds,
+            vector.NanoUsd, coordinator.FencingEpoch, deadline, now));
+        reservations.Add(attempt.ReservationId, vector);
+        successorCampaignIdsByAttempt.Add(attempt.AttemptId, campaignIdentity.CampaignId);
+        return new(authorizationId, operationId, attempt.AttemptId, attempt.RequestId,
+                attempt.ReservationId, attempt.DispatchFenceId, coordinator.FencingEpoch,
+                gate.EffectiveGateTime, gate.DeadlineUtc, accountIdentityId, billingScopeIdentityId,
+                semanticOperationId, semanticAuthorizationId, vector.NanoUsd);
+    }
+
     public void RecordPossibleStart(M1Slice6CampaignAccountingAdmission admission, DateTimeOffset now)
     {
         if (!reservations.ContainsKey(admission.ReservationId) || now >= admission.DeadlineUtc)
         {
             throw new InvalidDataException("Authoritative transport-start persistence is expired or unreserved.");
         }
-        store.RecordProviderTransportStart(admission.OperationId, admission.AttemptId,
-            admission.RequestId, admission.DispatchFenceId, ambiguous: false, now);
+        if (admission.OperationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal))
+        {
+            store.RecordM1Slice6SuccessorV6PossibleStart(admission.OperationId, admission.AttemptId,
+                admission.RequestId, admission.ReservationId, admission.DispatchFenceId, now);
+        }
+        else
+        {
+            store.RecordProviderTransportStart(admission.OperationId, admission.AttemptId,
+                admission.RequestId, admission.DispatchFenceId, ambiguous: false, now);
+        }
     }
 
     public void ReleaseBeforePossibleStart(M1Slice6CampaignAccountingAdmission admission, DateTimeOffset now)
@@ -288,6 +365,11 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         if (!reservations.Remove(admission.ReservationId, out ProviderBudgetVectorContract? reserved))
         {
             throw new InvalidDataException("Authoritative prestart release lacks its exact reservation.");
+        }
+        if (admission.OperationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal))
+        {
+            store.ReleaseM1Slice6SuccessorV6BeforeStart(admission.OperationId, admission.ReservationId, now);
+            return;
         }
         ProviderBudgetSettlementReceipt released = accounting.Settle(new(
             "m1s6-campaign-prestart-release-" + admission.ReservationId,
@@ -402,6 +484,48 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
                 new UtcTimestamp(result.CompletedAtUtc), null)).ToArray();
         string responseId = identity + "-response";
         string usageId = identity + "-usage";
+        if (admission.OperationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal))
+        {
+            M1Slice6SuccessorV6PersistenceReceipt v6Persisted = store.PersistM1Slice6SuccessorV6Response(new(
+                responseId, usageId, identity + "-receipt", identity + "-finalization",
+                admission.AuthorizationId, admission.OperationId, admission.ReservationId,
+                admission.AttemptId, admission.RequestId, admission.DispatchFenceId,
+                response.State, response.HttpStatus ?? 0, response.ReturnedModel,
+                response.ReturnedServiceTier, response.ErrorCode, response.RefusalCode,
+                response.IncompleteReason, response.Usage, rates, response.RawResponseBytes,
+                result.CompletedAtUtc, result.ResponseHeadersBytes, response.ProviderResponseId,
+                response.ProviderRequestId, response.Admitted));
+            reservations.Remove(admission.ReservationId);
+            M1Slice6CampaignSemanticAdmissionReceipt? v6Semantic = null;
+            if (structurallyValid)
+            {
+                ProviderOperationReadModel operation = store.ReadProviderOperation(admission.OperationId);
+                if (operation.RawResponseBytes is null || response.RawResponseBytes is null
+                    || !operation.RawResponseBytes.AsSpan().SequenceEqual(response.RawResponseBytes)
+                    || operation.ResponseId != responseId || operation.UsageEntryId != usageId
+                    || operation.SettlementId != v6Persisted.SettlementId || operation.UnresolvedHold)
+                { throw new InvalidDataException("Successor-v6 SQLite replay differs from the authoritative response."); }
+                try
+                {
+                    beforeSuccessorSemanticBinding?.Invoke();
+                    if (!successorCampaignIdsByAttempt.TryGetValue(admission.AttemptId, out string? campaignId))
+                    { throw new InvalidDataException("Successor semantic binding lacks its exact campaign attempt."); }
+                    EnsureSuccessorSemanticBinding(authority, admission, responseId,
+                        campaignId, result.CompletedAtUtc.AddTicks(2));
+                    v6Semantic = M1Slice6CampaignSemanticAdmission.Admit(store, authority, admission,
+                        response, result.CompletedAtUtc.AddTicks(3));
+                }
+                catch (Exception exception) when (exception is InvalidDataException or InvalidOperationException)
+                {
+                    return new(responseId, usageId, v6Persisted.SettlementId, v6Persisted.ReplayEdgeId,
+                        v6Persisted.SettledNanoUsd, v6Persisted.UnresolvedNanoUsd, false,
+                        true, null, "semantic-admission-failure");
+                }
+            }
+            return new(responseId, usageId, v6Persisted.SettlementId, v6Persisted.ReplayEdgeId,
+                v6Persisted.SettledNanoUsd, v6Persisted.UnresolvedNanoUsd, false,
+                v6Persisted.ResponsePersisted, v6Semantic, "");
+        }
         ProviderSimulationPersistenceReceipt persisted = store.PersistProviderSimulation(new(
             responseId, usageId, identity + "-receipt", identity + "-finalization",
             admission.AuthorizationId, admission.OperationId, admission.ReservationId,
@@ -493,12 +617,16 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
             semanticAuthorization = candidate.HostAuthorizationId;
             stage = "candidate-investigation";
         }
+        bool successorV6 = admission.OperationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal);
+        string bindingTable = successorV6
+            ? "m1_slice6_successor_v6_semantic_response_bindings"
+            : "m1_slice6_successor_semantic_response_bindings";
         using SqliteConnection connection = new($"Data Source={store.Paths.Database};Pooling=False");
         connection.Open();
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText =
-            """
-            INSERT INTO m1_slice6_successor_semantic_response_bindings(
+            $"""
+            INSERT INTO {bindingTable}(
               binding_id,campaign_id,stage,semantic_authorization_id,semantic_operation_id,
               transport_authorization_id,transport_operation_id,provider_attempt_id,request_id,
               dispatch_fence_id,semantic_response_record_id,transport_response_record_id,
@@ -530,7 +658,7 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         command.CommandText =
             "SELECT campaign_id,stage,semantic_authorization_id,semantic_operation_id,transport_authorization_id,"
             + "transport_operation_id,provider_attempt_id,request_id,dispatch_fence_id,semantic_response_record_id,"
-            + "transport_response_record_id,owner_kind,owner_id FROM m1_slice6_successor_semantic_response_bindings "
+            + $"transport_response_record_id,owner_kind,owner_id FROM {bindingTable} "
             + "WHERE binding_id=$binding;";
         command.Parameters.AddWithValue("$binding", "m1s6-successor-semantic-binding-" + admission.AttemptId);
         using SqliteDataReader reader = command.ExecuteReader();
@@ -551,6 +679,13 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
                 out ProviderBudgetVectorContract? reserved))
         { throw new InvalidDataException("Ambiguous successor start lacks its exact reservation."); }
         string settlementId = "m1s6-successor-" + admission.AttemptId + "-settlement";
+        if (admission.OperationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal))
+        {
+            M1Slice6SuccessorV6PersistenceReceipt v6Retained = store.RetainM1Slice6SuccessorV6Ambiguous(
+                admission.OperationId, admission.ReservationId, settlementId, now);
+            return new("", "", v6Retained.SettlementId, "", 0, v6Retained.UnresolvedNanoUsd,
+                false, false, null, "");
+        }
         ProviderBudgetSettlementReceipt retained = accounting.Settle(new(settlementId,
             admission.ReservationId, ProviderBudgetEventKind.RetainedAmbiguous,
             null, null, now));
@@ -596,8 +731,10 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
     {
         if (authority.Stage == M1Slice6CampaignStage.Qualification)
         { throw new InvalidOperationException("Qualification has no recoverable semantic admission."); }
-        OpenAiResponsesResult retainedReplay = OpenAiStagedResponseEnvelope.Replay(
-            rawResponseBytes, responseHeadersBytes, requestId);
+        bool successorV6 = transportOperationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal);
+        OpenAiResponsesResult retainedReplay = successorV6
+            ? OpenAiStagedResponseEnvelope.ReplaySuccessorV6(rawResponseBytes, responseHeadersBytes, requestId)
+            : OpenAiStagedResponseEnvelope.Replay(rawResponseBytes, responseHeadersBytes, requestId);
         M1Slice6CampaignAccountingAdmission admission = RecoveryAdmission(transportOperationId,
             transportAuthorizationId, attemptId, requestId, reservationId, dispatchFenceId, now,
             out ProviderBudgetVectorContract reserved);
@@ -608,7 +745,9 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
             using SqliteConnection connection = new($"Data Source={store.Paths.Database};Pooling=False");
             connection.Open();
             using SqliteCommand command = connection.CreateCommand();
-            command.CommandText = "SELECT COUNT(*) FROM provider_responses WHERE operation_id=$operation;";
+            command.CommandText = successorV6
+                ? "SELECT COUNT(*) FROM m1_slice6_successor_v6_responses WHERE operation_id=$operation;"
+                : "SELECT COUNT(*) FROM provider_responses WHERE operation_id=$operation;";
             command.Parameters.AddWithValue("$operation", transportOperationId);
             bool responseExists = Convert.ToInt64(command.ExecuteScalar(),
                 System.Globalization.CultureInfo.InvariantCulture) == 1;
@@ -623,7 +762,7 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
                     admission, authority, boundary, structurallyValid: true);
                 if (persisted.Semantic is not null) { return persisted; }
             }
-            else
+            else if (!successorV6)
             {
                 command.Parameters.Clear();
                 command.CommandText =
@@ -643,6 +782,11 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
                     reservationId, ProviderBudgetEventKind.SettledComplete, usageId, actual, now));
                 reservations.Remove(reservationId);
             }
+            else
+            {
+                throw new InvalidDataException(
+                    "Successor-v6 recovery found response bytes without atomic terminal accounting.");
+            }
             operation = store.ReadProviderOperation(transportOperationId);
         }
         if (operation.AuthorizationId != transportAuthorizationId || operation.ResponseId != responseId
@@ -650,8 +794,11 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
             || operation.RawResponseBytes is null || operation.ResponseHeadersBytes is null
             || operation.UsageEntryId is null || operation.SettlementId is null)
         { throw new InvalidDataException("Semantic recovery lacks an exact settled retained transport response."); }
-        OpenAiResponsesResult replay = accounting.Replay(new(new OpaqueId(transportOperationId),
-            new OpaqueId(responseId), NetworkPermitted: false));
+        OpenAiResponsesResult replay = successorV6
+            ? OpenAiStagedResponseEnvelope.ReplaySuccessorV6(operation.RawResponseBytes,
+                operation.ResponseHeadersBytes, requestId)
+            : accounting.Replay(new(new OpaqueId(transportOperationId),
+                new OpaqueId(responseId), NetworkPermitted: false));
         string input = M1Slice6CampaignSemanticAdmission.ExtractUntrustedInput(authority.CanonicalRequest);
         string semanticOperation;
         string semanticAuthorization;
@@ -682,6 +829,17 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         string authorizationId, string attemptId, string requestId, string reservationId,
         string dispatchFenceId, DateTimeOffset now, out ProviderBudgetVectorContract reserved)
     {
+        if (operationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal))
+        {
+            M1Slice6SuccessorV6ReservationReadModel v6 = store.ReadM1Slice6SuccessorV6Reservation(
+                operationId, authorizationId, attemptId, requestId, reservationId, dispatchFenceId);
+            reserved = new(1, v6.MaximumInputTokens, v6.MaximumOutputTokens,
+                checked(v6.MaximumInputTokens + v6.MaximumOutputTokens), v6.MaximumOutputTokens,
+                0, 0, 0, v6.ReservedNanoUsd);
+            return new(authorizationId, operationId, attemptId, requestId, reservationId,
+                dispatchFenceId, v6.CoordinatorFencingEpoch, now, v6.DeadlineUtc,
+                accountIdentityId, billingScopeIdentityId, ReservedNanoUsd: reserved.NanoUsd);
+        }
         using SqliteConnection connection = new($"Data Source={store.Paths.Database};Mode=ReadOnly;Pooling=False");
         connection.Open();
         using SqliteCommand command = connection.CreateCommand();
@@ -723,8 +881,11 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
             || operation.ReplayEdgeId != replayEdgeId || operation.RawResponseBytes is null
             || Convert.ToHexStringLower(SHA256.HashData(operation.RawResponseBytes)) != rawResponseSha256)
         { throw new InvalidDataException("C3 provider accounting does not bind one exact settled retained response."); }
-        OpenAiResponsesResult replay = accounting.Replay(new(new OpaqueId(operationId),
-            new OpaqueId(responseId), NetworkPermitted: false));
+        OpenAiResponsesResult replay = operationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal)
+            ? OpenAiStagedResponseEnvelope.ReplaySuccessorV6(operation.RawResponseBytes,
+                operation.ResponseHeadersBytes ?? [], operation.ClientRequestId)
+            : accounting.Replay(new(new OpaqueId(operationId),
+                new OpaqueId(responseId), NetworkPermitted: false));
         if (replay.RawResponseBytes is null
             || Convert.ToHexStringLower(SHA256.HashData(replay.RawResponseBytes)) != rawResponseSha256)
         { throw new InvalidDataException("C3 effect-free retained response replay changed bytes."); }
@@ -740,7 +901,7 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
             connection.Open();
             using SqliteCommand command = connection.CreateCommand();
             command.CommandText =
-                "SELECT COUNT(*) FROM m1_slice6_successor_semantic_response_bindings b "
+                "SELECT COUNT(*) FROM m1_slice6_successor_all_semantic_response_bindings b "
                 + "JOIN provider_semantic_admissions a ON a.operation_id=b.semantic_operation_id "
                 + "AND a.response_record_id=b.semantic_response_record_id "
                 + "JOIN evidence_acquisition_application_links l ON l.admission_id=a.admission_id "
@@ -762,7 +923,7 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
             connection.Open();
             using SqliteCommand command = connection.CreateCommand();
             command.CommandText =
-                "SELECT semantic_operation_id,owner_id FROM m1_slice6_successor_semantic_response_bindings "
+                "SELECT semantic_operation_id,owner_id FROM m1_slice6_successor_all_semantic_response_bindings "
                 + "WHERE transport_operation_id=$operation AND transport_response_record_id=$response;";
             command.Parameters.AddWithValue("$operation", operationId);
             command.Parameters.AddWithValue("$response", responseId);

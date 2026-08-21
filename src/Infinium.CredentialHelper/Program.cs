@@ -161,7 +161,9 @@ if (args is ["--wp9-campaign-provider-request-handle", string campaignRequestHan
                 CryptographicOperations.ZeroMemory(campaignSecretCanary);
                 campaignSecretCanary = secret.ToArray();
             });
-        using CancellationTokenSource deadline = new(TimeSpan.FromMinutes(2));
+        // Exact v5/v6 dispatch expiry remains inside the validated assignment and adapter.
+        // This outer containment ceiling leaves room for the largest v6 operation and evidence.
+        using CancellationTokenSource deadline = new(TimeSpan.FromMinutes(16));
         await engine.RunAsync(recordedRequest, recordedResponse, deadline.Token);
         (int listeners, int networkOperations) = NetworkMeasurement.MeasureCurrentProcessTcp();
         NativeRawTargetCanary[] targets = campaignStore.RawTargetCanaries.ToArray();

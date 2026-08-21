@@ -108,6 +108,8 @@ public sealed class CredentialHelperCoordinator
             expectedAccountIdentityId: work.AccountIdentityId?.Value,
             expectedBillingScopeIdentityId: work.BillingScopeIdentityId?.Value,
             expectedReservationGroupId: request?.ReservationGroupId?.Value,
+            expectedMaximumFrameBytes: work.Limits?.MaximumFrameBytes
+                ?? HelperProtocolV2Constants.MaximumFrameBytes,
             expectedOperationKind: work.OperationKind,
             expectedLimits: work.Limits,
             expectedDispatchDeadline: request?.DispatchDeadline,

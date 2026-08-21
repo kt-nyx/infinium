@@ -1,8 +1,7 @@
 # M1 Slice 6 lean continuation plan
-
 Status: Accepted
 
-Disposition: Owner-authorized successor execution model; successor WP9 attempt 2 is an ambiguous consumed start pending append-only evidence-supplement and offline-correction acceptance before any fresh authority
+Disposition: Owner-authorized successor execution model, as amended by the 2026-08-21 hard-budget continuation after accepted attempt-2 supplement and correction
 
 Owner: Project owner
 
@@ -12,7 +11,7 @@ Accepted: 2026-08-17
 
 Accepted by: Project owner
 
-Last reviewed: 2026-08-17
+Last reviewed: 2026-08-21
 
 Work ID: `M1/S6-CONTINUATION`
 
@@ -35,6 +34,17 @@ continuation verification profile, and the accepted
 [M1 process amendment](../../amendments/process-continuation.md)
 
 ## 1. Purpose and current authority
+
+The owner-authorized
+[hard-budget continuation amendment](m1-slice6-development-campaign-amendment.v2.json)
+supersedes this plan's finite five-start ceiling, repeated-defect stop, fixed
+per-attempt policy cost ceiling, and cumulative-reservation budget burn. It
+does not change accepted product meaning. The exact USD 10.00 aggregate hard
+limit, sequential fresh identities, one possible start per attempt, no
+automatic retry, durable settlement, first-structurally-valid semantic latch,
+credential isolation, answer isolation, and C3 owner-acceptance boundary remain
+unchanged. Released pre-start reservations are reusable; settled, unresolved,
+and currently outstanding exposure remains conservatively committed.
 
 This plan replaces the remaining Slice 6 orchestration model after accepted R2
 with three outcome packages. It preserves every uncompleted R3-R7 obligation
@@ -257,161 +267,87 @@ If accepted, this amendment removes premature implementation-freeze churn. It do
 C2 self-authorizing, erase a terminal event, or permit a helper, credential,
 network, provider, or billable operation without the exact existing gates.
 
-## 7. `M1/S6/C2` — One bounded live campaign
+## 7. `M1/S6/C2` — Sequential hard-budget continuation
 
-### 2026-08-20 owner-authorized successor amendment
+### 2026-08-21 owner-authorized clean-break supersession
 
-The original v4 C2B execution is terminal and immutable at event hash
-`282c97151dbdcd354288b67f96c4b01d7f7ef43b1bbfb9f247cbd9b510506de9`.
-The following clean-break rules supersede Sections 7.1-7.5 only where those
-sections say one start per stage, exactly three total starts, USD 1.34
-aggregate, no fourth request, or permanent stop after any failed stage:
+This section supersedes every earlier Slice 6 execution clause that imposed
+exactly three total starts, five lineage starts, a fourth-request prohibition,
+per-stage call counts, per-attempt USD 0.14/USD 0.60 ceilings, cumulative-
+reservation budget burn, or a terminal stop for an ordinary failed or ambiguous
+attempt. Those clauses remain historical descriptions of v4/v5 authority only
+and are not executable restrictions for successor v6.
 
-- each v5 runtime authority permits one possible provider start and no retry;
-- the campaign permits serial fresh attempts, never an automatic loop;
-- each stage has at most five lineage starts; terminal WP9 consumed ordinal 1,
-  leaving at most four successor WP9 starts, while WP10 and WP11 each have at
-  most five;
-- terminal USD 0.14 plus successor cumulative reservations/spend may not
-  exceed USD 10.00; the existing per-attempt USD 0.14/USD 0.60/USD 0.60
-  ceilings are unchanged unless exact technical necessity is independently
-  reviewed and rebound;
-- additive migration `M1-S6-SUCCESSOR-0007` may advance only the exact retained
-  product-state root to schema 7/storage `1.6.0`; it preserves historical rows
-  and permits the same frozen request only through a fresh transport operation
-  and attempt identity;
-- every reviewed runtime candidate binds both the immutable snapshot-origin
-  digest and an exact read-only logical checkpoint digest of the then-current
-  SQLite state plus every retained non-database file; the coordinator
-  recomputes that checkpoint immediately before admission so between-attempt
-  state drift cannot inherit authority;
-- a failed or ambiguous attempt retains its response or zero-byte diagnostic,
-  unresolved hold when needed, and fresh identities. Another attempt requires
-  accepted failure evidence plus offline diagnosis/correction and independent
-  review;
-- the first structurally valid WP10 or WP11 response is authoritative before
-  semantic comparison and permanently stops provider calls for that stage;
-  no prompt, product, fixture, or frozen-oracle tuning and no choice among
-  multiple valid semantic outputs is permitted; and
-- the retained credential is accessible only through the exact masked-helper
-  `CredReadW -> CredFree` boundary in the successor credential-access
-  authority. Exposure, enumeration, replacement, write, and delete remain
-  prohibited.
+The original v4 C2B event and successor ledger v2 through sequence 8 remain
+immutable. Their conservative committed exposure is USD 0.25008. Successor v6
+imports that exact lineage into a new ledger v3 and has USD 9.74992 remaining
+under the single Slice 6 USD 10.00 hard limit.
 
-All v4 schemas, manifests, ledger bytes, evidence, and historical statements
-remain unchanged and historical. “One-shot stage” in the original text now
-means “one possible provider start per independently reviewed and durably
-admitted fresh attempt.”
+### 7.1 Active objective and authority
 
-### 7.1 Objective and authority
+Complete WP9, WP10, and WP11 through serial fresh attempts. Each admitted
+attempt permits exactly one possible provider start, one DNS resolution, no
+automatic retry, and no parallel call. Failed, truncated, transport-error,
+provider-error, structurally invalid, schema-invalid, timestamp-invalid, or
+pre-effect attempts retain conservative evidence and return to diagnosis,
+correction, review, and an entirely fresh attempt identity.
 
-Execute the exact Slice 6 credential enrollment and three provider stages once
-each under a fresh, closed, owner-accepted campaign. C2 preserves the old R4-R7
-effect ceilings and semantic obligations while eliminating separate software-
-candidate freeze/bind cycles between stages.
+There is no per-stage start count, attempt count, or per-attempt policy-cost
+ceiling. The exact price-derived reservation for each fresh attempt must fit
+the aggregate remaining committed budget. A pre-start release is reusable;
+cumulative reservations are telemetry and are never spend. Committed exposure
+is historical committed plus settled plus unresolved plus outstanding.
 
-C2 is not opened by C1 alone. Before any helper/readiness/native operation, the
-owner must accept the exact committed C2 authority package binding:
+The first structurally valid WP10 or WP11 result becomes permanent stage
+authority before semantic comparison. No prompt, product, fixture, oracle, or
+answer tuning and no selection among multiple valid semantic results is
+permitted.
 
-- fresh campaign, credential, profile/generation, target fingerprint, and stage
-  identities;
-- exact accepted C1 implementation and build identities;
-- exact request profile, package/input/template/oracle bindings;
-- current capability, price, account/billing intent, budgets, deadlines, and
-  expiries;
-- one enrollment and exactly three sequential provider-stage ceilings;
-- durable ledger transition grammar and safety-identifier contract;
-- no retry, fallback, parallel dispatch, counter reset, ceiling transfer, or
-  fourth request; and
-- exact effect commands and retained evidence locations.
+### 7.2 Active technical bounds
 
-### 7.2 Preserved aggregate ceilings
+A stage-v6 manifest may adjust request bytes, proved input tokens, output
+tokens, raw-response bytes, timeout, and exact reservation within the accepted
+provider snapshot and active helper/platform feasibility. Current outer
+feasibility is 1,000,000 request bytes inside the successor-only 1,100,000-byte
+private protobuf message ceiling, leaving 100,000 bytes for framing metadata
+and identities; 922,000 input tokens; 128,000 output tokens; 1,048,576 raw
+response bytes; a separate 4,194,304-byte staged-envelope ceiling for the raw
+response plus sanitized receipt/schema metadata; and 900 seconds. The request's exact
+price-derived worst case must equal its durable reservation and fit the USD
+9.74992 remaining aggregate at admission. These are technical feasibility
+bounds, not lower owner budgets or fixed attempt profiles.
 
-Unless a future accepted authority package lowers them, C2 may not exceed:
-
-| Stage | Starts | Request bytes | Input tokens | Output tokens | Raw response bytes | Deadline | Maximum cost |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| WP9 qualification | 1 | 16,384 | 20,480 | 256 | 262,144 | 60 s | USD 0.14 |
-| WP10 source claim | 1 | 65,536 | 73,728 | 4,096 | 1,048,576 | 120 s | USD 0.60 |
-| WP11 investigation | 1 | 65,536 | 73,728 | 4,096 | 1,048,576 | 120 s | USD 0.60 |
-| Aggregate | 3 | 147,456 | 167,936 | 8,448 | 2,359,296 | - | USD 1.34 |
-
-The final aggregate native maximum remains `CredWriteW=1`, `CredReadW=5`,
-`CredDeleteW=0`, `CredFree=4`, total 10. Every successful credential read is
-paired with its allocation's free. The fresh authority may lower but never
-raise these bounds without a separate owner/architecture decision.
+Credential access remains the masked-helper exact
+`CredReadW -> CredFree` boundary. Credential exposure, enumeration,
+replacement, write, and delete remain prohibited.
 
 ### 7.3 C2 stage boundaries
 
-#### C2A — masked credential enrollment
-
-Maps old R4. Perform one helper-owned masked paste and exact-target enrollment
-under the accepted credential manifest. Retain sanitized evidence and exact
-effect counts. Ambiguity, expiry, secret exposure, target mismatch, or helper
-drift stops C2. Offline evidence-format correction is allowed only when the
-single effect is unambiguous; enrollment is never repeated under the campaign.
-
-#### C2B — WP9 transport qualification
-
-Maps old R5/WP9. After accepted C2A evidence, materialize, review, durably admit,
-and execute one exact non-semantic qualification request. Persist request,
-response, headers, usage, settlement, recovery, and replay. A known or possible
-start consumes WP9. No semantic reuse of the qualification response is allowed.
-
-#### C2C — WP10 source-claim extraction
-
-Maps old R6/WP10. After accepted WP9 evidence, materialize, review, durably
-admit, and execute one exact WP10 request over the frozen v2 package. Retain all
-nine semantic states and exactly one admitted artifact/application. A known or
-possible start consumes WP10. The frozen oracle is not changed after product
-comparison.
-
-#### C2D — WP11 candidate investigation
-
-Maps the live portion of old R7/WP11. After accepted WP10 evidence, reopen the
-exact persisted WP10 chain, materialize, review, durably admit, and execute one
-exact WP11 request containing the accepted positive and matched negative.
-Persist candidate results, settlement, recovery, and replay. A known or
-possible start consumes WP11. No fourth request exists.
+C2B completes non-semantic WP9 transport qualification. Independently accepted
+WP9 evidence opens C2C, which executes the frozen WP10 source-claim package.
+The first accepted WP10 result opens C2D, which executes the frozen WP11
+candidate-investigation package. Every attempt binds the current product-state
+checkpoint and current ledger tip. An ordinary failure does not close the
+stage; a first structurally valid result does.
 
 ### 7.4 Review and verification cadence
 
-Each effect keeps its exact pre-effect review, durable admission, one-start,
-expiry, settlement, evidence, and predecessor gate. That strictness is not
-reduced.
+Each effect retains exact pre-effect review, durable SQLite and ledger
+admission, one-start latching, credential isolation, response/evidence
+retention, settlement or conservative unresolved accounting, and independent
+evidence acceptance. Focused checks are used while correcting a candidate;
+consolidated changed-surface review and the complete accepted verification
+floor run at meaningful stable boundaries. Rebinding is required for a changed
+effect candidate, not after every local correction.
 
-Before each provider stage, compare the exact accepted local official-document
-snapshot, request profile, model, capability, and price facts with the stage
-manifest. Drift or the need for a public refresh stops before possible start;
-any internet refresh remains a separately authorized research action. After
-each credential/provider effect, its sanitized exact evidence must receive
-fresh independent acceptance before the next stage manifest is materialized.
+### 7.5 Active stops
 
-After an effect, run focused evidence, persistence, replay, canary, counter,
-and semantic/provenance review. Do not rerun the complete repository floor
-between stages when tracked implementation bytes are unchanged. If tracked
-implementation must change, stop before the next effect, correct and review the
-same C2 software candidate offline, run affected checks, and run the complete
-floor only when required to establish a new exact executable candidate. A
-started stage is never retried or replaced by that correction.
-
-### 7.5 Stops
-
-C2 stops the affected campaign path for:
-
-- secret or answer-isolation breach;
-- expired or mismatched authority;
-- native ambiguity or unknown cleanup;
-- known or possible provider start with any need for another response;
-- ceiling, counter, settlement, ledger, safety-identifier, or predecessor
-  inconsistency;
-- material provider/profile/capability/price drift; or
-- a required change to product meaning, accepted architecture, or effect
-  authority.
-
-Ordinary local evidence, codec, validator, documentation, or replay defects are
-corrected offline when retained evidence is sufficient and no new effect is
-needed.
+Stop only when the aggregate API hard budget is exhausted before a viable
+result; a secret or private-answer breach occurs; trustworthy retained evidence
+can no longer be preserved; completion requires changing accepted product
+meaning outside Slice 6; or C3 is complete and owner-ready. Authority, schema,
+timestamp, manifest, provider, evidence, replay, and review defects are
+ordinary development work unless they cause one of those conditions.
 
 ## 8. `M1/S6/C3` — Retained-evidence closeout
 
@@ -429,8 +365,9 @@ maturity, documentation, and owner-handoff outcomes of old R7.
 - replay retained raw responses and headers with network disabled;
 - verify the WP10 admitted chain and WP11 positive/negative consumption;
 - assemble composed provenance with qualification marked non-semantic;
-- prove the actual per-stage start totals are within five (including terminal
-  WP9), settlement/recovery, canaries, no retry, and no start after a first
+- bind frozen ledger v2 and all inherited attempt-2 evidence to the complete
+  ledger-v3 chronology; prove exact committed accounting, settlement/recovery,
+  canaries, no automatic retry or parallel call, and no start after a first
   authoritative stage response;
 - report refusals, unsupported modes, coverage, gaps, and claim limits;
 - run the final accumulated Slice 6 regression and continuation-profile floor;

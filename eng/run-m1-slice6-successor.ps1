@@ -4,6 +4,8 @@ param(
     [Parameter(Mandatory)][string]$CoordinatorSha256,
     [Parameter(Mandatory)][string]$CampaignManifest,
     [Parameter(Mandatory)][string]$CampaignManifestSha256,
+    [Parameter(Mandatory)][string]$HardBudgetAmendment,
+    [Parameter(Mandatory)][string]$HardBudgetAmendmentSha256,
     [Parameter(Mandatory)][string]$StageManifest,
     [Parameter(Mandatory)][string]$StageManifestSha256,
     [Parameter(Mandatory)][string]$CredentialManifest,
@@ -34,6 +36,7 @@ function Resolve-ExactFile([string]$Path, [string]$ExpectedSha256) {
 
 $coordinatorPath = Resolve-ExactFile $Coordinator $CoordinatorSha256
 $campaignPath = Resolve-ExactFile $CampaignManifest $CampaignManifestSha256
+$amendmentPath = Resolve-ExactFile $HardBudgetAmendment $HardBudgetAmendmentSha256
 $stagePath = Resolve-ExactFile $StageManifest $StageManifestSha256
 $credentialPath = Resolve-ExactFile $CredentialManifest $CredentialManifestSha256
 $runtimePath = Resolve-ExactFile $RuntimeAuthority $RuntimeAuthoritySha256
@@ -46,6 +49,7 @@ $evidencePath = [IO.Path]::GetFullPath($Evidence)
 # fallback, authority derivation, credential inspection, or output selection.
 & $coordinatorPath --m1-slice6-successor-attempt `
     --campaign-manifest $campaignPath --campaign-manifest-sha256 $CampaignManifestSha256 `
+    --hard-budget-amendment $amendmentPath --hard-budget-amendment-sha256 $HardBudgetAmendmentSha256 `
     --stage-manifest $stagePath --stage-manifest-sha256 $StageManifestSha256 `
     --credential-manifest $credentialPath --credential-manifest-sha256 $CredentialManifestSha256 `
     --runtime-authority $runtimePath --runtime-authority-sha256 $RuntimeAuthoritySha256 `

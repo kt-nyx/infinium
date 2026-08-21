@@ -6,6 +6,8 @@ public static class HelperProtocolV2Constants
     public const uint Minor = 0;
     public const string ContractVersion = "2.0.0";
     public const uint MaximumFrameBytes = 1_048_576;
+    public const uint SuccessorV6MaximumFrameBytes = 1_100_000;
+    public const uint SuccessorV6MaximumStagedOutputBytes = 4_194_304;
     public const uint MaximumRequestBytes = 65_536;
     public const uint MaximumResponseBytes = 1_048_576;
     public const uint MaximumStatusFrames = 16;

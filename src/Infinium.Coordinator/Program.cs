@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO.Pipes;
 using System.Net;
 using System.Security.AccessControl;
@@ -277,8 +278,92 @@ if (args is ["--m1-slice6-successor-campaign-initialize", "--campaign-manifest",
     }
 }
 
+if (args is ["--m1-slice6-hard-budget-initialize", "--campaign-manifest", string hardCampaign,
+    "--campaign-manifest-sha256", string hardCampaignSha,
+    "--hard-budget-amendment", string hardAmendment,
+    "--hard-budget-amendment-sha256", string hardAmendmentSha,
+    "--ledger", string hardLedger, "--review", string hardReview])
+{
+    try
+    {
+        M1Slice6SuccessorCampaignRunner.InitializeHardBudget(hardCampaign, hardCampaignSha,
+            hardAmendment, hardAmendmentSha, hardLedger, hardReview, DateTimeOffset.UtcNow);
+        Console.WriteLine("M1 Slice 6 hard-budget continuation independently reviewed and admitted with zero effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"M1 Slice 6 hard-budget initialization stopped: {exception.GetType().Name}");
+        return 84;
+    }
+}
+
+if (args is ["--m1-slice6-successor-materialize-attempt",
+    "--campaign-manifest", string materializeCampaign,
+    "--campaign-manifest-sha256", string materializeCampaignSha,
+    "--hard-budget-amendment", string materializeAmendment,
+    "--hard-budget-amendment-sha256", string materializeAmendmentSha,
+    "--ledger", string materializeLedger, "--stage", string materializeStage,
+    "--attempt-ordinal", string materializeOrdinalText,
+    "--output-directory", string materializeOutput,
+    "--implementation-commit", string materializeCommit,
+    "--coordinator-binary", string materializeCoordinator,
+    "--helper-binary", string materializeHelper]
+    && int.TryParse(materializeOrdinalText, CultureInfo.InvariantCulture, out int materializeOrdinal))
+{
+    try
+    {
+        M1Slice6SuccessorAttemptMaterializer.Materialize(materializeCampaign,
+            materializeCampaignSha, materializeAmendment, materializeAmendmentSha,
+            materializeLedger, materializeStage, materializeOrdinal, materializeOutput,
+            materializeCommit, materializeCoordinator, materializeHelper, DateTimeOffset.UtcNow);
+        Console.WriteLine("M1 Slice 6 fresh successor attempt materialized with zero effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException
+        or InvalidOperationException or UnauthorizedAccessException or System.Text.Json.JsonException)
+    {
+        Console.Error.WriteLine($"M1 Slice 6 successor attempt materialization stopped: {exception.GetType().Name}");
+        return 84;
+    }
+}
+
+if (args is ["--m1-slice6-successor-finalize-runtime",
+    "--campaign-manifest", string finalizeCampaign,
+    "--campaign-manifest-sha256", string finalizeCampaignSha,
+    "--hard-budget-amendment", string finalizeAmendment,
+    "--hard-budget-amendment-sha256", string finalizeAmendmentSha,
+    "--stage-manifest", string finalizeStage, "--runtime-candidate", string finalizeCandidate,
+    "--review", string finalizeReview, "--runtime-authority", string finalizeRuntime,
+    "--not-before-utc", string finalizeNotBeforeText,
+    "--expires-at-utc", string finalizeExpiresText]
+    && DateTimeOffset.TryParseExact(finalizeNotBeforeText, "yyyy-MM-dd'T'HH:mm:ss.fffffff'Z'",
+        CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+        out DateTimeOffset finalizeNotBefore)
+    && DateTimeOffset.TryParseExact(finalizeExpiresText, "yyyy-MM-dd'T'HH:mm:ss.fffffff'Z'",
+        CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+        out DateTimeOffset finalizeExpires))
+{
+    try
+    {
+        M1Slice6SuccessorAttemptMaterializer.FinalizeRuntime(finalizeCampaign,
+            finalizeCampaignSha, finalizeAmendment, finalizeAmendmentSha, finalizeStage,
+            finalizeCandidate, finalizeReview, finalizeRuntime, finalizeNotBefore, finalizeExpires);
+        Console.WriteLine("M1 Slice 6 reviewed runtime authority finalized with zero effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException
+        or InvalidOperationException or UnauthorizedAccessException or System.Text.Json.JsonException)
+    {
+        Console.Error.WriteLine($"M1 Slice 6 successor runtime finalization stopped: {exception.GetType().Name}");
+        return 84;
+    }
+}
+
 if (args is ["--m1-slice6-successor-attempt", "--campaign-manifest", string successorAttemptCampaign,
     "--campaign-manifest-sha256", string successorAttemptCampaignSha,
+    "--hard-budget-amendment", string successorAttemptAmendment,
+    "--hard-budget-amendment-sha256", string successorAttemptAmendmentSha,
     "--stage-manifest", string successorStage, "--stage-manifest-sha256", string successorStageSha,
     "--credential-manifest", string successorCredential, "--credential-manifest-sha256", string successorCredentialSha,
     "--runtime-authority", string successorRuntime, "--runtime-authority-sha256", string successorRuntimeSha,
@@ -289,7 +374,8 @@ if (args is ["--m1-slice6-successor-attempt", "--campaign-manifest", string succ
     try
     {
         return await M1Slice6SuccessorCampaignRunner.RunAttemptAsync(successorAttemptCampaign,
-            successorAttemptCampaignSha, successorStage, successorStageSha, successorCredential,
+            successorAttemptCampaignSha, successorAttemptAmendment, successorAttemptAmendmentSha,
+            successorStage, successorStageSha, successorCredential,
             successorCredentialSha, successorRuntime, successorRuntimeSha, successorAttemptLedger,
             successorSafetyRoot, successorHelper, successorHelperSha, successorEvidence, CancellationToken.None)
             .ConfigureAwait(false);
@@ -306,13 +392,16 @@ if (args is ["--m1-slice6-successor-attempt", "--campaign-manifest", string succ
 if (args is ["--m1-slice6-successor-attempt-evidence-acceptance",
     "--campaign-manifest", string successorAcceptCampaign,
     "--campaign-manifest-sha256", string successorAcceptCampaignSha,
+    "--hard-budget-amendment", string successorAcceptAmendment,
+    "--hard-budget-amendment-sha256", string successorAcceptAmendmentSha,
     "--ledger", string successorAcceptLedger, "--evidence", string successorAcceptEvidence,
     "--review", string successorAcceptReview])
 {
     try
     {
         M1Slice6SuccessorCampaignRunner.AcceptAttempt(successorAcceptCampaign,
-            successorAcceptCampaignSha, successorAcceptLedger, successorAcceptEvidence,
+            successorAcceptCampaignSha, successorAcceptAmendment, successorAcceptAmendmentSha,
+            successorAcceptLedger, successorAcceptEvidence,
             successorAcceptReview, DateTimeOffset.UtcNow);
         Console.WriteLine("M1 Slice 6 successor attempt evidence independently accepted with zero provider effect.");
         return 0;
@@ -352,6 +441,8 @@ if (args is ["--m1-slice6-successor-attempt-evidence-supplement-acceptance",
 if (args is ["--m1-slice6-successor-authoritative-recovery",
     "--campaign-manifest", string successorRecoveryCampaign,
     "--campaign-manifest-sha256", string successorRecoveryCampaignSha,
+    "--hard-budget-amendment", string successorRecoveryAmendment,
+    "--hard-budget-amendment-sha256", string successorRecoveryAmendmentSha,
     "--stage-manifest", string successorRecoveryStage,
     "--stage-manifest-sha256", string successorRecoveryStageSha,
     "--credential-manifest", string successorRecoveryCredential,
@@ -365,7 +456,8 @@ if (args is ["--m1-slice6-successor-authoritative-recovery",
     try
     {
         M1Slice6SuccessorCampaignRunner.RecoverAuthoritativeAttempt(successorRecoveryCampaign,
-            successorRecoveryCampaignSha, successorRecoveryStage, successorRecoveryStageSha,
+            successorRecoveryCampaignSha, successorRecoveryAmendment, successorRecoveryAmendmentSha,
+            successorRecoveryStage, successorRecoveryStageSha,
             successorRecoveryCredential, successorRecoveryCredentialSha, successorRecoveryRuntime,
             successorRecoveryRuntimeSha, successorRecoveryLedger, successorOriginalEvidence,
             successorRecoveryEvidence, DateTimeOffset.UtcNow);
@@ -383,12 +475,15 @@ if (args is ["--m1-slice6-successor-authoritative-recovery",
 if (args is ["--m1-slice6-successor-correction-review-acceptance",
     "--campaign-manifest", string successorCorrectionCampaign,
     "--campaign-manifest-sha256", string successorCorrectionCampaignSha,
+    "--hard-budget-amendment", string successorCorrectionAmendment,
+    "--hard-budget-amendment-sha256", string successorCorrectionAmendmentSha,
     "--ledger", string successorCorrectionLedger, "--review", string successorCorrectionReview])
 {
     try
     {
         M1Slice6SuccessorCampaignRunner.AcceptCorrectionReview(successorCorrectionCampaign,
-            successorCorrectionCampaignSha, successorCorrectionLedger, successorCorrectionReview, DateTimeOffset.UtcNow);
+            successorCorrectionCampaignSha, successorCorrectionAmendment, successorCorrectionAmendmentSha,
+            successorCorrectionLedger, successorCorrectionReview, DateTimeOffset.UtcNow);
         Console.WriteLine("M1 Slice 6 successor offline correction review accepted with zero provider effect.");
         return 0;
     }
@@ -402,13 +497,16 @@ if (args is ["--m1-slice6-successor-correction-review-acceptance",
 if (args is ["--m1-slice6-successor-composed-evidence-acceptance",
     "--campaign-manifest", string successorComposedCampaign,
     "--campaign-manifest-sha256", string successorComposedCampaignSha,
+    "--hard-budget-amendment", string successorComposedAmendment,
+    "--hard-budget-amendment-sha256", string successorComposedAmendmentSha,
     "--ledger", string successorComposedLedger, "--evidence", string successorComposedEvidence,
     "--review", string successorComposedReview])
 {
     try
     {
         M1Slice6SuccessorCampaignRunner.CompleteComposedEvidence(successorComposedCampaign,
-            successorComposedCampaignSha, successorComposedLedger, successorComposedEvidence,
+            successorComposedCampaignSha, successorComposedAmendment, successorComposedAmendmentSha,
+            successorComposedLedger, successorComposedEvidence,
             successorComposedReview, DateTimeOffset.UtcNow);
         Console.WriteLine("M1 Slice 6 successor effect-free C3 handoff or exact review acceptance completed.");
         return 0;

@@ -270,12 +270,17 @@ public sealed class M1Slice6CampaignProductionStageBoundary : IM1Slice6CampaignS
             M1Slice6CampaignStage.SourceClaimExtraction => ProviderOperationKindV2.SourceClaimExtraction,
             _ => ProviderOperationKindV2.CandidateInvestigation,
         };
+        bool successorV6 = requestId.StartsWith("m1-s6-successor-v6-", StringComparison.Ordinal);
         HelperLimitsV2 limits = new()
         {
-            MaximumFrameBytes = HelperProtocolV2Constants.MaximumFrameBytes,
+            MaximumFrameBytes = successorV6
+                ? HelperProtocolV2Constants.SuccessorV6MaximumFrameBytes
+                : HelperProtocolV2Constants.MaximumFrameBytes,
             MaximumRequestBytes = checked((ulong)authority.Limits.MaximumRequestBytes),
             MaximumResponseBytes = checked((ulong)authority.Limits.MaximumRawResponseBytes),
-            MaximumStagedOutputBytes = checked((ulong)authority.Limits.MaximumRawResponseBytes),
+            MaximumStagedOutputBytes = successorV6
+                ? HelperProtocolV2Constants.SuccessorV6MaximumStagedOutputBytes
+                : checked((ulong)authority.Limits.MaximumRawResponseBytes),
             MaximumInputTokens = checked((ulong)authority.Limits.MaximumInputTokens),
             MaximumOutputTokens = checked((ulong)authority.Limits.MaximumOutputTokens),
             MaximumCalculatedNanoUsd = authority.Limits.MaximumNanoUsd,
@@ -463,7 +468,9 @@ public sealed class M1Slice6CampaignProductionStageBoundary : IM1Slice6CampaignS
         {
             if (!OpenAiStagedResponseEnvelope.TryRead(stagedBytes, out raw, out headers))
             { return false; }
-            response = OpenAiStagedResponseEnvelope.Replay(raw, headers, requestId);
+            response = requestId.StartsWith("m1-s6-successor-v6-", StringComparison.Ordinal)
+                ? OpenAiStagedResponseEnvelope.ReplaySuccessorV6(raw, headers, requestId)
+                : OpenAiStagedResponseEnvelope.Replay(raw, headers, requestId);
             return true;
         }
         catch (Exception exception) when (exception is InvalidDataException or JsonException

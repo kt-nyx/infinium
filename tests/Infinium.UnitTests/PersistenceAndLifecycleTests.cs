@@ -23,12 +23,12 @@ public sealed class PersistenceAndLifecycleTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
-    public void Schema7ProviderPersistenceAndBackupRestoreDeclarationsAreClosed()
+    public void Schema8ProviderPersistenceAndBackupRestoreDeclarationsAreClosed()
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
 
-        Assert.AreEqual(7, store.GetSchemaVersion());
+        Assert.AreEqual(8, store.GetSchemaVersion());
         CollectionAssert.AreEquivalent(
             ProviderProjectionNames,
             ProviderPersistenceDeclarations.RebuildableProjections.ToArray());
@@ -46,6 +46,8 @@ public sealed class PersistenceAndLifecycleTests
                WHERE migration_id='M1-S6-0006' AND from_version=5 AND to_version=6),
               (SELECT COUNT(*) FROM migration_history
                WHERE migration_id='M1-S6-SUCCESSOR-0007' AND from_version=6 AND to_version=7),
+              (SELECT COUNT(*) FROM migration_history
+               WHERE migration_id='M1-S6-SUCCESSOR-V6-0008' AND from_version=7 AND to_version=8),
               (SELECT COUNT(*) FROM sqlite_schema
                WHERE type='table' AND name LIKE 'provider_%'),
               (SELECT COUNT(*) FROM sqlite_schema
@@ -55,8 +57,9 @@ public sealed class PersistenceAndLifecycleTests
         Assert.IsTrue(reader.Read());
         Assert.AreEqual(1L, reader.GetInt64(0));
         Assert.AreEqual(1L, reader.GetInt64(1));
-        Assert.AreEqual(36L, reader.GetInt64(2));
-        Assert.AreEqual(66L, reader.GetInt64(3));
+        Assert.AreEqual(1L, reader.GetInt64(2));
+        Assert.AreEqual(36L, reader.GetInt64(3));
+        Assert.AreEqual(66L, reader.GetInt64(4));
         reader.Close();
         command.CommandText = "SELECT COUNT(*) FROM sqlite_schema WHERE type='trigger' AND name='provider_usage_operation_ceiling_guard';";
         Assert.AreEqual(0L, (long)command.ExecuteScalar()!);
@@ -160,7 +163,7 @@ public sealed class PersistenceAndLifecycleTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
-    public void Schema7ProviderPersistenceBackupRestoreRetainsOnlyBlockedAuthorityState()
+    public void Schema8ProviderPersistenceBackupRestoreRetainsOnlyBlockedAuthorityState()
     {
         using TemporaryStore source = new();
         BackupArtifact backup;
@@ -180,7 +183,7 @@ public sealed class PersistenceAndLifecycleTests
                 AuthoritativeStore.RestoreBackup(backup, target);
             }
             using AuthoritativeStore restored = new(new StoragePaths(targetRoot));
-            Assert.AreEqual(7, restored.GetSchemaVersion());
+            Assert.AreEqual(8, restored.GetSchemaVersion());
             using SqliteConnection connection = new($"Data Source={restored.Paths.Database};Mode=ReadOnly;Pooling=False");
             connection.Open();
             using SqliteCommand command = connection.CreateCommand();

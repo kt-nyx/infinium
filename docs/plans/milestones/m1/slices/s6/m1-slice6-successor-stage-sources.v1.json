@@ -1,0 +1,48 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-successor-stage-sources/1.0.0",
+  "source_set_id": "infinium.m1-s6.successor-stage-sources/20260821-v6",
+  "stages": [
+    {
+      "ordinal": 1,
+      "operation": "Qualification",
+      "request_source": { "path": "docs/plans/milestones/m1/slices/s6/live/wp9-qualification-request.v4.json", "bytes": 863, "sha256": "738ac12bef0d0755e7dece88e302a076d79e61e240ffe3d1c8e1237c4736a4d9" },
+      "validation_package": {
+        "package_id": "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1",
+        "manifest": { "path": "fixtures/public/platform/provider-budget/capability-val/public-manifest.json", "bytes": 526, "sha256": "3fa9f56a2ad1f815638ed7f4ce198b499cc072604e2a29b3bf5e418d6d33389c" },
+        "product_input": { "path": "fixtures/public/platform/provider-budget/capability-val/input.json", "bytes": 190, "sha256": "c9cb054a578a244bca1a1d77bcc2ca7f2898ada42f4250da88588ddf6472b55a" },
+        "predecessor_manifest": { "path": "fixtures/public/platform/provider-budget/capability-val/public-manifest.json", "bytes": 526, "sha256": "3fa9f56a2ad1f815638ed7f4ce198b499cc072604e2a29b3bf5e418d6d33389c" },
+        "oracle": { "path": "fixtures/public/platform/provider-budget/capability-val/oracle.json", "bytes": 201, "sha256": "7ce656a0d056239cedcbfc75ec44b21ca7be79946da2613a109dfd233f6b8bda" },
+        "deterministic_oracle_result_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "semantic_use": false
+      }
+    },
+    {
+      "ordinal": 2,
+      "operation": "SourceClaimExtraction",
+      "request_source": { "path": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/execution-input.v2.json", "bytes": 4144, "sha256": "bcbcc804eee7ea51fc00b6daa33d688078dcb1e8ddc53349a0ec673b77a5e789" },
+      "validation_package": {
+        "package_id": "LLM-CLAIM-LIVE-VAL-v2",
+        "manifest": { "path": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/public-manifest.json", "bytes": 1126, "sha256": "1231c98875c3ba3ca0ce3b60773e566c791b4a313c1fd691233be1a1bc60ba09" },
+        "product_input": { "path": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/execution-input.v2.json", "bytes": 4144, "sha256": "bcbcc804eee7ea51fc00b6daa33d688078dcb1e8ddc53349a0ec673b77a5e789" },
+        "predecessor_manifest": { "path": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/public-manifest.json", "bytes": 1684, "sha256": "926963ca067da52ec8d6d7ecdd824df3cb2e2efed6dd12fe3418f3e63b29b4b7" },
+        "oracle": { "path": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/oracle.v2.json", "bytes": 2398, "sha256": "76a631ffa02eeff301c240588d1507e3fe3cc2fe13f19aa597aecb8d2ddb3e14" },
+        "deterministic_oracle_result_sha256": "beabc1d5cef06317d215bfa45ab481273e5995e0b4bd58ce412c78335bfc8e0f",
+        "semantic_use": true
+      }
+    },
+    {
+      "ordinal": 3,
+      "operation": "CandidateInvestigation",
+      "request_source": { "path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/execution-input.v2.json", "bytes": 3335, "sha256": "d9d84af1a0a4e8c86100928fd6737482b51a96fd7d1c461cd30ecc81cd29eeb6" },
+      "validation_package": {
+        "package_id": "LLM-INVESTIGATE-LIVE-VAL-v2",
+        "manifest": { "path": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/public-manifest.json", "bytes": 1185, "sha256": "f531447c5d7a1a3efc45b0787b319e3467d35197fbfea85436e3e003a789bb50" },
+        "product_input": { "path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/execution-input.v2.json", "bytes": 3335, "sha256": "d9d84af1a0a4e8c86100928fd6737482b51a96fd7d1c461cd30ecc81cd29eeb6" },
+        "predecessor_manifest": { "path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/public-manifest.json", "bytes": 1714, "sha256": "c607ca873edb888502c9511ee5d9663b87247565d88b302edf3de55fb2750942" },
+        "oracle": { "path": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/oracle.v2.json", "bytes": 3371, "sha256": "52f13b89f0c0cab2dc91c72e3986b8bc358e41a5ab5253ea1e8fab3b19230e3a" },
+        "deterministic_oracle_result_sha256": "5d594a901257437387cf970c9456106f16461401024d206fd4c1109f207dedd5",
+        "semantic_use": true
+      }
+    }
+  ]
+}

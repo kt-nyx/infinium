@@ -101,6 +101,27 @@ public sealed class ProviderInputBoundPolicyTests
 
     [TestMethod]
     [TestCategory("Unit")]
+    public void SuccessorV6ProofUsesDedicatedAdjustableLimitsWithoutBroadeningHistoricalProfile()
+    {
+        using JsonDocument schema = JsonDocument.Parse(ProviderAdapterTestData.OutputSchemaBytes);
+        byte[] request = OpenAiResponsesCanonicalSerializer.SerializeSuccessorV6(new(
+            ProviderOperationKind.SourceClaimExtraction, "Infinium closed M1 instruction", "bounded",
+            schema.RootElement.Clone(), 8_192, ProviderAdapterTestData.SafetyIdentifier));
+        ProviderFiniteLimitsContract limits = new(1_000_000, 100_000, 8_192,
+            1_048_576, 1, 1_000_000_000, 300_000);
+
+        ProviderInputBoundEvidence evidence = OpenAiResponsesInputBoundPolicy.ProveSuccessorV6(
+            ProviderOperationKind.SourceClaimExtraction, request, limits);
+        Assert.AreEqual(request.Length + 8_192, evidence.ConservativeInputTokenUpperBound);
+        OpenAiResponsesCanonicalSerializer.ValidateSuccessorV6Profile(request, 8_192);
+        Assert.ThrowsExactly<InvalidOperationException>(() => OpenAiResponsesInputBoundPolicy.Prove(
+            ProviderOperationKind.SourceClaimExtraction, request, limits));
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            OpenAiResponsesCanonicalSerializer.ValidateExactProfile(request, 8_192));
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
     public void LocalByteEnvelopeRejectsMalformedUtf8AndEveryOutOfBandInputClass()
     {
         Assert.ThrowsExactly<InvalidDataException>(() => OpenAiResponsesInputBoundPolicy.Prove(

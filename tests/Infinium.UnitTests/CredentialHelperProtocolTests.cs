@@ -59,6 +59,22 @@ public sealed class CredentialHelperProtocolTests
     }
 
     [TestMethod]
+    public void SuccessorV6PrivateFrameHasExactMetadataHeadroomWithoutBroadeningHistoricalFrames()
+    {
+        HelperPrivateFrameV2 successor = HelperTestFrames.DispatchAssignment();
+        successor.Assignment.ProviderRequest.RequestId = "m1-s6-successor-v6-near-boundary-request";
+        successor.Assignment.ProviderRequest.CanonicalRequestBytes = ByteString.CopyFrom(new byte[1_000_000]);
+        byte[] encoded = HelperPrivateProtocolV2.Encode(successor);
+        Assert.IsGreaterThan(HelperPrivateProtocolV2.HistoricalMaximumMessageBytes, encoded.Length - 4);
+        Assert.IsLessThanOrEqualTo(HelperPrivateProtocolV2.MaximumMessageBytes, encoded.Length - 4);
+        Assert.AreEqual(successor, HelperPrivateProtocolV2.Decode(encoded, successor.Sequence));
+
+        HelperPrivateFrameV2 historical = successor.Clone();
+        historical.Assignment.ProviderRequest.RequestId = "historical-near-boundary-request";
+        Assert.ThrowsExactly<InvalidDataException>(() => HelperPrivateProtocolV2.Encode(historical));
+    }
+
+    [TestMethod]
     public void HelperPrivateProtocolRejectsWrongWireTypeForEveryKnownFieldRecursively()
     {
         HashSet<MessageDescriptor> visited = [];

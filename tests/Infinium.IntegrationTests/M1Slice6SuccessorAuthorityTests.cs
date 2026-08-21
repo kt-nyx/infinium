@@ -23,23 +23,85 @@ public sealed class M1Slice6SuccessorAuthorityTests
     {
         string repository = RepositoryRoot();
         string path = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
-            "m1-slice6-successor-campaign-authorization.v5.json");
+            "m1-slice6-successor-campaign-authorization.v6.json");
         string sha = M1Slice6SuccessorAuthorityLoader.HashFile(path);
         string schema = Path.Combine(repository, "contracts", "repository",
-            "m1-slice6-successor-campaign-authorization.v5.schema.json");
+            "m1-slice6-successor-campaign-authorization.v6.schema.json");
         ActiveRepositoryJsonSchemaValidator.Validate(File.ReadAllBytes(path), File.ReadAllBytes(schema),
-            "infinium.repository.m1-slice6-successor-campaign-authorization/5.0.0");
+            "infinium.repository.m1-slice6-successor-campaign-authorization/6.0.0");
         M1Slice6SuccessorCampaignAuthority authority =
             M1Slice6SuccessorAuthorityLoader.Campaign(path, sha);
-        Assert.AreEqual("infinium.m1-s6.successor-campaign/a4f66e58-6456-4c90-a6e2-20260820c2b1",
+        Assert.AreEqual("infinium.m1-s6.successor-campaign-v6/20260821-hard-budget",
             authority.CampaignId);
-        Assert.AreEqual("e6788d546308a8ec8f7c3374c52cf8700a7a2245f52d213587e6a84d1d779b0d",
+        Assert.AreEqual("5c76484a5835bb118a7143da25369b9571d96c39d8f533dcce1534f0b3ec84a6",
             authority.CredentialAccessAuthoritySha256);
-        string reviewPath = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
-            "m1-slice6-successor-campaign-independent-review.v1.json");
-        M1Slice6SuccessorIndependentReview review = M1Slice6SuccessorAuthorityLoader.Review(
-            reviewPath, "campaign-authority", authority.CampaignId, sha, false);
-        Assert.AreEqual("/root/successor-authority-review/campaign-final-20260820", review.ReviewId);
+    }
+
+    [TestMethod]
+    public void FreshAttemptMaterializerIsEffectFreeSchemaValidAndRequiresNextOrdinal()
+    {
+        string repository = RepositoryRoot();
+        string directory = Path.Combine(repository, ".infinium-successor-materializer-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string campaignPath = Path.Combine(repository, "docs", "plans", "milestones", "m1",
+                "slices", "s6", "m1-slice6-successor-campaign-authorization.v6.json");
+            string amendmentPath = Path.Combine(repository, "docs", "plans", "milestones", "m1",
+                "slices", "s6", "m1-slice6-development-campaign-amendment.v2.json");
+            string campaignSha = M1Slice6SuccessorAuthorityLoader.HashFile(campaignPath);
+            string amendmentSha = M1Slice6SuccessorAuthorityLoader.HashFile(amendmentPath);
+            M1Slice6SuccessorCampaignAuthority campaign =
+                M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+            M1Slice6HardBudgetAuthority amendment =
+                M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(amendmentPath, amendmentSha, campaign);
+            DateTimeOffset now = new(2026, 8, 21, 18, 0, 0, TimeSpan.Zero);
+            M1Slice6SuccessorCampaignLedger predecessor = new(amendment.PredecessorLedgerPath,
+                "infinium.m1-s6.successor-campaign/a4f66e58-6456-4c90-a6e2-20260820c2b1",
+                "ff0a8a1cd499f5639c85fa7d43737643dc4b3494643d150b72d2772fc2fc18ef",
+                campaign.TerminalCampaignId, campaign.TerminalEventHash, now);
+            string ledgerPath = Path.Combine(directory, "ledger.v3.jsonl");
+            _ = new M1Slice6SuccessorCampaignLedgerV3(ledgerPath, campaign.CampaignId,
+                campaign.ManifestSha256, campaign.TerminalCampaignId, campaign.TerminalEventHash, 8,
+                amendment.PredecessorEventHash, amendment.AmendmentId, amendment.ManifestSha256,
+                "test-amendment-review", new string('a', 64), predecessor.Current.Wp9PossibleStarts,
+                predecessor.Current.Wp10PossibleStarts, predecessor.Current.Wp11PossibleStarts,
+                predecessor.Current.Wp9Authoritative, predecessor.Current.Wp10Authoritative,
+                predecessor.Current.Wp11Authoritative, predecessor.Current.SuccessorCumulativeReservedNanoUsd,
+                predecessor.Current.SuccessorUnresolvedNanoUsd,
+                predecessor.Current.SuccessorSettledNanoUsd, now);
+            M1Slice6SuccessorCampaignLedgerV3 expiredReopen =
+                M1Slice6SuccessorCampaignRunner.OpenHardBudgetLedger(campaign, amendment,
+                    ledgerPath, amendment.ExpiresAtUtc.AddTicks(1), requireExisting: true);
+            Assert.AreEqual(M1Slice6SuccessorCampaignV3State.HardBudgetAmended,
+                expiredReopen.Current.State);
+            string coordinator = typeof(M1Slice6SuccessorCampaignRunner).Assembly.Location;
+            string helper = Path.Combine(repository, "src", "Infinium.CredentialHelper", "bin",
+                "Debug", "net10.0", "Infinium.CredentialHelper.dll");
+            string rejected = Path.Combine(directory, "wrong-ordinal");
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                M1Slice6SuccessorAttemptMaterializer.Materialize(campaignPath, campaignSha,
+                    amendmentPath, amendmentSha, ledgerPath, "Qualification", 4, rejected,
+                    new string('b', 40), coordinator, helper, now.AddTicks(1)));
+            Assert.IsFalse(Directory.Exists(rejected));
+
+            string output = Path.Combine(directory, "wp9-attempt-3-rederived");
+            M1Slice6SuccessorAttemptMaterializer.Materialize(campaignPath, campaignSha,
+                amendmentPath, amendmentSha, ledgerPath, "Qualification", 3, output,
+                new string('b', 40), coordinator, helper, now.AddTicks(2));
+            string stagePath = Path.Combine(output, "stage-attempt.v6.json");
+            string candidatePath = Path.Combine(output, "runtime-candidate.v2.json");
+            ActiveRepositoryJsonSchemaValidator.Validate(File.ReadAllBytes(stagePath),
+                File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                    "m1-slice6-successor-stage-attempt.v6.schema.json")),
+                M1Slice6SuccessorAuthorityLoader.StageSchema);
+            ActiveRepositoryJsonSchemaValidator.Validate(File.ReadAllBytes(candidatePath),
+                File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                    "m1-slice6-successor-runtime-candidate.v2.schema.json")),
+                M1Slice6SuccessorAuthorityLoader.RuntimeCandidateSchema);
+            Assert.AreEqual(3, JsonNode.Parse(File.ReadAllBytes(stagePath))!["attempt"]!["ordinal"]!.GetValue<int>());
+        }
+        finally { Directory.Delete(directory, recursive: true); }
     }
 
     [TestMethod]
@@ -146,7 +208,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
                 "slices", "s6", "m1-slice6-successor-campaign-authorization.v5.json");
             string campaignSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(campaignPath)));
             M1Slice6SuccessorCampaignAuthority campaign =
-                M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+                M1Slice6SuccessorAuthorityLoader.HistoricalCampaign(campaignPath, campaignSha);
             DateTimeOffset start = new(2026, 8, 21, 1, 0, 0, TimeSpan.Zero);
             string ledgerPath = Path.Combine(directory, "ledger.jsonl");
             M1Slice6SuccessorCampaignLedger ledger = new(ledgerPath, campaign.CampaignId,
@@ -232,9 +294,13 @@ public sealed class M1Slice6SuccessorAuthorityTests
                     semantic_result_sha256 = (string?)null,
                     semantic_provenance = new
                     {
-                        source_acquisition_id = "", source_admission_id = "", admitted_artifact_id = "",
-                        source_application_link_id = "", evidence_application_link_id = "",
-                        candidate_id = "", hypothesis_id = "",
+                        source_acquisition_id = "",
+                        source_admission_id = "",
+                        admitted_artifact_id = "",
+                        source_application_link_id = "",
+                        evidence_application_link_id = "",
+                        candidate_id = "",
+                        hypothesis_id = "",
                     },
                     semantic_failure_code = "",
                 },
@@ -299,9 +365,12 @@ public sealed class M1Slice6SuccessorAuthorityTests
                 subject = new { id = supplementId, sha256 = supplementSha },
                 correction = new
                 {
-                    required = false, defect_id = (string?)null,
-                    diagnosis_disposition = (string?)null, failure_evidence_id = (string?)null,
-                    failure_evidence_sha256 = (string?)null, candidate_commit = (string?)null,
+                    required = false,
+                    defect_id = (string?)null,
+                    diagnosis_disposition = (string?)null,
+                    failure_evidence_id = (string?)null,
+                    failure_evidence_sha256 = (string?)null,
+                    candidate_commit = (string?)null,
                 },
                 findings = HistoricalEvidenceLimitations,
                 reviewed_at_utc = "2026-08-21T01:00:00.0000000+00:00",
@@ -378,14 +447,14 @@ public sealed class M1Slice6SuccessorAuthorityTests
         {
             string slice = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6");
             JsonObject access = JsonNode.Parse(File.ReadAllText(Path.Combine(slice,
-                "m1-slice6-successor-credential-access.v1.json")))!.AsObject();
+                "m1-slice6-successor-credential-access.v2.json")))!.AsObject();
             access["status"] = "reviewed-and-admitted";
             string accessPath = Path.Combine(directory, "access.json");
             File.WriteAllText(accessPath, access.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
             string accessSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(accessPath)));
 
             JsonObject campaign = JsonNode.Parse(File.ReadAllText(Path.Combine(slice,
-                "m1-slice6-successor-campaign-authorization.v5.json")))!.AsObject();
+                "m1-slice6-successor-campaign-authorization.v6.json")))!.AsObject();
             campaign["status"] = "owner-authorized-reviewed-and-admitted";
             string accessRelative = Path.GetRelativePath(repository, accessPath).Replace('\\', '/');
             campaign["credential_inheritance"]!["access_authority_path"] = accessRelative;
@@ -416,7 +485,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
         {
             string slice = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6");
             JsonObject checkedInAccess = JsonNode.Parse(File.ReadAllText(Path.Combine(slice,
-                "m1-slice6-successor-credential-access.v1.json")))!.AsObject();
+                "m1-slice6-successor-credential-access.v2.json")))!.AsObject();
             string checkedInSource = checkedInAccess["retained_product_state"]!["source_root_absolute"]!.GetValue<string>();
             JsonObject checkedInOrigin = JsonNode.Parse(File.ReadAllText(Path.Combine(
                 checkedInAccess["retained_product_state"]!["successor_root_absolute"]!.GetValue<string>(),
@@ -452,7 +521,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
             string accessSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(accessPath)));
 
             JsonObject campaign = JsonNode.Parse(File.ReadAllText(Path.Combine(slice,
-                "m1-slice6-successor-campaign-authorization.v5.json")))!.AsObject();
+                "m1-slice6-successor-campaign-authorization.v6.json")))!.AsObject();
             campaign["credential_inheritance"]!["access_authority_path"] =
                 Path.GetRelativePath(repository, accessPath).Replace('\\', '/');
             campaign["credential_inheritance"]!["access_authority_sha256"] = accessSha;

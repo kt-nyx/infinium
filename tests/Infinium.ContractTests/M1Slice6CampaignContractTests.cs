@@ -120,9 +120,9 @@ public sealed class M1Slice6CampaignContractTests
         StringAssert.Contains(currentState,
             "The accepted v4 campaign crossed one WP9 possible-start latch");
         StringAssert.Contains(currentState,
-            "Terminal USD 0.14 plus successor cumulative reservations may not exceed USD 10.00");
+            "only committed exposure counts against USD 10.00");
         StringAssert.Contains(currentState,
-            "one possible provider start per fresh attempt; automatic retry remains absolutely prohibited");
+            "one possible provider start per fresh attempt; attempts are sequential and automatic retry remains prohibited");
         StringAssert.Contains(currentState,
             "Credential exposure/enumeration/write/delete/replacement, semantic answer tuning or selection, private fixtures, archives, push, and destructive work remain prohibited.");
         Assert.IsFalse(currentState.Replace(stateAuthority, "C2 live execution is authorized", StringComparison.Ordinal)

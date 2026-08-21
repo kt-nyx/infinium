@@ -45,7 +45,11 @@ public static class HelperProtocolV2Codec
         ulong? expectedSequence = null,
         HelperAssignmentKindV2? expectedAssignmentKind = null)
     {
-        if (expectedMaximumFrameBytes is 0 or > HelperProtocolV2Constants.MaximumFrameBytes
+        ulong authorityMaximumFrameBytes = expectedRequestId?.StartsWith(
+            "m1-s6-successor-v6-", StringComparison.Ordinal) == true
+            ? HelperProtocolV2Constants.SuccessorV6MaximumFrameBytes
+            : HelperProtocolV2Constants.MaximumFrameBytes;
+        if (expectedMaximumFrameBytes is 0 || expectedMaximumFrameBytes > authorityMaximumFrameBytes
             || bytes.IsEmpty || (ulong)bytes.Length > expectedMaximumFrameBytes)
         {
             throw new InvalidDataException("Helper v2 frame size is outside the closed bound.");
@@ -295,13 +299,14 @@ public static class HelperProtocolV2Codec
             {
                 throw new InvalidDataException("Provider dispatch assignment is missing its operation kind or limits.");
             }
-            ValidateLimits(value.OperationKind, value.Limits);
             ProviderRequestV2 request = value.ProviderRequest!;
             Require(request.DispatchId?.Value, "provider_request.dispatch_id");
             Require(request.CapabilitySnapshotId?.Value, "provider_request.capability_snapshot_id");
             Require(request.PriceSnapshotId?.Value, "provider_request.price_snapshot_id");
             Require(request.ReservationGroupId?.Value, "provider_request.reservation_group_id");
             Require(request.RequestId, "provider_request.request_id");
+            ValidateLimits(value.OperationKind, value.Limits,
+                request.RequestId.StartsWith("m1-s6-successor-v6-", StringComparison.Ordinal));
             if (request.EndpointIdentity != ProviderEndpointV2.OpenaiResponses
                 || request.CanonicalRequestBytes.IsEmpty
                 || (uint)request.CanonicalRequestBytes.Length > value.Limits.MaximumRequestBytes
@@ -345,21 +350,32 @@ public static class HelperProtocolV2Codec
         }
     }
 
-    private static void ValidateLimits(ProviderOperationKindV2 kind, HelperLimitsV2 value)
+    private static void ValidateLimits(ProviderOperationKindV2 kind, HelperLimitsV2 value,
+        bool successorV6)
     {
-        (uint request, uint input, uint output, uint response, long cost, ulong duration) = kind switch
-        {
-            ProviderOperationKindV2.TransportQualification => (16_384U, 20_480U, 256U, 262_144U, 140_000_000, 60_000UL),
-            ProviderOperationKindV2.SourceClaimExtraction or ProviderOperationKindV2.CandidateInvestigation =>
-                (65_536U, 73_728U, 4_096U, 1_048_576U, 600_000_000, 120_000UL),
-            _ => throw new InvalidDataException("Helper v2 operation kind is unknown."),
-        };
-        if (value.MaximumFrameBytes is 0 or > HelperProtocolV2Constants.MaximumFrameBytes
+        (uint request, uint input, uint output, uint response, long cost, ulong duration) = successorV6
+            ? kind is ProviderOperationKindV2.TransportQualification
+                or ProviderOperationKindV2.SourceClaimExtraction
+                or ProviderOperationKindV2.CandidateInvestigation
+                ? (1_000_000U, 922_000U, 128_000U, 1_048_576U, 9_749_920_000L, 900_000UL)
+                : throw new InvalidDataException("Successor v6 helper operation kind is unknown.")
+            : kind switch
+            {
+                ProviderOperationKindV2.TransportQualification => (16_384U, 20_480U, 256U, 262_144U, 140_000_000, 60_000UL),
+                ProviderOperationKindV2.SourceClaimExtraction or ProviderOperationKindV2.CandidateInvestigation =>
+                    (65_536U, 73_728U, 4_096U, 1_048_576U, 600_000_000, 120_000UL),
+                _ => throw new InvalidDataException("Helper v2 operation kind is unknown."),
+            };
+        ulong maximumFrame = successorV6 ? HelperProtocolV2Constants.SuccessorV6MaximumFrameBytes
+            : HelperProtocolV2Constants.MaximumFrameBytes;
+        ulong maximumStaged = successorV6 ? HelperProtocolV2Constants.SuccessorV6MaximumStagedOutputBytes
+            : response;
+        if (value.MaximumFrameBytes is 0 || value.MaximumFrameBytes > maximumFrame
             || value.MaximumRequestBytes is 0 || value.MaximumRequestBytes > request
             || value.MaximumInputTokens is 0 || value.MaximumInputTokens > input
             || value.MaximumOutputTokens is 0 || value.MaximumOutputTokens > output
             || value.MaximumResponseBytes is 0 || value.MaximumResponseBytes > response
-            || value.MaximumStagedOutputBytes is 0 || value.MaximumStagedOutputBytes > response
+            || value.MaximumStagedOutputBytes is 0 || value.MaximumStagedOutputBytes > maximumStaged
             || value.MaximumCalculatedNanoUsd is <= 0 || value.MaximumCalculatedNanoUsd > cost
             || value.MaximumDuration?.Value is 0 || value.MaximumDuration?.Value > duration
             || value.MaximumDispatchCount != 1)
@@ -433,7 +449,8 @@ public static class HelperProtocolV2Codec
         {
             throw new InvalidDataException("Helper v2 final revalidation is incomplete or internally contradictory.");
         }
-        ValidateLimits(value.OperationKind, value.Limits);
+        ValidateLimits(value.OperationKind, value.Limits,
+            value.RequestId.StartsWith("m1-s6-successor-v6-", StringComparison.Ordinal));
         if (ElapsedHundredNanoseconds(value.EvaluatedAt, value.DispatchDeadline)
             > checked(value.Limits.MaximumDuration.Value * 10_000UL))
         {
@@ -614,11 +631,13 @@ public static class HelperProtocolV2Codec
             {
                 throw new InvalidDataException("Provider receipt must retain the exact assignment, command, operation, attempt, request, dispatch fence, request fingerprint, proof, receipt, and fencing binding.");
             }
-            ValidateReceiptUsage(value, expectedLimits!);
+            ValidateReceiptUsage(value, expectedLimits!,
+                value.RequestId.StartsWith("m1-s6-successor-v6-", StringComparison.Ordinal));
         }
     }
 
-    private static void ValidateReceiptUsage(HelperReceiptV2 value, HelperLimitsV2 limits)
+    private static void ValidateReceiptUsage(HelperReceiptV2 value, HelperLimitsV2 limits,
+        bool successorV6)
     {
         bool hasUsage = value.InputTokens is not null || value.OutputTokens is not null
             || value.TotalTokens is not null || value.ReasoningTokens is not null
@@ -643,23 +662,27 @@ public static class HelperProtocolV2Codec
         }
         // Assignment limits are pre-dispatch authority. Receipts are post-fact
         // evidence and must retain bounded overruns instead of erasing them.
+        ulong maximumInput = successorV6 ? 922_000UL : 147_456UL;
+        ulong maximumOutput = successorV6 ? 128_000UL : 8_192UL;
+        ulong maximumTotal = successorV6 ? 1_050_000UL : 155_648UL;
+        ulong maximumCost = successorV6 ? 14_980_000_000UL : 1_200_000_000UL;
         if (value.RawResponse is not null && (!ValidDigest(value.RawResponse)
                 || value.RawResponse.SizeBytes > limits.MaximumResponseBytes
                 || value.RawResponse.SizeBytes > limits.MaximumStagedOutputBytes)
-            || IsAvailable(value.InputTokens) && value.InputTokens!.Value > 147_456
-            || IsAvailable(value.OutputTokens) && value.OutputTokens!.Value > 8_192
+            || IsAvailable(value.InputTokens) && value.InputTokens!.Value > maximumInput
+            || IsAvailable(value.OutputTokens) && value.OutputTokens!.Value > maximumOutput
             || IsAvailable(value.ReasoningTokens)
                 && (!IsAvailable(value.OutputTokens) || value.ReasoningTokens!.Value > value.OutputTokens!.Value
-                    || value.ReasoningTokens.Value > 8_192)
+                    || value.ReasoningTokens.Value > maximumOutput)
             || IsAvailable(value.TotalTokens)
                 && (!IsAvailable(value.InputTokens) || !IsAvailable(value.OutputTokens)
                     || value.TotalTokens!.Value != checked(value.InputTokens!.Value + value.OutputTokens!.Value)
-                    || value.TotalTokens.Value > 155_648)
-            || IsAvailable(value.CacheReadTokens) && value.CacheReadTokens!.Value > 147_456
-            || IsAvailable(value.CacheWriteTokens) && value.CacheWriteTokens!.Value > 147_456
+                    || value.TotalTokens.Value > maximumTotal)
+            || IsAvailable(value.CacheReadTokens) && value.CacheReadTokens!.Value > maximumInput
+            || IsAvailable(value.CacheWriteTokens) && value.CacheWriteTokens!.Value > maximumInput
             || IsAvailable(value.PricedToolCalls) && value.PricedToolCalls!.Value > 64
             || IsAvailable(value.CalculatedNanoUsd)
-                && value.CalculatedNanoUsd!.Value > 1_200_000_000)
+                && value.CalculatedNanoUsd!.Value > maximumCost)
         {
             throw new InvalidDataException("Provider receipt usage, cache, tool, cost, or raw-response facts exceed absolute retained-evidence bounds.");
         }

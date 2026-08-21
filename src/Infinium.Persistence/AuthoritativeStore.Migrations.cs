@@ -217,6 +217,7 @@ public sealed partial class AuthoritativeStore
             if (current <= 5)
             {
                 ApplySuccessorAttemptSchema6Extension();
+                ApplySuccessorV6PersistenceExtension();
             }
 
             if (current == 6)
@@ -231,15 +232,361 @@ public sealed partial class AuthoritativeStore
                 ApplyWp9CampaignInputBoundCorrectionIfRequired();
                 ApplyR2LiveSemanticSchema6ExtensionIfRequired();
                 ApplySuccessorAttemptSchema6Extension();
+                ApplySuccessorV6PersistenceExtension();
             }
 
-            if (current == 7 && !SuccessorAttemptExtensionApplied())
+            if (current == 7)
+            {
+                if (!SuccessorAttemptExtensionApplied())
+                {
+                    throw new InvalidOperationException(
+                        "Schema 7 lacks the exact Slice 6 successor attempt-identity migration.");
+                }
+                ApplySuccessorV6PersistenceExtension();
+            }
+
+            if (current == 8 && !SuccessorV6PersistenceExtensionApplied())
             {
                 throw new InvalidOperationException(
-                    "Schema 7 lacks the exact Slice 6 successor attempt-identity migration.");
+                    "Schema 8 lacks the exact Slice 6 successor-v6 persistence migration.");
             }
         }
     }
+
+    private bool SuccessorV6PersistenceExtensionApplied()
+    {
+        using SqliteCommand metadata = connection.CreateCommand();
+        metadata.CommandText = "SELECT value FROM store_metadata WHERE key='slice6_successor_v6_persistence_id';";
+        if (metadata.ExecuteScalar() is not string identity
+            || identity != ProviderPersistenceDeclarations.SuccessorV6PersistenceMigrationId)
+        { return false; }
+        using SqliteCommand objects = connection.CreateCommand();
+        objects.CommandText = "SELECT COUNT(*) FROM sqlite_schema WHERE type='table' AND name IN "
+            + "('m1_slice6_successor_v6_operations','m1_slice6_successor_v6_budget_events',"
+            + "'m1_slice6_successor_v6_responses','m1_slice6_successor_v6_semantic_response_bindings');";
+        if (Convert.ToInt64(objects.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 4)
+        { throw new InvalidOperationException("The Slice 6 successor-v6 persistence objects are incomplete."); }
+        string actual = ComputeSchemaFingerprint(connection);
+        using SqliteCommand declared = connection.CreateCommand();
+        declared.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
+        if (actual != ProviderPersistenceDeclarations.SuccessorV6PersistenceSchemaFingerprint
+            || declared.ExecuteScalar() is not string stored || stored != actual)
+        { throw new InvalidOperationException("The Slice 6 successor-v6 persistence fingerprint is stale (" + actual + ")."); }
+        using SqliteCommand migration = connection.CreateCommand();
+        migration.CommandText = "SELECT COUNT(*) FROM migration_history WHERE migration_id=$id "
+            + "AND from_version=7 AND to_version=8 AND sqlite_source_id=$source;";
+        migration.Parameters.AddWithValue("$id", ProviderPersistenceDeclarations.SuccessorV6PersistenceMigrationId);
+        migration.Parameters.AddWithValue("$source", BindingIdentity.SourceId);
+        if (Convert.ToInt64(migration.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+        { throw new InvalidOperationException("The Slice 6 successor-v6 migration history is stale."); }
+        return true;
+    }
+
+    private void ApplySuccessorV6PersistenceExtension()
+    {
+        string sourceFingerprint = ComputeSchemaFingerprint(connection);
+        using (SqliteCommand metadata = connection.CreateCommand())
+        {
+            metadata.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
+            if (sourceFingerprint != ProviderPersistenceDeclarations.SuccessorAttemptSchemaFingerprint
+                || metadata.ExecuteScalar() is not string declared || declared != sourceFingerprint)
+            { throw new InvalidOperationException("Schema 8 requires the exact accepted successor schema-7 source."); }
+        }
+        using SqliteTransaction transaction = BeginTransaction();
+        Execute(SuccessorV6PersistenceSchema, transaction);
+        CreateAppendOnlyTriggers([
+            "m1_slice6_successor_v6_operations",
+            "m1_slice6_successor_v6_budget_events",
+            "m1_slice6_successor_v6_responses",
+            "m1_slice6_successor_v6_semantic_response_bindings",
+        ], transaction);
+        Execute("DROP TRIGGER provider_semantic_proposal_root_guard; "
+            + "DROP TRIGGER provider_semantic_proposal_chronology_guard; "
+            + "DROP TRIGGER candidate_investigation_outcome_candidate_guard; "
+            + "DROP TRIGGER candidate_investigation_outcome_response_guard;", transaction);
+        string rootGuardV8 = SuccessorSemanticProposalRootGuard.Replace(
+            """
+              JOIN provider_operation_authorizations a
+                ON a.authorization_id=b.transport_authorization_id AND a.operation_id=b.transport_operation_id
+              JOIN provider_responses r ON r.response_record_id=b.transport_response_record_id
+                AND r.authorization_id=a.authorization_id AND r.operation_id=a.operation_id
+              JOIN provider_usage_entries u ON u.response_record_id=r.response_record_id
+                AND u.operation_id=r.operation_id AND u.availability='available'
+              JOIN provider_response_finalizations f ON f.response_record_id=r.response_record_id
+                AND f.usage_entry_id=u.usage_entry_id AND f.validation_state='admitted'
+                AND f.admission_state='admitted' AND f.finalized_at <= NEW.created_at
+            """,
+            """
+              JOIN m1_slice6_successor_all_transport_responses r
+                ON r.response_record_id=b.transport_response_record_id
+               AND r.authorization_id=b.transport_authorization_id AND r.operation_id=b.transport_operation_id
+               AND r.admission_state='admitted' AND r.finalized_at <= NEW.created_at
+            """, StringComparison.Ordinal)
+            .Replace("m1_slice6_successor_semantic_response_bindings",
+                "m1_slice6_successor_all_semantic_response_bindings", StringComparison.Ordinal);
+        Execute(rootGuardV8, transaction);
+        Execute(SuccessorSemanticProposalChronologyGuard
+            .Replace("JOIN provider_response_finalizations finalization",
+                "JOIN m1_slice6_successor_all_transport_responses finalization", StringComparison.Ordinal)
+            .Replace("m1_slice6_successor_semantic_response_bindings",
+                "m1_slice6_successor_all_semantic_response_bindings", StringComparison.Ordinal), transaction);
+        Execute(SuccessorCandidateOutcomeGuards
+            .Replace("JOIN provider_responses response",
+                "JOIN m1_slice6_successor_all_transport_responses response", StringComparison.Ordinal)
+            .Replace("m1_slice6_successor_semantic_response_bindings",
+                "m1_slice6_successor_all_semantic_response_bindings", StringComparison.Ordinal), transaction);
+        // Recreate canonical timestamp guards after the semantic guards. SQLite runs
+        // same-event triggers in reverse creation order, so this preserves schema 7's
+        // fail-closed precedence for malformed authority timestamps.
+        CreateCanonicalTimestampTriggers([
+            ("provider_semantic_proposals", "created_at", false),
+            ("candidate_investigation_outcomes", "created_at", false),
+        ], transaction, replaceExisting: true);
+        string fingerprint = ComputeSchemaFingerprint(connection, transaction);
+        Execute("UPDATE store_metadata SET value='8' WHERE key='schema_version'; "
+            + "UPDATE store_metadata SET value='1.7.0' WHERE key='storage_contract_version'; "
+            + "UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint'; "
+            + "INSERT INTO store_metadata(key,value) VALUES('slice6_successor_v6_persistence_id',$id); "
+            + "INSERT INTO migration_history(migration_id,from_version,to_version,applied_at,sqlite_source_id) "
+            + "VALUES($id,7,8,$now,$source); PRAGMA user_version=8;", transaction,
+            ("$fingerprint", fingerprint), ("$id", ProviderPersistenceDeclarations.SuccessorV6PersistenceMigrationId),
+            ("$now", ToText(DateTimeOffset.UtcNow)), ("$source", BindingIdentity.SourceId));
+        transaction.Commit();
+    }
+
+    private const string SuccessorV6PersistenceSchema =
+        """
+        CREATE TABLE m1_slice6_successor_v6_operations(
+          authorization_id TEXT PRIMARY KEY,
+          operation_id TEXT NOT NULL UNIQUE CHECK(operation_id GLOB 'm1s6-successor-v6-*'),
+          campaign_id TEXT NOT NULL CHECK(length(trim(campaign_id)) > 0),
+          stage TEXT NOT NULL CHECK(stage IN ('qualification','source-claim-extraction','candidate-investigation')),
+          operation_kind TEXT NOT NULL CHECK(operation_kind IN ('transport-qualification','source-claim-extraction','candidate-investigation')),
+          provider_attempt_id TEXT NOT NULL UNIQUE,
+          request_id TEXT NOT NULL UNIQUE,
+          reservation_id TEXT NOT NULL UNIQUE,
+          dispatch_fence_id TEXT NOT NULL UNIQUE,
+          owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
+          owner_id TEXT NOT NULL CHECK(length(trim(owner_id)) > 0),
+          semantic_authorization_id TEXT NOT NULL,
+          semantic_operation_id TEXT NOT NULL,
+          canonical_request_sha256 TEXT NOT NULL CHECK(length(canonical_request_sha256)=64 AND lower(canonical_request_sha256)=canonical_request_sha256),
+          maximum_request_bytes INTEGER NOT NULL CHECK(maximum_request_bytes BETWEEN 1 AND 1000000),
+          maximum_input_tokens INTEGER NOT NULL CHECK(maximum_input_tokens BETWEEN 1 AND 922000),
+          maximum_output_tokens INTEGER NOT NULL CHECK(maximum_output_tokens BETWEEN 1 AND 128000),
+          maximum_raw_response_bytes INTEGER NOT NULL CHECK(maximum_raw_response_bytes BETWEEN 1 AND 1048576),
+          deadline_milliseconds INTEGER NOT NULL CHECK(deadline_milliseconds BETWEEN 1 AND 900000),
+          reserved_nano_usd INTEGER NOT NULL CHECK(reserved_nano_usd BETWEEN 1 AND 9749920000),
+          coordinator_fencing_epoch INTEGER NOT NULL CHECK(coordinator_fencing_epoch > 0),
+          dispatch_deadline_utc TEXT NOT NULL,
+          admitted_at TEXT NOT NULL,
+          UNIQUE(authorization_id,operation_id),
+          UNIQUE(operation_id,reservation_id),
+          UNIQUE(operation_id,provider_attempt_id,request_id,reservation_id,dispatch_fence_id),
+          UNIQUE(authorization_id,operation_id,owner_kind,owner_id)
+        ) STRICT;
+        CREATE TABLE m1_slice6_successor_v6_budget_events(
+          event_id TEXT PRIMARY KEY,
+          operation_id TEXT NOT NULL REFERENCES m1_slice6_successor_v6_operations(operation_id) ON DELETE RESTRICT,
+          reservation_id TEXT NOT NULL,
+          event_kind TEXT NOT NULL CHECK(event_kind IN ('reserved','possible-start','released-undispatched','settled','unresolved')),
+          reserved_nano_usd INTEGER NOT NULL CHECK(reserved_nano_usd >= 0),
+          settled_nano_usd INTEGER NOT NULL CHECK(settled_nano_usd >= 0),
+          unresolved_nano_usd INTEGER NOT NULL CHECK(unresolved_nano_usd >= 0),
+          released_nano_usd INTEGER NOT NULL CHECK(released_nano_usd >= 0),
+          occurred_at TEXT NOT NULL,
+          UNIQUE(operation_id,event_kind),
+          FOREIGN KEY(operation_id,reservation_id)
+            REFERENCES m1_slice6_successor_v6_operations(operation_id,reservation_id) ON DELETE RESTRICT,
+          CHECK((event_kind='reserved' AND reserved_nano_usd>0 AND settled_nano_usd=0 AND unresolved_nano_usd=0 AND released_nano_usd=0)
+             OR (event_kind='possible-start' AND reserved_nano_usd=0 AND settled_nano_usd=0 AND unresolved_nano_usd=0 AND released_nano_usd=0)
+             OR (event_kind='released-undispatched' AND reserved_nano_usd=0 AND settled_nano_usd=0 AND unresolved_nano_usd=0 AND released_nano_usd>0)
+             OR (event_kind='settled' AND reserved_nano_usd=0 AND settled_nano_usd>=0 AND unresolved_nano_usd=0 AND released_nano_usd>=0)
+             OR (event_kind='unresolved' AND reserved_nano_usd=0 AND settled_nano_usd=0 AND unresolved_nano_usd>0 AND released_nano_usd=0))
+        ) STRICT;
+        CREATE TRIGGER m1_slice6_successor_v6_reservation_budget_guard
+        BEFORE INSERT ON m1_slice6_successor_v6_budget_events
+        WHEN NEW.event_kind='reserved'
+        BEGIN
+          SELECT CASE WHEN 250080000 + NEW.reserved_nano_usd + COALESCE((
+            SELECT SUM(CASE
+              WHEN terminal.event_kind='settled' THEN terminal.settled_nano_usd
+              WHEN terminal.event_kind='unresolved' THEN terminal.unresolved_nano_usd
+              WHEN terminal.event_kind='released-undispatched' THEN 0
+              ELSE operation.reserved_nano_usd END)
+            FROM m1_slice6_successor_v6_operations operation
+            LEFT JOIN m1_slice6_successor_v6_budget_events terminal
+              ON terminal.operation_id=operation.operation_id
+             AND terminal.event_kind IN ('settled','unresolved','released-undispatched')
+            WHERE operation.operation_id<>NEW.operation_id),0) > 10000000000
+          THEN RAISE(ABORT,'successor-v6 aggregate hard budget exceeded') END;
+        END;
+        CREATE TRIGGER m1_slice6_successor_v6_terminal_partition_guard
+        BEFORE INSERT ON m1_slice6_successor_v6_budget_events
+        WHEN NEW.event_kind IN ('released-undispatched','settled','unresolved')
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM m1_slice6_successor_v6_operations operation
+            WHERE operation.operation_id=NEW.operation_id AND operation.reservation_id=NEW.reservation_id
+              AND ((NEW.event_kind='released-undispatched'
+                    AND NEW.released_nano_usd=operation.reserved_nano_usd)
+                OR (NEW.event_kind='settled'
+                    AND NEW.settled_nano_usd+NEW.released_nano_usd=operation.reserved_nano_usd)
+                OR (NEW.event_kind='unresolved'
+                    AND NEW.unresolved_nano_usd=operation.reserved_nano_usd)))
+          THEN RAISE(ABORT,'successor-v6 terminal accounting must exactly partition its reservation') END;
+        END;
+        CREATE TRIGGER m1_slice6_successor_v6_event_chronology_guard
+        BEFORE INSERT ON m1_slice6_successor_v6_budget_events
+        BEGIN
+          SELECT CASE
+            WHEN NOT EXISTS(SELECT 1 FROM m1_slice6_successor_v6_operations operation
+              WHERE operation.operation_id=NEW.operation_id AND operation.reservation_id=NEW.reservation_id
+                AND operation.admitted_at<=NEW.occurred_at)
+              THEN RAISE(ABORT,'successor-v6 event lacks exact admitted operation')
+            WHEN NEW.event_kind='reserved' AND EXISTS(SELECT 1 FROM m1_slice6_successor_v6_budget_events event
+              WHERE event.operation_id=NEW.operation_id)
+              THEN RAISE(ABORT,'successor-v6 reservation must be first')
+            WHEN NEW.event_kind<>'reserved' AND NOT EXISTS(SELECT 1 FROM m1_slice6_successor_v6_budget_events event
+              WHERE event.operation_id=NEW.operation_id AND event.event_kind='reserved' AND event.occurred_at<=NEW.occurred_at)
+              THEN RAISE(ABORT,'successor-v6 event requires prior reservation')
+            WHEN NEW.event_kind='possible-start' AND EXISTS(SELECT 1 FROM m1_slice6_successor_v6_budget_events event
+              WHERE event.operation_id=NEW.operation_id AND event.event_kind IN ('released-undispatched','settled','unresolved'))
+              THEN RAISE(ABORT,'successor-v6 start cannot follow terminal accounting')
+            WHEN NEW.event_kind='released-undispatched' AND EXISTS(SELECT 1 FROM m1_slice6_successor_v6_budget_events event
+              WHERE event.operation_id=NEW.operation_id AND event.event_kind='possible-start')
+              THEN RAISE(ABORT,'successor-v6 started reservation cannot be released as prestart')
+            WHEN NEW.event_kind IN ('settled','unresolved') AND NOT EXISTS(SELECT 1 FROM m1_slice6_successor_v6_budget_events event
+              WHERE event.operation_id=NEW.operation_id AND event.event_kind='possible-start' AND event.occurred_at<=NEW.occurred_at)
+              THEN RAISE(ABORT,'successor-v6 terminal accounting requires possible start')
+            WHEN NEW.event_kind IN ('released-undispatched','settled','unresolved') AND EXISTS(
+              SELECT 1 FROM m1_slice6_successor_v6_budget_events event WHERE event.operation_id=NEW.operation_id
+                AND event.event_kind IN ('released-undispatched','settled','unresolved'))
+              THEN RAISE(ABORT,'successor-v6 reservation may terminate exactly once')
+          END;
+        END;
+        CREATE TABLE m1_slice6_successor_v6_responses(
+          response_record_id TEXT PRIMARY KEY,
+          usage_entry_id TEXT NOT NULL UNIQUE,
+          settlement_id TEXT NOT NULL UNIQUE,
+          replay_edge_id TEXT NOT NULL UNIQUE,
+          authorization_id TEXT NOT NULL,
+          operation_id TEXT NOT NULL UNIQUE,
+          provider_attempt_id TEXT NOT NULL,
+          request_id TEXT NOT NULL,
+          reservation_id TEXT NOT NULL,
+          dispatch_fence_id TEXT NOT NULL,
+          response_state TEXT NOT NULL CHECK(response_state IN ('completed','refusal','incomplete','failed','queued','in-progress','malformed','oversized','mismatched','unknown','cancelled')),
+          http_status INTEGER NOT NULL CHECK(http_status BETWEEN 0 AND 999),
+          returned_model TEXT,
+          returned_service_tier TEXT,
+          error_code TEXT,
+          refusal_code TEXT,
+          incomplete_reason TEXT,
+          provider_response_id TEXT,
+          provider_request_id TEXT,
+          raw_response_payload_id TEXT REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+          raw_response_sha256 TEXT,
+          raw_response_bytes INTEGER,
+          response_headers_payload_id TEXT REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+          response_headers_sha256 TEXT,
+          response_headers_bytes INTEGER,
+          usage_available INTEGER NOT NULL CHECK(usage_available IN (0,1)),
+          dispatch_count INTEGER NOT NULL CHECK(dispatch_count BETWEEN 0 AND 1),
+          input_tokens INTEGER NOT NULL CHECK(input_tokens BETWEEN 0 AND 1050000),
+          output_tokens INTEGER NOT NULL CHECK(output_tokens BETWEEN 0 AND 128000),
+          total_tokens INTEGER NOT NULL CHECK(total_tokens BETWEEN 0 AND 1178000),
+          reasoning_tokens INTEGER NOT NULL CHECK(reasoning_tokens BETWEEN 0 AND 128000),
+          cache_read_tokens INTEGER NOT NULL CHECK(cache_read_tokens BETWEEN 0 AND 1050000),
+          cache_write_tokens INTEGER NOT NULL CHECK(cache_write_tokens BETWEEN 0 AND 1050000),
+          priced_tool_calls INTEGER NOT NULL CHECK(priced_tool_calls=0),
+          calculated_nano_usd INTEGER NOT NULL CHECK(calculated_nano_usd BETWEEN 0 AND 14980000000),
+          admitted INTEGER NOT NULL CHECK(admitted IN (0,1)),
+          created_at TEXT NOT NULL,
+          UNIQUE(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id),
+          FOREIGN KEY(authorization_id,operation_id) REFERENCES m1_slice6_successor_v6_operations(authorization_id,operation_id) ON DELETE RESTRICT,
+          FOREIGN KEY(operation_id,provider_attempt_id,request_id,reservation_id,dispatch_fence_id)
+            REFERENCES m1_slice6_successor_v6_operations(operation_id,provider_attempt_id,request_id,reservation_id,dispatch_fence_id) ON DELETE RESTRICT,
+          CHECK((raw_response_payload_id IS NULL AND raw_response_sha256 IS NULL AND raw_response_bytes IS NULL)
+             OR (raw_response_payload_id IS NOT NULL AND length(raw_response_sha256)=64 AND raw_response_bytes BETWEEN 1 AND 1048576)),
+          CHECK((response_headers_payload_id IS NULL AND response_headers_sha256 IS NULL AND response_headers_bytes IS NULL)
+             OR (response_headers_payload_id IS NOT NULL AND length(response_headers_sha256)=64 AND response_headers_bytes BETWEEN 1 AND 65536)),
+          CHECK(reasoning_tokens<=output_tokens AND total_tokens=input_tokens+output_tokens)
+        ) STRICT;
+        CREATE TRIGGER m1_slice6_successor_v6_response_operation_limit_guard
+        BEFORE INSERT ON m1_slice6_successor_v6_responses
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM m1_slice6_successor_v6_operations operation
+            WHERE operation.authorization_id=NEW.authorization_id AND operation.operation_id=NEW.operation_id
+              AND operation.provider_attempt_id=NEW.provider_attempt_id AND operation.request_id=NEW.request_id
+              AND operation.reservation_id=NEW.reservation_id AND operation.dispatch_fence_id=NEW.dispatch_fence_id
+              AND NEW.raw_response_bytes<=operation.maximum_raw_response_bytes
+              AND ((NEW.usage_available=0 AND NEW.dispatch_count=0 AND NEW.input_tokens=0
+                    AND NEW.output_tokens=0 AND NEW.total_tokens=0 AND NEW.reasoning_tokens=0
+                    AND NEW.cache_read_tokens=0 AND NEW.cache_write_tokens=0
+                    AND NEW.priced_tool_calls=0 AND NEW.calculated_nano_usd=0)
+                OR (NEW.usage_available=1 AND NEW.dispatch_count=1
+                    AND NEW.input_tokens<=operation.maximum_input_tokens
+                    AND NEW.output_tokens<=operation.maximum_output_tokens
+                    AND NEW.total_tokens<=operation.maximum_input_tokens+operation.maximum_output_tokens
+                    AND NEW.calculated_nano_usd<=operation.reserved_nano_usd
+                    AND NEW.calculated_nano_usd=CASE WHEN NEW.input_tokens>272000
+                      THEN NEW.input_tokens*10000+NEW.output_tokens*45000
+                      ELSE NEW.input_tokens*5000+NEW.output_tokens*30000 END)))
+          THEN RAISE(ABORT,'successor-v6 response exceeds its exact operation authority') END;
+        END;
+        CREATE TABLE m1_slice6_successor_v6_semantic_response_bindings(
+          binding_id TEXT PRIMARY KEY,
+          campaign_id TEXT NOT NULL,
+          stage TEXT NOT NULL CHECK(stage IN ('source-claim-extraction','candidate-investigation')),
+          semantic_authorization_id TEXT NOT NULL,
+          semantic_operation_id TEXT NOT NULL,
+          transport_authorization_id TEXT NOT NULL,
+          transport_operation_id TEXT NOT NULL,
+          provider_attempt_id TEXT NOT NULL,
+          request_id TEXT NOT NULL,
+          dispatch_fence_id TEXT NOT NULL,
+          semantic_response_record_id TEXT NOT NULL,
+          transport_response_record_id TEXT NOT NULL,
+          owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
+          owner_id TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          UNIQUE(campaign_id,stage),
+          UNIQUE(semantic_authorization_id,semantic_operation_id,semantic_response_record_id),
+          UNIQUE(transport_operation_id,provider_attempt_id,request_id,dispatch_fence_id,transport_response_record_id),
+          FOREIGN KEY(transport_authorization_id,transport_operation_id,owner_kind,owner_id)
+            REFERENCES m1_slice6_successor_v6_operations(authorization_id,operation_id,owner_kind,owner_id) ON DELETE RESTRICT,
+          FOREIGN KEY(transport_operation_id,provider_attempt_id,request_id,dispatch_fence_id,transport_response_record_id)
+            REFERENCES m1_slice6_successor_v6_responses(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id) ON DELETE RESTRICT
+        ) STRICT;
+        CREATE VIEW m1_slice6_successor_all_semantic_response_bindings AS
+          SELECT binding_id,campaign_id,stage,semantic_authorization_id,semantic_operation_id,
+            transport_authorization_id,transport_operation_id,provider_attempt_id,request_id,dispatch_fence_id,
+            semantic_response_record_id,transport_response_record_id,owner_kind,owner_id,created_at
+          FROM m1_slice6_successor_semantic_response_bindings
+          UNION ALL
+          SELECT binding_id,campaign_id,stage,semantic_authorization_id,semantic_operation_id,
+            transport_authorization_id,transport_operation_id,provider_attempt_id,request_id,dispatch_fence_id,
+            semantic_response_record_id,transport_response_record_id,owner_kind,owner_id,created_at
+          FROM m1_slice6_successor_v6_semantic_response_bindings;
+        CREATE VIEW m1_slice6_successor_all_transport_responses AS
+          SELECT response.response_record_id,response.authorization_id,response.operation_id,
+            response.operation_kind,response.owner_kind,response.owner_id,response.raw_response_fingerprint,
+            response.response_state,finalization.admission_state,finalization.finalized_at
+          FROM provider_responses response
+          JOIN provider_usage_entries usage ON usage.response_record_id=response.response_record_id
+            AND usage.operation_id=response.operation_id AND usage.availability='available'
+          JOIN provider_response_finalizations finalization ON finalization.response_record_id=response.response_record_id
+            AND finalization.usage_entry_id=usage.usage_entry_id
+          UNION ALL
+          SELECT response.response_record_id,response.authorization_id,response.operation_id,
+            operation.operation_kind,operation.owner_kind,operation.owner_id,response.raw_response_sha256,
+            response.response_state,CASE WHEN response.admitted=1 THEN 'admitted' ELSE 'rejected' END,response.created_at
+          FROM m1_slice6_successor_v6_responses response
+          JOIN m1_slice6_successor_v6_operations operation ON operation.operation_id=response.operation_id
+            AND operation.authorization_id=response.authorization_id;
+        """;
 
     private bool SuccessorAttemptExtensionApplied()
     {
@@ -1569,6 +1916,10 @@ public sealed partial class AuthoritativeStore
         "table:logical_findings",
         "table:migration_history",
         "table:m1_slice6_successor_semantic_response_bindings",
+        "table:m1_slice6_successor_v6_budget_events",
+        "table:m1_slice6_successor_v6_operations",
+        "table:m1_slice6_successor_v6_responses",
+        "table:m1_slice6_successor_v6_semantic_response_bindings",
         "table:payload_owners",
         "table:payload_backup_pins",
         "table:payloads",
@@ -1632,6 +1983,20 @@ public sealed partial class AuthoritativeStore
         "table:provider_usage_entries",
         "trigger:m1_slice6_successor_semantic_response_bindings_append_only_delete",
         "trigger:m1_slice6_successor_semantic_response_bindings_append_only_update",
+        "trigger:m1_slice6_successor_v6_budget_events_append_only_delete",
+        "trigger:m1_slice6_successor_v6_budget_events_append_only_update",
+        "trigger:m1_slice6_successor_v6_event_chronology_guard",
+        "trigger:m1_slice6_successor_v6_operations_append_only_delete",
+        "trigger:m1_slice6_successor_v6_operations_append_only_update",
+        "trigger:m1_slice6_successor_v6_reservation_budget_guard",
+        "trigger:m1_slice6_successor_v6_response_operation_limit_guard",
+        "trigger:m1_slice6_successor_v6_responses_append_only_delete",
+        "trigger:m1_slice6_successor_v6_responses_append_only_update",
+        "trigger:m1_slice6_successor_v6_semantic_response_bindings_append_only_delete",
+        "trigger:m1_slice6_successor_v6_semantic_response_bindings_append_only_update",
+        "trigger:m1_slice6_successor_v6_terminal_partition_guard",
+        "view:m1_slice6_successor_all_semantic_response_bindings",
+        "view:m1_slice6_successor_all_transport_responses",
         "view:provider_settlement_vector_partitions",
         "trigger:analysis_candidates_append_only_delete",
         "trigger:analysis_candidates_append_only_update",

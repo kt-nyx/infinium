@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active slice navigation; live authority remains in current state
 
-Last reviewed: 2026-08-20
+Last reviewed: 2026-08-21
 
 Live authorization is stated only in
 [current project state](../../../../../current-state.md). This entry routes to
@@ -37,6 +37,13 @@ chronology.
   chronology and never reusable authority
 - [Append-only implementation record](record.md), for exact chronology and
   retained evidence
+- [Owner-authorized hard-budget continuation amendment](m1-slice6-development-campaign-amendment.v2.json),
+  which supersedes the obsolete five-start, repeated-defect, and cumulative-reservation
+  restrictions without changing the USD 10 aggregate, one-start, sequential,
+  first-valid, credential, or isolation boundaries
+- [Clean-break successor campaign v6](m1-slice6-successor-campaign-authorization.v6.json)
+  and [credential-access v2](m1-slice6-successor-credential-access.v2.json),
+  which retire the v5 live path while retaining it as immutable historical input
 - [Superseded R1-R7 orchestrator handoff](orchestrator-handoff.md), retained as
   historical execution guidance only
 
@@ -148,7 +155,7 @@ scope reduction.
 
 ## Effect and campaign boundary
 
-### 2026-08-20 successor amendment
+### 2026-08-21 hard-budget successor amendment
 
 The v4 C2B campaign is now terminal historical evidence. Its final ledger event
 is `282c97151dbdcd354288b67f96c4b01d7f7ef43b1bbfb9f247cbd9b510506de9`.
@@ -157,28 +164,33 @@ stage, attempt, or runtime identity. The terminal WP9 start and USD 0.14
 reservation remain conservatively consumed.
 
 The owner-authorized
-[development-campaign amendment](m1-slice6-development-campaign-amendment.v1.json)
-and [v5 successor campaign](m1-slice6-successor-campaign-authorization.v5.json)
-supersede only the remaining live execution cadence. Each independently
-reviewed and durably admitted fresh attempt permits at most one possible
-provider start and one masked-helper `CredReadW -> CredFree` sequence.
+[hard-budget amendment](m1-slice6-development-campaign-amendment.v2.json)
+and [v6 successor campaign](m1-slice6-successor-campaign-authorization.v6.json)
+supersede the obsolete v5 execution cadence. Each independently reviewed and
+durably admitted fresh attempt permits at most one possible provider start and
+one masked-helper `CredReadW -> CredFree` sequence.
 Automatic retry, parallel calls, credential enumeration/write/delete/
 replacement, and semantic-output selection remain prohibited.
 
-The lineage permits at most five possible starts per stage, including the
-terminal WP9 start. A failed or ambiguous attempt may have a fresh successor
-only after its sanitized evidence is independently accepted and exact offline
-diagnosis/correction review is durably bound. The first structurally valid
-WP10 or WP11 response is permanent stage authority and stops further calls for
-that stage before semantic comparison. Terminal USD 0.14 plus successor
-cumulative reservations may not exceed USD 10.00. With unchanged per-call
-ceilings, the maximum possible lineage reservation is USD 6.70.
+There is no per-stage start count, attempt count, or per-attempt policy-cost
+ceiling. A failed or ambiguous attempt may have a fresh successor after its
+sanitized evidence is independently accepted and exact offline diagnosis and
+correction are durably bound. The first structurally valid WP10 or WP11
+response is permanent stage authority and stops further calls for that stage
+before semantic comparison. Historical committed exposure plus settled,
+unresolved, and outstanding successor-v6 exposure may not exceed USD 10.00;
+released pre-start reservations are reusable and cumulative reservations are
+telemetry only.
 
-The reviewed successor persistence candidate adds migration
-`M1-S6-SUCCESSOR-0007` (schema 6/storage `1.5.0` to schema 7/storage `1.6.0`)
-only at the exact retained product-state root. It preserves historical rows
-and scopes repeated frozen requests to fresh transport-operation and attempt
-identities. Each reviewed runtime candidate also binds an exact logical
+The historical successor-v5 persistence candidate added migration
+`M1-S6-SUCCESSOR-0007` (schema 6/storage `1.5.0` to schema 7/storage `1.6.0`).
+The active hard-budget continuation adds the clean-break
+`M1-S6-SUCCESSOR-V6-0008` migration to schema 8/storage `1.7.0`, preserving
+the schema-7 rows while giving v6 authorization, reservations, responses,
+settlement/replay, and semantic bindings successor-only tables with their
+adjustable technical envelope and aggregate USD 10 accounting. It scopes
+repeated frozen requests to fresh transport-operation and attempt identities.
+Each reviewed runtime candidate also binds an exact logical
 product-state checkpoint: a consistent read-only SQLite backup digest plus
 every retained non-database file. Runtime admission recomputes it before any
 possible start.
@@ -225,11 +237,14 @@ That recovery is now complete and independently accepted. It appended exactly
 one `credential-post-success-validator-defect-evidence-accepted` event while
 preserving the prior ledger prefix, success/failure evidence, and durable
 product state. All recovery-effect counters except the one ledger append are
-zero. The owner has now supplied the required fresh direction: execute C2B,
-C2C, and C2D sequentially under the accepted campaign, automatically continue
-only after independent evidence acceptance, then establish the final C1
-binding and complete effect-free C3. Every existing per-stage admission,
-one-start, ceiling, no-retry, settlement, and stop condition remains exact.
+zero. The owner then supplied the fresh v5 direction to execute C2B, C2C, and
+C2D sequentially under that campaign, automatically continue only after
+independent evidence acceptance, then establish the final C1 binding and
+complete effect-free C3. At that historical v5 boundary, every then-existing
+per-stage admission, one-start, ceiling, no-retry, settlement, and stop
+condition remained exact. Those restrictions are superseded for the active
+2026-08-21 hard-budget continuation above and remain historical validation
+inputs only.
 
 The exact C2B two-file candidate
 `572a3342ac6537d42a1041e9f8a5878cfcba1958` passed independent security,

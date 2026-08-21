@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.repository.m1-slice6-successor-stage-sources/1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_identity", "source_set_id", "stages"],
+  "properties": {
+    "schema_identity": { "const": "infinium.repository.m1-slice6-successor-stage-sources/1.0.0" },
+    "source_set_id": { "$ref": "#/$defs/id" },
+    "stages": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/stage" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9._:/-]+$" },
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "path": { "type": "string", "minLength": 1, "maxLength": 400, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?/)(?!.*\\\\)[^\\r\\n]+$" },
+    "file": { "type": "object", "additionalProperties": false, "required": ["path", "bytes", "sha256"], "properties": { "path": { "$ref": "#/$defs/path" }, "bytes": { "type": "integer", "minimum": 1 }, "sha256": { "$ref": "#/$defs/sha" } } },
+    "validation": { "type": "object", "additionalProperties": false, "required": ["package_id", "manifest", "product_input", "predecessor_manifest", "oracle", "deterministic_oracle_result_sha256", "semantic_use"], "properties": {
+      "package_id": { "$ref": "#/$defs/id" }, "manifest": { "$ref": "#/$defs/file" }, "product_input": { "$ref": "#/$defs/file" }, "predecessor_manifest": { "$ref": "#/$defs/file" }, "oracle": { "$ref": "#/$defs/file" }, "deterministic_oracle_result_sha256": { "$ref": "#/$defs/sha" }, "semantic_use": { "type": "boolean" }
+    } },
+    "stage": { "type": "object", "additionalProperties": false, "required": ["ordinal", "operation", "request_source", "validation_package"], "properties": {
+      "ordinal": { "type": "integer", "minimum": 1, "maximum": 3 }, "operation": { "enum": ["Qualification", "SourceClaimExtraction", "CandidateInvestigation"] },
+      "request_source": { "$ref": "#/$defs/file" }, "validation_package": { "$ref": "#/$defs/validation" }
+    } }
+  }
+}

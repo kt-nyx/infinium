@@ -46,9 +46,41 @@ public static class OpenAiResponsesInputBoundPolicy
         ProviderOperationKind operationKind,
         ReadOnlyMemory<byte> canonicalRequest,
         ProviderFiniteLimitsContract limits)
+        => ProveCore(operationKind, canonicalRequest, limits, successorV6: false);
+
+    public static ProviderInputBoundEvidence ProveSuccessorV6(
+        ProviderOperationKind operationKind,
+        ReadOnlyMemory<byte> canonicalRequest,
+        ProviderFiniteLimitsContract limits)
+        => ProveCore(operationKind, canonicalRequest, limits, successorV6: true);
+
+    private static ProviderInputBoundEvidence ProveCore(
+        ProviderOperationKind operationKind,
+        ReadOnlyMemory<byte> canonicalRequest,
+        ProviderFiniteLimitsContract limits,
+        bool successorV6)
     {
         ArgumentNullException.ThrowIfNull(limits);
-        ProviderOperationContractInvariants.Validate(operationKind, limits);
+        if (successorV6)
+        {
+            if (operationKind is not (ProviderOperationKind.TransportQualification
+                    or ProviderOperationKind.SourceClaimExtraction
+                    or ProviderOperationKind.CandidateInvestigation)
+                || limits.MaximumRequestBytes is < 1 or > 1_000_000
+                || limits.MaximumInputTokens is < 1 or > 922_000
+                || limits.MaximumOutputTokens is < 1 or > 128_000
+                || limits.MaximumRawResponseBytes is < 1 or > 1_048_576
+                || limits.MaximumDispatchCount != 1
+                || limits.MaximumCalculatedNanoUsd is < 1 or > 9_749_920_000
+                || limits.DeadlineMilliseconds is < 1 or > 900_000)
+            {
+                throw new InvalidOperationException("Successor v6 limits exceed provider, aggregate-budget, or helper feasibility.");
+            }
+        }
+        else
+        {
+            ProviderOperationContractInvariants.Validate(operationKind, limits);
+        }
         if (canonicalRequest.IsEmpty || canonicalRequest.Length > limits.MaximumRequestBytes)
         {
             throw new InvalidDataException("Canonical request bytes exceed the operation's admitted request bound.");
@@ -64,7 +96,8 @@ public static class OpenAiResponsesInputBoundPolicy
             throw new InvalidDataException("Canonical request must be well-formed UTF-8 without replacement decoding.", exception);
         }
 
-        ValidateClosedRequestShape(canonicalRequest, operationKind, limits.MaximumOutputTokens);
+        ValidateClosedRequestShape(canonicalRequest, operationKind, limits.MaximumOutputTokens,
+            successorV6 ? 900_000 : 48_000);
         IReadOnlyList<int> tokenIds = Tokenizer.Value.EncodeToIds(requestText, false, false);
         long byteCount = canonicalRequest.Length;
         long tokenCount = tokenIds.Count;
@@ -114,7 +147,8 @@ public static class OpenAiResponsesInputBoundPolicy
     private static void ValidateClosedRequestShape(
         ReadOnlyMemory<byte> canonicalRequest,
         ProviderOperationKind operationKind,
-        long maximumOutputTokens)
+        long maximumOutputTokens,
+        int maximumUntrustedTextLength)
     {
         JsonDocument document;
         try
@@ -162,7 +196,7 @@ public static class OpenAiResponsesInputBoundPolicy
             {
                 throw new InvalidDataException("Canonical request max_output_tokens must equal the admitted operation limit.");
             }
-            ValidateInputMessages(root.GetProperty("input"));
+            ValidateInputMessages(root.GetProperty("input"), maximumUntrustedTextLength);
 
             JsonElement reasoning = root.GetProperty("reasoning");
             RequireObjectProperties(reasoning, "reasoning", ["effort", "context", "mode"]);
@@ -198,18 +232,19 @@ public static class OpenAiResponsesInputBoundPolicy
         }
     }
 
-    private static void ValidateInputMessages(JsonElement input)
+    private static void ValidateInputMessages(JsonElement input, int maximumUntrustedTextLength)
     {
         if (input.ValueKind != JsonValueKind.Array || input.GetArrayLength() != 2)
         {
             throw new InvalidDataException("The closed request requires exactly one developer and one user message.");
         }
         JsonElement[] messages = input.EnumerateArray().ToArray();
-        ValidateMessage(messages[0], "developer", requireUntrustedFraming: false);
-        ValidateMessage(messages[1], "user", requireUntrustedFraming: true);
+        ValidateMessage(messages[0], "developer", requireUntrustedFraming: false, maximumUntrustedTextLength);
+        ValidateMessage(messages[1], "user", requireUntrustedFraming: true, maximumUntrustedTextLength);
     }
 
-    private static void ValidateMessage(JsonElement message, string role, bool requireUntrustedFraming)
+    private static void ValidateMessage(JsonElement message, string role, bool requireUntrustedFraming,
+        int maximumUntrustedTextLength)
     {
         const string untrustedPrefix = "BEGIN_UNTRUSTED_EVIDENCE\n";
         const string untrustedSuffix = "\nEND_UNTRUSTED_EVIDENCE";
@@ -228,7 +263,8 @@ public static class OpenAiResponsesInputBoundPolicy
             || !requireUntrustedFraming && text.Length > 8_192
             || requireUntrustedFraming && (!text.StartsWith(untrustedPrefix, StringComparison.Ordinal)
                 || !text.EndsWith(untrustedSuffix, StringComparison.Ordinal)
-                || text.Length - untrustedPrefix.Length - untrustedSuffix.Length is < 1 or > 48_000))
+                || text.Length - untrustedPrefix.Length - untrustedSuffix.Length < 1
+                || text.Length - untrustedPrefix.Length - untrustedSuffix.Length > maximumUntrustedTextLength))
         {
             throw new InvalidDataException($"The {role} message text is empty or outside its exact evidence framing.");
         }

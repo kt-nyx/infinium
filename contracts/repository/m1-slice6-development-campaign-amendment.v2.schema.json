@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.repository.m1-slice6-development-campaign-amendment/2.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_identity", "amendment_id", "status", "authorized_at_utc", "expires_at_utc", "owner_authority", "campaign_binding", "immutable_predecessor", "budget", "execution_policy", "stop_conditions"],
+  "properties": {
+    "schema_identity": { "const": "infinium.repository.m1-slice6-development-campaign-amendment/2.0.0" },
+    "amendment_id": { "$ref": "#/$defs/id" },
+    "status": { "const": "owner-authorized" },
+    "authorized_at_utc": { "$ref": "#/$defs/utc" },
+    "expires_at_utc": { "$ref": "#/$defs/utc" },
+    "owner_authority": { "type": "object", "additionalProperties": false, "required": ["task_authority_id", "source", "issued_by", "scope", "hard_cost_limit_nano_usd"], "properties": { "task_authority_id": { "$ref": "#/$defs/id" }, "source": { "const": "current-task-owner-message" }, "issued_by": { "const": "repository-owner" }, "scope": { "const": "M1-S6-C2B-C2C-C2D-C3" }, "hard_cost_limit_nano_usd": { "const": 10000000000 } } },
+    "campaign_binding": { "type": "object", "additionalProperties": false, "required": ["campaign_id", "campaign_manifest_sha256"], "properties": { "campaign_id": { "$ref": "#/$defs/id" }, "campaign_manifest_sha256": { "$ref": "#/$defs/sha" } } },
+    "immutable_predecessor": { "type": "object", "additionalProperties": false, "required": ["ledger_path", "ledger_sha256", "final_event_hash", "historical_committed_nano_usd", "immutable"], "properties": { "ledger_path": { "$ref": "#/$defs/path" }, "ledger_sha256": { "$ref": "#/$defs/sha" }, "final_event_hash": { "$ref": "#/$defs/sha" }, "historical_committed_nano_usd": { "const": 250080000 }, "immutable": { "const": true } } },
+    "budget": { "type": "object", "additionalProperties": false, "required": ["maximum_slice_nano_usd", "lower_internal_budget_permitted", "per_stage_start_limit", "per_attempt_cost_limit", "parallel_calls"], "properties": { "maximum_slice_nano_usd": { "const": 10000000000 }, "lower_internal_budget_permitted": { "const": false }, "per_stage_start_limit": { "type": "null" }, "per_attempt_cost_limit": { "type": "null" }, "parallel_calls": { "const": false } } },
+    "execution_policy": { "type": "object", "additionalProperties": false, "required": ["fresh_identity_per_attempt", "one_start_per_attempt", "sequential_attempts", "automatic_retry", "first_structurally_valid_semantic_result", "ordinary_failures"], "properties": { "fresh_identity_per_attempt": { "const": true }, "one_start_per_attempt": { "const": true }, "sequential_attempts": { "const": true }, "automatic_retry": { "const": false }, "first_structurally_valid_semantic_result": { "const": "permanent-authoritative-stage-result" }, "ordinary_failures": { "const": "diagnose-correct-review-and-fresh-attempt" } } },
+    "stop_conditions": { "type": "array", "items": { "enum": ["hard-budget-exhausted-before-viable-result", "secret-or-private-answer-breach", "trustworthy-retained-evidence-unpreservable", "accepted-product-meaning-change-outside-slice6-required", "c3-owner-ready"] }, "uniqueItems": true, "minItems": 5, "maxItems": 5 }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9._:/-]+$" },
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "utc": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{7}Z$" },
+    "path": { "type": "string", "minLength": 1, "maxLength": 400, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?/)(?!.*\\\\)[^\\r\\n]+$" }
+  }
+}

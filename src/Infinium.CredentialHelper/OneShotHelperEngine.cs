@@ -222,12 +222,20 @@ public sealed class OneShotHelperEngine
                     }
                     else
                     {
-                        adapterResult = await providerTransport.SendOnceAsync(
-                            assignment.ProviderRequest.CanonicalRequestBytes.Memory,
-                            secret,
-                            Limits(assignment.Limits),
-                            assignment.ProviderRequest.RequestId,
-                            cancellationToken).ConfigureAwait(false);
+                        bool successorV6 = assignment.ProviderRequest.RequestId
+                            .StartsWith("m1-s6-successor-v6-", StringComparison.Ordinal);
+                        adapterResult = successorV6
+                            ? providerTransport is IOpenAiResponsesSuccessorV6Transport successorTransport
+                                ? await successorTransport.SendSuccessorV6OnceAsync(
+                                    assignment.ProviderRequest.CanonicalRequestBytes.Memory, secret,
+                                    Limits(assignment.Limits), assignment.ProviderRequest.RequestId,
+                                    cancellationToken).ConfigureAwait(false)
+                                : throw new InvalidOperationException(
+                                    "Successor v6 dispatch requires the dedicated v6 transport profile.")
+                            : await providerTransport.SendOnceAsync(
+                                assignment.ProviderRequest.CanonicalRequestBytes.Memory, secret,
+                                Limits(assignment.Limits), assignment.ProviderRequest.RequestId,
+                                cancellationToken).ConfigureAwait(false);
                         hasResponse = adapterResult.RawResponseBytes is not null;
                         outcome = adapterResult.State switch
                         {

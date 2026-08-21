@@ -59,6 +59,31 @@ public sealed class OpenAiResponsesAdapterTests
     }
 
     [TestMethod]
+    public void SuccessorV6ResponseCodecRetainsLongContextUsageAndExactPricingWithoutBroadeningV5()
+    {
+        JsonObject response = JsonNode.Parse(ProviderAdapterTestData.CompletedResponse())!.AsObject();
+        JsonObject usage = response["usage"]!.AsObject();
+        usage["input_tokens"] = 300_000;
+        usage["output_tokens"] = 10_000;
+        usage["total_tokens"] = 310_000;
+        usage["output_tokens_details"]!["reasoning_tokens"] = 5_000;
+        byte[] raw = JsonSerializer.SerializeToUtf8Bytes(response);
+
+        OpenAiResponsesResult successor = OpenAiResponsesResponseCodec.ParseSuccessorV6(
+            raw, 200, "m1-s6-successor-v6-request-test", "provider-test", [],
+            ProviderAdapterTestData.OutputSchemaBytes);
+        Assert.IsTrue(successor.Admitted);
+        Assert.AreEqual(3_450_000_000, successor.Usage.CalculatedNanoUsd.Value);
+        Assert.AreEqual(UsageReceiptState.Complete, successor.Usage.ReceiptState);
+
+        OpenAiResponsesResult historical = OpenAiResponsesResponseCodec.Parse(
+            raw, 200, "historical-request", "provider-test", [],
+            ProviderAdapterTestData.OutputSchemaBytes);
+        Assert.IsFalse(historical.Admitted);
+        Assert.AreEqual(UsageReceiptState.Partial, historical.Usage.ReceiptState);
+    }
+
+    [TestMethod]
     [DataRow("incomplete", ProviderResponseState.Incomplete)]
     [DataRow("failed", ProviderResponseState.Failed)]
     [DataRow("queued", ProviderResponseState.Queued)]

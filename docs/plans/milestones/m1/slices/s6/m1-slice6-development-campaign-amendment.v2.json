@@ -1,0 +1,47 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-development-campaign-amendment/2.0.0",
+  "amendment_id": "infinium.m1-s6.hard-budget-continuation/20260821-c2b-c3",
+  "status": "owner-authorized",
+  "authorized_at_utc": "2026-08-21T15:02:47.4588891Z",
+  "expires_at_utc": "2026-08-31T23:59:00.0000000Z",
+  "owner_authority": {
+    "task_authority_id": "infinium.owner-task/20260821-m1-s6-c2b-c3-hard-budget-10usd",
+    "source": "current-task-owner-message",
+    "issued_by": "repository-owner",
+    "scope": "M1-S6-C2B-C2C-C2D-C3",
+    "hard_cost_limit_nano_usd": 10000000000
+  },
+  "campaign_binding": {
+    "campaign_id": "infinium.m1-s6.successor-campaign/a4f66e58-6456-4c90-a6e2-20260820c2b1",
+    "campaign_manifest_sha256": "ff0a8a1cd499f5639c85fa7d43737643dc4b3494643d150b72d2772fc2fc18ef"
+  },
+  "immutable_predecessor": {
+    "ledger_path": "artifacts/m1-slice6/successor-campaign/ledger.v2.jsonl",
+    "ledger_sha256": "db30e1d5281b2127a807d7bfc02b5608e5d80b4321b397e933b78a225fbe8aa8",
+    "final_event_hash": "be76dfd4d47b33e97f8585c66c951df7184b9995e02e9539e2c5bdf2ee089f2b",
+    "historical_committed_nano_usd": 250080000,
+    "immutable": true
+  },
+  "budget": {
+    "maximum_slice_nano_usd": 10000000000,
+    "lower_internal_budget_permitted": false,
+    "per_stage_start_limit": null,
+    "per_attempt_cost_limit": null,
+    "parallel_calls": false
+  },
+  "execution_policy": {
+    "fresh_identity_per_attempt": true,
+    "one_start_per_attempt": true,
+    "sequential_attempts": true,
+    "automatic_retry": false,
+    "first_structurally_valid_semantic_result": "permanent-authoritative-stage-result",
+    "ordinary_failures": "diagnose-correct-review-and-fresh-attempt"
+  },
+  "stop_conditions": [
+    "hard-budget-exhausted-before-viable-result",
+    "secret-or-private-answer-breach",
+    "trustworthy-retained-evidence-unpreservable",
+    "accepted-product-meaning-change-outside-slice6-required",
+    "c3-owner-ready"
+  ]
+}
