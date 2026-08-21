@@ -1,0 +1,23 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-successor-independent-review/3.0.0",
+  "review_id": "infinium.m1-s6.successor-offline-correction-review-v3/WP9/attempt-6/c887282a-0caf-4508-a38e-60256241f612",
+  "review_kind": "offline-correction",
+  "verdict": "accept",
+  "reviewer_id": "/root/successor-design-review",
+  "independent": true,
+  "provider_effect_used": false,
+  "subject": {
+    "id": "successor-attempt-evidence-m1-s6-successor-v6-wp9-attempt-6/c887282a-0caf-4508-a38e-60256241f612",
+    "sha256": "5599a3366ec4ed5191583bf0e19387bee4af6523658bb12a4e5fcc15ee3638bc"
+  },
+  "correction": {
+    "required": true,
+    "defect_id": "successor-v6-socket-error-diagnostic-propagation",
+    "diagnosis_disposition": "local-defect-corrected",
+    "failure_evidence_id": "successor-attempt-evidence-m1-s6-successor-v6-wp9-attempt-6/c887282a-0caf-4508-a38e-60256241f612",
+    "failure_evidence_sha256": "5599a3366ec4ed5191583bf0e19387bee4af6523658bb12a4e5fcc15ee3638bc",
+    "candidate_commit": "ccdd1b913990de6f9ecf5f0ae618ebbcb8112130"
+  },
+  "findings": [],
+  "reviewed_at_utc": "2026-08-21T19:10:28.9670268+00:00"
+}
