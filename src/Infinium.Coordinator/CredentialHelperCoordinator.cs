@@ -47,20 +47,27 @@ public sealed class CredentialHelperCoordinator
         HelperPrivateFrameV2 bootstrap,
         HelperPrivateFrameV2 assignment,
         DateTimeOffset now,
-        CancellationToken cancellationToken = default) => launcher.ExecuteAsync(
+        CancellationToken cancellationToken = default) => EffectLauncher.ExecuteAsync(
             bootstrap,
             assignment,
             null,
-            launcher.OperationTimeout,
+            EffectLauncher.OperationTimeout,
             now,
             cancellationToken);
     private readonly AuthoritativeStore store;
-    private readonly OneShotCredentialHelperLauncher launcher;
+    private readonly OneShotCredentialHelperLauncher? launcher;
+    private OneShotCredentialHelperLauncher EffectLauncher => launcher
+        ?? throw new InvalidOperationException("The zero-effect recovery coordinator has no helper launch authority.");
 
     public CredentialHelperCoordinator(AuthoritativeStore store, OneShotCredentialHelperLauncher launcher)
     {
         this.store = store ?? throw new ArgumentNullException(nameof(store));
         this.launcher = launcher ?? throw new ArgumentNullException(nameof(launcher));
+    }
+
+    internal CredentialHelperCoordinator(AuthoritativeStore store)
+    {
+        this.store = store ?? throw new ArgumentNullException(nameof(store));
     }
 
     public async Task<CoordinatedHelperReceipt> ExecuteStageAndAdmitAsync(
@@ -71,9 +78,22 @@ public sealed class CredentialHelperCoordinator
         DateTimeOffset now,
         CancellationToken cancellationToken = default)
     {
-        HelperProcessReceipt process = await launcher.ExecuteAsync(
-            bootstrap, assignment, finalRevalidation, launcher.OperationTimeout, now, cancellationToken)
+        HelperProcessReceipt process = await EffectLauncher.ExecuteAsync(
+            bootstrap, assignment, finalRevalidation, EffectLauncher.OperationTimeout, now, cancellationToken)
             .ConfigureAwait(false);
+        byte[] canonical = ValidateAndEncodeHelperTerminal(
+            process, assignment, finalRevalidation, now);
+        HelperStagingReceipt staging = store.StageAndAdmitHelperReceipt(
+            attemptId, canonical, now, process.StagedResponseBytes);
+        return new(process, staging);
+    }
+
+    private static byte[] ValidateAndEncodeHelperTerminal(
+        HelperProcessReceipt process,
+        HelperPrivateFrameV2 assignment,
+        HelperPrivateFrameV2? finalRevalidation,
+        DateTimeOffset now)
+    {
         ulong sequence = finalRevalidation is null ? 3UL : 4UL;
         HelperPrivateFrameV2 terminal = new()
         {
@@ -135,9 +155,7 @@ public sealed class CredentialHelperCoordinator
         {
             throw new InvalidDataException("The helper staged response does not match its validated manifest digest.");
         }
-        HelperStagingReceipt staging = store.StageAndAdmitHelperReceipt(
-            attemptId, canonical, now, process.StagedResponseBytes);
-        return new(process, staging);
+        return canonical;
     }
 
     public async Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>
@@ -244,6 +262,317 @@ public sealed class CredentialHelperCoordinator
             throw new InvalidOperationException("Production replacement failed to publish one exact verified generation.");
         }
         return (helper, verified);
+    }
+
+    internal async Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>
+        ExecuteVerifiedReplacementCleanupAsync(
+            string attemptId,
+            HelperPrivateFrameV2 bootstrap,
+            HelperPrivateFrameV2 assignment,
+            DateTimeOffset now,
+            Func<CancellationToken, Task<HelperProcessReceipt>>? testEffectExecutor = null,
+            bool testInterruptAfterEffect = false,
+            CancellationToken cancellationToken = default)
+    {
+        if (assignment.Assignment.AssignmentKind != HelperAssignmentKindV2.Replace)
+        {
+            throw new InvalidDataException("Verified replacement cleanup accepts only exact replacement helper semantics.");
+        }
+        HelperAssignmentV2 work = assignment.Assignment;
+        string profileId = work.AccessProfileId?.Value
+            ?? throw new InvalidDataException("Replacement cleanup profile identity is required.");
+        string successorGeneration = work.GenerationId?.Value
+            ?? throw new InvalidDataException("Replacement cleanup successor identity is required.");
+        CredentialProfileProjection current = store.GetCredentialProfile(profileId);
+        string predecessorGeneration = bootstrap.Bootstrap.Credential?.GenerationId?.Value
+            ?? throw new InvalidDataException("Replacement cleanup predecessor identity is required.");
+        if (current.GenerationId != predecessorGeneration || current.GenerationOrdinal != 1
+            || current.LifecycleState != "delete-pending" || current.VerificationState != "unavailable"
+            || current.CleanupDisposition != "failed"
+            || work.GenerationOrdinal != 2 || successorGeneration == predecessorGeneration
+            || work.Credential?.AccessProfileId?.Value != profileId
+            || work.Credential?.GenerationId?.Value != successorGeneration
+            || bootstrap.Bootstrap.Credential?.AccessProfileId?.Value != profileId
+            || !store.IsCredentialReplacementCleanupRecovery(
+                profileId, predecessorGeneration, successorGeneration))
+        {
+            throw new InvalidDataException("Replacement cleanup recovery does not bind the exact durable lineage.");
+        }
+        string stagedReceiptPath = Path.Combine(
+            store.Paths.Staging, attemptId, "helper-receipt.v2.pb");
+        if (File.Exists(stagedReceiptPath))
+        {
+            throw new InvalidDataException(
+                "A terminal replacement cleanup receipt is already staged; zero-native recovery is required.");
+        }
+        if (!store.TryAdmitCredentialReplacementHelperLaunch(attemptId, now.AddTicks(2)))
+        {
+            throw new InvalidOperationException(
+                "This replacement cleanup helper launch was already admitted and cannot be retried.");
+        }
+        HelperProcessReceipt process = testEffectExecutor is null
+            ? await EffectLauncher.ExecuteAsync(
+                bootstrap, assignment, null, EffectLauncher.OperationTimeout,
+                now.AddTicks(2), cancellationToken).ConfigureAwait(false)
+            : await testEffectExecutor(cancellationToken).ConfigureAwait(false);
+        if (testInterruptAfterEffect)
+        {
+            throw new IOException("Injected interruption after replacement helper return and before boundary staging.");
+        }
+        byte[] canonical = ValidateAndEncodeHelperTerminal(
+            process, assignment, null, now.AddTicks(2));
+        string relativePath = Path.Combine(attemptId, "helper-receipt.v2.pb");
+        HelperStagingReceipt expectedStaging = new(
+            attemptId, relativePath, canonical.Length,
+            Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(canonical)),
+            null, 0, null, true, true);
+        CoordinatedHelperReceipt prepared = new(process, expectedStaging);
+        string predecessorFingerprint = Convert.ToHexStringLower(
+            System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes($"Infinium:{profileId}:{predecessorGeneration}")));
+        string successorFingerprint = Convert.ToHexStringLower(
+            System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes($"Infinium:{profileId}:{successorGeneration}")));
+        M1Slice6SuccessorCredentialReplacementRunner.ValidateReplacementHelperBoundary(
+            process, predecessorFingerprint, successorFingerprint,
+            requireCompleted: process.Receipt.Outcome == HelperOutcomeV2.Completed);
+        byte[] boundary = M1Slice6SuccessorCredentialReplacementRunner.CreateValidatedReplacementBoundary(
+            M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(store.Paths.ProductRoot),
+            attemptId, prepared, predecessorFingerprint, successorFingerprint, canonical);
+        _ = store.StageCredentialReplacementBoundary(attemptId, boundary);
+        HelperStagingReceipt staging = store.StageAndAdmitHelperReceipt(
+            attemptId, canonical, now.AddTicks(2), process.StagedResponseBytes);
+        if (staging != expectedStaging)
+        {
+            throw new InvalidDataException("The staged replacement cleanup receipt identity drifted after boundary publication.");
+        }
+        CoordinatedHelperReceipt helper = new(process, staging);
+        return CompleteVerifiedReplacementCleanup(
+            M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(store.Paths.ProductRoot),
+            attemptId, bootstrap, assignment, helper, now);
+    }
+
+    internal (CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)
+        CompleteVerifiedReplacementCleanup(
+            string repository,
+            string attemptId,
+            HelperPrivateFrameV2 bootstrap,
+            HelperPrivateFrameV2 assignment,
+            CoordinatedHelperReceipt helper,
+            DateTimeOffset now)
+    {
+        HelperAssignmentV2 work = assignment.Assignment;
+        string profileId = work.AccessProfileId?.Value
+            ?? throw new InvalidDataException("Replacement cleanup profile identity is required.");
+        string successorGeneration = work.GenerationId?.Value
+            ?? throw new InvalidDataException("Replacement cleanup successor identity is required.");
+        string predecessorGeneration = bootstrap.Bootstrap.Credential?.GenerationId?.Value
+            ?? throw new InvalidDataException("Replacement cleanup predecessor identity is required.");
+        CredentialProfileProjection current = store.GetCredentialProfile(profileId);
+        if (!store.HasExactCredentialReplacementHelperLaunchAdmission(attemptId))
+        {
+            throw new InvalidDataException("Replacement cleanup completion lacks its exact one-shot launch admission.");
+        }
+        if (work.AssignmentKind != HelperAssignmentKindV2.Replace
+            || current.GenerationId != predecessorGeneration || current.GenerationOrdinal != 1
+            || current.LifecycleState != "delete-pending" || current.VerificationState != "unavailable"
+            || current.CleanupDisposition != "failed"
+            || successorGeneration == predecessorGeneration
+            || !store.IsCredentialReplacementCleanupRecovery(
+                profileId, predecessorGeneration, successorGeneration))
+        {
+            throw new InvalidDataException("Replacement cleanup completion does not bind the exact durable lineage.");
+        }
+        string predecessorFingerprint = Convert.ToHexStringLower(
+            System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes($"Infinium:{profileId}:{predecessorGeneration}")));
+        string successorFingerprint = Convert.ToHexStringLower(
+            System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes($"Infinium:{profileId}:{successorGeneration}")));
+        using (WindowsHandleRelativeStorage.AdmissionSource stagedReceipt = store.Paths.OpenAdmissionSource(
+            ProductWriteClass.AttemptStaging, helper.Staging.RelativePath))
+        using (MemoryStream destination = new())
+        {
+            _ = stagedReceipt.CopyToAndHash(destination, 1_048_576);
+            byte[] bytes = destination.ToArray();
+            if (Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(bytes))
+                    != helper.Staging.Sha256)
+            {
+                throw new InvalidDataException("The staged replacement terminal receipt is not exact.");
+            }
+        }
+        M1Slice6SuccessorCredentialReplacementRunner.ValidateReplacementHelperBoundary(
+            helper.Process, predecessorFingerprint, successorFingerprint,
+            requireCompleted: helper.Process.Receipt.Outcome == HelperOutcomeV2.Completed);
+        string boundaryPath = Path.Combine(
+            store.Paths.Staging, attemptId, AuthoritativeStore.CredentialReplacementBoundaryFileName);
+        byte[] expectedBoundary = M1Slice6SuccessorCredentialReplacementRunner.CreateValidatedReplacementBoundary(
+            repository, attemptId, helper, predecessorFingerprint, successorFingerprint);
+        if (!File.Exists(boundaryPath))
+        {
+            _ = store.StageCredentialReplacementBoundary(attemptId, expectedBoundary);
+        }
+        else if (!store.ReadCredentialReplacementBoundary(attemptId).AsSpan().SequenceEqual(expectedBoundary))
+        {
+            throw new InvalidDataException("The staged replacement cleanup boundary changed before publication.");
+        }
+        if (helper.Process.Receipt.Outcome != HelperOutcomeV2.Completed)
+        {
+            return (helper, current);
+        }
+        return (helper, PublishReplacementCleanupCompletion(
+            attemptId, current, successorGeneration, now));
+    }
+
+    internal (CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)
+        RecoverVerifiedReplacementCleanup(
+            string repository,
+            string attemptId,
+            HelperPrivateFrameV2 assignment,
+            string predecessorFingerprint,
+            string successorFingerprint,
+            string expectedHelperSha256,
+            DateTimeOffset now)
+    {
+        HelperAssignmentV2 work = assignment.Assignment;
+        if (work.AssignmentKind != HelperAssignmentKindV2.Replace)
+        {
+            throw new InvalidDataException("Replacement cleanup replay accepts only exact replacement semantics.");
+        }
+        string profileId = work.AccessProfileId?.Value
+            ?? throw new InvalidDataException("Replacement cleanup replay profile identity is required.");
+        string successorGeneration = work.GenerationId?.Value
+            ?? throw new InvalidDataException("Replacement cleanup replay successor identity is required.");
+        if (!store.HasExactCredentialReplacementHelperLaunchAdmission(attemptId))
+        {
+            throw new InvalidDataException("Replacement cleanup replay lacks its exact one-shot launch admission.");
+        }
+        CoordinatedHelperReceipt helper =
+            M1Slice6SuccessorCredentialReplacementRunner.ReadValidatedReplacementBoundary(
+                repository, store, attemptId, assignment,
+                predecessorFingerprint, successorFingerprint, expectedHelperSha256, now);
+        CredentialProfileProjection current = store.GetCredentialProfile(profileId);
+        if (helper.Process.Receipt.Outcome != HelperOutcomeV2.Completed)
+        {
+            if (current.LifecycleState != "delete-pending" || current.VerificationState != "unavailable"
+                || current.CleanupDisposition != "failed")
+            {
+                throw new InvalidDataException("A stopped replacement cleanup replay changed its durable lineage.");
+            }
+            return (helper, current);
+        }
+        if (current.GenerationId == successorGeneration && current.GenerationOrdinal == 2
+            && current.LifecycleState == "active-verified" && current.VerificationState == "available")
+        {
+            if (!HasExactReplacementCleanupRecoveryLineage(
+                    attemptId, profileId, successorGeneration, requireVerified: true))
+            {
+                throw new InvalidDataException(
+                    "The verified replacement cleanup replay is not owned by this exact operation.");
+            }
+            return (helper, current);
+        }
+        if (current.GenerationId == successorGeneration && current.GenerationOrdinal == 2
+            && current.LifecycleState == "active-unverified" && current.VerificationState == "unavailable"
+            && current.CleanupDisposition == "not-requested")
+        {
+            if (!HasExactReplacementCleanupRecoveryLineage(
+                    attemptId, profileId, successorGeneration, requireVerified: false))
+            {
+                throw new InvalidDataException(
+                    "The unverified replacement cleanup replay is not owned by this exact operation.");
+            }
+            return (helper, VerifyReplacementCleanupCompletion(
+                attemptId, current, now));
+        }
+        if (current.GenerationOrdinal != 1 || current.LifecycleState != "delete-pending"
+            || current.VerificationState != "unavailable" || current.CleanupDisposition != "failed"
+            || !store.IsCredentialReplacementCleanupRecovery(
+                profileId, current.GenerationId, successorGeneration))
+        {
+            throw new InvalidDataException("The replacement cleanup replay does not bind the exact durable predecessor.");
+        }
+        return (helper, PublishReplacementCleanupCompletion(
+            attemptId, current, successorGeneration, now));
+    }
+
+    private CredentialProfileProjection PublishReplacementCleanupCompletion(
+        string attemptId,
+        CredentialProfileProjection current,
+        string successorGeneration,
+        DateTimeOffset now)
+    {
+        string profileId = current.ProfileId;
+        CredentialProfileProjection recovered = store.ApplyCredentialTransition(new(
+            attemptId + "-replacement-cleanup-recovered",
+            profileId,
+            successorGeneration,
+            "recover",
+            "delete-pending",
+            "active-unverified",
+            "active-unverified",
+            current.CapabilitySnapshotId,
+            current.AccountIdentityId,
+            current.BillingScopeIdentityId,
+            now.AddTicks(3),
+            now.AddTicks(4)));
+        if (recovered.LifecycleState != "active-unverified"
+            || recovered.GenerationId != successorGeneration)
+        {
+            throw new InvalidOperationException(
+                "A completed replacement cleanup recovery did not reach the exact durable verification predecessor.");
+        }
+        return VerifyReplacementCleanupCompletion(attemptId, recovered, now);
+    }
+
+    private CredentialProfileProjection VerifyReplacementCleanupCompletion(
+        string attemptId,
+        CredentialProfileProjection recovered,
+        DateTimeOffset now)
+    {
+        CredentialProfileProjection verified = store.ApplyCredentialTransition(new(
+            attemptId + "-verified-generation",
+            recovered.ProfileId,
+            recovered.GenerationId,
+            "verify",
+            "active-unverified",
+            "active-verified",
+            "active-verified",
+            recovered.CapabilitySnapshotId,
+            recovered.AccountIdentityId,
+            recovered.BillingScopeIdentityId,
+            now.AddTicks(5),
+            now.AddTicks(6)));
+        if (verified.LifecycleState != "active-verified"
+            || verified.VerificationState != "available"
+            || verified.GenerationId != recovered.GenerationId)
+        {
+            throw new InvalidOperationException(
+                "Production replacement cleanup recovery failed to publish one exact verified generation.");
+        }
+        return verified;
+    }
+
+    private bool HasExactReplacementCleanupRecoveryLineage(
+        string attemptId,
+        string profileId,
+        string successorGeneration,
+        bool requireVerified)
+    {
+        bool recovered = store.HasExactCompletedCredentialTransition(
+            attemptId + "-replacement-cleanup-recovered",
+            profileId, successorGeneration, "recover",
+            "delete-pending", "active-unverified", "active-unverified",
+            requireCurrentProjection: !requireVerified);
+        if (!recovered || !requireVerified)
+        {
+            return recovered;
+        }
+        return store.HasExactCompletedCredentialTransition(
+            attemptId + "-verified-generation",
+            profileId, successorGeneration, "verify",
+            "active-unverified", "active-verified", "active-verified",
+            requireCurrentProjection: true);
     }
 
     internal async Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>

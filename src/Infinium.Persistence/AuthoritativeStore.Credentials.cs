@@ -399,6 +399,78 @@ public sealed partial class AuthoritativeStore
         }
     }
 
+    internal bool HasExactCompletedCredentialTransition(
+        string rootId,
+        string profileId,
+        string generationId,
+        string intentKind,
+        string fromState,
+        string toState,
+        string outcomeState,
+        bool requireCurrentProjection)
+    {
+        ValidateCredentialIdentity(rootId, nameof(rootId));
+        ValidateCredentialIdentity(profileId, nameof(profileId));
+        ValidateCredentialIdentity(generationId, nameof(generationId));
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT COUNT(*)
+                FROM provider_credential_intents terminal
+                JOIN provider_credential_intents pending
+                  ON pending.intent_id=$pending
+                 AND pending.profile_id=terminal.profile_id
+                 AND pending.generation_id=terminal.generation_id
+                 AND pending.intent_kind=terminal.intent_kind
+                 AND pending.intent_state='pending'
+                 AND pending.from_lifecycle_state=$from
+                 AND pending.to_lifecycle_state=$to
+                 AND pending.outcome_lifecycle_state=$from
+                JOIN provider_credential_intent_events pending_event
+                  ON pending_event.intent_event_id=$event1
+                 AND pending_event.intent_root_id=$root
+                 AND pending_event.intent_id=pending.intent_id
+                 AND pending_event.event_version=1
+                 AND pending_event.prior_intent_event_id IS NULL
+                JOIN provider_credential_intent_events terminal_event
+                  ON terminal_event.intent_event_id=$event2
+                 AND terminal_event.intent_root_id=$root
+                 AND terminal_event.intent_id=terminal.intent_id
+                 AND terminal_event.event_version=2
+                 AND terminal_event.prior_intent_event_id=pending_event.intent_event_id
+                WHERE terminal.intent_id=$terminal
+                  AND terminal.profile_id=$profile
+                  AND terminal.generation_id=$generation
+                  AND terminal.intent_kind=$kind
+                  AND terminal.intent_state='completed'
+                  AND terminal.from_lifecycle_state=$from
+                  AND terminal.to_lifecycle_state=$to
+                  AND terminal.outcome_lifecycle_state=$outcome
+                  AND ($require_current=0 OR EXISTS(
+                    SELECT 1 FROM provider_profile_projection projection
+                    WHERE projection.profile_id=$profile
+                      AND projection.generation_id=$generation
+                      AND projection.intent_id=terminal.intent_id));
+                """;
+            command.Parameters.AddWithValue("$root", rootId);
+            command.Parameters.AddWithValue("$pending", rootId + ":pending");
+            command.Parameters.AddWithValue("$terminal", rootId + ":terminal");
+            command.Parameters.AddWithValue("$event1", rootId + ":event:1");
+            command.Parameters.AddWithValue("$event2", rootId + ":event:2");
+            command.Parameters.AddWithValue("$profile", profileId);
+            command.Parameters.AddWithValue("$generation", generationId);
+            command.Parameters.AddWithValue("$kind", intentKind);
+            command.Parameters.AddWithValue("$from", fromState);
+            command.Parameters.AddWithValue("$to", toState);
+            command.Parameters.AddWithValue("$outcome", outcomeState);
+            command.Parameters.AddWithValue("$require_current", requireCurrentProjection ? 1 : 0);
+            return Convert.ToInt64(
+                command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) == 1;
+        }
+    }
+
     public IReadOnlyList<CredentialProfileProjection> RebuildCredentialProfileProjections(DateTimeOffset now)
     {
         lock (gate)

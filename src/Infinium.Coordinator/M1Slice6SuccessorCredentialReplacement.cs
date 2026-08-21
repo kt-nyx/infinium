@@ -19,10 +19,23 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         "infinium.repository.m1-slice6-successor-credential-replacement-review/1.0.0";
     internal const string EvidenceSchema =
         "infinium.m1-s6.successor-credential-replacement-evidence/v1";
+    internal const string EvidenceSchemaV2 =
+        "infinium.m1-s6.successor-credential-replacement-evidence/v2";
     internal const string FailureEvidenceSchema =
         "infinium.m1-s6.successor-credential-replacement-failure-evidence/v1";
+    internal const string BoundarySchema =
+        "infinium.m1-s6.successor-credential-replacement-helper-boundary/v1";
     internal const string RecoveryAmendmentSchema =
         "infinium.repository.m1-slice6-development-campaign-amendment/4.0.0";
+    internal const string CleanupRecoveryAmendmentSchema =
+        "infinium.repository.m1-slice6-development-campaign-amendment/5.0.0";
+
+    private enum ReplacementMode
+    {
+        Initial,
+        ReplacingRecovery,
+        DeletePendingRecovery,
+    }
 
     private static readonly JsonSerializerOptions Json = new()
     {
@@ -126,7 +139,7 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         string operationId = "m1s6-credential-replacement-" + authoritySha256[..32];
         if (authority.GetProperty("schema_identity").GetString() != AuthoritySchema
             || authority.GetProperty("status").GetString() != "independently-reviewed-ready-for-owner-effect"
-            || prepared > notBefore || now < notBefore || now >= expires
+            || prepared > notBefore
             || reviewedAt < prepared || reviewedAt > now || reviewedAt >= expires
             || review.GetProperty("schema_identity").GetString() != ReviewSchema
             || review.GetProperty("verdict").GetString() != "accept"
@@ -141,27 +154,39 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         string ownerPath = Path.GetFullPath(Path.Combine(repository,
             owner.GetProperty("path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
         byte[] ownerBytes = ExactBytes(ownerPath, owner.GetProperty("sha256").GetString()!);
-        bool recovery;
+        ReplacementMode mode;
         using (JsonDocument ownerDocument = JsonDocument.Parse(ownerBytes))
         {
             string ownerSchema = ownerDocument.RootElement.GetProperty("schema_identity").GetString()!;
-            recovery = ownerSchema == RecoveryAmendmentSchema;
-            string ownerSchemaFile = recovery
-                ? "m1-slice6-development-campaign-amendment.v4.schema.json"
-                : "m1-slice6-development-campaign-amendment.v3.schema.json";
+            mode = ownerSchema switch
+            {
+                RecoveryAmendmentSchema => ReplacementMode.ReplacingRecovery,
+                CleanupRecoveryAmendmentSchema => ReplacementMode.DeletePendingRecovery,
+                _ => ReplacementMode.Initial,
+            };
+            string ownerSchemaFile = mode switch
+            {
+                ReplacementMode.ReplacingRecovery => "m1-slice6-development-campaign-amendment.v4.schema.json",
+                ReplacementMode.DeletePendingRecovery => "m1-slice6-development-campaign-amendment.v5.schema.json",
+                _ => "m1-slice6-development-campaign-amendment.v3.schema.json",
+            };
             ActiveRepositoryJsonSchemaValidator.Validate(ownerBytes,
                 File.ReadAllBytes(Path.Combine(repository, "contracts", "repository", ownerSchemaFile)),
-                recovery ? RecoveryAmendmentSchema
-                    : "infinium.repository.m1-slice6-development-campaign-amendment/3.0.0");
+                ownerSchema);
             if (ownerDocument.RootElement.GetProperty("amendment_id").GetString()
                     != owner.GetProperty("id").GetString()
                 || ownerDocument.RootElement.GetProperty("status").GetString()
-                    != (recovery ? "owner-authorized-credential-replacement-recovery"
-                        : "owner-authorized-credential-replacement"))
+                    != (mode switch
+                    {
+                        ReplacementMode.ReplacingRecovery => "owner-authorized-credential-replacement-recovery",
+                        ReplacementMode.DeletePendingRecovery =>
+                            "owner-authorized-credential-replacement-cleanup-recovery",
+                        _ => "owner-authorized-credential-replacement",
+                    }))
             {
                 throw new InvalidDataException("The exact owner credential-replacement amendment is stale.");
             }
-            if (recovery)
+            if (mode == ReplacementMode.ReplacingRecovery)
             {
                 JsonElement priorOwner = ownerDocument.RootElement.GetProperty("prior_owner_authority");
                 JsonElement failure = ownerDocument.RootElement.GetProperty("retained_failure");
@@ -222,6 +247,10 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                     throw new InvalidDataException("The exact retained pre-native replacement failure is stale.");
                 }
             }
+            else if (mode == ReplacementMode.DeletePendingRecovery)
+            {
+                ValidateDeletePendingRecoveryOwner(repository, ownerDocument.RootElement, successorGeneration);
+            }
         }
         string expectedProductRoot = Path.GetFullPath(state.GetProperty("root_absolute").GetString()!);
         string closedProductRoot = testHooks?.ClosedProductRoot is null
@@ -237,11 +266,18 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             release.GetProperty("coordinator_path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
         string expectedEvidence = Path.GetFullPath(Path.Combine(repository,
             effect.GetProperty("evidence_path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
+        string evidenceDirectory = Path.GetDirectoryName(evidencePath)!;
+        bool exactRootCandidate = productStateRoot == expectedProductRoot && productStateRoot == closedProductRoot;
+        bool replayBoundaryAlreadyDurable = exactRootCandidate && File.Exists(Path.Combine(
+            productStateRoot, "staging", operationId, AuthoritativeStore.CredentialReplacementBoundaryFileName));
+        bool evidenceDirectoryExists = Directory.Exists(evidenceDirectory);
+        bool evidenceDirectoryIsEmpty = !evidenceDirectoryExists
+            || !Directory.EnumerateFileSystemEntries(evidenceDirectory).Any();
         if (productStateRoot != expectedProductRoot || productStateRoot != closedProductRoot || ledgerPath != expectedLedger
             || helperPath != expectedHelper || Path.GetFullPath(coordinatorPath) != expectedCoordinator
             || evidencePath != expectedEvidence || !Directory.Exists(productStateRoot)
             || !File.Exists(ledgerPath) || !File.Exists(helperPath) || File.Exists(evidencePath)
-            || Directory.Exists(Path.GetDirectoryName(evidencePath)!))
+            || evidenceDirectoryExists && (!replayBoundaryAlreadyDurable || !evidenceDirectoryIsEmpty))
         {
             throw new InvalidDataException("The credential replacement effect roots differ from exact reviewed authority.");
         }
@@ -287,8 +323,25 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         {
             throw new InvalidDataException("The replacement ledger does not preserve the exact seq39 accounting state.");
         }
-        string beforeCheckpoint = M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(productStateRoot);
-        if (beforeCheckpoint != state.GetProperty("checkpoint_sha256").GetString())
+        string beforeCheckpoint = state.GetProperty("checkpoint_sha256").GetString()!;
+        string stagedReceiptPath = Path.Combine(productStateRoot, "staging", operationId, "helper-receipt.v2.pb");
+        string stagedBoundaryPath = Path.Combine(productStateRoot, "staging", operationId,
+            AuthoritativeStore.CredentialReplacementBoundaryFileName);
+        bool receiptExists = File.Exists(stagedReceiptPath);
+        bool boundaryExists = File.Exists(stagedBoundaryPath);
+        if (receiptExists && !boundaryExists)
+        {
+            throw new InvalidDataException(
+                "A replacement receipt without its validated helper boundary cannot authorize replay.");
+        }
+        bool stagedReplay = boundaryExists;
+        if (!stagedReplay && (now < notBefore || now >= expires))
+        {
+            throw new InvalidDataException("The credential replacement effect window is not live.");
+        }
+        if (!stagedReplay
+            && M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(productStateRoot)
+                != beforeCheckpoint)
         {
             throw new InvalidDataException("The credential replacement product-state checkpoint is stale.");
         }
@@ -297,21 +350,46 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         using (AuthoritativeStore store = new(new StoragePaths(productStateRoot)))
         {
             CredentialProfileProjection current = store.GetCredentialProfile(profileId);
-            bool exactInitial = !recovery
+            bool exactInitial = mode == ReplacementMode.Initial
                 && current.GenerationId == predecessorGeneration && current.GenerationOrdinal == 1
                 && current.LifecycleState == "active-verified" && current.VerificationState == "available";
-            bool exactRecovery = recovery
+            bool exactReplacingRecovery = mode == ReplacementMode.ReplacingRecovery
                 && current.GenerationId == predecessorGeneration && current.GenerationOrdinal == 1
                 && current.LifecycleState == "replacing" && current.VerificationState == "unavailable";
-            if (!exactInitial && !exactRecovery)
+            bool exactDeletePendingRecovery = mode == ReplacementMode.DeletePendingRecovery
+                && current.GenerationId == predecessorGeneration && current.GenerationOrdinal == 1
+                && current.LifecycleState == "delete-pending" && current.VerificationState == "unavailable"
+                && current.CleanupDisposition == "failed"
+                && store.IsCredentialReplacementCleanupRecovery(
+                    profileId, predecessorGeneration, successorGeneration);
+            bool exactPublishedReplay = stagedReplay && mode == ReplacementMode.DeletePendingRecovery
+                && current.GenerationId == successorGeneration && current.GenerationOrdinal == 2
+                && current.LifecycleState == "active-verified" && current.VerificationState == "available"
+                && store.HasExactCompletedCredentialTransition(
+                    operationId + "-replacement-cleanup-recovered", profileId, successorGeneration,
+                    "recover", "delete-pending", "active-unverified", "active-unverified", false)
+                && store.HasExactCompletedCredentialTransition(
+                    operationId + "-verified-generation", profileId, successorGeneration,
+                    "verify", "active-unverified", "active-verified", "active-verified", true);
+            bool exactUnverifiedReplay = stagedReplay && mode == ReplacementMode.DeletePendingRecovery
+                && current.GenerationId == successorGeneration && current.GenerationOrdinal == 2
+                && current.LifecycleState == "active-unverified" && current.VerificationState == "unavailable"
+                && current.CleanupDisposition == "not-requested"
+                && store.HasExactCompletedCredentialTransition(
+                    operationId + "-replacement-cleanup-recovered", profileId, successorGeneration,
+                    "recover", "delete-pending", "active-unverified", "active-unverified", true);
+            if (!exactInitial && !exactReplacingRecovery && !exactDeletePendingRecovery
+                && !exactPublishedReplay && !exactUnverifiedReplay)
             {
                 throw new InvalidDataException("The replacement predecessor is not the exact active verified generation.");
             }
             if (profileId != "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e"
                 || predecessorGeneration != "g-ff6d82e7a7d244f6b8a9d0164991be37"
                 || predecessorFingerprint != "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0"
-                || store.CredentialGenerationExists(profileId, successorGeneration) != recovery
-                || recovery && store.CredentialGenerationOrdinal(profileId, successorGeneration) != 2)
+                || store.CredentialGenerationExists(profileId, successorGeneration)
+                    != (mode != ReplacementMode.Initial)
+                || mode != ReplacementMode.Initial
+                    && store.CredentialGenerationOrdinal(profileId, successorGeneration) != 2)
             {
                 throw new InvalidDataException("The credential replacement identity is stale or the successor is not fresh.");
             }
@@ -319,36 +397,60 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                 repository, authorityId, authoritySha256, evidenceId, operationId,
                 review.GetProperty("review_id").GetString()!, reviewSha256,
                 profileId, productStateRoot, evidencePath));
-            CredentialProfileProjection replacing = recovery
-                ? current
-                : store.BeginCredentialReplacement(
-                    operationId + "-begin", profileId, predecessorGeneration, successorGeneration, 2, now.AddTicks(1));
-            if (replacing.GenerationId != predecessorGeneration || replacing.LifecycleState != "replacing"
-                || replacing.VerificationState != "unavailable")
+            CredentialProfileProjection replacing = mode == ReplacementMode.Initial
+                ? store.BeginCredentialReplacement(
+                    operationId + "-begin", profileId, predecessorGeneration, successorGeneration, 2, now.AddTicks(1))
+                : current;
+            string admittedLifecycle = mode == ReplacementMode.DeletePendingRecovery ? "delete-pending" : "replacing";
+            if (!exactPublishedReplay && !exactUnverifiedReplay
+                && (replacing.GenerationId != predecessorGeneration || replacing.LifecycleState != admittedLifecycle
+                    || replacing.VerificationState != "unavailable"))
             {
                 throw new InvalidOperationException("The durable replacement intent did not make the predecessor ineligible.");
             }
-            DateTimeOffset helperExpiry = now.AddMinutes(11) < expires ? now.AddMinutes(11) : expires;
-            HelperPrivateFrameV2 bootstrap = Bootstrap(
-                profileId, predecessorGeneration, now, helperExpiry, authorityId);
-            HelperPrivateFrameV2 assignment = Assignment(profileId, successorGeneration, authorityId);
+            bool cleanupRecovery = mode == ReplacementMode.DeletePendingRecovery;
+            HelperPrivateFrameV2 assignment = Assignment(
+                profileId, successorGeneration, authorityId,
+                HelperAssignmentKindV2.Replace);
             Directory.CreateDirectory(Path.GetDirectoryName(evidencePath)!);
-            using CancellationTokenSource effectDeadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            TimeSpan remaining = helperExpiry - DateTimeOffset.UtcNow;
-            if (remaining <= TimeSpan.Zero) { throw new TimeoutException("Replacement authority expired before helper launch."); }
-            effectDeadline.CancelAfter(remaining);
-            if (testHooks?.EffectExecutor is not null)
+            if (stagedReplay)
             {
-                (helper, projection) = await testHooks.EffectExecutor(
-                    store, operationId, bootstrap, assignment, now, effectDeadline.Token).ConfigureAwait(false);
+                CredentialHelperCoordinator coordinator = new(store);
+                (helper, projection) = coordinator.RecoverVerifiedReplacementCleanup(
+                    repository, operationId, assignment,
+                    predecessorFingerprint, successorFingerprint, helperSha256, now);
             }
             else
             {
-                OneShotCredentialHelperLauncher launcher = OneShotCredentialHelperLauncher.CreateSuccessorCredentialReplacement(
-                    helperPath, helperSha256, authorityPath, authoritySha256, authorityId);
-                CredentialHelperCoordinator coordinator = new(store, launcher);
-                (helper, projection) = await coordinator.ExecuteVerifiedReplacementAsync(
-                    operationId, bootstrap, assignment, now, effectDeadline.Token).ConfigureAwait(false);
+                DateTimeOffset helperExpiry = now.AddMinutes(11) < expires ? now.AddMinutes(11) : expires;
+                HelperPrivateFrameV2 bootstrap = Bootstrap(
+                    profileId, predecessorGeneration, now, helperExpiry, authorityId);
+                using CancellationTokenSource effectDeadline =
+                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                TimeSpan remaining = helperExpiry - DateTimeOffset.UtcNow;
+                if (remaining <= TimeSpan.Zero)
+                {
+                    throw new TimeoutException("Replacement authority expired before helper launch.");
+                }
+                effectDeadline.CancelAfter(remaining);
+                if (testHooks?.EffectExecutor is not null)
+                {
+                    (helper, projection) = await testHooks.EffectExecutor(
+                        store, operationId, bootstrap, assignment, now, effectDeadline.Token).ConfigureAwait(false);
+                }
+                else
+                {
+                    OneShotCredentialHelperLauncher launcher =
+                        OneShotCredentialHelperLauncher.CreateSuccessorCredentialReplacement(
+                            helperPath, helperSha256, authorityPath, authoritySha256, authorityId);
+                    CredentialHelperCoordinator coordinator = new(store, launcher);
+                    (helper, projection) = cleanupRecovery
+                        ? await coordinator.ExecuteVerifiedReplacementCleanupAsync(
+                            operationId, bootstrap, assignment, now,
+                            cancellationToken: effectDeadline.Token).ConfigureAwait(false)
+                        : await coordinator.ExecuteVerifiedReplacementAsync(
+                            operationId, bootstrap, assignment, now, effectDeadline.Token).ConfigureAwait(false);
+                }
             }
         }
         CredentialProfileProjection reopened = AuthoritativeStore.ReadCredentialProfileProjectionReadOnly(
@@ -367,7 +469,9 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             && projection.GenerationId == predecessorGeneration
             && projection.GenerationOrdinal == 1
             && projection.LifecycleState == "delete-pending"
-            && projection.VerificationState == "unavailable";
+            && projection.VerificationState == "unavailable"
+            && (mode != ReplacementMode.DeletePendingRecovery
+                || projection.CleanupDisposition == "failed");
         if (!exactSuccess && !exactStopped)
         {
             throw new InvalidDataException("The replacement helper outcome and final durable projection disagree.");
@@ -379,41 +483,13 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             ?? throw new InvalidDataException("Credential replacement omitted its exact native trace.");
         JsonElement canaries = ParseOptional(helper.Process.NativeCanaryEvidenceBytes)
             ?? throw new InvalidDataException("Credential replacement omitted its canary evidence.");
-        JsonElement entry = ParseOptional(helper.Process.NativeEntryCleanupBytes)
-            ?? throw new InvalidDataException("Credential replacement omitted its entry cleanup evidence.");
-        if (status == "passed-active-verified-predecessor-absent")
-        {
-            ValidateSuccessfulBoundary(helper.Process, entry, canaries);
-            ValidateSuccessfulTrace(trace, predecessorFingerprint, successorFingerprint,
-                helper.Process.NativeCredentialOperationCount);
-        }
-        else
-        {
-            ValidateStoppedBoundary(helper.Process, entry, canaries);
-            ValidateStoppedTrace(trace, predecessorFingerprint, successorFingerprint,
-                helper.Process.NativeCredentialOperationCount, helper.Process.Receipt.Outcome);
-            bool collision = trace.GetArrayLength() == 2
-                && trace[0].GetProperty("Operation").GetString() == "CredReadW"
-                && trace[0].GetProperty("Result").GetString() == "success";
-            if (helper.Process.NativeNamespaceReuseBlocked != collision
-                || collision && helper.Process.NativeNamespaceReuseBlockReason != "preflight-collision"
-                || !collision && helper.Process.NativeNamespaceReuseBlockReason is not null)
-            {
-                throw new InvalidDataException("The stopped replacement collision and namespace-reuse facts disagree.");
-            }
-        }
-        object evidence = new
-        {
-            schema_identity = EvidenceSchema,
-            evidence_id = evidenceId,
-            status,
-            authority = new { id = authorityId, sha256 = authoritySha256 },
-            independent_review = new
-            {
-                id = review.GetProperty("review_id").GetString(),
-                sha256 = reviewSha256,
-            },
-            profile = new
+        JsonElement? entry = ParseOptional(helper.Process.NativeEntryCleanupBytes);
+        ValidateReplacementHelperBoundary(
+            helper.Process, predecessorFingerprint, successorFingerprint, exactSuccess);
+        string evidenceSchema = mode == ReplacementMode.DeletePendingRecovery
+            ? EvidenceSchemaV2 : EvidenceSchema;
+        object profileEvidence = mode == ReplacementMode.DeletePendingRecovery
+            ? new
             {
                 access_profile_id = profileId,
                 predecessor_generation_id = predecessorGeneration,
@@ -424,7 +500,32 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                 final_generation_ordinal = projection.GenerationOrdinal,
                 final_lifecycle_state = projection.LifecycleState,
                 final_verification_state = projection.VerificationState,
+                final_cleanup_disposition = projection.CleanupDisposition,
+            }
+            : new
+            {
+                access_profile_id = profileId,
+                predecessor_generation_id = predecessorGeneration,
+                predecessor_target_fingerprint_sha256 = predecessorFingerprint,
+                successor_generation_id = successorGeneration,
+                successor_target_fingerprint_sha256 = successorFingerprint,
+                final_generation_id = projection.GenerationId,
+                final_generation_ordinal = projection.GenerationOrdinal,
+                final_lifecycle_state = projection.LifecycleState,
+                final_verification_state = projection.VerificationState,
+            };
+        object evidence = new
+        {
+            schema_identity = evidenceSchema,
+            evidence_id = evidenceId,
+            status,
+            authority = new { id = authorityId, sha256 = authoritySha256 },
+            independent_review = new
+            {
+                id = review.GetProperty("review_id").GetString(),
+                sha256 = reviewSha256,
             },
+            profile = profileEvidence,
             product_state = new
             {
                 root_projection_sha256 = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(productStateRoot))),
@@ -457,13 +558,17 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                     excluded_handle_accessible = helper.Process.ExcludedHandleAccessible,
                 },
             },
-            completed_at_utc = DateTimeOffset.UtcNow.ToString("O"),
+            completed_at_utc = mode == ReplacementMode.DeletePendingRecovery
+                ? CanonicalZ(DateTimeOffset.UtcNow)
+                : DateTimeOffset.UtcNow.ToString("O"),
         };
         byte[] evidenceBytes = JsonSerializer.SerializeToUtf8Bytes(evidence, Json);
         ActiveRepositoryJsonSchemaValidator.Validate(evidenceBytes,
             File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
-                "m1-slice6-successor-credential-replacement-evidence.v1.schema.json")),
-            EvidenceSchema);
+                mode == ReplacementMode.DeletePendingRecovery
+                    ? "m1-slice6-successor-credential-replacement-evidence.v2.schema.json"
+                    : "m1-slice6-successor-credential-replacement-evidence.v1.schema.json")),
+            evidenceSchema);
         PublishEvidenceAtomically(evidencePath, evidenceBytes);
         return status == "passed-active-verified-predecessor-absent" ? 0 : 2;
     }
@@ -528,7 +633,8 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             return;
         }
         if (count != calls.Length || calls.Length > operations.Length
-            || calls.Length == 0 && outcome is not (HelperOutcomeV2.Cancelled or HelperOutcomeV2.Unavailable))
+            || calls.Length == 0 && outcome is not (HelperOutcomeV2.Cancelled
+                or HelperOutcomeV2.FailedKnown or HelperOutcomeV2.Unavailable))
         {
             throw new InvalidDataException("The stopped replacement native trace count or empty outcome is invalid.");
         }
@@ -542,6 +648,9 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             string result = call.GetProperty("Result").GetString() ?? "";
             long? allocation = NullableInt64(call, "AllocationId");
             long? pair = NullableInt64(call, "PairedAllocationId");
+            long? expectedAllocation = result == "success"
+                ? index switch { 2 => 1, 4 => 2, 6 => 3, _ => null }
+                : null;
             if (!call.EnumerateObject().Select(property => property.Name).SequenceEqual(names, StringComparer.Ordinal)
                 || call.GetProperty("Sequence").GetInt64() != index + 1
                 || call.GetProperty("Scenario").GetString() != "m1-slice6-successor-credential-replacement"
@@ -549,8 +658,8 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                 || call.GetProperty("TargetFingerprintSha256").GetString() != fingerprints[index]
                 || result != results[index]
                     && !(index == calls.Length - 1
-                        && result.StartsWith("win32-error:", StringComparison.Ordinal))
-                || allocation != (index switch { 2 => 1, 4 => 2, 6 => 3, _ => null })
+                        && IsCanonicalWin32Error(result))
+                || allocation != expectedAllocation
                 || pair != (index switch { 3 => 1, 5 => 2, 7 => 3, _ => null }))
             {
                 throw new InvalidDataException("The stopped replacement native trace is not an exact authorized prefix.");
@@ -567,6 +676,277 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         {
             throw new InvalidDataException("The stopped replacement retained an unpaired credential allocation.");
         }
+    }
+
+    private static bool IsCanonicalWin32Error(string value)
+    {
+        const string prefix = "win32-error:";
+        if (!value.StartsWith(prefix, StringComparison.Ordinal))
+        {
+            return false;
+        }
+        string suffix = value[prefix.Length..];
+        return int.TryParse(
+                suffix,
+                System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out int code)
+            && code > 0
+            && suffix == code.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    internal static void ValidateReplacementHelperBoundary(
+        HelperProcessReceipt process,
+        string predecessorFingerprint,
+        string successorFingerprint,
+        bool requireCompleted)
+    {
+        if (process.ExitCode != 0 || process.InheritedPrivateHandleCount != 2
+            || process.StandardProtocolHandleCount != 0)
+        {
+            throw new InvalidDataException("The replacement helper launcher facts are not exact.");
+        }
+        JsonElement trace = ParseOptional(process.NativeCallTraceBytes)
+            ?? throw new InvalidDataException("Credential replacement omitted its exact native trace.");
+        JsonElement canaries = ParseOptional(process.NativeCanaryEvidenceBytes)
+            ?? throw new InvalidDataException("Credential replacement omitted its canary evidence.");
+        JsonElement? entry = ParseOptional(process.NativeEntryCleanupBytes);
+        if (entry is null)
+        {
+            if (requireCompleted || process.Receipt.Outcome != HelperOutcomeV2.FailedKnown
+                || process.NativeCredentialOperationCount != 0 || trace.GetArrayLength() != 0
+                || process.NativeNamespaceReuseBlocked || process.NativeNamespaceReuseBlockReason is not null)
+            {
+                throw new InvalidDataException("Only an exact zero-native pre-entry failure may omit entry evidence.");
+            }
+            ValidatePreEntryStoppedBoundary(process, canaries);
+            return;
+        }
+        if (requireCompleted)
+        {
+            ValidateSuccessfulBoundary(process, entry.Value, canaries);
+            ValidateSuccessfulTrace(trace, predecessorFingerprint, successorFingerprint,
+                process.NativeCredentialOperationCount);
+            return;
+        }
+        ValidateStoppedBoundary(process, entry.Value, canaries);
+        ValidateStoppedTrace(trace, predecessorFingerprint, successorFingerprint,
+            process.NativeCredentialOperationCount, process.Receipt.Outcome);
+        bool collision = trace.GetArrayLength() == 2
+            && trace[0].GetProperty("Operation").GetString() == "CredReadW"
+            && trace[0].GetProperty("Result").GetString() == "success";
+        if (process.NativeNamespaceReuseBlocked != collision
+            || collision && process.NativeNamespaceReuseBlockReason != "preflight-collision"
+            || !collision && process.NativeNamespaceReuseBlockReason is not null)
+        {
+            throw new InvalidDataException("The stopped replacement collision and namespace-reuse facts disagree.");
+        }
+    }
+
+    private static void ValidatePreEntryStoppedBoundary(HelperProcessReceipt process, JsonElement canaries)
+    {
+        if (process.Receipt.Outcome != HelperOutcomeV2.FailedKnown
+            || process.NetworkOperationCount != 0 || process.ListenerCount != 0 || process.RetryAttempted
+            || process.StagedResponseBytes.Length != 0 || !process.ContainmentProbeExecuted
+            || !process.ProcessTreeTerminated || process.ProcessTreeSurvivorCount != 0
+            || process.TotalContainedProcessCount < 2 || process.ActiveProcessCountBeforeJobClose < 1
+            || process.ExcludedHandleAccessible)
+        {
+            throw new InvalidDataException("The pre-entry replacement failure boundary is not exact or contained.");
+        }
+        ValidateCanaries(canaries);
+    }
+
+    internal static byte[] CreateValidatedReplacementBoundary(
+        string repository,
+        string attemptId,
+        CoordinatedHelperReceipt helper,
+        string predecessorFingerprint,
+        string successorFingerprint,
+        byte[]? terminalReceiptBytes = null)
+    {
+        bool completed = helper.Process.Receipt.Outcome == HelperOutcomeV2.Completed;
+        ValidateReplacementHelperBoundary(
+            helper.Process, predecessorFingerprint, successorFingerprint, completed);
+        ContentDigest expectedReceiptDigest = CredentialReceiptDigest(
+            helper.Process.Receipt.AssignmentId,
+            helper.Process.Receipt.CommandId,
+            helper.Process.Receipt.Outcome);
+        ContentDigest? actualReceiptDigest = helper.Process.Receipt.NonSecretReceipt;
+        if (actualReceiptDigest is null
+            || actualReceiptDigest.Algorithm != expectedReceiptDigest.Algorithm
+            || actualReceiptDigest.SizeBytes != expectedReceiptDigest.SizeBytes
+            || !actualReceiptDigest.Value.Span.SequenceEqual(expectedReceiptDigest.Value.Span))
+        {
+            throw new InvalidDataException(
+                "The replacement helper receipt non-secret digest is not derived from its exact terminal identity.");
+        }
+        byte[] canonicalReceipt = terminalReceiptBytes ?? HelperPrivateProtocolV2.Encode(new()
+        {
+            Sequence = 3,
+            ProtocolFingerprintSha256 = ByteString.CopyFrom(
+                Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
+            Receipt = helper.Process.Receipt.Clone(),
+        });
+        HelperPrivateFrameV2 decodedReceipt = HelperPrivateProtocolV2.Decode(canonicalReceipt, 3);
+        if (!decodedReceipt.Receipt.Equals(helper.Process.Receipt))
+        {
+            throw new InvalidDataException(
+                "The replacement helper terminal frame does not contain the validated process receipt.");
+        }
+        string canonicalSha = Convert.ToHexStringLower(SHA256.HashData(canonicalReceipt));
+        string exactReceiptRelative = Path.Combine(attemptId, "helper-receipt.v2.pb");
+        if (helper.Staging.AttemptId != attemptId
+            || helper.Staging.RelativePath != exactReceiptRelative
+            || canonicalReceipt.Length != helper.Staging.ByteLength || canonicalSha != helper.Staging.Sha256
+            || helper.Staging.ResponseRelativePath is not null || helper.Staging.ResponseByteLength != 0
+            || helper.Staging.ResponseSha256 is not null
+            || !helper.Staging.StagedBeforeAdmission || !helper.Staging.CoordinatorOnlyAdmission)
+        {
+            throw new InvalidDataException("The replacement helper boundary receipt bytes are not exact.");
+        }
+        object boundary = new
+        {
+            schema_identity = BoundarySchema,
+            attempt_id = attemptId,
+            assignment_id = helper.Process.Receipt.AssignmentId,
+            terminal_receipt = new
+            {
+                relative_path = helper.Staging.RelativePath.Replace('\\', '/'),
+                sha256 = helper.Staging.Sha256,
+                base64 = Convert.ToBase64String(canonicalReceipt),
+                sequence = 3,
+                outcome = helper.Process.Receipt.Outcome.ToString(),
+            },
+            process = new
+            {
+                process_id = helper.Process.ProcessId,
+                exit_code = helper.Process.ExitCode,
+                binary_sha256 = helper.Process.BinarySha256,
+                staged_response_base64 = Convert.ToBase64String(helper.Process.StagedResponseBytes),
+                inherited_private_handle_count = helper.Process.InheritedPrivateHandleCount,
+                standard_protocol_handle_count = helper.Process.StandardProtocolHandleCount,
+                listener_count = helper.Process.ListenerCount,
+                network_operation_count = helper.Process.NetworkOperationCount,
+                native_credential_operation_count = helper.Process.NativeCredentialOperationCount,
+                process_tree_survivor_count = helper.Process.ProcessTreeSurvivorCount,
+                process_tree_terminated = helper.Process.ProcessTreeTerminated,
+                retry_attempted = helper.Process.RetryAttempted,
+                native_call_trace_base64 = Convert.ToBase64String(helper.Process.NativeCallTraceBytes!),
+                native_entry_cleanup_base64 = helper.Process.NativeEntryCleanupBytes is null
+                    ? null : Convert.ToBase64String(helper.Process.NativeEntryCleanupBytes),
+                native_canary_evidence_base64 = Convert.ToBase64String(helper.Process.NativeCanaryEvidenceBytes!),
+                containment_probe_executed = helper.Process.ContainmentProbeExecuted,
+                excluded_handle_accessible = helper.Process.ExcludedHandleAccessible,
+                active_process_count_before_job_close = helper.Process.ActiveProcessCountBeforeJobClose,
+                total_contained_process_count = helper.Process.TotalContainedProcessCount,
+                namespace_reuse_blocked = helper.Process.NativeNamespaceReuseBlocked,
+                namespace_reuse_block_reason = helper.Process.NativeNamespaceReuseBlockReason,
+            },
+        };
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(boundary, Json);
+        ActiveRepositoryJsonSchemaValidator.Validate(bytes,
+            File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                "m1-slice6-successor-credential-replacement-helper-boundary.v1.schema.json")),
+            BoundarySchema);
+        return bytes;
+    }
+
+    internal static CoordinatedHelperReceipt ReadValidatedReplacementBoundary(
+        string repository,
+        AuthoritativeStore store,
+        string attemptId,
+        HelperPrivateFrameV2 assignment,
+        string predecessorFingerprint,
+        string successorFingerprint,
+        string expectedHelperSha256,
+        DateTimeOffset now)
+    {
+        HelperAssignmentV2 expected = assignment.Assignment;
+        byte[] boundaryBytes = store.ReadCredentialReplacementBoundary(attemptId);
+        ActiveRepositoryJsonSchemaValidator.Validate(boundaryBytes,
+            File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                "m1-slice6-successor-credential-replacement-helper-boundary.v1.schema.json")),
+            BoundarySchema);
+        using JsonDocument document = JsonDocument.Parse(boundaryBytes);
+        JsonElement root = document.RootElement;
+        JsonElement terminalNode = root.GetProperty("terminal_receipt");
+        JsonElement processNode = root.GetProperty("process");
+        string receiptRelative = terminalNode.GetProperty("relative_path").GetString()!.Replace('/', Path.DirectorySeparatorChar);
+        string exactReceiptRelative = Path.Combine(attemptId, "helper-receipt.v2.pb");
+        byte[] receiptBytes = Convert.FromBase64String(terminalNode.GetProperty("base64").GetString()!);
+        if (root.GetProperty("attempt_id").GetString() != attemptId
+            || root.GetProperty("assignment_id").GetString() != expected.AssignmentId
+            || receiptRelative != exactReceiptRelative
+            || Convert.ToHexStringLower(SHA256.HashData(receiptBytes))
+                != terminalNode.GetProperty("sha256").GetString())
+        {
+            throw new InvalidDataException("The staged replacement boundary identity or receipt hash is stale.");
+        }
+        HelperPrivateFrameV2 terminal = HelperPrivateProtocolV2.Decode(receiptBytes, 3);
+        if (terminalNode.GetProperty("outcome").GetString() != terminal.Receipt.Outcome.ToString())
+        {
+            throw new InvalidDataException("The staged replacement boundary outcome is stale.");
+        }
+        _ = HelperProtocolV2Codec.Decode(
+            terminal.ToByteArray(), DateTimeOffset.UtcNow,
+            expectedAssignmentId: expected.AssignmentId,
+            expectedCommandId: expected.CommandId,
+            expectedProfileId: expected.AccessProfileId.Value,
+            expectedGenerationId: expected.GenerationId.Value,
+            expectedGenerationOrdinal: expected.GenerationOrdinal,
+            expectedNonSecretReceipt: CredentialReceiptDigest(
+                expected.AssignmentId, expected.CommandId, terminal.Receipt.Outcome),
+            expectedPayloadCase: HelperPrivateFrameV2.PayloadOneofCase.Receipt,
+            expectedSequence: 3,
+            expectedAssignmentKind: HelperAssignmentKindV2.Replace);
+        byte[] trace = Convert.FromBase64String(processNode.GetProperty("native_call_trace_base64").GetString()!);
+        byte[]? entry = processNode.GetProperty("native_entry_cleanup_base64").ValueKind == JsonValueKind.Null
+            ? null : Convert.FromBase64String(processNode.GetProperty("native_entry_cleanup_base64").GetString()!);
+        byte[] canaries = Convert.FromBase64String(processNode.GetProperty("native_canary_evidence_base64").GetString()!);
+        HelperProcessReceipt process = new(
+            processNode.GetProperty("process_id").GetInt32(),
+            processNode.GetProperty("exit_code").GetInt32(),
+            processNode.GetProperty("binary_sha256").GetString()!,
+            terminal.Receipt.Clone(),
+            Convert.FromBase64String(processNode.GetProperty("staged_response_base64").GetString()!),
+            processNode.GetProperty("inherited_private_handle_count").GetInt32(),
+            processNode.GetProperty("standard_protocol_handle_count").GetInt32(),
+            processNode.GetProperty("listener_count").GetInt32(),
+            processNode.GetProperty("network_operation_count").GetInt32(),
+            processNode.GetProperty("native_credential_operation_count").GetInt32(),
+            processNode.GetProperty("process_tree_survivor_count").GetInt32(),
+            processNode.GetProperty("process_tree_terminated").GetBoolean(),
+            processNode.GetProperty("retry_attempted").GetBoolean(),
+            trace, entry, canaries,
+            processNode.GetProperty("containment_probe_executed").GetBoolean(),
+            processNode.GetProperty("excluded_handle_accessible").GetBoolean(),
+            processNode.GetProperty("active_process_count_before_job_close").GetInt32(),
+            processNode.GetProperty("total_contained_process_count").GetInt32(),
+            processNode.GetProperty("namespace_reuse_blocked").GetBoolean(),
+            processNode.GetProperty("namespace_reuse_block_reason").ValueKind == JsonValueKind.Null
+                ? null : processNode.GetProperty("namespace_reuse_block_reason").GetString());
+        if (expectedHelperSha256.Length != 64
+            || !expectedHelperSha256.All(char.IsAsciiHexDigit)
+            || process.BinarySha256 != expectedHelperSha256)
+        {
+            throw new InvalidDataException("The staged replacement boundary helper binary is not the reviewed build.");
+        }
+        ValidateReplacementHelperBoundary(
+            process, predecessorFingerprint, successorFingerprint,
+            requireCompleted: process.Receipt.Outcome == HelperOutcomeV2.Completed);
+        string receiptPath = Path.Combine(store.Paths.Staging, exactReceiptRelative);
+        HelperStagingReceipt staging;
+        if (File.Exists(receiptPath))
+        {
+            staging = store.AdmitExistingHelperReceipt(attemptId, receiptBytes, now);
+        }
+        else
+        {
+            staging = store.StageAndAdmitHelperReceipt(
+                attemptId, receiptBytes, now);
+        }
+        return new(process, staging);
     }
 
     private static void ValidateCollisionTrace(JsonElement[] calls, string successor, int count)
@@ -718,15 +1098,113 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         },
     };
 
-    private static HelperPrivateFrameV2 Assignment(string profileId, string generationId, string authorityId) => new()
+    private static void ValidateDeletePendingRecoveryOwner(
+        string repository,
+        JsonElement owner,
+        string successorGeneration)
+    {
+        JsonElement priorOwner = owner.GetProperty("prior_owner_authority");
+        JsonElement failure = owner.GetProperty("retained_failure");
+        JsonElement receipt = owner.GetProperty("retained_receipt");
+        JsonElement recovery = owner.GetProperty("recovery");
+        string priorOwnerPath = Path.GetFullPath(Path.Combine(repository,
+            priorOwner.GetProperty("path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
+        string exactPriorOwnerPath = Path.GetFullPath(Path.Combine(repository, "docs", "plans", "milestones",
+            "m1", "slices", "s6", "m1-slice6-development-campaign-amendment.v4.json"));
+        byte[] priorOwnerBytes = ExactBytes(priorOwnerPath, priorOwner.GetProperty("sha256").GetString()!);
+        ActiveRepositoryJsonSchemaValidator.Validate(priorOwnerBytes,
+            File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                "m1-slice6-development-campaign-amendment.v4.schema.json")),
+            RecoveryAmendmentSchema);
+        string failurePath = Path.GetFullPath(Path.Combine(repository,
+            failure.GetProperty("path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
+        string exactFailurePath = Path.GetFullPath(Path.Combine(repository, "artifacts", "m1-slice6",
+            "successor-credential-replacement-recovery", "a6755587-1f60-4854-91b9-771e37a36ac9",
+            "replacement-evidence.v1.json"));
+        byte[] failureBytes = ExactBytes(failurePath, failure.GetProperty("sha256").GetString()!);
+        ActiveRepositoryJsonSchemaValidator.Validate(failureBytes,
+            File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                "m1-slice6-successor-credential-replacement-failure-evidence.v1.schema.json")),
+            FailureEvidenceSchema);
+        string receiptPath = Path.GetFullPath(Path.Combine(repository,
+            receipt.GetProperty("path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
+        string exactReceiptPath = Path.GetFullPath(Path.Combine(repository, "artifacts", "m1-slice6",
+            "successor-product-state", "staging",
+            "m1s6-credential-replacement-56e83ae29d7792337aa0dbc797bb294b", "helper-receipt.v2.pb"));
+        byte[] receiptBytes = ExactBytes(receiptPath, receipt.GetProperty("sha256").GetString()!);
+        HelperPrivateFrameV2 terminal = HelperPrivateProtocolV2.Decode(receiptBytes, 3);
+        using JsonDocument failureDocument = JsonDocument.Parse(failureBytes);
+        JsonElement retainedAuthority = failureDocument.RootElement.GetProperty("authority");
+        JsonElement retainedReview = failureDocument.RootElement.GetProperty("independent_review");
+        JsonElement retainedState = failureDocument.RootElement.GetProperty("product_state");
+        const string retainedAuthorityId =
+            "infinium.m1-s6.successor-credential-replacement-recovery/a6755587-1f60-4854-91b9-771e37a36ac9";
+        _ = HelperProtocolV2Codec.Decode(
+            terminal.ToByteArray(), DateTimeOffset.UtcNow,
+            expectedAssignmentId: retainedAuthorityId + "/replace",
+            expectedCommandId: retainedAuthorityId + "/command",
+            expectedProfileId: "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e",
+            expectedGenerationId: successorGeneration,
+            expectedGenerationOrdinal: 2,
+            expectedNonSecretReceipt: CredentialReceiptDigest(
+                retainedAuthorityId + "/replace", retainedAuthorityId + "/command",
+                HelperOutcomeV2.FailedKnown),
+            expectedPayloadCase: HelperPrivateFrameV2.PayloadOneofCase.Receipt,
+            expectedSequence: 3,
+            expectedAssignmentKind: HelperAssignmentKindV2.Replace);
+        if (priorOwnerPath != exactPriorOwnerPath || failurePath != exactFailurePath || receiptPath != exactReceiptPath
+            || priorOwner.GetProperty("id").GetString()
+                != "infinium.m1-s6.credential-replacement-recovery/20260821-pre-native-launcher-factory"
+            || priorOwner.GetProperty("sha256").GetString()
+                != "b84a5d158cce4ebb61fa1ddc7ce1dc899fbc1a5cae090fa1f26285d4786cf078"
+            || recovery.GetProperty("successor_generation_id").GetString() != successorGeneration
+            || recovery.GetProperty("assignment_kind").GetString() != "Replace"
+            || failureDocument.RootElement.GetProperty("operation_id").GetString()
+                != "m1s6-credential-replacement-56e83ae29d7792337aa0dbc797bb294b"
+            || failureDocument.RootElement.GetProperty("evidence_id").GetString()
+                != failure.GetProperty("id").GetString()
+            || retainedAuthority.GetProperty("id").GetString() != retainedAuthorityId
+            || retainedAuthority.GetProperty("sha256").GetString()
+                != "56e83ae29d7792337aa0dbc797bb294b0f2d729601465a5f0f4200452e6576b2"
+            || retainedReview.GetProperty("id").GetString()
+                != "infinium.m1-s6.successor-credential-replacement-review/4bb8c9ef-36a8-42fc-ac07-4f105fc9a76c"
+            || retainedReview.GetProperty("sha256").GetString()
+                != "c6b884a774fcd04fe60175c6b92227ac08f875f9a757e56ea418596646a1a0fd"
+            || retainedState.GetProperty("checkpoint_sha256").GetString()
+                != "0d0dae5feb20c28980c2f30e253e5204350a5547f783189c6bdd6432c9792d37"
+            || retainedState.GetProperty("profile_id").GetString()
+                != "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e"
+            || retainedState.GetProperty("generation_id").GetString()
+                != "g-ff6d82e7a7d244f6b8a9d0164991be37"
+            || retainedState.GetProperty("generation_ordinal").GetInt64() != 1
+            || retainedState.GetProperty("lifecycle_state").GetString() != "delete-pending"
+            || failureDocument.RootElement.GetProperty("typed_failure").GetString() != "InvalidDataException"
+            || terminal.Receipt.Outcome != HelperOutcomeV2.FailedKnown
+            || terminal.Receipt.TransportMayHaveStarted || terminal.Receipt.OutcomeHasResponse
+            || terminal.Receipt.RawResponse is not null
+            || terminal.Receipt.UsageReceiptState != UsageReceiptStateV2.NotDispatched
+            || terminal.Receipt.AssignmentId != retainedAuthorityId + "/replace"
+            || receipt.GetProperty("sequence").GetInt64() != 3
+            || receipt.GetProperty("outcome").GetString() != "FailedKnown"
+            || receipt.GetProperty("assignment_id").GetString() != terminal.Receipt.AssignmentId)
+        {
+            throw new InvalidDataException("The exact retained pre-entry cleanup-recovery failure is stale.");
+        }
+    }
+
+    private static HelperPrivateFrameV2 Assignment(
+        string profileId,
+        string generationId,
+        string authorityId,
+        HelperAssignmentKindV2 kind) => new()
     {
         Sequence = 2,
         ProtocolFingerprintSha256 = ByteString.CopyFrom(Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
         Assignment = new()
         {
-            AssignmentId = authorityId + "/replace",
+            AssignmentId = authorityId + (kind == HelperAssignmentKindV2.Recover ? "/recover" : "/replace"),
             CommandId = authorityId + "/command",
-            AssignmentKind = HelperAssignmentKindV2.Replace,
+            AssignmentKind = kind,
             AccessProfileId = new() { Value = profileId },
             GenerationId = new() { Value = generationId },
             GenerationOrdinal = 2,
@@ -739,6 +1217,23 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         UnixSeconds = value.ToUnixTimeSeconds(),
         Nanoseconds = checked((int)((value.Ticks % TimeSpan.TicksPerSecond) * 100)),
     };
+
+    private static ContentDigest CredentialReceiptDigest(
+        string assignmentId,
+        string commandId,
+        HelperOutcomeV2 outcome)
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes($"{assignmentId}/{commandId}/{outcome}");
+        return new()
+        {
+            Algorithm = DigestAlgorithm.Sha256,
+            Value = ByteString.CopyFrom(SHA256.HashData(bytes)),
+            SizeBytes = checked((ulong)bytes.Length),
+        };
+    }
+
+    private static string CanonicalZ(DateTimeOffset value) => value.ToUniversalTime().ToString(
+        "yyyy-MM-ddTHH:mm:ss.fffffff'Z'", System.Globalization.CultureInfo.InvariantCulture);
 
     private static byte[] ExactBytes(string path, string expectedSha)
     {

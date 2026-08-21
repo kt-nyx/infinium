@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infinium.Application.Provider;
+using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Helper.V2;
 using Infinium.Coordinator;
 using Infinium.Persistence;
@@ -15,6 +16,11 @@ namespace Infinium.Tests;
 public sealed class M1Slice6CredentialReplacementRunnerTests
 {
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
+    private static readonly string[] MalformedWin32Errors =
+    [
+        "win32-error:05", "win32-error:-5", "win32-error:5 secret", "win32-error:2147483648",
+    ];
+    private enum FixtureMode { Initial, ReplacingRecovery, DeletePendingRecovery }
 
     [TestMethod]
     public async Task InitialNoNativeRunnerAtomicallyBeginsFreshReplacement()
@@ -25,7 +31,7 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         Directory.CreateDirectory(testRoot);
         try
         {
-            ReplacementFixture initial = CreateFixture(repository, testRoot, "initial-success", recovery: false);
+            ReplacementFixture initial = CreateFixture(repository, testRoot, "initial-success", FixtureMode.Initial);
             int result = await M1Slice6SuccessorCredentialReplacementRunner.RunAsync(
                 initial.AuthorityPath, initial.AuthoritySha256, initial.ReviewPath, initial.ReviewSha256,
                 initial.ProductRoot, initial.LedgerPath, initial.HelperPath, initial.HelperSha256,
@@ -39,6 +45,74 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
             Assert.AreEqual(initial.SuccessorGeneration, activated.GenerationId);
             Assert.AreEqual(2, activated.GenerationOrdinal);
             Assert.AreEqual("active-verified", activated.LifecycleState);
+        }
+        finally
+        {
+            if (Directory.Exists(testRoot)) { Directory.Delete(testRoot, recursive: true); }
+        }
+    }
+
+    [TestMethod]
+    public async Task BoundaryOnlyCrashRecoveryReplaysWithoutHelperLaunch()
+    {
+        string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(AppContext.BaseDirectory);
+        string testRoot = Path.Combine(repository, "artifacts", "m1-slice6",
+            "replacement-boundary-only-replay-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(testRoot);
+        try
+        {
+            ReplacementFixture fixture = CreateFixture(
+                repository, testRoot, "boundary-only", FixtureMode.DeletePendingRecovery);
+            using JsonDocument authorityDocument = JsonDocument.Parse(File.ReadAllBytes(fixture.AuthorityPath));
+            string authorityId = authorityDocument.RootElement.GetProperty("authority_id").GetString()!;
+            string operationId = "m1s6-credential-replacement-" + fixture.AuthoritySha256[..32];
+            (_, HelperPrivateFrameV2 assignment) = CleanupFrames(
+                fixture.ProfileId, fixture.SuccessorGeneration, operationId, authorityId);
+            using (AuthoritativeStore store = new(new StoragePaths(fixture.ProductRoot)))
+            {
+                Assert.IsTrue(store.TryAdmitCredentialReplacementHelperLaunch(operationId, fixture.Now));
+                CoordinatedHelperReceipt prepared = CompletedReplacementReceipt(
+                    operationId, assignment, fixture.ProfileId, fixture.SuccessorGeneration,
+                    fixture.HelperSha256);
+                HelperPrivateFrameV2 terminal = new()
+                {
+                    Sequence = 3,
+                    ProtocolFingerprintSha256 = Google.Protobuf.ByteString.CopyFrom(
+                        Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
+                    Receipt = prepared.Process.Receipt.Clone(),
+                };
+                byte[] canonical = HelperPrivateProtocolV2.Encode(terminal);
+                CoordinatedHelperReceipt boundarySubject = prepared with
+                {
+                    Staging = new(
+                        operationId, Path.Combine(operationId, "helper-receipt.v2.pb"),
+                        canonical.Length, Sha(canonical), null, 0, null, true, true),
+                };
+                string predecessorFingerprint =
+                    "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0";
+                string successorFingerprint = Sha(Encoding.UTF8.GetBytes(
+                    $"Infinium:{fixture.ProfileId}:{fixture.SuccessorGeneration}"));
+                byte[] boundary = M1Slice6SuccessorCredentialReplacementRunner.CreateValidatedReplacementBoundary(
+                    repository, operationId, boundarySubject,
+                    predecessorFingerprint, successorFingerprint, canonical);
+                _ = store.StageCredentialReplacementBoundary(operationId, boundary);
+            }
+            Directory.CreateDirectory(Path.GetDirectoryName(fixture.EvidencePath)!);
+
+            int result = await M1Slice6SuccessorCredentialReplacementRunner.RunAsync(
+                fixture.AuthorityPath, fixture.AuthoritySha256, fixture.ReviewPath, fixture.ReviewSha256,
+                fixture.ProductRoot, fixture.LedgerPath, fixture.HelperPath, fixture.HelperSha256,
+                fixture.EvidencePath, CancellationToken.None,
+                fixture.Hooks(CompleteWithoutNative) with { UtcNow = fixture.Now.AddHours(1) });
+
+            Assert.AreEqual(0, result);
+            Assert.IsTrue(File.Exists(fixture.EvidencePath));
+            Assert.IsTrue(File.Exists(Path.Combine(
+                fixture.ProductRoot, "staging", operationId, "helper-receipt.v2.pb")));
+            CredentialProfileProjection projection = AuthoritativeStore.ReadCredentialProfileProjectionReadOnly(
+                fixture.ProductRoot, fixture.ProfileId);
+            Assert.AreEqual("active-verified", projection.LifecycleState);
+            Assert.AreEqual(fixture.SuccessorGeneration, projection.GenerationId);
         }
         finally
         {
@@ -229,23 +303,406 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         }
     }
 
+    [TestMethod]
+    public async Task DeletePendingRecoveryUsesExactReplaceWithoutSecondBeginAndRetainsStoppedState()
+    {
+        string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(AppContext.BaseDirectory);
+        string testRoot = Path.Combine(repository, "artifacts", "m1-slice6",
+            "replacement-runner-delete-pending-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(testRoot);
+        try
+        {
+            ReplacementFixture success = CreateFixture(
+                repository, testRoot, "success", FixtureMode.DeletePendingRecovery);
+            int result = await M1Slice6SuccessorCredentialReplacementRunner.RunAsync(
+                success.AuthorityPath, success.AuthoritySha256, success.ReviewPath, success.ReviewSha256,
+                success.ProductRoot, success.LedgerPath, success.HelperPath, success.HelperSha256,
+                success.EvidencePath, CancellationToken.None, success.Hooks(CompleteCleanupWithoutNative));
+            Assert.AreEqual(0, result);
+            CredentialProfileProjection active = AuthoritativeStore.ReadCredentialProfileProjectionReadOnly(
+                success.ProductRoot, success.ProfileId);
+            Assert.AreEqual(success.SuccessorGeneration, active.GenerationId);
+            Assert.AreEqual(2, active.GenerationOrdinal);
+            Assert.AreEqual("active-verified", active.LifecycleState);
+            using (JsonDocument evidence = JsonDocument.Parse(File.ReadAllBytes(success.EvidencePath)))
+            {
+                Assert.AreEqual("passed-active-verified-predecessor-absent",
+                    evidence.RootElement.GetProperty("status").GetString());
+            }
+
+            ReplacementFixture stopped = CreateFixture(
+                repository, testRoot, "stopped", FixtureMode.DeletePendingRecovery);
+            int stoppedResult = await M1Slice6SuccessorCredentialReplacementRunner.RunAsync(
+                stopped.AuthorityPath, stopped.AuthoritySha256, stopped.ReviewPath, stopped.ReviewSha256,
+                stopped.ProductRoot, stopped.LedgerPath, stopped.HelperPath, stopped.HelperSha256,
+                stopped.EvidencePath, CancellationToken.None, stopped.Hooks(StopCleanupFailedKnownWithoutNative));
+            Assert.AreEqual(2, stoppedResult);
+            CredentialProfileProjection unchanged = AuthoritativeStore.ReadCredentialProfileProjectionReadOnly(
+                stopped.ProductRoot, stopped.ProfileId);
+            Assert.AreEqual("delete-pending", unchanged.LifecycleState);
+            Assert.AreEqual(1, unchanged.GenerationOrdinal);
+            using (JsonDocument evidence = JsonDocument.Parse(File.ReadAllBytes(stopped.EvidencePath)))
+            {
+                Assert.AreEqual("FailedKnown",
+                    evidence.RootElement.GetProperty("effect").GetProperty("helper_outcome").GetString());
+                Assert.AreEqual(0,
+                    evidence.RootElement.GetProperty("effect").GetProperty("native_call_trace").GetArrayLength());
+            }
+
+            ReplacementFixture ambiguous = CreateFixture(
+                repository, testRoot, "ambiguous", FixtureMode.DeletePendingRecovery);
+            await Assert.ThrowsExactlyAsync<IOException>(() =>
+                M1Slice6SuccessorCredentialReplacementRunner.RunAsync(
+                    ambiguous.AuthorityPath, ambiguous.AuthoritySha256,
+                    ambiguous.ReviewPath, ambiguous.ReviewSha256,
+                    ambiguous.ProductRoot, ambiguous.LedgerPath,
+                    ambiguous.HelperPath, ambiguous.HelperSha256,
+                    ambiguous.EvidencePath, CancellationToken.None,
+                    ambiguous.Hooks((_, _, _, _, _, _) => throw new IOException("synthetic-cleanup-ambiguity"))));
+            CredentialProfileProjection retained = AuthoritativeStore.ReadCredentialProfileProjectionReadOnly(
+                ambiguous.ProductRoot, ambiguous.ProfileId);
+            Assert.AreEqual("delete-pending", retained.LifecycleState);
+            using JsonDocument fallback = JsonDocument.Parse(File.ReadAllBytes(ambiguous.EvidencePath));
+            Assert.AreEqual("delete-pending",
+                fallback.RootElement.GetProperty("product_state").GetProperty("lifecycle_state").GetString());
+        }
+        finally
+        {
+            if (Directory.Exists(testRoot)) { Directory.Delete(testRoot, recursive: true); }
+        }
+    }
+
+    [TestMethod]
+    public async Task CleanupCoordinatorStagesValidatesReplaysAndRefusesRelaunch()
+    {
+        string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(AppContext.BaseDirectory);
+        string testRoot = Path.Combine(repository, "artifacts", "m1-slice6",
+            "replacement-cleanup-coordinator-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(testRoot);
+        try
+        {
+            ReplacementFixture fixture = CreateFixture(
+                repository, testRoot, "complete", FixtureMode.DeletePendingRecovery);
+            (HelperPrivateFrameV2 bootstrap, HelperPrivateFrameV2 assignment) =
+                CleanupFrames(fixture.ProfileId, fixture.SuccessorGeneration, "cleanup-complete");
+            using (AuthoritativeStore store = new(new StoragePaths(fixture.ProductRoot)))
+            {
+                Assert.IsTrue(store.TryAdmitCredentialReplacementHelperLaunch("cleanup-complete", fixture.Now));
+                CoordinatedHelperReceipt prepared = CompletedReplacementReceipt(
+                    "cleanup-complete", assignment, fixture.ProfileId, fixture.SuccessorGeneration,
+                    fixture.HelperSha256);
+                CoordinatedHelperReceipt staged = StageReceipt(
+                    store, "cleanup-complete", prepared, fixture.Now);
+                OneShotCredentialHelperLauncher launcher = new(
+                    fixture.HelperPath, fixture.HelperSha256, Path.Combine(testRoot, "synthetic-store-complete"));
+                CredentialHelperCoordinator coordinator = new(store, launcher);
+                (CoordinatedHelperReceipt _, CredentialProfileProjection published) =
+                    coordinator.CompleteVerifiedReplacementCleanup(
+                        repository, "cleanup-complete", bootstrap, assignment, staged, fixture.Now);
+                Assert.AreEqual("active-verified", published.LifecycleState);
+                Assert.IsTrue(File.Exists(Path.Combine(store.Paths.Staging, "cleanup-complete",
+                    AuthoritativeStore.CredentialReplacementBoundaryFileName)));
+                (CoordinatedHelperReceipt _, CredentialProfileProjection replayed) =
+                    coordinator.RecoverVerifiedReplacementCleanup(
+                        repository, "cleanup-complete", assignment,
+                        "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0",
+                        Sha(Encoding.UTF8.GetBytes(
+                            $"Infinium:{fixture.ProfileId}:{fixture.SuccessorGeneration}")),
+                        fixture.HelperSha256,
+                        fixture.Now.AddMinutes(40));
+                Assert.AreEqual(published, replayed);
+            }
+
+            ReplacementFixture recover = CreateFixture(
+                repository, testRoot, "recover-before-publish", FixtureMode.DeletePendingRecovery);
+            (HelperPrivateFrameV2 recoverBootstrap, HelperPrivateFrameV2 recoverAssignment) =
+                CleanupFrames(recover.ProfileId, recover.SuccessorGeneration, "cleanup-recover");
+            using (AuthoritativeStore store = new(new StoragePaths(recover.ProductRoot)))
+            {
+                Assert.IsTrue(store.TryAdmitCredentialReplacementHelperLaunch("cleanup-recover", recover.Now));
+                CoordinatedHelperReceipt prepared = CompletedReplacementReceipt(
+                    "cleanup-recover", recoverAssignment, recover.ProfileId, recover.SuccessorGeneration,
+                    recover.HelperSha256);
+                HelperPrivateFrameV2 terminal = new()
+                {
+                    Sequence = 3,
+                    ProtocolFingerprintSha256 = Google.Protobuf.ByteString.CopyFrom(
+                        Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
+                    Receipt = prepared.Process.Receipt.Clone(),
+                };
+                byte[] canonical = HelperPrivateProtocolV2.Encode(terminal);
+                CoordinatedHelperReceipt staged = prepared with
+                {
+                    Staging = new(
+                        "cleanup-recover", Path.Combine("cleanup-recover", "helper-receipt.v2.pb"),
+                        canonical.Length, Sha(canonical), null, 0, null, true, true),
+                };
+                string predecessorFingerprint =
+                    "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0";
+                string successorFingerprint = Sha(Encoding.UTF8.GetBytes(
+                    $"Infinium:{recover.ProfileId}:{recover.SuccessorGeneration}"));
+                byte[] boundary = M1Slice6SuccessorCredentialReplacementRunner.CreateValidatedReplacementBoundary(
+                    repository, "cleanup-recover", staged, predecessorFingerprint, successorFingerprint, canonical);
+                _ = store.StageCredentialReplacementBoundary("cleanup-recover", boundary);
+                string receiptRelative = Path.Combine("cleanup-recover", "helper-receipt.v2.pb");
+                using (AttemptStagingAuthority stagingAuthority =
+                    store.Paths.CreateAttemptStagingDirectory("cleanup-recover"))
+                using (FileStream receipt = store.Paths.CreateNewFile(
+                    ProductWriteClass.AttemptStaging, receiptRelative))
+                {
+                    receipt.Write(canonical);
+                    receipt.Flush(flushToDisk: true);
+                }
+                Assert.AreEqual(0, store.HelperReceiptAdmissionCount("cleanup-recover"));
+                OneShotCredentialHelperLauncher launcher = new(
+                    recover.HelperPath, recover.HelperSha256, Path.Combine(testRoot, "synthetic-store-recover"));
+                CredentialHelperCoordinator coordinator = new(store, launcher);
+                (CoordinatedHelperReceipt _, CredentialProfileProjection published) =
+                    coordinator.RecoverVerifiedReplacementCleanup(
+                        repository, "cleanup-recover", recoverAssignment,
+                        predecessorFingerprint, successorFingerprint, recover.HelperSha256,
+                        recover.Now.AddMinutes(40));
+                Assert.AreEqual("active-verified", published.LifecycleState);
+                Assert.IsTrue(File.Exists(Path.Combine(
+                    store.Paths.Staging, "cleanup-recover", "helper-receipt.v2.pb")));
+                Assert.AreEqual(1, store.HelperReceiptAdmissionCount("cleanup-recover"));
+            }
+
+            ReplacementFixture unverified = CreateFixture(
+                repository, testRoot, "recover-before-verify", FixtureMode.DeletePendingRecovery);
+            (HelperPrivateFrameV2 unverifiedBootstrap, HelperPrivateFrameV2 unverifiedAssignment) =
+                CleanupFrames(unverified.ProfileId, unverified.SuccessorGeneration, "cleanup-unverified");
+            using (AuthoritativeStore store = new(new StoragePaths(unverified.ProductRoot)))
+            {
+                Assert.IsTrue(store.TryAdmitCredentialReplacementHelperLaunch("cleanup-unverified", unverified.Now));
+                CoordinatedHelperReceipt prepared = CompletedReplacementReceipt(
+                    "cleanup-unverified", unverifiedAssignment, unverified.ProfileId,
+                    unverified.SuccessorGeneration, unverified.HelperSha256);
+                CoordinatedHelperReceipt staged = StageReceipt(
+                    store, "cleanup-unverified", prepared, unverified.Now);
+                string predecessorFingerprint =
+                    "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0";
+                string successorFingerprint = Sha(Encoding.UTF8.GetBytes(
+                    $"Infinium:{unverified.ProfileId}:{unverified.SuccessorGeneration}"));
+                byte[] boundary = M1Slice6SuccessorCredentialReplacementRunner.CreateValidatedReplacementBoundary(
+                    repository, "cleanup-unverified", staged,
+                    predecessorFingerprint, successorFingerprint);
+                _ = store.StageCredentialReplacementBoundary("cleanup-unverified", boundary);
+                CredentialProfileProjection old = store.GetCredentialProfile(unverified.ProfileId);
+                CredentialProfileProjection intermediate = store.ApplyCredentialTransition(new(
+                    "cleanup-unverified-replacement-cleanup-recovered",
+                    old.ProfileId, unverified.SuccessorGeneration, "recover",
+                    "delete-pending", "active-unverified", "active-unverified",
+                    old.CapabilitySnapshotId, old.AccountIdentityId, old.BillingScopeIdentityId,
+                    unverified.Now.AddTicks(3), unverified.Now.AddTicks(4)));
+                Assert.AreEqual("active-unverified", intermediate.LifecycleState);
+                CredentialHelperCoordinator coordinator = new(store);
+                (CoordinatedHelperReceipt _, CredentialProfileProjection published) =
+                    coordinator.RecoverVerifiedReplacementCleanup(
+                        repository, "cleanup-unverified", unverifiedAssignment,
+                        predecessorFingerprint, successorFingerprint, unverified.HelperSha256,
+                        unverified.Now.AddMinutes(40));
+                Assert.AreEqual("active-verified", published.LifecycleState);
+                Assert.AreEqual(unverified.SuccessorGeneration, published.GenerationId);
+            }
+
+            ReplacementFixture stopped = CreateFixture(
+                repository, testRoot, "stopped", FixtureMode.DeletePendingRecovery);
+            (HelperPrivateFrameV2 stoppedBootstrap, HelperPrivateFrameV2 stoppedAssignment) =
+                CleanupFrames(stopped.ProfileId, stopped.SuccessorGeneration, "cleanup-stopped");
+            using (AuthoritativeStore store = new(new StoragePaths(stopped.ProductRoot)))
+            {
+                Assert.IsTrue(store.TryAdmitCredentialReplacementHelperLaunch("cleanup-stopped", stopped.Now));
+                (CoordinatedHelperReceipt prepared, _) = await StopCleanupFailedKnownWithoutNative(
+                    store, "cleanup-stopped", stoppedBootstrap, stoppedAssignment,
+                    stopped.Now, CancellationToken.None);
+                prepared = prepared with
+                {
+                    Process = prepared.Process with { BinarySha256 = stopped.HelperSha256 },
+                };
+                CoordinatedHelperReceipt staged = StageReceipt(
+                    store, "cleanup-stopped", prepared, stopped.Now);
+                string predecessorFingerprint =
+                    "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0";
+                string successorFingerprint = Sha(Encoding.UTF8.GetBytes(
+                    $"Infinium:{stopped.ProfileId}:{stopped.SuccessorGeneration}"));
+                OneShotCredentialHelperLauncher launcher = new(
+                    stopped.HelperPath, stopped.HelperSha256, Path.Combine(testRoot, "synthetic-store-stopped"));
+                CredentialHelperCoordinator coordinator = new(store, launcher);
+                (CoordinatedHelperReceipt _, CredentialProfileProjection unchanged) =
+                    coordinator.CompleteVerifiedReplacementCleanup(
+                        repository, "cleanup-stopped", stoppedBootstrap,
+                        stoppedAssignment, staged, stopped.Now);
+                Assert.AreEqual("delete-pending", unchanged.LifecycleState);
+                Assert.AreEqual("unavailable", unchanged.VerificationState);
+                Assert.AreEqual("failed", unchanged.CleanupDisposition);
+
+                (CoordinatedHelperReceipt replayed, CredentialProfileProjection replayProjection) =
+                    coordinator.RecoverVerifiedReplacementCleanup(
+                        repository, "cleanup-stopped", stoppedAssignment,
+                        predecessorFingerprint, successorFingerprint, stopped.HelperSha256,
+                        stopped.Now.AddMinutes(40));
+                Assert.AreEqual(HelperOutcomeV2.FailedKnown, replayed.Process.Receipt.Outcome);
+                Assert.AreEqual(unchanged, replayProjection);
+            }
+
+            string midTracePredecessor =
+                "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0";
+            string midTraceSuccessor = Sha(Encoding.UTF8.GetBytes(
+                $"Infinium:{stopped.ProfileId}:{stopped.SuccessorGeneration}"));
+            M1Slice6SuccessorCredentialReplacementRunner.ValidateReplacementHelperBoundary(
+                MidTraceReadFailureProcess(midTraceSuccessor, forgedAllocation: false),
+                midTracePredecessor, midTraceSuccessor, requireCompleted: false);
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorCredentialReplacementRunner.ValidateReplacementHelperBoundary(
+                    MidTraceReadFailureProcess(midTraceSuccessor, forgedAllocation: true),
+                    midTracePredecessor, midTraceSuccessor, requireCompleted: false));
+            foreach (string malformed in MalformedWin32Errors)
+            {
+                Assert.ThrowsExactly<InvalidDataException>(() =>
+                    M1Slice6SuccessorCredentialReplacementRunner.ValidateReplacementHelperBoundary(
+                        MidTraceReadFailureProcess(
+                            midTraceSuccessor, forgedAllocation: false, failureResult: malformed),
+                        midTracePredecessor, midTraceSuccessor, requireCompleted: false));
+            }
+
+            ReplacementFixture launchGuard = CreateFixture(
+                repository, testRoot, "launch-guard", FixtureMode.DeletePendingRecovery);
+            (HelperPrivateFrameV2 guardBootstrap, HelperPrivateFrameV2 guardAssignment) =
+                CleanupFrames(launchGuard.ProfileId, launchGuard.SuccessorGeneration, "cleanup-launch-guard");
+            using (AuthoritativeStore store = new(new StoragePaths(launchGuard.ProductRoot)))
+            {
+                CoordinatedHelperReceipt prepared = CompletedReplacementReceipt(
+                    "cleanup-launch-guard", guardAssignment, launchGuard.ProfileId,
+                    launchGuard.SuccessorGeneration, launchGuard.HelperSha256);
+                CredentialHelperCoordinator coordinator = new(store);
+                int executions = 0;
+                Task<HelperProcessReceipt> Effect(CancellationToken _)
+                {
+                    executions++;
+                    return Task.FromResult(prepared.Process);
+                }
+                await Assert.ThrowsExactlyAsync<IOException>(() =>
+                    coordinator.ExecuteVerifiedReplacementCleanupAsync(
+                        "cleanup-launch-guard", guardBootstrap, guardAssignment, launchGuard.Now,
+                        Effect, testInterruptAfterEffect: true, CancellationToken.None));
+                Assert.AreEqual(1, executions);
+                Assert.IsTrue(store.HasExactCredentialReplacementHelperLaunchAdmission("cleanup-launch-guard"));
+                Assert.IsFalse(File.Exists(Path.Combine(store.Paths.Staging, "cleanup-launch-guard",
+                    AuthoritativeStore.CredentialReplacementBoundaryFileName)));
+                await Assert.ThrowsExactlyAsync<InvalidOperationException>(() =>
+                    coordinator.ExecuteVerifiedReplacementCleanupAsync(
+                        "cleanup-launch-guard", guardBootstrap, guardAssignment, launchGuard.Now,
+                        Effect, cancellationToken: CancellationToken.None));
+                Assert.AreEqual(1, executions);
+            }
+
+            ReplacementFixture digestMismatch = CreateFixture(
+                repository, testRoot, "digest-mismatch", FixtureMode.DeletePendingRecovery);
+            (HelperPrivateFrameV2 digestBootstrap, HelperPrivateFrameV2 digestAssignment) =
+                CleanupFrames(
+                    digestMismatch.ProfileId, digestMismatch.SuccessorGeneration,
+                    "cleanup-digest-mismatch");
+            using (AuthoritativeStore store = new(new StoragePaths(digestMismatch.ProductRoot)))
+            {
+                CoordinatedHelperReceipt prepared = CompletedReplacementReceipt(
+                    "cleanup-digest-mismatch", digestAssignment, digestMismatch.ProfileId,
+                    digestMismatch.SuccessorGeneration, digestMismatch.HelperSha256);
+                HelperReceiptV2 receipt = prepared.Process.Receipt.Clone();
+                receipt.NonSecretReceipt.Value = Google.Protobuf.ByteString.CopyFrom(new byte[32]);
+                HelperProcessReceipt mismatched = prepared.Process with { Receipt = receipt };
+                CredentialHelperCoordinator coordinator = new(store);
+                await Assert.ThrowsExactlyAsync<InvalidDataException>(() =>
+                    coordinator.ExecuteVerifiedReplacementCleanupAsync(
+                        "cleanup-digest-mismatch", digestBootstrap, digestAssignment,
+                        digestMismatch.Now, _ => Task.FromResult(mismatched),
+                        cancellationToken: CancellationToken.None));
+                Assert.AreEqual(
+                    "delete-pending",
+                    store.GetCredentialProfile(digestMismatch.ProfileId).LifecycleState);
+                string stagingRoot = Path.Combine(store.Paths.Staging, "cleanup-digest-mismatch");
+                Assert.IsFalse(File.Exists(Path.Combine(
+                    stagingRoot, AuthoritativeStore.CredentialReplacementBoundaryFileName)));
+                Assert.IsFalse(File.Exists(Path.Combine(stagingRoot, "helper-receipt.v2.pb")));
+            }
+
+            ReplacementFixture preadmitted = CreateFixture(
+                repository, testRoot, "launch-preadmitted", FixtureMode.DeletePendingRecovery);
+            (HelperPrivateFrameV2 preadmittedBootstrap, HelperPrivateFrameV2 preadmittedAssignment) =
+                CleanupFrames(preadmitted.ProfileId, preadmitted.SuccessorGeneration, "cleanup-preadmitted");
+            using (AuthoritativeStore store = new(new StoragePaths(preadmitted.ProductRoot)))
+            {
+                Assert.IsTrue(store.TryAdmitCredentialReplacementHelperLaunch(
+                    "cleanup-preadmitted", preadmitted.Now));
+                CredentialHelperCoordinator coordinator = new(store);
+                int executions = 0;
+                await Assert.ThrowsExactlyAsync<InvalidOperationException>(() =>
+                    coordinator.ExecuteVerifiedReplacementCleanupAsync(
+                        "cleanup-preadmitted", preadmittedBootstrap, preadmittedAssignment, preadmitted.Now,
+                        _ =>
+                        {
+                            executions++;
+                            return Task.FromException<HelperProcessReceipt>(
+                                new AssertFailedException("A pre-admitted helper must not execute."));
+                        }, cancellationToken: CancellationToken.None));
+                Assert.AreEqual(0, executions);
+            }
+
+            ReplacementFixture tampered = CreateFixture(
+                repository, testRoot, "tampered", FixtureMode.DeletePendingRecovery);
+            (HelperPrivateFrameV2 tamperedBootstrap, HelperPrivateFrameV2 tamperedAssignment) =
+                CleanupFrames(tampered.ProfileId, tampered.SuccessorGeneration, "cleanup-tampered");
+            using (AuthoritativeStore store = new(new StoragePaths(tampered.ProductRoot)))
+            {
+                Assert.IsTrue(store.TryAdmitCredentialReplacementHelperLaunch("cleanup-tampered", tampered.Now));
+                CoordinatedHelperReceipt prepared = CompletedReplacementReceipt(
+                    "cleanup-tampered", tamperedAssignment, tampered.ProfileId, tampered.SuccessorGeneration,
+                    tampered.HelperSha256);
+                CoordinatedHelperReceipt staged = StageReceipt(store, "cleanup-tampered", prepared with
+                {
+                    Process = prepared.Process with { NativeCallTraceBytes = "[]"u8.ToArray() },
+                }, tampered.Now);
+                OneShotCredentialHelperLauncher launcher = new(
+                    tampered.HelperPath, tampered.HelperSha256, Path.Combine(testRoot, "synthetic-store-tampered"));
+                CredentialHelperCoordinator coordinator = new(store, launcher);
+                Assert.ThrowsExactly<InvalidDataException>(() =>
+                    coordinator.CompleteVerifiedReplacementCleanup(
+                        repository, "cleanup-tampered", tamperedBootstrap,
+                        tamperedAssignment, staged, tampered.Now));
+                Assert.AreEqual("delete-pending", store.GetCredentialProfile(tampered.ProfileId).LifecycleState);
+                Assert.IsFalse(File.Exists(Path.Combine(store.Paths.Staging, "cleanup-tampered",
+                    AuthoritativeStore.CredentialReplacementBoundaryFileName)));
+                await Assert.ThrowsExactlyAsync<InvalidDataException>(() =>
+                    coordinator.ExecuteVerifiedReplacementCleanupAsync(
+                        "cleanup-tampered", tamperedBootstrap,
+                        tamperedAssignment, tampered.Now,
+                        cancellationToken: CancellationToken.None));
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(testRoot)) { Directory.Delete(testRoot, recursive: true); }
+        }
+    }
+
     private static ReplacementFixture CreateFixture(
         string repository,
         string testRoot,
         string name,
-        bool recovery = true)
+        FixtureMode mode = FixtureMode.ReplacingRecovery)
     {
         string root = Path.Combine(testRoot, name);
         string product = Path.Combine(root, "product");
+        string profile = "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e";
+        string successor = mode == FixtureMode.Initial
+            ? "g-test" + Guid.NewGuid().ToString("N")
+            : "g-e6b6a3f21ad74108ba65955850349f83";
         Directory.CreateDirectory(root);
         using (StoragePaths paths = new(product)) { paths.Create(); }
-        if (recovery)
+        EnsureInitialVerifiedCredential(product);
+        if (mode != FixtureMode.Initial)
         {
-            CopyDirectory(Path.Combine(repository, "artifacts", "m1-slice6", "successor-product-state"), product);
-        }
-        else
-        {
-            EnsureInitialVerifiedCredential(product);
+            EnsureReplacementState(product, profile, successor, mode == FixtureMode.DeletePendingRecovery);
         }
         string ledger = Path.Combine(repository, "artifacts", "m1-slice6", "successor-campaign", "ledger.v3.jsonl");
         string coordinator = Path.Combine(repository, "src", "Infinium.Coordinator", "bin", "Debug", "net10.0",
@@ -255,18 +712,17 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         Assert.IsTrue(File.Exists(coordinator));
         Assert.IsTrue(File.Exists(helper));
         DateTimeOffset now = DateTimeOffset.UtcNow;
-        string profile = "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e";
-        string successor = recovery
-            ? "g-e6b6a3f21ad74108ba65955850349f83"
-            : "g-test" + Guid.NewGuid().ToString("N");
         string successorFingerprint = Sha(Encoding.UTF8.GetBytes($"Infinium:{profile}:{successor}"));
         string authorityId = "infinium.m1-s6.test-credential-replacement/" + Guid.NewGuid().ToString("N");
         string evidenceId = "infinium.m1-s6.test-credential-replacement-evidence/" + Guid.NewGuid().ToString("N");
         string evidence = Path.Combine(root, "evidence", "replacement.v1.json");
         string owner = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
-            recovery
-                ? "m1-slice6-development-campaign-amendment.v4.json"
-                : "m1-slice6-development-campaign-amendment.v3.json");
+            mode switch
+            {
+                FixtureMode.ReplacingRecovery => "m1-slice6-development-campaign-amendment.v4.json",
+                FixtureMode.DeletePendingRecovery => "m1-slice6-development-campaign-amendment.v5.json",
+                _ => "m1-slice6-development-campaign-amendment.v3.json",
+            });
         string v4 = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp9-production-profile-authorization.v4.json");
         using JsonDocument entryDocument = JsonDocument.Parse(File.ReadAllBytes(v4));
@@ -284,9 +740,14 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
             expires_at_utc = Z(now.AddMinutes(30)),
             owner_authority = new
             {
-                id = recovery
-                    ? "infinium.m1-s6.credential-replacement-recovery/20260821-pre-native-launcher-factory"
-                    : "infinium.m1-s6.credential-replacement/20260821-owner-fresh-key",
+                id = mode switch
+                {
+                    FixtureMode.ReplacingRecovery =>
+                        "infinium.m1-s6.credential-replacement-recovery/20260821-pre-native-launcher-factory",
+                    FixtureMode.DeletePendingRecovery =>
+                        "infinium.m1-s6.credential-replacement-cleanup-recovery/20260821-pre-entry-assignment-prefix",
+                    _ => "infinium.m1-s6.credential-replacement/20260821-owner-fresh-key",
+                },
                 path = Relative(repository, owner), sha256 = HashFile(owner),
             },
             predecessor_ledger = new
@@ -365,6 +826,32 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
             now.AddTicks(4), now.AddTicks(5)));
     }
 
+    private static void EnsureReplacementState(
+        string productRoot,
+        string profile,
+        string successor,
+        bool deletePending)
+    {
+        const string predecessor = "g-ff6d82e7a7d244f6b8a9d0164991be37";
+        using AuthoritativeStore store = new(new StoragePaths(productRoot));
+        CredentialProfileProjection current = store.GetCredentialProfile(profile);
+        DateTimeOffset now = current.UpdatedAt.AddTicks(10);
+        CredentialProfileProjection replacing = store.BeginCredentialReplacement(
+            "fixture-replacement-begin-" + Guid.NewGuid().ToString("N"),
+            profile, predecessor, successor, 2, now);
+        if (!deletePending) { return; }
+        CredentialProfileProjection pending = store.ApplyCredentialTransition(new(
+            "fixture-replacement-cleanup-pending-" + Guid.NewGuid().ToString("N"),
+            profile, predecessor, "delete", "replacing", "delete-pending", "delete-pending",
+            replacing.CapabilitySnapshotId, replacing.AccountIdentityId, replacing.BillingScopeIdentityId,
+            replacing.UpdatedAt.AddTicks(10), replacing.UpdatedAt.AddTicks(11)));
+        _ = store.ApplyCredentialTransition(new(
+            "fixture-replacement-cleanup-failed-" + Guid.NewGuid().ToString("N"),
+            profile, predecessor, "delete", "delete-pending", "delete-pending", "delete-pending",
+            pending.CapabilitySnapshotId, pending.AccountIdentityId, pending.BillingScopeIdentityId,
+            pending.UpdatedAt.AddTicks(10), pending.UpdatedAt.AddTicks(11), Failed: true));
+    }
+
     private static ReplacementFixture RebindOwner(
         string repository,
         ReplacementFixture fixture,
@@ -390,6 +877,214 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         AuthoritativeStore store, string attemptId, HelperPrivateFrameV2 _, HelperPrivateFrameV2 assignment,
         DateTimeOffset now, CancellationToken cancellationToken) =>
         CompleteWithoutNativeCore(store, attemptId, assignment, now, predecessorAlreadyAbsent: false, cancellationToken);
+
+    private static Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>
+        CompleteCleanupWithoutNative(
+            AuthoritativeStore store, string attemptId, HelperPrivateFrameV2 _, HelperPrivateFrameV2 assignment,
+            DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        Assert.AreEqual(HelperAssignmentKindV2.Replace, assignment.Assignment.AssignmentKind);
+        CredentialProfileProjection old = store.GetCredentialProfile(assignment.Assignment.AccessProfileId.Value);
+        Assert.AreEqual("delete-pending", old.LifecycleState);
+        string generation = assignment.Assignment.GenerationId.Value;
+        CredentialProfileProjection recovered = store.ApplyCredentialTransition(new(
+            attemptId + "-replacement-cleanup-recovered", old.ProfileId, generation, "recover",
+            "delete-pending", "active-unverified", "active-unverified", old.CapabilitySnapshotId,
+            old.AccountIdentityId, old.BillingScopeIdentityId, now.AddTicks(3), now.AddTicks(4)));
+        CredentialProfileProjection verified = store.ApplyCredentialTransition(new(
+            attemptId + "-verified-generation", old.ProfileId, generation, "verify", "active-unverified",
+            "active-verified", "active-verified", old.CapabilitySnapshotId, old.AccountIdentityId,
+            old.BillingScopeIdentityId, now.AddTicks(5), now.AddTicks(6)));
+        Assert.AreEqual(2, recovered.GenerationOrdinal);
+        return Task.FromResult((CompletedReplacementReceipt(attemptId, assignment, old.ProfileId, generation), verified));
+    }
+
+    private static Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>
+        StopCleanupFailedKnownWithoutNative(
+            AuthoritativeStore store, string attemptId, HelperPrivateFrameV2 bootstrap, HelperPrivateFrameV2 assignment,
+            DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        _ = bootstrap;
+        _ = now;
+        cancellationToken.ThrowIfCancellationRequested();
+        CredentialProfileProjection current = store.GetCredentialProfile(assignment.Assignment.AccessProfileId.Value);
+        Assert.AreEqual("delete-pending", current.LifecycleState);
+        HelperReceiptV2 receipt = new()
+        {
+            Outcome = HelperOutcomeV2.FailedKnown,
+            AssignmentId = assignment.Assignment.AssignmentId,
+            CommandId = assignment.Assignment.CommandId,
+            AssignmentKind = HelperAssignmentKindV2.Replace,
+            Credential = assignment.Assignment.Credential.Clone(),
+            UsageReceiptState = UsageReceiptStateV2.NotDispatched,
+            NonSecretReceipt = Digest(
+                $"{assignment.Assignment.AssignmentId}/{assignment.Assignment.CommandId}/{HelperOutcomeV2.FailedKnown}"),
+        };
+        HelperProcessReceipt process = new(1, 0, new string('a', 64), receipt, [], 2, 0, 0, 0, 0, 0, true,
+            false, "[]"u8.ToArray(), null,
+            JsonSerializer.SerializeToUtf8Bytes(Canary()), true, false, 1, 2);
+        HelperStagingReceipt staging = new(attemptId, "staging/test/helper-receipt.v2.pb", 1, new string('b', 64),
+            null, 0, null, true, true);
+        return Task.FromResult((new CoordinatedHelperReceipt(process, staging), current));
+    }
+
+    private static CoordinatedHelperReceipt CompletedReplacementReceipt(
+        string attemptId,
+        HelperPrivateFrameV2 assignment,
+        string profileId,
+        string generation,
+        string? binarySha256 = null)
+    {
+        string predecessor = "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0";
+        string successor = Sha(Encoding.UTF8.GetBytes($"Infinium:{profileId}:{generation}"));
+        string[] operations = ["CredReadW", "CredWriteW", "CredReadW", "CredFree", "CredReadW", "CredFree",
+            "CredReadW", "CredFree", "CredDeleteW", "CredReadW", "CredReadW"];
+        string[] fingerprints = [successor, successor, successor, successor, predecessor, predecessor, predecessor,
+            predecessor, predecessor, predecessor, predecessor];
+        string[] results = ["ERROR_NOT_FOUND", "success", "success", "released", "success", "released", "success",
+            "released", "success", "ERROR_NOT_FOUND", "ERROR_NOT_FOUND"];
+        object[] trace = Enumerable.Range(0, operations.Length).Select(index => (object)new
+        {
+            Sequence = index + 1, Operation = operations[index], TargetFingerprintSha256 = fingerprints[index],
+            Scenario = "m1-slice6-successor-credential-replacement", Result = results[index],
+            AllocationId = index switch { 2 => (long?)1, 4 => 2, 6 => 3, _ => null },
+            PairedAllocationId = index switch { 3 => (long?)1, 5 => 2, 7 => 3, _ => null },
+        }).ToArray();
+        HelperReceiptV2 receipt = new()
+        {
+            Outcome = HelperOutcomeV2.Completed,
+            AssignmentId = assignment.Assignment.AssignmentId,
+            CommandId = assignment.Assignment.CommandId,
+            AssignmentKind = HelperAssignmentKindV2.Replace,
+            Credential = assignment.Assignment.Credential.Clone(),
+            UsageReceiptState = UsageReceiptStateV2.NotDispatched,
+            NonSecretReceipt = Digest(
+                $"{assignment.Assignment.AssignmentId}/{assignment.Assignment.CommandId}/{HelperOutcomeV2.Completed}"),
+        };
+        HelperProcessReceipt process = new(1, 0, binarySha256 ?? new string('a', 64), receipt, [], 2, 0, 0, 0, 11, 0, true,
+            false, JsonSerializer.SerializeToUtf8Bytes(trace), JsonSerializer.SerializeToUtf8Bytes(Entry("submitted")),
+            JsonSerializer.SerializeToUtf8Bytes(Canary()), true, false, 1, 2);
+        HelperStagingReceipt staging = new(attemptId, "staging/test/helper-receipt.v2.pb", 1, new string('b', 64),
+            null, 0, null, true, true);
+        return new(process, staging);
+    }
+
+    private static HelperProcessReceipt MidTraceReadFailureProcess(
+        string successorFingerprint,
+        bool forgedAllocation,
+        string failureResult = "win32-error:5")
+    {
+        object[] trace =
+        [
+            new
+            {
+                Sequence = 1, Operation = "CredReadW", TargetFingerprintSha256 = successorFingerprint,
+                Scenario = "m1-slice6-successor-credential-replacement", Result = "ERROR_NOT_FOUND",
+                AllocationId = (long?)null, PairedAllocationId = (long?)null,
+            },
+            new
+            {
+                Sequence = 2, Operation = "CredWriteW", TargetFingerprintSha256 = successorFingerprint,
+                Scenario = "m1-slice6-successor-credential-replacement", Result = "success",
+                AllocationId = (long?)null, PairedAllocationId = (long?)null,
+            },
+            new
+            {
+                Sequence = 3, Operation = "CredReadW", TargetFingerprintSha256 = successorFingerprint,
+                Scenario = "m1-slice6-successor-credential-replacement", Result = failureResult,
+                AllocationId = forgedAllocation ? (long?)1 : null, PairedAllocationId = (long?)null,
+            },
+        ];
+        HelperReceiptV2 receipt = new()
+        {
+            Outcome = HelperOutcomeV2.FailedKnown,
+            AssignmentId = "replacement-mid-trace/read-failure",
+        };
+        return new(
+            1, 0, new string('a', 64), receipt, [], 2, 0, 0, 0, 3, 0, true, false,
+            JsonSerializer.SerializeToUtf8Bytes(trace),
+            JsonSerializer.SerializeToUtf8Bytes(Entry("failed")),
+            JsonSerializer.SerializeToUtf8Bytes(Canary()),
+            true, false, 1, 2);
+    }
+
+    private static Infinium.Contracts.Protobuf.Common.V1.ContentDigest Digest(string value)
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes(value);
+        return new()
+        {
+            Algorithm = Infinium.Contracts.Protobuf.Common.V1.DigestAlgorithm.Sha256,
+            Value = Google.Protobuf.ByteString.CopyFrom(SHA256.HashData(bytes)),
+            SizeBytes = checked((ulong)bytes.Length),
+        };
+    }
+
+    private static (HelperPrivateFrameV2 Bootstrap, HelperPrivateFrameV2 Assignment) CleanupFrames(
+        string profileId,
+        string successorGeneration,
+        string attemptId,
+        string? exactAuthorityId = null)
+    {
+        string authorityId = exactAuthorityId
+            ?? "infinium.m1-s6.successor-credential-replacement-cleanup-recovery/" + attemptId;
+        HelperPrivateFrameV2 bootstrap = new()
+        {
+            Sequence = 1,
+            ProtocolFingerprintSha256 = Google.Protobuf.ByteString.CopyFrom(
+                Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
+            Bootstrap = new()
+            {
+                CoordinatorFencingEpoch = 1,
+                ExpiresAt = new() { UnixSeconds = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds() },
+                OneUseNonceFingerprintSha256 = Google.Protobuf.ByteString.CopyFrom(new byte[32]),
+                CommandId = authorityId + "/command",
+                Credential = new()
+                {
+                    AccessProfileId = new() { Value = profileId },
+                    GenerationId = new() { Value = "g-ff6d82e7a7d244f6b8a9d0164991be37" },
+                },
+            },
+        };
+        HelperPrivateFrameV2 assignment = new()
+        {
+            Sequence = 2,
+            ProtocolFingerprintSha256 = bootstrap.ProtocolFingerprintSha256,
+            Assignment = new()
+            {
+                AssignmentId = authorityId + "/replace",
+                CommandId = authorityId + "/command",
+                AssignmentKind = HelperAssignmentKindV2.Replace,
+                AccessProfileId = new() { Value = profileId },
+                GenerationId = new() { Value = successorGeneration },
+                GenerationOrdinal = 2,
+                Credential = new()
+                {
+                    AccessProfileId = new() { Value = profileId },
+                    GenerationId = new() { Value = successorGeneration },
+                },
+            },
+        };
+        return (bootstrap, assignment);
+    }
+
+    private static CoordinatedHelperReceipt StageReceipt(
+        AuthoritativeStore store,
+        string attemptId,
+        CoordinatedHelperReceipt prepared,
+        DateTimeOffset now)
+    {
+        HelperPrivateFrameV2 terminal = new()
+        {
+            Sequence = 3,
+            ProtocolFingerprintSha256 = Google.Protobuf.ByteString.CopyFrom(
+                Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
+            Receipt = prepared.Process.Receipt.Clone(),
+        };
+        byte[] canonical = HelperPrivateProtocolV2.Encode(terminal);
+        HelperStagingReceipt staging = store.StageAndAdmitHelperReceipt(attemptId, canonical, now);
+        return prepared with { Staging = staging };
+    }
 
     private static Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>
         CompleteAlreadyAbsentWithoutNative(
@@ -434,7 +1129,7 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         object entry = Entry("submitted");
         object canary = Canary();
         HelperReceiptV2 receipt = new() { Outcome = HelperOutcomeV2.Completed, AssignmentId = assignment.Assignment.AssignmentId };
-        HelperProcessReceipt process = new(1, 0, new string('a', 64), receipt, [], 3, 0, 0, 0, traceLength, 0, true,
+        HelperProcessReceipt process = new(1, 0, new string('a', 64), receipt, [], 2, 0, 0, 0, traceLength, 0, true,
             false, JsonSerializer.SerializeToUtf8Bytes(trace), JsonSerializer.SerializeToUtf8Bytes(entry),
             JsonSerializer.SerializeToUtf8Bytes(canary), true, false, 1, 2);
         HelperStagingReceipt staging = new(attemptId, "staging/test/helper-receipt.v2.pb", 1, new string('b', 64),
@@ -454,7 +1149,7 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
             Outcome = HelperOutcomeV2.Cancelled,
             AssignmentId = assignment.Assignment.AssignmentId,
         };
-        HelperProcessReceipt process = new(1, 0, new string('a', 64), receipt, [], 3, 0, 0, 0, 0, 0, true,
+        HelperProcessReceipt process = new(1, 0, new string('a', 64), receipt, [], 2, 0, 0, 0, 0, 0, true,
             false, "[]"u8.ToArray(), JsonSerializer.SerializeToUtf8Bytes(Entry("cancelled")),
             JsonSerializer.SerializeToUtf8Bytes(Canary()), true, false, 1, 2);
         HelperStagingReceipt staging = new(attemptId, "staging/test/helper-receipt.v2.pb", 1, new string('b', 64),
@@ -485,7 +1180,7 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
             Outcome = HelperOutcomeV2.FailedKnown,
             AssignmentId = assignment.Assignment.AssignmentId,
         };
-        HelperProcessReceipt process = new(1, 0, new string('a', 64), receipt, [], 3, 0, 0, 0, 2, 0, true,
+        HelperProcessReceipt process = new(1, 0, new string('a', 64), receipt, [], 2, 0, 0, 0, 2, 0, true,
             false, JsonSerializer.SerializeToUtf8Bytes(trace), JsonSerializer.SerializeToUtf8Bytes(Entry("submitted")),
             JsonSerializer.SerializeToUtf8Bytes(Canary()), true, false, 1, 2, true, "preflight-collision");
         HelperStagingReceipt staging = new(attemptId, "staging/test/helper-receipt.v2.pb", 1, new string('b', 64),
@@ -524,6 +1219,26 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
     private static object Entry(string terminal)
     {
         bool cancelled = terminal == "cancelled";
+        object? action = terminal is "submitted" or "cancelled" ? new
+        {
+            Action = cancelled ? "cancel" : "submit",
+            Source = cancelled ? "cancel-button" : "submit-button",
+            WindowVisible = true,
+            EditVisible = true,
+            InitiallyBlank = true,
+            HelperProcessOwned = true,
+            SameSession = true,
+            InputDesktopAvailable = true,
+            NotCloaked = true,
+            OnMonitor = true,
+            Enabled = true,
+            Focused = true,
+            Foreground = true,
+            Active = true,
+            CurrentBlank = cancelled,
+            CurrentCharacterLength = cancelled ? 0 : 32,
+            Admitted = true,
+        } : null;
         return new
         {
             Surface = "wp9-distinct-helper-owned-native-masked-paste-surface", Masked = true, PastePermitted = true,
@@ -531,11 +1246,7 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
             HelperProcessOwned = true, SameSession = true, InputDesktopAvailable = true, NotCloaked = true,
             OnMonitor = true, Enabled = true, Focused = true, Foreground = true, Active = true, ReadinessChecks = 1,
             PreReadinessIgnoredActions = 0, MessagePumpIterations = 1,
-            ActionSnapshot = new { Action = cancelled ? "cancel" : "submit",
-            Source = cancelled ? "cancel-button" : "submit-button", WindowVisible = true, EditVisible = true,
-            InitiallyBlank = true, HelperProcessOwned = true, SameSession = true, InputDesktopAvailable = true,
-            NotCloaked = true, OnMonitor = true, Enabled = true, Focused = true, Foreground = true, Active = true,
-            CurrentBlank = cancelled, CurrentCharacterLength = cancelled ? 0 : 32, Admitted = true },
+            ActionSnapshot = action,
             TerminalState = terminal, WindowDestroyed = true, BufferCleared = true, NativeEditEmptyVerified = true,
             ThreadJoined = true,
         };

@@ -111,6 +111,7 @@ public sealed class OneShotCredentialHelperLauncher
         : nativeQualificationManifestPath is null
             ? TimeSpan.FromSeconds(30)
             : CredentialNativeQualificationSupervisor.PrimaryPhaseTimeout;
+    internal int ExpectedInheritedPrivateHandleCount => nativeQualificationManifestPath is null ? 3 : 2;
 
     internal async Task<Wp9NonLiveProbeResult> ExecuteWp9NonLiveProbeAsync(
         string mode,
@@ -665,7 +666,7 @@ public sealed class OneShotCredentialHelperLauncher
                 launchHash,
                 terminal.Receipt,
                 stagedResponse,
-                nativeManifestPath is null ? 3 : 2,
+                ExpectedInheritedPrivateHandleCount,
                 0,
                 metrics.ListenerCount,
                 metrics.NetworkOperationCount,

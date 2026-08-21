@@ -165,7 +165,7 @@ internal static class Wp9ProductionLaunchContract
     }
 }
 
-internal sealed class Wp9ProductionSecretSource : IHelperSecretSource, IDisposable
+internal sealed class Wp9ProductionSecretSource(string acceptedManifestId) : IHelperSecretSource, IDisposable
 {
     private byte[] canarySecret = [];
     internal Wp9ProductionEntryEvidence? EntryEvidence { get; private set; }
@@ -173,7 +173,7 @@ internal sealed class Wp9ProductionSecretSource : IHelperSecretSource, IDisposab
     public byte[] Capture(HelperAssignmentV2 assignment)
     {
         ArgumentNullException.ThrowIfNull(assignment);
-        if (!AcceptsAssignment(assignment))
+        if (!AcceptsAssignment(assignment, acceptedManifestId))
         {
             throw new InvalidDataException(
                 "The WP9 production entry surface accepts only an exact enrollment or authorized successor replacement assignment.");
@@ -202,15 +202,14 @@ internal sealed class Wp9ProductionSecretSource : IHelperSecretSource, IDisposab
         }
     }
 
-    internal static bool AcceptsAssignment(HelperAssignmentV2 assignment)
+    internal static bool AcceptsAssignment(HelperAssignmentV2 assignment, string acceptedManifestId)
     {
         ArgumentNullException.ThrowIfNull(assignment);
+        ArgumentException.ThrowIfNullOrWhiteSpace(acceptedManifestId);
         bool exactEnrollment = assignment.AssignmentKind == HelperAssignmentKindV2.Enroll
             && assignment.AssignmentId.StartsWith("wp9-production-profile/", StringComparison.Ordinal);
         bool exactSuccessorReplacement = assignment.AssignmentKind == HelperAssignmentKindV2.Replace
-            && assignment.AssignmentId.StartsWith(
-                "infinium.m1-s6.successor-credential-replacement/", StringComparison.Ordinal)
-            && assignment.AssignmentId.EndsWith("/replace", StringComparison.Ordinal);
+            && assignment.AssignmentId == acceptedManifestId + "/replace";
         return exactEnrollment || exactSuccessorReplacement;
     }
 

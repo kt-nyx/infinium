@@ -211,7 +211,8 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             string program = File.ReadAllText(Path.Combine(root, "src", "Infinium.CredentialHelper", "Program.cs"));
             int validation = program.IndexOf("FromProductionEnrollmentManifest(", StringComparison.Ordinal);
             int containment = program.IndexOf("productionDescendant = Process.Start", validation, StringComparison.Ordinal);
-            int uiSource = program.IndexOf("productionSecretSource = new();", validation, StringComparison.Ordinal);
+            int uiSource = program.IndexOf(
+                "productionSecretSource = new(productionManifestId);", validation, StringComparison.Ordinal);
             Assert.IsTrue(validation >= 0 && containment > validation && uiSource > containment,
                 "The compiled helper must reject a manifest before containment, UI, or native-store execution.");
         }
@@ -281,6 +282,12 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             string path = Path.Combine(temporary, "replacement.json");
             File.WriteAllBytes(path, bytes);
             string sha = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(bytes));
+            string repository = RepositoryRoot();
+            string launcherSource = File.ReadAllText(Path.Combine(
+                repository, "src", "Infinium.Coordinator", "OneShotCredentialHelperLauncher.cs"));
+            StringAssert.Contains(launcherSource,
+                "ExpectedInheritedPrivateHandleCount => nativeQualificationManifestPath is null ? 3 : 2;");
+            StringAssert.Contains(launcherSource, "ExpectedInheritedPrivateHandleCount,");
             using WindowsCredentialManagerStore store =
                 WindowsCredentialManagerStore.FromProductionEnrollmentManifest(path, sha, authorityId);
             Assert.IsTrue(store.IsProductionEnrollment);
@@ -289,12 +296,34 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             {
                 AssignmentKind = HelperAssignmentKindV2.Replace,
                 AssignmentId = authorityId + "/replace",
-            }));
+            }, authorityId));
             Assert.IsFalse(Wp9ProductionSecretSource.AcceptsAssignment(new HelperAssignmentV2
             {
                 AssignmentKind = HelperAssignmentKindV2.Replace,
                 AssignmentId = "wp9-production-profile/replace",
-            }));
+            }, authorityId));
+            Assert.IsFalse(Wp9ProductionSecretSource.AcceptsAssignment(new HelperAssignmentV2
+            {
+                AssignmentKind = HelperAssignmentKindV2.Recover,
+                AssignmentId = authorityId + "/recover",
+            }, authorityId));
+            Assert.IsFalse(Wp9ProductionSecretSource.AcceptsAssignment(new HelperAssignmentV2
+            {
+                AssignmentKind = HelperAssignmentKindV2.Replace,
+                AssignmentId = authorityId + "/replace-near-miss",
+            }, authorityId));
+            Assert.IsFalse(Wp9ProductionSecretSource.AcceptsAssignment(new HelperAssignmentV2
+            {
+                AssignmentKind = HelperAssignmentKindV2.Replace,
+                AssignmentId = authorityId + "/replace",
+            }, authorityId + "/different"));
+            const string cleanupAuthorityId =
+                "infinium.m1-s6.successor-credential-replacement-cleanup-recovery/test";
+            Assert.IsTrue(Wp9ProductionSecretSource.AcceptsAssignment(new HelperAssignmentV2
+            {
+                AssignmentKind = HelperAssignmentKindV2.Replace,
+                AssignmentId = cleanupAuthorityId + "/replace",
+            }, cleanupAuthorityId));
 
             JsonObject invalid = JsonNode.Parse(bytes)!.AsObject();
             invalid["native_boundary"]!["maximum_calls"]!["CredReadW"] = 5;
