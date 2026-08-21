@@ -1,0 +1,49 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-successor-runtime-candidate/2.0.0",
+  "candidate_id": "m1-s6-successor-v6-wp9-runtime-candidate-8/0bc596a0-7ba6-4b3e-847f-49fa3f9f462c",
+  "campaign": {
+    "id": "infinium.m1-s6.successor-campaign-v6/20260821-hard-budget",
+    "sha256": "41dc8f4c31461f10ec4da68ff8a0c65284b23bbdeec6489cc6d09347c6643a98"
+  },
+  "subject_manifest": {
+    "id": "infinium.m1-s6.successor-stage-v6/WP9/attempt-8/c3a9d856-f550-4050-b041-c26cb44bab00",
+    "sha256": "23564eb6dd30cdc151302815085af7894c1176d2556b669486d162f51c802ac6"
+  },
+  "predecessor": {
+    "ledger_event_hash": "f93953fd60969accefe350e22e1dddd8390b2fe7fd97b287952ceb149c5bcc85",
+    "evidence_id": "infinium.m1-s6.successor-offline-correction-review-v3/WP9/attempt-7/5ff6dbe1-ebfb-4089-a31b-09e855a26b13",
+    "evidence_sha256": "5e2ce0034bb06da57633b32da5794f31f1bccb6b9ff1f96db58ba33d709f3835"
+  },
+  "attempt": {
+    "attempt_id": "m1-s6-successor-v6-wp9-attempt-8/65636b15-a256-4f7a-8e7e-9f906bab4811",
+    "attempt_ordinal": 8,
+    "request_id": "m1-s6-successor-v6-wp9-request-8/80b71e85-0909-4a66-a4a3-e2b28c0c7573",
+    "reservation_id": "m1-s6-successor-v6-wp9-reservation-8/40880dd7-fbb9-44da-a373-e4932b3c9d68",
+    "dispatch_fence_id": "m1-s6-successor-v6-wp9-fence-8/31aa6382-10de-4e30-854b-71ce86ff2c09"
+  },
+  "credential_access": {
+    "id": "infinium.m1-s6.successor-credential-access-v2/20260821-hard-budget",
+    "sha256": "5c76484a5835bb118a7143da25369b9571d96c39d8f533dcce1534f0b3ec84a6"
+  },
+  "implementation_commit": "020328dca624bb4b00eb0fe5e1f2bedb13c04556",
+  "coordinator_sha256": "4621c2917968f88130ffc4bb5eb4a4965d3e87d65016597ce9b5b08f6dabba76",
+  "helper_sha256": "fa422fee95bbb11d7d89ef47419d3badc4e4f338c84bae925e759368bd7a1445",
+  "execution": {
+    "output_root_relative": "artifacts/m1-slice6/successor-campaign",
+    "ledger_path_relative": "artifacts/m1-slice6/successor-campaign/ledger.v3.jsonl",
+    "evidence_path_relative": "artifacts/m1-slice6/successor-campaign/wp9-attempt-8-2710946b41b64d249361b825818cbdc6/attempt-evidence.v3.json",
+    "product_state_root_absolute": "C:/Users/vex/.codex/worktrees/223b/infinium/artifacts/m1-slice6/successor-product-state",
+    "product_state_snapshot_origin_sha256": "e3d23f0a11d66c243fd857e66e741d957abb8d470b45d653ae53f17d74fe4945",
+    "product_state_checkpoint_sha256": "57de4de565d1fabba6bdccb8822eb93d74c905bfa5e2dc5cb4c7e31046514750",
+    "coordinator_path_relative": "src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe",
+    "helper_path_relative": "src/Infinium.CredentialHelper/bin/Release/net10.0/Infinium.CredentialHelper.exe"
+  },
+  "limits": {
+    "helper_launches": 1,
+    "credential_native_calls": 2,
+    "provider_starts": 1,
+    "dns_resolutions": 1,
+    "billable_operations": 1,
+    "automatic_retry": false
+  }
+}
