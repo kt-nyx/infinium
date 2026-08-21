@@ -132,10 +132,7 @@ public sealed class OneShotCredentialHelperLauncher
         using WindowsContainedWorkerProcess.PrivateHelperProcess contained =
             WindowsContainedWorkerProcess.CreatePrivateHelper(
                 helperBinary, arguments, Path.GetDirectoryName(helperBinary)!,
-                new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    ["DOTNET_EnableDiagnostics"] = "0",
-                }, [responseHandle]);
+                PrivateHelperEnvironment(), [responseHandle]);
         response.DisposeLocalCopyOfClientHandle();
         contained.Resume();
         using CancellationTokenSource bounded = new(timeout);
@@ -563,10 +560,7 @@ public sealed class OneShotCredentialHelperLauncher
                 productionProviderTransport ? "production" : "synthetic-qualification",
             ];
         }
-        Dictionary<string, string> environment = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ["DOTNET_EnableDiagnostics"] = "0",
-        };
+        IReadOnlyDictionary<string, string> environment = PrivateHelperEnvironment();
 
         using WindowsContainedWorkerProcess.PrivateHelperProcess contained =
             WindowsContainedWorkerProcess.CreatePrivateHelper(
@@ -734,6 +728,27 @@ public sealed class OneShotCredentialHelperLauncher
             }
             throw;
         }
+    }
+
+    internal static IReadOnlyDictionary<string, string> PrivateHelperEnvironment() =>
+        PrivateHelperEnvironment(Environment.GetFolderPath(Environment.SpecialFolder.Windows));
+
+    internal static IReadOnlyDictionary<string, string> PrivateHelperEnvironment(string? rawSystemRoot)
+    {
+        if (string.IsNullOrWhiteSpace(rawSystemRoot) || !Path.IsPathFullyQualified(rawSystemRoot))
+        {
+            throw new InvalidOperationException("The contained helper requires the exact Windows system root.");
+        }
+        string systemRoot = Path.GetFullPath(rawSystemRoot);
+        if (!Path.IsPathFullyQualified(systemRoot) || !Directory.Exists(systemRoot))
+        {
+            throw new InvalidOperationException("The contained helper requires the exact Windows system root.");
+        }
+        return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["SystemRoot"] = systemRoot,
+            ["DOTNET_EnableDiagnostics"] = "0",
+        };
     }
 
     private static CredentialNativeHelperEvidenceAmbiguityException NormalizeWp9ProductionTimeout(

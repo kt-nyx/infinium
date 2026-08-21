@@ -14,6 +14,25 @@ public sealed class CredentialHelperIntegrationTests
     private static readonly System.Text.Json.JsonSerializerOptions EvidenceJsonOptions = new() { WriteIndented = true };
 
     [TestMethod]
+    public void PrivateHelperEnvironmentRetainsOnlyRequiredWindowsAndDiagnosticsBindings()
+    {
+        IReadOnlyDictionary<string, string> environment =
+            OneShotCredentialHelperLauncher.PrivateHelperEnvironment();
+
+        Assert.HasCount(2, environment);
+        Assert.AreEqual(
+            Path.GetFullPath(Environment.GetFolderPath(Environment.SpecialFolder.Windows)),
+            environment["SystemRoot"]);
+        Assert.AreEqual("0", environment["DOTNET_EnableDiagnostics"]);
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            OneShotCredentialHelperLauncher.PrivateHelperEnvironment(""));
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            OneShotCredentialHelperLauncher.PrivateHelperEnvironment("   "));
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            OneShotCredentialHelperLauncher.PrivateHelperEnvironment("relative-windows"));
+    }
+
+    [TestMethod]
     public async Task HelperPrivateHandleLaunchesExactRepositoryBinaryWithoutStandardProtocolOrRetry()
     {
         string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");

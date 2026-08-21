@@ -568,6 +568,7 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport,
         {
             throw new InvalidOperationException("Offline transport accepts only a literal-IP loopback /v1/responses endpoint.");
         }
+        ProductionTransportObservation observation = new();
         SocketsHttpHandler handler = new()
         {
             AllowAutoRedirect = false,
@@ -576,8 +577,9 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport,
             UseProxy = false,
             MaxConnectionsPerServer = 1,
             PooledConnectionLifetime = TimeSpan.Zero,
+            ConnectCallback = observation.ConnectOnceAsync,
         };
-        return new(new HttpClient(handler, disposeHandler: true), endpoint, ownsClient: true);
+        return new(new HttpClient(handler, disposeHandler: true), endpoint, ownsClient: true, observation);
     }
 
     public async Task<OpenAiResponsesResult> SendOnceAsync(
@@ -745,9 +747,16 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport,
             Exception? last = null;
             foreach (IPAddress address in addresses)
             {
+                if (address.AddressFamily is not (AddressFamily.InterNetwork or AddressFamily.InterNetworkV6))
+                {
+                    continue;
+                }
                 Socket socket = new(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
                 try
                 {
+                    socket.Bind(new IPEndPoint(
+                        address.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any,
+                        0));
                     await socket.ConnectAsync(address, context.DnsEndPoint.Port, cancellationToken).ConfigureAwait(false);
                     return new NetworkStream(socket, ownsSocket: true);
                 }
