@@ -18,3 +18,4 @@ fixtures/public/** -text -diff -merge -eol
 # Slice 6 credential-replacement evidence is immutable byte-exact effect
 # evidence. Preserve its original JSON byte stream, including line endings.
 artifacts/m1-slice6/successor-credential-replacement/** -text -diff -merge -eol
+artifacts/m1-slice6/successor-credential-replacement-recovery/** -text -diff -merge -eol
