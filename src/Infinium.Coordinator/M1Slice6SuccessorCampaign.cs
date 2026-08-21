@@ -640,7 +640,8 @@ internal static class M1Slice6SuccessorAuthorityLoader
 
     internal static M1Slice6SuccessorRuntimeAuthority Runtime(string path, string expectedSha,
         string coordinatorPath, string helperPath, M1Slice6HardBudgetAuthority hardBudget,
-        DateTimeOffset now, bool requireEffectAdmission = true)
+        DateTimeOffset now, bool requireEffectAdmission = true,
+        bool requireExecutingAssemblyIdentity = true)
     {
         (byte[] bytes, string sha) = ExactBytes(path, expectedSha);
         string schemaRepository = FindRepositoryRoot(path);
@@ -721,7 +722,8 @@ internal static class M1Slice6SuccessorAuthorityLoader
                 != Text(execution, "product_state_checkpoint_sha256")
             || HashFile(reviewPath) != Text(review, "evidence_sha256")
             || HashFile(ownerDecisionPath) != Text(owner, "decision_sha256")
-            || !revision.Success || revision.Groups["sha"].Value != implementationCommit)
+            || requireExecutingAssemblyIdentity
+                && (!revision.Success || revision.Groups["sha"].Value != implementationCommit))
         {
             throw new InvalidDataException("The successor runtime authority is stale, expired, or broader than one start.");
         }
@@ -763,6 +765,20 @@ internal static class M1Slice6SuccessorAuthorityLoader
             outputRoot, ledgerPath, evidencePath, productState,
             Text(execution, "product_state_snapshot_origin_sha256"),
             Text(execution, "product_state_checkpoint_sha256"), notBefore, expiry);
+    }
+
+    internal static M1Slice6SuccessorRuntimeAuthority RuntimeForRecovery(string path,
+        string expectedSha, M1Slice6HardBudgetAuthority hardBudget, DateTimeOffset now)
+    {
+        (byte[] bytes, _) = ExactBytes(path, expectedSha);
+        using JsonDocument document = JsonDocument.Parse(bytes);
+        JsonElement execution = document.RootElement.GetProperty("execution");
+        string repository = FindRepositoryRoot(path);
+        string coordinator = ResolveRepositoryPath(repository,
+            Text(execution, "coordinator_path_relative"));
+        string helper = ResolveRepositoryPath(repository, Text(execution, "helper_path_relative"));
+        return Runtime(path, expectedSha, coordinator, helper, hardBudget, now,
+            requireEffectAdmission: false, requireExecutingAssemblyIdentity: false);
     }
 
     private static string ResolveRepositoryPath(string repository, string relative)
@@ -1143,7 +1159,7 @@ internal static class M1Slice6SuccessorCampaignRunner
                 : accounting.PersistSuccessorAttempt(admission, authority, result, structurallyValid);
         }
         catch (Exception exception) when (exception is InvalidDataException or InvalidOperationException
-            or IOException or Microsoft.Data.Sqlite.SqliteException)
+            or IOException or KeyNotFoundException or Microsoft.Data.Sqlite.SqliteException)
         {
             persistence = accounting.ConvergeSuccessorPersistenceFailure(admission, DateTimeOffset.UtcNow);
         }
@@ -1350,11 +1366,12 @@ internal static class M1Slice6SuccessorCampaignRunner
             M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
         M1Slice6HardBudgetAuthority hardBudget = M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(
             amendmentPath, amendmentSha, campaign);
-        M1Slice6SuccessorRuntimeAuthority runtime = M1Slice6SuccessorAuthorityLoader.Runtime(
-            runtimePath, runtimeSha, Environment.ProcessPath
-                ?? throw new InvalidOperationException("The coordinator executable path is unavailable."),
-            Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "Infinium.CredentialHelper.exe"),
-            hardBudget, now, requireEffectAdmission: false);
+        M1Slice6SuccessorRuntimeAuthority runtime =
+            M1Slice6SuccessorAuthorityLoader.RuntimeForRecovery(
+                runtimePath, runtimeSha, hardBudget, now);
+        recoveryPath = Path.GetFullPath(recoveryPath);
+        (ledgerPath, originalEvidencePath, _) = ValidateRecoveryRoots(runtime, campaign,
+            credentialPath, credentialSha, ledgerPath, originalEvidencePath, recoveryPath);
         (M1Slice6CampaignStageAuthority authority, M1Slice6SuccessorAttemptIdentity attempt) =
             M1Slice6SuccessorAuthorityLoader.Stage(stagePath, stageSha, campaign, hardBudget, runtime);
         M1Slice6SuccessorCampaignLedgerV3 ledger = OpenHardBudgetLedger(
@@ -1434,6 +1451,104 @@ internal static class M1Slice6SuccessorCampaignRunner
         WriteNew(Path.GetFullPath(recoveryPath), [.. recoveryBytes, (byte)'\n']);
         string recoverySha = ValidateRecoverySchema(campaignPath, File.ReadAllBytes(recoveryPath));
         ledger.RecordAuthoritativeRecoveryEvidence(attempt, recoveryId, recoverySha, now.AddTicks(3));
+    }
+
+    internal static void RecoverStartedAmbiguousAttempt(string campaignPath, string campaignSha,
+        string amendmentPath, string amendmentSha,
+        string stagePath, string stageSha, string credentialPath, string credentialSha,
+        string runtimePath, string runtimeSha, string ledgerPath, string evidencePath,
+        DateTimeOffset now)
+    {
+        M1Slice6SuccessorCampaignAuthority campaign =
+            M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+        M1Slice6HardBudgetAuthority hardBudget = M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(
+            amendmentPath, amendmentSha, campaign);
+        M1Slice6SuccessorRuntimeAuthority runtime =
+            M1Slice6SuccessorAuthorityLoader.RuntimeForRecovery(
+                runtimePath, runtimeSha, hardBudget, now);
+        (ledgerPath, evidencePath, _) = ValidateRecoveryRoots(runtime, campaign,
+            credentialPath, credentialSha, ledgerPath, evidencePath);
+        (M1Slice6CampaignStageAuthority authority, M1Slice6SuccessorAttemptIdentity attempt) =
+            M1Slice6SuccessorAuthorityLoader.Stage(stagePath, stageSha, campaign, hardBudget, runtime);
+        M1Slice6SuccessorCampaignLedgerV3 ledger = OpenHardBudgetLedger(
+            campaign, hardBudget, ledgerPath, now, requireExisting: true);
+        if (ledger.Current.State == M1Slice6SuccessorCampaignV3State.AttemptEvidenceHandoff
+            && ledger.Current.Attempt == attempt && File.Exists(Path.GetFullPath(evidencePath)))
+        {
+            _ = ValidateAttemptEvidence(campaignPath, campaign, ledger, attempt, evidencePath);
+            return;
+        }
+        if (ledger.Current.State != M1Slice6SuccessorCampaignV3State.AttemptStarted
+            || ledger.Current.Attempt != attempt || attempt.Stage != M1Slice6CampaignStage.Qualification)
+        {
+            throw new InvalidOperationException(
+                "Started-failure recovery requires the exact pending WP9 possible start.");
+        }
+        string directory = Path.GetDirectoryName(evidencePath)
+            ?? throw new InvalidDataException("Started-failure evidence path has no directory.");
+        string stem = Path.GetFileNameWithoutExtension(evidencePath);
+        string requestName = stem + ".canonical-request.json";
+        string headersName = stem + ".response-headers.json";
+        string traceName = stem + ".native-trace.json";
+        string canaryName = stem + ".canaries.json";
+        string preflightName = stem + ".preflight.json";
+        string rawPath = Path.Combine(directory, stem + ".raw-response.bin");
+        if (File.Exists(rawPath))
+        { throw new InvalidDataException("Ambiguous started-failure recovery cannot discard response bytes."); }
+        byte[] request = ReadExactRetained(Path.Combine(directory, requestName));
+        byte[] headers = ReadExactRetained(Path.Combine(directory, headersName));
+        byte[] trace = ReadExactRetained(Path.Combine(directory, traceName));
+        byte[] canaries = ReadExactRetained(Path.Combine(directory, canaryName));
+        byte[] preflight = ReadExactRetained(Path.Combine(directory, preflightName));
+        if (M1Slice6SuccessorAuthorityLoader.Hash(request) != authority.CanonicalRequestSha256
+            || !request.AsSpan().SequenceEqual(authority.CanonicalRequest))
+        { throw new InvalidDataException("Started-failure recovery request bytes are stale."); }
+        ValidateRecoveredPreflight(preflight, attempt, authority, runtime);
+        M1Slice6CampaignBoundaryFailureReceipt failureReceipt = RecoveredAmbiguousReceipt(
+            headers, trace, canaries, attempt, campaign.CredentialTargetFingerprintSha256);
+        RetainedAttemptArtifacts artifacts = new(requestName, authority.CanonicalRequestSha256,
+            null, null, headersName, M1Slice6SuccessorAuthorityLoader.Hash(headers),
+            traceName, M1Slice6SuccessorAuthorityLoader.Hash(trace),
+            canaryName, M1Slice6SuccessorAuthorityLoader.Hash(canaries));
+        string prefix = "m1s6-successor-v6-" + attempt.AttemptId;
+        string operationId = prefix + "-transport-operation";
+        string authorizationId = prefix + "-transport-authorization";
+        long reserved = ledger.Current.SuccessorOutstandingReservedNanoUsd;
+        if (reserved <= 0 || reserved != authority.Limits.MaximumNanoUsd)
+        { throw new InvalidDataException("Started-failure recovery reservation is not exact."); }
+        M1Slice6CampaignAccountingAdmission admission = new(authorizationId, operationId,
+            attempt.AttemptId, attempt.RequestId, attempt.ReservationId, attempt.DispatchFenceId,
+            0, now, now, "", "", ReservedNanoUsd: reserved);
+        using M1Slice6CampaignSqliteProviderAccounting accounting = new(campaign.ProductStateRoot,
+            credentialPath, credentialSha, now);
+        M1Slice6SuccessorAccountingPersistence persistence =
+            accounting.RecoverSuccessorV6AmbiguousStart(operationId, authorizationId,
+                attempt.AttemptId, attempt.RequestId, attempt.ReservationId,
+                attempt.DispatchFenceId, now.AddTicks(1));
+        byte[] evidenceBytes = Evidence(campaign, authority, attempt, runtime, admission, null,
+            "transport-ambiguous", reserved, 0, persistence.UnresolvedNanoUsd, persistence,
+            failureReceipt, artifacts);
+        string fullEvidencePath = Path.GetFullPath(evidencePath);
+        byte[] exactEvidence = [.. evidenceBytes, (byte)'\n'];
+        string repository = RepositoryRoot(campaignPath);
+        ActiveRepositoryJsonSchemaValidator.Validate(exactEvidence,
+            File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                "m1-slice6-successor-attempt-evidence.v3.schema.json")),
+            M1Slice6SuccessorAuthorityLoader.AttemptEvidenceSchemaV3);
+        if (File.Exists(fullEvidencePath))
+        {
+            if (!File.ReadAllBytes(fullEvidencePath).AsSpan().SequenceEqual(exactEvidence))
+            { throw new InvalidDataException("Started-failure recovery evidence path is stale."); }
+        }
+        else
+        {
+            WriteNew(fullEvidencePath, exactEvidence);
+        }
+        string evidenceSha = M1Slice6SuccessorAuthorityLoader.HashFile(fullEvidencePath);
+        ledger.RecordAttemptEvidence(attempt, "successor-attempt-evidence-" + attempt.AttemptId,
+            evidenceSha, "transport-ambiguous", structurallyValid: false, reserved, 0,
+            persistence.UnresolvedNanoUsd, now.AddTicks(2));
+        _ = ValidateAttemptEvidence(campaignPath, campaign, ledger, attempt, fullEvidencePath);
     }
 
     internal static void AcceptCorrectionReview(string campaignPath, string campaignSha,
@@ -1996,7 +2111,8 @@ internal static class M1Slice6SuccessorCampaignRunner
             provider_request_id = response?.ProviderRequestId ?? failureReceipt?.ProviderRequestId,
             response_bytes_existed = response is null ? failureReceipt?.ResponseBytesExisted : response.ResponseBytesExisted,
             response_bytes_observed_lower_bound = response?.ResponseBytesObservedLowerBound ?? failureReceipt?.ResponseBytesObservedLowerBound,
-            retained_response_bytes = response?.RawResponseBytes?.LongLength,
+            retained_response_bytes = response?.RawResponseBytes?.LongLength
+                ?? (failureReceipt?.ResponseBytesExisted == false ? 0 : null),
             provider_send_count = response?.SendCount ?? failureReceipt?.ProviderSendCount,
             dns_resolution_count = result?.DnsResolutionCount ?? failureReceipt?.DnsResolutionCount,
             retry_permitted = false,
@@ -2076,6 +2192,157 @@ internal static class M1Slice6SuccessorCampaignRunner
 
     private static string? NonEmpty(string? value) => string.IsNullOrEmpty(value) ? null : value;
 
+    private static byte[] ReadExactRetained(string path)
+    {
+        string full = Path.GetFullPath(path);
+        if (!File.Exists(full) || Path.GetFileName(full) != Path.GetFileName(path))
+        { throw new InvalidDataException("A started-failure retained sidecar is absent."); }
+        return File.ReadAllBytes(full);
+    }
+
+    private static void ValidateRecoveredPreflight(byte[] bytes,
+        M1Slice6SuccessorAttemptIdentity attempt, M1Slice6CampaignStageAuthority authority,
+        M1Slice6SuccessorRuntimeAuthority runtime)
+    {
+        using JsonDocument document = JsonDocument.Parse(bytes);
+        JsonElement root = document.RootElement;
+        M1Slice6SuccessorAuthorityLoader.Exact(root, "schema", "attempt_id",
+            "stage_manifest_sha256", "runtime_authority_sha256", "disposition");
+        if (M1Slice6SuccessorAuthorityLoader.Text(root, "schema")
+                != "infinium.m1-s6.successor-evidence-preflight/v1"
+            || M1Slice6SuccessorAuthorityLoader.Text(root, "attempt_id") != attempt.AttemptId
+            || M1Slice6SuccessorAuthorityLoader.Text(root, "stage_manifest_sha256")
+                != authority.ManifestSha256
+            || M1Slice6SuccessorAuthorityLoader.Text(root, "runtime_authority_sha256")
+                != runtime.ManifestSha256
+            || M1Slice6SuccessorAuthorityLoader.Text(root, "disposition")
+                != "fresh-paths-created-before-possible-start")
+        { throw new InvalidDataException("Started-failure preflight evidence is stale."); }
+    }
+
+    private static M1Slice6CampaignBoundaryFailureReceipt RecoveredAmbiguousReceipt(
+        byte[] headers, byte[] trace, byte[] canaries, M1Slice6SuccessorAttemptIdentity attempt,
+        string targetFingerprint)
+    {
+        using JsonDocument document = JsonDocument.Parse(headers);
+        JsonElement root = document.RootElement;
+        M1Slice6SuccessorAuthorityLoader.Exact(root, "schema", "state", "failure_stage",
+            "transport_disposition", "http_status", "response_bytes_existed",
+            "response_bytes_observed_lower_bound", "retained_response_bytes",
+            "provider_response_id", "provider_request_id", "returned_model",
+            "returned_service_tier", "refusal_code", "incomplete_reason",
+            "provider_error_type", "provider_error_code", "local_failure_code",
+            "requested_output_schema", "usage", "dns_resolution_count", "network_used",
+            "send_count", "headers");
+        JsonElement usage = root.GetProperty("usage");
+        M1Slice6SuccessorAuthorityLoader.Exact(usage, "Availability", "DispatchCount",
+            "InputTokens", "OutputTokens", "TotalTokens", "ReasoningTokens",
+            "CacheReadTokens", "CacheWriteTokens", "PricedToolCalls", "CalculatedNanoUsd",
+            "BillingAvailability", "RateAvailability", "CreditAvailability", "ReceiptState");
+        foreach (string quantityName in new[] { "DispatchCount", "InputTokens", "OutputTokens",
+            "TotalTokens", "ReasoningTokens", "CacheReadTokens", "CacheWriteTokens",
+            "PricedToolCalls", "CalculatedNanoUsd" })
+        {
+            JsonElement quantity = usage.GetProperty(quantityName);
+            M1Slice6SuccessorAuthorityLoader.Exact(quantity, "Availability", "Value");
+            if (quantity.GetProperty("Availability").GetInt32() != 2
+                || quantity.GetProperty("Value").ValueKind != JsonValueKind.Null)
+            { throw new InvalidDataException("Ambiguous response usage is not wholly unavailable."); }
+        }
+        string[] nullFields = ["http_status", "provider_response_id", "provider_request_id",
+            "returned_model", "returned_service_tier", "refusal_code", "incomplete_reason",
+            "provider_error_type", "provider_error_code", "requested_output_schema"];
+        if (M1Slice6SuccessorAuthorityLoader.Text(root, "schema")
+                != "infinium.openai.response-headers/v2"
+            || root.GetProperty("state").GetInt32() != (int)ProviderResponseState.Unknown
+            || M1Slice6SuccessorAuthorityLoader.Text(root, "failure_stage") != "provider-transport"
+            || M1Slice6SuccessorAuthorityLoader.Text(root, "transport_disposition")
+                != "may-have-started-no-response"
+            || nullFields.Any(name => root.GetProperty(name).ValueKind != JsonValueKind.Null)
+            || root.GetProperty("response_bytes_existed").GetBoolean()
+            || root.GetProperty("response_bytes_observed_lower_bound").GetInt64() != 0
+            || root.GetProperty("retained_response_bytes").GetInt64() != 0
+            || M1Slice6SuccessorAuthorityLoader.Text(root, "local_failure_code") != "transport_ambiguous"
+            || usage.GetProperty("Availability").GetInt32() != 2
+            || usage.GetProperty("BillingAvailability").GetInt32() != 2
+            || usage.GetProperty("RateAvailability").GetInt32() != 2
+            || usage.GetProperty("CreditAvailability").GetInt32() != 2
+            || usage.GetProperty("ReceiptState").GetInt32() != 5
+            || root.GetProperty("dns_resolution_count").GetInt32() != 1
+            || !root.GetProperty("network_used").GetBoolean()
+            || root.GetProperty("send_count").GetInt32() != 1
+            || root.GetProperty("headers").GetArrayLength() != 0)
+        { throw new InvalidDataException("Retained ambiguous response header evidence is not exact."); }
+        ValidateRecoveredCredentialTrace(trace, targetFingerprint);
+        ValidateRecoveredCanaries(canaries);
+        M1Slice6HelperBoundaryObservation observation = new(false, null, "Unavailable", true,
+            null, null, null, null, "may-have-started-no-response", true, 1, 1,
+            null, null, null, null, null, null, null, null, null, 2,
+            ["helper-receipt-unavailable"]);
+        return new("provider-transport", "may-have-started-no-response", "transport_ambiguous",
+            null, null, null, null, attempt.RequestId, null, false, 0, 1, 1,
+            null, headers, observation, trace, canaries);
+    }
+
+    private static void ValidateRecoveredCredentialTrace(byte[] bytes, string targetFingerprint)
+    {
+        using JsonDocument document = JsonDocument.Parse(bytes);
+        JsonElement[] calls = document.RootElement.EnumerateArray().ToArray();
+        if (calls.Length != 2) { throw new InvalidDataException("Recovered credential trace is incomplete."); }
+        foreach (JsonElement call in calls)
+        {
+            M1Slice6SuccessorAuthorityLoader.Exact(call, "Sequence", "Operation",
+                "TargetFingerprintSha256", "Scenario", "Result", "AllocationId", "PairedAllocationId");
+        }
+        long allocation = calls[0].GetProperty("AllocationId").GetInt64();
+        if (calls[0].GetProperty("Sequence").GetInt32() != 1
+            || M1Slice6SuccessorAuthorityLoader.Text(calls[0], "Operation") != "CredReadW"
+            || M1Slice6SuccessorAuthorityLoader.Text(calls[0], "Result") != "success"
+            || calls[0].GetProperty("PairedAllocationId").ValueKind != JsonValueKind.Null
+            || calls[1].GetProperty("Sequence").GetInt32() != 2
+            || M1Slice6SuccessorAuthorityLoader.Text(calls[1], "Operation") != "CredFree"
+            || M1Slice6SuccessorAuthorityLoader.Text(calls[1], "Result") != "released"
+            || calls[1].GetProperty("AllocationId").ValueKind != JsonValueKind.Null
+            || calls[1].GetProperty("PairedAllocationId").GetInt64() != allocation
+            || allocation <= 0
+            || calls.Any(call => M1Slice6SuccessorAuthorityLoader.Text(call, "Scenario")
+                != "m1-s6-campaign-provider-dispatch")
+            || calls.Any(call => M1Slice6SuccessorAuthorityLoader.Text(
+                call, "TargetFingerprintSha256") != targetFingerprint))
+        { throw new InvalidDataException("Recovered credential trace is not exact read/free evidence."); }
+    }
+
+    private static void ValidateRecoveredCanaries(byte[] bytes)
+    {
+        using JsonDocument document = JsonDocument.Parse(bytes);
+        JsonElement root = document.RootElement;
+        M1Slice6SuccessorAuthorityLoader.Exact(root, "SecretMatches", "RawTargetMatches",
+            "RawTargetEncodings", "ScannedSurfaces");
+        string[] encodings = root.GetProperty("RawTargetEncodings").EnumerateArray()
+            .Select(value => value.GetString()!).ToArray();
+        JsonElement[] surfaces = root.GetProperty("ScannedSurfaces").EnumerateArray().ToArray();
+        string[] names = ["private protocol request", "private protocol response", "native call trace",
+            "process command line", "process environment names"];
+        string[] kinds = ["private-pipe-bytes", "private-pipe-bytes", "canonical-trace-bytes",
+            "captured-text", "captured-text"];
+        if (root.GetProperty("SecretMatches").GetInt32() != 0
+            || root.GetProperty("RawTargetMatches").GetInt32() != 0
+            || !encodings.SequenceEqual(["utf-8", "utf-16le"], StringComparer.Ordinal)
+            || surfaces.Length != names.Length)
+        { throw new InvalidDataException("Recovered canary evidence is incomplete or matched protected bytes."); }
+        for (int index = 0; index < surfaces.Length; index++)
+        {
+            M1Slice6SuccessorAuthorityLoader.Exact(surfaces[index], "Name", "Kind", "ByteCount",
+                "SecretMatches", "RawTargetMatches");
+            if (M1Slice6SuccessorAuthorityLoader.Text(surfaces[index], "Name") != names[index]
+                || M1Slice6SuccessorAuthorityLoader.Text(surfaces[index], "Kind") != kinds[index]
+                || surfaces[index].GetProperty("ByteCount").GetInt64() <= 0
+                || surfaces[index].GetProperty("SecretMatches").GetInt32() != 0
+                || surfaces[index].GetProperty("RawTargetMatches").GetInt32() != 0)
+            { throw new InvalidDataException("Recovered canary surface is stale or matched protected bytes."); }
+        }
+    }
+
     internal static JsonNode NormalizeKnownV1AbsentValues(byte[] originalBytes)
     {
         JsonNode originalNode = JsonNode.Parse(originalBytes)
@@ -2141,6 +2408,9 @@ internal static class M1Slice6SuccessorCampaignRunner
         string? adapterTransport = observation.GetProperty("adapter_transport_disposition").ValueKind
             == JsonValueKind.Null ? null
                 : M1Slice6SuccessorAuthorityLoader.Text(observation, "adapter_transport_disposition");
+        bool recoveredPartialReceipt = !receiptAvailable
+            && failureDisposition == "transport-ambiguous"
+            && helperOutcome == "Unavailable";
         if (receiptAvailable)
         {
             int? stagedBytes = Integer(observation, "staged_envelope_bytes");
@@ -2194,13 +2464,30 @@ internal static class M1Slice6SuccessorCampaignRunner
             || receiptAvailable && adapterTransport is null
                 && Boolean(observation, "transport_may_have_started") == true
                 && topTransport != "may-have-started-no-response"
-            || !receiptAvailable && (failed.Length != 1 || failed[0] != "helper-receipt-unavailable"
+            || !receiptAvailable && !recoveredPartialReceipt
+                && (failed.Length != 1 || failed[0] != "helper-receipt-unavailable"
                 || helperOutcome != "receipt-unavailable" || parsed is not null || send is not null || dns is not null
                 || topSend is not null || topDns is not null)
-            || !receiptAvailable && observation.EnumerateObject().Any(property =>
+            || !receiptAvailable && !recoveredPartialReceipt && observation.EnumerateObject().Any(property =>
                 property.Name is not ("receipt_available" or "helper_outcome" or "failed_predicate_ids")
                 && property.Value.ValueKind != JsonValueKind.Null)
-            || !receiptAvailable && (hasTrace || hasCanary)
+            || !receiptAvailable && !recoveredPartialReceipt && (hasTrace || hasCanary)
+            || recoveredPartialReceipt && (failed.Length != 1
+                || failed[0] != "helper-receipt-unavailable" || !hasTrace || !hasCanary
+                || topSend != 1 || topDns != 1 || send != 1 || dns != 1
+                || topTransport != "may-have-started-no-response"
+                || adapterTransport != "may-have-started-no-response"
+                || Boolean(observation, "transport_may_have_started") != true
+                || Boolean(observation, "adapter_network_used") != true
+                || Integer(observation, "native_credential_operation_count") != 2
+                || observation.EnumerateObject().Any(property => property.Name is
+                    ("helper_exit_code" or "staged_envelope_bytes" or "staged_envelope_parsed"
+                    or "staged_raw_bytes" or "staged_header_bytes" or "retry_attempted"
+                    or "listener_snapshot_count" or "tcp_non_listener_snapshot_count"
+                    or "containment_probe_executed" or "active_contained_process_count_before_job_close"
+                    or "total_contained_process_count" or "process_tree_survivor_count"
+                    or "process_tree_terminated" or "excluded_handle_accessible")
+                    && property.Value.ValueKind != JsonValueKind.Null))
             || (send is < 0 or > 1) || (dns is < 0 or > 1)
             || (securityFailure && (hasTrace || hasCanary))
             || (!securityFailure && receiptAvailable && (!hasTrace || !hasCanary)))
@@ -2242,6 +2529,43 @@ internal static class M1Slice6SuccessorCampaignRunner
     private static long Required(ProviderQuantityContract quantity, string name) =>
         quantity.Availability == ProviderAvailabilityState.Available && quantity.Value is >= 0
             ? quantity.Value.Value : throw new InvalidDataException("Exact " + name + " is unavailable.");
+
+    private static (string LedgerPath, string EvidencePath, string ProductStateRoot)
+        ValidateRecoveryRoots(M1Slice6SuccessorRuntimeAuthority runtime,
+            M1Slice6SuccessorCampaignAuthority campaign, string credentialPath,
+            string credentialSha, string ledgerPath, string evidencePath,
+            string? recoveryOutputPath = null)
+    {
+        ledgerPath = Path.GetFullPath(ledgerPath);
+        evidencePath = Path.GetFullPath(evidencePath);
+        string productStateRoot = Path.GetFullPath(campaign.ProductStateRoot);
+        recoveryOutputPath = recoveryOutputPath is null
+            ? null : Path.GetFullPath(recoveryOutputPath);
+        if (M1Slice6SuccessorAuthorityLoader.HashFile(credentialPath) != credentialSha
+            || credentialSha != campaign.CredentialManifestSha256
+            || runtime.LedgerPath != ledgerPath || runtime.EvidencePath != evidencePath
+            || runtime.SafetyStateRoot != productStateRoot
+            || !runtime.SafetyStateRoot.Equals(campaign.ProductStateRoot,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidDataException(
+                "Recovery roots or credential binding differ from runtime authority.");
+        }
+        if (!IsContained(runtime.OutputRoot, ledgerPath)
+            || !IsContained(runtime.OutputRoot, evidencePath)
+            || recoveryOutputPath is not null
+                && (!IsContained(runtime.OutputRoot, recoveryOutputPath)
+                    || recoveryOutputPath.Equals(evidencePath, StringComparison.OrdinalIgnoreCase))
+            || IsContained(runtime.OutputRoot, productStateRoot)
+            || IsContained(productStateRoot, runtime.OutputRoot)
+            || runtime.OutputRoot.Equals(productStateRoot, StringComparison.OrdinalIgnoreCase)
+            || runtime.OutputRoot.Contains("infinium-c2a-execution", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidDataException(
+                "Recovery evidence roots are not exact, contained, fresh, and disjoint.");
+        }
+        return (ledgerPath, evidencePath, productStateRoot);
+    }
 
     private static bool IsContained(string root, string path)
     {

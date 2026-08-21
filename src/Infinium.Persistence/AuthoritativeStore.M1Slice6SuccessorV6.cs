@@ -174,14 +174,42 @@ public sealed partial class AuthoritativeStore
             long reserved = ScalarLong("SELECT reserved_nano_usd FROM m1_slice6_successor_v6_operations "
                 + "WHERE operation_id=$operation AND reservation_id=$reservation;", transaction,
                 ("$operation", operationId), ("$reservation", reservationId));
-            Execute(
+            long existingTerminal = ScalarLong(
                 """
-                INSERT INTO m1_slice6_successor_v6_budget_events(
-                  event_id,operation_id,reservation_id,event_kind,reserved_nano_usd,settled_nano_usd,
-                  unresolved_nano_usd,released_nano_usd,occurred_at)
-                VALUES($settlement,$operation,$reservation,'unresolved',0,0,$reserved,0,$now);
+                SELECT COUNT(*) FROM m1_slice6_successor_v6_budget_events
+                WHERE operation_id=$operation
+                  AND event_kind IN ('released-undispatched','settled','unresolved');
+                """, transaction, ("$operation", operationId));
+            if (existingTerminal == 0)
+            {
+                Execute(
+                    """
+                    INSERT INTO m1_slice6_successor_v6_budget_events(
+                      event_id,operation_id,reservation_id,event_kind,reserved_nano_usd,settled_nano_usd,
+                      unresolved_nano_usd,released_nano_usd,occurred_at)
+                    VALUES($settlement,$operation,$reservation,'unresolved',0,0,$reserved,0,$now);
+                    """, transaction, ("$settlement", settlementId), ("$operation", operationId),
+                    ("$reservation", reservationId), ("$reserved", reserved), ("$now", ToText(occurredAt)));
+            }
+            long exactTerminal = ScalarLong(
+                """
+                SELECT COUNT(*) FROM m1_slice6_successor_v6_budget_events
+                WHERE event_id=$settlement AND operation_id=$operation AND reservation_id=$reservation
+                  AND event_kind='unresolved' AND reserved_nano_usd=0 AND settled_nano_usd=0
+                  AND unresolved_nano_usd=$reserved AND released_nano_usd=0;
                 """, transaction, ("$settlement", settlementId), ("$operation", operationId),
-                ("$reservation", reservationId), ("$reserved", reserved), ("$now", ToText(occurredAt)));
+                ("$reservation", reservationId), ("$reserved", reserved));
+            long terminalCount = ScalarLong(
+                """
+                SELECT COUNT(*) FROM m1_slice6_successor_v6_budget_events
+                WHERE operation_id=$operation
+                  AND event_kind IN ('released-undispatched','settled','unresolved');
+                """, transaction, ("$operation", operationId));
+            if (exactTerminal != 1 || terminalCount != 1)
+            {
+                throw new InvalidOperationException(
+                    "Successor-v6 ambiguous recovery conflicts with existing terminal accounting.");
+            }
             transaction.Commit();
             return new("", "", settlementId, "", 0, reserved, false);
         }

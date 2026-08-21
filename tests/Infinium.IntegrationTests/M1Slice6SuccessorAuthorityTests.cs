@@ -3,7 +3,10 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infinium.Application.Evaluation;
+using Infinium.Application.Provider;
 using Infinium.Coordinator;
+using Infinium.Domain.Contracts;
+using Infinium.OpenAI;
 using Infinium.Persistence;
 using Microsoft.Data.Sqlite;
 
@@ -19,6 +22,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
     private static readonly string[] HistoricalEvidenceLimitations =
         ["actual-adapter-send-count-unverified", "credential-read-free-trace-not-independently-retained",
             "exact-containment-predicate-unavailable"];
+    private static readonly string[] RawTargetEncodings = ["utf-8", "utf-16le"];
     [TestMethod]
     public void CheckedInSuccessorAuthorityIsSchemaValidAndBindsTheReviewedSnapshot()
     {
@@ -151,6 +155,255 @@ public sealed class M1Slice6SuccessorAuthorityTests
                 helper, amendment, now.AddMinutes(10), requireEffectAdmission: false);
             Assert.AreEqual(3, runtime.AttemptOrdinal);
             Assert.AreEqual("/root/review/runtime-attempt-v6-test", runtime.ReviewEvidenceId);
+            M1Slice6SuccessorRuntimeAuthority recovered =
+                M1Slice6SuccessorAuthorityLoader.RuntimeForRecovery(runtimePath,
+                    M1Slice6SuccessorAuthorityLoader.HashFile(runtimePath), amendment,
+                    amendment.ExpiresAtUtc.AddDays(1));
+            Assert.AreEqual(runtime.AuthorityId, recovered.AuthorityId);
+            Assert.AreEqual(runtime.CoordinatorSha256, recovered.CoordinatorSha256);
+            Assert.AreEqual(runtime.HelperSha256, recovered.HelperSha256);
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
+    [TestMethod]
+    public void StartedAmbiguousRecoveryClosesExactRetainedAttemptOnceWithZeroEffect()
+    {
+        string repository = RepositoryRoot();
+        string directory = Path.Combine(repository,
+            ".successor-ambiguous-recovery-test-" + Guid.NewGuid().ToString("N"));
+        string source = Path.Combine(directory, "source");
+        string product = Path.Combine(directory, "product-state");
+        string outputRoot = Path.Combine(directory, "campaign");
+        Directory.CreateDirectory(source);
+        using (StoragePaths synthetic = new(product)) { synthetic.Create(); }
+        Directory.CreateDirectory(outputRoot);
+        try
+        {
+            string slice = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6");
+            string checkedAccessPath = Path.Combine(slice,
+                "m1-slice6-successor-credential-access.v2.json");
+            JsonObject access = JsonNode.Parse(File.ReadAllBytes(checkedAccessPath))!.AsObject();
+            string retainedSource = access["retained_product_state"]!["source_root_absolute"]!
+                .GetValue<string>();
+            string retainedProduct = access["retained_product_state"]!["successor_root_absolute"]!
+                .GetValue<string>();
+            JsonObject origin = JsonNode.Parse(File.ReadAllBytes(Path.Combine(retainedProduct,
+                "successor-snapshot-origin.v1.json")))!.AsObject();
+            foreach (JsonNode? item in origin["files"]!.AsArray())
+            {
+                string relative = item!["path"]!.GetValue<string>()
+                    .Replace('/', Path.DirectorySeparatorChar);
+                string sourceFile = Path.Combine(retainedSource, relative);
+                string copiedSource = Path.Combine(source, relative);
+                string copiedProduct = Path.Combine(product, relative);
+                Directory.CreateDirectory(Path.GetDirectoryName(copiedSource)!);
+                Directory.CreateDirectory(Path.GetDirectoryName(copiedProduct)!);
+                File.Copy(sourceFile, copiedSource);
+                File.Copy(sourceFile, copiedProduct);
+            }
+            origin["source_root"] = source;
+            origin["destination_root"] = product;
+            string originPath = Path.Combine(product, "successor-snapshot-origin.v1.json");
+            File.WriteAllText(originPath, origin.ToJsonString(IndentedJson));
+            access["retained_product_state"]!["source_root_absolute"] = source;
+            access["retained_product_state"]!["successor_root_absolute"] = product;
+            access["retained_product_state"]!["snapshot_origin_sha256"] =
+                M1Slice6SuccessorAuthorityLoader.HashFile(originPath);
+            string accessPath = Path.Combine(directory, "access.json");
+            File.WriteAllText(accessPath, access.ToJsonString(IndentedJson));
+            string accessSha = M1Slice6SuccessorAuthorityLoader.HashFile(accessPath);
+
+            JsonObject campaignNode = JsonNode.Parse(File.ReadAllBytes(Path.Combine(slice,
+                "m1-slice6-successor-campaign-authorization.v6.json")))!.AsObject();
+            campaignNode["credential_inheritance"]!["access_authority_path"] =
+                Path.GetRelativePath(repository, accessPath).Replace('\\', '/');
+            campaignNode["credential_inheritance"]!["access_authority_sha256"] = accessSha;
+            string campaignPath = Path.Combine(directory, "campaign.json");
+            File.WriteAllText(campaignPath, campaignNode.ToJsonString(IndentedJson));
+            string campaignSha = M1Slice6SuccessorAuthorityLoader.HashFile(campaignPath);
+            M1Slice6SuccessorCampaignAuthority campaign =
+                M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+            string amendmentPath = Path.Combine(slice,
+                "m1-slice6-development-campaign-amendment.v2.json");
+            string amendmentSha = M1Slice6SuccessorAuthorityLoader.HashFile(amendmentPath);
+            M1Slice6HardBudgetAuthority amendment =
+                M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(
+                    amendmentPath, amendmentSha, campaign);
+            DateTimeOffset now = new(2026, 8, 21, 18, 0, 0, TimeSpan.Zero);
+            M1Slice6SuccessorCampaignLedger predecessor = new(amendment.PredecessorLedgerPath,
+                "infinium.m1-s6.successor-campaign/a4f66e58-6456-4c90-a6e2-20260820c2b1",
+                "ff0a8a1cd499f5639c85fa7d43737643dc4b3494643d150b72d2772fc2fc18ef",
+                campaign.TerminalCampaignId, campaign.TerminalEventHash, now);
+            string ledgerPath = Path.Combine(outputRoot, "ledger.v3.jsonl");
+            M1Slice6SuccessorCampaignLedgerV3 ledger = new(ledgerPath, campaign.CampaignId,
+                campaign.ManifestSha256, campaign.TerminalCampaignId, campaign.TerminalEventHash, 8,
+                amendment.PredecessorEventHash, amendment.AmendmentId, amendment.ManifestSha256,
+                "synthetic-amendment-review", new string('a', 64),
+                predecessor.Current.Wp9PossibleStarts, predecessor.Current.Wp10PossibleStarts,
+                predecessor.Current.Wp11PossibleStarts, predecessor.Current.Wp9Authoritative,
+                predecessor.Current.Wp10Authoritative, predecessor.Current.Wp11Authoritative,
+                predecessor.Current.SuccessorCumulativeReservedNanoUsd,
+                predecessor.Current.SuccessorUnresolvedNanoUsd,
+                predecessor.Current.SuccessorSettledNanoUsd, now);
+            string coordinator = Path.Combine(repository, "src", "Infinium.Coordinator", "bin",
+                "Debug", "net10.0", "Infinium.Coordinator.exe");
+            string helper = Path.Combine(repository, "src", "Infinium.CredentialHelper", "bin",
+                "Debug", "net10.0", "Infinium.CredentialHelper.exe");
+            string implementationCommit = typeof(M1Slice6SuccessorCampaignRunner).Assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion
+                .Split('+')[^1];
+            string attemptDirectory = Path.Combine(outputRoot, "attempt");
+            M1Slice6SuccessorAttemptMaterializer.Materialize(campaignPath, campaignSha,
+                amendmentPath, amendmentSha, ledgerPath, "Qualification", 3, attemptDirectory,
+                implementationCommit, coordinator, helper, now.AddTicks(1));
+            string stagePath = Path.Combine(attemptDirectory, "stage-attempt.v6.json");
+            string stageSha = M1Slice6SuccessorAuthorityLoader.HashFile(stagePath);
+            string candidatePath = Path.Combine(attemptDirectory, "runtime-candidate.v2.json");
+            JsonNode candidate = JsonNode.Parse(File.ReadAllBytes(candidatePath))!;
+            string candidateId = candidate["candidate_id"]!.GetValue<string>();
+            string candidateSha = M1Slice6SuccessorAuthorityLoader.HashFile(candidatePath);
+            string reviewPath = Path.Combine(attemptDirectory, "runtime-review.v3.json");
+            File.WriteAllBytes(reviewPath, JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                schema_identity = M1Slice6SuccessorAuthorityLoader.IndependentReviewSchemaV3,
+                review_id = "/root/review/synthetic-ambiguous-recovery",
+                review_kind = "runtime-attempt",
+                verdict = "accept",
+                reviewer_id = "/root/successor-design-review",
+                independent = true,
+                provider_effect_used = false,
+                subject = new { id = candidateId, sha256 = candidateSha },
+                correction = new
+                {
+                    required = false,
+                    defect_id = (string?)null,
+                    diagnosis_disposition = (string?)null,
+                    failure_evidence_id = (string?)null,
+                    failure_evidence_sha256 = (string?)null,
+                    candidate_commit = (string?)null,
+                },
+                findings = Array.Empty<string>(),
+                reviewed_at_utc = "2026-08-21T18:00:00.0000000+00:00",
+            }));
+            string runtimePath = Path.Combine(attemptDirectory, "runtime-authority.v3.json");
+            M1Slice6SuccessorAttemptMaterializer.FinalizeRuntime(campaignPath, campaignSha,
+                amendmentPath, amendmentSha, stagePath, candidatePath, reviewPath, runtimePath,
+                now.AddTicks(2), now.AddMinutes(5));
+            string runtimeSha = M1Slice6SuccessorAuthorityLoader.HashFile(runtimePath);
+            M1Slice6SuccessorRuntimeAuthority runtime =
+                M1Slice6SuccessorAuthorityLoader.RuntimeForRecovery(
+                    runtimePath, runtimeSha, amendment, now.AddMinutes(6));
+            (M1Slice6CampaignStageAuthority authority, M1Slice6SuccessorAttemptIdentity attempt) =
+                M1Slice6SuccessorAuthorityLoader.Stage(stagePath, stageSha, campaign, amendment, runtime);
+            string credentialPath = Path.Combine(slice, "wp9-production-profile-authorization.v4.json");
+            string credentialSha = M1Slice6SuccessorAuthorityLoader.HashFile(credentialPath);
+            using (M1Slice6CampaignSqliteProviderAccounting accounting = new(
+                product, credentialPath, credentialSha, now))
+            {
+                M1Slice6CampaignIdentity identity = new(campaign.CampaignId, campaign.ManifestSha256,
+                    campaign.ManifestSha256, new string('0', 40), campaign.CredentialManifestId,
+                    campaign.CredentialManifestSha256, campaign.CredentialProfileId,
+                    campaign.CredentialGenerationId, campaign.CredentialTargetFingerprintSha256);
+                M1Slice6CampaignAccountingAdmission admission = accounting.PrepareSuccessorV6(
+                    authority, identity, attempt, now.AddTicks(3));
+                ledger.ReserveAttempt(attempt, admission.ReservedNanoUsd, now.AddTicks(4));
+                ledger.LatchPossibleStart(attempt, now.AddTicks(5));
+                accounting.RecordPossibleStart(admission, now.AddTicks(6));
+            }
+            string evidencePath = Path.Combine(attemptDirectory, "attempt-evidence.v3.json");
+            string stem = Path.GetFileNameWithoutExtension(evidencePath);
+            File.WriteAllBytes(Path.Combine(attemptDirectory, stem + ".canonical-request.json"),
+                authority.CanonicalRequest);
+            File.WriteAllBytes(Path.Combine(attemptDirectory, stem + ".response-headers.json"),
+                AmbiguousResponseHeaders());
+            File.WriteAllBytes(Path.Combine(attemptDirectory, stem + ".native-trace.json"),
+                SyntheticTrace(campaign.CredentialTargetFingerprintSha256));
+            File.WriteAllBytes(Path.Combine(attemptDirectory, stem + ".canaries.json"),
+                SyntheticCanaries());
+            File.WriteAllBytes(Path.Combine(attemptDirectory, stem + ".preflight.json"),
+                JsonSerializer.SerializeToUtf8Bytes(new
+                {
+                    schema = "infinium.m1-s6.successor-evidence-preflight/v1",
+                    attempt_id = attempt.AttemptId,
+                    stage_manifest_sha256 = authority.ManifestSha256,
+                    runtime_authority_sha256 = runtime.ManifestSha256,
+                    disposition = "fresh-paths-created-before-possible-start",
+                }));
+
+            string copiedLedger = Path.Combine(outputRoot, "copied-ledger.v3.jsonl");
+            File.Copy(ledgerPath, copiedLedger);
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorCampaignRunner.RecoverStartedAmbiguousAttempt(
+                    campaignPath, campaignSha, amendmentPath, amendmentSha, stagePath, stageSha,
+                    credentialPath, credentialSha, runtimePath, runtimeSha, copiedLedger,
+                    evidencePath, now.AddMinutes(6)));
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorCampaignRunner.RecoverStartedAmbiguousAttempt(
+                    campaignPath, campaignSha, amendmentPath, amendmentSha, stagePath, stageSha,
+                    credentialPath, new string('0', 64), runtimePath, runtimeSha, ledgerPath,
+                    evidencePath, now.AddMinutes(6)));
+            string wrongEvidence = Path.Combine(outputRoot, "wrong-evidence.json");
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorCampaignRunner.RecoverStartedAmbiguousAttempt(
+                    campaignPath, campaignSha, amendmentPath, amendmentSha, stagePath, stageSha,
+                    credentialPath, credentialSha, runtimePath, runtimeSha, ledgerPath,
+                    wrongEvidence, now.AddMinutes(6)));
+            string rawPath = Path.Combine(attemptDirectory, stem + ".raw-response.bin");
+            File.WriteAllText(rawPath, "must-not-exist");
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorCampaignRunner.RecoverStartedAmbiguousAttempt(
+                    campaignPath, campaignSha, amendmentPath, amendmentSha, stagePath, stageSha,
+                    credentialPath, credentialSha, runtimePath, runtimeSha, ledgerPath,
+                    evidencePath, now.AddMinutes(6)));
+            File.Delete(rawPath);
+            string headersPath = Path.Combine(attemptDirectory, stem + ".response-headers.json");
+            byte[] exactHeaders = File.ReadAllBytes(headersPath);
+            File.WriteAllText(headersPath, "{}");
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorCampaignRunner.RecoverStartedAmbiguousAttempt(
+                    campaignPath, campaignSha, amendmentPath, amendmentSha, stagePath, stageSha,
+                    credentialPath, credentialSha, runtimePath, runtimeSha, ledgerPath,
+                    evidencePath, now.AddMinutes(6)));
+            File.WriteAllBytes(headersPath, exactHeaders);
+
+            M1Slice6SuccessorCampaignRunner.RecoverStartedAmbiguousAttempt(
+                campaignPath, campaignSha, amendmentPath, amendmentSha, stagePath, stageSha,
+                credentialPath, credentialSha, runtimePath, runtimeSha, ledgerPath,
+                evidencePath, now.AddMinutes(6));
+            M1Slice6SuccessorCampaignRunner.RecoverStartedAmbiguousAttempt(
+                campaignPath, campaignSha, amendmentPath, amendmentSha, stagePath, stageSha,
+                credentialPath, credentialSha, runtimePath, runtimeSha, ledgerPath,
+                evidencePath, now.AddMinutes(7));
+            M1Slice6SuccessorCampaignLedgerV3 recoveredLedger =
+                M1Slice6SuccessorCampaignRunner.OpenHardBudgetLedger(
+                    campaign, amendment, ledgerPath, now.AddMinutes(8), requireExisting: true);
+            Assert.AreEqual(M1Slice6SuccessorCampaignV3State.AttemptEvidenceHandoff,
+                recoveredLedger.Current.State);
+            Assert.AreEqual("transport-ambiguous", recoveredLedger.Current.FailureDisposition);
+            Assert.AreEqual(0, recoveredLedger.Current.SuccessorOutstandingReservedNanoUsd);
+            Assert.AreEqual(authority.Limits.MaximumNanoUsd,
+                recoveredLedger.Current.SuccessorUnresolvedNanoUsd
+                    - predecessor.Current.SuccessorUnresolvedNanoUsd);
+            string operationId = "m1s6-successor-v6-" + attempt.AttemptId + "-transport-operation";
+            using (AuthoritativeStore store = new(new StoragePaths(product)))
+            {
+                ProviderOperationReadModel operation = store.ReadProviderOperation(operationId);
+                Assert.AreEqual(ProviderOperationState.UnresolvedHold, operation.State);
+                Assert.IsNull(operation.RawResponseBytes);
+            }
+            using (JsonDocument evidence = JsonDocument.Parse(File.ReadAllBytes(evidencePath)))
+            {
+                JsonElement root = evidence.RootElement;
+                Assert.IsFalse(root.GetProperty("retry_permitted").GetBoolean());
+                Assert.AreEqual(1, root.GetProperty("provider_send_count").GetInt32());
+                JsonElement observation = root.GetProperty("helper_boundary_observation");
+                Assert.IsFalse(observation.GetProperty("receipt_available").GetBoolean());
+                Assert.AreEqual(JsonValueKind.Null,
+                    observation.GetProperty("containment_probe_executed").ValueKind);
+                Assert.AreEqual(JsonValueKind.Null,
+                    observation.GetProperty("process_tree_terminated").ValueKind);
+            }
         }
         finally { Directory.Delete(directory, recursive: true); }
     }
@@ -625,6 +878,98 @@ public sealed class M1Slice6SuccessorAuthorityTests
         }
         finally { Directory.Delete(root, recursive: true); }
     }
+
+    private static byte[] AmbiguousResponseHeaders()
+    {
+        object unavailable = new { Availability = 2, Value = (long?)null };
+        return JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            schema = "infinium.openai.response-headers/v2",
+            state = (int)ProviderResponseState.Unknown,
+            failure_stage = "provider-transport",
+            transport_disposition = "may-have-started-no-response",
+            http_status = (int?)null,
+            response_bytes_existed = false,
+            response_bytes_observed_lower_bound = 0,
+            retained_response_bytes = 0,
+            provider_response_id = (string?)null,
+            provider_request_id = (string?)null,
+            returned_model = (string?)null,
+            returned_service_tier = (string?)null,
+            refusal_code = (string?)null,
+            incomplete_reason = (string?)null,
+            provider_error_type = (string?)null,
+            provider_error_code = (string?)null,
+            local_failure_code = "transport_ambiguous",
+            requested_output_schema = (string?)null,
+            usage = new
+            {
+                Availability = 2,
+                DispatchCount = unavailable,
+                InputTokens = unavailable,
+                OutputTokens = unavailable,
+                TotalTokens = unavailable,
+                ReasoningTokens = unavailable,
+                CacheReadTokens = unavailable,
+                CacheWriteTokens = unavailable,
+                PricedToolCalls = unavailable,
+                CalculatedNanoUsd = unavailable,
+                BillingAvailability = 2,
+                RateAvailability = 2,
+                CreditAvailability = 2,
+                ReceiptState = 5,
+            },
+            dns_resolution_count = 1,
+            network_used = true,
+            send_count = 1,
+            headers = Array.Empty<object>(),
+        });
+    }
+
+    private static byte[] SyntheticTrace(string targetFingerprint) =>
+        JsonSerializer.SerializeToUtf8Bytes(new object[]
+        {
+            new
+            {
+                Sequence = 1,
+                Operation = "CredReadW",
+                TargetFingerprintSha256 = targetFingerprint,
+                Scenario = "m1-s6-campaign-provider-dispatch",
+                Result = "success",
+                AllocationId = (long?)1,
+                PairedAllocationId = (long?)null,
+            },
+            new
+            {
+                Sequence = 2,
+                Operation = "CredFree",
+                TargetFingerprintSha256 = targetFingerprint,
+                Scenario = "m1-s6-campaign-provider-dispatch",
+                Result = "released",
+                AllocationId = (long?)null,
+                PairedAllocationId = (long?)1,
+            },
+        });
+
+    private static byte[] SyntheticCanaries() => JsonSerializer.SerializeToUtf8Bytes(new
+    {
+        SecretMatches = 0,
+        RawTargetMatches = 0,
+        RawTargetEncodings,
+        ScannedSurfaces = new[]
+        {
+            new { Name = "private protocol request", Kind = "private-pipe-bytes", ByteCount = 10,
+                SecretMatches = 0, RawTargetMatches = 0 },
+            new { Name = "private protocol response", Kind = "private-pipe-bytes", ByteCount = 10,
+                SecretMatches = 0, RawTargetMatches = 0 },
+            new { Name = "native call trace", Kind = "canonical-trace-bytes", ByteCount = 10,
+                SecretMatches = 0, RawTargetMatches = 0 },
+            new { Name = "process command line", Kind = "captured-text", ByteCount = 10,
+                SecretMatches = 0, RawTargetMatches = 0 },
+            new { Name = "process environment names", Kind = "captured-text", ByteCount = 10,
+                SecretMatches = 0, RawTargetMatches = 0 },
+        },
+    });
 
     private static string RepositoryRoot()
     {

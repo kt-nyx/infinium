@@ -472,6 +472,43 @@ if (args is ["--m1-slice6-successor-authoritative-recovery",
     }
 }
 
+if (args is ["--m1-slice6-successor-started-ambiguous-recovery",
+    "--campaign-manifest", string successorStartedRecoveryCampaign,
+    "--campaign-manifest-sha256", string successorStartedRecoveryCampaignSha,
+    "--hard-budget-amendment", string successorStartedRecoveryAmendment,
+    "--hard-budget-amendment-sha256", string successorStartedRecoveryAmendmentSha,
+    "--stage-manifest", string successorStartedRecoveryStage,
+    "--stage-manifest-sha256", string successorStartedRecoveryStageSha,
+    "--credential-manifest", string successorStartedRecoveryCredential,
+    "--credential-manifest-sha256", string successorStartedRecoveryCredentialSha,
+    "--runtime-authority", string successorStartedRecoveryRuntime,
+    "--runtime-authority-sha256", string successorStartedRecoveryRuntimeSha,
+    "--ledger", string successorStartedRecoveryLedger,
+    "--evidence", string successorStartedRecoveryEvidence])
+{
+    try
+    {
+        M1Slice6SuccessorCampaignRunner.RecoverStartedAmbiguousAttempt(
+            successorStartedRecoveryCampaign, successorStartedRecoveryCampaignSha,
+            successorStartedRecoveryAmendment, successorStartedRecoveryAmendmentSha,
+            successorStartedRecoveryStage, successorStartedRecoveryStageSha,
+            successorStartedRecoveryCredential, successorStartedRecoveryCredentialSha,
+            successorStartedRecoveryRuntime, successorStartedRecoveryRuntimeSha,
+            successorStartedRecoveryLedger, successorStartedRecoveryEvidence,
+            DateTimeOffset.UtcNow);
+        Console.WriteLine(
+            "M1 Slice 6 successor ambiguous start recovered with zero provider effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is InvalidDataException or InvalidOperationException
+        or IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+    {
+        Console.Error.WriteLine(
+            $"M1 Slice 6 successor ambiguous-start recovery stopped: {exception.GetType().Name}");
+        return 84;
+    }
+}
+
 if (args is ["--m1-slice6-successor-correction-review-acceptance",
     "--campaign-manifest", string successorCorrectionCampaign,
     "--campaign-manifest-sha256", string successorCorrectionCampaignSha,

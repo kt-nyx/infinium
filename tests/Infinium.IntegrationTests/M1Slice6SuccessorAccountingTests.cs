@@ -117,6 +117,102 @@ public sealed class M1Slice6SuccessorAccountingTests
     }
 
     [TestMethod]
+    public void SuccessorV6TransportAmbiguityRetainsTheExactUnresolvedHoldWithoutHistoricalSettlementLookup()
+    {
+        string root = Path.Combine(Path.GetTempPath(),
+            "infinium-successor-v6-ambiguous-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            string repository = RepositoryRoot();
+            string credential = Path.Combine(repository, "docs", "plans", "milestones", "m1",
+                "slices", "s6", "wp9-production-profile-authorization.v4.json");
+            string credentialSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(credential)));
+            using JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(credential));
+            JsonElement profile = manifest.RootElement.GetProperty("profile");
+            JsonElement intent = manifest.RootElement.GetProperty("provider_intent");
+            EnsureVerifiedCredential(root, profile.GetProperty("access_profile_id").GetString()!,
+                profile.GetProperty("generation_id").GetString()!,
+                intent.GetProperty("account_identity_id").GetString()!,
+                intent.GetProperty("billing_scope_identity_id").GetString()!);
+            byte[] canonical = ProviderAdapterTestData.CanonicalRequest();
+            M1Slice6CampaignStageAuthority authority = Authority(canonical) with
+            {
+                ContractVersion = M1Slice6AuthorityContractVersion.SuccessorV6,
+                Limits = new(16_384, 20_480, 256, 262_144, 110_080_000, 120_000),
+            };
+            M1Slice6CampaignIdentity campaign = new("successor-v6-ambiguous-test", new string('1', 64),
+                new string('2', 64), new string('3', 40),
+                manifest.RootElement.GetProperty("manifest_id").GetString()!, credentialSha,
+                profile.GetProperty("access_profile_id").GetString()!,
+                profile.GetProperty("generation_id").GetString()!,
+                profile.GetProperty("target_fingerprint_sha256").GetString()!);
+            M1Slice6SuccessorAttemptIdentity attempt = Attempt(3) with
+            {
+                AttemptId = "successor-v6-ambiguous-attempt",
+                RequestId = "successor-v6-ambiguous-request",
+                ReservationId = "successor-v6-ambiguous-reservation",
+                DispatchFenceId = "successor-v6-ambiguous-fence",
+            };
+            using M1Slice6CampaignSqliteProviderAccounting accounting =
+                new(root, credential, credentialSha, Start);
+            M1Slice6CampaignAccountingAdmission admission = accounting.PrepareSuccessorV6(
+                authority, campaign, attempt, Start.AddSeconds(1));
+            accounting.RecordPossibleStart(admission, Start.AddSeconds(2));
+            ProviderQuantityContract unavailable = new(ProviderAvailabilityState.Unavailable, null);
+            ProviderUsageContract unavailableUsage = new(ProviderAvailabilityState.Unavailable,
+                unavailable, unavailable, unavailable, unavailable, unavailable, unavailable,
+                unavailable, unavailable, unavailable, ProviderAvailabilityState.Unavailable,
+                ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable,
+                UsageReceiptState.Ambiguous);
+            OpenAiResponsesResult ambiguous = new(ProviderResponseState.Unknown,
+                TransportMayHaveStarted: true, RetryPermitted: false, HttpStatus: null,
+                RawResponseBytes: null, ProviderResponseId: null, ClientRequestId: admission.RequestId,
+                ProviderRequestId: null, ReturnedModel: null, ReturnedServiceTier: null,
+                RefusalCode: null, IncompleteReason: null, ErrorCode: "transport_ambiguous",
+                unavailableUsage, [],
+                Admitted: false, AdmissionReason: "transport_ambiguous", NetworkUsed: true,
+                SendCount: 1)
+            {
+                DnsResolutionCount = 1,
+            };
+            M1Slice6SuccessorAccountingPersistence retained = accounting.PersistSuccessorAttempt(
+                admission, authority, Boundary(ambiguous, authority, "{}"u8.ToArray(),
+                    Start.AddSeconds(3)), structurallyValid: false);
+            Assert.AreEqual(admission.ReservedNanoUsd, retained.UnresolvedNanoUsd);
+            Assert.AreEqual(0, retained.SettledNanoUsd);
+            Assert.IsFalse(retained.RetryPermitted);
+            M1Slice6SuccessorAccountingPersistence recovered =
+                accounting.RecoverSuccessorV6AmbiguousStart(admission.OperationId,
+                    admission.AuthorizationId, admission.AttemptId, admission.RequestId,
+                    admission.ReservationId, admission.DispatchFenceId, Start.AddSeconds(4));
+            Assert.AreEqual(admission.ReservedNanoUsd, recovered.UnresolvedNanoUsd);
+            Assert.AreEqual(0, recovered.SettledNanoUsd);
+            Assert.AreEqual("post-effect-settlement-recovered", recovered.SemanticFailureCode);
+            using AuthoritativeStore store = new(new StoragePaths(root));
+            ProviderOperationReadModel operation = store.ReadProviderOperation(admission.OperationId);
+            Assert.AreEqual(ProviderOperationState.UnresolvedHold, operation.State);
+            Assert.AreEqual(admission.ReservedNanoUsd, operation.ReservedNanoUsd);
+            using SqliteConnection connection = new(
+                $"Data Source={Path.Combine(root, "data", "infinium.sqlite3")};Mode=ReadOnly;Pooling=False");
+            connection.Open();
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText = "SELECT COUNT(*) FROM provider_settlements WHERE reservation_id=$reservation;";
+            command.Parameters.AddWithValue("$reservation", admission.ReservationId);
+            Assert.AreEqual(0L, (long)command.ExecuteScalar()!);
+            command.CommandText = "SELECT COUNT(*) FROM m1_slice6_successor_v6_budget_events "
+                + "WHERE operation_id=$operation AND event_kind='unresolved' AND unresolved_nano_usd=$reserved;";
+            command.Parameters.Clear();
+            command.Parameters.AddWithValue("$operation", admission.OperationId);
+            command.Parameters.AddWithValue("$reserved", admission.ReservedNanoUsd);
+            Assert.AreEqual(1L, (long)command.ExecuteScalar()!);
+        }
+        finally
+        {
+            if (Directory.Exists(root)) { Directory.Delete(root, recursive: true); }
+        }
+    }
+
+    [TestMethod]
     public void SuccessorV6StoreAllowsMoreThanFiveSequentialStartsReusesPrestartReleaseAndHoldsRejectedOverAuthorityUsage()
     {
         string root = Path.Combine(Path.GetTempPath(), "infinium-successor-v6-state-machine-" + Guid.NewGuid().ToString("N"));

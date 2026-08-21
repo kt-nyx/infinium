@@ -471,6 +471,15 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         string settlementId = identity + "-settlement";
         if (response.State == ProviderResponseState.Unknown && response.RawResponseBytes is null)
         {
+            if (admission.OperationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal))
+            {
+                M1Slice6SuccessorV6PersistenceReceipt v6Ambiguous =
+                    store.RetainM1Slice6SuccessorV6Ambiguous(admission.OperationId,
+                        admission.ReservationId, settlementId, result.CompletedAtUtc);
+                reservations.Remove(admission.ReservationId);
+                return new("", "", v6Ambiguous.SettlementId, "", 0,
+                    v6Ambiguous.UnresolvedNanoUsd, false, false, null, "");
+            }
             ProviderBudgetSettlementReceipt ambiguous = accounting.Settle(new(settlementId,
                 admission.ReservationId, ProviderBudgetEventKind.RetainedAmbiguous,
                 null, null, result.CompletedAtUtc));
@@ -694,6 +703,29 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         { throw new InvalidDataException("Ambiguous successor start was not retained as a full no-retry hold."); }
         return new("", "", settlementId, "", 0, retained.Unresolved.NanoUsd,
             false, false, null, "");
+    }
+
+    internal M1Slice6SuccessorAccountingPersistence RecoverSuccessorV6AmbiguousStart(
+        string operationId, string authorizationId, string attemptId, string requestId,
+        string reservationId, string dispatchFenceId, DateTimeOffset now)
+    {
+        if (!operationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal))
+        { throw new InvalidDataException("Started-failure recovery requires a successor-v6 operation."); }
+        M1Slice6SuccessorV6ReservationReadModel reservation =
+            store.ReadM1Slice6SuccessorV6Reservation(operationId, authorizationId, attemptId,
+                requestId, reservationId, dispatchFenceId);
+        string settlementId = "m1s6-successor-" + attemptId + "-settlement";
+        M1Slice6SuccessorV6PersistenceReceipt retained =
+            store.RetainM1Slice6SuccessorV6Ambiguous(operationId, reservationId, settlementId, now);
+        if (retained.SettledNanoUsd != 0
+            || retained.UnresolvedNanoUsd != reservation.ReservedNanoUsd
+            || retained.ResponsePersisted)
+        {
+            throw new InvalidDataException(
+                "Started-failure recovery did not retain the exact successor-v6 reservation.");
+        }
+        return new("", "", retained.SettlementId, "", 0, retained.UnresolvedNanoUsd,
+            false, false, null, "post-effect-settlement-recovered");
     }
 
     internal M1Slice6SuccessorAccountingPersistence ConvergeSuccessorPersistenceFailure(
