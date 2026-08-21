@@ -21,6 +21,8 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         "infinium.m1-s6.successor-credential-replacement-evidence/v1";
     internal const string FailureEvidenceSchema =
         "infinium.m1-s6.successor-credential-replacement-failure-evidence/v1";
+    internal const string RecoveryAmendmentSchema =
+        "infinium.repository.m1-slice6-development-campaign-amendment/4.0.0";
 
     private static readonly JsonSerializerOptions Json = new()
     {
@@ -139,18 +141,86 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         string ownerPath = Path.GetFullPath(Path.Combine(repository,
             owner.GetProperty("path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
         byte[] ownerBytes = ExactBytes(ownerPath, owner.GetProperty("sha256").GetString()!);
-        ActiveRepositoryJsonSchemaValidator.Validate(ownerBytes,
-            File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
-                "m1-slice6-development-campaign-amendment.v3.schema.json")),
-            "infinium.repository.m1-slice6-development-campaign-amendment/3.0.0");
+        bool recovery;
         using (JsonDocument ownerDocument = JsonDocument.Parse(ownerBytes))
         {
+            string ownerSchema = ownerDocument.RootElement.GetProperty("schema_identity").GetString()!;
+            recovery = ownerSchema == RecoveryAmendmentSchema;
+            string ownerSchemaFile = recovery
+                ? "m1-slice6-development-campaign-amendment.v4.schema.json"
+                : "m1-slice6-development-campaign-amendment.v3.schema.json";
+            ActiveRepositoryJsonSchemaValidator.Validate(ownerBytes,
+                File.ReadAllBytes(Path.Combine(repository, "contracts", "repository", ownerSchemaFile)),
+                recovery ? RecoveryAmendmentSchema
+                    : "infinium.repository.m1-slice6-development-campaign-amendment/3.0.0");
             if (ownerDocument.RootElement.GetProperty("amendment_id").GetString()
                     != owner.GetProperty("id").GetString()
                 || ownerDocument.RootElement.GetProperty("status").GetString()
-                    != "owner-authorized-credential-replacement")
+                    != (recovery ? "owner-authorized-credential-replacement-recovery"
+                        : "owner-authorized-credential-replacement"))
             {
                 throw new InvalidDataException("The exact owner credential-replacement amendment is stale.");
+            }
+            if (recovery)
+            {
+                JsonElement priorOwner = ownerDocument.RootElement.GetProperty("prior_owner_authority");
+                JsonElement failure = ownerDocument.RootElement.GetProperty("retained_failure");
+                JsonElement recoveryNode = ownerDocument.RootElement.GetProperty("recovery");
+                string priorOwnerPath = Path.GetFullPath(Path.Combine(repository,
+                    priorOwner.GetProperty("path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
+                string exactPriorOwnerPath = Path.GetFullPath(Path.Combine(repository, "docs", "plans", "milestones",
+                    "m1", "slices", "s6", "m1-slice6-development-campaign-amendment.v3.json"));
+                byte[] priorOwnerBytes = ExactBytes(priorOwnerPath, priorOwner.GetProperty("sha256").GetString()!);
+                ActiveRepositoryJsonSchemaValidator.Validate(priorOwnerBytes,
+                    File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                        "m1-slice6-development-campaign-amendment.v3.schema.json")),
+                    "infinium.repository.m1-slice6-development-campaign-amendment/3.0.0");
+                string failurePath = Path.GetFullPath(Path.Combine(repository,
+                    failure.GetProperty("path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
+                string exactFailurePath = Path.GetFullPath(Path.Combine(repository, "artifacts", "m1-slice6",
+                    "successor-credential-replacement", "c2cf7e8c-dd55-4791-9eb1-f1e557f80124",
+                    "replacement-evidence.v1.json"));
+                byte[] failureBytes = ExactBytes(failurePath, failure.GetProperty("sha256").GetString()!);
+                ActiveRepositoryJsonSchemaValidator.Validate(failureBytes,
+                    File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                        "m1-slice6-successor-credential-replacement-failure-evidence.v1.schema.json")),
+                    FailureEvidenceSchema);
+                using JsonDocument failureDocument = JsonDocument.Parse(failureBytes);
+                JsonElement retainedAuthority = failureDocument.RootElement.GetProperty("authority");
+                JsonElement retainedReview = failureDocument.RootElement.GetProperty("independent_review");
+                JsonElement retainedState = failureDocument.RootElement.GetProperty("product_state");
+                if (priorOwnerPath != exactPriorOwnerPath
+                    || failurePath != exactFailurePath
+                    || priorOwner.GetProperty("id").GetString()
+                        != "infinium.m1-s6.credential-replacement/20260821-owner-fresh-key"
+                    || priorOwner.GetProperty("sha256").GetString()
+                        != "088b5f2ae8198aa6bbec775fc25e1e1705b65d3f445e66b1e5d1427dd1660b47"
+                    || recoveryNode.GetProperty("successor_generation_id").GetString() != successorGeneration
+                    || failureDocument.RootElement.GetProperty("operation_id").GetString()
+                        != "m1s6-credential-replacement-89e103f783b0f67f2bf5ee9e273c796c"
+                    || failureDocument.RootElement.GetProperty("evidence_id").GetString()
+                        != failure.GetProperty("id").GetString()
+                    || retainedAuthority.GetProperty("id").GetString()
+                        != "infinium.m1-s6.successor-credential-replacement/c2cf7e8c-dd55-4791-9eb1-f1e557f80124"
+                    || retainedAuthority.GetProperty("sha256").GetString()
+                        != "89e103f783b0f67f2bf5ee9e273c796c26474c4e2ed48dc1a73139da5b6bdad8"
+                    || retainedReview.GetProperty("id").GetString()
+                        != "infinium.m1-s6.successor-credential-replacement-review/8aad193f-c124-40ef-9f72-77e7f84c9788"
+                    || retainedReview.GetProperty("sha256").GetString()
+                        != "0e02ca9e9dc12f88035b51f0f0db8dfbe46ed63f9d81a978740c6b72bd6da0ba"
+                    || retainedState.GetProperty("checkpoint_sha256").GetString()
+                        != "7509d3d36d0512a7cbfdd704791cffcf625ce67e239388c47583daf8a2a5fecb"
+                    || retainedState.GetProperty("profile_id").GetString()
+                        != "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e"
+                    || retainedState.GetProperty("generation_id").GetString()
+                        != "g-ff6d82e7a7d244f6b8a9d0164991be37"
+                    || retainedState.GetProperty("generation_ordinal").GetInt64() != 1
+                    || retainedState.GetProperty("lifecycle_state").GetString() != "replacing"
+                    || failureDocument.RootElement.GetProperty("typed_failure").GetString()
+                        != "KeyNotFoundException")
+                {
+                    throw new InvalidDataException("The exact retained pre-native replacement failure is stale.");
+                }
             }
         }
         string expectedProductRoot = Path.GetFullPath(state.GetProperty("root_absolute").GetString()!);
@@ -227,15 +297,21 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         using (AuthoritativeStore store = new(new StoragePaths(productStateRoot)))
         {
             CredentialProfileProjection current = store.GetCredentialProfile(profileId);
-            if (current.GenerationId != predecessorGeneration || current.GenerationOrdinal != 1
-                || current.LifecycleState != "active-verified" || current.VerificationState != "available")
+            bool exactInitial = !recovery
+                && current.GenerationId == predecessorGeneration && current.GenerationOrdinal == 1
+                && current.LifecycleState == "active-verified" && current.VerificationState == "available";
+            bool exactRecovery = recovery
+                && current.GenerationId == predecessorGeneration && current.GenerationOrdinal == 1
+                && current.LifecycleState == "replacing" && current.VerificationState == "unavailable";
+            if (!exactInitial && !exactRecovery)
             {
                 throw new InvalidDataException("The replacement predecessor is not the exact active verified generation.");
             }
             if (profileId != "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e"
                 || predecessorGeneration != "g-ff6d82e7a7d244f6b8a9d0164991be37"
                 || predecessorFingerprint != "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0"
-                || store.CredentialGenerationExists(profileId, successorGeneration))
+                || store.CredentialGenerationExists(profileId, successorGeneration) != recovery
+                || recovery && store.CredentialGenerationOrdinal(profileId, successorGeneration) != 2)
             {
                 throw new InvalidDataException("The credential replacement identity is stale or the successor is not fresh.");
             }
@@ -243,8 +319,10 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                 repository, authorityId, authoritySha256, evidenceId, operationId,
                 review.GetProperty("review_id").GetString()!, reviewSha256,
                 profileId, productStateRoot, evidencePath));
-            CredentialProfileProjection replacing = store.BeginCredentialReplacement(
-                operationId + "-begin", profileId, predecessorGeneration, successorGeneration, 2, now.AddTicks(1));
+            CredentialProfileProjection replacing = recovery
+                ? current
+                : store.BeginCredentialReplacement(
+                    operationId + "-begin", profileId, predecessorGeneration, successorGeneration, 2, now.AddTicks(1));
             if (replacing.GenerationId != predecessorGeneration || replacing.LifecycleState != "replacing"
                 || replacing.VerificationState != "unavailable")
             {
@@ -266,7 +344,7 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             }
             else
             {
-                OneShotCredentialHelperLauncher launcher = OneShotCredentialHelperLauncher.CreateWp9ProductionEnrollment(
+                OneShotCredentialHelperLauncher launcher = OneShotCredentialHelperLauncher.CreateSuccessorCredentialReplacement(
                     helperPath, helperSha256, authorityPath, authoritySha256, authorityId);
                 CredentialHelperCoordinator coordinator = new(store, launcher);
                 (helper, projection) = await coordinator.ExecuteVerifiedReplacementAsync(

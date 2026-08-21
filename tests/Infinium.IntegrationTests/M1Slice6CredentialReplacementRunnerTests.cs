@@ -2,6 +2,8 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using Infinium.Application.Provider;
 using Infinium.Contracts.Protobuf.Helper.V2;
 using Infinium.Coordinator;
 using Infinium.Persistence;
@@ -15,6 +17,96 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
 
     [TestMethod]
+    public async Task InitialNoNativeRunnerAtomicallyBeginsFreshReplacement()
+    {
+        string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(AppContext.BaseDirectory);
+        string testRoot = Path.Combine(repository, "artifacts", "m1-slice6",
+            "replacement-runner-initial-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(testRoot);
+        try
+        {
+            ReplacementFixture initial = CreateFixture(repository, testRoot, "initial-success", recovery: false);
+            int result = await M1Slice6SuccessorCredentialReplacementRunner.RunAsync(
+                initial.AuthorityPath, initial.AuthoritySha256, initial.ReviewPath, initial.ReviewSha256,
+                initial.ProductRoot, initial.LedgerPath, initial.HelperPath, initial.HelperSha256,
+                initial.EvidencePath, CancellationToken.None, initial.Hooks(CompleteWithoutNative));
+            Assert.AreEqual(0, result);
+            using JsonDocument evidence = JsonDocument.Parse(File.ReadAllBytes(initial.EvidencePath));
+            Assert.AreEqual("passed-active-verified-predecessor-absent",
+                evidence.RootElement.GetProperty("status").GetString());
+            CredentialProfileProjection activated = AuthoritativeStore.ReadCredentialProfileProjectionReadOnly(
+                initial.ProductRoot, initial.ProfileId);
+            Assert.AreEqual(initial.SuccessorGeneration, activated.GenerationId);
+            Assert.AreEqual(2, activated.GenerationOrdinal);
+            Assert.AreEqual("active-verified", activated.LifecycleState);
+        }
+        finally
+        {
+            if (Directory.Exists(testRoot)) { Directory.Delete(testRoot, recursive: true); }
+        }
+    }
+
+    [TestMethod]
+    public async Task RecoveryRejectsTamperedPriorOwnerAndFailureSemanticsBeforeEffect()
+    {
+        string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(AppContext.BaseDirectory);
+        string testRoot = Path.Combine(repository, "artifacts", "m1-slice6",
+            "replacement-runner-tamper-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(testRoot);
+        try
+        {
+            ReplacementFixture priorOwnerFixture = CreateFixture(repository, testRoot, "prior-owner-tamper");
+            string ownerSource = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+                "m1-slice6-development-campaign-amendment.v4.json");
+            JsonObject priorOwner = JsonNode.Parse(File.ReadAllBytes(ownerSource))!.AsObject();
+            priorOwner["prior_owner_authority"]!["id"] = "infinium.m1-s6.credential-replacement/wrong-owner";
+            string priorOwnerPath = Path.Combine(Path.GetDirectoryName(priorOwnerFixture.AuthorityPath)!,
+                "tampered-prior-owner.v4.json");
+            WriteNode(priorOwnerPath, priorOwner);
+            priorOwnerFixture = RebindOwner(repository, priorOwnerFixture, priorOwnerPath);
+            await Assert.ThrowsExactlyAsync<InvalidDataException>(() =>
+                M1Slice6SuccessorCredentialReplacementRunner.RunAsync(
+                    priorOwnerFixture.AuthorityPath, priorOwnerFixture.AuthoritySha256,
+                    priorOwnerFixture.ReviewPath, priorOwnerFixture.ReviewSha256,
+                    priorOwnerFixture.ProductRoot, priorOwnerFixture.LedgerPath,
+                    priorOwnerFixture.HelperPath, priorOwnerFixture.HelperSha256,
+                    priorOwnerFixture.EvidencePath, CancellationToken.None,
+                    priorOwnerFixture.Hooks(CompleteWithoutNative)));
+            Assert.IsFalse(File.Exists(priorOwnerFixture.EvidencePath));
+
+            ReplacementFixture failureFixture = CreateFixture(repository, testRoot, "failure-tamper");
+            string failureSource = Path.Combine(repository, "artifacts", "m1-slice6",
+                "successor-credential-replacement", "c2cf7e8c-dd55-4791-9eb1-f1e557f80124",
+                "replacement-evidence.v1.json");
+            JsonObject failure = JsonNode.Parse(File.ReadAllBytes(failureSource))!.AsObject();
+            failure["typed_failure"] = "IOException";
+            string failurePath = Path.Combine(Path.GetDirectoryName(failureFixture.AuthorityPath)!,
+                "tampered-failure.v1.json");
+            WriteNode(failurePath, failure);
+            JsonObject failureOwner = JsonNode.Parse(File.ReadAllBytes(ownerSource))!.AsObject();
+            failureOwner["retained_failure"]!["path"] = Relative(repository, failurePath);
+            failureOwner["retained_failure"]!["sha256"] = HashFile(failurePath);
+            string failureOwnerPath = Path.Combine(Path.GetDirectoryName(failureFixture.AuthorityPath)!,
+                "tampered-failure-owner.v4.json");
+            WriteNode(failureOwnerPath, failureOwner);
+            failureFixture = RebindOwner(repository, failureFixture, failureOwnerPath);
+            await Assert.ThrowsExactlyAsync<InvalidDataException>(() =>
+                M1Slice6SuccessorCredentialReplacementRunner.RunAsync(
+                    failureFixture.AuthorityPath, failureFixture.AuthoritySha256,
+                    failureFixture.ReviewPath, failureFixture.ReviewSha256,
+                    failureFixture.ProductRoot, failureFixture.LedgerPath,
+                    failureFixture.HelperPath, failureFixture.HelperSha256,
+                    failureFixture.EvidencePath, CancellationToken.None,
+                    failureFixture.Hooks(CompleteWithoutNative)));
+            Assert.IsFalse(File.Exists(failureFixture.EvidencePath));
+        }
+        finally
+        {
+            if (Directory.Exists(testRoot)) { Directory.Delete(testRoot, recursive: true); }
+        }
+    }
+
+    [TestMethod]
     public async Task NoNativeRunnerClosesSuccessPreflightAndPostAdmissionFailureEvidence()
     {
         string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(AppContext.BaseDirectory);
@@ -24,6 +116,12 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         try
         {
             ReplacementFixture success = CreateFixture(repository, testRoot, "success");
+            using (JsonDocument authority = JsonDocument.Parse(File.ReadAllBytes(success.AuthorityPath)))
+            {
+                _ = OneShotCredentialHelperLauncher.CreateSuccessorCredentialReplacement(
+                    success.HelperPath, success.HelperSha256, success.AuthorityPath,
+                    success.AuthoritySha256, authority.RootElement.GetProperty("authority_id").GetString()!);
+            }
             int result = await M1Slice6SuccessorCredentialReplacementRunner.RunAsync(
                 success.AuthorityPath, success.AuthoritySha256, success.ReviewPath, success.ReviewSha256,
                 success.ProductRoot, success.LedgerPath, success.HelperPath, success.HelperSha256,
@@ -131,13 +229,24 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         }
     }
 
-    private static ReplacementFixture CreateFixture(string repository, string testRoot, string name)
+    private static ReplacementFixture CreateFixture(
+        string repository,
+        string testRoot,
+        string name,
+        bool recovery = true)
     {
         string root = Path.Combine(testRoot, name);
         string product = Path.Combine(root, "product");
         Directory.CreateDirectory(root);
         using (StoragePaths paths = new(product)) { paths.Create(); }
-        CopyDirectory(Path.Combine(repository, "artifacts", "m1-slice6", "successor-product-state"), product);
+        if (recovery)
+        {
+            CopyDirectory(Path.Combine(repository, "artifacts", "m1-slice6", "successor-product-state"), product);
+        }
+        else
+        {
+            EnsureInitialVerifiedCredential(product);
+        }
         string ledger = Path.Combine(repository, "artifacts", "m1-slice6", "successor-campaign", "ledger.v3.jsonl");
         string coordinator = Path.Combine(repository, "src", "Infinium.Coordinator", "bin", "Debug", "net10.0",
             "Infinium.Coordinator.exe");
@@ -147,13 +256,17 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         Assert.IsTrue(File.Exists(helper));
         DateTimeOffset now = DateTimeOffset.UtcNow;
         string profile = "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e";
-        string successor = "g-test" + Guid.NewGuid().ToString("N");
+        string successor = recovery
+            ? "g-e6b6a3f21ad74108ba65955850349f83"
+            : "g-test" + Guid.NewGuid().ToString("N");
         string successorFingerprint = Sha(Encoding.UTF8.GetBytes($"Infinium:{profile}:{successor}"));
         string authorityId = "infinium.m1-s6.test-credential-replacement/" + Guid.NewGuid().ToString("N");
         string evidenceId = "infinium.m1-s6.test-credential-replacement-evidence/" + Guid.NewGuid().ToString("N");
         string evidence = Path.Combine(root, "evidence", "replacement.v1.json");
         string owner = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
-            "m1-slice6-development-campaign-amendment.v3.json");
+            recovery
+                ? "m1-slice6-development-campaign-amendment.v4.json"
+                : "m1-slice6-development-campaign-amendment.v3.json");
         string v4 = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp9-production-profile-authorization.v4.json");
         using JsonDocument entryDocument = JsonDocument.Parse(File.ReadAllBytes(v4));
@@ -171,7 +284,9 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
             expires_at_utc = Z(now.AddMinutes(30)),
             owner_authority = new
             {
-                id = "infinium.m1-s6.credential-replacement/20260821-owner-fresh-key",
+                id = recovery
+                    ? "infinium.m1-s6.credential-replacement-recovery/20260821-pre-native-launcher-factory"
+                    : "infinium.m1-s6.credential-replacement/20260821-owner-fresh-key",
                 path = Relative(repository, owner), sha256 = HashFile(owner),
             },
             predecessor_ledger = new
@@ -230,6 +345,46 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         return new(repository, product, ledger, coordinator, helper, authorityPath, authoritySha,
             reviewPath, HashFile(reviewPath), evidence, profile, successor, now);
     }
+
+    private static void EnsureInitialVerifiedCredential(string productRoot)
+    {
+        const string profile = "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e";
+        const string generation = "g-ff6d82e7a7d244f6b8a9d0164991be37";
+        DateTimeOffset now = DateTimeOffset.UtcNow.AddHours(-1);
+        using AuthoritativeStore store = new(new StoragePaths(productRoot));
+        store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, now);
+        _ = store.BeginCredentialEnrollment(profile, generation, "Synthetic initial replacement predecessor",
+            now.AddTicks(1), "account-initial", "billing-initial");
+        _ = store.ApplyCredentialTransition(new("initial-enroll", profile, generation, "enroll",
+            "pending-enrollment", "active-unverified", "active-unverified",
+            M1ProviderCatalog.Capability.Identity.Value, "account-initial", "billing-initial",
+            now.AddTicks(2), now.AddTicks(3)));
+        _ = store.ApplyCredentialTransition(new("initial-verify", profile, generation, "verify",
+            "active-unverified", "active-verified", "active-verified",
+            M1ProviderCatalog.Capability.Identity.Value, "account-initial", "billing-initial",
+            now.AddTicks(4), now.AddTicks(5)));
+    }
+
+    private static ReplacementFixture RebindOwner(
+        string repository,
+        ReplacementFixture fixture,
+        string ownerPath)
+    {
+        JsonObject authority = JsonNode.Parse(File.ReadAllBytes(fixture.AuthorityPath))!.AsObject();
+        authority["owner_authority"]!["path"] = Relative(repository, ownerPath);
+        authority["owner_authority"]!["sha256"] = HashFile(ownerPath);
+        WriteNode(fixture.AuthorityPath, authority);
+        string authoritySha = HashFile(fixture.AuthorityPath);
+        JsonObject review = JsonNode.Parse(File.ReadAllBytes(fixture.ReviewPath))!.AsObject();
+        review["subject"]!["sha256"] = authoritySha;
+        WriteNode(fixture.ReviewPath, review);
+        return fixture with { AuthoritySha256 = authoritySha, ReviewSha256 = HashFile(fixture.ReviewPath) };
+    }
+
+    private static void WriteNode(string path, JsonNode value) => File.WriteAllText(
+        path,
+        value.ToJsonString(Json) + "\n",
+        new UTF8Encoding(false));
 
     private static Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)> CompleteWithoutNative(
         AuthoritativeStore store, string attemptId, HelperPrivateFrameV2 _, HelperPrivateFrameV2 assignment,

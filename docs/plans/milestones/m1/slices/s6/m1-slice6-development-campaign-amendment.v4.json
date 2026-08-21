@@ -1,0 +1,32 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-development-campaign-amendment/4.0.0",
+  "amendment_id": "infinium.m1-s6.credential-replacement-recovery/20260821-pre-native-launcher-factory",
+  "status": "owner-authorized-credential-replacement-recovery",
+  "prior_owner_authority": {
+    "id": "infinium.m1-s6.credential-replacement/20260821-owner-fresh-key",
+    "path": "docs/plans/milestones/m1/slices/s6/m1-slice6-development-campaign-amendment.v3.json",
+    "sha256": "088b5f2ae8198aa6bbec775fc25e1e1705b65d3f445e66b1e5d1427dd1660b47"
+  },
+  "retained_failure": {
+    "id": "infinium.m1-s6.successor-credential-replacement-evidence/25c18ef1-b289-49eb-aee0-14c360b82c44",
+    "path": "artifacts/m1-slice6/successor-credential-replacement/c2cf7e8c-dd55-4791-9eb1-f1e557f80124/replacement-evidence.v1.json",
+    "sha256": "741a74e9c0931f729bed35a88e5453233cb0264572d9e5a80f20544ad34b97a4"
+  },
+  "recovery": {
+    "mode": "resume-same-generation-after-pre-native-launcher-factory-failure",
+    "diagnosis": "historical-enrollment-launcher-required-manifest-id-before-helper-process-start",
+    "predecessor_state": "ordinal1-replacing-unavailable",
+    "successor_generation_id": "g-e6b6a3f21ad74108ba65955850349f83",
+    "fresh_generation_creation": "prohibited-already-durably-reserved",
+    "helper_launches": 1,
+    "provider_effect": "prohibited"
+  },
+  "preserved_boundaries": {
+    "hard_budget_nano_usd": 10000000000,
+    "historical_evidence_immutable": true,
+    "enumeration": "prohibited",
+    "exposure": "prohibited",
+    "slice7": "not-authorized"
+  },
+  "authorized_at_utc": "2026-08-21T21:08:03.4264802Z"
+}

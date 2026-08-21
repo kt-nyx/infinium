@@ -333,6 +333,42 @@ public sealed class OneShotCredentialHelperLauncher
             wp9CampaignProvider: false);
     }
 
+    internal static OneShotCredentialHelperLauncher CreateSuccessorCredentialReplacement(
+        string helperBinary,
+        string expectedBinarySha256,
+        string acceptedAuthorityPath,
+        string acceptedAuthoritySha256,
+        string acceptedAuthorityId)
+    {
+        string authority = Path.GetFullPath(acceptedAuthorityPath);
+        if (!File.Exists(authority)
+            || acceptedAuthoritySha256.Length != 64
+            || !acceptedAuthoritySha256.All(char.IsAsciiHexDigit)
+            || !string.Equals(HashFile(authority), acceptedAuthoritySha256, StringComparison.Ordinal))
+        {
+            throw new InvalidDataException("The successor credential replacement authority is not exact.");
+        }
+        using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(authority));
+        string schema = document.RootElement.GetProperty("schema_identity").GetString() ?? "";
+        if (schema != "infinium.repository.m1-slice6-successor-credential-replacement-authorization/1.0.0"
+            || document.RootElement.GetProperty("authority_id").GetString() != acceptedAuthorityId
+            || document.RootElement.GetProperty("status").GetString()
+                != "independently-reviewed-ready-for-owner-effect")
+        {
+            throw new InvalidDataException("The successor credential replacement authority identity or status is invalid.");
+        }
+        return new(
+            helperBinary,
+            expectedBinarySha256,
+            Path.GetDirectoryName(authority)!,
+            authority,
+            acceptedAuthoritySha256,
+            acceptedAuthorityId,
+            productionProviderTransport: false,
+            wp9ProductionEnrollment: true,
+            wp9CampaignProvider: false);
+    }
+
     public async Task<HelperProcessReceipt> ExecuteAsync(
         HelperPrivateFrameV2 bootstrap,
         HelperPrivateFrameV2 assignment,

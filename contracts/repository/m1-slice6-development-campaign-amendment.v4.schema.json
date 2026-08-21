@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.repository.m1-slice6-development-campaign-amendment/4.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_identity", "amendment_id", "status", "prior_owner_authority", "retained_failure", "recovery", "preserved_boundaries", "authorized_at_utc"],
+  "properties": {
+    "schema_identity": { "const": "infinium.repository.m1-slice6-development-campaign-amendment/4.0.0" },
+    "amendment_id": { "$ref": "#/$defs/id" },
+    "status": { "const": "owner-authorized-credential-replacement-recovery" },
+    "prior_owner_authority": { "$ref": "#/$defs/bindingPath" },
+    "retained_failure": { "$ref": "#/$defs/bindingPath" },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "diagnosis", "predecessor_state", "successor_generation_id", "fresh_generation_creation", "helper_launches", "provider_effect"],
+      "properties": {
+        "mode": { "const": "resume-same-generation-after-pre-native-launcher-factory-failure" },
+        "diagnosis": { "const": "historical-enrollment-launcher-required-manifest-id-before-helper-process-start" },
+        "predecessor_state": { "const": "ordinal1-replacing-unavailable" },
+        "successor_generation_id": { "$ref": "#/$defs/id" },
+        "fresh_generation_creation": { "const": "prohibited-already-durably-reserved" },
+        "helper_launches": { "const": 1 },
+        "provider_effect": { "const": "prohibited" }
+      }
+    },
+    "preserved_boundaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hard_budget_nano_usd", "historical_evidence_immutable", "enumeration", "exposure", "slice7"],
+      "properties": {
+        "hard_budget_nano_usd": { "const": 10000000000 },
+        "historical_evidence_immutable": { "const": true },
+        "enumeration": { "const": "prohibited" },
+        "exposure": { "const": "prohibited" },
+        "slice7": { "const": "not-authorized" }
+      }
+    },
+    "authorized_at_utc": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{7}Z$" }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9._:/-]+$" },
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "path": { "type": "string", "minLength": 1, "maxLength": 500, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?/)(?!.*\\\\)[^\\r\\n]+$" },
+    "bindingPath": { "type": "object", "additionalProperties": false, "required": ["id", "path", "sha256"], "properties": { "id": { "$ref": "#/$defs/id" }, "path": { "$ref": "#/$defs/path" }, "sha256": { "$ref": "#/$defs/sha" } } }
+  }
+}

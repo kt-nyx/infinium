@@ -189,6 +189,24 @@ public sealed partial class AuthoritativeStore
         }
     }
 
+    public long CredentialGenerationOrdinal(string profileId, string generationId)
+    {
+        ValidateCredentialIdentity(profileId, nameof(profileId));
+        ValidateCredentialIdentity(generationId, nameof(generationId));
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT generation_ordinal FROM provider_generations WHERE profile_id=$profile AND generation_id=$generation;";
+            command.Parameters.AddWithValue("$profile", profileId);
+            command.Parameters.AddWithValue("$generation", generationId);
+            object? value = command.ExecuteScalar();
+            return value is null
+                ? throw new KeyNotFoundException("The exact credential generation is absent.")
+                : Convert.ToInt64(value, System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
+
     public CredentialProfileProjection BeginCredentialReplacement(
         string rootId,
         string profileId,
