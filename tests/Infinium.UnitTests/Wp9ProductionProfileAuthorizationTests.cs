@@ -88,6 +88,33 @@ public sealed class Wp9ProductionProfileAuthorizationTests
     }
 
     [TestMethod]
+    public void ProductionEntryReassertsBoundedActivationBeforeEveryReadinessMeasurement()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            RepositoryRoot(), "src", "Infinium.CredentialHelper", "Wp9ProductionEnrollmentSurface.cs"));
+        int loop = source.IndexOf("while (readiness.Elapsed < readinessDeadline)", StringComparison.Ordinal);
+        int topmost = source.IndexOf("SetWindowPos(window, HwndTopmost", loop, StringComparison.Ordinal);
+        int notTopmost = source.IndexOf("SetWindowPos(window, HwndNotTopmost", topmost, StringComparison.Ordinal);
+        int bringToTop = source.IndexOf("BringWindowToTop(window)", notTopmost, StringComparison.Ordinal);
+        int setForeground = source.IndexOf("SetForegroundWindow(window)", bringToTop, StringComparison.Ordinal);
+        int setFocus = source.IndexOf("SetFocus(edit)", setForeground, StringComparison.Ordinal);
+        int measurement = source.IndexOf("foreground = GetForegroundWindow() == window", setFocus,
+            StringComparison.Ordinal);
+        int loopEnd = source.IndexOf("Thread.Sleep(25)", measurement, StringComparison.Ordinal);
+
+        Assert.IsTrue(loop >= 0);
+        Assert.IsTrue(loop < topmost && topmost < notTopmost && notTopmost < bringToTop);
+        Assert.IsTrue(bringToTop < setForeground && setForeground < setFocus && setFocus < measurement);
+        Assert.IsTrue(measurement < loopEnd);
+
+        Wp9ProductionReadinessSnapshot foregroundDenied = new(
+            true, true, true, true, true, true, true, true, true, true, false, true);
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.IsReady(foregroundDenied));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.IsReady(
+            foregroundDenied with { Foreground = true }));
+    }
+
+    [TestMethod]
     public void ProductionCollisionClassifierIsExactAndCannotReinterpretOtherFailures()
     {
         Assert.IsTrue(Wp9ProductionCollisionClassifier.IsKnownCollision(

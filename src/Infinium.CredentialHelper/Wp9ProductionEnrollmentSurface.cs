@@ -285,6 +285,11 @@ internal static class Wp9ProductionMaskedEntryDialog
     private const uint DwmwaCloaked = 14;
     private const uint DesktopReadObjects = 0x0001;
     private const uint DesktopSwitchDesktop = 0x0100;
+    private const uint SwpNoMove = 0x0002;
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpShowWindow = 0x0040;
+    private static readonly nint HwndTopmost = new(-1);
+    private static readonly nint HwndNotTopmost = new(-2);
 
     internal static Wp9ProductionHiddenPumpProbe RunNonLiveHiddenPumpProbe()
     {
@@ -561,6 +566,13 @@ internal static class Wp9ProductionMaskedEntryDialog
                     messagePumpIterations++;
                     PumpMessages(edit, readyForActions, ref submitRequested, ref cancelRequested, ref actionSource,
                         ref preReadinessIgnoredActions);
+                    _ = SetWindowPos(window, HwndTopmost, 0, 0, 0, 0,
+                        SwpNoMove | SwpNoSize | SwpShowWindow);
+                    _ = SetWindowPos(window, HwndNotTopmost, 0, 0, 0, 0,
+                        SwpNoMove | SwpNoSize | SwpShowWindow);
+                    _ = BringWindowToTop(window);
+                    _ = SetForegroundWindow(window);
+                    _ = SetFocus(edit);
                     readinessChecks++;
                     int preReadinessLength = GetWindowTextLengthW(edit);
                     if (Wp9ProductionEntryReadinessOracle.ShouldClearPreReadinessContent(
@@ -867,6 +879,9 @@ internal static class Wp9ProductionMaskedEntryDialog
     [DllImport("user32.dll")] private static extern nint GetForegroundWindow();
     [DllImport("user32.dll")] private static extern nint GetActiveWindow();
     [DllImport("user32.dll")] private static extern bool SetForegroundWindow(nint window);
+    [DllImport("user32.dll")] private static extern bool BringWindowToTop(nint window);
+    [DllImport("user32.dll")] private static extern bool SetWindowPos(
+        nint window, nint insertAfter, int x, int y, int width, int height, uint flags);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowTextLengthW(nint window);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowTextW(nint window, [Out] char[] text, int maximum);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern bool SetWindowTextW(nint window, string text);
