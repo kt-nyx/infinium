@@ -352,7 +352,9 @@ public sealed class OneShotCredentialHelperLauncher
         }
         using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(authority));
         string schema = document.RootElement.GetProperty("schema_identity").GetString() ?? "";
-        if (schema != "infinium.repository.m1-slice6-successor-credential-replacement-authorization/1.0.0"
+        if (schema is not (
+                "infinium.repository.m1-slice6-successor-credential-replacement-authorization/1.0.0"
+                or "infinium.repository.m1-slice6-successor-credential-replacement-authorization/2.0.0")
             || document.RootElement.GetProperty("authority_id").GetString() != acceptedAuthorityId
             || document.RootElement.GetProperty("status").GetString()
                 != "independently-reviewed-ready-for-owner-effect")

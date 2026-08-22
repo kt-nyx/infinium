@@ -751,6 +751,7 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
     private readonly HashSet<string> writtenTargetFingerprints = new(StringComparer.Ordinal);
     private string? deleteFailureGenerationId;
     internal bool IsProductionEnrollment { get; private set; }
+    internal int? ExpectedCredentialCharacterLength { get; private set; }
 
     public WindowsCredentialManagerStore()
         : this(new NativeNamespaceReuseGuard(), FiniteNativeDeadline.Start(TimeSpan.FromMinutes(30))) { }
@@ -905,7 +906,8 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
             using JsonDocument document = JsonDocument.Parse(bytes);
             JsonElement root = document.RootElement;
             if (root.GetProperty("schema_identity").GetString()
-                == "infinium.repository.m1-slice6-successor-credential-replacement-authorization/1.0.0")
+                is "infinium.repository.m1-slice6-successor-credential-replacement-authorization/1.0.0"
+                    or "infinium.repository.m1-slice6-successor-credential-replacement-authorization/2.0.0")
             {
                 return FromProductionReplacementManifest(root, expectedManifestId);
             }
@@ -1077,6 +1079,8 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         JsonElement root,
         string expectedManifestId)
     {
+        bool exactLengthReplacement = root.GetProperty("schema_identity").GetString()
+            == "infinium.repository.m1-slice6-successor-credential-replacement-authorization/2.0.0";
         JsonElement profile = root.GetProperty("profile");
         JsonElement boundary = root.GetProperty("native_boundary");
         NativeTarget predecessor = new(
@@ -1100,7 +1104,8 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
             || predecessor.GenerationId == successor.GenerationId
             || IsRetiredProductionIdentity(expectedManifestId, successor.AccessProfileId,
                 successor.GenerationId, successor.TargetFingerprintSha256)
-            || profile.GetProperty("successor_generation_ordinal").GetInt32() != 2
+            || profile.GetProperty("successor_generation_ordinal").GetInt32()
+                != (exactLengthReplacement ? 3 : 2)
             || profile.GetProperty("target_derivation").GetString()
                 != "Infinium:<access_profile_id>:<generation_id>"
             || profile.GetProperty("target_encoding").GetString() != "utf-8"
@@ -1116,7 +1121,7 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
             || boundary.GetProperty("predecessor_delete").GetString()
                 != "required-after-successor-write-readback-verification"
             || !ValidProductionReplacementWindow(root)
-            || !ValidProductionEntrySurface(root.GetProperty("m1_entry_surface")))
+            || !ValidProductionEntrySurface(root.GetProperty("m1_entry_surface"), exactLengthReplacement))
         {
             throw new InvalidDataException("The production replacement manifest does not preserve its exact finite authority.");
         }
@@ -1132,7 +1137,10 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         }
         WindowsCredentialManagerStore store = new(
             new NativeNamespaceReuseGuard(), FiniteNativeDeadline.Start(remaining))
-            { IsProductionEnrollment = true };
+            {
+                IsProductionEnrollment = true,
+                ExpectedCredentialCharacterLength = exactLengthReplacement ? 164 : null,
+            };
         store.manifestTargets.Add(new(predecessor.AccessProfileId, predecessor.GenerationId), predecessor);
         store.manifestTargetOrder.Add(predecessor);
         store.manifestTargets.Add(new(successor.AccessProfileId, successor.GenerationId), successor);
@@ -1187,7 +1195,7 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         return prepared <= notBefore && notBefore <= now && now < expires;
     }
 
-    private static bool ValidProductionEntrySurface(JsonElement surface) =>
+    private static bool ValidProductionEntrySurface(JsonElement surface, bool exactLength = false) =>
         surface.GetProperty("owner").GetString() == "one-shot-credential-helper"
         && surface.GetProperty("presentation").GetString() == "direct-helper-owned-native-modal"
         && surface.GetProperty("masked").GetBoolean()
@@ -1195,8 +1203,13 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         && !surface.GetProperty("renderer_receives_or_retains_secret").GetBoolean()
         && surface.GetProperty("readiness_deadline_seconds").GetInt32() == 10
         && surface.GetProperty("response_deadline_seconds").GetInt32() == 600
-        && surface.GetProperty("input_bound").GetString()
-            == "live-character-length-1-through-2560-and-utf8-byte-length-1-through-2560-no-truncation";
+        && (exactLength
+            ? surface.GetProperty("input_bound").GetString()
+                == "exact-164-characters-exact-164-canonical-ascii-bytes-no-truncation"
+                && surface.GetProperty("expected_character_length").GetInt32() == 164
+                && surface.GetProperty("expected_utf8_byte_length").GetInt32() == 164
+            : surface.GetProperty("input_bound").GetString()
+                == "live-character-length-1-through-2560-and-utf8-byte-length-1-through-2560-no-truncation");
 
     internal static WindowsCredentialManagerStore FromRecoveryManifest(JsonElement manifestRoot)
     {

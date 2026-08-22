@@ -85,6 +85,64 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         Assert.IsFalse(Wp9ProductionEntryReadinessOracle.ShouldClearPreReadinessContent(true, 1));
         Assert.IsTrue(Wp9ProductionEntryReadinessOracle.BufferCleanupComplete(true, true));
         Assert.IsFalse(Wp9ProductionEntryReadinessOracle.BufferCleanupComplete(true, false));
+
+        Wp9ProductionActionSnapshot exactAction = new(
+            "submit", "submit-button", true, true, true, true, true, true,
+            true, true, true, true, true, true, false, 164, true);
+        Wp9ProductionEntryEvidence exactEvidence = new(
+            "wp9-distinct-helper-owned-native-masked-paste-surface", true, true, true, false,
+            true, true, true, true, true, true, true, true, true, true, true,
+            1, 0, 1, exactAction, "submitted", true, true, true, true);
+        byte[] exact = System.Text.Encoding.ASCII.GetBytes("sk-proj-A_" + new string('B', 154));
+        Assert.IsTrue(Wp9ProductionSecretSource.IsExactCanonicalCredential(exact, exactEvidence, 164));
+        Assert.IsFalse(Wp9ProductionSecretSource.IsExactCanonicalCredential(
+            exact.AsSpan(0, 163),
+            exactEvidence with { ActionSnapshot = exactAction with { CurrentCharacterLength = 163 } }, 164));
+        byte[] whitespace = exact.ToArray();
+        whitespace[^1] = (byte)' ';
+        Assert.IsFalse(Wp9ProductionSecretSource.IsExactCanonicalCredential(
+            whitespace, exactEvidence, 164));
+        byte[] nonAscii = exact.ToArray();
+        nonAscii[^2] = 0xc3;
+        nonAscii[^1] = 0xa9;
+        Assert.IsFalse(Wp9ProductionSecretSource.IsExactCanonicalCredential(
+            nonAscii, exactEvidence, 164));
+        Assert.IsFalse(Wp9ProductionSecretSource.IsExactCanonicalCredential(
+            System.Text.Encoding.ASCII.GetBytes("not-key-" + new string('B', 156)), exactEvidence, 164));
+    }
+
+    [TestMethod]
+    public void RejectedPartialCredentialIsZeroedBeforeStoreAndRetainedOnlyForCanaryScanning()
+    {
+        const string manifestId = "infinium.m1-s6.test-generation3-replacement/manifest";
+        byte[] rejected = System.Text.Encoding.ASCII.GetBytes("sk-proj-" + new string('R', 83));
+        byte[] expected = rejected.ToArray();
+        Wp9ProductionActionSnapshot action = new(
+            "submit", "submit-button", true, true, true, true, true, true,
+            true, true, true, true, true, true, false, 91, true);
+        Wp9ProductionEntryEvidence evidence = new(
+            "wp9-distinct-helper-owned-native-masked-paste-surface", true, true, true, false,
+            true, true, true, true, true, true, true, true, true, true, true,
+            1, 0, 1, action, "submitted", true, true, true, true);
+        using Wp9ProductionSecretSource source = new(
+            manifestId, 164, (_, _) => new Wp9ProductionEntryCapture(rejected, "submitted", evidence));
+        HelperAssignmentV2 assignment = new()
+        {
+            AssignmentKind = HelperAssignmentKindV2.Replace,
+            AssignmentId = manifestId + "/replace",
+        };
+
+        Assert.ThrowsExactly<InvalidDataException>(() => source.Capture(assignment));
+        Assert.IsTrue(rejected.All(value => value == 0),
+            "The rejected buffer that could otherwise reach CredWriteW must be zeroed.");
+        NativeCanaryEvidence scan = source.ScanAndClear(
+            [new NativeCanarySurface("rejected-value-observation", "test-bytes", expected)],
+            [
+                new NativeRawTargetCanary("utf-8", System.Text.Encoding.UTF8.GetBytes("unrelated-target")),
+                new NativeRawTargetCanary("utf-16le", System.Text.Encoding.Unicode.GetBytes("unrelated-target")),
+            ]);
+        Assert.AreEqual(1, scan.SecretMatches,
+            "The canary scanner must observe the actual rejected value, not an empty placeholder.");
     }
 
     [TestMethod]
@@ -101,11 +159,17 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         int measurement = source.IndexOf("foreground = GetForegroundWindow() == window", setFocus,
             StringComparison.Ordinal);
         int loopEnd = source.IndexOf("Thread.Sleep(25)", measurement, StringComparison.Ordinal);
+        int editCreated = source.IndexOf("edit = CreateWindowExW", StringComparison.Ordinal);
+        int exactNativeLimit = source.IndexOf(
+            "SendMessageW(edit, EmLimitText, WindowsCredentialManagerStore.MaximumBlobBytes, 0)",
+            editCreated, StringComparison.Ordinal);
+        int editSubclass = source.IndexOf("editProcedure =", exactNativeLimit, StringComparison.Ordinal);
 
         Assert.IsTrue(loop >= 0);
         Assert.IsTrue(loop < topmost && topmost < notTopmost && notTopmost < bringToTop);
         Assert.IsTrue(bringToTop < setForeground && setForeground < setFocus && setFocus < measurement);
         Assert.IsTrue(measurement < loopEnd);
+        Assert.IsTrue(editCreated >= 0 && editCreated < exactNativeLimit && exactNativeLimit < editSubclass);
 
         Wp9ProductionReadinessSnapshot foregroundDenied = new(
             true, true, true, true, true, true, true, true, true, true, false, true);
@@ -276,7 +340,7 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             int validation = program.IndexOf("FromProductionEnrollmentManifest(", StringComparison.Ordinal);
             int containment = program.IndexOf("productionDescendant = Process.Start", validation, StringComparison.Ordinal);
             int uiSource = program.IndexOf(
-                "productionSecretSource = new(productionManifestId);", validation, StringComparison.Ordinal);
+                "productionSecretSource = new(", validation, StringComparison.Ordinal);
             Assert.IsTrue(validation >= 0 && containment > validation && uiSource > containment,
                 "The compiled helper must reject a manifest before containment, UI, or native-store execution.");
         }

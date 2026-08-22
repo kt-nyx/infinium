@@ -272,7 +272,8 @@ if (args is ["--wp9-production-enrollment-request-handle", string productionRequ
             ArgumentList = { "--containment-descendant", "30000" },
         }) ?? throw new InvalidOperationException("WP9 containment descendant could not start.");
         productionFailureReasonOverride = null;
-        productionSecretSource = new(productionManifestId);
+        productionSecretSource = new(
+            productionManifestId, productionStore.ExpectedCredentialCharacterLength);
         productionRecordedRequest = new(request);
         productionRecordedResponse = new(productionResponse);
         OneShotHelperEngine engine = new(

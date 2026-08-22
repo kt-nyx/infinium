@@ -1801,8 +1801,9 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
             File.ReadAllBytes(nativeManifestPath));
         bool successorReplacement = document.RootElement.TryGetProperty(
                 "schema_identity", out System.Text.Json.JsonElement schemaIdentity)
-            && schemaIdentity.GetString()
-                == "infinium.repository.m1-slice6-successor-credential-replacement-authorization/1.0.0";
+            && schemaIdentity.GetString() is
+                "infinium.repository.m1-slice6-successor-credential-replacement-authorization/1.0.0"
+                or "infinium.repository.m1-slice6-successor-credential-replacement-authorization/2.0.0";
         if (trace.Count(item => item.Operation == "CredWriteW") != evidence.CredWriteW
             || trace.Count(item => item.Operation == "CredReadW") != evidence.CredReadW
             || trace.Count(item => item.Operation == "CredDeleteW") != evidence.CredDeleteW

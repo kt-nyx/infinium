@@ -165,10 +165,23 @@ internal static class Wp9ProductionLaunchContract
     }
 }
 
-internal sealed class Wp9ProductionSecretSource(string acceptedManifestId) : IHelperSecretSource, IDisposable
+internal sealed class Wp9ProductionSecretSource : IHelperSecretSource, IDisposable
 {
+    private readonly string acceptedManifestId;
+    private readonly int? expectedCharacterLength;
+    private readonly Func<TimeSpan, TimeSpan, Wp9ProductionEntryCapture> capture;
     private byte[] canarySecret = [];
     internal Wp9ProductionEntryEvidence? EntryEvidence { get; private set; }
+
+    internal Wp9ProductionSecretSource(
+        string acceptedManifestId,
+        int? expectedCharacterLength = null,
+        Func<TimeSpan, TimeSpan, Wp9ProductionEntryCapture>? capture = null)
+    {
+        this.acceptedManifestId = acceptedManifestId;
+        this.expectedCharacterLength = expectedCharacterLength;
+        this.capture = capture ?? Wp9ProductionMaskedEntryDialog.Capture;
+    }
 
     public byte[] Capture(HelperAssignmentV2 assignment)
     {
@@ -181,8 +194,7 @@ internal sealed class Wp9ProductionSecretSource(string acceptedManifestId) : IHe
         Wp9ProductionEntryCapture capture;
         try
         {
-            capture = Wp9ProductionMaskedEntryDialog.Capture(
-                TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(10));
+            capture = this.capture(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(10));
         }
         catch (Wp9ProductionEntryFailureException failure)
         {
@@ -198,8 +210,43 @@ internal sealed class Wp9ProductionSecretSource(string acceptedManifestId) : IHe
             }
             byte[] secret = capture.DetachSecret();
             canarySecret = secret.ToArray();
+            if (expectedCharacterLength is int expected
+                && !IsExactCanonicalCredential(secret, capture.Evidence, expected))
+            {
+                CryptographicOperations.ZeroMemory(secret);
+                throw new InvalidDataException(
+                    "The masked credential entry does not match the exact reviewed length and canonical byte contract.");
+            }
             return secret;
         }
+    }
+
+    internal static bool IsExactCanonicalCredential(
+        ReadOnlySpan<byte> secret,
+        Wp9ProductionEntryEvidence evidence,
+        int expectedCharacterLength)
+    {
+        if (expectedCharacterLength <= 0
+            || secret.Length != expectedCharacterLength
+            || evidence.TerminalState != "submitted"
+            || evidence.ActionSnapshot is not { Action: "submit", Admitted: true }
+            || evidence.ActionSnapshot?.CurrentCharacterLength != expectedCharacterLength
+            || secret.Length < 4 || secret[0] != (byte)'s' || secret[1] != (byte)'k'
+            || secret[2] != (byte)'-')
+        {
+            return false;
+        }
+        foreach (byte value in secret)
+        {
+            if (value is not (>= (byte)'A' and <= (byte)'Z'
+                    or >= (byte)'a' and <= (byte)'z'
+                    or >= (byte)'0' and <= (byte)'9'
+                    or (byte)'-' or (byte)'_'))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     internal static bool AcceptsAssignment(HelperAssignmentV2 assignment, string acceptedManifestId)
@@ -273,6 +320,7 @@ internal static class Wp9ProductionMaskedEntryDialog
     private const uint WmKeyDown = 0x0100;
     private const uint WmCut = 0x0300;
     private const uint WmCopy = 0x0301;
+    private const uint EmLimitText = 0x00C5;
     private const uint BmClick = 0x00F5;
     private const uint PmRemove = 0x0001;
     private const int VkReturn = 0x0D;
@@ -547,6 +595,7 @@ internal static class Wp9ProductionMaskedEntryDialog
                 {
                     throw new Win32Exception(Marshal.GetLastWin32Error(), "WP9 masked entry controls failed to initialize.");
                 }
+                _ = SendMessageW(edit, EmLimitText, WindowsCredentialManagerStore.MaximumBlobBytes, 0);
                 editProcedure = (handle, message, wParam, lParam) => message is WmCut or WmCopy
                     ? 0
                     : CallWindowProcW(originalEditProcedure, handle, message, wParam, lParam);
