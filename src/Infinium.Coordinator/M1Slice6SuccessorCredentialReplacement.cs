@@ -39,8 +39,7 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         "infinium.repository.m1-slice6-development-campaign-amendment/7.0.0";
     internal const string Generation3ReplacementAmendmentSchema =
         "infinium.repository.m1-slice6-development-campaign-amendment/8.0.0";
-    // Rebound to the exact substantive correction commit before owner authority is materialized.
-    internal const string Generation3CorrectionCommit = "0000000000000000000000000000000000000000";
+    internal const string Generation3CorrectionCommit = "41c0f1918910a4f230cccf045331f87e57cf6d03";
 
     private enum ReplacementMode
     {

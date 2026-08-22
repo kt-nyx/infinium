@@ -33,7 +33,7 @@
       "required": ["defect_id", "implementation_commit", "exact_character_length", "exact_utf8_byte_length", "canonical_alphabet", "bearer_byte_preservation"],
       "properties": {
         "defect_id": { "const": "successor-v6-credential-entry-and-bearer-byte-preservation" },
-        "implementation_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "implementation_commit": { "const": "41c0f1918910a4f230cccf045331f87e57cf6d03" },
         "exact_character_length": { "const": 164 },
         "exact_utf8_byte_length": { "const": 164 },
         "canonical_alphabet": { "const": "ASCII letters digits hyphen underscore with sk- prefix" },
