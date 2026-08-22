@@ -9595,3 +9595,15 @@ M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=572a3342ac6537d42a1041e9f8a5878c
   bound. The correction adds the standard horizontal-capacity style while
   retaining password masking, the 164-character Submit gate, the native
   maximum, clipboard-copy denial, and buffer clearing.
+- Corrected commit `7d47963a0ef5d48c3454d00dbfdf58fd32034058`
+  then completed fresh attempt `aa2ef2ccf24647ddab632b2a1d3e7f43`.
+  Sanitized evidence SHA-256
+  `4016db9308160991b43a49beb3682abed332df0039dcf9bde3916d2469533ccf`
+  proves an exact 164-character admitted submission, the complete protected
+  generation-3 write/read-back and predecessor-delete grammar, final
+  generation 3 `active-verified`/`available`, cleared UI and buffers, zero
+  network/provider/billable operations, and no retry. Boundary SHA-256 is
+  `2b51bfee5d9e32cb0a79c8fb909f833c56f3cd925b628e65c4b3065123bc4a0b`;
+  receipt SHA-256 is
+  `d07fd2e7489dd6c04d06525f800ea259701030409513fee2b4f034a858ba3ba0`.
+  No credential bytes or credential-derived digest are retained.
