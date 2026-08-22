@@ -633,8 +633,14 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport,
         using HttpRequestMessage request = new(HttpMethod.Post, endpoint);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         request.Headers.TryAddWithoutValidation("X-Client-Request-Id", clientRequestId);
-        string bearer = Encoding.ASCII.GetString(secret.Span);
-        request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + bearer);
+        string bearer = successorV6
+            ? CanonicalBearer(secret.Span)
+            : Encoding.ASCII.GetString(secret.Span);
+        bool bearerAdmitted = request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + bearer);
+        if (successorV6 && !bearerAdmitted)
+        {
+            throw new InvalidOperationException("The exact provider credential was not admitted to the request.");
+        }
         request.Content = new ByteArrayContent(canonicalRequest.ToArray());
         request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
         request.Version = HttpVersion.Version11;
@@ -710,6 +716,30 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport,
                 ProviderErrorType = TransportErrorType(error),
             };
         }
+    }
+
+    private static string CanonicalBearer(ReadOnlySpan<byte> secret)
+    {
+        if (secret.Length < 4 || secret[0] != (byte)'s' || secret[1] != (byte)'k'
+            || secret[2] != (byte)'-')
+        {
+            throw new InvalidOperationException("The provider credential does not have the canonical key prefix.");
+        }
+
+        foreach (byte value in secret)
+        {
+            bool admitted = value is >= (byte)'A' and <= (byte)'Z'
+                or >= (byte)'a' and <= (byte)'z'
+                or >= (byte)'0' and <= (byte)'9'
+                or (byte)'-' or (byte)'_';
+            if (!admitted)
+            {
+                throw new InvalidOperationException(
+                    "The provider credential contains a non-canonical byte and cannot be placed in a bearer header.");
+            }
+        }
+
+        return Encoding.ASCII.GetString(secret);
     }
 
     private static string TransportErrorType(HttpRequestException error)

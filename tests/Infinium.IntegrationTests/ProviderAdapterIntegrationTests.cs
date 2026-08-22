@@ -56,9 +56,51 @@ public sealed class ProviderAdapterIntegrationTests
         Assert.AreEqual("application/json; charset=utf-8", server.RequestHeaders["Content-Type"]);
         Assert.AreEqual("application/json", server.RequestHeaders["Accept"]);
         Assert.AreEqual("client-offline-1", server.RequestHeaders["X-Client-Request-Id"]);
+        Assert.AreEqual("Bearer sk-offline-canary-never-retained", server.RequestHeaders["Authorization"]);
         Assert.AreEqual(2, result.RateHeaders.Count);
         Assert.AreEqual(100L, result.RateHeaders.Single(header => header.Name == "x-ratelimit-limit-requests").Value);
         Assert.AreEqual(99L, result.RateHeaders.Single(header => header.Name == "x-ratelimit-remaining-requests").Value);
+    }
+
+    [TestMethod]
+    public async Task SuccessorBearerPreservesALongCanonicalCredentialExactlyAndRejectsInvalidBytesBeforeSend()
+    {
+        string longCredential = "sk-proj-A_" + new string('B', 154);
+        Assert.AreEqual(164, longCredential.Length);
+        await using ProviderLoopbackServer server = new(ProviderAdapterTestData.CompletedResponse());
+        using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
+        OpenAiResponsesResult result = await adapter.SendSuccessorV6OnceAsync(
+            ProviderAdapterTestData.CanonicalRequest(), Encoding.ASCII.GetBytes(longCredential),
+            ProviderAdapterTestData.Limits(), "client-long-bearer", CancellationToken.None);
+
+        Assert.IsTrue(result.Admitted);
+        Assert.AreEqual("Bearer " + longCredential, server.RequestHeaders["Authorization"]);
+        Assert.AreEqual(1, server.RequestCount);
+
+        await using ProviderLoopbackServer whitespaceServer = new(ProviderAdapterTestData.CompletedResponse());
+        using OpenAiResponsesAdapter whitespaceAdapter =
+            OpenAiResponsesAdapter.CreateDeterministicLoopback(whitespaceServer.Endpoint);
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => whitespaceAdapter.SendSuccessorV6OnceAsync(
+            ProviderAdapterTestData.CanonicalRequest(), "sk-proj-invalid value"u8.ToArray(),
+            ProviderAdapterTestData.Limits(), "client-invalid-whitespace", CancellationToken.None));
+        Assert.AreEqual(0, whitespaceServer.RequestCount);
+
+        await using ProviderLoopbackServer nonAsciiServer = new(ProviderAdapterTestData.CompletedResponse());
+        using OpenAiResponsesAdapter nonAsciiAdapter =
+            OpenAiResponsesAdapter.CreateDeterministicLoopback(nonAsciiServer.Endpoint);
+        byte[] nonAscii = [.. "sk-proj-valid"u8.ToArray(), 0xc3, 0xa9];
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => nonAsciiAdapter.SendSuccessorV6OnceAsync(
+            ProviderAdapterTestData.CanonicalRequest(), nonAscii,
+            ProviderAdapterTestData.Limits(), "client-invalid-nonascii", CancellationToken.None));
+        Assert.AreEqual(0, nonAsciiServer.RequestCount);
+
+        await using ProviderLoopbackServer prefixServer = new(ProviderAdapterTestData.CompletedResponse());
+        using OpenAiResponsesAdapter prefixAdapter =
+            OpenAiResponsesAdapter.CreateDeterministicLoopback(prefixServer.Endpoint);
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => prefixAdapter.SendSuccessorV6OnceAsync(
+            ProviderAdapterTestData.CanonicalRequest(), "not-a-provider-key"u8.ToArray(),
+            ProviderAdapterTestData.Limits(), "client-invalid-prefix", CancellationToken.None));
+        Assert.AreEqual(0, prefixServer.RequestCount);
     }
 
     [TestMethod]
