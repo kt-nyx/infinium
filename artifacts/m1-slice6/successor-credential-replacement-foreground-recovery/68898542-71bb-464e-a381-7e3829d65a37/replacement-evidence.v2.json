@@ -1,0 +1,247 @@
+{
+  "schema_identity": "infinium.m1-s6.successor-credential-replacement-evidence/v2",
+  "evidence_id": "infinium.m1-s6.successor-credential-replacement-evidence/0dd95374-f9e1-400a-888d-ffd56f680214",
+  "status": "passed-active-verified-predecessor-absent",
+  "authority": {
+    "id": "infinium.m1-s6.successor-credential-replacement-foreground-recovery/68898542-71bb-464e-a381-7e3829d65a37",
+    "sha256": "9528ecdc8b0b7cff0de4fefa84d8afe3bde300393fdfb7afb027b6454e4fe8a5"
+  },
+  "independent_review": {
+    "id": "infinium.m1-s6.successor-credential-replacement-foreground-recovery-review/68299f79-0283-4890-b000-8313bb302cf5",
+    "sha256": "a34a0768eeda0503fd399ae374e4df714a78fc64aabad1937a04172e9393be65"
+  },
+  "profile": {
+    "access_profile_id": "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e",
+    "predecessor_generation_id": "g-ff6d82e7a7d244f6b8a9d0164991be37",
+    "predecessor_target_fingerprint_sha256": "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0",
+    "successor_generation_id": "g-e6b6a3f21ad74108ba65955850349f83",
+    "successor_target_fingerprint_sha256": "e7be7fd8ea2adef986806215f4a431174bab96b50789e855a2a18f96254c93ca",
+    "final_generation_id": "g-e6b6a3f21ad74108ba65955850349f83",
+    "final_generation_ordinal": 2,
+    "final_lifecycle_state": "active-verified",
+    "final_verification_state": "available",
+    "final_cleanup_disposition": "not-requested"
+  },
+  "product_state": {
+    "root_projection_sha256": "7cc4b9ea87ef086e10bb759f09e5dbd4436ffbacb0d52c782b5a46d51dff4270",
+    "checkpoint_before_sha256": "34d4fb9e56d38b534ba2ec3e5e874106c66a2038d1895576cbdfd5c964fb98de",
+    "checkpoint_after_sha256": "3ebb463346786506210498ea65c68af2768d2f73020e0e8e8b05c5d39b49f54e"
+  },
+  "effect": {
+    "helper_launch_count": 1,
+    "native_credential_operation_count": 11,
+    "native_call_trace": [
+      {
+        "Sequence": 1,
+        "Operation": "CredReadW",
+        "TargetFingerprintSha256": "e7be7fd8ea2adef986806215f4a431174bab96b50789e855a2a18f96254c93ca",
+        "Scenario": "m1-slice6-successor-credential-replacement",
+        "Result": "ERROR_NOT_FOUND",
+        "AllocationId": null,
+        "PairedAllocationId": null
+      },
+      {
+        "Sequence": 2,
+        "Operation": "CredWriteW",
+        "TargetFingerprintSha256": "e7be7fd8ea2adef986806215f4a431174bab96b50789e855a2a18f96254c93ca",
+        "Scenario": "m1-slice6-successor-credential-replacement",
+        "Result": "success",
+        "AllocationId": null,
+        "PairedAllocationId": null
+      },
+      {
+        "Sequence": 3,
+        "Operation": "CredReadW",
+        "TargetFingerprintSha256": "e7be7fd8ea2adef986806215f4a431174bab96b50789e855a2a18f96254c93ca",
+        "Scenario": "m1-slice6-successor-credential-replacement",
+        "Result": "success",
+        "AllocationId": 1,
+        "PairedAllocationId": null
+      },
+      {
+        "Sequence": 4,
+        "Operation": "CredFree",
+        "TargetFingerprintSha256": "e7be7fd8ea2adef986806215f4a431174bab96b50789e855a2a18f96254c93ca",
+        "Scenario": "m1-slice6-successor-credential-replacement",
+        "Result": "released",
+        "AllocationId": null,
+        "PairedAllocationId": 1
+      },
+      {
+        "Sequence": 5,
+        "Operation": "CredReadW",
+        "TargetFingerprintSha256": "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0",
+        "Scenario": "m1-slice6-successor-credential-replacement",
+        "Result": "success",
+        "AllocationId": 2,
+        "PairedAllocationId": null
+      },
+      {
+        "Sequence": 6,
+        "Operation": "CredFree",
+        "TargetFingerprintSha256": "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0",
+        "Scenario": "m1-slice6-successor-credential-replacement",
+        "Result": "released",
+        "AllocationId": null,
+        "PairedAllocationId": 2
+      },
+      {
+        "Sequence": 7,
+        "Operation": "CredReadW",
+        "TargetFingerprintSha256": "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0",
+        "Scenario": "m1-slice6-successor-credential-replacement",
+        "Result": "success",
+        "AllocationId": 3,
+        "PairedAllocationId": null
+      },
+      {
+        "Sequence": 8,
+        "Operation": "CredFree",
+        "TargetFingerprintSha256": "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0",
+        "Scenario": "m1-slice6-successor-credential-replacement",
+        "Result": "released",
+        "AllocationId": null,
+        "PairedAllocationId": 3
+      },
+      {
+        "Sequence": 9,
+        "Operation": "CredDeleteW",
+        "TargetFingerprintSha256": "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0",
+        "Scenario": "m1-slice6-successor-credential-replacement",
+        "Result": "success",
+        "AllocationId": null,
+        "PairedAllocationId": null
+      },
+      {
+        "Sequence": 10,
+        "Operation": "CredReadW",
+        "TargetFingerprintSha256": "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0",
+        "Scenario": "m1-slice6-successor-credential-replacement",
+        "Result": "ERROR_NOT_FOUND",
+        "AllocationId": null,
+        "PairedAllocationId": null
+      },
+      {
+        "Sequence": 11,
+        "Operation": "CredReadW",
+        "TargetFingerprintSha256": "06637d7e67004768b83297623114c8e44c7298c9a2ab37c05ab41fa8617a4dd0",
+        "Scenario": "m1-slice6-successor-credential-replacement",
+        "Result": "ERROR_NOT_FOUND",
+        "AllocationId": null,
+        "PairedAllocationId": null
+      }
+    ],
+    "entry_evidence": {
+      "Surface": "wp9-distinct-helper-owned-native-masked-paste-surface",
+      "Masked": true,
+      "PastePermitted": true,
+      "HelperOwned": true,
+      "RendererReceivedSecret": false,
+      "InitiallyBlank": true,
+      "Ready": true,
+      "HelperProcessOwned": true,
+      "SameSession": true,
+      "InputDesktopAvailable": true,
+      "NotCloaked": true,
+      "OnMonitor": true,
+      "Enabled": true,
+      "Focused": true,
+      "Foreground": true,
+      "Active": true,
+      "ReadinessChecks": 276,
+      "PreReadinessIgnoredActions": 0,
+      "MessagePumpIterations": 358,
+      "ActionSnapshot": {
+        "Action": "submit",
+        "Source": "submit-button",
+        "WindowVisible": true,
+        "EditVisible": true,
+        "InitiallyBlank": true,
+        "HelperProcessOwned": true,
+        "SameSession": true,
+        "InputDesktopAvailable": true,
+        "NotCloaked": true,
+        "OnMonitor": true,
+        "Enabled": true,
+        "Focused": true,
+        "Foreground": true,
+        "Active": true,
+        "CurrentBlank": false,
+        "CurrentCharacterLength": 91,
+        "Admitted": true
+      },
+      "TerminalState": "submitted",
+      "WindowDestroyed": true,
+      "BufferCleared": true,
+      "NativeEditEmptyVerified": true,
+      "ThreadJoined": true
+    },
+    "canaries": {
+      "SecretMatches": 0,
+      "RawTargetMatches": 0,
+      "RawTargetEncodings": [
+        "utf-8",
+        "utf-16le"
+      ],
+      "ScannedSurfaces": [
+        {
+          "Name": "private protocol request",
+          "Kind": "private-pipe-bytes",
+          "ByteCount": 756,
+          "SecretMatches": 0,
+          "RawTargetMatches": 0
+        },
+        {
+          "Name": "private protocol response",
+          "Kind": "private-pipe-bytes",
+          "ByteCount": 417,
+          "SecretMatches": 0,
+          "RawTargetMatches": 0
+        },
+        {
+          "Name": "native call trace",
+          "Kind": "canonical-trace-bytes",
+          "ByteCount": 2795,
+          "SecretMatches": 0,
+          "RawTargetMatches": 0
+        },
+        {
+          "Name": "process command line",
+          "Kind": "captured-text",
+          "ByteCount": 666,
+          "SecretMatches": 0,
+          "RawTargetMatches": 0
+        },
+        {
+          "Name": "process environment names",
+          "Kind": "captured-text",
+          "ByteCount": 35,
+          "SecretMatches": 0,
+          "RawTargetMatches": 0
+        }
+      ]
+    },
+    "staged_response_byte_length": 0,
+    "network_operation_count": 0,
+    "listener_count": 0,
+    "provider_operation_count": 0,
+    "billable_operation_count": 0,
+    "retry_attempted": false,
+    "helper_outcome": "Completed",
+    "terminal_origin": "helper-terminal-receipt",
+    "validated_failure_envelope_sha256": null,
+    "failure_stage": null,
+    "failure_reason": null,
+    "namespace_reuse_blocked": false,
+    "namespace_reuse_block_reason": null,
+    "containment": {
+      "probe_executed": true,
+      "process_tree_terminated": true,
+      "process_tree_survivor_count": 0,
+      "active_process_count_before_job_close": 4,
+      "total_contained_process_count": 4,
+      "excluded_handle_accessible": false
+    }
+  },
+  "completed_at_utc": "2026-08-22T00:42:08.0278301Z"
+}
