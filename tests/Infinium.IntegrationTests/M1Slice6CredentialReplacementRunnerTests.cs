@@ -24,6 +24,39 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
     private enum FixtureMode { Initial, ReplacingRecovery, DeletePendingRecovery }
 
     [TestMethod]
+    public void ForegroundRecoveryOwnerBindsExactStoppedAttemptAndReviewedCorrection()
+    {
+        string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(AppContext.BaseDirectory);
+        string ownerPath = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "m1-slice6-development-campaign-amendment.v7.json");
+        byte[] ownerBytes = File.ReadAllBytes(ownerPath);
+        ActiveRepositoryJsonSchemaValidator.Validate(ownerBytes,
+            File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                "m1-slice6-development-campaign-amendment.v7.schema.json")),
+            M1Slice6SuccessorCredentialReplacementRunner.ForegroundRecoveryAmendmentSchema);
+        using JsonDocument owner = JsonDocument.Parse(ownerBytes);
+        string productRoot = Path.Combine(
+            repository, "artifacts", "m1-slice6", "successor-product-state");
+        string checkpointBefore =
+            M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(productRoot);
+        M1Slice6SuccessorCredentialReplacementRunner.ValidateForegroundRecoveryOwner(
+            repository, owner.RootElement, "g-e6b6a3f21ad74108ba65955850349f83");
+        M1Slice6SuccessorCredentialReplacementRunner.ValidateForegroundRecoveryOwner(
+            repository, owner.RootElement, "g-e6b6a3f21ad74108ba65955850349f83");
+        Assert.AreEqual(checkpointBefore,
+            M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(productRoot));
+
+        JsonObject tampered = JsonNode.Parse(ownerBytes)!.AsObject();
+        tampered["retained_boundary"]!["sha256"] = new string('0', 64);
+        using JsonDocument tamperedDocument = JsonDocument.Parse(
+            JsonSerializer.SerializeToUtf8Bytes(tampered));
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            M1Slice6SuccessorCredentialReplacementRunner.ValidateForegroundRecoveryOwner(
+                repository, tamperedDocument.RootElement,
+                "g-e6b6a3f21ad74108ba65955850349f83"));
+    }
+
+    [TestMethod]
     public void TypedFailureRecoveryOwnerBindsExactRetainedAttemptAndConsumedLaunch()
     {
         string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(AppContext.BaseDirectory);
