@@ -16,11 +16,11 @@ public sealed class CandidateInvestigationProviderContextTests
 
         Assert.AreEqual(8, development.Scenarios.Count);
         Assert.AreEqual(15, validation.Scenarios.Count);
-        foreach (string disposition in new[] { "accepted", "rejected-matched-negative", "accepted-conditional",
-                     "rejected-unsupported", "rejected-contradiction-abstained", "rejected-explicit-abstention",
+        foreach (string disposition in new[] { "accepted", "abstained-unsupported", "accepted-conditional",
+                     "abstained-contradicted",
                      "not-used", "unavailable-provider" })
         {
-            Assert.AreEqual(disposition, Scenario(development, disposition).Disposition);
+            Assert.IsTrue(development.Scenarios.Any(item => item.Disposition == disposition), disposition);
         }
         foreach (string disposition in new[] { "rejected-hostile-authority", "rejected-malformed", "rejected-refusal",
                      "rejected-incomplete", "rejected-deleted-audit-only", "rejected-identity-drift" })
@@ -53,7 +53,7 @@ public sealed class CandidateInvestigationProviderContextTests
     {
         (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load("S6-CANDIDATE-DEV-v2");
         CandidateInvestigationResult baseline = CandidateInvestigationEngine.Execute(input, transcripts);
-        string contextId = baseline.Scenarios.Single(x => x.Disposition == "rejected-matched-negative").ContextId;
+        string contextId = baseline.Scenarios.First(x => x.Disposition == "abstained-unsupported").ContextId;
         CandidateInvestigationRetainedTranscript transcript = transcripts.Single(x => x.ContextId == contextId)
             with
         { ContextId = "renamed-context" };
@@ -65,7 +65,7 @@ public sealed class CandidateInvestigationProviderContextTests
             Contexts = input.Contexts.Select(x => x.ContextId == contextId ? context : x).ToArray(),
         };
 
-        Assert.AreEqual("rejected-matched-negative",
+        Assert.AreEqual("abstained-unsupported",
             CandidateInvestigationEngine.Execute(renamed, [transcript]).Scenarios.Single().Disposition);
     }
 
@@ -89,8 +89,8 @@ public sealed class CandidateInvestigationProviderContextTests
                 ContradictingEvidenceIds = [],
                 State = "proposed",
             }] }]).Scenarios.Single();
-        Assert.AreEqual(ProposalAdmissionState.Rejected,
-            wrongRelationship.Investigation.HypothesisProposals.Single().State);
+        Assert.AreEqual(SemanticDecisionState.Rejected,
+            wrongRelationship.Investigation.AdmissionLinks.Single().DecisionState);
 
         CandidateInvestigationScenarioResult omitted = CandidateInvestigationEngine.Execute(input,
             [transcript with { Proposals = [proposal with
@@ -99,7 +99,8 @@ public sealed class CandidateInvestigationProviderContextTests
                 ContradictingEvidenceIds = [],
                 State = "proposed",
             }] }]).Scenarios.Single();
-        Assert.AreEqual(ProposalAdmissionState.Abstained, omitted.Investigation.HypothesisProposals.Single().State);
+        Assert.AreEqual(SemanticDecisionState.Abstained, omitted.Investigation.AdmissionLinks.Single().DecisionState);
+        Assert.AreEqual(SemanticSupportState.Contradicted, omitted.Investigation.AdmissionLinks.Single().SupportState);
         Assert.AreEqual("known-contradiction-omitted", omitted.Investigation.HypothesisProposals.Single().Reason);
     }
 

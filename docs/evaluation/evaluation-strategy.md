@@ -2,7 +2,7 @@
 
 Status: Accepted
 Disposition: actively maintained
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-22
 Infinium is not trustworthy because it produces plausible reports. It becomes
 trustworthy only when evidence reconstruction, candidate selection, semantic
 classification, abstention, and user-facing/release presentation are evaluated
@@ -410,3 +410,13 @@ authored cases for the behavior they introduce before product comparison; WP3
 owns scale/stress construction and an independent count model; WP6 assembles
 the comprehensive cross-stage corpus. The rejected preauthored 28-package WP1
 corpus has no current authority and is not a prerequisite for product work.
+
+Slice 6 additionally binds prompt provenance to the exact UTF-8 instruction
+text serialized into a transmitted request. Its public semantic-admission
+authority independently exercises source and candidate propositions across
+supported, unsupported, contradicted, explicit-abstention, and unresolved-
+applicability cases. Proposal or faithful extraction, evidence support, local
+applicability, and host decision are compared independently; product output is
+not used to author expected truth. Historical v1/v2 fixture packages remain
+byte-preserved and are interpreted only through explicit read-only projections
+at the fixture-reader boundary.

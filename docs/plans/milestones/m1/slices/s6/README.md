@@ -1,7 +1,7 @@
 # M1 Slice 6
 
 Status: Accepted
-Disposition: Live effects and accounting are closed and immutable; Slice 6 remains implementation-active for an effect-free prompt-fidelity and semantic-admission correction
+Disposition: Live effects and accounting are closed and immutable; the effect-free prompt-fidelity and semantic-admission correction is complete and review-ready, with owner acceptance and contract freeze pending
 
 Last reviewed: 2026-08-22
 
@@ -71,18 +71,23 @@ SQLite provenance, and USD 1.62548 total committed exposure with zero
 outstanding reservation. USD 8.37452 remains unused. Commit
 `c9c06aad0185db19b9d8e41cc01eca54aa453977` records that completed candidate.
 
-Post-closeout review found one unresolved semantic seam. The live WP10 and
-WP11 requests recorded the detailed `PromptV1` identities and fingerprints but
-transmitted only the shorter generic strict-schema instruction. WP10 then
-admitted three accurately bounded claims rather than the frozen oracle's exact
-one, while WP11 retained an explicit unsupported negative rather than the
-frozen abstention. The responses are structurally valid and immutable, but
-they do not prove that the recorded prompt, host policy, product meaning, and
-independently authored expected truth agree. Slice 6 therefore remains
-implementation-active. The next gate is an effect-free correction, independent
-expected-truth review, consolidated review, and final floor before the owner
-acceptance and contract-freeze decision. No provider or credential effect is
-authorized, and Slice 7 remains unopened.
+Post-closeout review found that the live WP10 and WP11 requests recorded the
+detailed `PromptV1` identities and fingerprints but transmitted only the
+shorter generic strict-schema instruction. The effect-free correction now
+requires exact transmitted prompt text and digest before dispatch and adopts
+ADR-0034's independent proposal/extraction, support, applicability, and host-
+decision axes. Unsupported means insufficient support rather than falsehood;
+contradicted requires direct opposing evidence; abstained publishes no host
+conclusion. Schema 9/storage `1.8.0`, producers, consumers, backup/restore,
+replay, schemas/codecs, and tests carry those distinctions together.
+
+The answer-isolated `S6-SEMANTIC-ADMISSION-VAL-v1` package independently covers
+five source and five candidate cases. Registry v3 adds that authority while
+preserving the exact v1/v2 packages through fixture-reader-only projections.
+The complete review and accepted non-live floor passed without changing any
+retained response, ledger event, accounting fact, or prior evidence. The next
+gate is owner acceptance and contract freeze. No provider or credential effect
+is authorized, and Slice 7 remains unopened.
 
 ## Accepted baseline and retained execution history
 
@@ -227,6 +232,14 @@ Each reviewed runtime candidate also binds an exact logical
 product-state checkpoint: a consistent read-only SQLite backup digest plus
 every retained non-database file. Runtime admission recomputes it before any
 possible start.
+
+The effect-free semantic correction adds
+`M1-S6-C2-SEMANTIC-0009`, moving the active store to schema 9/storage `1.8.0`.
+It preserves every schema-8 row and the legacy combined decision column, adds
+explicit support, applicability, and host-decision columns, and rebuilds the
+same append-only guards. Fresh schema-9 creation and schema-8 migration
+converge on fingerprint
+`c40cfd33517c3578f5247d7bf4196fd02016b9160c6fb1a743ca58d17c1673f0`.
 
 The successor live wrapper is `eng/run-m1-slice6-successor.ps1`. It accepts
 only exact digest-bound campaign/stage/runtime/helper inputs and performs one

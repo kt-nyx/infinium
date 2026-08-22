@@ -291,6 +291,26 @@ to the reusable claim revision and preserves the original extraction. A
 decision that the claim does not apply to one local setup belongs to that
 setup's semantic analysis context instead.
 
+Provider-assisted extraction and investigation retain four separate semantic
+axes under
+[ADR-0034](../architecture/decisions/ADR-0034-prompt-fidelity-and-semantic-admission-axes.md):
+
+- the proposal or extraction state says what the provider proposed and whether
+  a cited source statement was faithfully extracted;
+- the support state says whether bounded evidence supports, fails to support,
+  directly contradicts, or could not evaluate that proposition;
+- the applicability state says whether the proposition applies in the local
+  context or whether its conditions remain unresolved; and
+- the host decision says whether Infinium admitted, rejected, abstained from,
+  or retained the result only for audit.
+
+`Unsupported` means insufficient supporting evidence, not evidence of
+falsehood. `Contradicted` requires direct opposing evidence. `Abstained` means
+the host publishes no conclusion; an explicit provider abstention is retained
+separately with support not evaluated. A faithful extracted claim may survive
+while support or local applicability remains unresolved, and only a supported,
+applicable proposition may be admitted into local analysis.
+
 ## Candidate
 
 A selected interaction that warrants investigation. Candidate selection may use

@@ -20,7 +20,7 @@
       "id": "current-public-fixtures",
       "paths": [
         "fixtures/tooling/",
-        "fixtures/public/public-fixture-registry.v1.json"
+        "fixtures/public/public-fixture-registry.v3.json"
       ],
       "validator": "Infinium.Application.Evaluation.ActiveJsonSchemaValidator",
       "claim": "functionally organized, independently authored public fixture contract evidence; never product-derived oracle authority"

@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/public-fixture-registry.v3.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_identity",
+    "registry_version",
+    "status",
+    "package_count",
+    "packages"
+  ],
+  "properties": {
+    "schema_identity": {
+      "const": "infinium.repository.public-fixture-registry/1.8.0"
+    },
+    "registry_version": {
+      "const": "1.8.0"
+    },
+    "status": {
+      "const": "current"
+    },
+    "package_count": {
+      "const": 44
+    },
+    "packages": {
+      "type": "array",
+      "minItems": 44,
+      "maxItems": 44,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/package"
+      }
+    }
+  },
+  "$defs": {
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package_identity",
+        "package_version",
+        "partition",
+        "package_path",
+        "authority_file",
+        "authority_bytes",
+        "authority_sha256"
+      ],
+      "properties": {
+        "package_identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "package_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "partition": {
+          "enum": [
+            "development",
+            "validation",
+            "finding-case-causal-conclusions",
+            "finding-case-coverage-boundaries",
+            "finding-case-reconciliation-lineage",
+            "finding-case-taxonomy-history"
+          ]
+        },
+        "package_path": {
+          "type": "string",
+          "pattern": "^fixtures/public/"
+        },
+        "authority_file": {
+          "type": "string",
+          "pattern": "^fixtures/public/.+\\.json$"
+        },
+        "authority_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "authority_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "authority_status": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

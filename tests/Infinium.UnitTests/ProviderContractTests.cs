@@ -330,13 +330,14 @@ public sealed class ProviderContractTests
     {
         HypothesisProposalContract admitted = new(
             Id("proposal-1"), Id("candidate-1"), "synthetic hypothesis", [Id("evidence-1")], [], [],
-            ProposalAdmissionState.Admitted, "synthetic admission");
+            SemanticProposalState.Proposed, "synthetic admission");
         CandidateInvestigationDocument candidate = new(
             ContractConstants.CandidateInvestigationSchemaId, "1", Id("operation-1"), "analysis-run", Id("run-1"),
             Id("run-1"), Id("candidate-1"), [Id("participant-1")], ["subject"], [Id("path-1")],
             Id("closure-1"), [Id("evidence-1")], [admitted], [], [], [Id("validation-1")], [Id("admission-1")],
             [new(Id("admission-1"), Id("proposal-1"), Id("authorization-1"), Id("operation-1"), Id("response-1"), "analysis-run",
-                Id("run-1"), Id("candidate-1"), Id("validation-1"), Id("application-1"), ProposalAdmissionState.Admitted)]);
+                Id("run-1"), Id("candidate-1"), Id("validation-1"), Id("application-1"), SemanticSupportState.Supported,
+                SemanticApplicabilityState.Applicable, SemanticDecisionState.Admitted)]);
         ProviderOperationContractInvariants.Validate(candidate);
         Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
             candidate with { AdmissionLinkIds = [Id("application-1")] }));
@@ -357,12 +358,12 @@ public sealed class ProviderContractTests
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(candidate with
             {
-                HypothesisProposals = [admitted with { State = ProposalAdmissionState.Rejected }],
+                HypothesisProposals = [admitted with { ProposalState = SemanticProposalState.Rejected }],
             }));
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(candidate with
             {
-                AdmissionLinks = [candidate.AdmissionLinks[0] with { State = ProposalAdmissionState.Rejected }],
+                AdmissionLinks = [candidate.AdmissionLinks[0] with { DecisionState = SemanticDecisionState.Rejected }],
             }));
         Assert.ThrowsExactly<ArgumentException>(() => Id(" "));
     }

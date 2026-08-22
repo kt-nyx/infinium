@@ -21,8 +21,7 @@ public sealed class ProviderBudgetIntegrationTests
         DateTimeOffset.Parse("2026-08-10T00:00:00.0000000+00:00", System.Globalization.CultureInfo.InvariantCulture);
     private static readonly string[] OutputGaps =
         ["provider-billing-unavailable", "prepaid-credit-unavailable"];
-    private static readonly string[] NonAdmittedSourceClaimStates = ["unsupported", "abstained", "deleted"];
-    private static readonly string[] AllSourceClaimStates = ["admitted", "unsupported", "abstained", "deleted"];
+    private static readonly string[] AllSourceClaimDecisionStates = ["admitted", "abstained", "abstained", "audit-only"];
     private static readonly JsonSerializerOptions FaultEvidenceJsonOptions = new() { WriteIndented = true };
 
     [TestMethod]
@@ -480,6 +479,7 @@ public sealed class ProviderBudgetIntegrationTests
             ApplicationScopeId = "application-restore",
             CostAttributionScopeId = "cost-restore",
             SourceRevisionId = "source-claim-revision",
+            ApplicableConditionIds = ["condition-mode-copper"],
             Passages =
             [
                 .. fixtureInput.Passages.Select(x => x with { SourceRevisionId = "source-claim-revision" }),
@@ -495,7 +495,11 @@ public sealed class ProviderBudgetIntegrationTests
             SourceRevisionId = "source-claim-revision",
             Proposals =
             [
-                fixtureTranscripts[0].Proposals[0] with { ProposalId = "provider-returned-arbitrary-omega" },
+                fixtureTranscripts[0].Proposals[0] with
+                {
+                    ProposalId = "provider-returned-arbitrary-omega",
+                    ApplicationSemantics = "applicability-only",
+                },
                 fixtureTranscripts[1].Proposals[0] with
                 {
                     ProposalId = "provider-returned-arbitrary-unsupported",
@@ -528,7 +532,11 @@ public sealed class ProviderBudgetIntegrationTests
         Assert.AreEqual(4, persisted.AdmissionCount);
         ProviderSemanticAdmissionReadModel[] admissions = context.Store
             .ReadSourceClaimAdmissions("acquisition-restore").ToArray();
-        CollectionAssert.AreEquivalent(AllSourceClaimStates, admissions.Select(x => x.State).ToArray());
+        CollectionAssert.AreEquivalent(AllSourceClaimDecisionStates, admissions.Select(x => x.DecisionState).ToArray());
+        Assert.IsTrue(admissions.All(x => !string.IsNullOrWhiteSpace(x.SupportState)
+            && !string.IsNullOrWhiteSpace(x.ApplicabilityState)
+            && !string.IsNullOrWhiteSpace(x.DecisionState)),
+            "Persisted source admissions must expose every independent semantic axis.");
         Assert.IsEmpty(context.Store.ReadSourceClaimApplicationLinks("acquisition-restore"),
             "Persistence and admission must not imply later consuming-analysis application.");
         SourceClaimExtractionDocument document = context.Store.ReadSourceClaimExtraction(
@@ -538,11 +546,10 @@ public sealed class ProviderBudgetIntegrationTests
         Assert.ThrowsExactly<InvalidDataException>(() => context.Store.PersistSourceClaimExtraction(new(
             document, "authorization-settlement", "wrong-response", "attempt-settlement", "request-settlement",
             gate.DispatchFenceId, BaseTime.AddSeconds(9))));
-        foreach (string state in NonAdmittedSourceClaimStates)
+        foreach (ProviderSemanticAdmissionReadModel nonAdmitted in admissions.Where(x => x.DecisionState != "admitted"))
         {
-            ProviderSemanticAdmissionReadModel nonAdmitted = admissions.Single(x => x.State == state);
             Assert.ThrowsExactly<InvalidDataException>(() => context.Store.ConsumeAdmittedSourceClaim(new(
-                "consumer-link-" + state, "acquisition-restore", nonAdmitted.AdmissionId, "run-restore",
+                "consumer-link-" + nonAdmitted.ProposalId, "acquisition-restore", nonAdmitted.AdmissionId, "run-restore",
                 "application-restore", "cost-restore", BaseTime.AddSeconds(9))));
         }
         Assert.IsEmpty(context.Store.ReadSourceClaimApplicationLinks("acquisition-restore"));
@@ -756,6 +763,7 @@ public sealed class ProviderBudgetIntegrationTests
                 ApplicationScopeId = "application-restore",
                 CostAttributionScopeId = "cost-restore",
                 SourceRevisionId = "candidate-doc-revision",
+                ApplicableConditionIds = ["condition-mode-copper"],
                 Passages = [sourcePassage, deletedSourcePassage, unavailableSourcePassage],
             };
             SourceClaimRetainedTranscript sourceTranscript = sourceTranscripts[0] with
@@ -768,6 +776,7 @@ public sealed class ProviderBudgetIntegrationTests
                 {
                     ProposalId = "candidate-source-proposal",
                     PassageId = "candidate-passage",
+                    ApplicationSemantics = "applicability-only",
                 }],
             };
             SourceClaimAdmissionPublication sourceAdmission = new SourceClaimAcquisitionCoordinator(context.Store)
@@ -1171,7 +1180,12 @@ public sealed class ProviderBudgetIntegrationTests
             input, transcript, "candidate-authorization", "candidate-attempt", "candidate-request",
             "candidate-fence", candidateAnalysisNow.AddSeconds(1));
         Assert.AreEqual(1, publication.Persistence.ProposalCount);
-        Assert.AreEqual("admitted", context.Store.ReadCandidateInvestigationAdmissions("run-restore", hostCandidateId).Single().State);
+        ProviderSemanticAdmissionReadModel candidateAdmission = context.Store
+            .ReadCandidateInvestigationAdmissions("run-restore", hostCandidateId).Single();
+        Assert.AreEqual("admitted", candidateAdmission.State);
+        Assert.AreEqual("supported", candidateAdmission.SupportState);
+        Assert.AreEqual("applicable", candidateAdmission.ApplicabilityState);
+        Assert.AreEqual("admitted", candidateAdmission.DecisionState);
         Assert.AreEqual("proposal-d01", context.Store.ReadCandidateInvestigation(
             "run-restore", hostCandidateId, "admission-proposal-d01").HypothesisProposals.Single().ProposalId.Value);
         CandidateInvestigationOutcomeReadModel retained = context.Store.ReadCandidateInvestigationOutcome(
@@ -1182,6 +1196,37 @@ public sealed class ProviderBudgetIntegrationTests
             new DurableCandidateInvestigationCoordinator(context.Store).ReplayRetained(
                 "run-restore", "candidate-operation", fixtureContext.ContextId).CanonicalInvestigationSha256);
 
+        CandidateInvestigationContextInput explicitAbstentionContext = durableContext with
+        {
+            ContextId = "context-explicit-abstention",
+        };
+        CandidateInvestigationExecutionInput explicitAbstentionInput = input with
+        {
+            Contexts = [explicitAbstentionContext, fixtureInput.Contexts[1]],
+        };
+        CandidateInvestigationRetainedTranscript explicitAbstentionTranscript = transcript with
+        {
+            TranscriptId = "transcript-explicit-abstention",
+            ContextId = explicitAbstentionContext.ContextId,
+            Proposals = [transcript.Proposals[0] with
+            {
+                ProposalId = "proposal-explicit-abstention",
+                State = "abstained",
+            }],
+        };
+        CandidateInvestigationAdmissionPublication explicitAbstention = coordinator.AdmitRetainedTranscript(
+            explicitAbstentionInput, explicitAbstentionTranscript, "candidate-authorization", "candidate-attempt",
+            "candidate-request", "candidate-fence", candidateAnalysisNow.AddSeconds(1));
+        Assert.AreEqual("abstained-explicit", explicitAbstention.Scenario.Disposition);
+        Assert.AreEqual("abstained-explicit", coordinator.ReplayRetained(
+            "run-restore", "candidate-operation", explicitAbstentionContext.ContextId).Disposition);
+        ProviderSemanticAdmissionReadModel explicitAbstentionAdmission = context.Store
+            .ReadCandidateInvestigationAdmissionsForOperation("run-restore", "candidate-operation")
+            .Single(x => x.ProposalId == "proposal-explicit-abstention");
+        Assert.AreEqual("not-evaluated", explicitAbstentionAdmission.SupportState);
+        Assert.AreEqual("applicable", explicitAbstentionAdmission.ApplicabilityState);
+        Assert.AreEqual("abstained", explicitAbstentionAdmission.DecisionState);
+
         foreach ((string Availability, string EvidenceId, string EvidenceApplicationId, string PassageId,
                      string ContextId, string TranscriptId, string ProposalId, string ExpectedDisposition,
                      string ExpectedReplay) evidenceCase in new[]
@@ -1191,7 +1236,7 @@ public sealed class ProviderBudgetIntegrationTests
                          "proposal-durable-deleted", "rejected-deleted-audit-only", "audit-only"),
                      ("unavailable", "candidate-evidence-unavailable", "evidence-application-unavailable",
                          "candidate-passage-unavailable", "context-durable-unavailable", "transcript-durable-unavailable",
-                         "proposal-durable-unavailable", "rejected-unavailable", "retained-response"),
+                         "proposal-durable-unavailable", "abstained-unavailable", "retained-response"),
                  })
         {
             CandidateAnalysisEntryContract terminalHostCandidate = candidateAnalysis.Pipeline.Analysis.Candidates.Single(item =>
@@ -1424,7 +1469,7 @@ public sealed class ProviderBudgetIntegrationTests
             }
             using StoragePaths restoredPaths = new(restoredRoot);
             using AuthoritativeStore restored = new(restoredPaths);
-            Assert.AreEqual(1, restored.ReadCandidateInvestigationAdmissions("run-restore", hostCandidateId).Count);
+            Assert.AreEqual(2, restored.ReadCandidateInvestigationAdmissions("run-restore", hostCandidateId).Count);
             Assert.AreEqual("proposal-d01", restored.ReadCandidateInvestigation(
                 "run-restore", hostCandidateId, "admission-proposal-d01").HypothesisProposals.Single().ProposalId.Value);
             Assert.AreEqual("accepted", restored.ReadCandidateInvestigationOutcome(
@@ -1437,11 +1482,11 @@ public sealed class ProviderBudgetIntegrationTests
                 "run-restore", "candidate-operation", driftContext.ContextId).Disposition);
             Assert.AreEqual("rejected-deleted-audit-only", restored.ReadCandidateInvestigationOutcome(
                 "run-restore", "candidate-operation", "context-durable-deleted").Disposition);
-            Assert.AreEqual("rejected-unavailable", restored.ReadCandidateInvestigationOutcome(
+            Assert.AreEqual("abstained-unavailable", restored.ReadCandidateInvestigationOutcome(
                 "run-restore", "candidate-operation", "context-durable-unavailable").Disposition);
             Assert.AreEqual("rejected-deleted-audit-only", new DurableCandidateInvestigationCoordinator(restored)
                 .ReplayRetained("run-restore", "candidate-operation", "context-durable-deleted").Disposition);
-            Assert.AreEqual("rejected-unavailable", new DurableCandidateInvestigationCoordinator(restored)
+            Assert.AreEqual("abstained-unavailable", new DurableCandidateInvestigationCoordinator(restored)
                 .ReplayRetained("run-restore", "candidate-operation", "context-durable-unavailable").Disposition);
             Assert.AreEqual("not-used", new DurableCandidateInvestigationCoordinator(restored).ReplayRetained(
                 "run-restore", "candidate-terminal-d07", "context-d07").Disposition);

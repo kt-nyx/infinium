@@ -1,0 +1,26 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-oracle/1.0.0",
+  "schema_version": "1",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v1",
+  "partition": "validation",
+  "definitions": {
+    "unsupported": "The attempted proposition lacks sufficient supporting evidence; this does not assert that it is false.",
+    "contradicted": "Available evidence directly opposes the attempted proposition.",
+    "abstained": "The host asserts no conclusion because support or applicability is insufficient, conflicting, unavailable, or unresolved."
+  },
+  "source_cases": [
+    {"case_id":"faithful-evidence-only","raw_state":"proposed","application_semantics":"evidence-only","condition_ids":[],"applicable_condition_ids":[],"contradiction":false,"deleted":false,"expected_proposal_state":"extracted","expected_support_state":"not-evaluated","expected_applicability_state":"not-evaluated","expected_decision_state":"abstained"},
+    {"case_id":"supported-applicable","raw_state":"proposed","application_semantics":"applicability-only","condition_ids":["condition-active"],"applicable_condition_ids":["condition-active"],"contradiction":false,"deleted":false,"expected_proposal_state":"extracted","expected_support_state":"supported","expected_applicability_state":"applicable","expected_decision_state":"admitted"},
+    {"case_id":"conditional-unestablished","raw_state":"proposed","application_semantics":"applicability-only","condition_ids":["condition-missing"],"applicable_condition_ids":[],"contradiction":false,"deleted":false,"expected_proposal_state":"extracted","expected_support_state":"not-evaluated","expected_applicability_state":"conditional-unestablished","expected_decision_state":"abstained"},
+    {"case_id":"contradicted-sources","raw_state":"proposed","application_semantics":"evidence-only","condition_ids":[],"applicable_condition_ids":[],"contradiction":true,"deleted":false,"expected_proposal_state":"extracted","expected_support_state":"contradicted","expected_applicability_state":"unknown","expected_decision_state":"abstained"},
+    {"case_id":"deleted-audit-only","raw_state":"unavailable","application_semantics":"evidence-only","condition_ids":[],"applicable_condition_ids":[],"contradiction":false,"deleted":true,"expected_proposal_state":"deleted","expected_support_state":"unavailable","expected_applicability_state":"not-evaluated","expected_decision_state":"audit-only"}
+  ],
+  "candidate_cases": [
+    {"case_id":"supported","raw_state":"proposed","supporting":true,"contradicting":false,"available":true,"expected_proposal_state":"proposed","expected_support_state":"supported","expected_applicability_state":"applicable","expected_decision_state":"admitted"},
+    {"case_id":"unsupported-declared","raw_state":"unsupported","supporting":false,"contradicting":false,"available":true,"expected_proposal_state":"proposed","expected_support_state":"unsupported","expected_applicability_state":"applicable","expected_decision_state":"abstained"},
+    {"case_id":"unsupported-absent","raw_state":"proposed","supporting":false,"contradicting":false,"available":true,"expected_proposal_state":"proposed","expected_support_state":"unsupported","expected_applicability_state":"applicable","expected_decision_state":"abstained"},
+    {"case_id":"contradicted","raw_state":"proposed","supporting":true,"contradicting":true,"available":true,"expected_proposal_state":"proposed","expected_support_state":"contradicted","expected_applicability_state":"applicable","expected_decision_state":"abstained"},
+    {"case_id":"explicit-abstention","raw_state":"abstained","supporting":false,"contradicting":false,"available":true,"expected_proposal_state":"abstained","expected_support_state":"not-evaluated","expected_applicability_state":"applicable","expected_decision_state":"abstained"}
+  ],
+  "frozen_boundaries": {"answer_isolated":true,"product_output_used":false,"provider_call_required":false,"credentials_required":false,"private_fixture_used":false,"prior_live_evidence_mutated":false}
+}

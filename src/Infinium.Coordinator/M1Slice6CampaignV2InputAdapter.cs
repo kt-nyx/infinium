@@ -100,7 +100,7 @@ internal static class M1Slice6CampaignV2InputAdapter
             Text(root, "parent_analysis_run_id"), Text(root, "application_scope_id"),
             Text(root, "cost_attribution_scope_id"), Text(root, "source_revision_id"),
             Text(root, "declared_purpose"), Text(root, "prompt_id"), Text(root, "prompt_fingerprint"),
-            normalized);
+            normalized, facts.Keys.Order(StringComparer.Ordinal).ToArray());
         SourceClaimContextMinimizer.ValidateInput(input);
         return new(input, facts, Encoding.UTF8.GetBytes(json));
     }

@@ -31,7 +31,8 @@ public sealed class SourceClaimTransparencyEvaluationTests
         SourceClaimFixturePackage package = SourceClaimFixtureReader.Read(Path.Combine(
             RepositoryRoot(), "fixtures", "public", "provider", "source-claims", "S6-CLAIM-VAL-v1"));
         SourceClaimAcquisitionResult actual = SourceClaimAcquisitionEngine.Execute(package.ExecutionInput, package.Transcripts);
-        Assert.AreEqual(0, actual.Scenarios.Sum(x => x.Extraction.ClaimProposals.Count(p => p.State == ProposalAdmissionState.Admitted)));
+        Assert.AreEqual(0, actual.Scenarios.Sum(x => x.Extraction.AdmissionCorrelations.Count(
+            p => p.DecisionState == SemanticDecisionState.Admitted)));
         Assert.IsTrue(actual.Scenarios.SelectMany(x => x.Extraction.ClaimProposals)
             .All(x => x.Reason != "Requires host validation"));
         Assert.IsFalse(File.ReadAllText(Path.Combine(RepositoryRoot(), "contracts", "json-schema", "source-claim-extraction.v1.schema.json"))

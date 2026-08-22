@@ -127,7 +127,7 @@ public sealed class CandidateInvestigationProviderProvenanceContractTests
                          { HypothesisProposals = [proposal with { ContradictingEvidenceIds = [new("evidence-d01")] }] } },
                      scenario with { Investigation = scenario.Investigation with { AdmissionLinks = [] } },
                      scenario with { Investigation = scenario.Investigation with
-                         { AdmissionLinks = [link with { State = ProposalAdmissionState.Rejected }] } },
+                         { AdmissionLinks = [link with { DecisionState = SemanticDecisionState.Rejected }] } },
                  })
         {
             CandidateInvestigationResult actual = baseline with
@@ -208,7 +208,7 @@ public sealed class CandidateInvestigationProviderProvenanceContractTests
             scenario with { Investigation = document with { HypothesisProposals = [proposal with { SupportingEvidenceIds = [] }] } },
             scenario with { Investigation = document with { HypothesisProposals = [proposal with { ContradictingEvidenceIds = [new("ev-mutated")] }] } },
             scenario with { Investigation = document with { HypothesisProposals = [proposal with { MissingInformation = ["mutated"] }] } },
-            scenario with { Investigation = document with { HypothesisProposals = [proposal with { State = ProposalAdmissionState.Rejected }] } },
+            scenario with { Investigation = document with { HypothesisProposals = [proposal with { ProposalState = SemanticProposalState.Rejected }] } },
             scenario with { Investigation = document with { HypothesisProposals = [proposal with { Reason = "mutated" }] } },
             scenario with { Investigation = document with { AdmissionLinks = [link with { AdmissionId = new("admission-mutated") }] } },
             scenario with { Investigation = document with { AdmissionLinks = [link with { AuthorizationId = new("auth-mutated") }] } },

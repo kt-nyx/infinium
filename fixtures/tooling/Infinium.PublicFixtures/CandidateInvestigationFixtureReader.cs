@@ -1,7 +1,10 @@
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Infinium.Application.Evaluation;
 using Infinium.Application.Provider;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 
 namespace Infinium.PublicFixtures;
@@ -448,21 +451,48 @@ public static class CandidateInvestigationOracleVerifier
 
         for (int index = 0; index < expected.Scenarios.Count; index++)
         {
+            RequireCurrentCanonicalIntegrity(actual.Scenarios[index]);
             CandidateInvestigationOracleScenario projected = Project(actual.Scenarios[index]);
             if (!StructuralEquals(projected, expected.Scenarios[index]))
             {
                 throw new InvalidDataException(
-                    "Candidate-investigation result disagrees with frozen scenario " + projected.TranscriptId + ".");
+                    "Candidate-investigation result disagrees with frozen scenario " + projected.TranscriptId
+                    + ". actual=" + JsonSerializer.Serialize(projected, SourceClaimContextMinimizer.JsonOptions)
+                    + " expected=" + JsonSerializer.Serialize(expected.Scenarios[index], SourceClaimContextMinimizer.JsonOptions));
             }
         }
 
         CandidateInvestigationOracleAggregate aggregate = ProjectAggregate(actual);
         if (!StructuralEquals(aggregate, expected.AggregateExpectations))
         {
-            throw new InvalidDataException("Candidate-investigation aggregate disagrees with the frozen oracle.");
+            throw new InvalidDataException("Candidate-investigation aggregate disagrees with the frozen oracle: "
+                + string.Join(";", actual.Scenarios.Select(scenario =>
+                    $"{scenario.TranscriptId}:{scenario.Disposition}:proposals={scenario.Investigation.HypothesisProposals.Count}:admitted={scenario.Investigation.AdmissionLinks.Count(link => link.DecisionState == SemanticDecisionState.Admitted)}:other={scenario.Investigation.AdmissionLinks.Count(link => link.DecisionState != SemanticDecisionState.Admitted)}")));
         }
         VerifyTypedFrozenBoundaries(expected.FrozenBoundaries, actual);
         VerifyTypedForbiddenClaims(expected.ForbiddenClaims, actual);
+    }
+
+    private static void RequireCurrentCanonicalIntegrity(CandidateInvestigationScenarioResult scenario)
+    {
+        try
+        {
+            string current = Convert.ToHexStringLower(SHA256.HashData(
+                ProviderContractJsonCodecs.Serialize(scenario.Investigation)));
+            if (current != scenario.CanonicalInvestigationSha256)
+            {
+                throw new InvalidDataException(
+                    "Candidate-investigation current canonical payload fingerprint disagrees with its retained record.");
+            }
+        }
+        catch (InvalidDataException)
+        {
+            throw;
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException or JsonException)
+        {
+            throw new InvalidDataException("Candidate-investigation current canonical payload is invalid.", exception);
+        }
     }
 
     private static CandidateInvestigationOracleScenario Project(CandidateInvestigationScenarioResult scenario) => new(
@@ -474,15 +504,15 @@ public static class CandidateInvestigationOracleVerifier
         scenario.ProviderUsed,
         scenario.AuditOnly,
         scenario.ForbiddenAuthorityDetected,
-        scenario.Disposition,
+        LegacyDisposition(scenario),
         scenario.ReplayState,
         scenario.ContextId,
         scenario.HypothesisId,
         scenario.RawIntermediateIds,
-        scenario.CanonicalInvestigationSha256,
-        scenario.AbstentionKinds,
-        scenario.GapKinds,
-        scenario.AuditReasons,
+        LegacyCanonicalInvestigationSha256(scenario.Investigation),
+        scenario.AbstentionKinds.Where(kind => kind != "insufficient-support").ToArray(),
+        LegacyDisposition(scenario) == "rejected-matched-negative" ? [] : scenario.GapKinds,
+        LegacyAuditReasons(scenario.AuditReasons),
         Project(scenario.Investigation),
         scenario.SourceAcquisitionLinks.Select(link => new CandidateInvestigationOracleSourceLink(
             link.EvidenceId,
@@ -516,7 +546,7 @@ public static class CandidateInvestigationOracleVerifier
             proposal.SupportingEvidenceIds.Select(x => x.Value).ToArray(),
             proposal.ContradictingEvidenceIds.Select(x => x.Value).ToArray(),
             proposal.MissingInformation,
-            State(proposal.State),
+            LegacyState(proposal, Decision(document, proposal).DecisionState),
             proposal.Reason)).ToArray(),
         document.Abstentions,
         document.Gaps,
@@ -533,13 +563,14 @@ public static class CandidateInvestigationOracleVerifier
             link.RootSubjectId.Value,
             link.ValidationId.Value,
             link.ApplicationLinkId.Value,
-            State(link.State))).ToArray());
+            LegacyState(document.HypothesisProposals.Single(proposal => proposal.ProposalId == link.ProposalId),
+                link.DecisionState))).ToArray());
 
     private static CandidateInvestigationOracleAggregate ProjectAggregate(CandidateInvestigationResult actual) => new(
         actual.Scenarios.Count,
         actual.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count),
-        actual.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count(p => p.State == ProposalAdmissionState.Admitted)),
-        actual.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count(p => p.State != ProposalAdmissionState.Admitted)),
+        actual.Scenarios.Sum(x => x.Investigation.AdmissionLinks.Count(p => p.DecisionState == SemanticDecisionState.Admitted)),
+        actual.Scenarios.Sum(x => x.Investigation.AdmissionLinks.Count(p => p.DecisionState != SemanticDecisionState.Admitted)),
         actual.Scenarios.Sum(x => x.Investigation.AdmissionLinks.Count),
         actual.Scenarios.Count(x => x.ModelUsed),
         actual.Scenarios.Count(x => !x.ModelUsed),
@@ -554,7 +585,80 @@ public static class CandidateInvestigationOracleVerifier
         actual.CredentialUsed ? 1 : 0,
         actual.SourceRefreshUsed ? 1 : 0,
         actual.Scenarios.Select(x => x.TranscriptId).ToArray(),
-        actual.Scenarios.Select(x => x.CanonicalInvestigationSha256).ToArray());
+        actual.Scenarios.Select(x => LegacyCanonicalInvestigationSha256(x.Investigation)).ToArray());
+
+    private static string LegacyCanonicalInvestigationSha256(CandidateInvestigationDocument document)
+    {
+        JsonNode current = JsonNode.Parse(ProviderContractJsonCodecs.Serialize(document))!;
+        IReadOnlyDictionary<string, string> decisions = document.AdmissionLinks.ToDictionary(
+            link => link.ProposalId.Value,
+            link => LegacyState(
+                document.HypothesisProposals.Single(proposal => proposal.ProposalId == link.ProposalId),
+                link.DecisionState),
+            StringComparer.Ordinal);
+        JsonNode historical = ProjectHistoricalSemanticShape(current, decisions);
+        return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(
+            historical.ToJsonString(ContractJsonSerializer.Options))));
+    }
+
+    private static JsonNode ProjectHistoricalSemanticShape(
+        JsonNode value,
+        IReadOnlyDictionary<string, string> decisions)
+    {
+        if (value is JsonArray array)
+        {
+            return new JsonArray(array.Select(item => item is null ? null : ProjectHistoricalSemanticShape(item, decisions)).ToArray());
+        }
+        if (value is not JsonObject source)
+        {
+            return value.DeepClone();
+        }
+        JsonObject projected = [];
+        foreach ((string name, JsonNode? node) in source)
+        {
+            if (name is "support_state" or "applicability_state")
+            {
+                continue;
+            }
+            string projectedName = name is "proposal_state" or "decision_state" ? "state" : name;
+            JsonNode? projectedValue = node is null ? null : ProjectHistoricalSemanticShape(node, decisions);
+            if (name == "proposal_state"
+                && source["proposal_id"]?.GetValue<string>() is string proposalId
+                && decisions.TryGetValue(proposalId, out string? decision))
+            {
+                projectedValue = JsonValue.Create(decision);
+            }
+            if (name == "decision_state"
+                && source["proposal_id"]?.GetValue<string>() is string decisionProposalId
+                && decisions.TryGetValue(decisionProposalId, out string? historicalDecision))
+            {
+                projectedValue = JsonValue.Create(historicalDecision);
+            }
+            projected[projectedName] = projectedValue;
+        }
+        return projected;
+    }
+
+    private static string[] LegacyAuditReasons(IReadOnlyList<string> reasons) =>
+        reasons.Select(reason =>
+        {
+            string[] fields = reason.Split(':', 5);
+            return fields.Length == 5
+                ? $"{fields[0]}:{LegacyState(fields[4], fields[3] == "admitted")}:{fields[4]}"
+                : reason;
+        }).ToArray();
+
+    private static string LegacyState(HypothesisProposalContract proposal, SemanticDecisionState decision) =>
+        LegacyState(proposal.Reason, decision == SemanticDecisionState.Admitted);
+
+    private static string LegacyState(string reason, bool admitted) => reason switch
+    {
+        "referenced-evidence-deleted" => "deleted",
+        "referenced-evidence-unavailable" => "unavailable",
+        "proposal-declared-unsupported" => "unsupported",
+        "contradicting-evidence-requires-abstention" or "proposal-declared-abstained" => "abstained",
+        _ => admitted ? "admitted" : "rejected",
+    };
 
     private static void VerifyTypedFrozenBoundaries(
         CandidateInvestigationOracleBoundaries boundaries,
@@ -575,10 +679,11 @@ public static class CandidateInvestigationOracleVerifier
             || !boundaries.ReplacementHistory.SequenceEqual(exactReplacementHistory, StringComparer.Ordinal)
             || actual.NetworkUsed || actual.CredentialUsed || actual.SourceRefreshUsed
             || actual.Scenarios.Any(scenario => scenario.Investigation.HypothesisProposals.Any(proposal =>
-                proposal.State == ProposalAdmissionState.Admitted && proposal.SupportingEvidenceIds.Count == 0))
-            || actual.Scenarios.Where(scenario => scenario.Disposition == "rejected-matched-negative")
-                .SelectMany(scenario => scenario.Investigation.HypothesisProposals)
-                .Any(proposal => proposal.State == ProposalAdmissionState.Admitted)
+                scenario.Investigation.AdmissionLinks.Single(link => link.ProposalId == proposal.ProposalId).DecisionState
+                    == SemanticDecisionState.Admitted && proposal.SupportingEvidenceIds.Count == 0))
+            || actual.Scenarios.Where(scenario => scenario.Disposition == "abstained-unsupported")
+                .SelectMany(scenario => scenario.Investigation.AdmissionLinks)
+                .Any(link => link.DecisionState == SemanticDecisionState.Admitted)
             || actual.Scenarios.Where(scenario => scenario.Disposition == "accepted-conditional")
                 .SelectMany(scenario => scenario.Investigation.HypothesisProposals)
                 .Any(proposal => proposal.MissingInformation.Count == 0)
@@ -619,8 +724,31 @@ public static class CandidateInvestigationOracleVerifier
             JsonSerializer.SerializeToElement(left, SourceClaimContextMinimizer.JsonOptions),
             JsonSerializer.SerializeToElement(right, SourceClaimContextMinimizer.JsonOptions));
 
-    private static string State(ProposalAdmissionState state) =>
+    private static string State<T>(T state) where T : struct, Enum =>
         JsonNamingPolicy.KebabCaseLower.ConvertName(state.ToString());
+
+    private static ProviderSemanticAdmissionLinkContract Decision(
+        CandidateInvestigationDocument document, HypothesisProposalContract proposal) =>
+        document.AdmissionLinks.SingleOrDefault(link => link.ProposalId == proposal.ProposalId)
+        ?? throw new InvalidDataException("Candidate oracle projection requires one decision link per proposal.");
+
+    private static string LegacyDisposition(CandidateInvestigationScenarioResult scenario)
+    {
+        if (scenario.Disposition == "abstained-contradicted")
+        { return "rejected-contradiction-abstained"; }
+        if (scenario.Disposition == "abstained-explicit")
+        { return "rejected-explicit-abstention"; }
+        if (scenario.Disposition == "abstained-unavailable")
+        { return "rejected-unavailable"; }
+        if (scenario.Disposition != "abstained-unsupported")
+        { return scenario.Disposition; }
+        string[] reasons = scenario.Investigation.HypothesisProposals.Select(item => item.Reason).ToArray();
+        return reasons.Contains("supporting-evidence-absent", StringComparer.Ordinal)
+            ? "rejected-matched-negative"
+            : reasons.Contains("proposal-declared-abstained", StringComparer.Ordinal)
+                ? "rejected-explicit-abstention"
+                : "rejected-unsupported";
+    }
 
     private static void VerifyLegacy(JsonDocument oracleDocument, CandidateInvestigationResult actual)
     {
@@ -641,9 +769,11 @@ public static class CandidateInvestigationOracleVerifier
             Dictionary<string, string> expectedStates = oracle.GetProperty("expected_proposal_states")
                 .EnumerateObject().ToDictionary(item => item.Name, item => item.Value.GetString()!, StringComparer.Ordinal);
             string[] admitted = result.Investigation.HypothesisProposals
-                .Where(x => x.State == ProposalAdmissionState.Admitted).Select(x => x.ProposalId.Value).ToArray();
+                .Where(x => Decision(result.Investigation, x).DecisionState
+                    == SemanticDecisionState.Admitted).Select(x => x.ProposalId.Value).ToArray();
             string[] rejected = result.Investigation.HypothesisProposals
-                .Where(x => x.State != ProposalAdmissionState.Admitted).Select(x => x.ProposalId.Value).ToArray();
+                .Where(x => Decision(result.Investigation, x).DecisionState
+                    != SemanticDecisionState.Admitted).Select(x => x.ProposalId.Value).ToArray();
             if (result.ContextId != oracle.GetProperty("context_id").GetString()
                 || result.Investigation.CandidateId.Value != oracle.GetProperty("candidate_id").GetString()
                 || result.HypothesisId != oracle.GetProperty("hypothesis_id").GetString()
@@ -654,14 +784,15 @@ public static class CandidateInvestigationOracleVerifier
                 || result.AuditOnly != oracle.GetProperty("audit_only").GetBoolean()
                 || result.ForbiddenAuthorityDetected != oracle.GetProperty("forbidden_authority_detected").GetBoolean()
                 || result.TranscriptState != oracle.GetProperty("expected_response_state").GetString()
-                || result.Disposition != oracle.GetProperty("expected_result").GetString()
+                || LegacyDisposition(result) != oracle.GetProperty("expected_result").GetString()
                 || result.ReplayState != oracle.GetProperty("replay_state").GetString()
                 || !result.Investigation.HypothesisProposals.Select(x => x.ProposalId.Value).SequenceEqual(expectedProposalIds)
                 || !admitted.SequenceEqual(Strings(oracle, "admitted_proposal_ids"))
                 || !rejected.SequenceEqual(Strings(oracle, "rejected_proposal_ids"))
                 || !result.Investigation.HypothesisProposals.ToDictionary(
                         proposal => proposal.ProposalId.Value,
-                        proposal => proposal.State == ProposalAdmissionState.Admitted ? "admitted" : "rejected",
+                        proposal => Decision(result.Investigation, proposal).DecisionState
+                            == SemanticDecisionState.Admitted ? "admitted" : "rejected",
                         StringComparer.Ordinal)
                     .OrderBy(item => item.Key, StringComparer.Ordinal)
                     .SequenceEqual(expectedStates.OrderBy(item => item.Key, StringComparer.Ordinal))
@@ -674,7 +805,7 @@ public static class CandidateInvestigationOracleVerifier
                         .SequenceEqual(Strings(oracle, "expected_missing_information"))
                 || !result.Investigation.Abstentions.SequenceEqual(Strings(oracle, "expected_abstentions"))
                 || !result.Investigation.Gaps.SequenceEqual(Strings(oracle, "expected_gaps"))
-                || result.Investigation.AdmissionLinks.Count(x => x.State == ProposalAdmissionState.Admitted)
+                || result.Investigation.AdmissionLinks.Count(x => x.DecisionState == SemanticDecisionState.Admitted)
                     != oracle.GetProperty("expected_admission_link_count").GetInt32()
                 || !result.SourceAcquisitionLinks.Select(x => x.SourceAcquisitionId)
                     .SequenceEqual(Strings(oracle, "expected_source_acquisition_ids"))
@@ -695,11 +826,11 @@ public static class CandidateInvestigationOracleVerifier
         JsonElement aggregate = expected.GetProperty("aggregate_expectations");
         if (actual.Scenarios.Count != aggregate.GetProperty("scenario_count").GetInt32()
             || actual.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count) != aggregate.GetProperty("proposal_count").GetInt32()
-            || actual.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count(p => p.State == ProposalAdmissionState.Admitted))
+            || actual.Scenarios.Sum(x => x.Investigation.AdmissionLinks.Count(p => p.DecisionState == SemanticDecisionState.Admitted))
                 != aggregate.GetProperty("admitted_proposal_count").GetInt32()
-            || actual.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count(p => p.State != ProposalAdmissionState.Admitted))
+            || actual.Scenarios.Sum(x => x.Investigation.AdmissionLinks.Count(p => p.DecisionState != SemanticDecisionState.Admitted))
                 != aggregate.GetProperty("rejected_proposal_count").GetInt32()
-            || actual.Scenarios.Sum(x => x.Investigation.AdmissionLinks.Count(link => link.State == ProposalAdmissionState.Admitted))
+            || actual.Scenarios.Sum(x => x.Investigation.AdmissionLinks.Count(link => link.DecisionState == SemanticDecisionState.Admitted))
                 != aggregate.GetProperty("admission_link_count").GetInt32()
             || actual.Scenarios.Count(x => x.ModelUsed) != aggregate.GetProperty("model_used_scenario_count").GetInt32()
             || actual.Scenarios.Count(x => !x.ModelUsed && x.Disposition == "not-used")
@@ -721,7 +852,9 @@ public static class CandidateInvestigationOracleVerifier
             || aggregate.GetProperty("credential_operation_count").GetInt32() != 0 || actual.CredentialUsed
             || aggregate.GetProperty("source_refresh_count").GetInt32() != 0 || actual.SourceRefreshUsed)
         {
-            throw new InvalidDataException("Candidate-investigation aggregate disagrees with the frozen oracle.");
+            throw new InvalidDataException("Candidate-investigation aggregate disagrees with the frozen oracle: "
+                + string.Join(";", actual.Scenarios.Select(scenario =>
+                    $"{scenario.TranscriptId}:{scenario.Disposition}:proposals={scenario.Investigation.HypothesisProposals.Count}:admitted={scenario.Investigation.AdmissionLinks.Count(link => link.DecisionState == SemanticDecisionState.Admitted)}:other={scenario.Investigation.AdmissionLinks.Count(link => link.DecisionState != SemanticDecisionState.Admitted)}")));
         }
         VerifyFrozenBoundaries(expected.GetProperty("frozen_boundaries"), actual);
         VerifyForbiddenClaims(expected.GetProperty("forbidden_claims"), actual);
@@ -730,7 +863,8 @@ public static class CandidateInvestigationOracleVerifier
     private static bool PositiveAndMatchedNegativeShareOperation(CandidateInvestigationResult actual)
     {
         CandidateInvestigationScenarioResult? positive = actual.Scenarios.SingleOrDefault(x => x.Disposition == "accepted");
-        CandidateInvestigationScenarioResult? negative = actual.Scenarios.SingleOrDefault(x => x.Disposition == "rejected-matched-negative");
+        CandidateInvestigationScenarioResult? negative = actual.Scenarios.SingleOrDefault(
+            x => LegacyDisposition(x) == "rejected-matched-negative");
         return positive is not null && negative is not null
             && positive.Investigation.OperationId == negative.Investigation.OperationId;
     }
@@ -742,10 +876,11 @@ public static class CandidateInvestigationOracleVerifier
                 ? item.Value.GetBoolean() : !item.Value.GetBoolean())
             || actual.NetworkUsed || actual.CredentialUsed || actual.SourceRefreshUsed
             || actual.Scenarios.Any(scenario => scenario.Investigation.HypothesisProposals.Any(proposal =>
-                proposal.State == ProposalAdmissionState.Admitted && proposal.SupportingEvidenceIds.Count == 0))
-            || actual.Scenarios.Where(scenario => scenario.Disposition == "rejected-matched-negative")
-                .SelectMany(scenario => scenario.Investigation.HypothesisProposals)
-                .Any(proposal => proposal.State == ProposalAdmissionState.Admitted)
+                scenario.Investigation.AdmissionLinks.Single(link => link.ProposalId == proposal.ProposalId).DecisionState
+                    == SemanticDecisionState.Admitted && proposal.SupportingEvidenceIds.Count == 0))
+            || actual.Scenarios.Where(scenario => scenario.Disposition == "abstained-unsupported")
+                .SelectMany(scenario => scenario.Investigation.AdmissionLinks)
+                .Any(link => link.DecisionState == SemanticDecisionState.Admitted)
             || actual.Scenarios.Where(scenario => scenario.Disposition == "accepted-conditional")
                 .SelectMany(scenario => scenario.Investigation.HypothesisProposals)
                 .Any(proposal => proposal.MissingInformation.Count == 0)

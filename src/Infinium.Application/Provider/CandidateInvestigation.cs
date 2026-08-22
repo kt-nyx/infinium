@@ -258,7 +258,7 @@ public static class CandidateInvestigationEngine
         List<string> audit = [];
         foreach (CandidateInvestigationTranscriptProposal proposal in transcript.Proposals)
         {
-            ProposalAdmissionState state = ValidateProposal(context, proposal, evidence, out string reason);
+            SemanticAssessment assessment = ValidateProposal(context, proposal, evidence);
             OpaqueId validationId = new("validation-" + proposal.ProposalId);
             OpaqueId admissionId = new("admission-" + proposal.ProposalId);
             validationIds.Add(validationId);
@@ -272,111 +272,120 @@ public static class CandidateInvestigationEngine
                 ?? context.Evidence[0].EvidenceApplicationLinkId;
             proposals.Add(new(new(proposal.ProposalId), new(context.CandidateId), proposal.Hypothesis,
                 retainedSupportingEvidence, retainedContradictingEvidence,
-                proposal.MissingInformation, state, reason));
+                proposal.MissingInformation, assessment.ProposalState, assessment.Reason));
             links.Add(new(admissionId, new(proposal.ProposalId), new(input.HostAuthorizationId), new(input.OperationId),
                 new(transcript.ResponseRecordId), input.OwnerKind, new(input.OwnerId), new(context.CandidateId), validationId,
-                new(applicationLinkId), state));
-            audit.Add(proposal.ProposalId + ":" + JsonNamingPolicy.KebabCaseLower.ConvertName(state.ToString()) + ":" + reason);
+                new(applicationLinkId), assessment.SupportState, SemanticApplicabilityState.Applicable,
+                assessment.DecisionState));
+            audit.Add(proposal.ProposalId + ":" + Wire(assessment.ProposalState) + ":"
+                + Wire(assessment.SupportState) + ":" + Wire(assessment.DecisionState) + ":" + assessment.Reason);
         }
         string disposition = proposals.Any(x => x.Reason == "model-proposed-forbidden-authority") ? "rejected-hostile-authority"
-            : proposals.Any(x => x.State == ProposalAdmissionState.Deleted) ? "rejected-deleted-audit-only"
-            : proposals.Any(x => x.State == ProposalAdmissionState.Abstained)
-                ? proposals.Any(x => x.ContradictingEvidenceIds.Count > 0)
-                    ? "rejected-contradiction-abstained" : "rejected-explicit-abstention"
-            : proposals.Any(x => x.State == ProposalAdmissionState.Unsupported)
-                ? transcript.Proposals.Any(x => x.State == "proposed")
-                    ? "rejected-matched-negative" : "rejected-unsupported"
-            : proposals.Any(x => x.State == ProposalAdmissionState.Unavailable) ? "rejected-unavailable"
-            : proposals.Any(x => x.State == ProposalAdmissionState.Rejected)
-                && transcript.Proposals.Any(x => x.State == "proposed" && x.SupportingEvidenceIds.Count == 0)
-                ? "rejected-matched-negative"
-            : proposals.All(x => x.State == ProposalAdmissionState.Admitted)
+            : links.Any(x => x.DecisionState == SemanticDecisionState.AuditOnly) ? "rejected-deleted-audit-only"
+            : links.Any(x => x.SupportState == SemanticSupportState.Contradicted) ? "abstained-contradicted"
+            : proposals.Any(x => x.ProposalState == SemanticProposalState.Abstained) ? "abstained-explicit"
+            : links.Any(x => x.SupportState == SemanticSupportState.Unsupported) ? "abstained-unsupported"
+            : links.Any(x => x.SupportState == SemanticSupportState.Unavailable) ? "abstained-unavailable"
+            : links.All(x => x.DecisionState == SemanticDecisionState.Admitted)
                 ? proposals.Any(x => x.MissingInformation.Count > 0) ? "accepted-conditional" : "accepted"
                 : "rejected";
-        string replayState = proposals.Any(x => x.State == ProposalAdmissionState.Deleted) ? "audit-only" : "retained-response";
-        string[] abstentionKinds = proposals.Any(x => x.State == ProposalAdmissionState.Abstained)
-            ? [proposals.Any(x => x.ContradictingEvidenceIds.Count > 0) ? "contradiction-unresolved" : "explicit-undetermined"] : [];
-        string[] gapKinds = proposals.Any(x => x.State == ProposalAdmissionState.Deleted) ? ["deleted-evidence"]
-            : proposals.Any(x => x.State == ProposalAdmissionState.Unsupported) ? ["unsupported-hypothesis"]
-            : proposals.Any(x => x.State == ProposalAdmissionState.Unavailable) ? ["evidence-unavailable"] : [];
+        string replayState = links.Any(x => x.DecisionState == SemanticDecisionState.AuditOnly) ? "audit-only" : "retained-response";
+        string[] abstentionKinds = links.Any(x => x.DecisionState == SemanticDecisionState.Abstained)
+            ? [links.Any(x => x.SupportState == SemanticSupportState.Contradicted)
+                ? "contradiction-unresolved"
+                : proposals.Any(x => x.ProposalState == SemanticProposalState.Abstained)
+                    ? "explicit-undetermined"
+                    : "insufficient-support"] : [];
+        string[] gapKinds = links.Any(x => x.DecisionState == SemanticDecisionState.AuditOnly) ? ["deleted-evidence"]
+            : links.Any(x => x.SupportState == SemanticSupportState.Unsupported) ? ["unsupported-hypothesis"]
+            : links.Any(x => x.SupportState == SemanticSupportState.Unavailable) ? ["evidence-unavailable"] : [];
         return Build(input, context, transcript, proposals, validationIds, links, disposition, replayState,
             abstentionKinds, gapKinds, audit, admissionIds);
     }
 
-    private static ProposalAdmissionState ValidateProposal(
+    private static SemanticAssessment ValidateProposal(
         CandidateInvestigationContextInput context,
         CandidateInvestigationTranscriptProposal proposal,
-        Dictionary<string, CandidateEvidenceInput> evidence,
-        out string reason)
+        Dictionary<string, CandidateEvidenceInput> evidence)
     {
         if (string.IsNullOrWhiteSpace(proposal.ProposalId) || proposal.CandidateId != context.CandidateId
             || proposal.HypothesisId != context.HypothesisId || proposal.Hypothesis != context.Hypothesis
             || proposal.SupportingEvidenceIds.Intersect(proposal.ContradictingEvidenceIds, StringComparer.Ordinal).Any()
             || proposal.SupportingEvidenceIds.Concat(proposal.ContradictingEvidenceIds).Any(id => !evidence.ContainsKey(id)))
         {
-            reason = "candidate-hypothesis-or-evidence-identity-rejected";
-            return ProposalAdmissionState.Rejected;
+            return Rejected("candidate-hypothesis-or-evidence-identity-rejected");
         }
         if (proposal.AuthorityCategory == "protected-effect-request")
         {
-            reason = "model-proposed-forbidden-authority";
-            return ProposalAdmissionState.Rejected;
+            return Rejected("model-proposed-forbidden-authority");
         }
         if (proposal.AuthorityCategory != "informational")
         {
-            reason = "unknown-authority-category";
-            return ProposalAdmissionState.Rejected;
+            return Rejected("unknown-authority-category");
         }
         CandidateEvidenceInput[] referenced = proposal.SupportingEvidenceIds.Concat(proposal.ContradictingEvidenceIds)
             .Select(id => evidence[id]).ToArray();
         if (proposal.SupportingEvidenceIds.Any(id => evidence[id].Relationship != "supporting")
             || proposal.ContradictingEvidenceIds.Any(id => evidence[id].Relationship != "contradicting"))
         {
-            reason = "evidence-relationship-mismatch";
-            return ProposalAdmissionState.Rejected;
+            return Rejected("evidence-relationship-mismatch");
         }
         if (referenced.Any(x => x.Availability == "deleted"))
         {
-            reason = "referenced-evidence-deleted";
-            return ProposalAdmissionState.Deleted;
+            return new(SemanticProposalState.Deleted, SemanticSupportState.Unavailable,
+                SemanticDecisionState.AuditOnly, "referenced-evidence-deleted");
         }
         if (referenced.Any(x => x.Availability == "unavailable") || proposal.State == "unavailable")
         {
-            reason = "referenced-evidence-unavailable";
-            return ProposalAdmissionState.Unavailable;
+            return new(SemanticProposalState.Unavailable, SemanticSupportState.Unavailable,
+                SemanticDecisionState.Abstained, "referenced-evidence-unavailable");
         }
         if (proposal.State == "unsupported")
         {
-            reason = "proposal-declared-unsupported";
-            return ProposalAdmissionState.Unsupported;
+            return new(SemanticProposalState.Proposed, SemanticSupportState.Unsupported,
+                SemanticDecisionState.Abstained, "proposal-declared-unsupported");
         }
         if (proposal.State == "abstained" || proposal.ContradictingEvidenceIds.Count > 0)
         {
-            reason = proposal.ContradictingEvidenceIds.Count > 0 ? "contradicting-evidence-requires-abstention" : "proposal-declared-abstained";
-            return ProposalAdmissionState.Abstained;
+            return proposal.ContradictingEvidenceIds.Count > 0
+                ? new(SemanticProposalState.Proposed, SemanticSupportState.Contradicted,
+                    SemanticDecisionState.Abstained, "contradicting-evidence-requires-abstention")
+                : new(SemanticProposalState.Abstained, SemanticSupportState.NotEvaluated,
+                    SemanticDecisionState.Abstained, "proposal-declared-abstained");
         }
         if (proposal.State != "proposed")
         {
-            reason = "unknown-proposal-state";
-            return ProposalAdmissionState.Rejected;
+            return Rejected("unknown-proposal-state");
         }
         if (proposal.SupportingEvidenceIds.Count == 0
             )
         {
-            reason = "supporting-evidence-absent";
-            return ProposalAdmissionState.Rejected;
+            return new(SemanticProposalState.Proposed, SemanticSupportState.Unsupported,
+                SemanticDecisionState.Abstained, "supporting-evidence-absent");
         }
         string[] knownContradictions = evidence.Values
             .Where(item => item.Relationship == "contradicting" && item.Availability == "available")
             .Select(item => item.EvidenceId).ToArray();
         if (knownContradictions.Except(proposal.ContradictingEvidenceIds, StringComparer.Ordinal).Any())
         {
-            reason = "known-contradiction-omitted";
-            return ProposalAdmissionState.Abstained;
+            return new(SemanticProposalState.Proposed, SemanticSupportState.Contradicted,
+                SemanticDecisionState.Abstained, "known-contradiction-omitted");
         }
-        reason = "exact-candidate-hypothesis-evidence-links-admitted";
-        return ProposalAdmissionState.Admitted;
+        return new(SemanticProposalState.Proposed, SemanticSupportState.Supported,
+            SemanticDecisionState.Admitted, "exact-candidate-hypothesis-evidence-links-admitted");
     }
+
+    private static SemanticAssessment Rejected(string reason) => new(SemanticProposalState.Rejected,
+        SemanticSupportState.NotEvaluated, SemanticDecisionState.Rejected, reason);
+
+    private static string Wire<T>(T value) where T : struct, Enum =>
+        JsonNamingPolicy.KebabCaseLower.ConvertName(value.ToString());
+
+    private sealed record SemanticAssessment(
+        SemanticProposalState ProposalState,
+        SemanticSupportState SupportState,
+        SemanticDecisionState DecisionState,
+        string Reason);
 
     private static CandidateInvestigationScenarioResult Failure(
         CandidateInvestigationExecutionInput input,
@@ -507,7 +516,7 @@ public static class CandidateInvestigationTransparencyRenderer
                     supporting_evidence_ids = proposal.SupportingEvidenceIds.Select(x => x.Value),
                     contradicting_evidence_ids = proposal.ContradictingEvidenceIds.Select(x => x.Value),
                     proposal.MissingInformation,
-                    state = JsonNamingPolicy.KebabCaseLower.ConvertName(proposal.State.ToString()),
+                    proposal_state = JsonNamingPolicy.KebabCaseLower.ConvertName(proposal.ProposalState.ToString()),
                     proposal.Reason,
                 }),
                 source_acquisition_links = scenario.SourceAcquisitionLinks,
@@ -531,7 +540,8 @@ public static class CandidateInvestigationTransparencyRenderer
     public static string RenderHuman(CandidateInvestigationResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
-        int admitted = result.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count(p => p.State == ProposalAdmissionState.Admitted));
+        int admitted = result.Scenarios.Sum(x => x.Investigation.AdmissionLinks.Count(
+            p => p.DecisionState == SemanticDecisionState.Admitted));
         int retained = result.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count);
         int gaps = result.Scenarios.Sum(x => x.Investigation.Gaps.Count);
         return $"Candidate investigations: {admitted} admitted, {retained - admitted} not admitted, {gaps} gaps; "

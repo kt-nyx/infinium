@@ -17,11 +17,12 @@ public sealed class SourceClaimExtractionContractTests
             "evidence-acquisition-run", Id("acquisition-contract"), Id("run-contract"), Id("scope-contract"),
             Id("cost-contract"), Id("revision-contract"), [Id("passage-contract")], "Exact source claim extraction",
             [new(Id("proposal-contract"), Id("passage-contract"), "Conditional claim", [Id("condition-contract")],
-                ProposalAdmissionState.Admitted, "exact-citation-and-identity-admitted")], [], [], [],
+                SemanticProposalState.Extracted, "exact-citation-and-identity-admitted")], [], [], [],
             [Id("validation-contract")], [Id("correlation-contract")],
             [new(Id("admission-contract"), Id("proposal-contract"), Id("authorization-contract"), Id("operation-contract"),
                 Id("response-contract"), "evidence-acquisition-run", Id("acquisition-contract"), Id("revision-contract"),
-                Id("validation-contract"), Id("correlation-contract"), ProposalAdmissionState.Admitted)]);
+                Id("validation-contract"), Id("correlation-contract"), SemanticSupportState.Supported,
+                SemanticApplicabilityState.Applicable, SemanticDecisionState.Admitted)]);
         byte[] canonical = ProviderContractJsonCodecs.Serialize(document);
         SourceClaimExtractionDocument roundTrip = ProviderContractJsonCodecs.DeserializeSourceClaimExtraction(canonical);
         CollectionAssert.AreEqual(canonical, ProviderContractJsonCodecs.Serialize(roundTrip));
@@ -50,11 +51,11 @@ public sealed class SourceClaimExtractionContractTests
 
     [TestMethod]
     [TestCategory("Contract")]
-    public void Slice5CandidateV1SchemaAndWireSemanticsRemainFrozen()
+    public void Slice6SemanticAdmissionRevisionHasExactCandidateSchemaAndWireSemantics()
     {
         byte[] schema = File.ReadAllBytes(TestRepository.PathFromRoot(
             "contracts", "json-schema", "candidate-investigation.v1.schema.json"));
-        Assert.AreEqual("74861d5d0230fca68da30686abdafc08429c6fe6866da96a77b49e7f09d0ca4c",
+        Assert.AreEqual("fece2fd9a4003e52dad7df97f5f288cc2dc88b84f988b1724e87524c16fa5bda",
             Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(schema)));
 
         Infinium.Contracts.Protobuf.Application.V1.CandidateInvestigationPayload candidate = new()
@@ -80,12 +81,14 @@ public sealed class SourceClaimExtractionContractTests
                     RootSubjectId = "candidate-frozen",
                     ValidationId = "validation-frozen",
                     ApplicationLinkId = "application-frozen",
-                    State = "admitted",
+                    SupportState = "supported",
+                    ApplicabilityState = "applicable",
+                    DecisionState = "admitted",
                 },
             },
         };
         ApplicationProviderContractValidator.Validate(candidate);
-        Assert.AreEqual("1424b7b66b81d37fd77538c922249b371e45897dd9e8f66d4d8dc71d6a58ddf1",
+        Assert.AreEqual("d54ab2845a59ff6537136273ae0d432934db24665cb81018c500bdda51ea3317",
             Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(candidate.ToByteArray())));
     }
 

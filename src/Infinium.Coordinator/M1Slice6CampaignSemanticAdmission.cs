@@ -191,7 +191,7 @@ internal static class M1Slice6CampaignSemanticAdmission
         RequireSourceRevision(store, input);
         SourceClaimScenarioResult preview = SourceClaimAcquisitionEngine.Execute(input, [transcript]).Scenarios.Single();
         HashSet<string> admittedProposalIds = preview.Extraction.AdmissionCorrelations
-            .Where(item => item.State == ProposalAdmissionState.Admitted)
+            .Where(item => item.DecisionState == SemanticDecisionState.Admitted)
             .Select(item => item.ProposalId.Value).ToHashSet(StringComparer.Ordinal);
         Dictionary<string, SourceClaimCampaignIdentity> identities = transcript.Proposals
             .Where(item => admittedProposalIds.Contains(item.ProposalId))
@@ -210,7 +210,9 @@ internal static class M1Slice6CampaignSemanticAdmission
             }, StringComparer.Ordinal);
         Dictionary<string, SourceClaimApplicabilityFactAuthority> applicabilityFacts =
             campaignInput.ApplicabilityFacts.Values.Where(item => preview.Extraction.ClaimProposals
-                    .Where(proposal => proposal.State == ProposalAdmissionState.Admitted)
+                    .Where(proposal => preview.Extraction.AdmissionCorrelations.Any(correlation =>
+                        correlation.ProposalId == proposal.ProposalId
+                        && correlation.DecisionState == SemanticDecisionState.Admitted))
                     .SelectMany(proposal => proposal.ConditionIds).Any(id => id.Value == item.FactId))
                 .ToDictionary(item => item.FactId,
                 item => new SourceClaimApplicabilityFactAuthority(item.FactId, item.SourceRevisionId,
@@ -226,7 +228,7 @@ internal static class M1Slice6CampaignSemanticAdmission
                 identities, artifactAuthority, applicabilityFacts, applicationAuthority);
         SourceClaimScenarioResult scenario = publication.Scenario;
         int admittedCount = scenario.Extraction.AdmissionCorrelations.Count(item =>
-            item.State == ProposalAdmissionState.Admitted);
+            item.DecisionState == SemanticDecisionState.Admitted);
         if (publication.Persistence.ProposalCount != input.Passages.Count
             || publication.Persistence.AdmissionCount != input.Passages.Count
             || admittedCount < 1
@@ -242,7 +244,7 @@ internal static class M1Slice6CampaignSemanticAdmission
         Dictionary<string, string> proposalPassages = transcript.Proposals.ToDictionary(
             item => item.ProposalId, item => item.PassageId, StringComparer.Ordinal);
         SourceClaimAdmissionCorrelationContract admitted = scenario.Extraction.AdmissionCorrelations
-            .Where(item => item.State == ProposalAdmissionState.Admitted)
+            .Where(item => item.DecisionState == SemanticDecisionState.Admitted)
             .OrderBy(item => passageOrder[proposalPassages[item.ProposalId.Value]])
             .First();
         SourceClaimCampaignIdentity semanticIdentity = identities[admitted.ProposalId.Value];
@@ -445,11 +447,11 @@ internal static class M1Slice6CampaignSemanticAdmission
         CandidateInvestigationAdmissionPublication positive = publications.Single(item =>
             item.Scenario.Disposition is "accepted" or "accepted-conditional");
         CandidateInvestigationAdmissionPublication negative = publications.Single(item =>
-            item.Scenario.Disposition is "empty-abstained" or "rejected-unsupported");
+            item.Scenario.Disposition is "empty-abstained" or "abstained-unsupported");
         M1Slice6CampaignEvidenceRoot positiveRoot = campaignInput.RootsByContext[positive.Scenario.ContextId];
         M1Slice6CampaignEvidenceRoot negativeRoot = campaignInput.RootsByContext[negative.Scenario.ContextId];
         if (positive.Scenario.Disposition is not ("accepted" or "accepted-conditional")
-            || negative.Scenario.Disposition is not ("empty-abstained" or "rejected-unsupported")
+            || negative.Scenario.Disposition is not ("empty-abstained" or "abstained-unsupported")
             || positiveRoot.Kind != M1Slice6CampaignEvidenceRootKind.PersistedSourceClaimApplication
             || negativeRoot.Kind != M1Slice6CampaignEvidenceRootKind.FrozenHostEvidence
             || positive.Scenario.SourceAcquisitionLinks.Count != 1
@@ -464,8 +466,8 @@ internal static class M1Slice6CampaignSemanticAdmission
         CandidateEvidenceInput evidence = context.Evidence.Single();
         return new("infinium.host.candidate-investigation-admission/v1",
             "accepted-conditional", publications.Sum(item => item.Persistence.ProposalCount),
-            publications.Sum(item => item.Scenario.Investigation.HypothesisProposals.Count(proposal =>
-                proposal.State == ProposalAdmissionState.Admitted)),
+            publications.Sum(item => item.Scenario.Investigation.AdmissionLinks.Count(link =>
+                link.DecisionState == SemanticDecisionState.Admitted)),
             semanticResultSha256, new(
                 evidence.SourceAcquisitionId, evidence.SourceAdmissionId,
                 store.ReadSourceClaimApplicationLinks(evidence.SourceAcquisitionId)
@@ -809,7 +811,7 @@ internal static class M1Slice6CampaignSemanticAdmission
                 || sourceMatrix.AdmissionCorrelations.Count != 9
                 || !sourceMatrix.AdmissionCorrelations.Any(item =>
                     item.AdmissionId.Value == root.SourceAdmissionId
-                    && item.State == ProposalAdmissionState.Admitted)
+                    && item.DecisionState == SemanticDecisionState.Admitted)
                 || sourceMatrix.ContradictionEvidenceIds.Count == 0
                 || sourceMatrix.Abstentions.Count == 0 || sourceMatrix.Gaps.Count == 0)
             {

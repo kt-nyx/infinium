@@ -78,6 +78,50 @@ public enum ProposalAdmissionState
     Deleted,
 }
 
+/// <summary>What the host retained from an untrusted semantic proposal, before deciding local use.</summary>
+public enum SemanticProposalState
+{
+    Unspecified,
+    Proposed,
+    Extracted,
+    Rejected,
+    Abstained,
+    Unavailable,
+    Deleted,
+}
+
+/// <summary>Whether the available evidence supports the proposition. Unsupported is not contradicted.</summary>
+public enum SemanticSupportState
+{
+    Unspecified,
+    NotEvaluated,
+    Supported,
+    Unsupported,
+    Contradicted,
+    Unavailable,
+}
+
+/// <summary>Whether a faithfully retained statement applies to the exact local scope.</summary>
+public enum SemanticApplicabilityState
+{
+    Unspecified,
+    NotEvaluated,
+    Applicable,
+    ConditionalUnestablished,
+    NotApplicable,
+    Unknown,
+}
+
+/// <summary>The host decision after proposal, support, and applicability have been considered.</summary>
+public enum SemanticDecisionState
+{
+    Unspecified,
+    Admitted,
+    Rejected,
+    Abstained,
+    AuditOnly,
+}
+
 public enum ProviderInputBoundProofState
 {
     Unspecified,
@@ -316,7 +360,9 @@ public sealed record ProviderSemanticAdmissionLinkContract(
     OpaqueId RootSubjectId,
     OpaqueId ValidationId,
     OpaqueId ApplicationLinkId,
-    ProposalAdmissionState State);
+    SemanticSupportState SupportState,
+    SemanticApplicabilityState ApplicabilityState,
+    SemanticDecisionState DecisionState);
 
 public sealed record SourceClaimAdmissionCorrelationContract(
     OpaqueId AdmissionId,
@@ -329,14 +375,16 @@ public sealed record SourceClaimAdmissionCorrelationContract(
     OpaqueId RootSubjectId,
     OpaqueId ValidationId,
     OpaqueId AdmissionCorrelationId,
-    ProposalAdmissionState State);
+    SemanticSupportState SupportState,
+    SemanticApplicabilityState ApplicabilityState,
+    SemanticDecisionState DecisionState);
 
 public sealed record CitationProposalContract(
     OpaqueId ProposalId,
     OpaqueId PassageId,
     string Claim,
     IReadOnlyList<OpaqueId> ConditionIds,
-    ProposalAdmissionState State,
+    SemanticProposalState ExtractionState,
     string Reason);
 
 public sealed record SourceClaimExtractionDocument(
@@ -367,7 +415,7 @@ public sealed record HypothesisProposalContract(
     IReadOnlyList<OpaqueId> SupportingEvidenceIds,
     IReadOnlyList<OpaqueId> ContradictingEvidenceIds,
     IReadOnlyList<string> MissingInformation,
-    ProposalAdmissionState State,
+    SemanticProposalState ProposalState,
     string Reason);
 
 public sealed record CandidateInvestigationDocument(

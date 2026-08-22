@@ -854,7 +854,9 @@ public static class ApplicationProviderContractValidator
                 && (declaredIdsAreAdmissions
                     ? declaredLinkIds.Contains(link.AdmissionId)
                     : declaredLinkIds.Contains(link.ApplicationLinkId))
-                && link.State is "admitted" or "rejected" or "abstained" or "unavailable" or "unsupported" or "deleted");
+                && link.SupportState is "not-evaluated" or "supported" or "unsupported" or "contradicted" or "unavailable"
+                && link.ApplicabilityState is "not-evaluated" or "applicable" or "conditional-unestablished" or "not-applicable" or "unknown"
+                && link.DecisionState is "admitted" or "rejected" or "abstained" or "audit-only");
     }
 
     private static bool ValidSourceClaimAdmissionCorrelations(
@@ -876,7 +878,9 @@ public static class ApplicationProviderContractValidator
                 && link.RootSubjectId == rootSubjectId
                 && validationIds.Contains(link.ValidationId)
                 && correlationIds.Contains(link.AdmissionCorrelationId)
-                && link.State is "admitted" or "rejected" or "abstained" or "unavailable" or "unsupported" or "deleted");
+                && link.SupportState is "not-evaluated" or "supported" or "unsupported" or "contradicted" or "unavailable"
+                && link.ApplicabilityState is "not-evaluated" or "applicable" or "conditional-unestablished" or "not-applicable" or "unknown"
+                && link.DecisionState is "admitted" or "rejected" or "abstained" or "audit-only");
     }
 
     private static bool ValidRateLimitFact(ProviderRateLimitFact value)

@@ -49,7 +49,7 @@ public sealed class EvaluationBoundaryContractTests
     private static readonly string[] CurrentPublicFixtureAuthorityPaths =
     [
         "fixtures/tooling/",
-        "fixtures/public/public-fixture-registry.v1.json",
+        "fixtures/public/public-fixture-registry.v3.json",
     ];
 
     [TestMethod]
@@ -107,8 +107,8 @@ public sealed class EvaluationBoundaryContractTests
     public void ProviderPublicFixtureRegistryExactlyIndexesEveryCurrentFunctionalPackage()
     {
         using JsonDocument registry = ReadAndValidate(
-            "fixtures/public/public-fixture-registry.v1.json",
-            "public-fixture-registry.v1.schema.json");
+            "fixtures/public/public-fixture-registry.v3.json",
+            "public-fixture-registry.v3.schema.json");
         JsonElement[] entries = registry.RootElement.GetProperty("packages")
             .EnumerateArray()
             .ToArray();
@@ -130,7 +130,11 @@ public sealed class EvaluationBoundaryContractTests
         Assert.AreEqual(entries.Length, actual.Count, "Package identities must be unique.");
 
         Dictionary<string, FixtureSourceIdentity> expected = DiscoverCurrentFixturePackages();
-        CollectionAssert.AreEquivalent(expected.Keys.ToArray(), actual.Keys.ToArray());
+        string[] expectedRegistryIdentities = expected.Keys
+            .Concat(R1V2PackageAuthorities.Keys)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        CollectionAssert.AreEquivalent(expectedRegistryIdentities, actual.Keys.ToArray());
         foreach ((string identity, FixtureSourceIdentity source) in expected)
         {
             FixtureRegistryEntry registered = actual[identity];
@@ -193,6 +197,31 @@ public sealed class EvaluationBoundaryContractTests
             Assert.AreEqual(Convert.ToHexStringLower(SHA256.HashData(bytes)),
                 row.GetProperty("authority_sha256").GetString(), authority);
         }
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
+    public void ProviderPublicFixtureRegistryV3PreservesV2AndAddsOnlySemanticAdmissionAuthority()
+    {
+        using JsonDocument v2 = ReadAndValidate(
+            "fixtures/public/public-fixture-registry.v2.json", "public-fixture-registry.v2.schema.json");
+        using JsonDocument v3 = ReadAndValidate(
+            "fixtures/public/public-fixture-registry.v3.json", "public-fixture-registry.v3.schema.json");
+        JsonElement[] retained = v2.RootElement.GetProperty("packages").EnumerateArray().ToArray();
+        JsonElement[] rows = v3.RootElement.GetProperty("packages").EnumerateArray().ToArray();
+        Assert.AreEqual(43, retained.Length);
+        Assert.AreEqual(44, rows.Length);
+        for (int index = 0; index < retained.Length; index++)
+        {
+            Assert.IsTrue(JsonElement.DeepEquals(retained[index], rows[index]), $"Registry v2 row {index} drifted in v3.");
+        }
+        JsonElement semantic = rows[^1];
+        Assert.AreEqual("S6-SEMANTIC-ADMISSION-VAL-v1", semantic.GetProperty("package_identity").GetString());
+        string authority = semantic.GetProperty("authority_file").GetString()!;
+        byte[] bytes = File.ReadAllBytes(TestRepository.PathFromRoot([.. authority.Split('/')]));
+        Assert.AreEqual(bytes.LongLength, semantic.GetProperty("authority_bytes").GetInt64());
+        Assert.AreEqual(Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(),
+            semantic.GetProperty("authority_sha256").GetString());
     }
 
     [TestMethod]

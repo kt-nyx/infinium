@@ -411,12 +411,15 @@ public partial class AuthoritativeStore
         }
         if (request.AdmittedArtifactAuthorityByProposal.Count != 0
             && (!request.AdmittedArtifactAuthorityByProposal.Keys.ToHashSet(StringComparer.Ordinal)
-                    .SetEquals(document.ClaimProposals.Where(item => item.State == ProposalAdmissionState.Admitted)
+                    .SetEquals(document.AdmissionCorrelations
+                        .Where(item => item.DecisionState == SemanticDecisionState.Admitted)
                         .Select(item => item.ProposalId.Value))
                 || !request.ApplicationAuthorityByProposal.Keys.ToHashSet(StringComparer.Ordinal)
                     .SetEquals(request.AdmittedArtifactAuthorityByProposal.Keys)
                 || !request.ApplicabilityFactsById.Keys.ToHashSet(StringComparer.Ordinal).SetEquals(
-                    document.ClaimProposals.Where(item => item.State == ProposalAdmissionState.Admitted)
+                    document.ClaimProposals.Where(item => document.AdmissionCorrelations.Any(link =>
+                            link.ProposalId == item.ProposalId
+                            && link.DecisionState == SemanticDecisionState.Admitted))
                         .SelectMany(item => item.ConditionIds).Select(item => item.Value))))
         {
             throw new InvalidDataException(
@@ -476,11 +479,11 @@ public partial class AuthoritativeStore
                 byte[] payload = JsonSerializer.SerializeToUtf8Bytes(document);
                 string payloadId = AdmitCoordinatorPayload(
                     payload, "source-claim-extraction", proposal.ProposalId.Value, request.OccurredAt, transaction);
-                string kind = proposal.State is ProposalAdmissionState.Abstained ? "abstention"
-                    : proposal.State is ProposalAdmissionState.Unsupported or ProposalAdmissionState.Unavailable
-                        or ProposalAdmissionState.Deleted ? "gap" : "source-claim";
+                string kind = proposal.ExtractionState is SemanticProposalState.Abstained ? "abstention"
+                    : proposal.ExtractionState is SemanticProposalState.Unavailable or SemanticProposalState.Deleted
+                        or SemanticProposalState.Rejected ? "gap" : "source-claim";
                 string? admittedArtifactId = null;
-                if (proposal.State == ProposalAdmissionState.Admitted)
+                if (link.DecisionState == SemanticDecisionState.Admitted)
                 {
                     admittedArtifactId = request.AdmittedArtifactIdsByProposal.TryGetValue(
                         proposal.ProposalId.Value, out string? exactArtifact)
@@ -499,12 +502,17 @@ public partial class AuthoritativeStore
                       payload_id,created_at)
                     VALUES($proposal,$authorization,$operation,$attempt,$request,$response,$fence,$owner_kind,
                       $owner,$root,$correlation,$kind,$payload,$now);
-                    INSERT INTO provider_semantic_validations VALUES(
+                    INSERT INTO provider_semantic_validations(
+                      validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
+                      state,host_policy_id,reason,created_at,support_state,applicability_state,decision_state) VALUES(
                       $validation,$proposal,$operation,$response,$owner_kind,$owner,$root,$state,
-                      'infinium.host.source-claim-admission/v1',$reason,$now);
-                    INSERT INTO provider_semantic_admissions VALUES(
+                      'infinium.host.source-claim-admission/v1',$reason,$now,$support,$applicability,$decision);
+                    INSERT INTO provider_semantic_admissions(
+                      admission_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
+                      validation_id,semantic_link_id,state,host_policy_id,reason,admitted_artifact_id,created_at,
+                      support_state,applicability_state,decision_state) VALUES(
                       $admission,$proposal,$operation,$response,$owner_kind,$owner,$root,$validation,$correlation,
-                      $state,'infinium.host.source-claim-admission/v1',$reason,$artifact,$now);
+                      $state,'infinium.host.source-claim-admission/v1',$reason,$artifact,$now,$support,$applicability,$decision);
                     """,
                     transaction,
                     ("$proposal", proposal.ProposalId.Value), ("$authorization", request.AuthorizationId),
@@ -513,11 +521,13 @@ public partial class AuthoritativeStore
                     ("$fence", request.DispatchFenceId), ("$owner_kind", document.OwnerKind),
                     ("$owner", document.OwnerId.Value), ("$root", document.SourceRevisionId.Value),
                     ("$correlation", link.AdmissionCorrelationId.Value), ("$kind", kind), ("$payload", payloadId),
-                    ("$validation", link.ValidationId.Value), ("$state", ToAdmissionState(proposal.State)),
+                    ("$validation", link.ValidationId.Value), ("$state", ToAdmissionState(link.DecisionState)),
+                    ("$support", ToWire(link.SupportState)), ("$applicability", ToWire(link.ApplicabilityState)),
+                    ("$decision", ToWire(link.DecisionState)),
                     ("$reason", proposal.Reason), ("$admission", link.AdmissionId.Value),
                     ("$artifact", admittedArtifactId),
                     ("$now", ToText(request.OccurredAt)));
-                if (proposal.State == ProposalAdmissionState.Admitted
+                if (link.DecisionState == SemanticDecisionState.Admitted
                     && request.AdmittedArtifactAuthorityByProposal.Count != 0)
                 {
                     if (!request.AdmittedArtifactAuthorityByProposal.TryGetValue(proposal.ProposalId.Value,
@@ -608,7 +618,8 @@ public partial class AuthoritativeStore
                 """
                 SELECT admission.admission_id,admission.proposal_id,admission.operation_id,
                   admission.response_record_id,admission.root_subject_id,admission.validation_id,
-                  admission.semantic_link_id,admission.state,admission.reason,proposal.payload_id
+                  admission.semantic_link_id,admission.state,admission.reason,proposal.payload_id,
+                  admission.support_state,admission.applicability_state,admission.decision_state
                 FROM provider_semantic_admissions admission
                 JOIN provider_semantic_proposals proposal ON proposal.proposal_id=admission.proposal_id
                 WHERE admission.owner_kind='evidence-acquisition-run' AND admission.owner_id=$owner
@@ -621,7 +632,8 @@ public partial class AuthoritativeStore
             {
                 results.Add(new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
                     reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7),
-                    reader.GetString(8), reader.GetString(9)));
+                    reader.GetString(8), reader.GetString(9), reader.GetString(10), reader.GetString(11),
+                    reader.GetString(12)));
             }
             return results;
         }
@@ -664,6 +676,18 @@ public partial class AuthoritativeStore
         ProposalAdmissionState.Deleted => "deleted",
         _ => throw new InvalidDataException("Source-claim persistence requires an explicit terminal admission state."),
     };
+
+    private static string ToAdmissionState(SemanticDecisionState state) => state switch
+    {
+        SemanticDecisionState.Admitted => "admitted",
+        SemanticDecisionState.Rejected => "rejected",
+        SemanticDecisionState.Abstained => "abstained",
+        SemanticDecisionState.AuditOnly => "deleted",
+        _ => throw new InvalidDataException("Semantic persistence requires an explicit terminal decision state."),
+    };
+
+    private static string ToWire<T>(T state) where T : struct, Enum =>
+        JsonNamingPolicy.KebabCaseLower.ConvertName(state.ToString());
 
     public CandidateInvestigationPersistenceReceipt PersistCandidateInvestigation(
         CandidateInvestigationPersistenceRequest request)
@@ -835,9 +859,9 @@ public partial class AuthoritativeStore
                 {
                     HypothesisProposalContract proposal = document.HypothesisProposals.Single(x => x.ProposalId == link.ProposalId);
                     string payloadId = resultPayloadId;
-                    string kind = proposal.State is ProposalAdmissionState.Abstained ? "abstention"
-                        : proposal.State is ProposalAdmissionState.Unsupported or ProposalAdmissionState.Unavailable
-                            or ProposalAdmissionState.Deleted ? "gap" : "candidate-hypothesis";
+                    string kind = proposal.ProposalState is SemanticProposalState.Abstained ? "abstention"
+                        : proposal.ProposalState is SemanticProposalState.Unavailable or SemanticProposalState.Deleted
+                            or SemanticProposalState.Rejected ? "gap" : "candidate-hypothesis";
                     Execute(
                         """
                     INSERT INTO provider_semantic_proposals(
@@ -846,12 +870,17 @@ public partial class AuthoritativeStore
                       payload_id,created_at)
                     VALUES($proposal,$authorization,$operation,$attempt,$request,$response,$fence,'analysis-run',
                       $owner,$candidate,$application,$kind,$payload,$now);
-                    INSERT INTO provider_semantic_validations VALUES(
+                    INSERT INTO provider_semantic_validations(
+                      validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
+                      state,host_policy_id,reason,created_at,support_state,applicability_state,decision_state) VALUES(
                       $validation,$proposal,$operation,$response,'analysis-run',$owner,$candidate,$state,
-                      'infinium.host.candidate-investigation-admission/v1',$reason,$now);
-                    INSERT INTO provider_semantic_admissions VALUES(
+                      'infinium.host.candidate-investigation-admission/v1',$reason,$now,$support,$applicability,$decision);
+                    INSERT INTO provider_semantic_admissions(
+                      admission_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
+                      validation_id,semantic_link_id,state,host_policy_id,reason,admitted_artifact_id,created_at,
+                      support_state,applicability_state,decision_state) VALUES(
                       $admission,$proposal,$operation,$response,'analysis-run',$owner,$candidate,$validation,$application,
-                      $state,'infinium.host.candidate-investigation-admission/v1',$reason,$artifact,$now);
+                      $state,'infinium.host.candidate-investigation-admission/v1',$reason,$artifact,$now,$support,$applicability,$decision);
                     """,
                         transaction,
                         ("$proposal", proposal.ProposalId.Value), ("$authorization", request.AuthorizationId),
@@ -860,9 +889,11 @@ public partial class AuthoritativeStore
                         ("$fence", request.DispatchFenceId), ("$owner", document.OwnerId.Value),
                         ("$candidate", document.CandidateId.Value), ("$application", link.ApplicationLinkId.Value),
                         ("$kind", kind), ("$payload", payloadId), ("$validation", link.ValidationId.Value),
-                        ("$state", ToAdmissionState(proposal.State)), ("$reason", proposal.Reason),
+                        ("$state", ToAdmissionState(link.DecisionState)), ("$reason", proposal.Reason),
+                        ("$support", ToWire(link.SupportState)), ("$applicability", ToWire(link.ApplicabilityState)),
+                        ("$decision", ToWire(link.DecisionState)),
                         ("$admission", link.AdmissionId.Value),
-                        ("$artifact", proposal.State == ProposalAdmissionState.Admitted ? payloadId : null),
+                        ("$artifact", link.DecisionState == SemanticDecisionState.Admitted ? payloadId : null),
                         ("$now", ToText(request.OccurredAt)));
                 }
                 if (ownsTransaction)
@@ -1150,7 +1181,8 @@ public partial class AuthoritativeStore
             foreach (HypothesisProposalContract proposal in request.Document.HypothesisProposals)
             {
                 JsonElement retained = ExactObject(transcript.GetProperty("proposals"), "proposal_id", proposal.ProposalId.Value);
-                (ProposalAdmissionState State, string Reason, string ApplicationLinkId) expectedProposal =
+                (SemanticProposalState ProposalState, SemanticSupportState SupportState,
+                    SemanticDecisionState DecisionState, string Reason, string ApplicationLinkId) expectedProposal =
                     ExpectedCandidateProposal(context, retained);
                 ProviderSemanticAdmissionLinkContract admission = request.Document.AdmissionLinks.Single(x =>
                     x.ProposalId == proposal.ProposalId);
@@ -1162,7 +1194,10 @@ public partial class AuthoritativeStore
                     || !Strings(retained, "contradicting_evidence_ids").SequenceEqual(
                         proposal.ContradictingEvidenceIds.Select(x => x.Value), StringComparer.Ordinal)
                     || !Strings(retained, "missing_information").SequenceEqual(proposal.MissingInformation, StringComparer.Ordinal)
-                    || proposal.State != expectedProposal.State || proposal.Reason != expectedProposal.Reason
+                    || proposal.ProposalState != expectedProposal.ProposalState || proposal.Reason != expectedProposal.Reason
+                    || admission.SupportState != expectedProposal.SupportState
+                    || admission.ApplicabilityState != SemanticApplicabilityState.Applicable
+                    || admission.DecisionState != expectedProposal.DecisionState
                     || admission.ApplicationLinkId.Value != expectedProposal.ApplicationLinkId
                     || !request.Document.ValidationIds.Contains(new("validation-" + proposal.ProposalId.Value))
                     || !request.Document.AdmissionLinkIds.Contains(new("admission-" + proposal.ProposalId.Value)))
@@ -1247,7 +1282,8 @@ public partial class AuthoritativeStore
         }
     }
 
-    private static (ProposalAdmissionState State, string Reason, string ApplicationLinkId) ExpectedCandidateProposal(
+    private static (SemanticProposalState ProposalState, SemanticSupportState SupportState,
+        SemanticDecisionState DecisionState, string Reason, string ApplicationLinkId) ExpectedCandidateProposal(
         JsonElement context,
         JsonElement proposal)
     {
@@ -1266,57 +1302,70 @@ public partial class AuthoritativeStore
             || supporting.Intersect(contradicting, StringComparer.Ordinal).Any()
             || referencedIds.Any(id => !evidence.ContainsKey(id)))
         {
-            return (ProposalAdmissionState.Rejected, "candidate-hypothesis-or-evidence-identity-rejected", applicationLinkId);
+            return (SemanticProposalState.Rejected, SemanticSupportState.NotEvaluated,
+                SemanticDecisionState.Rejected, "candidate-hypothesis-or-evidence-identity-rejected", applicationLinkId);
         }
         if (Text(proposal, "authority_category") == "protected-effect-request")
         {
-            return (ProposalAdmissionState.Rejected, "model-proposed-forbidden-authority", applicationLinkId);
+            return (SemanticProposalState.Rejected, SemanticSupportState.NotEvaluated,
+                SemanticDecisionState.Rejected, "model-proposed-forbidden-authority", applicationLinkId);
         }
         if (Text(proposal, "authority_category") != "informational")
         {
-            return (ProposalAdmissionState.Rejected, "unknown-authority-category", applicationLinkId);
+            return (SemanticProposalState.Rejected, SemanticSupportState.NotEvaluated,
+                SemanticDecisionState.Rejected, "unknown-authority-category", applicationLinkId);
         }
         if (supporting.Any(id => Text(evidence[id], "relationship") != "supporting")
             || contradicting.Any(id => Text(evidence[id], "relationship") != "contradicting"))
         {
-            return (ProposalAdmissionState.Rejected, "evidence-relationship-mismatch", applicationLinkId);
+            return (SemanticProposalState.Rejected, SemanticSupportState.NotEvaluated,
+                SemanticDecisionState.Rejected, "evidence-relationship-mismatch", applicationLinkId);
         }
         JsonElement[] referenced = referencedIds.Select(id => evidence[id]).ToArray();
         if (referenced.Any(item => Text(item, "availability") == "deleted"))
         {
-            return (ProposalAdmissionState.Deleted, "referenced-evidence-deleted", applicationLinkId);
+            return (SemanticProposalState.Deleted, SemanticSupportState.Unavailable,
+                SemanticDecisionState.AuditOnly, "referenced-evidence-deleted", applicationLinkId);
         }
         if (referenced.Any(item => Text(item, "availability") == "unavailable")
             || Text(proposal, "state") == "unavailable")
         {
-            return (ProposalAdmissionState.Unavailable, "referenced-evidence-unavailable", applicationLinkId);
+            return (SemanticProposalState.Unavailable, SemanticSupportState.Unavailable,
+                SemanticDecisionState.Abstained, "referenced-evidence-unavailable", applicationLinkId);
         }
         if (Text(proposal, "state") == "unsupported")
         {
-            return (ProposalAdmissionState.Unsupported, "proposal-declared-unsupported", applicationLinkId);
+            return (SemanticProposalState.Proposed, SemanticSupportState.Unsupported,
+                SemanticDecisionState.Abstained, "proposal-declared-unsupported", applicationLinkId);
         }
         if (Text(proposal, "state") == "abstained" || contradicting.Length > 0)
         {
-            return (ProposalAdmissionState.Abstained,
-                contradicting.Length > 0 ? "contradicting-evidence-requires-abstention" : "proposal-declared-abstained",
-                applicationLinkId);
+            return contradicting.Length > 0
+                ? (SemanticProposalState.Proposed, SemanticSupportState.Contradicted,
+                    SemanticDecisionState.Abstained, "contradicting-evidence-requires-abstention", applicationLinkId)
+                : (SemanticProposalState.Abstained, SemanticSupportState.NotEvaluated,
+                    SemanticDecisionState.Abstained, "proposal-declared-abstained", applicationLinkId);
         }
         if (Text(proposal, "state") != "proposed")
         {
-            return (ProposalAdmissionState.Rejected, "unknown-proposal-state", applicationLinkId);
+            return (SemanticProposalState.Rejected, SemanticSupportState.NotEvaluated,
+                SemanticDecisionState.Rejected, "unknown-proposal-state", applicationLinkId);
         }
         if (supporting.Length == 0)
         {
-            return (ProposalAdmissionState.Rejected, "supporting-evidence-absent", applicationLinkId);
+            return (SemanticProposalState.Proposed, SemanticSupportState.Unsupported,
+                SemanticDecisionState.Abstained, "supporting-evidence-absent", applicationLinkId);
         }
         string[] knownContradictions = evidence.Values
             .Where(item => Text(item, "relationship") == "contradicting" && Text(item, "availability") == "available")
             .Select(item => Text(item, "evidence_id")).ToArray();
         if (knownContradictions.Except(contradicting, StringComparer.Ordinal).Any())
         {
-            return (ProposalAdmissionState.Abstained, "known-contradiction-omitted", applicationLinkId);
+            return (SemanticProposalState.Proposed, SemanticSupportState.Contradicted,
+                SemanticDecisionState.Abstained, "known-contradiction-omitted", applicationLinkId);
         }
-        return (ProposalAdmissionState.Admitted, "exact-candidate-hypothesis-evidence-links-admitted", applicationLinkId);
+        return (SemanticProposalState.Proposed, SemanticSupportState.Supported,
+            SemanticDecisionState.Admitted, "exact-candidate-hypothesis-evidence-links-admitted", applicationLinkId);
     }
 
     private static (string Disposition, string ReplayState) ExpectedCandidateOutcome(
@@ -1344,24 +1393,21 @@ public partial class AuthoritativeStore
         }
         string disposition = document.HypothesisProposals.Any(x => x.Reason == "model-proposed-forbidden-authority")
             ? "rejected-hostile-authority"
-            : document.HypothesisProposals.Any(x => x.State == ProposalAdmissionState.Deleted)
+            : document.AdmissionLinks.Any(x => x.DecisionState == SemanticDecisionState.AuditOnly)
                 ? "rejected-deleted-audit-only"
-            : document.HypothesisProposals.Any(x => x.State == ProposalAdmissionState.Abstained)
-                ? document.HypothesisProposals.Any(x => x.ContradictingEvidenceIds.Count > 0)
-                    ? "rejected-contradiction-abstained" : "rejected-explicit-abstention"
-            : document.HypothesisProposals.Any(x => x.State == ProposalAdmissionState.Unsupported)
-                ? transcriptProposals.Any(x => Text(x, "state") == "proposed")
-                    ? "rejected-matched-negative" : "rejected-unsupported"
-            : document.HypothesisProposals.Any(x => x.State == ProposalAdmissionState.Unavailable) ? "rejected-unavailable"
-            : document.HypothesisProposals.Any(x => x.State == ProposalAdmissionState.Rejected)
-                && transcriptProposals.Any(x => Text(x, "state") == "proposed"
-                    && Strings(x, "supporting_evidence_ids").Length == 0)
-                ? "rejected-matched-negative"
-            : document.HypothesisProposals.All(x => x.State == ProposalAdmissionState.Admitted)
+            : document.AdmissionLinks.Any(x => x.SupportState == SemanticSupportState.Contradicted)
+                ? "abstained-contradicted"
+            : document.HypothesisProposals.Any(x => x.ProposalState == SemanticProposalState.Abstained)
+                ? "abstained-explicit"
+            : document.AdmissionLinks.Any(x => x.SupportState == SemanticSupportState.Unsupported)
+                ? "abstained-unsupported"
+            : document.AdmissionLinks.Any(x => x.SupportState == SemanticSupportState.Unavailable)
+                ? "abstained-unavailable"
+            : document.AdmissionLinks.All(x => x.DecisionState == SemanticDecisionState.Admitted)
                 ? document.HypothesisProposals.Any(x => x.MissingInformation.Count > 0)
                     ? "accepted-conditional" : "accepted"
                 : "rejected";
-        return (disposition, document.HypothesisProposals.Any(x => x.State == ProposalAdmissionState.Deleted)
+        return (disposition, document.AdmissionLinks.Any(x => x.DecisionState == SemanticDecisionState.AuditOnly)
             ? "audit-only" : "retained-response");
     }
 
@@ -1666,7 +1712,8 @@ public partial class AuthoritativeStore
                 """
                 SELECT admission.admission_id,admission.proposal_id,admission.operation_id,
                   admission.response_record_id,admission.root_subject_id,admission.validation_id,
-                  admission.semantic_link_id,admission.state,admission.reason,proposal.payload_id
+                  admission.semantic_link_id,admission.state,admission.reason,proposal.payload_id,
+                  admission.support_state,admission.applicability_state,admission.decision_state
                 FROM provider_semantic_admissions admission
                 JOIN provider_semantic_proposals proposal ON proposal.proposal_id=admission.proposal_id
                 WHERE admission.owner_kind='analysis-run' AND admission.owner_id=$owner
@@ -1681,7 +1728,8 @@ public partial class AuthoritativeStore
             {
                 results.Add(new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
                     reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7),
-                    reader.GetString(8), reader.GetString(9)));
+                    reader.GetString(8), reader.GetString(9), reader.GetString(10), reader.GetString(11),
+                    reader.GetString(12)));
             }
             return results;
         }
@@ -1875,7 +1923,8 @@ public partial class AuthoritativeStore
                 """
                 SELECT admission.admission_id,admission.proposal_id,admission.operation_id,
                   admission.response_record_id,admission.root_subject_id,admission.validation_id,
-                  admission.semantic_link_id,admission.state,admission.reason,proposal.payload_id
+                  admission.semantic_link_id,admission.state,admission.reason,proposal.payload_id,
+                  admission.support_state,admission.applicability_state,admission.decision_state
                 FROM provider_semantic_admissions admission
                 JOIN provider_semantic_proposals proposal ON proposal.proposal_id=admission.proposal_id
                 WHERE admission.owner_kind='analysis-run' AND admission.owner_id=$owner
@@ -1890,7 +1939,8 @@ public partial class AuthoritativeStore
             {
                 results.Add(new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
                     reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7),
-                    reader.GetString(8), reader.GetString(9)));
+                    reader.GetString(8), reader.GetString(9), reader.GetString(10), reader.GetString(11),
+                    reader.GetString(12)));
             }
             return results;
         }
@@ -2049,7 +2099,10 @@ public sealed record ProviderSemanticAdmissionReadModel(
     string AdmissionCorrelationId,
     string State,
     string Reason,
-    string PayloadId);
+    string PayloadId,
+    string SupportState,
+    string ApplicabilityState,
+    string DecisionState);
 
 public sealed record CandidateInvestigationPersistenceRequest(
     CandidateInvestigationDocument Document,

@@ -504,8 +504,10 @@ message SourceClaimAdmissionCorrelation {
   string root_subject_id = 7;
   string validation_id = 8;
   string admission_correlation_id = 9;
-  string state = 10;
+  string support_state = 10;
   string authorization_id = 11;
+  string applicability_state = 12;
+  string decision_state = 13;
 }
 
 message CandidateInvestigationPayload {
@@ -529,8 +531,10 @@ message ProviderSemanticAdmissionLink {
   string root_subject_id = 7;
   string validation_id = 8;
   string application_link_id = 9;
-  string state = 10;
+  string support_state = 10;
   string authorization_id = 11;
+  string applicability_state = 12;
+  string decision_state = 13;
 }
 
 message GetAnalysisOutputRequest {

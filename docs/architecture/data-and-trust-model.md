@@ -91,6 +91,10 @@ causal evidence, severity, confidence, or authority.
 
 Each transition records the applicable analyzer, ruleset, tool, prompt, model,
 and evidence identities, including explicit absence of LLM involvement.
+For a provider operation, prompt provenance binds the exact UTF-8 instruction
+text serialized into the canonical transmitted request and the SHA-256 of
+those exact bytes. A prompt ID or fingerprint recorded elsewhere cannot stand
+in for the transmitted text.
 
 Reusable external claims retain their evidence-acquisition-run provenance.
 Consuming analysis runs add application links; they do not rewrite the claims
@@ -140,6 +144,14 @@ only a schema-constrained result containing:
 
 The system validates identifiers, citations, schema, applicability, and
 provenance before results become stored claims or findings.
+
+Validation is axis-specific. Faithful proposal/extraction, evidence support,
+local applicability, and the host admission decision are distinct facts. An
+unsupported proposition lacks sufficient support but is not thereby false; a
+contradicted proposition has direct opposing evidence; and an abstained host
+decision publishes no conclusion. Only supported and applicable propositions
+can be admitted. See
+[ADR-0034](decisions/ADR-0034-prompt-fidelity-and-semantic-admission-axes.md).
 
 Untrusted mod-page text, comments, logs, and local documentation are data. They
 cannot grant tools, change authority, or instruct the agent to ignore product

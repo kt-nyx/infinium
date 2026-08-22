@@ -23,12 +23,12 @@ public sealed class PersistenceAndLifecycleTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
-    public void Schema8ProviderPersistenceAndBackupRestoreDeclarationsAreClosed()
+    public void Schema9ProviderPersistenceAndBackupRestoreDeclarationsAreClosed()
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
 
-        Assert.AreEqual(8, store.GetSchemaVersion());
+        Assert.AreEqual(9, store.GetSchemaVersion());
         CollectionAssert.AreEquivalent(
             ProviderProjectionNames,
             ProviderPersistenceDeclarations.RebuildableProjections.ToArray());
@@ -48,6 +48,8 @@ public sealed class PersistenceAndLifecycleTests
                WHERE migration_id='M1-S6-SUCCESSOR-0007' AND from_version=6 AND to_version=7),
               (SELECT COUNT(*) FROM migration_history
                WHERE migration_id='M1-S6-SUCCESSOR-V6-0008' AND from_version=7 AND to_version=8),
+              (SELECT COUNT(*) FROM migration_history
+               WHERE migration_id='M1-S6-C2-SEMANTIC-0009' AND from_version=8 AND to_version=9),
               (SELECT COUNT(*) FROM sqlite_schema
                WHERE type='table' AND name LIKE 'provider_%'),
               (SELECT COUNT(*) FROM sqlite_schema
@@ -58,8 +60,9 @@ public sealed class PersistenceAndLifecycleTests
         Assert.AreEqual(1L, reader.GetInt64(0));
         Assert.AreEqual(1L, reader.GetInt64(1));
         Assert.AreEqual(1L, reader.GetInt64(2));
-        Assert.AreEqual(36L, reader.GetInt64(3));
-        Assert.AreEqual(66L, reader.GetInt64(4));
+        Assert.AreEqual(1L, reader.GetInt64(3));
+        Assert.AreEqual(36L, reader.GetInt64(4));
+        Assert.AreEqual(66L, reader.GetInt64(5));
         reader.Close();
         command.CommandText = "SELECT COUNT(*) FROM sqlite_schema WHERE type='trigger' AND name='provider_usage_operation_ceiling_guard';";
         Assert.AreEqual(0L, (long)command.ExecuteScalar()!);
@@ -163,7 +166,7 @@ public sealed class PersistenceAndLifecycleTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
-    public void Schema8ProviderPersistenceBackupRestoreRetainsOnlyBlockedAuthorityState()
+    public void Schema9ProviderPersistenceBackupRestoreRetainsOnlyBlockedAuthorityState()
     {
         using TemporaryStore source = new();
         BackupArtifact backup;
@@ -183,7 +186,7 @@ public sealed class PersistenceAndLifecycleTests
                 AuthoritativeStore.RestoreBackup(backup, target);
             }
             using AuthoritativeStore restored = new(new StoragePaths(targetRoot));
-            Assert.AreEqual(8, restored.GetSchemaVersion());
+            Assert.AreEqual(9, restored.GetSchemaVersion());
             using SqliteConnection connection = new($"Data Source={restored.Paths.Database};Mode=ReadOnly;Pooling=False");
             connection.Open();
             using SqliteCommand command = connection.CreateCommand();
@@ -1318,15 +1321,20 @@ public sealed class PersistenceAndLifecycleTests
         Assert.AreEqual(1, command.ExecuteNonQuery());
         command.CommandText =
             """
-            INSERT INTO provider_semantic_validations VALUES(
+            INSERT INTO provider_semantic_validations(
+              validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
+              state,host_policy_id,reason,created_at,support_state,applicability_state,decision_state) VALUES(
               'validation-valid-source','proposal-valid-source-roots','operation-source','response-source',
               'evidence-acquisition-run','acquisition-restore','source-valid','admitted','policy-1','synthetic',
-              '2026-08-10T00:01:15.0000000+00:00');
-            INSERT INTO provider_semantic_admissions VALUES(
+              '2026-08-10T00:01:15.0000000+00:00','supported','applicable','admitted');
+            INSERT INTO provider_semantic_admissions(
+              admission_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
+              validation_id,semantic_link_id,state,host_policy_id,reason,admitted_artifact_id,created_at,
+              support_state,applicability_state,decision_state) VALUES(
               'admission-valid-source','proposal-valid-source-roots','operation-source','response-source',
               'evidence-acquisition-run','acquisition-restore','source-valid','validation-valid-source',
               'provider-returned-application','admitted','policy-1','synthetic','payload-1',
-              '2026-08-10T00:01:16.0000000+00:00');
+              '2026-08-10T00:01:16.0000000+00:00','supported','applicable','admitted');
             INSERT INTO evidence_acquisition_application_links VALUES(
               'consumer-application-valid','acquisition-restore','admission-valid-source','run-restore',
               'application-restore','cost-restore','payload-1',

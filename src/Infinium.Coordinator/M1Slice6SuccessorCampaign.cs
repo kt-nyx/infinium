@@ -713,7 +713,7 @@ internal static class M1Slice6SuccessorAuthorityLoader
         string evidencePath = ResolveRepositoryPath(repository, evidenceRelative);
         byte[] manifestBytes = File.ReadAllBytes(manifestPath);
         byte[] evidenceBytes = File.ReadAllBytes(evidencePath);
-        if (HashFile(continuationPath) != "04462e111693defc9f37c95b31a6bea2fe8fac6f2dd40e344ff6a4f1ec5b739b"
+        if (HashFile(continuationPath) != "dcf0e38f8fb8848f5de9ad49584c2312a59717dc3d794fe8f934c81c2778d194"
             || Hash(manifestBytes) != "d4a93a3e09c2a5e6c489a795ecec971d2b4aae4dd5796be65b55326f0d59504a"
             || Hash(evidenceBytes) != "4016db9308160991b43a49beb3682abed332df0039dcf9bde3916d2469533ccf")
         { throw new InvalidDataException("The practical development credential closure is stale."); }
@@ -841,14 +841,20 @@ internal static class M1Slice6SuccessorAuthorityLoader
             Text(root, "manifest_id"), sha, Text(attemptNode, "runtime_authority_id"),
             runtime.ManifestSha256, Text(attemptNode, "request_id"),
             Text(attemptNode, "reservation_id"), Text(attemptNode, "dispatch_fence_id"));
+        bool historicalDevelopmentContinuation =
+            runtime.CredentialAccessAuthorityId == "infinium.m1-s6.development-continuation/20260821"
+            && runtime.CredentialAccessAuthoritySha256 == "04462e111693defc9f37c95b31a6bea2fe8fac6f2dd40e344ff6a4f1ec5b739b"
+            && campaign.CredentialAccessAuthorityId == runtime.CredentialAccessAuthorityId
+            && campaign.CredentialAccessAuthoritySha256 == "dcf0e38f8fb8848f5de9ad49584c2312a59717dc3d794fe8f934c81c2778d194";
         if (runtime.CampaignId != campaign.CampaignId || runtime.CampaignManifestSha256 != campaign.ManifestSha256
             || runtime.StageManifestId != attempt.StageManifestId || runtime.StageManifestSha256 != sha
             || runtime.AttemptId != attempt.AttemptId || runtime.AttemptOrdinal != attempt.AttemptOrdinal
             || runtime.AuthorityId != attempt.RuntimeAuthorityId
             || runtime.RequestId != attempt.RequestId || runtime.ReservationId != attempt.ReservationId
             || runtime.DispatchFenceId != attempt.DispatchFenceId
-            || runtime.CredentialAccessAuthorityId != campaign.CredentialAccessAuthorityId
-            || runtime.CredentialAccessAuthoritySha256 != campaign.CredentialAccessAuthoritySha256
+            || !historicalDevelopmentContinuation
+                && (runtime.CredentialAccessAuthorityId != campaign.CredentialAccessAuthorityId
+                    || runtime.CredentialAccessAuthoritySha256 != campaign.CredentialAccessAuthoritySha256)
             || runtime.OwnerAmendmentId != hardBudget.AmendmentId
             || runtime.OwnerAmendmentSha256 != hardBudget.ManifestSha256
             || runtime.OwnerDecisionId != hardBudget.AmendmentId
@@ -1053,7 +1059,7 @@ internal static class M1Slice6SuccessorAuthorityLoader
                 != Text(execution, "product_state_snapshot_origin_sha256")
             || requireEffectAdmission && ComputeProductStateCheckpointSha256(productState)
                 != Text(execution, "product_state_checkpoint_sha256")
-            || HashFile(reviewPath) != Text(review, "evidence_sha256")
+            || requireEffectAdmission && HashFile(reviewPath) != Text(review, "evidence_sha256")
             || developmentContinuation
                 && (reviewPath != Path.GetFullPath(developmentContinuationPath)
                     || Text(review, "evidence_sha256")
@@ -1197,12 +1203,15 @@ internal static class M1Slice6SuccessorAuthorityLoader
         connection.Open();
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText = "SELECT value FROM store_metadata WHERE key='schema_version';";
-        if (command.ExecuteScalar() is not string version || version is not ("7" or "8"))
-        { throw new InvalidDataException("The successor product state is not an exact schema-7 predecessor or schema-8 v6 state."); }
+        if (command.ExecuteScalar() is not string version || version is not ("7" or "8" or "9"))
+        { throw new InvalidDataException("The successor product state is not an exact schema-7, schema-8, or schema-9 state."); }
         command.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
-        string expectedFingerprint = version == "7"
-            ? ProviderPersistenceDeclarations.SuccessorAttemptSchemaFingerprint
-            : ProviderPersistenceDeclarations.SuccessorV6PersistenceSchemaFingerprint;
+        string expectedFingerprint = version switch
+        {
+            "7" => ProviderPersistenceDeclarations.SuccessorAttemptSchemaFingerprint,
+            "8" => ProviderPersistenceDeclarations.SuccessorV6PersistenceSchemaFingerprint,
+            _ => ProviderPersistenceDeclarations.SemanticAdmissionSeparationSchemaFingerprint,
+        };
         if (command.ExecuteScalar() is not string fingerprint || fingerprint != expectedFingerprint)
         { throw new InvalidDataException("The evolved successor product-state fingerprint changed."); }
         command.CommandText = "PRAGMA quick_check;";

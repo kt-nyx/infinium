@@ -606,7 +606,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
                 fingerprintConnection.Open();
                 using SqliteCommand fingerprintCommand = fingerprintConnection.CreateCommand();
                 fingerprintCommand.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
-                Assert.AreEqual(ProviderPersistenceDeclarations.SuccessorV6PersistenceSchemaFingerprint,
+                Assert.AreEqual(ProviderPersistenceDeclarations.SemanticAdmissionSeparationSchemaFingerprint,
                     (string)fingerprintCommand.ExecuteScalar()!);
             }
 

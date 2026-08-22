@@ -527,16 +527,16 @@ public static class ProviderOperationContractInvariants
             || string.IsNullOrWhiteSpace(value.ApplicationScopeId.Value)
             || string.IsNullOrWhiteSpace(value.CostAttributionScopeId.Value)
             || value.ClaimProposals.Count > 64 || !Unique(value.ClaimProposals.Select(x => x.ProposalId))
-            || value.ClaimProposals.Any(x => !Enum.IsDefined(x.State) || x.State == ProposalAdmissionState.Unspecified
+            || value.ClaimProposals.Any(x => !Enum.IsDefined(x.ExtractionState) || x.ExtractionState == SemanticProposalState.Unspecified
                 || string.IsNullOrWhiteSpace(x.Claim) || string.IsNullOrWhiteSpace(x.Reason)
                 || !value.PassageIds.Contains(x.PassageId) || !Unique(x.ConditionIds)
-                || (x.State == ProposalAdmissionState.Admitted
+                || (x.ExtractionState == SemanticProposalState.Extracted
                     && (value.ValidationIds.Count == 0 || value.AdmissionCorrelationIds.Count == 0)))
             || !BoundedUniqueText(value.Abstentions) || !BoundedUniqueText(value.Gaps)
             || !Unique(value.ContradictionEvidenceIds) || !Unique(value.ValidationIds)
             || !Unique(value.AdmissionCorrelationIds)
             || !SourceClaimAdmissionStatesMatch(value.AdmissionCorrelations,
-                value.ClaimProposals.Select(x => new KeyValuePair<OpaqueId, ProposalAdmissionState>(x.ProposalId, x.State)))
+                value.ClaimProposals.Select(x => new KeyValuePair<OpaqueId, SemanticProposalState>(x.ProposalId, x.ExtractionState)))
             || !ValidSourceClaimAdmissionCorrelations(value.AdmissionCorrelations, value.OperationId, value.OwnerKind,
                 value.OwnerId, value.SourceRevisionId, value.ClaimProposals.Select(x => x.ProposalId),
                 value.ValidationIds, value.AdmissionCorrelationIds))
@@ -558,14 +558,14 @@ public static class ProviderOperationContractInvariants
             || value.OwnerKind != "analysis-run" || value.OwnerId != value.AnalysisRunId
             || !Unique(value.ParticipantIds) || value.ParticipantRoles.Any(string.IsNullOrWhiteSpace)
             || value.HypothesisProposals.Count > 64 || !Unique(value.HypothesisProposals.Select(x => x.ProposalId))
-            || value.HypothesisProposals.Any(x => !Enum.IsDefined(x.State) || x.State == ProposalAdmissionState.Unspecified
+            || value.HypothesisProposals.Any(x => !Enum.IsDefined(x.ProposalState) || x.ProposalState == SemanticProposalState.Unspecified
                 || string.IsNullOrWhiteSpace(x.Hypothesis) || string.IsNullOrWhiteSpace(x.Reason)
                 || x.CandidateId != value.CandidateId
                 || !Unique(x.SupportingEvidenceIds) || !Unique(x.ContradictingEvidenceIds)
                 || x.SupportingEvidenceIds.Intersect(x.ContradictingEvidenceIds).Any()
                 || x.SupportingEvidenceIds.Concat(x.ContradictingEvidenceIds).Any(id => !value.EvidenceIds.Contains(id))
                 || !BoundedUniqueText(x.MissingInformation)
-                || (x.State == ProposalAdmissionState.Admitted
+                || (x.ProposalState == SemanticProposalState.Proposed
                     && (value.ValidationIds.Count == 0 || value.AdmissionLinkIds.Count == 0)))
             || !Unique(value.CausalPathIds) || !Unique(value.EvidenceIds)
             || !BoundedUniqueText(value.Abstentions) || !BoundedUniqueText(value.Gaps)
@@ -573,7 +573,7 @@ public static class ProviderOperationContractInvariants
             || !value.ValidationIds.ToHashSet().SetEquals(value.AdmissionLinks.Select(x => x.ValidationId))
             || !value.AdmissionLinkIds.ToHashSet().SetEquals(value.AdmissionLinks.Select(x => x.AdmissionId))
             || !AdmissionStatesMatch(value.AdmissionLinks,
-                value.HypothesisProposals.Select(x => new KeyValuePair<OpaqueId, ProposalAdmissionState>(x.ProposalId, x.State)))
+                value.HypothesisProposals.Select(x => new KeyValuePair<OpaqueId, SemanticProposalState>(x.ProposalId, x.ProposalState)))
             || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId, value.OwnerKind,
                 value.OwnerId, value.CandidateId, value.HypothesisProposals.Select(x => x.ProposalId),
                 value.ValidationIds, value.AdmissionLinkIds, declaredIdsAreAdmissions: true))
@@ -995,20 +995,18 @@ public static class ProviderOperationContractInvariants
                 && (declaredIdsAreAdmissions
                     ? declaredLinkIds.Contains(link.AdmissionId)
                     : declaredLinkIds.Contains(link.ApplicationLinkId))
-                && link.State is ProposalAdmissionState.Admitted or ProposalAdmissionState.Rejected
-                    or ProposalAdmissionState.Abstained or ProposalAdmissionState.Unavailable
-                    or ProposalAdmissionState.Unsupported or ProposalAdmissionState.Deleted);
+                && ValidSemanticStates(link.SupportState, link.ApplicabilityState, link.DecisionState));
     }
 
     private static bool AdmissionStatesMatch(
         IReadOnlyList<ProviderSemanticAdmissionLinkContract> links,
-        IEnumerable<KeyValuePair<OpaqueId, ProposalAdmissionState>> proposals)
+        IEnumerable<KeyValuePair<OpaqueId, SemanticProposalState>> proposals)
     {
-        Dictionary<OpaqueId, ProposalAdmissionState> states = proposals.ToDictionary();
-        return links.All(link => states.TryGetValue(link.ProposalId, out ProposalAdmissionState state)
-                && state == link.State)
-            && states.All(proposal => proposal.Value != ProposalAdmissionState.Admitted
-                || links.Count(link => link.ProposalId == proposal.Key && link.State == ProposalAdmissionState.Admitted) == 1);
+        Dictionary<OpaqueId, SemanticProposalState> states = proposals.ToDictionary();
+        return links.All(link => states.ContainsKey(link.ProposalId))
+            && states.All(proposal => links.Count(link => link.ProposalId == proposal.Key) == 1
+                && ProposalDecisionCompatible(proposal.Value,
+                    links.Single(link => link.ProposalId == proposal.Key).DecisionState));
     }
 
     private static bool ValidSourceClaimAdmissionCorrelations(
@@ -1034,20 +1032,59 @@ public static class ProviderOperationContractInvariants
                 && proposalIds.Contains(link.ProposalId)
                 && validationIds.Contains(link.ValidationId)
                 && correlationIds.Contains(link.AdmissionCorrelationId)
-                && link.State is ProposalAdmissionState.Admitted or ProposalAdmissionState.Rejected
-                    or ProposalAdmissionState.Abstained or ProposalAdmissionState.Unavailable
-                    or ProposalAdmissionState.Unsupported or ProposalAdmissionState.Deleted);
+                && ValidSemanticStates(link.SupportState, link.ApplicabilityState, link.DecisionState));
     }
 
     private static bool SourceClaimAdmissionStatesMatch(
         IReadOnlyList<SourceClaimAdmissionCorrelationContract> links,
-        IEnumerable<KeyValuePair<OpaqueId, ProposalAdmissionState>> proposals)
+        IEnumerable<KeyValuePair<OpaqueId, SemanticProposalState>> proposals)
     {
-        Dictionary<OpaqueId, ProposalAdmissionState> states = proposals.ToDictionary();
-        return links.All(link => states.TryGetValue(link.ProposalId, out ProposalAdmissionState state)
-                && state == link.State)
-            && states.All(proposal => proposal.Value != ProposalAdmissionState.Admitted
-                || links.Count(link => link.ProposalId == proposal.Key && link.State == ProposalAdmissionState.Admitted) == 1);
+        Dictionary<OpaqueId, SemanticProposalState> states = proposals.ToDictionary();
+        return links.All(link => states.ContainsKey(link.ProposalId))
+            && states.All(proposal => links.Count(link => link.ProposalId == proposal.Key) == 1
+                && ProposalDecisionCompatible(proposal.Value,
+                    links.Single(link => link.ProposalId == proposal.Key).DecisionState));
+    }
+
+    private static bool ProposalDecisionCompatible(
+        SemanticProposalState proposal,
+        SemanticDecisionState decision) => proposal switch
+        {
+            SemanticProposalState.Proposed or SemanticProposalState.Extracted =>
+                decision is SemanticDecisionState.Admitted or SemanticDecisionState.Abstained or SemanticDecisionState.Rejected,
+            SemanticProposalState.Rejected => decision == SemanticDecisionState.Rejected,
+            SemanticProposalState.Abstained or SemanticProposalState.Unavailable => decision == SemanticDecisionState.Abstained,
+            SemanticProposalState.Deleted => decision == SemanticDecisionState.AuditOnly,
+            _ => false,
+        };
+
+    private static bool ValidSemanticStates(
+        SemanticSupportState support,
+        SemanticApplicabilityState applicability,
+        SemanticDecisionState decision)
+    {
+        if (!Enum.IsDefined(support) || support == SemanticSupportState.Unspecified
+            || !Enum.IsDefined(applicability) || applicability == SemanticApplicabilityState.Unspecified
+            || !Enum.IsDefined(decision) || decision == SemanticDecisionState.Unspecified)
+        {
+            return false;
+        }
+
+        return decision switch
+        {
+            SemanticDecisionState.Admitted => support == SemanticSupportState.Supported
+                && applicability == SemanticApplicabilityState.Applicable,
+            SemanticDecisionState.Abstained => support is SemanticSupportState.Unsupported
+                    or SemanticSupportState.Contradicted or SemanticSupportState.NotEvaluated
+                    or SemanticSupportState.Unavailable
+                || applicability is SemanticApplicabilityState.ConditionalUnestablished
+                    or SemanticApplicabilityState.NotApplicable or SemanticApplicabilityState.Unknown
+                    or SemanticApplicabilityState.NotEvaluated,
+            SemanticDecisionState.AuditOnly => support == SemanticSupportState.Unavailable,
+            SemanticDecisionState.Rejected => support != SemanticSupportState.Supported
+                || applicability != SemanticApplicabilityState.Applicable,
+            _ => false,
+        };
     }
 
     private static bool BoundedUniqueText(IReadOnlyList<string> values) =>

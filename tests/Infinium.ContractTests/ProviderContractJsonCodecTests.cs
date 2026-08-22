@@ -293,7 +293,7 @@ public sealed class ProviderContractJsonCodecTests
                 ContractConstants.SourceClaimExtractionSchemaId, "1", Id("acquisition-1"), Id("operation-1"),
                 "evidence-acquisition-run", Id("acquisition-1"), Id("run-1"), Id("application-scope-1"), Id("cost-scope-1"),
                 Id("source-1"), [Id("passage-1")], "Synthetic contract-shape example",
-                [new(Id("proposal-1"), Id("passage-1"), "Synthetic proposed claim", [], ProposalAdmissionState.Proposed, "Requires host validation")],
+                [],
                 [], ["No semantic truth is supplied"], ["Host validation pending"], [], [], []),
             ProviderContractJsonCodecs.Serialize,
             ProviderContractJsonCodecs.DeserializeSourceClaimExtraction);
@@ -301,8 +301,7 @@ public sealed class ProviderContractJsonCodecTests
             new CandidateInvestigationDocument(
                 ContractConstants.CandidateInvestigationSchemaId, "1", Id("operation-2"), "analysis-run", Id("run-1"), Id("run-1"), Id("candidate-1"),
                 [Id("participant-1")], ["synthetic-input"], [], Id("closure-1"), [],
-                [new(Id("hypothesis-1"), Id("candidate-1"), "Synthetic untrusted hypothesis", [], [],
-                    ["Independent evidence"], ProposalAdmissionState.Proposed, "Requires host validation")],
+                [],
                 ["No semantic truth is supplied"], ["Evidence absent"], [], [], []),
             ProviderContractJsonCodecs.Serialize,
             ProviderContractJsonCodecs.DeserializeCandidateInvestigation);
@@ -1455,7 +1454,9 @@ public sealed class ProviderContractJsonCodecTests
                     RootSubjectId = "source-revision-1",
                     ValidationId = "validation-1",
                     AdmissionCorrelationId = "correlation-1",
-                    State = "admitted",
+                    SupportState = "supported",
+                    ApplicabilityState = "applicable",
+                    DecisionState = "admitted",
                 },
             },
         };
@@ -1492,7 +1493,9 @@ public sealed class ProviderContractJsonCodecTests
                     RootSubjectId = "candidate-1",
                     ValidationId = "validation-1",
                     ApplicationLinkId = "application-link-2",
-                    State = "admitted",
+                    SupportState = "supported",
+                    ApplicabilityState = "applicable",
+                    DecisionState = "admitted",
                 },
             },
         };
@@ -1890,8 +1893,12 @@ public sealed class ProviderContractJsonCodecTests
             string[] parts = column.Split('.', 2);
             Assert.AreEqual(2, parts.Length, $"{schema}:{path}:table.column");
             Match table = Regex.Match(migration, $@"CREATE TABLE {Regex.Escape(parts[0])}\((?<body>.*?)\) STRICT;", RegexOptions.Singleline);
-            Assert.IsTrue(table.Success, $"{schema}:{path}:{parts[0]}");
-            Assert.IsTrue(Regex.IsMatch(table.Groups["body"].Value, $@"(?m)^\s*{Regex.Escape(parts[1])}\s+"),
+            bool declaredInCreate = table.Success
+                && Regex.IsMatch(table.Groups["body"].Value, $@"(?m)^\s*{Regex.Escape(parts[1])}\s+");
+            bool declaredInMigration = Regex.IsMatch(migration,
+                $@"ALTER TABLE\s+{Regex.Escape(parts[0])}\s+ADD COLUMN\s+{Regex.Escape(parts[1])}\s+",
+                RegexOptions.IgnoreCase);
+            Assert.IsTrue(declaredInCreate || declaredInMigration,
                 $"{schema}:{path}:{column}");
         }
     }

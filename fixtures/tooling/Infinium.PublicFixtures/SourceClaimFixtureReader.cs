@@ -331,16 +331,17 @@ public static class SourceClaimOracleVerifier
             SourceClaimScenarioResult scenario = actual.Scenarios.Single(x => x.TranscriptId == scenarioOracle.TranscriptId);
             SourceClaimRetainedTranscript transcript = package.Transcripts.Single(x => x.TranscriptId == scenario.TranscriptId);
             Dictionary<string, string> actualStates = scenario.Extraction.ClaimProposals.ToDictionary(
-                x => x.ProposalId.Value, x => x.State == ProposalAdmissionState.Admitted ? "admitted" : "rejected",
+                x => x.ProposalId.Value, x => x.ExtractionState == SemanticProposalState.Extracted ? "admitted" : "rejected",
                 StringComparer.Ordinal);
-            string[] admitted = scenario.Extraction.ClaimProposals.Where(x => x.State == ProposalAdmissionState.Admitted)
-                .Select(x => x.ProposalId.Value).ToArray();
-            string[] rejected = scenario.Extraction.ClaimProposals.Where(x => x.State != ProposalAdmissionState.Admitted)
-                .Select(x => x.ProposalId.Value).ToArray();
+            string[] admitted = scenario.Extraction.ClaimProposals
+                .Where(x => x.ExtractionState == SemanticProposalState.Extracted).Select(x => x.ProposalId.Value).ToArray();
+            string[] rejected = scenario.Extraction.ClaimProposals
+                .Where(x => x.ExtractionState != SemanticProposalState.Extracted).Select(x => x.ProposalId.Value).ToArray();
             bool forbidden = scenario.Extraction.ClaimProposals.Any(x => x.Reason == "model-proposed-forbidden-authority");
             bool providerUsed = transcript.ModelUsed;
             int admittedCorrelations = scenario.Extraction.AdmissionCorrelations.Count(
-                x => x.State == ProposalAdmissionState.Admitted);
+                x => scenario.Extraction.ClaimProposals.Single(p => p.ProposalId == x.ProposalId).ExtractionState
+                    == SemanticProposalState.Extracted);
             SourceClaimOracleIdentity identity = expected.ExpectedIdentity;
             if (scenario.Extraction.SchemaId != identity.SourceClaimOutputSchemaId
                 || scenario.Extraction.SchemaVersion != identity.SchemaVersion
@@ -357,7 +358,7 @@ public static class SourceClaimOracleVerifier
                 || scenario.Extraction.AdmissionCorrelations.Any(
                     x => x.AuthorizationId.Value != identity.HostAuthorizationId
                     || x.ResponseRecordId.Value != transcript.ResponseRecordId)
-                || scenario.Disposition != scenarioOracle.ExpectedResult
+                || LegacyDisposition(scenario, transcript) != scenarioOracle.ExpectedResult
                 || transcript.ResponseRecordId != scenarioOracle.ExpectedResponseRecordId
                 || transcript.ResponseState != scenarioOracle.ExpectedResponseState
                 || transcript.ResponseFingerprint != scenarioOracle.ExpectedResponseFingerprint
@@ -373,23 +374,32 @@ public static class SourceClaimOracleVerifier
                 || scenario.Extraction.Gaps.Count != scenarioOracle.ExpectedGapCount
                 || !transcript.Abstentions.SequenceEqual(scenarioOracle.ExpectedAbstentions, StringComparer.Ordinal)
                 || !transcript.Gaps.SequenceEqual(scenarioOracle.ExpectedGaps, StringComparer.Ordinal)
-                || !scenario.AbstentionKinds.SequenceEqual(scenarioOracle.ExpectedAbstentionKinds, StringComparer.Ordinal)
-                || !scenario.GapKinds.SequenceEqual(scenarioOracle.ExpectedGapKinds, StringComparer.Ordinal)
+                || !LegacyAbstentionKinds(scenario).SequenceEqual(scenarioOracle.ExpectedAbstentionKinds, StringComparer.Ordinal)
+                || !LegacyGapKinds(scenario).SequenceEqual(scenarioOracle.ExpectedGapKinds, StringComparer.Ordinal)
                 || admittedCorrelations != scenarioOracle.ExpectedAdmittedCorrelationCount
                 || providerUsed != scenarioOracle.ProviderUsed
                 || scenario.ReplayState != scenarioOracle.ReplayState
                 || (scenario.ReplayState == "audit-only") != scenarioOracle.AuditOnly
                 || forbidden != scenarioOracle.ForbiddenAuthorityDetected)
             {
-                throw new InvalidDataException($"Source-claim scenario oracle mismatch: {scenario.TranscriptId}.");
+                throw new InvalidDataException($"Source-claim scenario oracle mismatch: {scenario.TranscriptId}; "
+                    + $"disposition={LegacyDisposition(scenario, transcript)}/{scenarioOracle.ExpectedResult}; "
+                    + $"states={string.Join(',', actualStates.Select(item => item.Key + '=' + item.Value))}/"
+                    + $"{string.Join(',', scenarioOracle.ExpectedProposalStates.Select(item => item.Key + '=' + item.Value))}; "
+                    + $"abstention-kinds={string.Join(',', LegacyAbstentionKinds(scenario))}/"
+                    + $"{string.Join(',', scenarioOracle.ExpectedAbstentionKinds)}; "
+                    + $"gap-kinds={string.Join(',', LegacyGapKinds(scenario))}/"
+                    + $"{string.Join(',', scenarioOracle.ExpectedGapKinds)}; "
+                    + $"admitted-correlations={admittedCorrelations}/{scenarioOracle.ExpectedAdmittedCorrelationCount}.");
             }
         }
         int accepted = actual.Scenarios.Sum(x => x.Extraction.ClaimProposals.Count(
-            p => p.State == ProposalAdmissionState.Admitted));
+            p => p.ExtractionState == SemanticProposalState.Extracted));
         int rejectedCount = actual.Scenarios.Sum(x => x.Extraction.ClaimProposals.Count(
-            p => p.State != ProposalAdmissionState.Admitted));
+            p => p.ExtractionState != SemanticProposalState.Extracted));
         int totalAdmittedCorrelations = actual.Scenarios.Sum(x => x.Extraction.AdmissionCorrelations.Count(
-            p => p.State == ProposalAdmissionState.Admitted));
+            p => x.Extraction.ClaimProposals.Single(proposal => proposal.ProposalId == p.ProposalId).ExtractionState
+                == SemanticProposalState.Extracted));
         int providers = package.Transcripts.Count(x => x.ModelUsed);
         int proposals = actual.Scenarios.Sum(x => x.Extraction.ClaimProposals.Count);
         int abstentions = actual.Scenarios.Sum(x => x.Extraction.Abstentions.Count);
@@ -443,7 +453,7 @@ public static class SourceClaimOracleVerifier
                 || input.Reason != item.Reason || output.ProposalId.Value != item.ProposalId
                 || output.PassageId.Value != item.PassageId || output.Claim != item.Claim
                 || !output.ConditionIds.Select(x => x.Value).SequenceEqual(item.ConditionIds, StringComparer.Ordinal)
-                || (output.State == ProposalAdmissionState.Admitted ? "admitted" : "rejected") != item.ExpectedState)
+                || (output.ExtractionState == SemanticProposalState.Extracted ? "admitted" : "rejected") != item.ExpectedState)
             {
                 return false;
             }
@@ -454,4 +464,27 @@ public static class SourceClaimOracleVerifier
     private static bool DictionaryEqual(
         Dictionary<string, string> left, IReadOnlyDictionary<string, string> right) =>
         left.Count == right.Count && left.All(x => right.TryGetValue(x.Key, out string? value) && value == x.Value);
+
+    private static string[] LegacyGapKinds(SourceClaimScenarioResult scenario) =>
+        scenario.GapKinds.Select(kind => kind == "unsupported-source-claim" ? "unsupported-claim" : kind).ToArray();
+
+    private static string[] LegacyAbstentionKinds(SourceClaimScenarioResult scenario) =>
+        scenario.AbstentionKinds.Where(kind => kind != "insufficient-support").ToArray();
+
+    private static string LegacyDisposition(
+        SourceClaimScenarioResult scenario, SourceClaimRetainedTranscript transcript)
+    {
+        if (scenario.Disposition == "abstained-unsupported")
+        { return "rejected-unsupported"; }
+        if (scenario.Disposition == "abstained-explicit")
+        { return "rejected-explicit-abstention"; }
+        if (scenario.Disposition == "extracted-contradicted-abstained")
+        { return "rejected-contradiction-abstained"; }
+        if (scenario.Disposition is not ("accepted-source-extraction" or "extracted-condition-unestablished"))
+        { return scenario.Disposition; }
+        return transcript.Proposals.Any(item => item.ApplicationSemantics == "applicability-only")
+            ? "accepted-conditional-applicability"
+            : transcript.Proposals.Any(item => item.ConditionScope == "version-scoped")
+                ? "accepted-conditional" : "accepted";
+    }
 }

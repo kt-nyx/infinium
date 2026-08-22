@@ -2,8 +2,8 @@ namespace Infinium.Persistence;
 
 public static class ProviderPersistenceDeclarations
 {
-    public const int SchemaVersion = 8;
-    public const string StorageContractVersion = "1.7.0";
+    public const int SchemaVersion = 9;
+    public const string StorageContractVersion = "1.8.0";
     public const string MigrationId = "M1-S6-0006";
     public const string Wp2ExtensionMigrationId = "M1-S6-WP2-0006A";
     public const string Wp2ExtensionSourceSchemaFingerprint = "56dc6efd92fff75fe21f344abafa3b88b99a8e92d2d1b2517f706d63af4599a3";
@@ -31,6 +31,8 @@ public static class ProviderPersistenceDeclarations
     public const string SuccessorV6PersistenceOriginalSchemaFingerprint = "dcf0653bbf1c337e77f0f58aad0ba63fb3d775ccb3c6a7e4e560e971ff309893";
     public const string SuccessorV6PersistenceSchemaFingerprint = "67dab8043a37d7095720016c75ab0199116e0a4f14029234a17fa6ced3c36b2a";
     public const string SuccessorV6SemanticTriggerCorrectionId = "M1-S6-SUCCESSOR-V6-0008A";
+    public const string SemanticAdmissionSeparationMigrationId = "M1-S6-C2-SEMANTIC-0009";
+    public const string SemanticAdmissionSeparationSchemaFingerprint = "c40cfd33517c3578f5247d7bf4196fd02016b9160c6fb1a743ca58d17c1673f0";
     public const int SourceSchemaVersion = 5;
     public const string SourceStorageContractVersion = "1.4.0";
     public const string SourceSchemaFingerprint = "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d";

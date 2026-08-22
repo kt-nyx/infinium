@@ -45,7 +45,8 @@ public sealed record SourceClaimExecutionInput(
     string DeclaredPurpose,
     string PromptId,
     string PromptFingerprint,
-    IReadOnlyList<SourceClaimPassageInput> Passages);
+    IReadOnlyList<SourceClaimPassageInput> Passages,
+    IReadOnlyList<string>? ApplicableConditionIds = null);
 
 public sealed record SourceClaimTranscriptProposal(
     string ProposalId,
@@ -124,6 +125,10 @@ public static class SourceClaimContextMinimizer
             || string.IsNullOrWhiteSpace(input.HostAuthorizationId)
             || input.PromptId != SourceClaimPromptV1.Id || input.PromptFingerprint != SourceClaimPromptV1.Fingerprint
             || input.Passages.Count is < 1 or > 64 || string.IsNullOrWhiteSpace(input.DeclaredPurpose)
+            || input.ApplicableConditionIds is not null
+                && (input.ApplicableConditionIds.Count > 64
+                    || input.ApplicableConditionIds.Any(string.IsNullOrWhiteSpace)
+                    || input.ApplicableConditionIds.Distinct(StringComparer.Ordinal).Count() != input.ApplicableConditionIds.Count)
             || input.Passages.Select(x => x.PassageId).Distinct(StringComparer.Ordinal).Count() != input.Passages.Count
             || input.Passages.Any(x => x.SourceRevisionId != input.SourceRevisionId
                 || (x.Deleted
@@ -217,20 +222,24 @@ public static class SourceClaimAcquisitionEngine
         List<string> audit = [];
         foreach (SourceClaimTranscriptProposal candidate in transcript.Proposals)
         {
-            ProposalAdmissionState state = ValidateProposal(candidate, passages, out string reason);
+            SemanticAssessment assessment = ValidateProposal(candidate, passages,
+                input.ApplicableConditionIds ?? [], transcript.ContradictionEvidenceIds);
             OpaqueId validationId = new("validation-" + candidate.ProposalId);
             OpaqueId correlationId = new("admission-correlation-" + candidate.ProposalId);
             validations.Add(validationId);
             correlationIds.Add(correlationId);
             proposals.Add(new(new(candidate.ProposalId), new(candidate.PassageId), candidate.Claim,
-                candidate.ConditionIds.Select(x => new OpaqueId(x)).ToArray(), state, reason));
+                candidate.ConditionIds.Select(x => new OpaqueId(x)).ToArray(), assessment.ProposalState, assessment.Reason));
             correlations.Add(new(new("admission-" + candidate.ProposalId), new(candidate.ProposalId),
                 new(input.HostAuthorizationId), new(input.OperationId), new(transcript.ResponseRecordId),
-                input.OwnerKind, new(input.OwnerId), new(input.SourceRevisionId), validationId, correlationId, state));
-            audit.Add(candidate.ProposalId + ":" + ToWire(state) + ":" + reason);
+                input.OwnerKind, new(input.OwnerId), new(input.SourceRevisionId), validationId, correlationId,
+                assessment.SupportState, assessment.ApplicabilityState, assessment.DecisionState));
+            audit.Add(candidate.ProposalId + ":" + ToWire(assessment.ProposalState) + ":"
+                + ToWire(assessment.SupportState) + ":" + ToWire(assessment.ApplicabilityState) + ":"
+                + ToWire(assessment.DecisionState) + ":" + assessment.Reason);
         }
 
-        bool deleted = proposals.Any(x => x.State == ProposalAdmissionState.Deleted);
+        bool deleted = proposals.Any(x => x.ExtractionState == SemanticProposalState.Deleted);
         IReadOnlyList<string> gaps = deleted && transcript.Gaps.Count == 0
             ? ["A deleted passage cannot support an admitted source claim."] : transcript.Gaps;
         SourceClaimExtractionDocument document = new(
@@ -244,18 +253,26 @@ public static class SourceClaimAcquisitionEngine
         byte[] canonical = ProviderContractJsonCodecs.Serialize(document);
         string disposition = deleted ? "rejected-deleted-audit-only"
             : proposals.Any(x => x.Reason == "model-proposed-forbidden-authority") ? "rejected-hostile-authority"
-            : proposals.Any(x => x.State == ProposalAdmissionState.Abstained)
-                ? transcript.ContradictionEvidenceIds.Count == 0 ? "rejected-explicit-abstention"
-                    : "rejected-contradiction-abstained"
-            : proposals.Any(x => x.State == ProposalAdmissionState.Unsupported) ? "rejected-unsupported"
-            : transcript.Proposals.Any(x => x.ApplicationSemantics == "applicability-only")
+            : correlations.Any(x => x.DecisionState == SemanticDecisionState.Admitted)
                 ? "accepted-conditional-applicability"
-            : transcript.Proposals.Any(x => x.ConditionScope == "version-scoped") ? "accepted-conditional" : "accepted";
-        string[] abstentionKinds = proposals.Any(x => x.State == ProposalAdmissionState.Abstained)
-            ? [transcript.ContradictionEvidenceIds.Count == 0 ? "explicit-undetermined" : "contradiction-unresolved"] : [];
+            : correlations.Any(x => x.SupportState == SemanticSupportState.Contradicted)
+                ? "extracted-contradicted-abstained"
+            : correlations.Any(x => x.ApplicabilityState == SemanticApplicabilityState.ConditionalUnestablished)
+                ? "extracted-condition-unestablished"
+            : proposals.Any(x => x.ExtractionState == SemanticProposalState.Extracted) ? "accepted-source-extraction"
+            : correlations.Any(x => x.SupportState == SemanticSupportState.Unsupported) ? "abstained-unsupported"
+            : proposals.Any(x => x.ExtractionState == SemanticProposalState.Abstained) ? "abstained-explicit"
+            : "rejected";
+        string[] abstentionKinds = correlations.Any(x => x.SupportState == SemanticSupportState.Contradicted)
+            ? ["contradiction-unresolved"]
+            : correlations.Any(x => x.SupportState == SemanticSupportState.Unsupported)
+                ? ["insufficient-support"]
+                : proposals.Any(x => x.ExtractionState == SemanticProposalState.Abstained)
+                    ? ["explicit-undetermined"] : [];
         string[] gapKinds = deleted ? ["deleted-source-passage"]
-            : proposals.Any(x => x.State == ProposalAdmissionState.Unsupported) ? ["unsupported-claim"]
-            : proposals.Any(x => x.State == ProposalAdmissionState.Abstained)
+            : correlations.Any(x => x.SupportState == SemanticSupportState.Unsupported) ? ["unsupported-source-claim"]
+            : proposals.Any(x => x.ExtractionState == SemanticProposalState.Abstained)
+                || correlations.Any(x => x.SupportState == SemanticSupportState.Contradicted)
                 ? [transcript.ContradictionEvidenceIds.Count == 0 ? "definitive-source-missing"
                     : "non-contradictory-authority-missing"] : [];
         return new(transcript.TranscriptId, transcript.ResponseState, disposition,
@@ -263,41 +280,25 @@ public static class SourceClaimAcquisitionEngine
             Convert.ToHexStringLower(SHA256.HashData(canonical)), abstentionKinds, gapKinds, audit);
     }
 
-    private static ProposalAdmissionState ValidateProposal(
+    private static SemanticAssessment ValidateProposal(
         SourceClaimTranscriptProposal proposal,
         Dictionary<string, SourceClaimPassageInput> passages,
-        out string reason)
+        IReadOnlyList<string> applicableConditionIds,
+        IReadOnlyList<string> contradictionEvidenceIds)
     {
         if (string.IsNullOrWhiteSpace(proposal.ProposalId) || string.IsNullOrWhiteSpace(proposal.Claim)
             || proposal.Claim.Length > 4096 || proposal.ConditionIds.Count > 64)
         {
-            reason = "malformed-proposal";
-            return ProposalAdmissionState.Rejected;
+            return Rejected("malformed-proposal");
         }
         if (!passages.TryGetValue(proposal.PassageId, out SourceClaimPassageInput? passage))
         {
-            reason = "citation-outside-minimized-context";
-            return ProposalAdmissionState.Rejected;
+            return Rejected("citation-outside-minimized-context");
         }
         if (passage.Deleted)
         {
-            reason = "cited-passage-deleted";
-            return ProposalAdmissionState.Deleted;
-        }
-        if (proposal.State is "unsupported" or "unavailable" or "abstained")
-        {
-            reason = "proposal-declared-" + proposal.State;
-            return proposal.State switch
-            {
-                "unsupported" => ProposalAdmissionState.Unsupported,
-                "unavailable" => ProposalAdmissionState.Unavailable,
-                _ => ProposalAdmissionState.Abstained,
-            };
-        }
-        if (proposal.State != "proposed")
-        {
-            reason = "unknown-proposal-state";
-            return ProposalAdmissionState.Rejected;
+            return new(SemanticProposalState.Deleted, SemanticSupportState.Unavailable,
+                SemanticApplicabilityState.NotEvaluated, SemanticDecisionState.AuditOnly, "cited-passage-deleted");
         }
         if (proposal.ClaimKind != "documentation-claim"
             || proposal.ApplicationSemantics is not ("evidence-only" or "applicability-only")
@@ -307,24 +308,69 @@ public static class SourceClaimAcquisitionEngine
             || proposal.ConditionScope == "unconditional" && proposal.ConditionIds.Count != 0
             || proposal.ConditionScope != "unconditional" && proposal.ConditionIds.Count == 0)
         {
-            reason = "structural-host-policy-rejected";
-            return ProposalAdmissionState.Rejected;
+            return Rejected("structural-host-policy-rejected");
         }
         if (proposal.AuthorityCategory == "protected-effect-request")
         {
-            reason = "model-proposed-forbidden-authority";
-            return ProposalAdmissionState.Rejected;
+            return Rejected("model-proposed-forbidden-authority");
         }
-        reason = "exact-citation-and-identity-admitted";
-        return ProposalAdmissionState.Admitted;
+
+        if (contradictionEvidenceIds.Contains(proposal.PassageId, StringComparer.Ordinal))
+        {
+            return new(proposal.State == "abstained" ? SemanticProposalState.Abstained : SemanticProposalState.Extracted,
+                SemanticSupportState.Contradicted,
+                SemanticApplicabilityState.Unknown, SemanticDecisionState.Abstained,
+                "faithful-source-claim-retained-contradiction-unresolved");
+        }
+        if (proposal.State is "unsupported" or "unavailable" or "abstained")
+        {
+            return proposal.State switch
+            {
+                "unsupported" => new(SemanticProposalState.Abstained, SemanticSupportState.Unsupported,
+                    SemanticApplicabilityState.Unknown, SemanticDecisionState.Abstained, "proposal-declared-unsupported"),
+                "unavailable" => new(SemanticProposalState.Unavailable, SemanticSupportState.Unavailable,
+                    SemanticApplicabilityState.Unknown, SemanticDecisionState.Abstained, "proposal-declared-unavailable"),
+                _ => new(SemanticProposalState.Abstained, SemanticSupportState.NotEvaluated,
+                    SemanticApplicabilityState.Unknown, SemanticDecisionState.Abstained, "proposal-declared-abstained"),
+            };
+        }
+        if (proposal.State != "proposed")
+        {
+            return Rejected("unknown-proposal-state");
+        }
+        if (proposal.ApplicationSemantics == "evidence-only")
+        {
+            return new(SemanticProposalState.Extracted, SemanticSupportState.NotEvaluated,
+                SemanticApplicabilityState.NotEvaluated, SemanticDecisionState.Abstained,
+                "faithful-source-claim-retained-for-later-support-evaluation");
+        }
+        bool applicable = proposal.ConditionIds.All(applicableConditionIds.Contains);
+        return applicable
+            ? new(SemanticProposalState.Extracted, SemanticSupportState.Supported,
+                SemanticApplicabilityState.Applicable, SemanticDecisionState.Admitted,
+                "faithful-source-claim-and-applicability-facts-admitted")
+            : new(SemanticProposalState.Extracted, SemanticSupportState.NotEvaluated,
+                SemanticApplicabilityState.ConditionalUnestablished, SemanticDecisionState.Abstained,
+                "faithful-source-claim-retained-condition-unestablished");
     }
+
+    private static SemanticAssessment Rejected(string reason) => new(SemanticProposalState.Rejected,
+        SemanticSupportState.NotEvaluated, SemanticApplicabilityState.NotEvaluated,
+        SemanticDecisionState.Rejected, reason);
+
+    private sealed record SemanticAssessment(
+        SemanticProposalState ProposalState,
+        SemanticSupportState SupportState,
+        SemanticApplicabilityState ApplicabilityState,
+        SemanticDecisionState DecisionState,
+        string Reason);
 
     private static SourceClaimScenarioResult AuditOnly(
         SourceClaimExecutionInput input,
         SourceClaimRetainedTranscript transcript,
         string reason)
     {
-        ProposalAdmissionState state = ProposalAdmissionState.Rejected;
+        SemanticProposalState state = SemanticProposalState.Rejected;
         OpaqueId proposalId = new("status-" + transcript.TranscriptId);
         OpaqueId validationId = new("validation-" + transcript.TranscriptId);
         OpaqueId correlationId = new("admission-correlation-" + transcript.TranscriptId);
@@ -337,7 +383,8 @@ public static class SourceClaimAcquisitionEngine
             transcript.ResponseState == "refusal" ? [reason] : [], [reason], [validationId], [correlationId],
             [new(new("admission-" + transcript.TranscriptId), proposalId, new(input.HostAuthorizationId),
                 new(input.OperationId), new(transcript.ResponseRecordId), input.OwnerKind, new(input.OwnerId),
-                new(input.SourceRevisionId), validationId, correlationId, state)]);
+                new(input.SourceRevisionId), validationId, correlationId, SemanticSupportState.NotEvaluated,
+                SemanticApplicabilityState.NotEvaluated, SemanticDecisionState.Rejected)]);
         ProviderOperationContractInvariants.Validate(document);
         byte[] canonical = ProviderContractJsonCodecs.Serialize(document);
         return new(transcript.TranscriptId, transcript.ResponseState, "rejected-identity-drift", "audit-only", document,
@@ -425,7 +472,8 @@ public static class SourceClaimAcquisitionEngine
         }
     }
 
-    private static string ToWire(ProposalAdmissionState value) => JsonNamingPolicy.KebabCaseLower.ConvertName(value.ToString());
+    private static string ToWire<T>(T value) where T : struct, Enum =>
+        JsonNamingPolicy.KebabCaseLower.ConvertName(value.ToString());
 }
 
 public static class SourceClaimTransparencyRenderer
@@ -450,11 +498,11 @@ public static class SourceClaimTransparencyRenderer
                 operation_id = scenario.Extraction.OperationId.Value,
                 source_revision_id = scenario.Extraction.SourceRevisionId.Value,
                 admitted_proposal_ids = scenario.Extraction.ClaimProposals
-                    .Where(x => x.State == ProposalAdmissionState.Admitted).Select(x => x.ProposalId.Value).ToArray(),
+                    .Where(x => x.ExtractionState == SemanticProposalState.Extracted).Select(x => x.ProposalId.Value).ToArray(),
                 non_admitted_proposal_ids = scenario.Extraction.ClaimProposals
-                    .Where(x => x.State != ProposalAdmissionState.Admitted).Select(x => x.ProposalId.Value).ToArray(),
+                    .Where(x => x.ExtractionState != SemanticProposalState.Extracted).Select(x => x.ProposalId.Value).ToArray(),
                 admitted_correlation_ids = scenario.Extraction.AdmissionCorrelations
-                    .Where(x => x.State == ProposalAdmissionState.Admitted)
+                    .Where(x => x.DecisionState == SemanticDecisionState.Admitted)
                     .Select(x => x.AdmissionCorrelationId.Value).ToArray(),
                 contradiction_count = scenario.Extraction.ContradictionEvidenceIds.Count,
                 abstention_count = scenario.Extraction.Abstentions.Count,
@@ -473,7 +521,8 @@ public static class SourceClaimTransparencyRenderer
     public static string RenderHuman(SourceClaimAcquisitionResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
-        int admitted = result.Scenarios.Sum(x => x.Extraction.ClaimProposals.Count(p => p.State == ProposalAdmissionState.Admitted));
+        int admitted = result.Scenarios.Sum(x => x.Extraction.AdmissionCorrelations.Count(
+            p => p.DecisionState == SemanticDecisionState.Admitted));
         int retained = result.Scenarios.Sum(x => x.Extraction.ClaimProposals.Count);
         int gaps = result.Scenarios.Sum(x => x.Extraction.Gaps.Count);
         return $"Source claims: {admitted} admitted, {retained - admitted} not admitted, {gaps} gaps; "

@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active navigation
 
-Last reviewed: 2026-08-17
+Last reviewed: 2026-08-22
 
 This directory is the authoritative entry point for the rebuilt Infinium
 project. It records product intent, accepted decisions, current execution,

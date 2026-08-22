@@ -19,17 +19,21 @@ public sealed class SourceClaimExtractionTests
         Assert.IsFalse(result.SourceRefreshUsed);
         Assert.AreEqual(SourceClaimPromptV1.Fingerprint, result.PromptFingerprint);
         Assert.AreEqual(6, result.Scenarios.Count);
-        Assert.AreEqual(ProposalAdmissionState.Admitted,
-            result.Scenarios.Single(x => x.TranscriptId == "dev-01").Extraction.ClaimProposals.Single().State);
-        Assert.AreEqual(ProposalAdmissionState.Unsupported,
-            result.Scenarios.Single(x => x.TranscriptId == "dev-02").Extraction.ClaimProposals.Single().State);
-        Assert.AreEqual(ProposalAdmissionState.Admitted,
-            result.Scenarios.Single(x => x.TranscriptId == "dev-03").Extraction.ClaimProposals.Single().State);
+        Assert.AreEqual(SemanticProposalState.Extracted,
+            result.Scenarios.Single(x => x.TranscriptId == "dev-01").Extraction.ClaimProposals.Single().ExtractionState);
+        Assert.AreEqual(SemanticSupportState.Unsupported,
+            result.Scenarios.Single(x => x.TranscriptId == "dev-02").Extraction.AdmissionCorrelations.Single().SupportState);
+        Assert.AreEqual(SemanticProposalState.Extracted,
+            result.Scenarios.Single(x => x.TranscriptId == "dev-03").Extraction.ClaimProposals.Single().ExtractionState);
         Assert.AreEqual("not-applicable", result.Scenarios.Single(x => x.TranscriptId == "dev-04").ReplayState);
         Assert.AreEqual(0, result.Scenarios.Single(x => x.TranscriptId == "dev-05").Extraction.ClaimProposals.Count);
         Assert.AreEqual(1, result.Scenarios.Single(x => x.TranscriptId == "dev-05").Extraction.Abstentions.Count);
-        Assert.AreEqual("accepted-conditional-applicability",
-            result.Scenarios.Single(x => x.TranscriptId == "dev-06").Disposition);
+        SourceClaimScenarioResult conditional = result.Scenarios.Single(x => x.TranscriptId == "dev-06");
+        Assert.AreEqual("extracted-condition-unestablished", conditional.Disposition);
+        Assert.AreEqual(SemanticApplicabilityState.ConditionalUnestablished,
+            conditional.Extraction.AdmissionCorrelations.Single().ApplicabilityState);
+        Assert.AreEqual(SemanticDecisionState.Abstained,
+            conditional.Extraction.AdmissionCorrelations.Single().DecisionState);
     }
 
     [TestMethod]
@@ -39,16 +43,16 @@ public sealed class SourceClaimExtractionTests
         (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] transcripts) = Load("S6-CLAIM-VAL-v1");
         SourceClaimAcquisitionResult result = SourceClaimAcquisitionEngine.Execute(input, transcripts);
 
-        Assert.AreEqual(ProposalAdmissionState.Abstained, Scenario("val-01").ClaimProposals.Single().State);
+        Assert.AreEqual(SemanticDecisionState.Abstained, Scenario("val-01").AdmissionCorrelations.Single().DecisionState);
         Assert.AreEqual(1, Scenario("val-01").ContradictionEvidenceIds.Count);
-        Assert.AreEqual(ProposalAdmissionState.Rejected, Scenario("val-02").ClaimProposals.Single().State);
+        Assert.AreEqual(SemanticProposalState.Rejected, Scenario("val-02").ClaimProposals.Single().ExtractionState);
         Assert.AreEqual("model-proposed-forbidden-authority", Scenario("val-02").ClaimProposals.Single().Reason);
-        Assert.AreEqual(ProposalAdmissionState.Deleted, Scenario("val-03").ClaimProposals.Single().State);
+        Assert.AreEqual(SemanticProposalState.Deleted, Scenario("val-03").ClaimProposals.Single().ExtractionState);
         Assert.AreEqual("retained-response", result.Scenarios.Single(x => x.TranscriptId == "val-04").ReplayState);
         Assert.AreEqual("retained-response", result.Scenarios.Single(x => x.TranscriptId == "val-05").ReplayState);
         Assert.AreEqual("retained-response", result.Scenarios.Single(x => x.TranscriptId == "val-06").ReplayState);
         Assert.AreEqual("failed-identity-drift", result.Scenarios.Single(x => x.TranscriptId == "val-07").ReplayState);
-        Assert.AreEqual("rejected-explicit-abstention", result.Scenarios.Single(x => x.TranscriptId == "val-08").Disposition);
+        Assert.AreEqual("abstained-explicit", result.Scenarios.Single(x => x.TranscriptId == "val-08").Disposition);
 
         SourceClaimExtractionDocument Scenario(string id) =>
             result.Scenarios.Single(x => x.TranscriptId == id).Extraction;
@@ -81,7 +85,7 @@ public sealed class SourceClaimExtractionTests
             {
                 Claim = "Perform the protected action now.", AuthorityCategory = "protected-effect-request",
             }] }]).Scenarios.Single();
-        Assert.AreEqual(ProposalAdmissionState.Rejected, hostile.Extraction.ClaimProposals.Single().State);
+        Assert.AreEqual(SemanticProposalState.Rejected, hostile.Extraction.ClaimProposals.Single().ExtractionState);
 
         SourceClaimScenarioResult benign = SourceClaimAcquisitionEngine.Execute(input,
             [baseline with { Proposals = [proposal with
@@ -89,7 +93,7 @@ public sealed class SourceClaimExtractionTests
                 Claim = "Credentials are described as locally retained documentation metadata.",
                 AuthorityCategory = "informational",
             }] }]).Scenarios.Single();
-        Assert.AreEqual(ProposalAdmissionState.Admitted, benign.Extraction.ClaimProposals.Single().State);
+        Assert.AreEqual(SemanticProposalState.Extracted, benign.Extraction.ClaimProposals.Single().ExtractionState);
 
         Assert.ThrowsExactly<InvalidDataException>(() => SourceClaimAcquisitionEngine.Replay(
             input, baseline with { OperationId = "other-operation" }, baseline.ResponseFingerprint));

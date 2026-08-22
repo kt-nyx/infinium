@@ -254,7 +254,80 @@ public sealed partial class AuthoritativeStore
             {
                 ApplySuccessorV6SemanticTriggerCorrectionIfRequired();
             }
+            using SqliteCommand finalVersionCommand = connection.CreateCommand();
+            finalVersionCommand.CommandText = "PRAGMA user_version;";
+            int finalVersion = Convert.ToInt32(finalVersionCommand.ExecuteScalar(),
+                System.Globalization.CultureInfo.InvariantCulture);
+            if (finalVersion == 8)
+            {
+                ApplySemanticAdmissionSeparationMigration();
+            }
+            else if (finalVersion == 9)
+            {
+                ValidateSemanticAdmissionSeparationMigration();
+            }
         }
+    }
+
+    private void ApplySemanticAdmissionSeparationMigration()
+    {
+        using SqliteTransaction transaction = BeginTransaction();
+        Execute("DROP TRIGGER provider_semantic_validations_append_only_update; "
+            + "DROP TRIGGER provider_semantic_validations_append_only_delete; "
+            + "DROP TRIGGER provider_semantic_admissions_append_only_update; "
+            + "DROP TRIGGER provider_semantic_admissions_append_only_delete;", transaction);
+        Execute(
+            "ALTER TABLE provider_semantic_validations ADD COLUMN support_state TEXT NOT NULL DEFAULT 'not-evaluated' "
+            + "CHECK(support_state IN ('not-evaluated','supported','unsupported','contradicted','unavailable')); "
+            + "ALTER TABLE provider_semantic_validations ADD COLUMN applicability_state TEXT NOT NULL DEFAULT 'not-evaluated' "
+            + "CHECK(applicability_state IN ('not-evaluated','applicable','conditional-unestablished','not-applicable','unknown')); "
+            + "ALTER TABLE provider_semantic_validations ADD COLUMN decision_state TEXT NOT NULL DEFAULT 'rejected' "
+            + "CHECK(decision_state IN ('admitted','rejected','abstained','audit-only')); "
+            + "ALTER TABLE provider_semantic_admissions ADD COLUMN support_state TEXT NOT NULL DEFAULT 'not-evaluated' "
+            + "CHECK(support_state IN ('not-evaluated','supported','unsupported','contradicted','unavailable')); "
+            + "ALTER TABLE provider_semantic_admissions ADD COLUMN applicability_state TEXT NOT NULL DEFAULT 'not-evaluated' "
+            + "CHECK(applicability_state IN ('not-evaluated','applicable','conditional-unestablished','not-applicable','unknown')); "
+            + "ALTER TABLE provider_semantic_admissions ADD COLUMN decision_state TEXT NOT NULL DEFAULT 'rejected' "
+            + "CHECK(decision_state IN ('admitted','rejected','abstained','audit-only')); "
+            + "UPDATE provider_semantic_validations SET support_state=CASE state "
+            + "WHEN 'admitted' THEN 'supported' WHEN 'unsupported' THEN 'unsupported' "
+            + "WHEN 'unavailable' THEN 'unavailable' WHEN 'deleted' THEN 'unavailable' ELSE 'not-evaluated' END, "
+            + "decision_state=CASE state WHEN 'admitted' THEN 'admitted' WHEN 'abstained' THEN 'abstained' "
+            + "WHEN 'unsupported' THEN 'abstained' WHEN 'unavailable' THEN 'abstained' "
+            + "WHEN 'deleted' THEN 'audit-only' ELSE 'rejected' END; "
+            + "UPDATE provider_semantic_admissions SET support_state=CASE state "
+            + "WHEN 'admitted' THEN 'supported' WHEN 'unsupported' THEN 'unsupported' "
+            + "WHEN 'unavailable' THEN 'unavailable' WHEN 'deleted' THEN 'unavailable' ELSE 'not-evaluated' END, "
+            + "decision_state=CASE state WHEN 'admitted' THEN 'admitted' WHEN 'abstained' THEN 'abstained' "
+            + "WHEN 'unsupported' THEN 'abstained' WHEN 'unavailable' THEN 'abstained' "
+            + "WHEN 'deleted' THEN 'audit-only' ELSE 'rejected' END;",
+            transaction);
+        CreateAppendOnlyTriggers(["provider_semantic_validations", "provider_semantic_admissions"], transaction);
+        string fingerprint = ComputeSchemaFingerprint(connection, transaction);
+        Execute(
+            "UPDATE store_metadata SET value='9' WHERE key='schema_version'; "
+            + "UPDATE store_metadata SET value='1.8.0' WHERE key='storage_contract_version'; "
+            + "UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint'; "
+            + "INSERT INTO store_metadata(key,value) VALUES('semantic_admission_separation_id',$id); "
+            + "INSERT INTO migration_history(migration_id,from_version,to_version,applied_at,sqlite_source_id) "
+            + "VALUES($id,8,9,$now,$source); PRAGMA user_version=9;",
+            transaction, ("$fingerprint", fingerprint),
+            ("$id", ProviderPersistenceDeclarations.SemanticAdmissionSeparationMigrationId),
+            ("$now", ToText(DateTimeOffset.UtcNow)), ("$source", BindingIdentity.SourceId));
+        transaction.Commit();
+        if (fingerprint != ProviderPersistenceDeclarations.SemanticAdmissionSeparationSchemaFingerprint)
+        { throw new InvalidOperationException("The semantic-admission separation fingerprint is stale (" + fingerprint + ")."); }
+    }
+
+    private void ValidateSemanticAdmissionSeparationMigration()
+    {
+        string fingerprint = ComputeSchemaFingerprint(connection);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "SELECT value FROM store_metadata WHERE key='semantic_admission_separation_id';";
+        if (command.ExecuteScalar() is not string identity
+            || identity != ProviderPersistenceDeclarations.SemanticAdmissionSeparationMigrationId
+            || fingerprint != ProviderPersistenceDeclarations.SemanticAdmissionSeparationSchemaFingerprint)
+        { throw new InvalidOperationException("Schema 9 lacks the exact semantic-admission separation migration."); }
     }
 
     private bool SuccessorV6PersistenceExtensionApplied()

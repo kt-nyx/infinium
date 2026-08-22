@@ -51,6 +51,8 @@ param(
 
     [switch] $OwnerTestProcessCleanup,
 
+    [switch] $PromptFidelitySemanticAdmissionReview,
+
     [switch] $CredentialNativePostEffectAudit,
 
     [switch] $CampaignV2CandidateOnly
@@ -107,6 +109,9 @@ if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 
     }
     if ($OwnerTestProcessCleanup) {
         $arguments += '-OwnerTestProcessCleanup'
+    }
+    if ($PromptFidelitySemanticAdmissionReview) {
+        $arguments += '-PromptFidelitySemanticAdmissionReview'
     }
     if ($CredentialNativePostEffectAudit) {
         $arguments += '-CredentialNativePostEffectAudit'
@@ -915,6 +920,68 @@ function Test-Wp1ProtectedPath([string] $Path) {
     return $Path.StartsWith('contracts/protobuf/infinium/helper/v1/', [System.StringComparison]::Ordinal)
 }
 
+function Get-PromptFidelitySemanticAdmissionReviewPaths {
+    return @(
+        'contracts/json-schema/candidate-investigation.v1.schema.json',
+        'contracts/json-schema/source-claim-extraction.v1.schema.json',
+        'contracts/protobuf/infinium/application/v1/application.proto',
+        'contracts/repository/public-fixture-registry.v3.schema.json',
+        'docs/README.md',
+        'docs/architecture/data-and-trust-model.md',
+        'docs/architecture/decisions/ADR-0034-prompt-fidelity-and-semantic-admission-axes.md',
+        'docs/architecture/decisions/README.md',
+        'docs/current-state.md',
+        'docs/evaluation/case-catalog.md',
+        'docs/evaluation/evaluation-strategy.md',
+        'docs/evaluation/repository-evaluation-authority.v1.json',
+        'docs/plans/milestones/m1/slices/s6/README.md',
+        'docs/plans/milestones/m1/slices/s6/record.md',
+        'docs/plans/milestones/m1/slices/s6/wp1-contract-traceability.v1.json',
+        'docs/product/domain-model.md',
+        'eng/verify-m1-slice6.ps1',
+        'fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v1/oracle-provenance.v1.json',
+        'fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v1/oracle.v1.json',
+        'fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v1/public-manifest.json',
+        'fixtures/public/public-fixture-registry.v3.json',
+        'fixtures/tooling/Infinium.PublicFixtures/CandidateInvestigationFixtureReader.cs',
+        'fixtures/tooling/Infinium.PublicFixtures/ProviderContractExampleReader.cs',
+        'fixtures/tooling/Infinium.PublicFixtures/SourceClaimFixtureReader.cs',
+        'src/Infinium.Application/Provider/ApplicationProviderContractValidator.cs',
+        'src/Infinium.Application/Provider/CandidateInvestigation.cs',
+        'src/Infinium.Application/Provider/SourceClaimAcquisition.cs',
+        'src/Infinium.Application/Runtime/ProtocolConstants.cs',
+        'src/Infinium.Coordinator/M1Slice6CampaignProviderAccounting.cs',
+        'src/Infinium.Coordinator/M1Slice6CampaignSemanticAdmission.cs',
+        'src/Infinium.Coordinator/M1Slice6CampaignV2InputAdapter.cs',
+        'src/Infinium.Coordinator/M1Slice6SuccessorAttemptMaterializer.cs',
+        'src/Infinium.Coordinator/M1Slice6SuccessorCampaign.cs',
+        'src/Infinium.Coordinator/ProviderAccountingCoordinator.cs',
+        'src/Infinium.Coordinator/SourceClaimAcquisitionCoordinator.cs',
+        'src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs',
+        'src/Infinium.Domain/Contracts/ProviderOperationContracts.cs',
+        'src/Infinium.Persistence/AuthoritativeStore.Migrations.cs',
+        'src/Infinium.Persistence/AuthoritativeStore.SourceClaims.cs',
+        'src/Infinium.Persistence/AuthoritativeStore.cs',
+        'src/Infinium.Persistence/ProviderPersistenceDeclarations.cs',
+        'tests/Infinium.ContractTests/CandidateInvestigationProviderProvenanceContractTests.cs',
+        'tests/Infinium.ContractTests/EvaluationBoundaryContractTests.cs',
+        'tests/Infinium.ContractTests/ProviderContractJsonCodecTests.cs',
+        'tests/Infinium.ContractTests/ProviderLayer6VerifierContractTests.cs',
+        'tests/Infinium.ContractTests/SourceClaimExtractionContractTests.cs',
+        'tests/Infinium.EvaluationTests/SemanticAdmissionAuthorityEvaluationTests.cs',
+        'tests/Infinium.EvaluationTests/SourceClaimTransparencyEvaluationTests.cs',
+        'tests/Infinium.IntegrationTests/M1Slice6CampaignRehearsalTests.cs',
+        'tests/Infinium.IntegrationTests/M1Slice6SuccessorAccountingTests.cs',
+        'tests/Infinium.IntegrationTests/M1Slice6SuccessorAuthorityTests.cs',
+        'tests/Infinium.IntegrationTests/ProviderBudgetIntegrationTests.cs',
+        'tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs',
+        'tests/Infinium.UnitTests/CandidateInvestigationProviderContextTests.cs',
+        'tests/Infinium.UnitTests/PersistenceAndLifecycleTests.cs',
+        'tests/Infinium.UnitTests/ProviderContractTests.cs',
+        'tests/Infinium.UnitTests/SourceClaimExtractionTests.cs'
+    )
+}
+
 function Invoke-Layer6ReviewGate(
     [string] $ReviewBaseline = $BaselineCommit,
     [string] $ReviewCandidate = $CandidateCommit,
@@ -930,7 +997,8 @@ function Invoke-Layer6ReviewGate(
     [bool] $CampaignStageAdmissionCloseoutMode = [bool]$M1Slice6CampaignStageAdmissionCloseout,
     [bool] $CampaignCredentialEvidenceCloseoutMode = [bool]$M1Slice6CampaignCredentialEvidenceCloseout,
     [bool] $CampaignStageEvidenceCloseoutMode = [bool]$M1Slice6CampaignStageEvidenceCloseout,
-    [bool] $CampaignComposedEvidenceCloseoutMode = [bool]$M1Slice6CampaignComposedEvidenceCloseout) {
+    [bool] $CampaignComposedEvidenceCloseoutMode = [bool]$M1Slice6CampaignComposedEvidenceCloseout,
+    [bool] $PromptFidelitySemanticAdmissionReviewMode = [bool]$PromptFidelitySemanticAdmissionReview) {
     $baselineHash = Resolve-GitCommit $ReviewBaseline 'BaselineCommit'
     $candidateHash = Resolve-GitCommit $ReviewCandidate 'CandidateCommit'
     & git -C $repoRoot merge-base --is-ancestor $baselineHash $candidateHash
@@ -1441,6 +1509,31 @@ function Invoke-Layer6ReviewGate(
         throw 'Layer6Review could not derive the candidate change set.'
     }
 
+    [string[]]$promptFidelitySemanticAdmissionPaths = if ($PromptFidelitySemanticAdmissionReviewMode) {
+        @(Get-PromptFidelitySemanticAdmissionReviewPaths)
+    } else { @() }
+    if ($PromptFidelitySemanticAdmissionReviewMode) {
+        if ($HandoffCloseout -or $Wp4OwnerReviewHandoff -or $Wp8PreLiveCloseoutMode -or
+            $Wp9OwnerStopMode -or $Wp9ReviewCloseoutMode -or $Wp9OwnerAcceptanceCloseoutMode -or
+            $CampaignReviewMode -or $CampaignReviewCloseoutMode -or $CampaignAdmissionCloseoutMode -or
+            $CampaignRolloverCloseoutMode -or $CampaignStageReviewCloseoutMode -or
+            $CampaignStageAdmissionCloseoutMode -or $CampaignCredentialEvidenceCloseoutMode -or
+            $CampaignStageEvidenceCloseoutMode -or $CampaignComposedEvidenceCloseoutMode -or
+            $OwnerTestProcessCleanup) {
+            throw 'PromptFidelitySemanticAdmissionReview cannot be combined with another Layer6 authority mode.'
+        }
+        $expectedBaseline = '1676e148be513040396489fbf0d317b3af34bee4'
+        $head = (& git -C $repoRoot rev-parse HEAD).Trim()
+        [string[]]$actualPaths = @(& git -C $repoRoot -c core.quotePath=false diff --name-only $baselineHash $candidateHash --)
+        [Array]::Sort($actualPaths, [StringComparer]::Ordinal)
+        [Array]::Sort($promptFidelitySemanticAdmissionPaths, [StringComparer]::Ordinal)
+        if ($baselineHash -cne $expectedBaseline -or $candidateHash -cne $head -or
+            (& git -C $repoRoot rev-list --count "$baselineHash..$candidateHash").Trim() -ne '1' -or
+            [string]::Join("`n", $actualPaths) -cne [string]::Join("`n", $promptFidelitySemanticAdmissionPaths)) {
+            throw 'PromptFidelitySemanticAdmissionReview requires the exact base, current one-commit candidate, and closed correction path set.'
+        }
+    }
+
     $changedPaths = [System.Collections.Generic.List[object]]::new()
     foreach ($line in $nameStatusLines) {
         if ([string]::IsNullOrWhiteSpace($line)) {
@@ -1466,6 +1559,8 @@ function Invoke-Layer6ReviewGate(
                 $campaignCloseoutPaths -ccontains $path
             $isOwnerTestProcessCleanupPolicy = $OwnerTestProcessCleanup -and
                 $path -ceq 'docs/execution-policy.md'
+            $isPromptFidelitySemanticAdmissionPath = $PromptFidelitySemanticAdmissionReviewMode -and
+                $promptFidelitySemanticAdmissionPaths -ccontains $path
             $isProtected = (Test-Wp1ProtectedPath $path) -and
                 -not $isRemainderR1Candidate -and
                 -not $isHandoffCurrentState -and
@@ -1475,7 +1570,8 @@ function Invoke-Layer6ReviewGate(
                 -not $isWp9OwnerAcceptanceCloseoutPath -and
                 -not $isCampaignReviewPath -and
                 -not $isCampaignCloseoutPath -and
-                -not $isOwnerTestProcessCleanupPolicy
+                -not $isOwnerTestProcessCleanupPolicy -and
+                -not $isPromptFidelitySemanticAdmissionPath
             $isAllowed = (Test-Wp1AllowedPath $path) -or
                 $isRemainderR1Candidate -or
                 $isHandoffCurrentState -or
@@ -1485,7 +1581,8 @@ function Invoke-Layer6ReviewGate(
                 $isWp9OwnerAcceptanceCloseoutPath -or
                 $isCampaignReviewPath -or
                 $isCampaignCloseoutPath -or
-                $isOwnerTestProcessCleanupPolicy
+                $isOwnerTestProcessCleanupPolicy -or
+                $isPromptFidelitySemanticAdmissionPath
             $privateOrArchive = $path -match '(?i)(^|/)(private|legacy|archive)(/|$)' -or
                 $path -match '(?i)independent-slice3-evaluator' -or
                 $path -match '(?i)^docs/evaluation/fixtures/'
@@ -1532,6 +1629,7 @@ function Invoke-Layer6ReviewGate(
     $pathReport = Write-JsonReport 'layer6-changed-paths.json' ([ordered]@{
         baseline_commit = $baselineHash
         candidate_commit = $candidateHash
+        prompt_fidelity_semantic_admission_review = [bool]$PromptFidelitySemanticAdmissionReviewMode
         wp8_current_state_disposition = $wp8CurrentStateDisposition
         changed_path_count = $changedPaths.Count
         failure_count = $pathFailures.Count

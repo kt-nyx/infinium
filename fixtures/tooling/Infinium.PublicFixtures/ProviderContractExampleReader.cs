@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Infinium.Application.Evaluation;
 
 namespace Infinium.PublicFixtures;
@@ -77,7 +78,8 @@ public static class ProviderContractExampleReader
 
         foreach (string schema in SchemaNames)
         {
-            ActiveJsonSchemaValidator.Validate(examples.GetProperty(schema), schema);
+            ActiveJsonSchemaValidator.Validate(ProjectHistoricalSemanticFieldNames(
+                examples.GetProperty(schema), schema), schema);
         }
 
         string authorityText = root.GetRawText();
@@ -90,6 +92,35 @@ public static class ProviderContractExampleReader
         }
 
         return SchemaNames.Length;
+    }
+
+    private static JsonElement ProjectHistoricalSemanticFieldNames(JsonElement example, string schema)
+    {
+        if (schema is not ("source-claim-extraction.v1.schema.json" or "candidate-investigation.v1.schema.json"))
+        {
+            return example;
+        }
+
+        // The WP1 answer-free package is immutable prior evidence. Validate its historical
+        // single-axis `state` spelling against the clean-break contract by projecting only
+        // that field name in memory; product codecs do not accept the historical shape.
+        JsonObject projected = JsonNode.Parse(example.GetRawText())!.AsObject();
+        string replacement = schema == "source-claim-extraction.v1.schema.json"
+            ? "extraction_state"
+            : "proposal_state";
+        string proposalsProperty = schema == "source-claim-extraction.v1.schema.json"
+            ? "claim_proposals"
+            : "hypothesis_proposals";
+        foreach (JsonObject proposal in projected[proposalsProperty]!.AsArray().Select(node => node!.AsObject()))
+        {
+            JsonNode? state = proposal["state"]?.DeepClone();
+            if (!proposal.Remove("state") || state is null)
+            {
+                throw new InvalidDataException("Historical provider semantic example is missing its frozen state field.");
+            }
+            proposal[replacement] = state;
+        }
+        return JsonSerializer.SerializeToElement(projected);
     }
 
     private static bool ValidUsageExample(JsonElement value, int expectedComparison, string expectedSettlement)

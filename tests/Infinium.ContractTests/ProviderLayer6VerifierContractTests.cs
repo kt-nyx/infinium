@@ -133,6 +133,7 @@ public sealed class ProviderLayer6VerifierContractTests
             "[switch] $Wp4OwnerReviewHandoff",
             "[switch] $Wp8PreLiveCloseout",
             "[switch] $OwnerTestProcessCleanup",
+            "[switch] $PromptFidelitySemanticAdmissionReview",
             "merge-base --is-ancestor",
             "layer6-changed-paths.json",
             "docs/evaluation/specifications/semantic-fixture-catalog.md",
@@ -146,6 +147,8 @@ public sealed class ProviderLayer6VerifierContractTests
             "wp8_pre_live_closeout = [bool]$Wp8PreLiveCloseoutMode",
             "network_permitted = $false",
             "credential_access_permitted = $false",
+            "PromptFidelitySemanticAdmissionReview requires the exact base, current one-commit candidate, and closed correction path set.",
+            "prompt_fidelity_semantic_admission_review = [bool]$PromptFidelitySemanticAdmissionReviewMode",
         ];
 
         foreach (string required in requiredInterfaceAndEvidence)

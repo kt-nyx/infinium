@@ -9753,3 +9753,102 @@ seams and public validation authority through the proper independent process,
 then review, correct, and re-review until the package is owner-ready. A future
 live validation request, if ultimately required, needs separate explicit owner
 authority after the effect-free package is complete and reviewed.
+
+## 2026-08-22 effect-free prompt-fidelity and semantic-admission convergence
+
+### Scope and preserved evidence
+
+This correction was implemented from
+`1676e148be513040396489fbf0d317b3af34bee4` on
+`codex/m1-s6-c2-authority`. It performed no credential access, provider call,
+network operation, private-fixture or archive access, push, destructive
+operation, or Slice 7 work. The completed WP9-WP11 responses, ledger events,
+accounting, composed provenance, and all earlier public package bytes remain
+unchanged.
+
+### Implemented vertical path
+
+- Canonical request materialization now transmits the exact
+  `SourceClaimPromptV1.Instructions` or
+  `CandidateInvestigationPromptV1.Instructions` bytes and rejects any
+  prompt-ID, text, fingerprint, parsed-request, or byte-digest mismatch before
+  dispatch.
+- ADR-0034 defines independent proposal/extraction, evidence-support, local-
+  applicability, and host-decision axes. Only `supported` plus `applicable`
+  can be admitted. `Unsupported` means insufficient support,
+  `contradicted` requires opposing evidence, and `abstained` publishes no host
+  conclusion.
+- Source extraction retains faithful source claims without treating them as
+  downstream proof. Candidate investigation distinguishes unsupported,
+  contradicted, unavailable, and explicit-abstention outcomes without
+  collapsing their evidence state.
+- JSON Schema, protobuf, codecs, domain invariants, producers, coordinator
+  consumers, transparency output, persistence, backup/restore, replay, and
+  terminal publication use the separated model. Schema 9/storage `1.8.0`
+  preserves schema-8 rows and the legacy decision column while adding support,
+  applicability, and decision columns.
+- Public registry v3 adds answer-isolated package
+  `S6-SEMANTIC-ADMISSION-VAL-v1`: five source and five candidate cases covering
+  supported, unsupported, contradicted, explicit-abstention, unavailable, and
+  unresolved-applicability behavior. Exact v1/v2 packages remain unchanged;
+  fixture-reader-only projections compare their historical combined states
+  without creating product compatibility.
+
+### Review, corrections, and re-review
+
+Consolidated semantic, persistence, provenance, authority, and diff review
+found two must-fix seams after the first green focused pass:
+
+1. persistence-side candidate replay reconstructed an explicit abstention as
+   unsupported and did not reproduce its `abstained-explicit` disposition;
+2. admission read models and terminal publication still selected through the
+   legacy combined column instead of exposing and consuming the explicit
+   semantic axes.
+
+Both were corrected on the same candidate. Follow-up integration review also
+updated stale tests that had treated faithful extraction as automatic local
+admission and unavailable evidence as rejection. The complete-floor review
+then found and corrected stale schema-8 fingerprint expectations, an obsolete
+unsupported-disposition spelling, schema-8-only successor validation, and the
+historical continuation-candidate hash seam. The latter now has a narrow
+read-only projection for effect-free replay; effect admission still requires
+the current exact continuation bytes. The generated dependency manifest was
+also normalized; regeneration produced no logical manifest diff and its check
+then passed. Re-review passed explicit-abstention persistence/replay, source
+and candidate backup/restore, historical fixture projection, prompt-byte
+fidelity, and a fresh-clone three-stage loopback rehearsal. The first
+candidate-bound Layer 6 review then found that its historical WP1 allowlist
+could not represent this accepted cross-vertical correction. The verifier now
+has an exact `PromptFidelitySemanticAdmissionReview` mode bound to the
+requested base, current one-commit candidate, and closed correction path set;
+no general path authority was broadened. No must-fix, safety/isolation, or
+owner-decision finding remains.
+
+### Verification evidence
+
+Focused development checks passed with 282 unit tests and 4 expected skips,
+163 contract tests, 65 public evaluation tests and 8 expected private-target
+skips, the two corrected persistence/replay integration tests, and the isolated
+fresh-clone rehearsal.
+
+The final common Release floor passed on the review-ready candidate:
+
+- restore and Release build passed with zero warnings and zero errors;
+- category Unit: 282 passed, 4 expected skips;
+- category Contract: 172 passed;
+- category Integration: 183 passed, 1 expected skip;
+- category Evaluation: 87 passed, 8 expected private-target skips;
+- category Security: 174 passed, 6 expected skips;
+- category Fault: 111 passed, 3 expected skips;
+- the unfiltered solution run passed Security 19, Fault 7, Evaluation 67 with
+  8 expected skips, Unit 312 with 4 expected skips, Contract 200, and
+  Integration 230 with 1 expected skip; and
+- formatter verification, dependency-manifest verification, documentation
+  validation, the complete public analysis-pipeline gate, and
+  `git diff --check` passed.
+
+The accumulated category commands passed 1,009 test executions with 22
+expected skips. The unfiltered solution run passed 835 tests with 13 expected
+skips. No final-floor command accessed credentials, sent a provider request,
+used private fixtures or archives, changed retained evidence, or opened Slice
+7.

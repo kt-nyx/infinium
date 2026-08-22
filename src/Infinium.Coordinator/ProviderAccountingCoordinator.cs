@@ -124,7 +124,7 @@ public sealed class ProviderAccountingCoordinator
             }
             acquisitionRunId = new(operation.OwnerId);
             acquisitionRunIds = [acquisitionRunId];
-            admissionId = new(admissions.OrderByDescending(x => x.State == "admitted")
+            admissionId = new(admissions.OrderByDescending(x => x.DecisionState == "admitted")
                 .ThenBy(x => x.AdmissionId, StringComparer.Ordinal).First().AdmissionId);
         }
         else if (operationKind == ProviderOperationKind.CandidateInvestigation)
@@ -144,7 +144,7 @@ public sealed class ProviderAccountingCoordinator
             }
             if (admissions.Count > 0)
             {
-                admissionId = new(admissions.OrderByDescending(x => x.State == "admitted")
+                admissionId = new(admissions.OrderByDescending(x => x.DecisionState == "admitted")
                     .ThenBy(x => x.AdmissionId, StringComparer.Ordinal).First().AdmissionId);
             }
         }

@@ -71,7 +71,7 @@ public sealed class SourceClaimAcquisitionCoordinator
             SourceClaimAdmissionCorrelationContract[] correlations = scenario.Extraction.AdmissionCorrelations
                 .Select(correlation =>
                 {
-                    if (correlation.State != ProposalAdmissionState.Admitted)
+                    if (correlation.DecisionState != SemanticDecisionState.Admitted)
                     {
                         return correlation;
                     }

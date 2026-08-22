@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active navigation
 
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-22
 
 ADRs preserve technical decisions and their rationale. They are append-only:
 accepted records are superseded rather than rewritten to hide prior decisions.
@@ -45,6 +45,7 @@ accepted records are superseded rather than rewritten to hide prior decisions.
 | [ADR-0031](ADR-0031-facegen-loose-availability-gap-and-protocol-5-successor-model.md) | Accepted historical decision; active model authority superseded | Preserve the `/5` successor-model decision and durable FaceGen loose-availability gap; active model authority superseded by ADR-0032 |
 | [ADR-0032](ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md) | Accepted; partially superseded | Defer the M1 held-out evaluator, retire `/5`, and continue M1 under public verification; `/4` retention superseded by ADR-0033 |
 | [ADR-0033](ADR-0033-retire-and-archive-protocol-4-evaluator.md) | Accepted | Retire `/4` from active code and review, archive its public closure externally, and reserve its identities |
+| [ADR-0034](ADR-0034-prompt-fidelity-and-semantic-admission-axes.md) | Accepted | Bind exact transmitted prompt bytes and separate proposal, support, applicability, and host-decision state |
 
 ADR-0015 through ADR-0023 are accepted and jointly select the Wave E
 persistence, lifecycle, application-stack, process, IPC, credential, security,
@@ -79,6 +80,9 @@ evaluator closeout and continuation profile.
 ADR-0033 supersedes the remaining active protocol `/4` retention and bounded
 regression provisions. Protocol `/4` is archived outside Infinium and no
 evaluator protocol is a current command or review gate.
+ADR-0034 binds provider prompt provenance to exact transmitted instruction
+bytes and separates faithful proposal/extraction, evidence support, local
+applicability, and host admission without rewriting retained Slice 6 evidence.
 ADR-0008 through
 ADR-0011 accept the Wave B integration and semantic
 boundaries, and ADR-0012 accepts the revised Nexus interface/risk boundary,
