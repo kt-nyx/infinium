@@ -1,0 +1,23 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-successor-independent-review/3.0.0",
+  "review_id": "infinium.m1-s6.successor-runtime-attempt-9-review-v3/d857bd81-3372-451a-aeb5-d58dc9cb6a00",
+  "review_kind": "runtime-attempt",
+  "verdict": "accept",
+  "reviewer_id": "/root/successor-design-review",
+  "independent": true,
+  "provider_effect_used": false,
+  "subject": {
+    "id": "m1-s6-successor-v6-wp9-runtime-candidate-9/49298f4a-3df3-457f-af5b-6600cc913436",
+    "sha256": "2c91f3b2434076ece83e197cb85baa361938c1a442f7b0c56d5333165821250d"
+  },
+  "correction": {
+    "required": false,
+    "defect_id": null,
+    "diagnosis_disposition": null,
+    "failure_evidence_id": null,
+    "failure_evidence_sha256": null,
+    "candidate_commit": null
+  },
+  "findings": [],
+  "reviewed_at_utc": "2026-08-22T01:28:52.4385162+00:00"
+}
