@@ -28,7 +28,9 @@ public static class ProviderPersistenceDeclarations
     public const string SuccessorAttemptExtensionMigrationId = "M1-S6-SUCCESSOR-0007";
     public const string SuccessorAttemptSchemaFingerprint = "bc281cecc1025f1fa687c735c536967f338b639259b426545a1b60f33b2c846b";
     public const string SuccessorV6PersistenceMigrationId = "M1-S6-SUCCESSOR-V6-0008";
-    public const string SuccessorV6PersistenceSchemaFingerprint = "dcf0653bbf1c337e77f0f58aad0ba63fb3d775ccb3c6a7e4e560e971ff309893";
+    public const string SuccessorV6PersistenceOriginalSchemaFingerprint = "dcf0653bbf1c337e77f0f58aad0ba63fb3d775ccb3c6a7e4e560e971ff309893";
+    public const string SuccessorV6PersistenceSchemaFingerprint = "67dab8043a37d7095720016c75ab0199116e0a4f14029234a17fa6ced3c36b2a";
+    public const string SuccessorV6SemanticTriggerCorrectionId = "M1-S6-SUCCESSOR-V6-0008A";
     public const int SourceSchemaVersion = 5;
     public const string SourceStorageContractVersion = "1.4.0";
     public const string SourceSchemaFingerprint = "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d";

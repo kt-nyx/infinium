@@ -1,0 +1,80 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-successor-stage-attempt/6.0.0",
+  "manifest_id": "infinium.m1-s6.successor-stage-v6/WP10/attempt-2/26f49890-4c5b-4a31-985d-b98d3d5f43e9",
+  "status": "reviewed-and-admitted",
+  "campaign_binding": {
+    "campaign_id": "infinium.m1-s6.successor-campaign-v7/3e457821-389a-4ea8-a4c0-aed9da3b5966",
+    "campaign_manifest_sha256": "d81e4b7e9972d9531215a650bedd5a0ac98c015f01c9c0af4a9c9c7265dbded8",
+    "credential_manifest_id": "infinium.m1-s6.successor-credential-replacement-generation-3/a942ce52-81b3-4363-ac16-2e16745f326f",
+    "credential_manifest_sha256": "d4a93a3e09c2a5e6c489a795ecec971d2b4aae4dd5796be65b55326f0d59504a",
+    "hard_budget_amendment_id": "infinium.m1-s6.hard-budget-continuation/20260821-c2b-c3",
+    "hard_budget_amendment_sha256": "a79502da0ebea9ded5f6b10b72ad70f8b482d9de28e97e3bd09541936683a5b3"
+  },
+  "stage": {
+    "ordinal": 2,
+    "work_package": "WP10",
+    "operation": "SourceClaimExtraction"
+  },
+  "attempt": {
+    "ordinal": 2,
+    "attempt_id": "m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715",
+    "runtime_authority_id": "m1-s6-successor-v6-wp10-runtime-2/81464cc7-c3c4-4a2f-9cbd-6d158022075d",
+    "request_id": "m1-s6-successor-v6-wp10-request-2/39be6273-89f5-4236-b950-e5204143e043",
+    "reservation_id": "m1-s6-successor-v6-wp10-reservation-2/91e9d4ae-b4ab-468f-9caf-a7c512039818",
+    "dispatch_fence_id": "m1-s6-successor-v6-wp10-fence-2/ce15899e-afd7-49d6-b1f3-25261fb62e9c"
+  },
+  "predecessor_evidence": {
+    "event_hash": "3b03a1d6091b8b906c46b83782d6aaffeeaa690ae236fabba424e5e9dd5f690b",
+    "evidence_id": "infinium.m1-s6.development-continuation/20260821",
+    "evidence_sha256": "04462e111693defc9f37c95b31a6bea2fe8fac6f2dd40e344ff6a4f1ec5b739b"
+  },
+  "canonical_request": {
+    "path": "wp10-request.v6.json",
+    "sha256": "03b37c85821caf4c1c1d08e1161d728df1b68df9e856ef3ae565da4f77064baa",
+    "bytes": 8954,
+    "proved_input_tokens": 17146,
+    "maximum_output_tokens": 4096
+  },
+  "transport": {
+    "provider": "openai",
+    "endpoint": "https://api.openai.com/v1/responses",
+    "maximum_provider_starts": 1,
+    "maximum_dns_resolutions": 1,
+    "automatic_retry": false,
+    "parallel": false
+  },
+  "limits": {
+    "maximum_request_bytes": 65536,
+    "maximum_input_tokens": 73728,
+    "maximum_output_tokens": 4096,
+    "maximum_raw_response_bytes": 1048576,
+    "calculated_reservation_nano_usd": 491520000,
+    "deadline_milliseconds": 120000
+  },
+  "safety_identifier": {
+    "projection": "d0173a008b80c182c9e6c40ef7d69d12fd154f6167b86cf607d3e83c29fa5e14",
+    "raw_seed_present": false
+  },
+  "validation_package": {
+    "package_id": "LLM-CLAIM-LIVE-VAL-v2",
+    "manifest_path": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/public-manifest.json",
+    "manifest_sha256": "1231c98875c3ba3ca0ce3b60773e566c791b4a313c1fd691233be1a1bc60ba09",
+    "product_input_path": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/execution-input.v2.json",
+    "product_input_bytes": 4144,
+    "product_input_sha256": "bcbcc804eee7ea51fc00b6daa33d688078dcb1e8ddc53349a0ec673b77a5e789",
+    "predecessor_manifest_path": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/public-manifest.json",
+    "predecessor_manifest_bytes": 1684,
+    "predecessor_manifest_sha256": "926963ca067da52ec8d6d7ecdd824df3cb2e2efed6dd12fe3418f3e63b29b4b7",
+    "oracle_path": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/oracle.v2.json",
+    "oracle_sha256": "76a631ffa02eeff301c240588d1507e3fe3cc2fe13f19aa597aecb8d2ddb3e14",
+    "deterministic_oracle_result_sha256": "beabc1d5cef06317d215bfa45ab481273e5995e0b4bd58ce412c78335bfc8e0f",
+    "semantic_use": true
+  },
+  "execution": {
+    "provider_request_permitted": true,
+    "requires_durable_admission": true,
+    "requires_typed_runtime_authority": true,
+    "automatic_retry": false,
+    "first_structurally_valid_response_stops_stage": true
+  }
+}

@@ -250,6 +250,10 @@ public sealed partial class AuthoritativeStore
                 throw new InvalidOperationException(
                     "Schema 8 lacks the exact Slice 6 successor-v6 persistence migration.");
             }
+            if (current == 8)
+            {
+                ApplySuccessorV6SemanticTriggerCorrectionIfRequired();
+            }
         }
     }
 
@@ -269,7 +273,8 @@ public sealed partial class AuthoritativeStore
         string actual = ComputeSchemaFingerprint(connection);
         using SqliteCommand declared = connection.CreateCommand();
         declared.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
-        if (actual != ProviderPersistenceDeclarations.SuccessorV6PersistenceSchemaFingerprint
+        if (actual is not (ProviderPersistenceDeclarations.SuccessorV6PersistenceOriginalSchemaFingerprint
+                or ProviderPersistenceDeclarations.SuccessorV6PersistenceSchemaFingerprint)
             || declared.ExecuteScalar() is not string stored || stored != actual)
         { throw new InvalidOperationException("The Slice 6 successor-v6 persistence fingerprint is stale (" + actual + ")."); }
         using SqliteCommand migration = connection.CreateCommand();
@@ -280,6 +285,59 @@ public sealed partial class AuthoritativeStore
         if (Convert.ToInt64(migration.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
         { throw new InvalidOperationException("The Slice 6 successor-v6 migration history is stale."); }
         return true;
+    }
+
+    private void ApplySuccessorV6SemanticTriggerCorrectionIfRequired()
+    {
+        using SqliteCommand existing = connection.CreateCommand();
+        existing.CommandText = "SELECT value FROM store_metadata WHERE key='slice6_successor_v6_semantic_trigger_correction_id';";
+        if (existing.ExecuteScalar() is string identity)
+        {
+            if (identity != ProviderPersistenceDeclarations.SuccessorV6SemanticTriggerCorrectionId)
+            { throw new InvalidOperationException("The successor-v6 semantic trigger correction identity is stale."); }
+            return;
+        }
+        using SqliteTransaction transaction = BeginTransaction();
+        Execute("DROP TRIGGER provider_semantic_proposal_root_guard;", transaction);
+        Execute(SuccessorSemanticProposalRootGuardV8(), transaction);
+        string fingerprint = ComputeSchemaFingerprint(connection, transaction);
+        Execute(
+            "INSERT INTO store_metadata(key,value) VALUES('schema_fingerprint',$fingerprint) "
+            + "ON CONFLICT(key) DO UPDATE SET value=excluded.value; "
+            + "INSERT INTO store_metadata(key,value) VALUES('slice6_successor_v6_semantic_trigger_correction_id',$id);",
+            transaction, ("$fingerprint", fingerprint),
+            ("$id", ProviderPersistenceDeclarations.SuccessorV6SemanticTriggerCorrectionId));
+        transaction.Commit();
+        if (fingerprint != ProviderPersistenceDeclarations.SuccessorV6PersistenceSchemaFingerprint)
+        { throw new InvalidOperationException("The corrected successor-v6 persistence fingerprint is stale (" + fingerprint + ")."); }
+    }
+
+    private static string SuccessorSemanticProposalRootGuardV8()
+    {
+        const string activeBridge =
+            """
+              SELECT 1 FROM m1_slice6_successor_all_semantic_response_bindings b
+              JOIN m1_slice6_successor_all_transport_responses r
+                ON r.response_record_id=b.transport_response_record_id
+               AND r.authorization_id=b.transport_authorization_id AND r.operation_id=b.transport_operation_id
+               AND r.admission_state='admitted' AND r.finalized_at <= NEW.created_at
+            """;
+        const string startMarker = "SELECT 1 FROM m1_slice6_successor_semantic_response_bindings b";
+        const string endMarker = "AND f.admission_state='admitted' AND f.finalized_at <= NEW.created_at";
+        int start = SuccessorSemanticProposalRootGuard.IndexOf(startMarker, StringComparison.Ordinal);
+        int end = start < 0 ? -1 : SuccessorSemanticProposalRootGuard.IndexOf(
+            endMarker, start, StringComparison.Ordinal);
+        if (start < 0 || end < 0)
+        { throw new InvalidOperationException("The historical successor semantic bridge is absent."); }
+        end += endMarker.Length;
+        string corrected = (SuccessorSemanticProposalRootGuard[..start]
+            + activeBridge.TrimStart() + SuccessorSemanticProposalRootGuard[end..])
+            .Replace("m1_slice6_successor_semantic_response_bindings",
+                "m1_slice6_successor_all_semantic_response_bindings", StringComparison.Ordinal);
+        if (corrected == SuccessorSemanticProposalRootGuard
+            || !corrected.Contains("m1_slice6_successor_all_transport_responses", StringComparison.Ordinal))
+        { throw new InvalidOperationException("The successor-v6 semantic root trigger correction did not close."); }
+        return corrected;
     }
 
     private void ApplySuccessorV6PersistenceExtension()

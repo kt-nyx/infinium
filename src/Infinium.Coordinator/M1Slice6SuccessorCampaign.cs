@@ -1821,6 +1821,82 @@ internal static class M1Slice6SuccessorCampaignRunner
         if (rawSha != M1Slice6SuccessorAuthorityLoader.Text(artifacts, "raw_response_sha256")
             || headersSha != M1Slice6SuccessorAuthorityLoader.Text(artifacts, "response_headers_sha256"))
         { throw new InvalidDataException("Offline recovery retained response sidecars are stale."); }
+        string recoveryId = "successor-authoritative-recovery-" + attempt.AttemptId;
+        if (File.Exists(recoveryPath))
+        {
+            byte[] retainedRecovery = File.ReadAllBytes(recoveryPath);
+            string retainedSha = ValidateRecoverySchema(campaignPath, retainedRecovery);
+            using JsonDocument retainedDocument = JsonDocument.Parse(retainedRecovery);
+            JsonElement retained = retainedDocument.RootElement;
+            JsonElement retainedAccounting = retained.GetProperty("accounting");
+            JsonElement retainedSemantic = retained.GetProperty("semantic");
+            if (M1Slice6SuccessorAuthorityLoader.Text(retained, "recovery_id") != recoveryId
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "campaign_id") != campaign.CampaignId
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "campaign_manifest_sha256") != campaign.ManifestSha256
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "stage") != attempt.Stage.ToString()
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "attempt_id") != attempt.AttemptId
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "original_evidence_id") != ledger.Current.EvidenceId
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "original_evidence_sha256") != ledger.Current.EvidenceSha256
+                || retained.GetProperty("provider_effect_used").GetBoolean()
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "raw_response_sha256") != rawSha
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "response_headers_sha256") != headersSha
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "authorization_id")
+                    != M1Slice6SuccessorAuthorityLoader.Text(accountingNode, "authorization_id")
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "operation_id")
+                    != M1Slice6SuccessorAuthorityLoader.Text(accountingNode, "operation_id")
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "attempt_id") != attempt.AttemptId
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "request_id") != attempt.RequestId
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "dispatch_fence_id") != attempt.DispatchFenceId
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "response_id")
+                    != M1Slice6SuccessorAuthorityLoader.Text(accountingNode, "response_id")
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "usage_entry_id")
+                    != M1Slice6SuccessorAuthorityLoader.Text(accountingNode, "usage_entry_id")
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "settlement_id")
+                    != M1Slice6SuccessorAuthorityLoader.Text(accountingNode, "settlement_id")
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "replay_edge_id")
+                    != M1Slice6SuccessorAuthorityLoader.Text(accountingNode, "replay_edge_id"))
+            {
+                throw new InvalidDataException(
+                    "Retained authoritative recovery bytes differ from the exact recovered attempt.");
+            }
+            string expectedSemantic = attempt.Stage switch
+            {
+                M1Slice6CampaignStage.Qualification => "qualification-nonsemantic",
+                M1Slice6CampaignStage.SourceClaimExtraction => "infinium.host.source-claim-admission/v1",
+                M1Slice6CampaignStage.CandidateInvestigation => "infinium.host.candidate-investigation-admission/v1",
+                _ => throw new InvalidDataException("The retained recovery semantic stage is not closed."),
+            };
+            int proposalCount = retainedSemantic.GetProperty("proposal_count").GetInt32();
+            int admissionCount = retainedSemantic.GetProperty("admission_count").GetInt32();
+            if (M1Slice6SuccessorAuthorityLoader.Text(retainedSemantic, "validation_id") != expectedSemantic
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedSemantic, "disposition").Length == 0
+                || proposalCount < 0 || admissionCount < 0 || admissionCount > proposalCount
+                || attempt.Stage != M1Slice6CampaignStage.Qualification && admissionCount == 0)
+            { throw new InvalidDataException("Retained authoritative recovery semantic facts are not exact."); }
+            M1Slice6CampaignSemanticProvenance provenance = M1Slice6CampaignSemanticProvenance.Empty;
+            if (attempt.Stage != M1Slice6CampaignStage.Qualification)
+            {
+                JsonElement p = retainedSemantic.GetProperty("provenance");
+                provenance = new(M1Slice6SuccessorAuthorityLoader.Text(p, "source_acquisition_id"),
+                    M1Slice6SuccessorAuthorityLoader.Text(p, "source_admission_id"),
+                    M1Slice6SuccessorAuthorityLoader.Text(p, "admitted_artifact_id"),
+                    M1Slice6SuccessorAuthorityLoader.Text(p, "source_application_link_id"),
+                    M1Slice6SuccessorAuthorityLoader.Text(p, "evidence_application_link_id"),
+                    M1Slice6SuccessorAuthorityLoader.Text(p, "candidate_id"),
+                    M1Slice6SuccessorAuthorityLoader.Text(p, "hypothesis_id"));
+            }
+            using M1Slice6CampaignSqliteProviderAccounting retainedAccountingStore = new(
+                campaign.ProductStateRoot, credentialPath, credentialSha, now);
+            retainedAccountingStore.ValidateSuccessorC3Attempt(attempt.Stage,
+                M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "operation_id"),
+                M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "authorization_id"),
+                M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "response_id"),
+                M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "usage_entry_id"),
+                M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "settlement_id"),
+                M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "replay_edge_id"), rawSha, provenance);
+            ledger.RecordAuthoritativeRecoveryEvidence(attempt, recoveryId, retainedSha, now.AddTicks(1));
+            return;
+        }
         using M1Slice6CampaignSqliteProviderAccounting accounting = new(campaign.ProductStateRoot,
             credentialPath, credentialSha, now);
         string recoverableResponseId = accountingNode.GetProperty("response_id").ValueKind == JsonValueKind.String
@@ -1834,7 +1910,6 @@ internal static class M1Slice6SuccessorCampaignRunner
             File.ReadAllBytes(rawPath), File.ReadAllBytes(headersPath), now.AddTicks(1));
         M1Slice6CampaignSemanticAdmissionReceipt semantic = recovered.Semantic
             ?? throw new InvalidDataException("Offline retained-response recovery did not complete semantic admission.");
-        string recoveryId = "successor-authoritative-recovery-" + attempt.AttemptId;
         byte[] recoveryBytes = JsonSerializer.SerializeToUtf8Bytes(new
         {
             schema = M1Slice6SuccessorAuthorityLoader.RecoveryEvidenceSchema,
@@ -1869,47 +1944,11 @@ internal static class M1Slice6SuccessorCampaignRunner
                 admission_count = semantic.AdmissionCount,
                 provenance = semantic.Provenance,
             },
-            recovered_at_utc = now.AddTicks(2),
+            recovered_at_utc = now.AddTicks(2).ToString("O",
+                System.Globalization.CultureInfo.InvariantCulture),
         }, EvidenceJson);
-        string recoverySha;
-        if (File.Exists(recoveryPath))
-        {
-            byte[] retainedRecovery = File.ReadAllBytes(recoveryPath);
-            recoverySha = ValidateRecoverySchema(campaignPath, retainedRecovery);
-            using JsonDocument retainedDocument = JsonDocument.Parse(retainedRecovery);
-            JsonElement retained = retainedDocument.RootElement;
-            JsonElement retainedAccounting = retained.GetProperty("accounting");
-            JsonElement retainedSemantic = retained.GetProperty("semantic");
-            if (M1Slice6SuccessorAuthorityLoader.Text(retained, "recovery_id") != recoveryId
-                || M1Slice6SuccessorAuthorityLoader.Text(retained, "campaign_id") != campaign.CampaignId
-                || M1Slice6SuccessorAuthorityLoader.Text(retained, "campaign_manifest_sha256") != campaign.ManifestSha256
-                || M1Slice6SuccessorAuthorityLoader.Text(retained, "stage") != attempt.Stage.ToString()
-                || M1Slice6SuccessorAuthorityLoader.Text(retained, "attempt_id") != attempt.AttemptId
-                || M1Slice6SuccessorAuthorityLoader.Text(retained, "original_evidence_id") != ledger.Current.EvidenceId
-                || M1Slice6SuccessorAuthorityLoader.Text(retained, "original_evidence_sha256") != ledger.Current.EvidenceSha256
-                || retained.GetProperty("provider_effect_used").GetBoolean()
-                || M1Slice6SuccessorAuthorityLoader.Text(retained, "raw_response_sha256") != rawSha
-                || M1Slice6SuccessorAuthorityLoader.Text(retained, "response_headers_sha256") != headersSha
-                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "authorization_id")
-                    != M1Slice6SuccessorAuthorityLoader.Text(accountingNode, "authorization_id")
-                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "operation_id")
-                    != M1Slice6SuccessorAuthorityLoader.Text(accountingNode, "operation_id")
-                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "response_id") != recovered.ResponseId
-                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "usage_entry_id") != recovered.UsageEntryId
-                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "settlement_id") != recovered.SettlementId
-                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "replay_edge_id") != recovered.ReplayEdgeId
-                || M1Slice6SuccessorAuthorityLoader.Text(retainedSemantic, "validation_id") != semantic.ValidationId
-                || M1Slice6SuccessorAuthorityLoader.Text(retainedSemantic, "disposition") != semantic.Disposition
-                || M1Slice6SuccessorAuthorityLoader.Text(retainedSemantic, "result_sha256") != semantic.ResultSha256)
-            {
-                throw new InvalidDataException("Retained authoritative recovery bytes differ from the exact recovered attempt.");
-            }
-        }
-        else
-        {
-            WriteNew(Path.GetFullPath(recoveryPath), [.. recoveryBytes, (byte)'\n']);
-            recoverySha = ValidateRecoverySchema(campaignPath, File.ReadAllBytes(recoveryPath));
-        }
+        WriteNew(Path.GetFullPath(recoveryPath), [.. recoveryBytes, (byte)'\n']);
+        string recoverySha = ValidateRecoverySchema(campaignPath, File.ReadAllBytes(recoveryPath));
         ledger.RecordAuthoritativeRecoveryEvidence(attempt, recoveryId, recoverySha, now.AddTicks(3));
     }
 

@@ -92,8 +92,62 @@ public sealed record SourceClaimApplicationReadModel(
     string CostAttributionScopeId,
     string AdmittedArtifactId);
 
+public sealed record SourceClaimResolvedApplicationReadModel(
+    string ApplicationLinkId,
+    string AcquisitionRunId,
+    string ProposalId,
+    string AdmissionId,
+    string AdmittedArtifactId,
+    string SourceRevisionId,
+    string PassageId,
+    string ContentSha256);
+
 public partial class AuthoritativeStore
 {
+    public void EnsureSourceClaimCampaignParentRun(string runId, string installationSnapshotId,
+        string analysisContextId, string effectiveConfigurationId, string resolvedInputManifestId,
+        DateTimeOffset occurredAt)
+    {
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginImmediateTransaction();
+            using SqliteCommand command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = "SELECT COUNT(*) FROM runs WHERE run_id=$run;";
+            command.Parameters.AddWithValue("$run", runId);
+            long existing = Convert.ToInt64(command.ExecuteScalar(),
+                System.Globalization.CultureInfo.InvariantCulture);
+            if (existing == 1)
+            {
+                transaction.Commit();
+                return;
+            }
+            if (existing != 0)
+            { throw new InvalidDataException("The source-claim campaign parent run identity is ambiguous."); }
+            Execute(
+                """
+                INSERT INTO runs VALUES($run,$snapshot,$context,$configuration,$manifest,
+                  'running',0,1,1,$now,$now)
+                ON CONFLICT(run_id) DO NOTHING;
+                """, transaction, ("$run", runId), ("$snapshot", installationSnapshotId),
+                ("$context", analysisContextId), ("$configuration", effectiveConfigurationId),
+                ("$manifest", resolvedInputManifestId), ("$now", ToText(occurredAt)));
+            command.Parameters.Clear();
+            command.CommandText =
+                "SELECT COUNT(*) FROM runs WHERE run_id=$run AND installation_snapshot_id=$snapshot "
+                + "AND analysis_context_id=$context AND effective_scan_configuration_id=$configuration "
+                + "AND resolved_input_manifest_id=$manifest;";
+            command.Parameters.AddWithValue("$run", runId);
+            command.Parameters.AddWithValue("$snapshot", installationSnapshotId);
+            command.Parameters.AddWithValue("$context", analysisContextId);
+            command.Parameters.AddWithValue("$configuration", effectiveConfigurationId);
+            command.Parameters.AddWithValue("$manifest", resolvedInputManifestId);
+            if (Convert.ToInt64(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+            { throw new InvalidDataException("The source-claim campaign parent run binding is stale."); }
+            transaction.Commit();
+        }
+    }
+
     private SqliteTransaction? candidateInvestigationBatchTransaction;
 
     public IReadOnlyList<CandidateInvestigationPersistenceReceipt> PersistCandidateInvestigationBatch(
@@ -144,10 +198,18 @@ public partial class AuthoritativeStore
                 INSERT INTO evidence_acquisition_runs VALUES(
                   $acquisition,$snapshot,$context,$configuration,$manifest,$run,$scope,$cost,'running',$now)
                 ON CONFLICT(acquisition_run_id) DO NOTHING;
-                INSERT INTO evidence_acquisition_job_nodes VALUES($job,$acquisition,'source-claim-extraction','running',$now);
-                INSERT INTO evidence_acquisition_commands VALUES($command,$acquisition,'provider-operation',$now,'recorded');
-                INSERT INTO provider_command_bindings VALUES($command,'evidence-acquisition-run',$acquisition,$now);
-                INSERT INTO evidence_acquisition_parent_links VALUES($parent,$acquisition,$run,'initiated-by',NULL,$now);
+                INSERT INTO evidence_acquisition_job_nodes VALUES($job,$acquisition,'source-claim-extraction','running',$now)
+                ON CONFLICT(acquisition_job_node_id) DO NOTHING;
+                INSERT INTO evidence_acquisition_commands VALUES($command,$acquisition,'provider-operation',$now,'recorded')
+                ON CONFLICT(command_id) DO NOTHING;
+                INSERT INTO provider_command_bindings
+                SELECT $command,'evidence-acquisition-run',$acquisition,command.requested_at
+                FROM evidence_acquisition_commands command
+                WHERE command.command_id=$command
+                  AND NOT EXISTS(SELECT 1 FROM provider_command_bindings binding
+                    WHERE binding.command_id=$command);
+                INSERT INTO evidence_acquisition_parent_links VALUES($parent,$acquisition,$run,'initiated-by',NULL,$now)
+                ON CONFLICT(parent_link_id) DO NOTHING;
                 """,
                 transaction,
                 ("$acquisition", request.AcquisitionRunId), ("$snapshot", request.InstallationSnapshotId),
@@ -190,6 +252,33 @@ public partial class AuthoritativeStore
             }
             transaction.Commit();
         }
+    }
+
+    public void EnsureSourceClaimCampaignAcquisition(SourceClaimAcquisitionRegistration request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        lock (gate)
+        {
+            using SqliteCommand existing = connection.CreateCommand();
+            existing.CommandText =
+                "SELECT parent_analysis_run_id,application_scope_id,cost_attribution_scope_id "
+                + "FROM evidence_acquisition_runs WHERE acquisition_run_id=$acquisition;";
+            existing.Parameters.AddWithValue("$acquisition", request.AcquisitionRunId);
+            using SqliteDataReader reader = existing.ExecuteReader();
+            if (reader.Read())
+            {
+                if (reader.GetString(0) != request.ParentAnalysisRunId
+                    || reader.GetString(1) != request.ApplicationScopeId
+                    || reader.GetString(2) != request.CostAttributionScopeId
+                    || reader.Read())
+                {
+                    throw new InvalidDataException(
+                        "The source-claim campaign acquisition lineage is stale or ambiguous.");
+                }
+                return;
+            }
+        }
+        RegisterSourceClaimAcquisition(request);
     }
 
     public SourceClaimConsumptionReceipt ConsumeAdmittedSourceClaim(SourceClaimConsumptionRequest request)
@@ -277,6 +366,39 @@ public partial class AuthoritativeStore
         }
     }
 
+    public SourceClaimResolvedApplicationReadModel ResolveSourceClaimApplication(
+        string acquisitionRunId, string sourceRevisionId, string passageId, string contentSha256)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(acquisitionRunId);
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT link.application_link_id,link.acquisition_run_id,artifact.proposal_id," +
+                "link.admission_id,link.admitted_artifact_id,artifact.source_revision_id," +
+                "artifact.passage_id,artifact.content_sha256 " +
+                "FROM evidence_acquisition_application_links link " +
+                "JOIN source_claim_admitted_artifacts artifact " +
+                "ON artifact.admitted_artifact_id=link.admitted_artifact_id " +
+                "AND artifact.acquisition_run_id=link.acquisition_run_id " +
+                "WHERE link.acquisition_run_id=$acquisition AND artifact.source_revision_id=$revision " +
+                "AND artifact.passage_id=$passage AND artifact.content_sha256=$sha;";
+            command.Parameters.AddWithValue("$acquisition", acquisitionRunId);
+            command.Parameters.AddWithValue("$revision", sourceRevisionId);
+            command.Parameters.AddWithValue("$passage", passageId);
+            command.Parameters.AddWithValue("$sha", contentSha256);
+            using SqliteDataReader reader = command.ExecuteReader();
+            if (!reader.Read())
+            { throw new InvalidDataException("No admitted source application matches the exact WP11 evidence bytes."); }
+            SourceClaimResolvedApplicationReadModel result = new(reader.GetString(0), reader.GetString(1),
+                reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetString(5),
+                reader.GetString(6), reader.GetString(7));
+            if (reader.Read())
+            { throw new InvalidDataException("The exact WP11 source application binding is ambiguous."); }
+            return result;
+        }
+    }
+
     public SourceClaimPersistenceReceipt PersistSourceClaimExtraction(SourceClaimPersistenceRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -321,21 +443,19 @@ public partial class AuthoritativeStore
                         AND response.provider_attempt_id=$attempt AND response.request_id=$request
                         AND response.dispatch_fence_id=$fence)
                     OR EXISTS(
-                      SELECT 1 FROM m1_slice6_successor_semantic_response_bindings binding
-                      JOIN provider_operation_authorizations transport
-                        ON transport.authorization_id=binding.transport_authorization_id
-                       AND transport.operation_id=binding.transport_operation_id
-                      JOIN provider_responses response
-                        ON response.authorization_id=transport.authorization_id
-                       AND response.operation_id=transport.operation_id
+                      SELECT 1 FROM m1_slice6_successor_all_semantic_response_bindings binding
+                      JOIN m1_slice6_successor_all_transport_responses response
+                        ON response.authorization_id=binding.transport_authorization_id
+                       AND response.operation_id=binding.transport_operation_id
                        AND response.response_record_id=binding.transport_response_record_id
                       WHERE binding.semantic_authorization_id=$authorization
                         AND binding.semantic_operation_id=$operation
                         AND binding.owner_kind=$owner_kind AND binding.owner_id=$owner
                         AND binding.stage='source-claim-extraction'
                         AND binding.semantic_response_record_id=$response
-                        AND response.provider_attempt_id=$attempt AND response.request_id=$request
-                        AND response.dispatch_fence_id=$fence);
+                        AND binding.provider_attempt_id=$attempt AND binding.request_id=$request
+                        AND binding.dispatch_fence_id=$fence
+                        AND response.admission_state='admitted');
                     """;
                 authority.Parameters.AddWithValue("$authorization", request.AuthorizationId);
                 authority.Parameters.AddWithValue("$operation", document.OperationId.Value);

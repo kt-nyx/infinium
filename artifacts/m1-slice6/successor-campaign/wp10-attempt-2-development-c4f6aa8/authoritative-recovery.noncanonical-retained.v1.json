@@ -1,0 +1,41 @@
+{
+  "schema": "infinium.m1-s6.successor-authoritative-recovery/v1",
+  "recovery_id": "successor-authoritative-recovery-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715",
+  "campaign_id": "infinium.m1-s6.successor-campaign-v7/3e457821-389a-4ea8-a4c0-aed9da3b5966",
+  "campaign_manifest_sha256": "d81e4b7e9972d9531215a650bedd5a0ac98c015f01c9c0af4a9c9c7265dbded8",
+  "stage": "SourceClaimExtraction",
+  "attempt_id": "m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715",
+  "original_evidence_id": "successor-attempt-evidence-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715",
+  "original_evidence_sha256": "5aa6391aba25fbdfcd5470e3dc0db9c8a108b392f14e3c024bf883d214d4b0af",
+  "provider_effect_used": false,
+  "raw_response_sha256": "2b3dc4f7553182fd3180d961a17007d9cb68480d0ee38151b65097ec47918896",
+  "response_headers_sha256": "e224207b4d3b356acbb7368d732a2341a6451be59e7c9e2b8df2aa5b15c5ccb6",
+  "accounting": {
+    "authorization_id": "m1s6-successor-v6-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715-transport-authorization",
+    "operation_id": "m1s6-successor-v6-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715-transport-operation",
+    "attempt_id": "m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715",
+    "request_id": "m1-s6-successor-v6-wp10-request-2/39be6273-89f5-4236-b950-e5204143e043",
+    "dispatch_fence_id": "m1-s6-successor-v6-wp10-fence-2/ce15899e-afd7-49d6-b1f3-25261fb62e9c",
+    "response_id": "m1s6-successor-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715-response",
+    "usage_entry_id": "m1s6-successor-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715-usage",
+    "settlement_id": "m1s6-successor-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715-settlement",
+    "replay_edge_id": "m1s6-successor-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715-response:replay"
+  },
+  "semantic": {
+    "validation_id": "infinium.host.source-claim-admission/v1",
+    "disposition": "rejected-deleted-audit-only",
+    "result_sha256": "c7c78e8fe22c709e2d671946b26dcd7f3ba4b805a6f9637f9f3b19a65f408b23",
+    "proposal_count": 9,
+    "admission_count": 3,
+    "provenance": {
+      "source_acquisition_id": "wp10-acquisition-live-val-v2",
+      "source_admission_id": "wp10-source-admission-73a127ba041cdf3a571e0675",
+      "admitted_artifact_id": "wp10-artifact-73a127ba041cdf3a571e0675",
+      "source_application_link_id": "wp10-application-link-73a127ba041cdf3a571e0675",
+      "evidence_application_link_id": "",
+      "candidate_id": "",
+      "hypothesis_id": ""
+    }
+  },
+  "recovered_at_utc": "2026-08-22T04:59:45.810175+00:00"
+}

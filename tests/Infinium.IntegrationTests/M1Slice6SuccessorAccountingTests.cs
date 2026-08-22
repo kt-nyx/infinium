@@ -470,7 +470,7 @@ public sealed class M1Slice6SuccessorAccountingTests
             M1Slice6SuccessorAccountingPersistence wp11Persisted = await PersistValid(
                 accounting, campaign, wp11,
                 Attempt(M1Slice6CampaignStage.CandidateInvestigation, 1), Start.AddSeconds(8));
-            Assert.IsNotNull(wp11Persisted.Semantic);
+            Assert.IsNotNull(wp11Persisted.Semantic, wp11Persisted.SemanticFailureCode);
             Assert.AreEqual("infinium.host.candidate-investigation-admission/v1", wp11Persisted.Semantic.ValidationId);
             Assert.AreEqual(wp10Persisted.Semantic.Provenance.SourceAcquisitionId,
                 wp11Persisted.Semantic.Provenance.SourceAcquisitionId);
@@ -558,6 +558,8 @@ public sealed class M1Slice6SuccessorAccountingTests
             count.CommandText = "SELECT COUNT(*) FROM m1_slice6_successor_semantic_response_bindings WHERE transport_operation_id=$operation;";
             count.Parameters.AddWithValue("$operation", admission.OperationId);
             Assert.AreEqual(1L, (long)count.ExecuteScalar()!);
+            verification.Dispose();
+            recoveryAccounting.Dispose();
         }
         finally
         {
@@ -625,6 +627,8 @@ public sealed class M1Slice6SuccessorAccountingTests
             count.CommandText = "SELECT COUNT(*) FROM m1_slice6_successor_semantic_response_bindings WHERE transport_operation_id=$operation;";
             count.Parameters.AddWithValue("$operation", admission.OperationId);
             Assert.AreEqual(1L, (long)count.ExecuteScalar()!);
+            verification.Dispose();
+            recoveryAccounting.Dispose();
         }
         finally
         {

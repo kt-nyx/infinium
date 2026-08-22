@@ -873,6 +873,7 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
             admission = admission with
             { SemanticOperationId = semanticOperation, SemanticAuthorizationId = semanticAuthorization };
         }
+        M1Slice6CampaignSemanticAdmission.PreparePrerequisites(store, authority, now);
         EnsureSuccessorSemanticBinding(authority, admission, responseId, campaignId, now.AddTicks(1));
         M1Slice6CampaignSemanticAdmissionReceipt semantic = M1Slice6CampaignSemanticAdmission.Admit(
             store, authority, admission, replay, now.AddTicks(2), successorV6);

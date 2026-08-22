@@ -1,0 +1,161 @@
+{
+  "schema": "infinium.m1-s6.successor-attempt-evidence/v3",
+  "status": "first-structurally-valid-response-authoritative",
+  "campaign_id": "infinium.m1-s6.successor-campaign-v7/3e457821-389a-4ea8-a4c0-aed9da3b5966",
+  "campaign_manifest_sha256": "d81e4b7e9972d9531215a650bedd5a0ac98c015f01c9c0af4a9c9c7265dbded8",
+  "stage": "SourceClaimExtraction",
+  "work_package": "WP10",
+  "attempt_id": "m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715",
+  "attempt_ordinal": 2,
+  "stage_manifest_id": "infinium.m1-s6.successor-stage-v6/WP10/attempt-2/26f49890-4c5b-4a31-985d-b98d3d5f43e9",
+  "stage_manifest_sha256": "a4199bafe2192f3e7f8e0d6e7142cf1515eac3f115d8f9c1b4516c6daa7b5c25",
+  "runtime_authority_id": "m1-s6-successor-v6-wp10-runtime-2/81464cc7-c3c4-4a2f-9cbd-6d158022075d",
+  "runtime_authority_sha256": "13fda4faea1d3ac1f9d67c5a6b6c59ffb573fd74d27b618f74e4adbb9542a1a9",
+  "failure_stage": "none",
+  "failure_disposition": null,
+  "transport_disposition": "response-received",
+  "http_status": 200,
+  "provider_error_type": null,
+  "provider_error_code": null,
+  "local_failure_code": null,
+  "provider_response_id": "resp_0010c4122669d15a016a89275d097087d2a5e02251b0dd0a59",
+  "client_request_id": "m1-s6-successor-v6-wp10-request-2/39be6273-89f5-4236-b950-e5204143e043",
+  "provider_request_id": "req_c678c6749dc840da975422b1392f0a0f",
+  "response_bytes_existed": true,
+  "response_bytes_observed_lower_bound": 22796,
+  "retained_response_bytes": 22796,
+  "provider_send_count": 1,
+  "dns_resolution_count": 1,
+  "retry_permitted": false,
+  "reserved_nano_usd": 491520000,
+  "settled_nano_usd": 63260000,
+  "unresolved_hold_nano_usd": 0,
+  "usage": {
+    "availability": 1,
+    "dispatch_count": {
+      "availability": 1,
+      "value": 1
+    },
+    "input_tokens": {
+      "availability": 1,
+      "value": 1828
+    },
+    "output_tokens": {
+      "availability": 1,
+      "value": 1804
+    },
+    "total_tokens": {
+      "availability": 1,
+      "value": 3632
+    },
+    "reasoning_tokens": {
+      "availability": 1,
+      "value": 632
+    },
+    "cache_read_tokens": {
+      "availability": 1,
+      "value": 0
+    },
+    "cache_write_tokens": {
+      "availability": 1,
+      "value": 0
+    },
+    "priced_tool_calls": {
+      "availability": 1,
+      "value": 0
+    },
+    "calculated_nano_usd": {
+      "availability": 1,
+      "value": 63260000
+    },
+    "billing_availability": 2,
+    "rate_availability": 1,
+    "credit_availability": 2,
+    "receipt_state": 2
+  },
+  "rate_facts": [
+    {
+      "name": "openai-processing-ms",
+      "value": 24999
+    },
+    {
+      "name": "x-ratelimit-limit-requests",
+      "value": 5000
+    },
+    {
+      "name": "x-ratelimit-limit-tokens",
+      "value": 1000000
+    },
+    {
+      "name": "x-ratelimit-remaining-requests",
+      "value": 4999
+    },
+    {
+      "name": "x-ratelimit-remaining-tokens",
+      "value": 998339
+    }
+  ],
+  "helper_boundary_observation": {
+    "receipt_available": true,
+    "helper_exit_code": 0,
+    "helper_outcome": "Completed",
+    "transport_may_have_started": true,
+    "staged_envelope_bytes": 27811,
+    "staged_envelope_parsed": true,
+    "staged_raw_bytes": 22796,
+    "staged_header_bytes": 5000,
+    "adapter_transport_disposition": "response-received",
+    "adapter_network_used": true,
+    "adapter_send_count": 1,
+    "adapter_dns_resolution_count": 1,
+    "retry_attempted": false,
+    "listener_snapshot_count": 0,
+    "tcp_non_listener_snapshot_count": 0,
+    "containment_probe_executed": true,
+    "active_contained_process_count_before_job_close": 2,
+    "total_contained_process_count": 4,
+    "process_tree_survivor_count": 0,
+    "process_tree_terminated": true,
+    "excluded_handle_accessible": false,
+    "native_credential_operation_count": 2,
+    "failed_predicate_ids": []
+  },
+  "retained_artifacts": {
+    "canonical_request_path": "attempt-evidence.v3.canonical-request.json",
+    "canonical_request_sha256": "03b37c85821caf4c1c1d08e1161d728df1b68df9e856ef3ae565da4f77064baa",
+    "raw_response_path": "attempt-evidence.v3.raw-response.bin",
+    "raw_response_sha256": "2b3dc4f7553182fd3180d961a17007d9cb68480d0ee38151b65097ec47918896",
+    "response_headers_path": "attempt-evidence.v3.response-headers.json",
+    "response_headers_sha256": "e224207b4d3b356acbb7368d732a2341a6451be59e7c9e2b8df2aa5b15c5ccb6",
+    "native_trace_path": "attempt-evidence.v3.native-trace.json",
+    "native_trace_sha256": "c3d711eedf527af7d33926cdce38d79e2851c7f22a7dee4a1f4cf8087def95ea",
+    "canary_evidence_path": "attempt-evidence.v3.canaries.json",
+    "canary_evidence_sha256": "e78fdeb84fdff58619d263f26bda5fa9621773e3983d6ff4ba5d28b5cd0690a8"
+  },
+  "accounting": {
+    "authorization_id": "m1s6-successor-v6-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715-transport-authorization",
+    "operation_id": "m1s6-successor-v6-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715-transport-operation",
+    "attempt_id": "m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715",
+    "request_id": "m1-s6-successor-v6-wp10-request-2/39be6273-89f5-4236-b950-e5204143e043",
+    "reservation_id": "m1-s6-successor-v6-wp10-reservation-2/91e9d4ae-b4ab-468f-9caf-a7c512039818",
+    "dispatch_fence_id": "m1-s6-successor-v6-wp10-fence-2/ce15899e-afd7-49d6-b1f3-25261fb62e9c",
+    "response_id": "m1s6-successor-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715-response",
+    "usage_entry_id": "m1s6-successor-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715-usage",
+    "settlement_id": "m1s6-successor-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715-settlement",
+    "replay_edge_id": "m1s6-successor-m1-s6-successor-v6-wp10-attempt-2/c2e67f5f-feaf-4230-a550-e21f233f4715-response:replay",
+    "response_persisted": true,
+    "semantic_validation_id": null,
+    "semantic_disposition": null,
+    "semantic_result_sha256": null,
+    "semantic_provenance": {
+      "source_acquisition_id": "",
+      "source_admission_id": "",
+      "admitted_artifact_id": "",
+      "source_application_link_id": "",
+      "evidence_application_link_id": "",
+      "candidate_id": "",
+      "hypothesis_id": ""
+    },
+    "semantic_failure_code": "semantic-admission-failure"
+  }
+}
