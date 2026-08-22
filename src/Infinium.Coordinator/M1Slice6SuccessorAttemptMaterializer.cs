@@ -36,7 +36,8 @@ internal static class M1Slice6SuccessorAttemptMaterializer
                 "Attempt materialization requires the exact directly executable coordinator and helper apphosts.");
         }
         M1Slice6SuccessorCampaignAuthority campaign =
-            M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+            M1Slice6SuccessorAuthorityLoader.Campaign(
+                campaignPath, campaignSha, requireRolloverBaseline: true);
         M1Slice6HardBudgetAuthority amendment =
             M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(amendmentPath, amendmentSha, campaign);
         if (now.Offset != TimeSpan.Zero || now >= amendment.ExpiresAtUtc)
@@ -203,7 +204,8 @@ internal static class M1Slice6SuccessorAttemptMaterializer
         string reviewPath, string runtimePath, DateTimeOffset notBefore, DateTimeOffset expires)
     {
         M1Slice6SuccessorCampaignAuthority campaign =
-            M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+            M1Slice6SuccessorAuthorityLoader.Campaign(
+                campaignPath, campaignSha, requireRolloverBaseline: true);
         M1Slice6HardBudgetAuthority amendment =
             M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(amendmentPath, amendmentSha, campaign);
         if (notBefore.Offset != TimeSpan.Zero || expires.Offset != TimeSpan.Zero
@@ -217,13 +219,22 @@ internal static class M1Slice6SuccessorAttemptMaterializer
         string stageSha = M1Slice6SuccessorAuthorityLoader.HashFile(stagePath);
         string candidateId = M1Slice6SuccessorAuthorityLoader.Text(cr, "candidate_id");
         string candidateSha = M1Slice6SuccessorAuthorityLoader.HashFile(candidatePath);
-        M1Slice6SuccessorIndependentReview review = M1Slice6SuccessorAuthorityLoader.Review(
-            reviewPath, "runtime-attempt", candidateId, candidateSha, false, successorV6: true);
+        string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(campaignPath);
+        bool developmentContinuation = campaign.CredentialAccessAuthorityId
+            == "infinium.m1-s6.development-continuation/20260821";
+        M1Slice6SuccessorIndependentReview? review = developmentContinuation ? null
+            : M1Slice6SuccessorAuthorityLoader.Review(
+                reviewPath, "runtime-attempt", candidateId, candidateSha, false, successorV6: true);
+        if (developmentContinuation
+            && (Path.GetFullPath(reviewPath) != Path.GetFullPath(Path.Combine(repository, "docs", "plans",
+                    "milestones", "m1", "slices", "s6", "development-continuation.md"))
+                || M1Slice6SuccessorAuthorityLoader.HashFile(reviewPath)
+                    != campaign.CredentialAccessAuthoritySha256))
+        { throw new InvalidDataException("Development runtime finalization requires the exact owner continuation."); }
         JsonElement stageNode = sr.GetProperty("stage");
         string kind = stageNode.GetProperty("ordinal").GetInt32() switch
         { 1 => "transport-qualification", 2 => "source-claim-extraction", _ => "candidate-investigation" };
         JsonElement attempt = sr.GetProperty("attempt");
-        string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(campaignPath);
         object runtime = new
         {
             schema_identity = M1Slice6SuccessorAuthorityLoader.RuntimeSchema,
@@ -247,9 +258,11 @@ internal static class M1Slice6SuccessorAttemptMaterializer
             },
             review = new
             {
-                evidence_id = review.ReviewId,
+                evidence_id = developmentContinuation
+                    ? campaign.CredentialAccessAuthorityId : review!.ReviewId,
                 evidence_path = Relative(repository, reviewPath),
-                evidence_sha256 = review.ManifestSha256,
+                evidence_sha256 = developmentContinuation
+                    ? campaign.CredentialAccessAuthoritySha256 : review!.ManifestSha256,
             },
             owner_decision = new
             {

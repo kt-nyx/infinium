@@ -184,34 +184,62 @@ public sealed class M1Slice6CampaignProductionStageBoundary : IM1Slice6CampaignS
         using JsonDocument document = JsonDocument.Parse(bytes);
         JsonElement root = document.RootElement;
         JsonElement profile = root.GetProperty("profile");
-        JsonElement providerIntent = root.GetProperty("provider_intent");
         string schemaIdentity = root.GetProperty("schema_identity").GetString()!;
+        bool developmentGeneration3 = schemaIdentity
+            == "infinium.repository.m1-slice6-successor-credential-replacement-authorization/2.0.0";
         bool activeGeneration2 = schemaIdentity
             == "infinium.repository.wp9-production-profile-authorization/5.0.0";
-        if (root.GetProperty("manifest_id").GetString() != credentialManifestId
+        string actualManifestId = developmentGeneration3
+            ? root.GetProperty("authority_id").GetString()!
+            : root.GetProperty("manifest_id").GetString()!;
+        if (actualManifestId != credentialManifestId
             || schemaIdentity is not (
                 "infinium.repository.wp9-production-profile-authorization/4.0.0"
-                or "infinium.repository.wp9-production-profile-authorization/5.0.0")
-            || root.GetProperty("status").GetString() != (activeGeneration2
-                ? "active-verified-read-only-provider-use" : "ready-for-owner-acceptance"))
+                or "infinium.repository.wp9-production-profile-authorization/5.0.0"
+                or "infinium.repository.m1-slice6-successor-credential-replacement-authorization/2.0.0")
+            || root.GetProperty("status").GetString() != (developmentGeneration3
+                ? "independently-reviewed-ready-for-owner-effect"
+                : activeGeneration2 ? "active-verified-read-only-provider-use" : "ready-for-owner-acceptance"))
         {
             throw new InvalidDataException("Campaign provider boundary requires the exact production credential identity.");
         }
         profileId = profile.GetProperty("access_profile_id").GetString()!;
-        generationId = profile.GetProperty("generation_id").GetString()!;
-        generationOrdinal = checked((ulong)profile.GetProperty("generation_ordinal").GetInt64());
-        if (generationOrdinal != (activeGeneration2 ? 2UL : 1UL))
+        generationId = profile.GetProperty(developmentGeneration3
+            ? "successor_generation_id" : "generation_id").GetString()!;
+        generationOrdinal = checked((ulong)profile.GetProperty(developmentGeneration3
+            ? "successor_generation_ordinal" : "generation_ordinal").GetInt64());
+        if (generationOrdinal != (developmentGeneration3 ? 3UL : activeGeneration2 ? 2UL : 1UL))
         { throw new InvalidDataException("Campaign provider boundary has a stale credential generation ordinal."); }
-        targetFingerprint = profile.GetProperty("target_fingerprint_sha256").GetString()!;
+        targetFingerprint = profile.GetProperty(developmentGeneration3
+            ? "successor_target_fingerprint_sha256" : "target_fingerprint_sha256").GetString()!;
+        JsonElement providerIntent;
+        JsonDocument? providerDocument = null;
+        if (developmentGeneration3)
+        {
+            string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(credentialManifestPath);
+            string providerPath = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+                "wp9-production-profile-authorization.v5.json");
+            if (M1Slice6SuccessorAuthorityLoader.HashFile(providerPath)
+                != "49b71673b144dc5c5118f4dbfec52d22ca9f8f380ebe4cb7f9d7959746d93939")
+            { throw new InvalidDataException("Development provider identity authority is stale."); }
+            providerDocument = JsonDocument.Parse(File.ReadAllBytes(providerPath));
+            providerIntent = providerDocument.RootElement.GetProperty("provider_intent");
+        }
+        else
+        {
+            providerIntent = root.GetProperty("provider_intent");
+        }
         accountIdentityId = providerIntent.GetProperty("account_identity_id").GetString()!;
         billingScopeIdentityId = providerIntent.GetProperty("billing_scope_identity_id").GetString()!;
+        providerDocument?.Dispose();
         if (string.IsNullOrWhiteSpace(accountIdentityId) || string.IsNullOrWhiteSpace(billingScopeIdentityId)
             || accountIdentityId == "unavailable" || billingScopeIdentityId == "unavailable")
         {
             throw new InvalidDataException("Campaign provider boundary requires exact account and billing-scope identities.");
         }
         OneShotCredentialHelperLauncher launcher = OneShotCredentialHelperLauncher.CreateWp9CampaignProvider(
-            helperBinary, helperSha256, credentialManifestPath, credentialManifestSha256, credentialManifestId);
+            helperBinary, helperSha256, credentialManifestPath, credentialManifestSha256, credentialManifestId,
+            developmentGeneration3);
         executeHelper = (bootstrap, assignment, final, timeout, now, cancellationToken) =>
             launcher.ExecuteAsync(bootstrap, assignment, final, timeout, now, cancellationToken);
     }

@@ -197,6 +197,12 @@ internal static class Wp9ProductionLaunchContract
         parsed = null;
         return false;
     }
+
+    internal static bool TryParseCampaign(
+        string[] options,
+        out Wp9ProductionLaunchOptions? parsed,
+        out bool developmentCredentialContinuation) =>
+        TryParseEnrollment(options, out parsed, out developmentCredentialContinuation);
 }
 
 internal sealed class Wp9ProductionSecretSource : IHelperSecretSource, IDisposable

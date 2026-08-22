@@ -37,12 +37,35 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         using System.Text.Json.JsonDocument credential = System.Text.Json.JsonDocument.Parse(credentialBytes);
         System.Text.Json.JsonElement root = credential.RootElement;
         System.Text.Json.JsonElement profile = root.GetProperty("profile");
-        System.Text.Json.JsonElement intent = root.GetProperty("provider_intent");
+        bool developmentGeneration3 = root.GetProperty("schema_identity").GetString()
+            == "infinium.repository.m1-slice6-successor-credential-replacement-authorization/2.0.0";
+        System.Text.Json.JsonElement intent;
+        System.Text.Json.JsonDocument? providerDocument = null;
+        if (developmentGeneration3)
+        {
+            string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(credentialManifestPath);
+            string providerPath = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+                "wp9-production-profile-authorization.v5.json");
+            if (M1Slice6SuccessorAuthorityLoader.HashFile(providerPath)
+                != "49b71673b144dc5c5118f4dbfec52d22ca9f8f380ebe4cb7f9d7959746d93939"
+                || root.GetProperty("status").GetString() != "independently-reviewed-ready-for-owner-effect"
+                || profile.GetProperty("successor_generation_ordinal").GetInt32() != 3)
+            { throw new InvalidDataException("Development provider accounting authority is stale."); }
+            providerDocument = System.Text.Json.JsonDocument.Parse(File.ReadAllBytes(providerPath));
+            intent = providerDocument.RootElement.GetProperty("provider_intent");
+        }
+        else
+        {
+            intent = root.GetProperty("provider_intent");
+        }
         profileId = profile.GetProperty("access_profile_id").GetString()!;
-        generationId = profile.GetProperty("generation_id").GetString()!;
-        credentialTargetFingerprintSha256 = profile.GetProperty("target_fingerprint_sha256").GetString()!;
+        generationId = profile.GetProperty(developmentGeneration3
+            ? "successor_generation_id" : "generation_id").GetString()!;
+        credentialTargetFingerprintSha256 = profile.GetProperty(developmentGeneration3
+            ? "successor_target_fingerprint_sha256" : "target_fingerprint_sha256").GetString()!;
         accountIdentityId = intent.GetProperty("account_identity_id").GetString()!;
         billingScopeIdentityId = intent.GetProperty("billing_scope_identity_id").GetString()!;
+        providerDocument?.Dispose();
         if (string.IsNullOrWhiteSpace(accountIdentityId)
             || string.IsNullOrWhiteSpace(billingScopeIdentityId)
             || accountIdentityId == "unavailable" || billingScopeIdentityId == "unavailable")

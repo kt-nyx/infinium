@@ -133,14 +133,17 @@ if (args is ["--wp9-campaign-provider-request-handle", string campaignRequestHan
         using AnonymousPipeClientStream response = new(PipeDirection.Out, campaignResponseHandle);
         ClearHandleInheritance(request.SafePipeHandle.DangerousGetHandle());
         ClearHandleInheritance(response.SafePipeHandle.DangerousGetHandle());
-        if (!Wp9ProductionLaunchContract.TryParse(campaignOptions, out Wp9ProductionLaunchOptions? launchOptions))
+        if (!Wp9ProductionLaunchContract.TryParseCampaign(campaignOptions,
+                out Wp9ProductionLaunchOptions? launchOptions,
+                out bool developmentCredentialContinuation))
         {
             throw new InvalidDataException("Campaign provider containment options are invalid.");
         }
         bool excludedHandleAccessible = launchOptions!.ExcludedHandle != 0
             && GetHandleInformation(launchOptions.ExcludedHandle, out _);
         campaignStore = WindowsCredentialManagerStore.FromProductionEnrollmentManifest(
-            campaignCredentialManifestPath, campaignCredentialManifestSha256, campaignCredentialManifestId);
+            campaignCredentialManifestPath, campaignCredentialManifestSha256, campaignCredentialManifestId,
+            developmentCredentialContinuation);
         campaignStore.BeginScenario("m1-s6-campaign-provider-dispatch");
         campaignDescendant = Process.Start(new ProcessStartInfo
         {

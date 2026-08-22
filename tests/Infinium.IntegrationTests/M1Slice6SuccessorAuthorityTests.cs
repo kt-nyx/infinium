@@ -40,8 +40,13 @@ public sealed class M1Slice6SuccessorAuthorityTests
         M1Slice6SuccessorCampaignAuthority campaign =
             M1Slice6SuccessorAuthorityLoader.Campaign(
                 campaignPath, campaignSha, requireRolloverBaseline: false);
-        Assert.ThrowsExactly<InvalidDataException>(() => M1Slice6SuccessorAuthorityLoader.Campaign(
-            campaignPath, campaignSha, requireRolloverBaseline: true));
+        M1Slice6SuccessorCampaignAuthority active = M1Slice6SuccessorAuthorityLoader.Campaign(
+            campaignPath, campaignSha, requireRolloverBaseline: true);
+        Assert.AreEqual("g-8b25e655d13f42cdb35f5d59f599bd05", active.CredentialGenerationId);
+        Assert.AreEqual("infinium.m1-s6.development-continuation/20260821",
+            active.CredentialAccessAuthorityId);
+        Assert.AreEqual("d4a93a3e09c2a5e6c489a795ecec971d2b4aae4dd5796be65b55326f0d59504a",
+            active.CredentialManifestSha256);
         _ = M1Slice6SuccessorAuthorityLoader.Review(
             Path.Combine(slice, "m1-slice6-successor-campaign-v7-independent-review.v3.json"),
             "campaign-authority", campaign.CampaignId, campaign.ManifestSha256,
@@ -97,6 +102,83 @@ public sealed class M1Slice6SuccessorAuthorityTests
         finally
         {
             if (Directory.Exists(alternateRoot)) { Directory.Delete(alternateRoot, recursive: true); }
+        }
+    }
+
+    [TestMethod]
+    public void DevelopmentGeneration3MaterializesAndFinalizesWithoutPerAttemptReview()
+    {
+        string repository = RepositoryRoot();
+        string slice = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6");
+        string campaignPath = Path.Combine(slice, "m1-slice6-successor-campaign-authorization.v7.json");
+        string amendmentPath = Path.Combine(slice, "m1-slice6-development-campaign-amendment.v2.json");
+        string credentialPath = Path.Combine(slice,
+            "m1-slice6-successor-credential-replacement-generation-3-authorization.v2.json");
+        string continuationPath = Path.Combine(slice, "development-continuation.md");
+        string ledgerPath = Path.Combine(repository, "artifacts", "m1-slice6", "successor-campaign",
+            "ledger.v4.jsonl");
+        string output = Path.Combine(Path.GetDirectoryName(ledgerPath)!,
+            ".development-provider-materializer-test-" + Guid.NewGuid().ToString("N"));
+        string productCopy = Path.Combine(repository,
+            ".development-provider-accounting-test-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            string campaignSha = M1Slice6SuccessorAuthorityLoader.HashFile(campaignPath);
+            string amendmentSha = M1Slice6SuccessorAuthorityLoader.HashFile(amendmentPath);
+            M1Slice6SuccessorCampaignAuthority campaign = M1Slice6SuccessorAuthorityLoader.Campaign(
+                campaignPath, campaignSha, requireRolloverBaseline: true);
+            M1Slice6HardBudgetAuthority amendment = M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(
+                amendmentPath, amendmentSha, campaign);
+            string coordinator = Path.Combine(repository, "src", "Infinium.Coordinator", "bin", "Debug", "net10.0",
+                "Infinium.Coordinator.exe");
+            string helper = Path.Combine(repository, "src", "Infinium.CredentialHelper", "bin", "Debug", "net10.0",
+                "Infinium.CredentialHelper.exe");
+            string implementationCommit = typeof(M1Slice6SuccessorCampaignRunner).Assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion.Split('+')[^1];
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            M1Slice6SuccessorAttemptMaterializer.Materialize(campaignPath, campaignSha,
+                amendmentPath, amendmentSha, ledgerPath, "Qualification", 10, output,
+                implementationCommit, coordinator, helper, now);
+            string stagePath = Path.Combine(output, "stage-attempt.v6.json");
+            string candidatePath = Path.Combine(output, "runtime-candidate.v2.json");
+            string runtimePath = Path.Combine(output, "runtime-authority.v3.json");
+            M1Slice6SuccessorAttemptMaterializer.FinalizeRuntime(campaignPath, campaignSha,
+                amendmentPath, amendmentSha, stagePath, candidatePath, continuationPath, runtimePath,
+                now, now.AddMinutes(5));
+            M1Slice6SuccessorRuntimeAuthority runtime = M1Slice6SuccessorAuthorityLoader.Runtime(
+                runtimePath, M1Slice6SuccessorAuthorityLoader.HashFile(runtimePath), coordinator,
+                helper, amendment, now.AddMinutes(1), requireEffectAdmission: false);
+            Assert.AreEqual(10, runtime.AttemptOrdinal);
+            Assert.AreEqual("infinium.m1-s6.development-continuation/20260821", runtime.ReviewEvidenceId);
+            M1Slice6CampaignProductionStageBoundary boundary = new(helper,
+                M1Slice6SuccessorAuthorityLoader.HashFile(helper), credentialPath,
+                campaign.CredentialManifestSha256, campaign.CredentialManifestId);
+            Assert.AreEqual(3UL, (ulong)typeof(M1Slice6CampaignProductionStageBoundary)
+                .GetField("generationOrdinal", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(boundary)!);
+            Assert.AreEqual(Path.GetFullPath(credentialPath),
+                M1Slice6SuccessorCampaignRunner.ActiveCredentialManifestPath(
+                    repository, campaignPath, campaign));
+            using (StoragePaths storage = new(productCopy)) { storage.Create(); }
+            foreach (string directory in Directory.GetDirectories(
+                campaign.ProductStateRoot, "*", SearchOption.AllDirectories))
+            {
+                Directory.CreateDirectory(Path.Combine(productCopy,
+                    Path.GetRelativePath(campaign.ProductStateRoot, directory)));
+            }
+            foreach (string source in Directory.GetFiles(
+                campaign.ProductStateRoot, "*", SearchOption.AllDirectories))
+            {
+                File.Copy(source, Path.Combine(productCopy,
+                    Path.GetRelativePath(campaign.ProductStateRoot, source)), overwrite: true);
+            }
+            using M1Slice6CampaignSqliteProviderAccounting accounting = new(
+                productCopy, credentialPath, campaign.CredentialManifestSha256, now);
+        }
+        finally
+        {
+            if (Directory.Exists(output)) { Directory.Delete(output, recursive: true); }
+            if (Directory.Exists(productCopy)) { Directory.Delete(productCopy, recursive: true); }
         }
     }
 

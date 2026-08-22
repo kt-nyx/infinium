@@ -253,7 +253,8 @@ public sealed class OneShotCredentialHelperLauncher
         string expectedBinarySha256,
         string credentialManifestPath,
         string credentialManifestSha256,
-        string credentialManifestId) => new(
+        string credentialManifestId,
+        bool developmentCredentialContinuation = false) => new(
             helperBinary,
             expectedBinarySha256,
             Path.GetDirectoryName(Path.GetFullPath(credentialManifestPath))!,
@@ -262,7 +263,8 @@ public sealed class OneShotCredentialHelperLauncher
             credentialManifestId,
             productionProviderTransport: true,
             wp9ProductionEnrollment: false,
-            wp9CampaignProvider: true);
+            wp9CampaignProvider: true,
+            developmentCredentialContinuation: developmentCredentialContinuation);
 
     internal static OneShotCredentialHelperLauncher CreateNativeQualification(
         string helperBinary,
@@ -597,7 +599,7 @@ public sealed class OneShotCredentialHelperLauncher
                 ];
             }
         }
-        if (wp9ProductionEnrollment && developmentCredentialContinuation)
+        if ((wp9ProductionEnrollment || wp9CampaignProvider) && developmentCredentialContinuation)
         {
             arguments = [.. arguments, "--development-credential-continuation", "1"];
         }
