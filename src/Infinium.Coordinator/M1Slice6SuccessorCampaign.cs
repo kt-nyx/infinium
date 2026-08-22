@@ -1988,6 +1988,20 @@ internal static class M1Slice6SuccessorCampaignRunner
         M1Slice6SuccessorCampaignLedgerV3Entry failure = ledger.Entries.Last(entry =>
             entry.Attempt?.AttemptId == attempt.AttemptId
             && entry.State == M1Slice6SuccessorCampaignV3State.AttemptEvidenceHandoff);
+        bool developmentContinuation = campaign.CredentialAccessAuthorityId
+            == "infinium.m1-s6.development-continuation/20260821";
+        if (developmentContinuation)
+        {
+            string expected = Path.Combine(M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(campaignPath),
+                "docs", "plans", "milestones", "m1", "slices", "s6", "development-continuation.md");
+            if (Path.GetFullPath(reviewPath) != Path.GetFullPath(expected)
+                || M1Slice6SuccessorAuthorityLoader.HashFile(reviewPath)
+                    != campaign.CredentialAccessAuthoritySha256)
+            { throw new InvalidDataException("Development correction acceptance requires the exact owner continuation."); }
+            ledger.RecordOfflineCorrectionReview(campaign.CredentialAccessAuthorityId,
+                campaign.CredentialAccessAuthoritySha256, "credential-input-truncation-fixed", now.AddTicks(1));
+            return;
+        }
         M1Slice6SuccessorIndependentReview review = M1Slice6SuccessorAuthorityLoader.Review(
             reviewPath, "offline-correction", failure.EvidenceId, failure.EvidenceSha256, null,
             failure.EvidenceId, failure.EvidenceSha256, successorV6: true);
