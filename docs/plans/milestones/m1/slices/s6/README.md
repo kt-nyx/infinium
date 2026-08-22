@@ -41,9 +41,14 @@ chronology.
   which supersedes the obsolete five-start, repeated-defect, and cumulative-reservation
   restrictions without changing the USD 10 aggregate, one-start, sequential,
   first-valid, credential, or isolation boundaries
-- [Clean-break successor campaign v6](m1-slice6-successor-campaign-authorization.v6.json)
+- [Active generation-2 successor campaign v7](m1-slice6-successor-campaign-authorization.v7.json),
+  [credential-access v3](m1-slice6-successor-credential-access.v3.json), and
+  [production profile v5](wp9-production-profile-authorization.v5.json), which
+  admit only the verified replacement generation and the single ledger-v4 path
+- [Accepted campaign-v7 review](m1-slice6-successor-campaign-v7-independent-review.v3.json)
+- [Historical campaign v6](m1-slice6-successor-campaign-authorization.v6.json)
   and [credential-access v2](m1-slice6-successor-credential-access.v2.json),
-  which retire the v5 live path while retaining it as immutable historical input
+  superseded for new effects but retained as immutable ledger-v3 lineage
 - [Superseded R1-R7 orchestrator handoff](orchestrator-handoff.md), retained as
   historical execution guidance only
 
@@ -52,6 +57,15 @@ linked from the accepted plans and implementation record. Load them only when
 the current package names them as exact inputs.
 
 ## Current handoff
+
+Credential replacement is complete. Independently accepted evidence proves
+generation 2 active-verified/available, the predecessor absent and ineligible,
+exact masked UI and native-call closure, and zero DNS/network/provider/billable
+effect during replacement. Campaign v7 imports immutable ledger-v3 sequence 39
+into the only active ledger-v4 path at sequence 40. Committed Slice 6 exposure
+remains USD 0.91056 with no outstanding reservation and USD 9.08944 remaining.
+The next eligible action is fresh WP9 ordinal 9; WP10, WP11, C3, and Slice 7
+remain gated exactly as stated in current state.
 
 R1 is accepted at candidate
 `fcd17cd6db98019fc9e5253d5167d2487862671c`. Its final NonLiveAll receipt

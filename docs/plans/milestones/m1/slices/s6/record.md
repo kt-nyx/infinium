@@ -9514,3 +9514,40 @@ M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=572a3342ac6537d42a1041e9f8a5878c
   replacement, so no further provider attempt is safe or useful until the
   owner authorizes replacement/re-enrollment under fresh credential and
   attempt authority. C2C, C2D, C3, and Slice 7 remain unopened.
+
+## 2026-08-22 generation-2 credential replacement and campaign rollover
+
+- The owner authorized one masked replacement ceremony. After several retained,
+  independently reviewed pre-entry and readiness failures were diagnosed and
+  corrected offline, the final fresh authority completed the exact replacement
+  trace. Evidence SHA-256
+  `4778cb8e9275c34a5eab70d32635261f5ebf9eda75247960e7389e01fe448feb`
+  proves generation 2 active-verified/available, the generation-1 predecessor
+  deleted and absent, exact allocation/free pairing, zero canary matches, zero
+  process survivors, and zero DNS/network/provider/billable operations. Its
+  independent review SHA-256 is
+  `85d09936320fd393abacb337031b6519843e580fcb93fb10d93eb82aee9db160`.
+- Credential-access v3, production-profile v5, and campaign v7 bind only the
+  verified generation-2 target and exact `CredReadW -> CredFree` dispatch
+  boundary. Campaign-v7 SHA-256 is
+  `d81e4b7e9972d9531215a650bedd5a0ac98c015f01c9c0af4a9c9c7265dbded8`;
+  independent campaign-review SHA-256 is
+  `5ef117d271744b1c1da134f36291fcd40789f6b3ed4eca0726938936e539c9ab`.
+  Historical profile v4, credential-access v2, campaign v6, and ledger v3 are
+  preserved unchanged and cannot authorize new effects.
+- The zero-effect rollover initializer created the only active ledger-v4 path.
+  Sequence 40 imports exact ledger-v3 sequence 39/event
+  `b5292326a65791731614a6ab75a0b838de121ea721d01d5489f4c2897f88dcc0`
+  and records event
+  `66544b69df2b21ae5b8f601f26e10deb4fc685c68e03cc8027586d66f330fdb7`.
+  Ledger-v4 whole-file SHA-256 is
+  `af3ab3202514cf26695655710b550661ad7b7356fed246019f532a7227ede061`.
+  WP9 starts remain eight; no stage is authoritative; USD 0.77056 successor
+  exposure remains unresolved; total committed exposure remains USD 0.91056;
+  outstanding reservation is zero; USD 9.08944 remains.
+- Independent changed-surface and genesis reviews accepted the clean break.
+  Focused integration passed 18/18, production-profile unit tests 14/14,
+  Slice-6 contract tests 4/4, and the Debug/Release builds were clean. No
+  provider effect occurred during authority construction, review, or ledger
+  rollover. Fresh WP9 ordinal 9 is the next eligible package; C2C, C2D, C3,
+  and Slice 7 remain unopened.

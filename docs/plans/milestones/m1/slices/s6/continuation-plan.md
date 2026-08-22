@@ -46,6 +46,14 @@ credential isolation, answer isolation, and C3 owner-acceptance boundary remain
 unchanged. Released pre-start reservations are reusable; settled, unresolved,
 and currently outstanding exposure remains conservatively committed.
 
+The independently accepted generation-2 rollover supersedes credential-access
+v2 and campaign v6 only for new effects. Credential-access v3, profile v5, and
+campaign v7 bind the verified replacement generation and the single active
+`artifacts/m1-slice6/successor-campaign/ledger.v4.jsonl` path. Ledger v4 imports
+the immutable ledger-v3 sequence-39 tail at sequence 40 without changing its
+counters, latches, hard-budget accounting, stage order, or first-valid rule.
+Generation 1, campaign v6, and ledger v3 remain historical-only.
+
 This plan replaces the remaining Slice 6 orchestration model after accepted R2
 with three outcome packages. It preserves every uncompleted R3-R7 obligation
 while applying the process amendment's coherent-candidate, proportional-
