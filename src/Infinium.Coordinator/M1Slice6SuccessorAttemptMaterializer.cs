@@ -349,7 +349,7 @@ internal static class M1Slice6SuccessorAttemptMaterializer
             schema.RootElement.Clone(), maximumOutputTokens, safety));
     }
 
-    private static byte[] OutputSchema(M1Slice6CampaignStage stage)
+    internal static byte[] OutputSchema(M1Slice6CampaignStage stage)
     {
         JsonObject identifier = new() { ["type"] = "string", ["minLength"] = 1, ["maxLength"] = 200 };
         JsonObject sha = new() { ["type"] = "string", ["minLength"] = 64, ["maxLength"] = 64 };
@@ -513,9 +513,12 @@ internal static class M1Slice6SuccessorAttemptMaterializer
         ["required"] = new JsonArray(required.Select(value => (JsonNode?)JsonValue.Create(value)).ToArray()),
         ["properties"] = properties,
     };
-    private static JsonObject Const(string value) => new() { ["const"] = value };
+    private static JsonObject Const(string value) => new() { ["type"] = "string", ["const"] = value };
     private static JsonObject Enum(params string[] values) => new()
-    { ["enum"] = new JsonArray(values.Select(value => (JsonNode?)JsonValue.Create(value)).ToArray()) };
+    {
+        ["type"] = "string",
+        ["enum"] = new JsonArray(values.Select(value => (JsonNode?)JsonValue.Create(value)).ToArray()),
+    };
 
     private static void WriteJson(string path, object value) =>
         WriteNew(path, [.. Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value, Json)

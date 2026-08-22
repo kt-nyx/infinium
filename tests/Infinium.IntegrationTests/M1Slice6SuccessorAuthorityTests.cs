@@ -16,6 +16,23 @@ namespace Infinium.Tests;
 [TestCategory("Integration")]
 public sealed class M1Slice6SuccessorAuthorityTests
 {
+    [TestMethod]
+    public void SuccessorSemanticOutputSchemasTypeEveryConstantAndEnumString()
+    {
+        foreach (M1Slice6CampaignStage stage in new[]
+                 { M1Slice6CampaignStage.SourceClaimExtraction, M1Slice6CampaignStage.CandidateInvestigation })
+        {
+            using JsonDocument document = JsonDocument.Parse(M1Slice6SuccessorAttemptMaterializer.OutputSchema(stage));
+            JsonElement rootProperties = document.RootElement.GetProperty("properties");
+            Assert.AreEqual("string", rootProperties.GetProperty("schema_id").GetProperty("type").GetString());
+            Assert.AreEqual("string", rootProperties.GetProperty("schema_version").GetProperty("type").GetString());
+            JsonElement transcriptProperties = rootProperties.GetProperty("transcripts")
+                .GetProperty("items").GetProperty("properties");
+            Assert.AreEqual("string", transcriptProperties.GetProperty("prompt_id").GetProperty("type").GetString());
+            Assert.AreEqual("string", transcriptProperties.GetProperty("response_state").GetProperty("type").GetString());
+        }
+    }
+
     private static readonly JsonSerializerOptions IndentedJson = new() { WriteIndented = true };
     private static readonly string[] NormalizedAbsentFields =
         ["response_id", "usage_entry_id", "replay_edge_id", "semantic_failure_code"];
