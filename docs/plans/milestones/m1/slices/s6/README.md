@@ -1,7 +1,7 @@
 # M1 Slice 6
 
-Status: Implementation complete; owner acceptance pending
-Disposition: C3 is complete; this entry routes to immutable closeout evidence and the final owner gate
+Status: Accepted
+Disposition: Live effects and accounting are closed and immutable; Slice 6 remains implementation-active for an effect-free prompt-fidelity and semantic-admission correction
 
 Last reviewed: 2026-08-22
 
@@ -68,8 +68,23 @@ protected enrollment and read-back. WP9 ordinal 11, WP10 ordinal 2, and WP11
 ordinal 1 are the permanent first-structurally-valid results. Effect-free C3
 composed evidence binds all retained attempts, the three stage results, exact
 SQLite provenance, and USD 1.62548 total committed exposure with zero
-outstanding reservation. USD 8.37452 remains unused. The only next gate is
-project-owner Slice 6 acceptance and contract freeze; Slice 7 remains unopened.
+outstanding reservation. USD 8.37452 remains unused. Commit
+`c9c06aad0185db19b9d8e41cc01eca54aa453977` records that completed candidate.
+
+Post-closeout review found one unresolved semantic seam. The live WP10 and
+WP11 requests recorded the detailed `PromptV1` identities and fingerprints but
+transmitted only the shorter generic strict-schema instruction. WP10 then
+admitted three accurately bounded claims rather than the frozen oracle's exact
+one, while WP11 retained an explicit unsupported negative rather than the
+frozen abstention. The responses are structurally valid and immutable, but
+they do not prove that the recorded prompt, host policy, product meaning, and
+independently authored expected truth agree. Slice 6 therefore remains
+implementation-active. The next gate is an effect-free correction, independent
+expected-truth review, consolidated review, and final floor before the owner
+acceptance and contract-freeze decision. No provider or credential effect is
+authorized, and Slice 7 remains unopened.
+
+## Accepted baseline and retained execution history
 
 R1 is accepted at candidate
 `fcd17cd6db98019fc9e5253d5167d2487862671c`. Its final NonLiveAll receipt
@@ -149,29 +164,29 @@ owner-accepted recovery boundary and its consolidated package review passed
 with no remaining must-fix. The zero-effect recovery is now complete and
 independently accepted; it changed only the append-only campaign ledger.
 
-## Lean continuation
+## Lean continuation structure (completed execution history)
 
-The remaining accepted R3-R7 obligations are preserved through three outcome
-packages:
+The accepted R3-R7 obligations were carried through three outcome packages:
 
 1. `M1/S6/C1` - one coherent effect-free readiness candidate, focused checks,
    consolidated review, corrections on the same candidate, and one final floor
    and binding when review-ready.
-2. `M1/S6/C2` - one fresh, separately owner-authorized bounded live campaign:
+2. `M1/S6/C2` - the owner-authorized sequential live development campaign:
    masked credential enrollment, WP9 transport qualification, WP10
-   source-claim extraction, and WP11 candidate investigation, each with exact
-   admission, expiry, ceiling, persistence, evidence, and no-retry gates.
+   source-claim extraction, and WP11 candidate investigation across retained
+   fresh attempts within the aggregate hard budget.
 3. `M1/S6/C3` - retained-evidence replay, composed provenance, accumulated
    verification, contract-maturity review, documentation, and the final owner
    Slice 6 acceptance handoff without another effect.
 
-C1-C3 preserve WP9, WP10, and WP11 identities, semantic outcomes, exact
-profile and ceiling requirements, persistence/replay, invalid-state handling,
-product/evaluator separation, answer isolation, provenance, and final owner
-acceptance. The change is execution cadence and package decomposition, not
-scope reduction.
+C1-C3 preserved WP9, WP10, and WP11 identities, exact profile and ceiling
+requirements, persistence/replay, invalid-state handling, product/evaluator
+separation, answer isolation, provenance, and the final owner-acceptance
+boundary. The live semantic outcomes now require the effect-free reconciliation
+stated in the current handoff; this does not reopen or reinterpret any retained
+effect.
 
-## Effect and campaign boundary
+## Retained effect and campaign history
 
 ### 2026-08-21 hard-budget successor amendment
 

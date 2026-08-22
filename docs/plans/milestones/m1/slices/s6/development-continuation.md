@@ -1,8 +1,10 @@
 # Slice 6 practical development continuation
 
-Status: Owner-authorized
+Status: Accepted
+Disposition: Owner-authorized practical continuation consumed by the completed Slice 6 live campaign; retained as historical authority and grants no new effect
 
 Authorized: 2026-08-21
+Last reviewed: 2026-08-22
 
 ## Objective
 
