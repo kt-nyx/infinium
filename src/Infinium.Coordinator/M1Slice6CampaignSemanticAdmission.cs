@@ -78,6 +78,10 @@ internal static class M1Slice6CampaignSemanticAdmission
             {
                 throw new InvalidDataException("WP11 live input must bind the exact two-context product contract.");
             }
+            store.EnsureSourceClaimCampaignParentRun(input.AnalysisRunId,
+                input.AnalysisRunId + "-install", input.AnalysisRunId + "-context",
+                input.AnalysisRunId + "-config", input.AnalysisRunId + "-manifest",
+                occurredAt.AddTicks(1));
             bool alreadyPrepared = input.Contexts.All(context =>
             {
                 try
