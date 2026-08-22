@@ -2129,6 +2129,19 @@ internal static class M1Slice6SuccessorCampaignRunner
         {
             if (ledger.Current.EvidenceId != evidenceId || ledger.Current.EvidenceSha256 != composedSha)
             { throw new InvalidDataException("C3 resumed with different composed evidence bytes."); }
+            string developmentReview = Path.Combine(repository, "docs", "plans", "milestones", "m1",
+                "slices", "s6", "development-continuation.md");
+            if (campaign.CredentialAccessAuthorityId
+                    == "infinium.m1-s6.development-continuation/20260821"
+                && Path.GetFullPath(reviewPath).Equals(Path.GetFullPath(developmentReview),
+                    StringComparison.OrdinalIgnoreCase)
+                && M1Slice6SuccessorAuthorityLoader.HashFile(reviewPath)
+                    == campaign.CredentialAccessAuthoritySha256)
+            {
+                ledger.Complete(evidenceId, composedSha, campaign.CredentialAccessAuthorityId,
+                    campaign.CredentialAccessAuthoritySha256, now.AddTicks(1));
+                return;
+            }
             M1Slice6SuccessorIndependentReview resumedReview = M1Slice6SuccessorAuthorityLoader.Review(
                 reviewPath, "composed-closeout", evidenceId, composedSha, false, successorV6: true);
             ledger.Complete(evidenceId, composedSha, resumedReview.ReviewId,
@@ -2245,8 +2258,8 @@ internal static class M1Slice6SuccessorCampaignRunner
             if (exact.State == M1Slice6SuccessorCampaignV3State.AuthoritativeRecoveryHandoff)
             {
                 using JsonDocument recovery = JsonDocument.Parse(File.ReadAllBytes(authorityEvidencePath));
-                semantic = recovery.RootElement.GetProperty("semantic");
-                attemptAccounting = recovery.RootElement.GetProperty("accounting");
+                semantic = recovery.RootElement.GetProperty("semantic").Clone();
+                attemptAccounting = recovery.RootElement.GetProperty("accounting").Clone();
                 rawSha = M1Slice6SuccessorAuthorityLoader.Text(recovery.RootElement, "raw_response_sha256");
             }
             if (exact.Attempt.Stage != M1Slice6CampaignStage.Qualification)

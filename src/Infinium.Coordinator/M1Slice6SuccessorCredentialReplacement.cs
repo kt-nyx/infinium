@@ -259,20 +259,21 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                     != (developmentContinuation
                         ? "owner-authorized-credential-replacement-generation-3"
                         : mode switch
-                    {
-                        ReplacementMode.ReplacingRecovery => "owner-authorized-credential-replacement-recovery",
-                        ReplacementMode.DeletePendingRecovery =>
-                            "owner-authorized-credential-replacement-cleanup-recovery",
-                        _ => generation3Replacement
-                            ? "owner-authorized-credential-replacement-generation-3"
-                            : "owner-authorized-credential-replacement",
-                    }))
+                        {
+                            ReplacementMode.ReplacingRecovery => "owner-authorized-credential-replacement-recovery",
+                            ReplacementMode.DeletePendingRecovery =>
+                                "owner-authorized-credential-replacement-cleanup-recovery",
+                            _ => generation3Replacement
+                                ? "owner-authorized-credential-replacement-generation-3"
+                                : "owner-authorized-credential-replacement",
+                        }))
             {
                 throw new InvalidDataException("The exact owner credential-replacement amendment is stale.");
             }
             if (developmentContinuation)
             {
-                ValidateGeneration3ReplacementOwner(repository, ownerDocument.RootElement);
+                ValidateGeneration3ReplacementOwner(
+                    repository, ownerDocument.RootElement, testHooks?.Generation3OwnerLedgerPath);
             }
             else if (mode == ReplacementMode.ReplacingRecovery)
             {
@@ -355,7 +356,8 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             }
             else if (generation3Replacement)
             {
-                ValidateGeneration3ReplacementOwner(repository, ownerDocument.RootElement);
+                ValidateGeneration3ReplacementOwner(
+                    repository, ownerDocument.RootElement, testHooks?.Generation3OwnerLedgerPath);
             }
         }
         string expectedProductRoot = Path.GetFullPath(state.GetProperty("root_absolute").GetString()!);
@@ -809,7 +811,10 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         return status == "passed-active-verified-predecessor-absent" ? 0 : 2;
     }
 
-    internal static void ValidateGeneration3ReplacementOwner(string repository, JsonElement owner)
+    internal static void ValidateGeneration3ReplacementOwner(
+        string repository,
+        JsonElement owner,
+        string? expectedLedgerPathOverride = null)
     {
         const string attemptEvidenceSha =
             "b8f66af50409db241ab85920dc2686380c9ede4314f4c2161cc644f0441a8a46";
@@ -852,8 +857,10 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         string exactReplacementReviewPath = Path.GetFullPath(Path.Combine(repository, "docs", "plans",
             "milestones", "m1", "slices", "s6",
             "m1-slice6-successor-credential-replacement-foreground-recovery-evidence-review.v3.json"));
-        string exactLedgerPath = Path.GetFullPath(Path.Combine(repository, "artifacts", "m1-slice6",
-            "successor-campaign", "ledger.v4.jsonl"));
+        string exactLedgerPath = expectedLedgerPathOverride is null
+            ? Path.GetFullPath(Path.Combine(repository, "artifacts", "m1-slice6",
+                "successor-campaign", "ledger.v4.jsonl"))
+            : Path.GetFullPath(expectedLedgerPathOverride);
 
         static string Resolve(string root, JsonElement binding) => Path.GetFullPath(Path.Combine(root,
             binding.GetProperty("path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
@@ -1727,18 +1734,18 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
 
     private static HelperPrivateFrameV2 Bootstrap(
         string profileId, string generationId, DateTimeOffset now, DateTimeOffset expires, string authorityId) => new()
-    {
-        Sequence = 1,
-        ProtocolFingerprintSha256 = ByteString.CopyFrom(Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
-        Bootstrap = new()
         {
-            CoordinatorFencingEpoch = 1,
-            ExpiresAt = Instant(expires),
-            OneUseNonceFingerprintSha256 = ByteString.CopyFrom(RandomNumberGenerator.GetBytes(32)),
-            CommandId = authorityId + "/command",
-            Credential = new() { AccessProfileId = new() { Value = profileId }, GenerationId = new() { Value = generationId } },
-        },
-    };
+            Sequence = 1,
+            ProtocolFingerprintSha256 = ByteString.CopyFrom(Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
+            Bootstrap = new()
+            {
+                CoordinatorFencingEpoch = 1,
+                ExpiresAt = Instant(expires),
+                OneUseNonceFingerprintSha256 = ByteString.CopyFrom(RandomNumberGenerator.GetBytes(32)),
+                CommandId = authorityId + "/command",
+                Credential = new() { AccessProfileId = new() { Value = profileId }, GenerationId = new() { Value = generationId } },
+            },
+        };
 
     internal static void ValidateTypedFailureRecoveryOwner(
         string repository,
@@ -2110,20 +2117,20 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         string authorityId,
         HelperAssignmentKindV2 kind,
         ulong generationOrdinal = 2) => new()
-    {
-        Sequence = 2,
-        ProtocolFingerprintSha256 = ByteString.CopyFrom(Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
-        Assignment = new()
         {
-            AssignmentId = authorityId + (kind == HelperAssignmentKindV2.Recover ? "/recover" : "/replace"),
-            CommandId = authorityId + "/command",
-            AssignmentKind = kind,
-            AccessProfileId = new() { Value = profileId },
-            GenerationId = new() { Value = generationId },
-            GenerationOrdinal = generationOrdinal,
-            Credential = new() { AccessProfileId = new() { Value = profileId }, GenerationId = new() { Value = generationId } },
-        },
-    };
+            Sequence = 2,
+            ProtocolFingerprintSha256 = ByteString.CopyFrom(Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
+            Assignment = new()
+            {
+                AssignmentId = authorityId + (kind == HelperAssignmentKindV2.Recover ? "/recover" : "/replace"),
+                CommandId = authorityId + "/command",
+                AssignmentKind = kind,
+                AccessProfileId = new() { Value = profileId },
+                GenerationId = new() { Value = generationId },
+                GenerationOrdinal = generationOrdinal,
+                Credential = new() { AccessProfileId = new() { Value = profileId }, GenerationId = new() { Value = generationId } },
+            },
+        };
 
     private static Instant Instant(DateTimeOffset value) => new()
     {
@@ -2237,51 +2244,51 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         {
             throw new IOException("The reviewed replacement evidence path already exists and cannot be trusted as this failure record.");
         }
-            string lifecycle = "unknown-non-dispatchable-inspection-required";
-            string generation = "unknown-generation";
-            long ordinal = 0;
-            try
+        string lifecycle = "unknown-non-dispatchable-inspection-required";
+        string generation = "unknown-generation";
+        long ordinal = 0;
+        try
+        {
+            CredentialProfileProjection projection =
+                AuthoritativeStore.ReadCredentialProfileProjectionReadOnly(context.ProductStateRoot, context.ProfileId);
+            lifecycle = projection.LifecycleState;
+            generation = projection.GenerationId;
+            ordinal = projection.GenerationOrdinal;
+        }
+        catch
+        {
+            // Unknown is the conservative retained fact when durable inspection cannot complete.
+        }
+        string? checkpoint = null;
+        try { checkpoint = M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(context.ProductStateRoot); }
+        catch { }
+        object retained = new
+        {
+            schema_identity = FailureEvidenceSchema,
+            evidence_id = context.EvidenceId,
+            operation_id = context.OperationId,
+            status = "stopped-ambiguous-effect-recovery-required",
+            authority = new { id = context.AuthorityId, sha256 = context.AuthoritySha256 },
+            independent_review = new { id = context.ReviewId, sha256 = context.ReviewSha256 },
+            product_state = new
             {
-                CredentialProfileProjection projection =
-                    AuthoritativeStore.ReadCredentialProfileProjectionReadOnly(context.ProductStateRoot, context.ProfileId);
-                lifecycle = projection.LifecycleState;
-                generation = projection.GenerationId;
-                ordinal = projection.GenerationOrdinal;
-            }
-            catch
-            {
-                // Unknown is the conservative retained fact when durable inspection cannot complete.
-            }
-            string? checkpoint = null;
-            try { checkpoint = M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(context.ProductStateRoot); }
-            catch { }
-            object retained = new
-            {
-                schema_identity = FailureEvidenceSchema,
-                evidence_id = context.EvidenceId,
-                operation_id = context.OperationId,
-                status = "stopped-ambiguous-effect-recovery-required",
-                authority = new { id = context.AuthorityId, sha256 = context.AuthoritySha256 },
-                independent_review = new { id = context.ReviewId, sha256 = context.ReviewSha256 },
-                product_state = new
-                {
-                    checkpoint_sha256 = checkpoint,
-                    profile_id = context.ProfileId,
-                    generation_id = generation,
-                    generation_ordinal = ordinal,
-                    lifecycle_state = lifecycle,
-                },
-                observed_effect_facts = "unknown-conservatively-blocked",
-                typed_failure = exception.GetType().Name,
-                isolation_observation = "fallback-fields-are-secret-free-effect-isolation-unverified-stop-condition",
-                completed_at_utc = DateTimeOffset.UtcNow.ToString("O"),
-            };
-            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(retained, Json);
-            ActiveRepositoryJsonSchemaValidator.Validate(bytes,
-                File.ReadAllBytes(Path.Combine(context.Repository, "contracts", "repository",
-                    "m1-slice6-successor-credential-replacement-failure-evidence.v1.schema.json")),
-                FailureEvidenceSchema);
-            PublishEvidenceAtomically(context.EvidencePath, bytes);
+                checkpoint_sha256 = checkpoint,
+                profile_id = context.ProfileId,
+                generation_id = generation,
+                generation_ordinal = ordinal,
+                lifecycle_state = lifecycle,
+            },
+            observed_effect_facts = "unknown-conservatively-blocked",
+            typed_failure = exception.GetType().Name,
+            isolation_observation = "fallback-fields-are-secret-free-effect-isolation-unverified-stop-condition",
+            completed_at_utc = DateTimeOffset.UtcNow.ToString("O"),
+        };
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(retained, Json);
+        ActiveRepositoryJsonSchemaValidator.Validate(bytes,
+            File.ReadAllBytes(Path.Combine(context.Repository, "contracts", "repository",
+                "m1-slice6-successor-credential-replacement-failure-evidence.v1.schema.json")),
+            FailureEvidenceSchema);
+        PublishEvidenceAtomically(context.EvidencePath, bytes);
     }
 
     private static void PublishEvidenceAtomically(string path, byte[] bytes)
@@ -2323,5 +2330,8 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         string CoordinatorPath,
         Func<AuthoritativeStore, string, HelperPrivateFrameV2, HelperPrivateFrameV2, DateTimeOffset,
             CancellationToken, Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>>
-            EffectExecutor);
+            EffectExecutor)
+    {
+        internal string? Generation3OwnerLedgerPath { get; init; }
+    }
 }

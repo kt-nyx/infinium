@@ -300,6 +300,9 @@ public sealed partial class AuthoritativeStore
         using SqliteTransaction transaction = BeginTransaction();
         Execute("DROP TRIGGER provider_semantic_proposal_root_guard;", transaction);
         Execute(SuccessorSemanticProposalRootGuardV8(), transaction);
+        CreateCanonicalTimestampTriggers([
+            ("provider_semantic_proposals", "created_at", false),
+        ], transaction, replaceExisting: true);
         string fingerprint = ComputeSchemaFingerprint(connection, transaction);
         Execute(
             "INSERT INTO store_metadata(key,value) VALUES('schema_fingerprint',$fingerprint) "
@@ -410,6 +413,7 @@ public sealed partial class AuthoritativeStore
             ("$fingerprint", fingerprint), ("$id", ProviderPersistenceDeclarations.SuccessorV6PersistenceMigrationId),
             ("$now", ToText(DateTimeOffset.UtcNow)), ("$source", BindingIdentity.SourceId));
         transaction.Commit();
+        ApplySuccessorV6SemanticTriggerCorrectionIfRequired();
     }
 
     private const string SuccessorV6PersistenceSchema =

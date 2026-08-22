@@ -32,7 +32,7 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
     }
 
     [TestMethod]
-    public void ActualGeneration3OwnerAuthorityClosesExactRetainedLineage()
+    public void ConsumedGeneration3OwnerAuthorityCannotReopenAfterLedgerAdvancement()
     {
         string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(AppContext.BaseDirectory);
         string path = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
@@ -43,8 +43,9 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                 "m1-slice6-development-campaign-amendment.v8.schema.json")),
             M1Slice6SuccessorCredentialReplacementRunner.Generation3ReplacementAmendmentSchema);
         using JsonDocument owner = JsonDocument.Parse(bytes);
-        M1Slice6SuccessorCredentialReplacementRunner.ValidateGeneration3ReplacementOwner(
-            repository, owner.RootElement);
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            M1Slice6SuccessorCredentialReplacementRunner.ValidateGeneration3ReplacementOwner(
+                repository, owner.RootElement));
         Assert.AreEqual(M1Slice6SuccessorCredentialReplacementRunner.Generation3CorrectionCommit,
             owner.RootElement.GetProperty("correction").GetProperty("implementation_commit").GetString());
     }
@@ -257,7 +258,7 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
             using (JsonDocument exactDocument = JsonDocument.Parse(exact.ToJsonString()))
             {
                 M1Slice6SuccessorCredentialReplacementRunner.ValidateGeneration3ReplacementOwner(
-                    repository, exactDocument.RootElement);
+                    repository, exactDocument.RootElement, fixture.LedgerPath);
             }
 
             Reject(node => node["retained_wp9_failure"]!["evidence"]!["sha256"] = new string('0', 64));
@@ -276,7 +277,7 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                 using JsonDocument changedDocument = JsonDocument.Parse(changed.ToJsonString());
                 Assert.Throws<InvalidDataException>(() =>
                     M1Slice6SuccessorCredentialReplacementRunner.ValidateGeneration3ReplacementOwner(
-                        repository, changedDocument.RootElement));
+                        repository, changedDocument.RootElement, fixture.LedgerPath));
             }
         }
         finally
@@ -388,7 +389,8 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                 {
                     Interlocked.Increment(ref attemptedSecondLaunches);
                     throw new InvalidOperationException("A staged boundary must never relaunch the helper.");
-                }) with { UtcNow = fixture.Now.AddHours(1) };
+                }) with
+                { UtcNow = fixture.Now.AddHours(1) };
             int result = await M1Slice6SuccessorCredentialReplacementRunner.RunAsync(
                 fixture.AuthorityPath, fixture.AuthoritySha256, fixture.ReviewPath, fixture.ReviewSha256,
                 fixture.ProductRoot, fixture.LedgerPath, fixture.HelperPath, fixture.HelperSha256,
@@ -1213,8 +1215,14 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         {
             EnsureReplacementState(product, profile, successor, mode == FixtureMode.DeletePendingRecovery);
         }
-        string ledger = Path.Combine(repository, "artifacts", "m1-slice6", "successor-campaign",
+        string sourceLedger = Path.Combine(repository, "artifacts", "m1-slice6", "successor-campaign",
             generation3 ? "ledger.v4.jsonl" : "ledger.v3.jsonl");
+        string ledger = sourceLedger;
+        if (generation3)
+        {
+            ledger = Path.Combine(root, "ledger.v4-sequence-44.jsonl");
+            CopyLedgerThroughSequence(sourceLedger, ledger, 44);
+        }
         string coordinator = Path.Combine(repository, "src", "Infinium.Coordinator", "bin", "Debug", "net10.0",
             "Infinium.Coordinator.exe");
         string helper = Path.Combine(repository, "src", "Infinium.CredentialHelper", "bin", "Debug", "net10.0",
@@ -1250,7 +1258,9 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                 "m1-slice6-successor-credential-replacement-foreground-recovery-evidence-review.v3.json");
             object Binding(string id, string path) => new
             {
-                id, path = Relative(repository, path), sha256 = HashFile(path),
+                id,
+                path = Relative(repository, path),
+                sha256 = HashFile(path),
             };
             object ownerDocument = new
             {
@@ -1290,22 +1300,35 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                 },
                 ledger_predecessor = new
                 {
-                    path = Relative(repository, ledger), sha256 = HashFile(ledger), sequence = 44,
+                    path = Relative(repository, ledger),
+                    sha256 = HashFile(ledger),
+                    sequence = 44,
                     event_hash = "5dc8b3f2797620b305e3616d950c62e7b2f59d5b7c1ff6ce0a84f87b09e55e16",
-                    committed_nano_usd = 1_020_640_000, outstanding_nano_usd = 0,
+                    committed_nano_usd = 1_020_640_000,
+                    outstanding_nano_usd = 0,
                 },
                 replacement = new
                 {
-                    predecessor_generation_ordinal = 2, successor_generation_ordinal = 3,
-                    helper_launches = 1, assignment_kind = "Replace", automatic_retry = false,
-                    enumeration = "prohibited", overwrite = "prohibited-new-target-only",
-                    dns_resolutions = 0, network_operations = 0, provider_operations = 0, billable_operations = 0,
+                    predecessor_generation_ordinal = 2,
+                    successor_generation_ordinal = 3,
+                    helper_launches = 1,
+                    assignment_kind = "Replace",
+                    automatic_retry = false,
+                    enumeration = "prohibited",
+                    overwrite = "prohibited-new-target-only",
+                    dns_resolutions = 0,
+                    network_operations = 0,
+                    provider_operations = 0,
+                    billable_operations = 0,
                 },
                 preserved_boundaries = new
                 {
-                    hard_budget_nano_usd = 10_000_000_000, historical_evidence_immutable = true,
-                    secret_isolation = true, private_answer_isolation = true,
-                    exposure = "prohibited", slice7 = "not-authorized",
+                    hard_budget_nano_usd = 10_000_000_000,
+                    historical_evidence_immutable = true,
+                    secret_isolation = true,
+                    private_answer_isolation = true,
+                    exposure = "prohibited",
+                    slice7 = "not-authorized",
                 },
                 authorized_at_utc = Z(now.AddMinutes(-3)),
             };
@@ -1347,11 +1370,14 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                         "infinium.m1-s6.credential-replacement-generation-3/20260822-exact-length",
                     _ => "infinium.m1-s6.credential-replacement/20260821-owner-fresh-key",
                 },
-                path = Relative(repository, owner), sha256 = HashFile(owner),
+                path = Relative(repository, owner),
+                sha256 = HashFile(owner),
             },
             predecessor_ledger = new
             {
-                path = Relative(repository, ledger), sha256 = HashFile(ledger), sequence = generation3 ? 44 : 39,
+                path = Relative(repository, ledger),
+                sha256 = HashFile(ledger),
+                sequence = generation3 ? 44 : 39,
                 event_hash = generation3
                     ? "5dc8b3f2797620b305e3616d950c62e7b2f59d5b7c1ff6ce0a84f87b09e55e16"
                     : "b5292326a65791731614a6ab75a0b838de121ea721d01d5489f4c2897f88dcc0",
@@ -1373,24 +1399,34 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                 successor_generation_id = successor,
                 successor_generation_ordinal = generation3 ? 3 : 2,
                 successor_target_fingerprint_sha256 = successorFingerprint,
-                target_derivation = "Infinium:<access_profile_id>:<generation_id>", target_encoding = "utf-8",
+                target_derivation = "Infinium:<access_profile_id>:<generation_id>",
+                target_encoding = "utf-8",
             },
             release_build = new
             {
                 implementation_commit = commit,
-                coordinator_path = Relative(repository, coordinator), coordinator_sha256 = HashFile(coordinator),
-                helper_path = Relative(repository, helper), helper_sha256 = HashFile(helper),
+                coordinator_path = Relative(repository, coordinator),
+                coordinator_sha256 = HashFile(coordinator),
+                helper_path = Relative(repository, helper),
+                helper_sha256 = HashFile(helper),
             },
             effect_boundary = new
             {
-                evidence_path = Relative(repository, evidence), helper_launches = 1, dns_resolutions = 0,
-                network_operations = 0, provider_operations = 0, billable_operations = 0,
-                automatic_retry = false, enumeration = "prohibited", secret_exposure = "prohibited",
+                evidence_path = Relative(repository, evidence),
+                helper_launches = 1,
+                dns_resolutions = 0,
+                network_operations = 0,
+                provider_operations = 0,
+                billable_operations = 0,
+                automatic_retry = false,
+                enumeration = "prohibited",
+                secret_exposure = "prohibited",
             },
             native_boundary = new
             {
                 maximum_calls = new { CredWriteW = 1, CredReadW = 6, CredDeleteW = 1, CredFree = 3, total = 11 },
-                enumeration = "prohibited", overwrite = "prohibited",
+                enumeration = "prohibited",
+                overwrite = "prohibited",
                 predecessor_delete = "required-after-successor-write-readback-verification",
             },
             m1_entry_surface = entry,
@@ -1402,9 +1438,13 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         {
             schema_identity = M1Slice6SuccessorCredentialReplacementRunner.ReviewSchema,
             review_id = "infinium.m1-s6.test-credential-replacement-review/" + Guid.NewGuid().ToString("N"),
-            verdict = "accept", reviewer_id = "/root/test-independent", independent = true,
-            provider_effect_used = false, subject = new { id = authorityId, sha256 = authoritySha },
-            findings = Array.Empty<string>(), reviewed_at_utc = Z(now.AddSeconds(-30)),
+            verdict = "accept",
+            reviewer_id = "/root/test-independent",
+            independent = true,
+            provider_effect_used = false,
+            subject = new { id = authorityId, sha256 = authoritySha },
+            findings = Array.Empty<string>(),
+            reviewed_at_utc = Z(now.AddSeconds(-30)),
         };
         string reviewPath = Path.Combine(root, "review.v1.json");
         File.WriteAllText(reviewPath, JsonSerializer.Serialize(review, Json) + "\n", new UTF8Encoding(false));
@@ -1579,8 +1619,11 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
             "released", "success", "ERROR_NOT_FOUND", "ERROR_NOT_FOUND"];
         object[] trace = Enumerable.Range(0, operations.Length).Select(index => (object)new
         {
-            Sequence = index + 1, Operation = operations[index], TargetFingerprintSha256 = fingerprints[index],
-            Scenario = "m1-slice6-successor-credential-replacement", Result = results[index],
+            Sequence = index + 1,
+            Operation = operations[index],
+            TargetFingerprintSha256 = fingerprints[index],
+            Scenario = "m1-slice6-successor-credential-replacement",
+            Result = results[index],
             AllocationId = index switch { 2 => (long?)1, 4 => 2, 6 => 3, _ => null },
             PairedAllocationId = index switch { 3 => (long?)1, 5 => 2, 7 => 3, _ => null },
         }).ToArray();
@@ -1757,7 +1800,9 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         int traceLength = predecessorAlreadyAbsent ? 5 : 11;
         object[] trace = Enumerable.Range(0, traceLength).Select(index => (object)new
         {
-            Sequence = index + 1, Operation = operations[index], TargetFingerprintSha256 = fingerprints[index],
+            Sequence = index + 1,
+            Operation = operations[index],
+            TargetFingerprintSha256 = fingerprints[index],
             Scenario = "m1-slice6-successor-credential-replacement",
             Result = predecessorAlreadyAbsent && index == 4 ? "ERROR_NOT_FOUND" : results[index],
             AllocationId = index switch { 2 => (long?)1, 4 when !predecessorAlreadyAbsent => 2, 6 => 3, _ => null },
@@ -1912,13 +1957,30 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         } : null;
         return new
         {
-            Surface = "wp9-distinct-helper-owned-native-masked-paste-surface", Masked = true, PastePermitted = true,
-            HelperOwned = true, RendererReceivedSecret = false, InitiallyBlank = true, Ready = true,
-            HelperProcessOwned = true, SameSession = true, InputDesktopAvailable = true, NotCloaked = true,
-            OnMonitor = true, Enabled = true, Focused = true, Foreground = true, Active = true, ReadinessChecks = 1,
-            PreReadinessIgnoredActions = 0, MessagePumpIterations = 1,
+            Surface = "wp9-distinct-helper-owned-native-masked-paste-surface",
+            Masked = true,
+            PastePermitted = true,
+            HelperOwned = true,
+            RendererReceivedSecret = false,
+            InitiallyBlank = true,
+            Ready = true,
+            HelperProcessOwned = true,
+            SameSession = true,
+            InputDesktopAvailable = true,
+            NotCloaked = true,
+            OnMonitor = true,
+            Enabled = true,
+            Focused = true,
+            Foreground = true,
+            Active = true,
+            ReadinessChecks = 1,
+            PreReadinessIgnoredActions = 0,
+            MessagePumpIterations = 1,
             ActionSnapshot = action,
-            TerminalState = terminal, WindowDestroyed = true, BufferCleared = true, NativeEditEmptyVerified = true,
+            TerminalState = terminal,
+            WindowDestroyed = true,
+            BufferCleared = true,
+            NativeEditEmptyVerified = true,
             ThreadJoined = true,
         };
     }
@@ -1928,9 +1990,20 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         string[] names = ["private protocol request", responseSurface, "native call trace",
             "process command line", "process environment names"];
         string[] kinds = ["private-pipe-bytes", "private-pipe-bytes", "canonical-trace-bytes", "captured-text", "captured-text"];
-        return new { SecretMatches = 0, RawTargetMatches = 0, RawTargetEncodings = new[] { "utf-8", "utf-16le" },
-            ScannedSurfaces = names.Select((value, index) => new { Name = value, Kind = kinds[index], ByteCount = 1,
-                SecretMatches = 0, RawTargetMatches = 0 }).ToArray() };
+        return new
+        {
+            SecretMatches = 0,
+            RawTargetMatches = 0,
+            RawTargetEncodings = new[] { "utf-8", "utf-16le" },
+            ScannedSurfaces = names.Select((value, index) => new
+            {
+                Name = value,
+                Kind = kinds[index],
+                ByteCount = 1,
+                SecretMatches = 0,
+                RawTargetMatches = 0
+            }).ToArray()
+        };
     }
 
     private static void CopyDirectory(string source, string destination)
@@ -1948,6 +2021,36 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
     }
 
     private static string Relative(string root, string path) => Path.GetRelativePath(root, path).Replace('\\', '/');
+
+    private static void CopyLedgerThroughSequence(string source, string destination, long terminalSequence)
+    {
+        byte[] bytes = File.ReadAllBytes(source);
+        int lineStart = 0;
+        int endExclusive = -1;
+        for (int index = 0; index < bytes.Length; index++)
+        {
+            if (bytes[index] != (byte)'\n') { continue; }
+            using JsonDocument line = JsonDocument.Parse(bytes.AsMemory(lineStart, index - lineStart));
+            long sequence = line.RootElement.GetProperty("sequence").GetInt64();
+            if (sequence == terminalSequence)
+            {
+                endExclusive = index + 1;
+                break;
+            }
+            if (sequence > terminalSequence)
+            {
+                break;
+            }
+            lineStart = index + 1;
+        }
+        if (endExclusive < 0)
+        {
+            throw new InvalidDataException(
+                $"The source ledger does not contain terminal sequence {terminalSequence}.");
+        }
+        File.WriteAllBytes(destination, bytes.AsSpan(0, endExclusive).ToArray());
+    }
+
     private static string Z(DateTimeOffset value) => value.ToUniversalTime().ToString(
         "yyyy-MM-ddTHH:mm:ss.fffffff'Z'", System.Globalization.CultureInfo.InvariantCulture);
     private static string HashFile(string path) => Sha(File.ReadAllBytes(path));
@@ -1962,6 +2065,9 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         internal M1Slice6SuccessorCredentialReplacementRunner.ReplacementRunnerTestHooks Hooks(
             Func<AuthoritativeStore, string, HelperPrivateFrameV2, HelperPrivateFrameV2, DateTimeOffset,
                 CancellationToken, Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>> effect) =>
-            new(Now, ProductRoot, CoordinatorPath, effect);
+            new(Now, ProductRoot, CoordinatorPath, effect)
+            {
+                Generation3OwnerLedgerPath = LedgerPath,
+            };
     }
 }

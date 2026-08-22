@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Infinium.CredentialHelper;
 using Infinium.Contracts.Protobuf.Helper.V2;
+using Infinium.CredentialHelper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infinium.Tests;

@@ -9607,3 +9607,40 @@ M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=572a3342ac6537d42a1041e9f8a5878c
   receipt SHA-256 is
   `d07fd2e7489dd6c04d06525f800ea259701030409513fee2b4f034a858ba3ba0`.
   No credential bytes or credential-derived digest are retained.
+
+## 2026-08-22 practical live completion through C3
+
+- The product retrieved generation 3 through the exact protected
+  `CredReadW -> CredFree` path and used the complete byte-preserved credential.
+  WP9 ordinal 11 received the first non-authentication-error, structurally
+  valid provider response and permanently closed WP9 provider execution.
+- WP10 ordinal 1 retained an HTTP 400 structured-output-schema rejection with
+  its full USD 0.49152 reservation unresolved. The corrected schema was used by
+  fresh ordinal 2, whose first structurally valid response settled USD 0.06326.
+  Effect-free semantic recovery preserved the complete nine-proposal response,
+  admitted the three host-valid source claims with deterministic host-owned
+  identities, and retained every unsupported, unavailable, abstained, hostile,
+  deleted, and contradictory result without answer selection.
+- WP11 ordinal 1 was the first structurally valid candidate-investigation
+  response and settled USD 0.04561. Effect-free recovery preserved the exact
+  provider response while deterministically binding the host-owned response
+  record and separately bound local-observation provenance. It retained two
+  proposals: one supported candidate was admitted and one explicit unsupported
+  negative remained non-admitted. No second WP11 call occurred.
+- Composed evidence SHA-256
+  `901f278825d3fdbab2971b9f6bb4462f84c12dea96f1c14c8f222d1f29a1df9d`
+  binds frozen ledger-v2 sequence 8, the five inherited attempt-2 evidence
+  artifacts, every ledger-v4 attempt handoff, all three permanent stage
+  results, effect-free retained-response replay, and exact WP10-to-WP11 SQLite
+  provenance. C3 used no provider effect.
+- Ledger v4 completed at sequence 72/event
+  `bb2094d71515b0f16edc45a5411d8689b743ff9fe5bb811beef3511c76340445`,
+  whole-file SHA-256
+  `4cc47bba72ee4c6881cbe77834ac5ab79bd0e0f487145fe0942738d34c507a17`.
+  Final counts are WP9 11 possible starts, WP10 2, and WP11 1. Successor
+  settled exposure is USD 0.11332, unresolved exposure is USD 1.37216,
+  outstanding reservation is zero, total committed exposure is USD 1.62548,
+  and USD 8.37452 remains unused under the hard limit.
+- Slice 6 implementation is complete and ready for the project owner's final
+  acceptance and contract-freeze decision. No further provider or credential
+  effect is needed or authorized, and Slice 7 remains unopened.

@@ -1070,7 +1070,7 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         Validate(target);
         WindowsCredentialManagerStore store = new(
             new NativeNamespaceReuseGuard(), FiniteNativeDeadline.Start(expires - DateTimeOffset.UtcNow))
-            { IsProductionEnrollment = true };
+        { IsProductionEnrollment = true };
         store.manifestTargets.Add(new(target.AccessProfileId, target.GenerationId), target);
         store.manifestTargetOrder.Add(target);
         store.BeginScenario("m1-slice6-successor-provider-read-only-generation-2");
@@ -1143,10 +1143,10 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         }
         WindowsCredentialManagerStore store = new(
             new NativeNamespaceReuseGuard(), FiniteNativeDeadline.Start(remaining))
-            {
-                IsProductionEnrollment = true,
-                ExpectedCredentialCharacterLength = exactLengthReplacement ? 164 : null,
-            };
+        {
+            IsProductionEnrollment = true,
+            ExpectedCredentialCharacterLength = exactLengthReplacement ? 164 : null,
+        };
         store.manifestTargets.Add(new(predecessor.AccessProfileId, predecessor.GenerationId), predecessor);
         store.manifestTargetOrder.Add(predecessor);
         store.manifestTargets.Add(new(successor.AccessProfileId, successor.GenerationId), successor);

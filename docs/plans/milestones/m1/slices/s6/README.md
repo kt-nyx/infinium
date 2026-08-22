@@ -1,9 +1,9 @@
 # M1 Slice 6
 
-Status: Accepted
-Disposition: Active slice navigation; live authority remains in current state
+Status: Implementation complete; owner acceptance pending
+Disposition: C3 is complete; this entry routes to immutable closeout evidence and the final owner gate
 
-Last reviewed: 2026-08-21
+Last reviewed: 2026-08-22
 
 Live authorization is stated only in
 [current project state](../../../../../current-state.md). This entry routes to
@@ -12,8 +12,8 @@ chronology.
 
 ## Current authority and navigation
 
-- [Owner-authorized practical development continuation](development-continuation.md),
-  the active simplified credential and C2B-C3 execution path
+- [Consumed practical development continuation](development-continuation.md),
+  retained byte-for-byte as the authority that completed credential enrollment and C2B-C3
 - [Accepted Slice 6 plan](plan.md)
 - [Accepted Slice 6 remainder plan](remainder-plan.md), governing historical
   R1-R2 execution and preserving the original remaining obligations
@@ -61,15 +61,15 @@ the current package names them as exact inputs.
 
 ## Current handoff
 
-The immutable ledger-v4 prefix now ends at sequence 44 after WP9 ordinal 9 was
-retained without a structurally valid result. It records USD 1.02064 committed
-exposure, no outstanding reservation, and USD 8.97936 remaining. Generation 2
-is non-dispatchable after the retained generation-3 entry mismatch; generation
-3 is already reserved but was never written. The active action is the
-simplified masked development continuation: accept exactly 164 characters,
-write and protected-read-back generation 3, then make one small request through
-the actual product path. WP10, WP11, C3, and Slice 7 remain gated as stated in
-current state.
+Ledger v4 is completed at sequence 72/event
+`bb2094d71515b0f16edc45a5411d8689b743ff9fe5bb811beef3511c76340445`.
+Generation 3 is active-verified and available after exact 164-character
+protected enrollment and read-back. WP9 ordinal 11, WP10 ordinal 2, and WP11
+ordinal 1 are the permanent first-structurally-valid results. Effect-free C3
+composed evidence binds all retained attempts, the three stage results, exact
+SQLite provenance, and USD 1.62548 total committed exposure with zero
+outstanding reservation. USD 8.37452 remains unused. The only next gate is
+project-owner Slice 6 acceptance and contract freeze; Slice 7 remains unopened.
 
 R1 is accepted at candidate
 `fcd17cd6db98019fc9e5253d5167d2487862671c`. Its final NonLiveAll receipt

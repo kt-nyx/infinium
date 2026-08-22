@@ -123,7 +123,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
     }
 
     [TestMethod]
-    public void DevelopmentGeneration3MaterializesAndFinalizesWithoutPerAttemptReview()
+    public void DevelopmentGeneration3RetainedWp11RuntimeAndAccountingRemainStructurallyValidAfterCompletion()
     {
         string repository = RepositoryRoot();
         string slice = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6");
@@ -131,11 +131,8 @@ public sealed class M1Slice6SuccessorAuthorityTests
         string amendmentPath = Path.Combine(slice, "m1-slice6-development-campaign-amendment.v2.json");
         string credentialPath = Path.Combine(slice,
             "m1-slice6-successor-credential-replacement-generation-3-authorization.v2.json");
-        string continuationPath = Path.Combine(slice, "development-continuation.md");
-        string ledgerPath = Path.Combine(repository, "artifacts", "m1-slice6", "successor-campaign",
-            "ledger.v4.jsonl");
-        string output = Path.Combine(Path.GetDirectoryName(ledgerPath)!,
-            ".development-provider-materializer-test-" + Guid.NewGuid().ToString("N"));
+        string attemptRoot = Path.Combine(repository, "artifacts", "m1-slice6", "successor-campaign",
+            "wp11-attempt-1-development-439ccda");
         string productCopy = Path.Combine(repository,
             ".development-provider-accounting-test-" + Guid.NewGuid().ToString("N"));
         try
@@ -146,33 +143,18 @@ public sealed class M1Slice6SuccessorAuthorityTests
                 campaignPath, campaignSha, requireRolloverBaseline: true);
             M1Slice6HardBudgetAuthority amendment = M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(
                 amendmentPath, amendmentSha, campaign);
-            string coordinator = Path.Combine(repository, "src", "Infinium.Coordinator", "bin", "Debug", "net10.0",
-                "Infinium.Coordinator.exe");
-            string helper = Path.Combine(repository, "src", "Infinium.CredentialHelper", "bin", "Debug", "net10.0",
-                "Infinium.CredentialHelper.exe");
-            string implementationCommit = typeof(M1Slice6SuccessorCampaignRunner).Assembly
-                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion.Split('+')[^1];
             DateTimeOffset now = DateTimeOffset.UtcNow;
-            M1Slice6SuccessorAttemptMaterializer.Materialize(campaignPath, campaignSha,
-                amendmentPath, amendmentSha, ledgerPath, "Qualification", 10, output,
-                implementationCommit, coordinator, helper, now);
-            string stagePath = Path.Combine(output, "stage-attempt.v6.json");
-            string candidatePath = Path.Combine(output, "runtime-candidate.v2.json");
-            string runtimePath = Path.Combine(output, "runtime-authority.v3.json");
-            M1Slice6SuccessorAttemptMaterializer.FinalizeRuntime(campaignPath, campaignSha,
-                amendmentPath, amendmentSha, stagePath, candidatePath, continuationPath, runtimePath,
-                now, now.AddMinutes(5));
-            M1Slice6SuccessorRuntimeAuthority runtime = M1Slice6SuccessorAuthorityLoader.Runtime(
-                runtimePath, M1Slice6SuccessorAuthorityLoader.HashFile(runtimePath), coordinator,
-                helper, amendment, now.AddMinutes(1), requireEffectAdmission: false);
-            Assert.AreEqual(10, runtime.AttemptOrdinal);
+            string stagePath = Path.Combine(attemptRoot, "stage-attempt.v6.json");
+            string runtimePath = Path.Combine(attemptRoot, "runtime-authority.v3.json");
+            M1Slice6SuccessorRuntimeAuthority runtime = M1Slice6SuccessorAuthorityLoader.RuntimeForRecovery(
+                runtimePath, M1Slice6SuccessorAuthorityLoader.HashFile(runtimePath), amendment, now);
+            (M1Slice6CampaignStageAuthority stage, M1Slice6SuccessorAttemptIdentity attempt) =
+                M1Slice6SuccessorAuthorityLoader.Stage(stagePath,
+                    M1Slice6SuccessorAuthorityLoader.HashFile(stagePath), campaign, amendment, runtime);
+            Assert.AreEqual(1, runtime.AttemptOrdinal);
+            Assert.AreEqual(M1Slice6CampaignStage.CandidateInvestigation, stage.Stage);
+            Assert.AreEqual(runtime.AttemptId, attempt.AttemptId);
             Assert.AreEqual("infinium.m1-s6.development-continuation/20260821", runtime.ReviewEvidenceId);
-            M1Slice6CampaignProductionStageBoundary boundary = new(helper,
-                M1Slice6SuccessorAuthorityLoader.HashFile(helper), credentialPath,
-                campaign.CredentialManifestSha256, campaign.CredentialManifestId);
-            Assert.AreEqual(3UL, (ulong)typeof(M1Slice6CampaignProductionStageBoundary)
-                .GetField("generationOrdinal", BindingFlags.Instance | BindingFlags.NonPublic)!
-                .GetValue(boundary)!);
             Assert.AreEqual(Path.GetFullPath(credentialPath),
                 M1Slice6SuccessorCampaignRunner.ActiveCredentialManifestPath(
                     repository, campaignPath, campaign));
@@ -194,7 +176,6 @@ public sealed class M1Slice6SuccessorAuthorityTests
         }
         finally
         {
-            if (Directory.Exists(output)) { Directory.Delete(output, recursive: true); }
             if (Directory.Exists(productCopy)) { Directory.Delete(productCopy, recursive: true); }
         }
     }
@@ -618,6 +599,16 @@ public sealed class M1Slice6SuccessorAuthorityTests
                     AmbiguousResponseHeaders(), SyntheticTrace(campaign.CredentialTargetFingerprintSha256),
                     SyntheticCanaries(), attempt, campaign.CredentialTargetFingerprintSha256);
             Assert.IsNull(historicalReceipt.ProviderErrorType);
+
+            using (SqliteConnection fingerprintConnection = new(
+                       $"Data Source={Path.Combine(product, "data", "infinium.sqlite3")};Mode=ReadOnly;Pooling=False"))
+            {
+                fingerprintConnection.Open();
+                using SqliteCommand fingerprintCommand = fingerprintConnection.CreateCommand();
+                fingerprintCommand.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
+                Assert.AreEqual(ProviderPersistenceDeclarations.SuccessorV6PersistenceSchemaFingerprint,
+                    (string)fingerprintCommand.ExecuteScalar()!);
+            }
 
             M1Slice6SuccessorCampaignRunner.RecoverStartedAmbiguousAttempt(
                 campaignPath, campaignSha, amendmentPath, amendmentSha, stagePath, stageSha,

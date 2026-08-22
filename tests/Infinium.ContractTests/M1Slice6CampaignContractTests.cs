@@ -120,11 +120,11 @@ public sealed class M1Slice6CampaignContractTests
         StringAssert.Contains(currentState,
             "The accepted v4 campaign crossed one WP9 possible-start latch");
         StringAssert.Contains(currentState,
-            "only committed exposure counts against USD 10.00");
+            "total committed exposure is USD 1.62548");
         StringAssert.Contains(currentState,
-            "Each provider attempt has at most one possible start and automatic retry remains prohibited");
+            "The completed ledger permanently closes WP9, WP10, and WP11 provider execution");
         StringAssert.Contains(currentState,
-            "Credential exposure or enumeration, semantic answer tuning or selection, private fixtures, archives, push, destructive work, and Slice 7 remain prohibited.");
+            "Credential exposure or enumeration, further Slice 6 provider calls, semantic answer tuning or selection, private fixtures, archives, push, destructive work, and Slice 7 remain prohibited.");
         Assert.IsFalse(currentState.Replace(stateAuthority, "C2 live execution is authorized", StringComparison.Ordinal)
             .Contains(stateAuthority, StringComparison.Ordinal));
         StringAssert.Contains(verifier, "function Test-M1Slice6RemainderR1NoEffectState");

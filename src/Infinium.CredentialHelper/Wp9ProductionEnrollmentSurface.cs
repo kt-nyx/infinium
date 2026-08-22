@@ -993,7 +993,8 @@ internal static class Wp9ProductionMaskedEntryDialog
     [DllImport("user32.dll")] private static extern nint GetActiveWindow();
     [DllImport("user32.dll")] private static extern bool SetForegroundWindow(nint window);
     [DllImport("user32.dll")] private static extern bool BringWindowToTop(nint window);
-    [DllImport("user32.dll")] private static extern bool SetWindowPos(
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(
         nint window, nint insertAfter, int x, int y, int width, int height, uint flags);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowTextLengthW(nint window);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowTextW(nint window, [Out] char[] text, int maximum);

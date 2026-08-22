@@ -1,0 +1,315 @@
+{
+  "id": "resp_07081b4eac1c04dc016a89313d861c87d28b08f79ab5313226",
+  "object": "response",
+  "created_at": 1787375933,
+  "status": "completed",
+  "background": false,
+  "billing": {
+    "payer": "developer"
+  },
+  "completed_at": 1787375949,
+  "error": null,
+  "frequency_penalty": 0.0,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": 4096,
+  "max_tool_calls": null,
+  "model": "gpt-5.6-sol",
+  "moderation": null,
+  "output": [
+    {
+      "id": "rs_07081b4eac1c04dc016a89313e76d487d28d2f2ad455536867",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABqiTFNT-cKdK4oE9JT8ZyuUpBpV-1XoYwb6_5H6DXiY8JVDDbfip9GZ1ELSd_y3wvxtg4iWPTS5PQVNfX9FGwUD7oePw0qhneDXR_B8uDBZyl5K364HQOsoobb5MkUAtNPZy1NKtgDY9Lbmj9-O7A6gLj7L1tUn2iymI6GGwe0-EzhId74JQWT7BKnOOrbJguw36P5kG8oUFY_yQly2KzEFbpJTDc1eFRt9ubnQapIkJbALNR5BTws8rvBvvCxOmB1NyA8i8OmbJDXNxjKdUYAPqyRcVu_ivjgGUiuvOsCguwTVfG4MXhlQ6YxIsVBifxB1hXCC3D5OAtGz06TiPKc9ZmvwJLEulOw1r_SJXM5pJrLJ5NOSGKm8kRRu8WJA00m2G2WCroHG4gbC6_siPXbyOIG_9bGQpmJc9YsVOhTNIKe4_J8nf0AJPKyt9ptmxHNPnNjKW0_-0DnHF6PIJxc4cnHSz6ZOzcAnCj-dEPSTq2rPiueoaewGjTrT8AAQswPqikPwanm3h1NCtzHXVkkIxF-n6jzPYkPGNAyCxhto0SOgEHbF8Hmz06PU991SblxFCbDr_VZy6L2wbAahRv0Z3ARAZFg_-Al5KvvQ8dLhwS2-RyrREVxqlGjVlI2lIy9qvA_xqgKxYTpT8uuT4wnJL1UTJ8gAbBheUx1G525xjqMJJ7nOjmiU0SpZ-dVnoDH_BYDvT-NAV_Bs8NH3JA908Mjp2y0j72Iz39R7Y98p5mHkLQZ3kJ1sV86FiuKmarzpqcuP-ttx5JefqfIvl1xdN33cBv-zDn-hBU_RAnlu3qfc2ZOYApUBbYVk9UB5aoQwSdAGLCXX83lAwIkKAVnjd9V-9xfEYJ1biBWRveu-PCzjGRj_6jMv0SrbOgwHs6dIomcy0OH85BnRbzTsXYVL0qJ6c9WRtUMocj7o4JrQyFKdYnAxWXDzEtCZmaqk466mZhjmPip8TzoL2gvl-4nVWCS6PqVe5hMNmivWtiIBgL1NzEFMqgJG2OIhKTqOxv_bPMNQZ1LLyoCQtssDDOLtzNC2MPvaGzklJNILQtBYXHwQac3uimr05bJpAQKdaK43U4Xgb7ja_pVANic6v2NC7ihOB24Y0tCjEMhtu_bx4wthNKCzz0V76BcJwc4nH_ntSqV8sbqimYxAt_2xJqYbeDA_yeLa0tj4lmFHmFQSwwNdCB0GhQQ4CAGfTDukO6jMQRwABbgRRTE-v2tBC_QJEFHsyyBvrM5RJlFZ980Cx9J0c9Opqk5hpXPLAXCSPf7Tld5wr7cMu_OGTPZubK46V9xKQtPNx-3VmbAD8CnYd9SB6-661pxzPVrEomlHdfmiT2uLkqy79nlp4YVCdAs75RZuf_iVq3-4GPCwEQ_1BIKCb2X32tii4PAebY-amMO6Bo5F6Vgf0do_gEMEcu6Pg3TGWGhP71u2EdxjgIqLg2pyPQZDOFk6AhH9yZpNJKDvIk2M2Du__LU9RHuV3cg7z4w0xKF5vMnvFQWBkSZYbb43X6z5WSNxhPpsG9gZ9WNQoFDUyHyIvDAnIV2zcpWfuLUc0volydt1x9Rw92xbK2V-J10dPNjMHThg96nlUEqTfmitTya9amUmJIo57uwRiq8un-14jFhQkV1Huj-XWPcF3e7ofFr-WZYLGViQx0dDjnEuQzNtGpq1_WqBrTQ1Gb-Dz3CRrpwd8tz8QKNG_yKufL7Tuveb7C-17oUB2ilNtVHCgBJ1jQt9oQCzIDQ5J8jZCmK_T4Ro5tQ4X1EytirQHhn9g_QweNNGs4zmjIryw112RVlVXz9LnUOuVK-QDHM9Ljf3hnwv1y-o1X5CdJh-FAYemiqBAV6v7-tayHgZ_aDvuun0N3QdoC6v1hlWQVu5V7Qu-t3sB-nj38EUM9KmeXSvKsoDv02_YNEAIPg6i5zi21orzz8yr7W3ANTtiM_d0-iv9thlr-9VNmwZsf6wQfTGUkelEXOJ5c18W9oH9HbkfoBnU4UGlPpMttdqXeS0f-44JFchrh9xIt_AwztOKGB0OVQISpDdNcLF2tZYz8MajYarCUBvPbShD6MjTbRBkx2Gz5D182ccuTEHV2qdVzrqIEzzzokDaMyEr5Vnk6jamKPLeJGo8CG8EM6nD3qEhNaVTh_FTdDqdHozEs2PUpNdPV9UV-iifL9SE4AFj0JigAF3aW9vnuR_jOohdZJ7tKc3J8vJC-3AHEkW-k-zpG12SkNjFTGJKyn3TqvNmaeIrRFbthwPSZGSdEAoAqiEnmXdgH2XVr_In3KWFlq702BQo9II0AU4lwLQCSWOhpEkk2TOmCTysUBVmPJiBqum0KysAzSsY-tgJS3GRnvmi4k55xQyfPnw-SwJK1hQVCplj2nfVPhVvEBwA6Ui2GzZoqPIaxIN_Pnr6VG-NRk-jRNs8ypy9hNPPHAyoZJQ1j26f4Ycc8ZdkQwCfEeG8KnHIFxXkJvtahLHzUUUTPYRp9k8igY_k6okejQegrgINX3eYGXza_8Kbb6EXFig_qxUdpP4ZYyxYadFwt0qiZ4afovEVKV7O88F_COXIy9FIN9u0AAgsCNouwk5kDd7-Hw3c04vT6PQQyF_KxIKbVj-I3LdfJsm8h8Q7P1hkeBLnEcnfXkPnTjqbM5Nr8e5COa7d6Jm9kXSwJamOEwM1VocNaJbNMLFO4gK0af-idFQrUioUN3SFJ8uisDTDgzKUN7p8h4Mta9gO4w89IPLqiA-hO1nA6F1i5uHbYlHmSKQJ4lWvJ456V1yX4Ba0lGpJNjseKv0tU16qaAkiSxy46QvhF0zCqhUhQPIG4sXRFspkIEc2gEpBe0pnVvXKOo1fCAXlULKPYf1veou4pYxj9_tstuF7ny1MLIXhJw_CuMWYJLeVfMExzRm7i1Th1N58FssFkHXVzUUPPV6KpB32nt9hJQMbZi2T_qhwoDYhseS2-DI9S1XPFNF8AvXGs7UK8incEh0DJwc_OPFQUGKEuK6qOeLm3VEVtrPTnueD62dmJRrHUCU5YNtDlQ1pzUmatk5faOT-s-vBDadWBoYxcJAhdZgjWecCjWI-gqciXH_Kx4tZCUclQNZXknBCL34eL3BNAUPRHUtLnkzpyZEimHH4l-XuH5Or8QsbdqAjH5dRlz6IScLDodiLnmNSpoDfENEp5TVWHnBihb2MhaiRnzvhCj6ijEuDkfbkmQyuHmm-_WUdWKcmOWa6fbMBZv74LDt4x7iGlkJtsd2pEeVwt0FDxDaEJ1-qgkcbS_o2MZp1sTNt1VLSIKUxidwBJPEXQ_mv5KLaDnS0QHR6WmU6tIvdtIfeulSaGDKOoQa-4Tt5XnynvVgKbEXClVtfYTfsMsPOQLLNr7IGFNaHuoZRA6Gn8nIz6JuAEbMGRt-ut-sZhgWr7TehisnEr82E-2B8M03-HyD3zKFsgvc1IQ4VLKjmOR0Y9XTLAUTnH4ZUuPMKP-NUFGI96QG4DkAdw1KRXOTm13eAS5siIYfpMsH3-YHbbWoc5B8yPuIDU5XoJd1xWRgotxz1TVVVRkpYWhguZ9DnGxkMFAyWwcM97dHTZsGQYSMf5iZtRkwFSx5f-Jvza0FDiomJwKrjKa2UtDN9v0-q6fvkD0NDA3auUHCVjMkhBmGXlM16jyWZR5VXALU8ClEcXUNMF_pWPbH6uxmPQf5oV7YvJmPKGEA2f1gJg2_Cd-DU-e1Td6SBZAB7x2T_6397fYtTHHJ4kcEE1xaqVd1ZUdCChj8r73J7Z0ig13G8xNrLtqOjeyl_g8LUHKrDNYHUaZd4TKAwKzCcodvT38tCxCqn5Z41rGXg871gvS6vC72gjb6fTlVfFvnMpxAByzXw-K2WxIT0asMHIK_KQfhBzkLO9E-psqxMw0SIUO2sznB_1iwcT5FXSQJW4IDztOcUh_eEsLADU7Dbw0Asn949ZPqVe-imn4vRiO7dpztPimXb1ZCM-ufrTzZUgQJIvaFtQg5uC3rDddU74zcmoRX1hOlVrO4IKZ7tiGpXbf7qjBkBGHmQOe4JOUpBxzqUelZvR-oOTeQ7unRRAnY0KV4ZcfFKoKHsbo_LDkKo0KioJXExdWTYUhZ3u8D_-g46gpKzkXB7OuYVy_-WTT8zSnkMaTxuJBAEWFGFjXLaJO9Ug9lXv_ertH3a1SJyCsB4KFBZX9hOVPBjLyy_bMlIEN89saq8SipMzX83wgBkQUhN-YKRvDPJweuaqS7rluoY6KTsNSM56UXcAiLHsW5uA0mGlaA6urSUh3JkKvTRIGELst1HjQffFPJ9mmp0o4kJyrGGtjamJ3sV7HlXLkRoCsWjwLw_D5IxujlFt3ab3PUVZLOMDYrTRarYT-4ChMEc_8JDEUn71DMZb3QoRus90AI4EiTJAB0RoInPryrwxBy-Y2hDCPxeh2Y44cjdZCGxEWhG1T9GcXCR8zWMXEjc6WpPJwo1CIr7IknXSC0C1F2BFXdvYfx1j73l7e8OiQjhlLKYEKABTKORM9lNrMnjxXivlRdVt31JCWHUJvV3CUDSN6G5JC4y5TLJN-7phb67zNmMOx89zuKWClFpQulkNIaWD4iCgSqTNdA1i0ijId6_CTovrShEZeF0YDU5k_ga_NP7X7OMKVL_LYM5VHFETwHAjEVyJELJA-s8Z2QH5BHEXkyd6YP695vVpC1KaqoToDQ22FJCf3fCrDOB0TV4CQGUXre2AmrK_1OA6XQUtltCkXYjZ7KNJd5Bj_H1eiO_kIHcUV5x-tmaaB-t3Rx-5sQSxrYeWSYsjLaJ_xk-iQwBWP2-BebS6zbU2IZ7UreJ51xrK1QlBXZVCs9k_nmxiTEnKzRTETyWI5Bz6_vTHaLgb98iEaFTWbwjN2pdmlHOCx5aqrTSGS6y6acJJNnmwzNSdlANax1aBqaxu9KN6ttUAU-teqDHb95CnlbRXqDO454bUgbFze83lAJn7bTaPZz-iayS3PIu2g-TvbZSZnqkth_iayk6JeIrmO5_hG6KJGzUcog018Oge7KdYa4WzAcgCT4Rw-rKISz-SjeS0TcBx11wfev2XBdMS8qJkKzVJgs9iV4rTN4zaYdL-xVIU9rcObZ45nJu7Ms-fBIWuelFv1vvvu-2BUUedwEgdg6vO96x4IZaxMLf_ka65pIbKiiF8Il18aCDRoZx-_rEbcDv8ZU9xeBLezW_4XTkfS6J9hqy5Z7nOz6r9DW4rglNp1B5ZYnEU6qtT5wI1QszJRuU9Pm_r7obGzbQhdTOEdM2U3QHWKbFrRZpQyuPDQ3uPJsb8a9laMHmPLY4iNYIkWhltlD0DmGwzHcG3F7hyQkItLmsiRNaOqb0edKKjgAi5UzU630ws9cbZheC40s9stXIohVDJYgM-cUp9qkA0BTyy1xZy6MMB_wEnHzVByMp5YsNv8i99YY8j46_QSxB9BMZOeTU_NyhEa16cfPGPHsED0WvQO5zl8tGrHHDmHddI7f-2VKw8XoSkvx47JwCdq9qE=",
+      "summary": []
+    },
+    {
+      "id": "rs_07081b4eac1c04dc016a89314652e487d2b71158ee720b3ae9",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABqiTFNrmihdkbDGpUmDNIg_VMXgL6BcSavWR6zNwX_epKQvLznA06cAchpHurj4WFQDtqhzxLt8Oes3nfTLdzGATmi_jXc-8EA0QBd9_PBHRA1DDFztE_-kfOFNlv1n5CT4qlYpsxWGW3x6Q39cHl1GIan3p1TdGr9uNEzAZBpSqdgzgzpxdkRqHZQXhOn94o2TM0PMUJ2wz2mo5kk1Et2F9NySKY0AyuMl2MXDCKyW-iIXFbBs3sZe41EoQQvhGVq9Hn8HwCtbKXUwBs5SV1Mdb2_xg1EcDi1gc_-BymAFd1mlH9DODc-t-1xW8QpgstGXAeM4Bp00Sa5a5GvMCQQZMyF28znjvStaqH2UrlAP5rKLkwqQb-N0YWeMbaoLh6uperaSHX18PBzU0M8ayY7vB_IUVXVTVg1HoQHiJuiLihBllcn17cN2iX_G_JyzBJ6lf-swk3gYBPEwm1-feuDQFBWzl4BHxj_0IiH-D1KrZe0BSorOXQ5MgdVgZic9ZfhPvDRoMpZfM-WD0P0pXOPc2KoUuguFhe2cQW0qoKYQ3F0oAMqroGPV9k2YE6xo6khytS8TqSZwLeIknXSV9Jr_dM0LSdxvs82HC4MiXrEurlRJPvLh6d-JMM8x4ljI8WXcL7pZ13oeS1o2RBRHV8iHqdJAEAZ-kL2dO24rsdcvmn2gJXibD_QqQ4sunnJvQX_HWqhbeX1mNQP973awcfx_fpyl026hTb1jAq-_Y6jyAxIlcoxuz-LHdt4ckeOHfGPMlyin4Yo27--HoangqiDxiYSOvLpK9qagVSY65YnOOgokyA7igHA3Qo0dv9XzNr7dmFpzLyYhEiUYHLQmzkJHbd42z1BGpLV_xyYl2o8TQOpO8YxBfWo_hhQU9J1WhH9sqxd-C7sAxDPCDyU8H1Pib_8fbPEtSLXQo1hjkAc759DcaFOeqm04FXOPG9MRp-V_HjbV0evXhNXvEgcg2udTtu-hChdniTQVWNLObbqkMb9gCvBo7kjlL-xwcSxzG_soiKmrGgvFLlzSxO5b24rNOikZ96khD8DNKxdY3XCHX-Bj6bUsgSTAdJUra8Rv14RtzIutaeW8vh5vijChnmaR8avJpdhiR7hxeTxY1gZstmlzWU6d_79-XjxeEZzIZy7SCBffy407T8-8qY2qSM_oaeul-UriJ0NQE4IjNM8KEId-yKp3Wo5nBzMmDFX2Zc2dUJnP3EMsdZiWYKMdeePR0_RMfgWSZz-OMlJDl9OwEfyEaaliq06-k7IvCSfEcx3g6nPZxlyYgEpjU6VLYmwOdJXkRyNfCUsE9IxqohKk3RFHBllzVKm_9cYwKu0F_8SwUl_w_9WZ4a2coRfVQ9f_hZzfzZzumBU5OxrIUkPzokPoHvJwOyxY6LpIU6Ok_t2IZ66ft_wpKfWDmm4oNiqUZ5TsIJS2ZllZe_lQ1NvxL0KmYPinjtmK4rVbsFqarV5S0qBHOWOUR0CkC1kArNqHSBmSZOcC1kVC2GlgX5fNfiKUa5kCTRHbxLuSIr5zepBVjG6y0AJ_EHJIkyqS3IegxPLC2e5GMAIPHBPfVzvcRBL43UUtQKo4gnj7Xp-LFzD5giCG9pKcCjBfcJ9QTkq1NfDK_T4Gex-aUCmZbn8Eu40aD8N-niNGsWYcsGtoF3vKWNmOqECo61u-RLWmNuXfufQQlxqxoIaTj5XPmAzPgBPFfo6cB4ekkp55p65PU6OzJNA403fsihrX5XEOXZ5Oj2onZ5FuzMdFeK8irK1gSMjNWsizhti930Wr9j_zPTmJZtj7kA63l5-d4wcrYfoUdlmmTbVq9wQ3jCoLLgkGckNcGQE5VbovZiIKgf6ejPkMfhFHs_Kn4v0qkFc0dbg9eYFtFO6ugeQABIsFTvKmIAtrEQuTGn9RmocIvEHjSenbKp3TVdmw-MakO7IPOzm3UdOVQ==",
+      "summary": []
+    },
+    {
+      "id": "msg_07081b4eac1c04dc016a893147bd0c87d286906d63434ddf95",
+      "type": "message",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "annotations": [],
+          "logprobs": [],
+          "text": "{\"schema_id\":\"infinium.llm.candidate-investigation-retained-transcripts/v1\",\"schema_version\":\"1\",\"transcripts\":[{\"abstentions\":[],\"context_id\":\"relay-gate-context-a\",\"gaps\":[\"The supporting evidence payload is not included, so its detailed reasoning cannot be independently inspected.\"],\"model_used\":true,\"operation_id\":\"wp11-candidate-operation-live-val-v2\",\"prompt_fingerprint\":\"026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e\",\"prompt_id\":\"infinium.m1-s6.candidate-investigation-prompt/v1\",\"proposals\":[{\"authority_category\":\"informational\",\"candidate_id\":\"relay-gate-candidate-a\",\"contradicting_evidence_ids\":[],\"hypothesis\":\"The relay and gate create a collision when their declared exchange is active.\",\"hypothesis_id\":\"relay-gate-hypothesis-a\",\"missing_information\":[\"Full content of relay-gate-evidence-a.\"],\"proposal_id\":\"relay-gate-proposal-a\",\"reason\":\"The local observation identifies incompatible writes to the same slot under the active-exchange condition, and the available evidence is classified as supporting.\",\"state\":\"proposed\",\"supporting_evidence_ids\":[\"relay-gate-shared-slot-write\",\"relay-gate-evidence-a\"]}],\"response_fingerprint\":\"relay-gate-response-a-v1-fingerprint-026d7002102b74df9ef50ed2421\",\"response_record_id\":\"relay-gate-response-record-a\",\"response_state\":\"completed\",\"transcript_id\":\"relay-gate-transcript-a\"},{\"abstentions\":[],\"context_id\":\"relay-gate-context-b\",\"gaps\":[\"No supporting evidence establishes the relevant exchange-activation semantics.\",\"The neutral evidence payload is not included, so its relevance cannot be independently assessed.\"],\"model_used\":true,\"operation_id\":\"wp11-candidate-operation-live-val-v2\",\"prompt_fingerprint\":\"026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e\",\"prompt_id\":\"infinium.m1-s6.candidate-investigation-prompt/v1\",\"proposals\":[{\"authority_category\":\"informational\",\"candidate_id\":\"relay-gate-candidate-b\",\"contradicting_evidence_ids\":[],\"hypothesis\":\"The relay and gate create a collision when their declared exchange is active.\",\"hypothesis_id\":\"relay-gate-hypothesis-b\",\"missing_information\":[\"Supporting evidence for the declared exchange and its activation semantics.\",\"Full content of relay-gate-evidence-b.\"],\"proposal_id\":\"relay-gate-proposal-b\",\"reason\":\"The local observation describes a possible incompatible write, but the supplied external evidence is neutral and does not substantiate the declared exchange or its activation semantics.\",\"state\":\"unsupported\",\"supporting_evidence_ids\":[\"relay-gate-shared-slot-write\"]}],\"response_fingerprint\":\"relay-gate-response-b-v1-fingerprint-026d7002102b74df9ef50ed2421\",\"response_record_id\":\"relay-gate-response-record-b\",\"response_state\":\"completed\",\"transcript_id\":\"relay-gate-transcript-b\"}]}"
+        }
+      ],
+      "phase": "final_answer",
+      "role": "assistant"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0.0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "prompt_cache_options": {
+    "mode": "explicit",
+    "ttl": "30m"
+  },
+  "prompt_cache_retention": "24h",
+  "reasoning": {
+    "context": "current_turn",
+    "effort": "medium",
+    "mode": "standard",
+    "summary": null
+  },
+  "safety_identifier": "d0173a008b80c182c9e6c40ef7d69d12fd154f6167b86cf607d3e83c29fa5e14",
+  "service_tier": "default",
+  "store": false,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "json_schema",
+      "description": null,
+      "name": "candidate_investigation",
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "schema_id": {
+            "const": "infinium.llm.candidate-investigation-retained-transcripts/v1",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "1",
+            "type": "string"
+          },
+          "transcripts": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "abstentions": {
+                  "items": {
+                    "maxLength": 4096,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "maxItems": 64,
+                  "type": "array"
+                },
+                "context_id": {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "gaps": {
+                  "items": {
+                    "maxLength": 4096,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "maxItems": 64,
+                  "type": "array"
+                },
+                "model_used": {
+                  "type": "boolean"
+                },
+                "operation_id": {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "prompt_fingerprint": {
+                  "const": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+                  "type": "string"
+                },
+                "prompt_id": {
+                  "const": "infinium.m1-s6.candidate-investigation-prompt/v1",
+                  "type": "string"
+                },
+                "proposals": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "authority_category": {
+                        "enum": [
+                          "informational",
+                          "protected-effect-request"
+                        ],
+                        "type": "string"
+                      },
+                      "candidate_id": {
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "contradicting_evidence_ids": {
+                        "items": {
+                          "maxLength": 200,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "maxItems": 64,
+                        "type": "array"
+                      },
+                      "hypothesis": {
+                        "maxLength": 4096,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "hypothesis_id": {
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "missing_information": {
+                        "items": {
+                          "maxLength": 4096,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "maxItems": 64,
+                        "type": "array"
+                      },
+                      "proposal_id": {
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "reason": {
+                        "maxLength": 1024,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "state": {
+                        "enum": [
+                          "proposed",
+                          "unsupported",
+                          "unavailable",
+                          "abstained"
+                        ],
+                        "type": "string"
+                      },
+                      "supporting_evidence_ids": {
+                        "items": {
+                          "maxLength": 200,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "maxItems": 64,
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "proposal_id",
+                      "candidate_id",
+                      "hypothesis_id",
+                      "hypothesis",
+                      "supporting_evidence_ids",
+                      "contradicting_evidence_ids",
+                      "missing_information",
+                      "authority_category",
+                      "state",
+                      "reason"
+                    ],
+                    "type": "object"
+                  },
+                  "maxItems": 64,
+                  "type": "array"
+                },
+                "response_fingerprint": {
+                  "maxLength": 64,
+                  "minLength": 64,
+                  "type": "string"
+                },
+                "response_record_id": {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "response_state": {
+                  "enum": [
+                    "completed",
+                    "malformed",
+                    "refusal",
+                    "incomplete",
+                    "drift",
+                    "not-used",
+                    "unavailable"
+                  ],
+                  "type": "string"
+                },
+                "transcript_id": {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "transcript_id",
+                "operation_id",
+                "context_id",
+                "response_record_id",
+                "response_state",
+                "response_fingerprint",
+                "prompt_id",
+                "prompt_fingerprint",
+                "proposals",
+                "abstentions",
+                "gaps",
+                "model_used"
+              ],
+              "type": "object"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          }
+        },
+        "required": [
+          "schema_id",
+          "schema_version",
+          "transcripts"
+        ],
+        "type": "object"
+      },
+      "strict": true
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "none",
+  "tool_usage": {
+    "image_gen": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 0
+    },
+    "web_search": {
+      "num_requests": 0
+    }
+  },
+  "tools": [],
+  "top_logprobs": 0,
+  "top_p": 0.98,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 1478,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "output_tokens": 1274,
+    "output_tokens_details": {
+      "reasoning_tokens": 603
+    },
+    "total_tokens": 2752
+  },
+  "user": null,
+  "metadata": {}
+}

@@ -399,7 +399,8 @@ public sealed class M1Slice6LiveCampaignOfflineGateTests
             CandidateInvestigationOutcomeReadModel retained = store.ReadCandidateInvestigationOutcome(
                 analysisRunId, candidateOperationId, contextId);
             retainedOutcomeIds.Add(retained.OutcomeId);
-            CollectionAssert.AreEqual(exactCandidateInput, retained.InputPayload);
+            AssertCandidateInputReboundOnlyToDurableSourceApplication(
+                store, exactCandidateInput, retained.InputPayload);
             CandidateInvestigationScenarioResult replay = candidateCoordinator.ReplayRetained(
                 analysisRunId, candidateOperationId, contextId);
             Assert.AreEqual(contextId, replay.ContextId);
@@ -436,6 +437,44 @@ public sealed class M1Slice6LiveCampaignOfflineGateTests
             + " evidence_id=campaign-composed-evidence sha256=" + Sha(File.ReadAllBytes(composedPath))
             + " verdicts=security,semantics,budget,provenance,diff";
         Assert.AreEqual(1, recordLines.Count(line => line == composedMarker));
+    }
+
+    private static void AssertCandidateInputReboundOnlyToDurableSourceApplication(
+        AuthoritativeStore store, byte[] exactInput, byte[] retainedInput)
+    {
+        JsonObject expected = JsonNode.Parse(exactInput)!.AsObject();
+        JsonObject actual = JsonNode.Parse(retainedInput)!.AsObject();
+        JsonArray expectedContexts = expected["contexts"]!.AsArray();
+        JsonArray actualContexts = actual["contexts"]!.AsArray();
+        foreach (JsonObject expectedContext in expectedContexts.Select(item => item!.AsObject()))
+        {
+            string contextId = expectedContext["context_id"]!.GetValue<string>();
+            JsonObject actualContext = actualContexts.Select(item => item!.AsObject())
+                .Single(item => item["context_id"]!.GetValue<string>() == contextId);
+            JsonArray expectedEvidence = expectedContext["evidence"]!.AsArray();
+            JsonArray actualEvidence = actualContext["evidence"]!.AsArray();
+            for (int index = 0; index < expectedEvidence.Count; index++)
+            {
+                JsonObject expectedItem = expectedEvidence[index]!.AsObject();
+                if (expectedItem["host_bindings"] is not JsonObject expectedHost)
+                { continue; }
+                JsonObject actualHost = actualEvidence[index]!["host_bindings"]!.AsObject();
+                SourceClaimResolvedApplicationReadModel resolved = store.ResolveSourceClaimApplication(
+                    expectedHost["acquisition_run_id"]!.GetValue<string>(),
+                    expectedHost["source_revision_id"]!.GetValue<string>(),
+                    expectedHost["passage_id"]!.GetValue<string>(),
+                    expectedHost["persisted_payload_sha256"]!.GetValue<string>());
+                Assert.AreEqual(resolved.ProposalId, actualHost["proposal_id"]!.GetValue<string>());
+                Assert.AreEqual(resolved.AdmissionId, actualHost["source_admission_id"]!.GetValue<string>());
+                Assert.AreEqual(resolved.AdmittedArtifactId,
+                    actualHost["admitted_artifact_id"]!.GetValue<string>());
+                Assert.AreEqual(resolved.ApplicationLinkId,
+                    actualHost["application_link_id"]!.GetValue<string>());
+                expectedItem["host_bindings"] = actualHost.DeepClone();
+            }
+        }
+        Assert.IsTrue(JsonNode.DeepEquals(expected, actual),
+            "The retained WP11 input changed outside its durable WP10 host bindings.");
     }
 
     private static void AssertRelationalAuthorityRejectsTornOrOrphanRows(string databasePath, string outcomeId)

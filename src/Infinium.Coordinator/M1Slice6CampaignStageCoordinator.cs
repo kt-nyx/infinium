@@ -2039,8 +2039,8 @@ internal static class M1Slice6CampaignStageRunner
                 || provenance.Any(name => validation.GetProperty(name).GetString() != ""))
             || !qualification && (validation.GetProperty("validation_id").GetString() is not
                     ("infinium.host.source-claim-admission/v1" or "infinium.host.candidate-investigation-admission/v1")
-                || validation.GetProperty("disposition").GetString() is not ("accepted" or "accepted-conditional"
-                    or "accepted-conditional-applicability")
+                || !AcceptedSemanticDisposition(stage,
+                    validation.GetProperty("disposition").GetString())
                 || validation.GetProperty("proposal_count").GetInt32() != expectedProposalCount
                 || validation.GetProperty("admission_count").GetInt32() != expectedAdmissionCount
                 || resultSha != package.GetProperty("deterministic_oracle_result_sha256").GetString())
@@ -2547,13 +2547,18 @@ internal static class M1Slice6CampaignStageRunner
             || semantic.GetProperty("admission_count").GetInt32() != expectedAdmissions
             || expectedAdmissions == 0 && (semantic.GetProperty("disposition").GetString() != "not-applicable"
                 || semanticResult != new string('0', 64))
-            || expectedAdmissions == 1 && (semantic.GetProperty("disposition").GetString() is not
-                    ("accepted" or "accepted-conditional" or "accepted-conditional-applicability")
+            || expectedAdmissions == 1 && (!AcceptedSemanticDisposition(expectedStage,
+                    semantic.GetProperty("disposition").GetString())
                 || semanticResult != oracleResult))
         {
             throw new InvalidDataException("Campaign composed stage has stale stage, package, or semantic identities.");
         }
     }
+
+    private static bool AcceptedSemanticDisposition(M1Slice6CampaignStage stage, string? disposition) =>
+        disposition is "accepted" or "accepted-conditional" or "accepted-conditional-applicability"
+        || stage == M1Slice6CampaignStage.SourceClaimExtraction
+            && disposition == "rejected-deleted-audit-only";
 
     private static M1Slice6FiniteCampaignLedger OpenLedger(string campaignManifestPath,
         string campaignManifestSha256, string campaignReviewedCandidate, string credentialManifestPath,

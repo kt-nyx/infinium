@@ -388,14 +388,34 @@ internal static class M1Slice6CampaignSemanticAdmission
             throw new InvalidDataException("WP11 input/output identities differ from the authoritative provider admission.");
         }
         if (!envelope.Transcripts.Select(item => item.ContextId).ToHashSet(StringComparer.Ordinal)
-                .SetEquals(input.Contexts.Select(item => item.ContextId))
-            || envelope.Transcripts.Any(item => item.ResponseRecordId != "m1s6-campaign-stage-3-response"))
+                .SetEquals(input.Contexts.Select(item => item.ContextId)))
         {
-            throw new InvalidDataException("WP11 transcripts did not total the exact contexts or response record.");
+            throw new InvalidDataException("WP11 transcripts did not total the exact contexts.");
         }
+        string semanticResultSha256 = CandidateActualSemanticResultSha256(
+            campaignInput, envelope.Transcripts);
+        // The provider authors semantic transcript content, while the host owns the durable
+        // response identity. A campaign-v2 local observation is bound separately from source
+        // evidence, so remove only that exact contextual identifier from evidence-link arrays;
+        // every other unknown identifier remains visible to the ordinary rejection logic.
+        // The semantic-result digest above continues to bind the complete provider output.
         CandidateInvestigationRetainedTranscript[] retainedTranscripts = envelope.Transcripts
-            .Select(item => item with { ResponseFingerprint = rawResponseSha256 }).ToArray();
-        string semanticResultSha256 = CandidateActualSemanticResultSha256(campaignInput, retainedTranscripts);
+            .Select(item =>
+            {
+                string observationId = campaignInput.LocalObservationsByContext[item.ContextId].ObservationId;
+                return item with
+                {
+                    ResponseRecordId = "m1s6-campaign-stage-3-response",
+                    ResponseFingerprint = rawResponseSha256,
+                    Proposals = item.Proposals.Select(proposal => proposal with
+                    {
+                        SupportingEvidenceIds = proposal.SupportingEvidenceIds
+                            .Where(id => id != observationId).ToArray(),
+                        ContradictingEvidenceIds = proposal.ContradictingEvidenceIds
+                            .Where(id => id != observationId).ToArray(),
+                    }).ToArray(),
+                };
+            }).ToArray();
         DurableCandidateInvestigationCoordinator coordinator = new(store);
         List<CandidateInvestigationAdmissionPublication> publications =
             store.ExecuteCandidateInvestigationBatch(() =>
@@ -425,25 +445,27 @@ internal static class M1Slice6CampaignSemanticAdmission
         CandidateInvestigationAdmissionPublication positive = publications.Single(item =>
             item.Scenario.Disposition is "accepted" or "accepted-conditional");
         CandidateInvestigationAdmissionPublication negative = publications.Single(item =>
-            item.Scenario.Disposition == "empty-abstained");
+            item.Scenario.Disposition is "empty-abstained" or "rejected-unsupported");
         M1Slice6CampaignEvidenceRoot positiveRoot = campaignInput.RootsByContext[positive.Scenario.ContextId];
         M1Slice6CampaignEvidenceRoot negativeRoot = campaignInput.RootsByContext[negative.Scenario.ContextId];
         if (positive.Scenario.Disposition is not ("accepted" or "accepted-conditional")
-            || negative.Scenario.Disposition != "empty-abstained"
+            || negative.Scenario.Disposition is not ("empty-abstained" or "rejected-unsupported")
             || positiveRoot.Kind != M1Slice6CampaignEvidenceRootKind.PersistedSourceClaimApplication
             || negativeRoot.Kind != M1Slice6CampaignEvidenceRootKind.FrozenHostEvidence
             || positive.Scenario.SourceAcquisitionLinks.Count != 1
             || negative.Scenario.SourceAcquisitionLinks.Count != 0
             || positive.Persistence.ProposalCount != 1 || positive.Persistence.AdmissionCount != 1
-            || negative.Persistence.ProposalCount != 0 || negative.Persistence.AdmissionCount != 0)
+            || negative.Persistence.AdmissionCount != negative.Persistence.ProposalCount)
         {
-            throw new InvalidDataException("WP11 host admission did not produce one accepted and one explicitly abstained context.");
+            throw new InvalidDataException("WP11 host admission did not produce one accepted and one retained negative context.");
         }
         CandidateInvestigationContextInput context = input.Contexts.Single(item =>
             item.ContextId == positive.Scenario.ContextId);
         CandidateEvidenceInput evidence = context.Evidence.Single();
         return new("infinium.host.candidate-investigation-admission/v1",
-            "accepted-conditional", 1, 1,
+            "accepted-conditional", publications.Sum(item => item.Persistence.ProposalCount),
+            publications.Sum(item => item.Scenario.Investigation.HypothesisProposals.Count(proposal =>
+                proposal.State == ProposalAdmissionState.Admitted)),
             semanticResultSha256, new(
                 evidence.SourceAcquisitionId, evidence.SourceAdmissionId,
                 store.ReadSourceClaimApplicationLinks(evidence.SourceAcquisitionId)

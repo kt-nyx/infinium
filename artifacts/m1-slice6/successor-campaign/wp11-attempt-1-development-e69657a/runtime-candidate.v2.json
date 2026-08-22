@@ -1,0 +1,49 @@
+{
+  "schema_identity": "infinium.repository.m1-slice6-successor-runtime-candidate/2.0.0",
+  "candidate_id": "m1-s6-successor-v6-wp11-runtime-candidate-1/fada0b49-bd6a-4073-9e32-0b172302b9a2",
+  "campaign": {
+    "id": "infinium.m1-s6.successor-campaign-v7/3e457821-389a-4ea8-a4c0-aed9da3b5966",
+    "sha256": "d81e4b7e9972d9531215a650bedd5a0ac98c015f01c9c0af4a9c9c7265dbded8"
+  },
+  "subject_manifest": {
+    "id": "infinium.m1-s6.successor-stage-v6/WP11/attempt-1/ad64545c-5ef2-4266-8049-9223c9f3e6dd",
+    "sha256": "0f0a9f30f40342348ba787764ab868c4bdeffd110f087252440fcdd63e385d2d"
+  },
+  "predecessor": {
+    "ledger_event_hash": "3560e3c7482189f557eb2f691701ed00e3a6324db11fbc3747cc1dbc6effe2cf",
+    "evidence_id": "infinium.m1-s6.development-continuation/20260821",
+    "evidence_sha256": "04462e111693defc9f37c95b31a6bea2fe8fac6f2dd40e344ff6a4f1ec5b739b"
+  },
+  "attempt": {
+    "attempt_id": "m1-s6-successor-v6-wp11-attempt-1/fe359f5a-4218-497d-ac7d-ce41283eead5",
+    "attempt_ordinal": 1,
+    "request_id": "m1-s6-successor-v6-wp11-request-1/d50d9878-d1d0-4629-a06c-8fc6c23b5e26",
+    "reservation_id": "m1-s6-successor-v6-wp11-reservation-1/7223bcd0-e073-40b1-bb65-21d8a1f2c0a4",
+    "dispatch_fence_id": "m1-s6-successor-v6-wp11-fence-1/6c0df87f-c5a9-4271-8a89-b0aa1fd46eac"
+  },
+  "credential_access": {
+    "id": "infinium.m1-s6.development-continuation/20260821",
+    "sha256": "04462e111693defc9f37c95b31a6bea2fe8fac6f2dd40e344ff6a4f1ec5b739b"
+  },
+  "implementation_commit": "e69657ad2a851359ad1a96bb05d8ce2b6a79b2ab",
+  "coordinator_sha256": "8821d24691958ea5445032dad9f92cde5ff1563ab39ddfb59d8d60c913ffdd21",
+  "helper_sha256": "9e480c050787867a233fe15e19888d123ee0fdde083929dfc87ba8440eea62f0",
+  "execution": {
+    "output_root_relative": "artifacts/m1-slice6/successor-campaign",
+    "ledger_path_relative": "artifacts/m1-slice6/successor-campaign/ledger.v4.jsonl",
+    "evidence_path_relative": "artifacts/m1-slice6/successor-campaign/wp11-attempt-1-development-e69657a/attempt-evidence.v3.json",
+    "product_state_root_absolute": "C:/Users/vex/.codex/worktrees/223b/infinium/artifacts/m1-slice6/successor-product-state",
+    "product_state_snapshot_origin_sha256": "e3d23f0a11d66c243fd857e66e741d957abb8d470b45d653ae53f17d74fe4945",
+    "product_state_checkpoint_sha256": "c76edb1a8e39bfdbd3fede12f32a1d631cf5c818a94e06a71c295f3b879a5759",
+    "coordinator_path_relative": "src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe",
+    "helper_path_relative": "src/Infinium.CredentialHelper/bin/Release/net10.0/Infinium.CredentialHelper.exe"
+  },
+  "limits": {
+    "helper_launches": 1,
+    "credential_native_calls": 2,
+    "provider_starts": 1,
+    "dns_resolutions": 1,
+    "billable_operations": 1,
+    "automatic_retry": false
+  }
+}

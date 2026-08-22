@@ -994,7 +994,7 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
                 store.ReadCandidateInvestigationOutcomesForOperation(ownerId, semanticOperation);
             if (outcomes.Count != 2
                 || outcomes.Count(item => item.Disposition is "accepted" or "accepted-conditional") != 1
-                || outcomes.Count(item => item.Disposition == "empty-abstained") != 1
+                || outcomes.Count(item => item.Disposition is "empty-abstained" or "rejected-unsupported") != 1
                 || outcomes.Any(item => item.ReplayState != "retained-response"))
             { throw new InvalidDataException("C3 WP11 positive/negative retained consumption changed."); }
             command.Parameters.Clear();
@@ -1020,7 +1020,8 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
             command.CommandText =
                 "SELECT COUNT(*) FROM candidate_investigation_outcomes o "
                 + "JOIN candidate_evidence_authority e ON e.outcome_id=o.outcome_id "
-                + "WHERE o.owner_id=$owner AND o.operation_id=$semantic AND o.disposition='empty-abstained' "
+                + "WHERE o.owner_id=$owner AND o.operation_id=$semantic "
+                + "AND o.disposition IN ('empty-abstained','rejected-unsupported') "
                 + "AND e.root_kind='frozen-host-evidence' AND e.evidence_root_id IS NOT NULL "
                 + "AND e.applicability_record_id IS NOT NULL AND e.source_acquisition_id IS NULL "
                 + "AND e.source_admission_id IS NULL AND e.admitted_artifact_id IS NULL "
