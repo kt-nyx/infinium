@@ -23,3 +23,8 @@ artifacts/m1-slice6/successor-credential-replacement-cleanup-recovery/** -text -
 artifacts/m1-slice6/successor-credential-replacement-typed-failure-recovery/** -text -diff -merge -eol
 artifacts/m1-slice6/successor-credential-replacement-foreground-recovery/** -text -diff -merge -eol
 artifacts/m1-slice6/successor-product-state/staging/m1s6-credential-replacement-*/** -text -diff -merge -eol
+
+# The ordinal-9 successor effect evidence was written with the Windows JSON
+# newline before the successor serializer was made canonical-LF. Preserve the
+# exact ledger-bound bytes; later successor evidence is emitted as LF directly.
+artifacts/m1-slice6/successor-campaign/wp9-attempt-9-9e47065a5bd548edaf9ea6ef6ec2aa92/attempt-evidence* -text -diff -merge -eol

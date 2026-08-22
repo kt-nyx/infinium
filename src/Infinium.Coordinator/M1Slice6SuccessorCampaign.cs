@@ -1252,6 +1252,7 @@ internal static class M1Slice6SuccessorCampaignRunner
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         WriteIndented = true,
+        NewLine = "\n",
     };
 
     internal static async Task<int> RunAttemptAsync(string campaignPath, string campaignSha,
