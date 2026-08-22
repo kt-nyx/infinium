@@ -1,0 +1,140 @@
+{
+  "schema": "infinium.m1-s6.successor-attempt-evidence/v3",
+  "status": "failure-review-pending",
+  "campaign_id": "infinium.m1-s6.successor-campaign-v7/3e457821-389a-4ea8-a4c0-aed9da3b5966",
+  "campaign_manifest_sha256": "d81e4b7e9972d9531215a650bedd5a0ac98c015f01c9c0af4a9c9c7265dbded8",
+  "stage": "Qualification",
+  "work_package": "WP9",
+  "attempt_id": "m1-s6-successor-v6-wp9-attempt-9/3637b14e-0d22-4a0c-88b2-c86bc57d871b",
+  "attempt_ordinal": 9,
+  "stage_manifest_id": "infinium.m1-s6.successor-stage-v6/WP9/attempt-9/80ed9364-63eb-49f0-8ceb-9b24079c39bf",
+  "stage_manifest_sha256": "4845234d7be89df4960f40e71c332d29e27a2611a7d2f77af68870b6d4b43c60",
+  "runtime_authority_id": "m1-s6-successor-v6-wp9-runtime-9/91a9f99d-185a-439f-92c2-ffdf6389a8bd",
+  "runtime_authority_sha256": "d68f03064cc78018d6cfc117a43441a763af12dafb8b5e19df81264415cd6c44",
+  "failure_stage": "provider-response",
+  "failure_disposition": "provider-failed",
+  "transport_disposition": "response-received",
+  "http_status": 401,
+  "provider_error_type": "invalid_request_error",
+  "provider_error_code": "invalid_api_key",
+  "local_failure_code": null,
+  "provider_response_id": null,
+  "client_request_id": "m1-s6-successor-v6-wp9-request-9/61ddb0a7-136b-4b60-9ffa-c7f0cd923ff0",
+  "provider_request_id": "req_f12995e165d54602a038562db9623e46",
+  "response_bytes_existed": true,
+  "response_bytes_observed_lower_bound": 337,
+  "retained_response_bytes": 337,
+  "provider_send_count": 1,
+  "dns_resolution_count": 1,
+  "retry_permitted": false,
+  "reserved_nano_usd": 110080000,
+  "settled_nano_usd": 0,
+  "unresolved_hold_nano_usd": 110080000,
+  "usage": {
+    "availability": 1,
+    "dispatch_count": {
+      "availability": 1,
+      "value": 1
+    },
+    "input_tokens": {
+      "availability": 2,
+      "value": null
+    },
+    "output_tokens": {
+      "availability": 2,
+      "value": null
+    },
+    "total_tokens": {
+      "availability": 2,
+      "value": null
+    },
+    "reasoning_tokens": {
+      "availability": 2,
+      "value": null
+    },
+    "cache_read_tokens": {
+      "availability": 2,
+      "value": null
+    },
+    "cache_write_tokens": {
+      "availability": 2,
+      "value": null
+    },
+    "priced_tool_calls": {
+      "availability": 2,
+      "value": null
+    },
+    "calculated_nano_usd": {
+      "availability": 2,
+      "value": null
+    },
+    "billing_availability": 2,
+    "rate_availability": 2,
+    "credit_availability": 2,
+    "receipt_state": 4
+  },
+  "rate_facts": [],
+  "helper_boundary_observation": {
+    "receipt_available": true,
+    "helper_exit_code": 0,
+    "helper_outcome": "FailedKnown",
+    "transport_may_have_started": true,
+    "staged_envelope_bytes": 1698,
+    "staged_envelope_parsed": true,
+    "staged_raw_bytes": 337,
+    "staged_header_bytes": 1346,
+    "adapter_transport_disposition": "response-received",
+    "adapter_network_used": true,
+    "adapter_send_count": 1,
+    "adapter_dns_resolution_count": 1,
+    "retry_attempted": false,
+    "listener_snapshot_count": 0,
+    "tcp_non_listener_snapshot_count": 1,
+    "containment_probe_executed": true,
+    "active_contained_process_count_before_job_close": 2,
+    "total_contained_process_count": 4,
+    "process_tree_survivor_count": 0,
+    "process_tree_terminated": true,
+    "excluded_handle_accessible": false,
+    "native_credential_operation_count": 2,
+    "failed_predicate_ids": []
+  },
+  "retained_artifacts": {
+    "canonical_request_path": "attempt-evidence.v3.canonical-request.json",
+    "canonical_request_sha256": "738ac12bef0d0755e7dece88e302a076d79e61e240ffe3d1c8e1237c4736a4d9",
+    "raw_response_path": "attempt-evidence.v3.raw-response.bin",
+    "raw_response_sha256": "4cf2d4c56f131638a79037676fd41ccba53d73e773aa39aedc4376c8a753ab3d",
+    "response_headers_path": "attempt-evidence.v3.response-headers.json",
+    "response_headers_sha256": "12a974420d70f6694a1a46eedb27dc5c45970994099b67b07a0eccd363372ed7",
+    "native_trace_path": "attempt-evidence.v3.native-trace.json",
+    "native_trace_sha256": "626ab9245de0b5ac6a7628ecc86a63c6d6357e848b14e95a3014e4e10aaa0221",
+    "canary_evidence_path": "attempt-evidence.v3.canaries.json",
+    "canary_evidence_sha256": "c43633c8a24f93bab13ed005a14df7c55ee57314feed66de9f7a290f9b5b85fc"
+  },
+  "accounting": {
+    "authorization_id": "m1s6-successor-v6-m1-s6-successor-v6-wp9-attempt-9/3637b14e-0d22-4a0c-88b2-c86bc57d871b-transport-authorization",
+    "operation_id": "m1s6-successor-v6-m1-s6-successor-v6-wp9-attempt-9/3637b14e-0d22-4a0c-88b2-c86bc57d871b-transport-operation",
+    "attempt_id": "m1-s6-successor-v6-wp9-attempt-9/3637b14e-0d22-4a0c-88b2-c86bc57d871b",
+    "request_id": "m1-s6-successor-v6-wp9-request-9/61ddb0a7-136b-4b60-9ffa-c7f0cd923ff0",
+    "reservation_id": "m1-s6-successor-v6-wp9-reservation-9/01c9376f-9e89-4971-9ca0-44c9233d848e",
+    "dispatch_fence_id": "m1-s6-successor-v6-wp9-fence-9/7ff03d07-72ed-415a-ac9f-2a36f586fafa",
+    "response_id": "m1s6-successor-m1-s6-successor-v6-wp9-attempt-9/3637b14e-0d22-4a0c-88b2-c86bc57d871b-response",
+    "usage_entry_id": "m1s6-successor-m1-s6-successor-v6-wp9-attempt-9/3637b14e-0d22-4a0c-88b2-c86bc57d871b-usage",
+    "settlement_id": "m1s6-successor-m1-s6-successor-v6-wp9-attempt-9/3637b14e-0d22-4a0c-88b2-c86bc57d871b-settlement",
+    "replay_edge_id": "m1s6-successor-m1-s6-successor-v6-wp9-attempt-9/3637b14e-0d22-4a0c-88b2-c86bc57d871b-response:replay",
+    "response_persisted": true,
+    "semantic_validation_id": null,
+    "semantic_disposition": null,
+    "semantic_result_sha256": null,
+    "semantic_provenance": {
+      "source_acquisition_id": "",
+      "source_admission_id": "",
+      "admitted_artifact_id": "",
+      "source_application_link_id": "",
+      "evidence_application_link_id": "",
+      "candidate_id": "",
+      "hypothesis_id": ""
+    },
+    "semantic_failure_code": null
+  }
+}
