@@ -1290,7 +1290,8 @@ public static class OpenAiResponsesResponseCodec
                 && Available(usage.ReasoningTokens) && Available(usage.CacheReadTokens)
                 && Available(usage.CacheWriteTokens) && Available(usage.PricedToolCalls)
                 && usage.CacheReadTokens.Value == 0 && usage.CacheWriteTokens.Value == 0;
-            bool structuredOutput = completed && StrictOutputMatches(root, requestedOutputSchema.Span);
+            bool structuredOutput = completed
+                && StrictOutputMatches(root, requestedOutputSchema.Span, allowReasoningItems: successorV6);
             bool admitted = completed && exactProfile && usageComplete && structuredOutput && refusal is null
                 && incomplete is null && error is null;
             string reason = admitted ? "admitted"
@@ -1402,7 +1403,8 @@ public static class OpenAiResponsesResponseCodec
         return null;
     }
 
-    private static bool StrictOutputMatches(JsonElement root, ReadOnlySpan<byte> schemaBytes)
+    private static bool StrictOutputMatches(JsonElement root, ReadOnlySpan<byte> schemaBytes,
+        bool allowReasoningItems)
     {
         if (schemaBytes.IsEmpty)
         {
@@ -1412,25 +1414,50 @@ public static class OpenAiResponsesResponseCodec
         {
             return false;
         }
-        if (output.GetArrayLength() != 1)
+        if (!allowReasoningItems && output.GetArrayLength() != 1)
         {
             return false;
         }
         string? outputText = null;
+        int messageCount = 0;
         foreach (JsonElement item in output.EnumerateArray())
         {
+            if (allowReasoningItems && String(item, "type") == "reasoning")
+            {
+                if (item.ValueKind != JsonValueKind.Object
+                    || !ExactProperties(item, ["id", "type", "content", "encrypted_content", "summary"])
+                    || !item.TryGetProperty("id", out JsonElement reasoningId)
+                    || reasoningId.ValueKind != JsonValueKind.String
+                    || !item.TryGetProperty("content", out JsonElement reasoningContent)
+                    || reasoningContent.ValueKind != JsonValueKind.Array
+                    || !item.TryGetProperty("summary", out JsonElement reasoningSummary)
+                    || reasoningSummary.ValueKind != JsonValueKind.Array
+                    || !item.TryGetProperty("encrypted_content", out JsonElement encrypted)
+                    || encrypted.ValueKind is not (JsonValueKind.String or JsonValueKind.Null))
+                {
+                    return false;
+                }
+                continue;
+            }
             if (item.ValueKind != JsonValueKind.Object
-                || !ExactProperties(item, ["id", "type", "status", "role", "content"])
+                || !ExactProperties(item, allowReasoningItems
+                    ? ["id", "type", "status", "role", "content", "phase"]
+                    : ["id", "type", "status", "role", "content"])
                 || String(item, "type") != "message"
                 || item.TryGetProperty("status", out JsonElement status)
                     && (status.ValueKind != JsonValueKind.String || status.GetString() != "completed")
                 || item.TryGetProperty("role", out JsonElement role)
                     && (role.ValueKind != JsonValueKind.String || role.GetString() != "assistant")
+                || allowReasoningItems && item.TryGetProperty("phase", out JsonElement phase)
+                    && (phase.ValueKind != JsonValueKind.String
+                        || phase.GetString() != "final_answer")
                 || !item.TryGetProperty("content", out JsonElement content)
                 || content.ValueKind != JsonValueKind.Array || content.GetArrayLength() != 1)
             {
                 return false;
             }
+            if (++messageCount != 1)
+            { return false; }
             foreach (JsonElement part in content.EnumerateArray())
             {
                 if (part.ValueKind != JsonValueKind.Object
@@ -1448,7 +1475,7 @@ public static class OpenAiResponsesResponseCodec
                 outputText = text;
             }
         }
-        if (outputText is null)
+        if (outputText is null || messageCount != 1)
         {
             return false;
         }

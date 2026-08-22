@@ -84,6 +84,42 @@ public sealed class OpenAiResponsesAdapterTests
     }
 
     [TestMethod]
+    public void SuccessorV6AdmitsProviderReasoningEnvelopeWithoutBroadeningHistoricalCodec()
+    {
+        JsonObject response = JsonNode.Parse(ProviderAdapterTestData.CompletedResponse())!.AsObject();
+        JsonArray output = response["output"]!.AsArray();
+        output[0]!["id"] = "msg_provider_1";
+        output[0]!["status"] = "completed";
+        output[0]!["role"] = "assistant";
+        output[0]!["phase"] = "final_answer";
+        output.Insert(0, new JsonObject
+        {
+            ["id"] = "rs_provider_1",
+            ["type"] = "reasoning",
+            ["content"] = new JsonArray(),
+            ["encrypted_content"] = "opaque-provider-reasoning",
+            ["summary"] = new JsonArray(),
+        });
+        byte[] raw = JsonSerializer.SerializeToUtf8Bytes(response);
+
+        OpenAiResponsesResult successor = OpenAiResponsesResponseCodec.ParseSuccessorV6(
+            raw, 200, "m1-s6-successor-v6-request", "provider-request", [],
+            ProviderAdapterTestData.OutputSchemaBytes);
+        OpenAiResponsesResult historical = OpenAiResponsesResponseCodec.Parse(
+            raw, 200, "historical-request", "provider-request", [],
+            ProviderAdapterTestData.OutputSchemaBytes);
+
+        Assert.IsTrue(successor.Admitted);
+        Assert.AreEqual(ProviderResponseState.Completed, successor.State);
+        Assert.IsFalse(historical.Admitted);
+        output[0]!["unexpected"] = true;
+        OpenAiResponsesResult tampered = OpenAiResponsesResponseCodec.ParseSuccessorV6(
+            JsonSerializer.SerializeToUtf8Bytes(response), 200, "m1-s6-successor-v6-request-2",
+            "provider-request-2", [], ProviderAdapterTestData.OutputSchemaBytes);
+        Assert.IsFalse(tampered.Admitted);
+    }
+
+    [TestMethod]
     [DataRow("incomplete", ProviderResponseState.Incomplete)]
     [DataRow("failed", ProviderResponseState.Failed)]
     [DataRow("queued", ProviderResponseState.Queued)]
