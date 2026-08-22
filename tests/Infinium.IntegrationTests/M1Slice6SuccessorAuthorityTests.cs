@@ -39,6 +39,12 @@ public sealed class M1Slice6SuccessorAuthorityTests
         string campaignSha = M1Slice6SuccessorAuthorityLoader.HashFile(campaignPath);
         M1Slice6SuccessorCampaignAuthority campaign =
             M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+        _ = M1Slice6SuccessorAuthorityLoader.Campaign(
+            campaignPath, campaignSha, requireRolloverBaseline: true);
+        _ = M1Slice6SuccessorAuthorityLoader.Review(
+            Path.Combine(slice, "m1-slice6-successor-campaign-v7-independent-review.v3.json"),
+            "campaign-authority", campaign.CampaignId, campaign.ManifestSha256,
+            false, successorV6: true);
         Assert.AreEqual("infinium.m1-s6.successor-campaign-v7/3e457821-389a-4ea8-a4c0-aed9da3b5966",
             campaign.CampaignId);
         Assert.AreEqual("g-e6b6a3f21ad74108ba65955850349f83", campaign.CredentialGenerationId);
