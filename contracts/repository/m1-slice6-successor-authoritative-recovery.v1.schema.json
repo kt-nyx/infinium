@@ -9,7 +9,7 @@
     "recovery_id": { "$ref": "#/$defs/id" },
     "campaign_id": { "$ref": "#/$defs/id" },
     "campaign_manifest_sha256": { "$ref": "#/$defs/sha" },
-    "stage": { "enum": ["SourceClaimExtraction", "CandidateInvestigation"] },
+    "stage": { "enum": ["Qualification", "SourceClaimExtraction", "CandidateInvestigation"] },
     "attempt_id": { "$ref": "#/$defs/id" },
     "original_evidence_id": { "$ref": "#/$defs/id" },
     "original_evidence_sha256": { "$ref": "#/$defs/sha" },

@@ -784,8 +784,6 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         string reservationId, string dispatchFenceId, string responseId, string campaignId,
         byte[] rawResponseBytes, byte[] responseHeadersBytes, DateTimeOffset now)
     {
-        if (authority.Stage == M1Slice6CampaignStage.Qualification)
-        { throw new InvalidOperationException("Qualification has no recoverable semantic admission."); }
         bool successorV6 = transportOperationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal);
         OpenAiResponsesResult retainedReplay = successorV6
             ? OpenAiStagedResponseEnvelope.ReplaySuccessorV6(rawResponseBytes, responseHeadersBytes, requestId)
@@ -854,24 +852,27 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
                 operation.ResponseHeadersBytes, requestId)
             : accounting.Replay(new(new OpaqueId(transportOperationId),
                 new OpaqueId(responseId), NetworkPermitted: false));
-        string input = M1Slice6CampaignSemanticAdmission.ExtractUntrustedInput(authority.CanonicalRequest);
-        string semanticOperation;
-        string semanticAuthorization;
-        if (authority.Stage == M1Slice6CampaignStage.SourceClaimExtraction)
+        if (authority.Stage != M1Slice6CampaignStage.Qualification)
         {
-            SourceClaimExecutionInput source = M1Slice6CampaignV2InputAdapter.ReadSourceClaim(input);
-            semanticOperation = source.OperationId;
-            semanticAuthorization = source.HostAuthorizationId;
+            string input = M1Slice6CampaignSemanticAdmission.ExtractUntrustedInput(authority.CanonicalRequest);
+            string semanticOperation;
+            string semanticAuthorization;
+            if (authority.Stage == M1Slice6CampaignStage.SourceClaimExtraction)
+            {
+                SourceClaimExecutionInput source = M1Slice6CampaignV2InputAdapter.ReadSourceClaim(input);
+                semanticOperation = source.OperationId;
+                semanticAuthorization = source.HostAuthorizationId;
+            }
+            else
+            {
+                CandidateInvestigationExecutionInput candidate =
+                    M1Slice6CampaignV2InputAdapter.ReadCandidate(input).ProductInput;
+                semanticOperation = candidate.OperationId;
+                semanticAuthorization = candidate.HostAuthorizationId;
+            }
+            admission = admission with
+            { SemanticOperationId = semanticOperation, SemanticAuthorizationId = semanticAuthorization };
         }
-        else
-        {
-            CandidateInvestigationExecutionInput candidate =
-                M1Slice6CampaignV2InputAdapter.ReadCandidate(input).ProductInput;
-            semanticOperation = candidate.OperationId;
-            semanticAuthorization = candidate.HostAuthorizationId;
-        }
-        admission = admission with
-        { SemanticOperationId = semanticOperation, SemanticAuthorizationId = semanticAuthorization };
         EnsureSuccessorSemanticBinding(authority, admission, responseId, campaignId, now.AddTicks(1));
         M1Slice6CampaignSemanticAdmissionReceipt semantic = M1Slice6CampaignSemanticAdmission.Admit(
             store, authority, admission, replay, now.AddTicks(2), successorV6);

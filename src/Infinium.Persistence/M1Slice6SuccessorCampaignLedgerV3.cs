@@ -460,9 +460,8 @@ public sealed class M1Slice6SuccessorCampaignLedgerV3
         string evidenceId, string evidenceSha256, DateTimeOffset now)
     {
         RequireExactAttempt(attempt, M1Slice6SuccessorCampaignV3State.AttemptEvidenceHandoff);
-        if (!string.IsNullOrEmpty(Current.FailureDisposition)
-            || attempt.Stage == M1Slice6CampaignStage.Qualification)
-        { throw new InvalidOperationException("Only a first-valid semantic stage may receive offline recovery evidence."); }
+        if (!string.IsNullOrEmpty(Current.FailureDisposition))
+        { throw new InvalidOperationException("Only a first-valid stage may receive offline recovery evidence."); }
         Append(M1Slice6SuccessorCampaignV3State.AuthoritativeRecoveryHandoff,
             "authoritative-retained-response-semantic-recovery-handoff", attempt,
             Identity(evidenceId), Hex(evidenceSha256), "", Current.Wp9PossibleStarts,

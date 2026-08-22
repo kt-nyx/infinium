@@ -968,7 +968,8 @@ internal static class M1Slice6SuccessorAuthorityLoader
     internal static M1Slice6SuccessorRuntimeAuthority Runtime(string path, string expectedSha,
         string coordinatorPath, string helperPath, M1Slice6HardBudgetAuthority hardBudget,
         DateTimeOffset now, bool requireEffectAdmission = true,
-        bool requireExecutingAssemblyIdentity = true)
+        bool requireExecutingAssemblyIdentity = true,
+        bool requireCurrentExecutableHashes = true)
     {
         (byte[] bytes, string sha) = ExactBytes(path, expectedSha);
         string schemaRepository = FindRepositoryRoot(path);
@@ -1044,8 +1045,9 @@ internal static class M1Slice6SuccessorAuthorityLoader
             || requireEffectAdmission && (now < notBefore || now >= expiry)
             || Path.GetFullPath(coordinatorPath) != expectedCoordinator
             || Path.GetFullPath(helperPath) != expectedHelper
-            || HashFile(coordinatorPath) != Text(candidate, "coordinator_sha256")
-            || HashFile(helperPath) != Text(candidate, "helper_sha256")
+            || requireCurrentExecutableHashes
+                && (HashFile(coordinatorPath) != Text(candidate, "coordinator_sha256")
+                    || HashFile(helperPath) != Text(candidate, "helper_sha256"))
             || HashFile(runtimeCandidatePath) != Text(candidate, "candidate_sha256")
             || HashFile(Path.Combine(productState, "successor-snapshot-origin.v1.json"))
                 != Text(execution, "product_state_snapshot_origin_sha256")
@@ -1116,7 +1118,8 @@ internal static class M1Slice6SuccessorAuthorityLoader
             Text(execution, "coordinator_path_relative"));
         string helper = ResolveRepositoryPath(repository, Text(execution, "helper_path_relative"));
         return Runtime(path, expectedSha, coordinator, helper, hardBudget, now,
-            requireEffectAdmission: false, requireExecutingAssemblyIdentity: false);
+            requireEffectAdmission: false, requireExecutingAssemblyIdentity: false,
+            requireCurrentExecutableHashes: false);
     }
 
     private static string ResolveRepositoryPath(string repository, string relative)
@@ -1868,8 +1871,45 @@ internal static class M1Slice6SuccessorCampaignRunner
             },
             recovered_at_utc = now.AddTicks(2),
         }, EvidenceJson);
-        WriteNew(Path.GetFullPath(recoveryPath), [.. recoveryBytes, (byte)'\n']);
-        string recoverySha = ValidateRecoverySchema(campaignPath, File.ReadAllBytes(recoveryPath));
+        string recoverySha;
+        if (File.Exists(recoveryPath))
+        {
+            byte[] retainedRecovery = File.ReadAllBytes(recoveryPath);
+            recoverySha = ValidateRecoverySchema(campaignPath, retainedRecovery);
+            using JsonDocument retainedDocument = JsonDocument.Parse(retainedRecovery);
+            JsonElement retained = retainedDocument.RootElement;
+            JsonElement retainedAccounting = retained.GetProperty("accounting");
+            JsonElement retainedSemantic = retained.GetProperty("semantic");
+            if (M1Slice6SuccessorAuthorityLoader.Text(retained, "recovery_id") != recoveryId
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "campaign_id") != campaign.CampaignId
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "campaign_manifest_sha256") != campaign.ManifestSha256
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "stage") != attempt.Stage.ToString()
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "attempt_id") != attempt.AttemptId
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "original_evidence_id") != ledger.Current.EvidenceId
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "original_evidence_sha256") != ledger.Current.EvidenceSha256
+                || retained.GetProperty("provider_effect_used").GetBoolean()
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "raw_response_sha256") != rawSha
+                || M1Slice6SuccessorAuthorityLoader.Text(retained, "response_headers_sha256") != headersSha
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "authorization_id")
+                    != M1Slice6SuccessorAuthorityLoader.Text(accountingNode, "authorization_id")
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "operation_id")
+                    != M1Slice6SuccessorAuthorityLoader.Text(accountingNode, "operation_id")
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "response_id") != recovered.ResponseId
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "usage_entry_id") != recovered.UsageEntryId
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "settlement_id") != recovered.SettlementId
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedAccounting, "replay_edge_id") != recovered.ReplayEdgeId
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedSemantic, "validation_id") != semantic.ValidationId
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedSemantic, "disposition") != semantic.Disposition
+                || M1Slice6SuccessorAuthorityLoader.Text(retainedSemantic, "result_sha256") != semantic.ResultSha256)
+            {
+                throw new InvalidDataException("Retained authoritative recovery bytes differ from the exact recovered attempt.");
+            }
+        }
+        else
+        {
+            WriteNew(Path.GetFullPath(recoveryPath), [.. recoveryBytes, (byte)'\n']);
+            recoverySha = ValidateRecoverySchema(campaignPath, File.ReadAllBytes(recoveryPath));
+        }
         ledger.RecordAuthoritativeRecoveryEvidence(attempt, recoveryId, recoverySha, now.AddTicks(3));
     }
 
