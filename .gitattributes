@@ -20,4 +20,5 @@ fixtures/public/** -text -diff -merge -eol
 artifacts/m1-slice6/successor-credential-replacement/** -text -diff -merge -eol
 artifacts/m1-slice6/successor-credential-replacement-recovery/** -text -diff -merge -eol
 artifacts/m1-slice6/successor-credential-replacement-cleanup-recovery/** -text -diff -merge -eol
+artifacts/m1-slice6/successor-credential-replacement-typed-failure-recovery/** -text -diff -merge -eol
 artifacts/m1-slice6/successor-product-state/staging/m1s6-credential-replacement-*/** -text -diff -merge -eol
