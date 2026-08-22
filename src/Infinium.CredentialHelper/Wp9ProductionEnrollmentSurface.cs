@@ -350,6 +350,7 @@ internal static class Wp9ProductionMaskedEntryDialog
     private const uint WsChild = 0x40000000;
     private const uint WsBorder = 0x00800000;
     private const uint EsPassword = 0x0020;
+    private const uint EsAutoHScroll = 0x0080;
     private const int GwlStyle = -16;
     private const int GwlWndProc = -4;
     private const uint WmClose = 0x0010;
@@ -629,7 +630,8 @@ internal static class Wp9ProductionMaskedEntryDialog
                 nint instruction = CreateWindowExW(0, "STATIC",
                     "Paste the OpenAI API key for the exact authorized profile. The value remains inside this helper.",
                     WsChild | WsVisible, 20, 15, 550, 35, window, 0, 0, 0);
-                edit = CreateWindowExW(0, "EDIT", null, WsChild | WsVisible | WsBorder | EsPassword,
+                edit = CreateWindowExW(0, "EDIT", null,
+                    WsChild | WsVisible | WsBorder | EsPassword | EsAutoHScroll,
                     20, 58, 550, 28, window, 0, 0, 0);
                 string initialStatus = expectedCharacterLength is int expected
                     ? $"Characters: 0 / {expected}. Submit is accepted only at the exact reviewed length."

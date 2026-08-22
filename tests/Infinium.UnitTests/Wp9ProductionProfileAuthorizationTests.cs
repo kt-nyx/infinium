@@ -209,6 +209,9 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             StringComparison.Ordinal);
         int loopEnd = source.IndexOf("Thread.Sleep(25)", measurement, StringComparison.Ordinal);
         int editCreated = source.IndexOf("edit = CreateWindowExW", StringComparison.Ordinal);
+        int horizontalCapacity = source.IndexOf(
+            "WsChild | WsVisible | WsBorder | EsPassword | EsAutoHScroll",
+            editCreated, StringComparison.Ordinal);
         int exactNativeLimit = source.IndexOf(
             "SendMessageW(edit, EmLimitText, WindowsCredentialManagerStore.MaximumBlobBytes, 0)",
             editCreated, StringComparison.Ordinal);
@@ -221,7 +224,8 @@ public sealed class Wp9ProductionProfileAuthorizationTests
         Assert.IsTrue(loop < topmost && topmost < notTopmost && notTopmost < bringToTop);
         Assert.IsTrue(bringToTop < setForeground && setForeground < setFocus && setFocus < measurement);
         Assert.IsTrue(measurement < loopEnd);
-        Assert.IsTrue(editCreated >= 0 && editCreated < exactNativeLimit && exactNativeLimit < editSubclass);
+        Assert.IsTrue(editCreated >= 0 && editCreated < horizontalCapacity
+            && horizontalCapacity < exactNativeLimit && exactNativeLimit < editSubclass);
         Assert.IsTrue(editSubclass < safeCount && safeCount < exactSubmitGate);
 
         Wp9ProductionReadinessSnapshot foregroundDenied = new(

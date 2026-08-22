@@ -9575,3 +9575,23 @@ M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=572a3342ac6537d42a1041e9f8a5878c
   no uncontrolled retry, first-structurally-valid stage result, answer
   isolation, private-fixture/archive/push/destructive prohibitions, and Slice 7
   boundary remain mandatory.
+
+### First simplified enrollment attempt and UI-capacity correction
+
+- Commit `b1773ec4f99c73c3e8612d6969b07bdb724428b1` opened the simplified masked
+  enrollment under fresh attempt `1281292828974996bd1f43289d5eb0fe`. The
+  owner cancelled after the single-line edit control stopped accepting input
+  at 91 characters. The terminal evidence is immutable at SHA-256
+  `2e0fb9ad6183b412829605f32b77832afa0772b12d1dd2b426ccafd16e19eab8`;
+  boundary SHA-256 is
+  `c174a3b12b90759d75dc86ebb106818ad4526d980bad9634ac462c048a88cde4`
+  and receipt SHA-256 is
+  `c3545a92629fb689a2bb7c188515587df7fb3cb1bd0af10fa069f1eff365c7c2`.
+  It records one helper launch, zero native credential operations, zero
+  network/provider/billable operations, cleared input memory, and no retry.
+- Diagnosis found the native single-line password edit omitted
+  `ES_AUTOHSCROLL`. Without that style, user input was constrained by the
+  visible control width despite the separate 2,560-character `EM_LIMITTEXT`
+  bound. The correction adds the standard horizontal-capacity style while
+  retaining password masking, the 164-character Submit gate, the native
+  maximum, clipboard-copy denial, and buffer clearing.
