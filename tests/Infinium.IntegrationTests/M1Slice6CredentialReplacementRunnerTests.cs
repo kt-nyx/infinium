@@ -35,8 +35,16 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                 "m1-slice6-development-campaign-amendment.v6.schema.json")),
             M1Slice6SuccessorCredentialReplacementRunner.TypedFailureRecoveryAmendmentSchema);
         using JsonDocument owner = JsonDocument.Parse(ownerBytes);
+        string productRoot = Path.Combine(
+            repository, "artifacts", "m1-slice6", "successor-product-state");
+        string checkpointBefore =
+            M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(productRoot);
         M1Slice6SuccessorCredentialReplacementRunner.ValidateTypedFailureRecoveryOwner(
             repository, owner.RootElement, "g-e6b6a3f21ad74108ba65955850349f83");
+        M1Slice6SuccessorCredentialReplacementRunner.ValidateTypedFailureRecoveryOwner(
+            repository, owner.RootElement, "g-e6b6a3f21ad74108ba65955850349f83");
+        Assert.AreEqual(checkpointBefore,
+            M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(productRoot));
 
         JsonObject tampered = JsonNode.Parse(ownerBytes)!.AsObject();
         tampered["correction"]!["consumed_helper_launches"] = 2;

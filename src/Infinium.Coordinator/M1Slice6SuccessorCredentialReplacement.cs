@@ -1415,10 +1415,14 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         const string retainedOperation =
             "m1s6-credential-replacement-5bba03b2f399640c13c0432cab823a05";
         string productRoot = Path.Combine(repository, "artifacts", "m1-slice6", "successor-product-state");
-        using AuthoritativeStore store = new(new StoragePaths(productRoot));
-        CredentialProfileProjection current = store.GetCredentialProfile(
-            "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e");
-        string retainedStaging = Path.Combine(store.Paths.Staging, retainedOperation);
+        CredentialReplacementRecoveryAudit audit =
+            AuthoritativeStore.ReadCredentialReplacementRecoveryAuditReadOnly(
+                productRoot,
+                "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e",
+                successorGeneration,
+                retainedOperation);
+        CredentialProfileProjection current = audit.Projection;
+        string retainedStaging = Path.Combine(productRoot, "staging", retainedOperation);
         if (priorOwnerPath != exactPriorOwnerPath
             || failurePath != exactFailurePath
             || priorOwner.GetProperty("id").GetString()
@@ -1462,15 +1466,14 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             || correction.GetProperty("terminal_receipt").GetString() != "absent"
             || recovery.GetProperty("successor_generation_id").GetString() != successorGeneration
             || recovery.GetProperty("assignment_kind").GetString() != "Replace"
-            || !store.HasExactCredentialReplacementHelperLaunchAdmission(retainedOperation)
+            || audit.PriorHelperLaunchAdmissionCount != 1
             || Directory.Exists(retainedStaging)
             || current.GenerationId != "g-ff6d82e7a7d244f6b8a9d0164991be37"
             || current.GenerationOrdinal != 1
             || current.LifecycleState != "delete-pending"
             || current.VerificationState != "unavailable"
             || current.CleanupDisposition != "failed"
-            || !store.CredentialGenerationExists(current.ProfileId, successorGeneration)
-            || store.CredentialGenerationOrdinal(current.ProfileId, successorGeneration) != 2)
+            || audit.SuccessorGenerationOrdinal != 2)
         {
             throw new InvalidDataException(
                 "The exact retained typed-failure cleanup-recovery lineage is stale.");

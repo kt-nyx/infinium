@@ -2,6 +2,11 @@ using Microsoft.Data.Sqlite;
 
 namespace Infinium.Persistence;
 
+public sealed record CredentialReplacementRecoveryAudit(
+    CredentialProfileProjection Projection,
+    long? SuccessorGenerationOrdinal,
+    long PriorHelperLaunchAdmissionCount);
+
 public sealed partial class AuthoritativeStore
 {
     public static CredentialProfileProjection ReadCredentialProfileProjectionReadOnly(
@@ -58,6 +63,88 @@ public sealed partial class AuthoritativeStore
             queryOnly.CommandText = "PRAGMA query_only=ON;";
             queryOnly.ExecuteNonQuery();
         }
+        CredentialProfileProjection projection = ReadCredentialProfileProjection(readOnly, profileId);
+        sqliteVfs.VerifyAllGuards();
+        return projection;
+    }
+
+    public static CredentialReplacementRecoveryAudit ReadCredentialReplacementRecoveryAuditReadOnly(
+        string productRoot,
+        string profileId,
+        string successorGenerationId,
+        string priorAttemptId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(productRoot);
+        ValidateCredentialIdentity(profileId, nameof(profileId));
+        ValidateCredentialIdentity(successorGenerationId, nameof(successorGenerationId));
+        ValidateCredentialIdentity(priorAttemptId, nameof(priorAttemptId));
+        string exactRoot = Path.GetFullPath(productRoot);
+        if (!Path.IsPathFullyQualified(productRoot))
+        {
+            throw new ArgumentException("The product root must be absolute.", nameof(productRoot));
+        }
+        string databasePath = Path.Combine(exactRoot, "data", "infinium.sqlite3");
+        using StoragePaths paths = new(exactRoot);
+        paths.BindExistingWriteClass(ProductWriteClass.Data);
+        using WindowsGuardedSqliteVfs sqliteVfs = new(paths, ProductWriteClass.Data, "infinium.sqlite3");
+        string immutableDatabaseUri = "file:"
+            + new Uri(databasePath).GetComponents(UriComponents.Path, UriFormat.UriEscaped)
+            + "?immutable=1";
+        using SqliteConnection source = new(new SqliteConnectionStringBuilder
+        {
+            DataSource = immutableDatabaseUri,
+            Mode = SqliteOpenMode.ReadOnly,
+            Cache = SqliteCacheMode.Private,
+            Pooling = false,
+            Vfs = sqliteVfs.Name,
+        }.ToString());
+        source.Open();
+        using SqliteConnection readOnly = new(new SqliteConnectionStringBuilder
+        {
+            DataSource = ":memory:",
+            Mode = SqliteOpenMode.Memory,
+            Pooling = false,
+        }.ToString());
+        readOnly.Open();
+        source.BackupDatabase(readOnly);
+        using (SqliteCommand queryOnly = readOnly.CreateCommand())
+        {
+            queryOnly.CommandText = "PRAGMA query_only=ON;";
+            queryOnly.ExecuteNonQuery();
+        }
+        CredentialProfileProjection projection = ReadCredentialProfileProjection(readOnly, profileId);
+        long? successorOrdinal;
+        using (SqliteCommand generation = readOnly.CreateCommand())
+        {
+            generation.CommandText =
+                "SELECT generation_ordinal FROM provider_generations "
+                + "WHERE profile_id=$profile AND generation_id=$generation;";
+            generation.Parameters.AddWithValue("$profile", profileId);
+            generation.Parameters.AddWithValue("$generation", successorGenerationId);
+            object? value = generation.ExecuteScalar();
+            successorOrdinal = value is null or DBNull
+                ? null
+                : Convert.ToInt64(value, System.Globalization.CultureInfo.InvariantCulture);
+        }
+        long launchAdmissions;
+        using (SqliteCommand admission = readOnly.CreateCommand())
+        {
+            admission.CommandText =
+                "SELECT COUNT(*) FROM audit_events "
+                + "WHERE event_kind='credential-replacement-helper-launch-admitted' "
+                + "AND object_kind='helper-attempt' AND object_id=$attempt;";
+            admission.Parameters.AddWithValue("$attempt", priorAttemptId);
+            launchAdmissions = Convert.ToInt64(
+                admission.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture);
+        }
+        sqliteVfs.VerifyAllGuards();
+        return new(projection, successorOrdinal, launchAdmissions);
+    }
+
+    private static CredentialProfileProjection ReadCredentialProfileProjection(
+        SqliteConnection readOnly,
+        string profileId)
+    {
         using SqliteCommand command = readOnly.CreateCommand();
         command.CommandText =
             """
@@ -87,7 +174,6 @@ public sealed partial class AuthoritativeStore
         {
             throw new InvalidDataException("The authoritative credential profile projection is ambiguous.");
         }
-        sqliteVfs.VerifyAllGuards();
         return projection;
     }
 
