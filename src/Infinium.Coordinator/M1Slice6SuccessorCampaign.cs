@@ -1798,8 +1798,7 @@ internal static class M1Slice6SuccessorCampaignRunner
         M1Slice6SuccessorCampaignLedgerV3 ledger = OpenActiveLedger(
             campaign, hardBudget, ledgerPath, now, requireExisting: true);
         if (ledger.Current.State != M1Slice6SuccessorCampaignV3State.AttemptEvidenceHandoff
-            || ledger.Current.Attempt != attempt || ledger.Current.FailureDisposition.Length != 0
-            || attempt.Stage == M1Slice6CampaignStage.Qualification)
+            || ledger.Current.Attempt != attempt || ledger.Current.FailureDisposition.Length != 0)
         { throw new InvalidOperationException("Offline recovery requires one exact first-valid semantic handoff."); }
         byte[] originalBytes = File.ReadAllBytes(Path.GetFullPath(originalEvidencePath));
         string originalSha = M1Slice6SuccessorAuthorityLoader.Hash(originalBytes);
@@ -2462,9 +2461,13 @@ internal static class M1Slice6SuccessorCampaignRunner
         using JsonDocument document = JsonDocument.Parse(bytes);
         JsonElement root = document.RootElement;
         JsonElement semantic = root.GetProperty("semantic");
-        string expected = attempt.Stage == M1Slice6CampaignStage.SourceClaimExtraction
-            ? "infinium.host.source-claim-admission/v1"
-            : "infinium.host.candidate-investigation-admission/v1";
+        string expected = attempt.Stage switch
+        {
+            M1Slice6CampaignStage.Qualification => "qualification-nonsemantic",
+            M1Slice6CampaignStage.SourceClaimExtraction => "infinium.host.source-claim-admission/v1",
+            M1Slice6CampaignStage.CandidateInvestigation => "infinium.host.candidate-investigation-admission/v1",
+            _ => "",
+        };
         if (M1Slice6SuccessorAuthorityLoader.Text(root, "campaign_id") != campaign.CampaignId
             || M1Slice6SuccessorAuthorityLoader.Text(root, "campaign_manifest_sha256") != campaign.ManifestSha256
             || M1Slice6SuccessorAuthorityLoader.Text(root, "attempt_id") != attempt.AttemptId

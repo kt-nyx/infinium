@@ -97,14 +97,16 @@ internal static class M1Slice6CampaignSemanticAdmission
     internal static M1Slice6CampaignSemanticAdmissionReceipt Admit(
         AuthoritativeStore store, M1Slice6CampaignStageAuthority authority,
         M1Slice6CampaignAccountingAdmission admission, OpenAiResponsesResult response,
-        DateTimeOffset occurredAt)
+        DateTimeOffset occurredAt, bool successorV6 = false)
     {
         ArgumentNullException.ThrowIfNull(store);
         string inputJson = ExtractUntrustedInput(authority.CanonicalRequest);
         byte[] rawResponse = response.RawResponseBytes
             ?? throw new InvalidDataException("Semantic admission requires retained raw response bytes.");
         string rawResponseSha256 = Convert.ToHexStringLower(SHA256.HashData(rawResponse));
-        string outputJson = ExtractOutputText(rawResponse);
+        string outputJson = successorV6
+            ? ExtractSuccessorV6OutputText(rawResponse)
+            : ExtractOutputText(rawResponse);
         return authority.Stage switch
         {
             M1Slice6CampaignStage.Qualification => AdmitQualification(outputJson),
@@ -817,5 +819,33 @@ internal static class M1Slice6CampaignSemanticAdmission
         }
         return content[0].GetProperty("text").GetString()
             ?? throw new InvalidDataException("The retained response output_text is absent.");
+    }
+
+    internal static string ExtractSuccessorV6OutputText(ReadOnlySpan<byte> rawResponse)
+    {
+        using JsonDocument response = JsonDocument.Parse(rawResponse.ToArray());
+        JsonElement[] output = response.RootElement.GetProperty("output").EnumerateArray().ToArray();
+        JsonElement[] messages = output.Where(item =>
+            item.ValueKind == JsonValueKind.Object
+            && item.TryGetProperty("type", out JsonElement type)
+            && type.GetString() == "message").ToArray();
+        if (messages.Length != 1 || output.Any(item =>
+                item.GetProperty("type").GetString() is not ("reasoning" or "message")))
+        {
+            throw new InvalidDataException("The successor response has no unique output message.");
+        }
+        JsonElement message = messages[0];
+        if (message.TryGetProperty("phase", out JsonElement phase)
+            && phase.GetString() != "final_answer")
+        {
+            throw new InvalidDataException("The successor response message phase is not final_answer.");
+        }
+        JsonElement[] content = message.GetProperty("content").EnumerateArray().ToArray();
+        if (content.Length != 1 || content[0].GetProperty("type").GetString() != "output_text")
+        {
+            throw new InvalidDataException("The successor response has no unique output_text payload.");
+        }
+        return content[0].GetProperty("text").GetString()
+            ?? throw new InvalidDataException("The successor response output_text is absent.");
     }
 }

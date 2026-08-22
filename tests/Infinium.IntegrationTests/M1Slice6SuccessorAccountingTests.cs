@@ -16,6 +16,30 @@ public sealed class M1Slice6SuccessorAccountingTests
     private static readonly DateTimeOffset Start = new(2026, 8, 20, 18, 0, 0, TimeSpan.Zero);
 
     [TestMethod]
+    public void SuccessorV6SemanticReaderAdmitsCurrentReasoningEnvelopeWithoutBroadeningHistoricalReader()
+    {
+        byte[] raw = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            output = new object[]
+            {
+                new { type = "reasoning", id = "rs_test", summary = Array.Empty<object>() },
+                new
+                {
+                    type = "message",
+                    id = "msg_test",
+                    status = "completed",
+                    role = "assistant",
+                    phase = "final_answer",
+                    content = new[] { new { type = "output_text", text = "{\"ok\":true}", annotations = Array.Empty<object>() } },
+                },
+            },
+        });
+
+        Assert.AreEqual("{\"ok\":true}", M1Slice6CampaignSemanticAdmission.ExtractSuccessorV6OutputText(raw));
+        Assert.ThrowsExactly<InvalidDataException>(() => M1Slice6CampaignSemanticAdmission.ExtractOutputText(raw));
+    }
+
+    [TestMethod]
     public async Task SuccessorV6PersistsAndReplaysUsageAboveHistoricalSqlCeilings()
     {
         string root = Path.Combine(Path.GetTempPath(), "infinium-successor-v6-accounting-" + Guid.NewGuid().ToString("N"));

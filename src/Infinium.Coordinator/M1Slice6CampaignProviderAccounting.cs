@@ -545,7 +545,7 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
                     EnsureSuccessorSemanticBinding(authority, admission, responseId,
                         campaignId, result.CompletedAtUtc.AddTicks(2));
                     v6Semantic = M1Slice6CampaignSemanticAdmission.Admit(store, authority, admission,
-                        response, result.CompletedAtUtc.AddTicks(3));
+                        response, result.CompletedAtUtc.AddTicks(3), successorV6: true);
                 }
                 catch (Exception exception) when (exception is InvalidDataException or InvalidOperationException)
                 {
@@ -874,7 +874,7 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         { SemanticOperationId = semanticOperation, SemanticAuthorizationId = semanticAuthorization };
         EnsureSuccessorSemanticBinding(authority, admission, responseId, campaignId, now.AddTicks(1));
         M1Slice6CampaignSemanticAdmissionReceipt semantic = M1Slice6CampaignSemanticAdmission.Admit(
-            store, authority, admission, replay, now.AddTicks(2));
+            store, authority, admission, replay, now.AddTicks(2), successorV6);
         return new(responseId, operation.UsageEntryId, operation.SettlementId,
             operation.ReplayEdgeId, Required(replay.Usage.CalculatedNanoUsd, "recovered calculated cost"),
             0, false, true, semantic, "");
