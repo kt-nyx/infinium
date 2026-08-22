@@ -2037,8 +2037,15 @@ internal static class M1Slice6SuccessorCampaignRunner
                 || M1Slice6SuccessorAuthorityLoader.HashFile(reviewPath)
                     != campaign.CredentialAccessAuthoritySha256)
             { throw new InvalidDataException("Development correction acceptance requires the exact owner continuation."); }
+            string defectId = attempt.Stage switch
+            {
+                M1Slice6CampaignStage.Qualification => "credential-input-truncation-fixed",
+                M1Slice6CampaignStage.SourceClaimExtraction => "source-claim-stage-local-defect-corrected",
+                M1Slice6CampaignStage.CandidateInvestigation => "candidate-investigation-stage-local-defect-corrected",
+                _ => throw new InvalidOperationException("Development correction stage is not closed."),
+            };
             ledger.RecordOfflineCorrectionReview(campaign.CredentialAccessAuthorityId,
-                campaign.CredentialAccessAuthoritySha256, "credential-input-truncation-fixed", now.AddTicks(1));
+                campaign.CredentialAccessAuthoritySha256, defectId, now.AddTicks(1));
             return;
         }
         M1Slice6SuccessorIndependentReview review = M1Slice6SuccessorAuthorityLoader.Review(
