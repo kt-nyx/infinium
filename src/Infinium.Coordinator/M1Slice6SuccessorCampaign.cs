@@ -670,12 +670,12 @@ internal static class M1Slice6SuccessorAuthorityLoader
         ValidateProductStateSnapshot(repository, originPath, sourceProductRoot, productRoot);
         CredentialProfileProjection projection =
             AuthoritativeStore.ReadCredentialProfileProjectionReadOnly(productRoot, Text(credential, "profile_id"));
-        if (projection.GenerationId != Text(credential, "generation_id")
-            || projection.GenerationOrdinal != 2 || projection.LifecycleState != "active-verified"
-            || projection.VerificationState != "available" || projection.CleanupDisposition != "not-requested"
-            || requireRolloverBaseline
-                && ComputeProductStateCheckpointSha256(productRoot)
-                    != Text(productState, "current_checkpoint_sha256"))
+        if (requireRolloverBaseline
+            && (projection.GenerationId != Text(credential, "generation_id")
+                || projection.GenerationOrdinal != 2 || projection.LifecycleState != "active-verified"
+                || projection.VerificationState != "available" || projection.CleanupDisposition != "not-requested"
+                || ComputeProductStateCheckpointSha256(productRoot)
+                    != Text(productState, "current_checkpoint_sha256")))
         { throw new InvalidDataException("The generation-2 product-state projection is not exact active-verified authority."); }
 
         _ = Utc(Text(root, "prepared_at_utc"));

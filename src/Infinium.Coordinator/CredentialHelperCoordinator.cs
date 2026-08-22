@@ -560,16 +560,20 @@ public sealed class CredentialHelperCoordinator
             ?? throw new InvalidDataException("Replacement cleanup profile identity is required.");
         string successorGeneration = work.GenerationId?.Value
             ?? throw new InvalidDataException("Replacement cleanup successor identity is required.");
+        long successorOrdinal = checked((long)work.GenerationOrdinal);
+        long predecessorOrdinal = successorOrdinal - 1;
         CredentialProfileProjection current = store.GetCredentialProfile(profileId);
         string predecessorGeneration = bootstrap.Bootstrap.Credential?.GenerationId?.Value
             ?? throw new InvalidDataException("Replacement cleanup predecessor identity is required.");
-        if (current.GenerationId != predecessorGeneration || current.GenerationOrdinal != 1
+        if (current.GenerationId != predecessorGeneration || current.GenerationOrdinal != predecessorOrdinal
             || current.LifecycleState != "delete-pending" || current.VerificationState != "unavailable"
             || current.CleanupDisposition != "failed"
-            || work.GenerationOrdinal != 2 || successorGeneration == predecessorGeneration
+            || successorOrdinal < 2 || successorGeneration == predecessorGeneration
             || work.Credential?.AccessProfileId?.Value != profileId
             || work.Credential?.GenerationId?.Value != successorGeneration
             || bootstrap.Bootstrap.Credential?.AccessProfileId?.Value != profileId
+            || !store.CredentialGenerationExists(profileId, successorGeneration)
+            || store.CredentialGenerationOrdinal(profileId, successorGeneration) != successorOrdinal
             || !store.IsCredentialReplacementCleanupRecovery(
                 profileId, predecessorGeneration, successorGeneration))
         {
@@ -725,6 +729,8 @@ public sealed class CredentialHelperCoordinator
             ?? throw new InvalidDataException("Replacement cleanup profile identity is required.");
         string successorGeneration = work.GenerationId?.Value
             ?? throw new InvalidDataException("Replacement cleanup successor identity is required.");
+        long successorOrdinal = checked((long)work.GenerationOrdinal);
+        long predecessorOrdinal = successorOrdinal - 1;
         string predecessorGeneration = bootstrap.Bootstrap.Credential?.GenerationId?.Value
             ?? throw new InvalidDataException("Replacement cleanup predecessor identity is required.");
         CredentialProfileProjection current = store.GetCredentialProfile(profileId);
@@ -733,10 +739,12 @@ public sealed class CredentialHelperCoordinator
             throw new InvalidDataException("Replacement cleanup completion lacks its exact one-shot launch admission.");
         }
         if (work.AssignmentKind != HelperAssignmentKindV2.Replace
-            || current.GenerationId != predecessorGeneration || current.GenerationOrdinal != 1
+            || current.GenerationId != predecessorGeneration || current.GenerationOrdinal != predecessorOrdinal
             || current.LifecycleState != "delete-pending" || current.VerificationState != "unavailable"
             || current.CleanupDisposition != "failed"
             || successorGeneration == predecessorGeneration
+            || !store.CredentialGenerationExists(profileId, successorGeneration)
+            || store.CredentialGenerationOrdinal(profileId, successorGeneration) != successorOrdinal
             || !store.IsCredentialReplacementCleanupRecovery(
                 profileId, predecessorGeneration, successorGeneration))
         {
@@ -802,7 +810,11 @@ public sealed class CredentialHelperCoordinator
             ?? throw new InvalidDataException("Replacement cleanup replay profile identity is required.");
         string successorGeneration = work.GenerationId?.Value
             ?? throw new InvalidDataException("Replacement cleanup replay successor identity is required.");
-        if (!store.HasExactCredentialReplacementHelperLaunchAdmission(attemptId))
+        long successorOrdinal = checked((long)work.GenerationOrdinal);
+        long predecessorOrdinal = successorOrdinal - 1;
+        if (!store.HasExactCredentialReplacementHelperLaunchAdmission(attemptId)
+            || !store.CredentialGenerationExists(profileId, successorGeneration)
+            || store.CredentialGenerationOrdinal(profileId, successorGeneration) != successorOrdinal)
         {
             throw new InvalidDataException("Replacement cleanup replay lacks its exact one-shot launch admission.");
         }
@@ -813,14 +825,16 @@ public sealed class CredentialHelperCoordinator
         CredentialProfileProjection current = store.GetCredentialProfile(profileId);
         if (helper.Process.Receipt.Outcome != HelperOutcomeV2.Completed)
         {
-            if (current.LifecycleState != "delete-pending" || current.VerificationState != "unavailable"
+            if (CredentialTargetFingerprint(profileId, current.GenerationId) != predecessorFingerprint
+                || current.GenerationOrdinal != predecessorOrdinal
+                || current.LifecycleState != "delete-pending" || current.VerificationState != "unavailable"
                 || current.CleanupDisposition != "failed")
             {
                 throw new InvalidDataException("A stopped replacement cleanup replay changed its durable lineage.");
             }
             return (helper, current);
         }
-        if (current.GenerationId == successorGeneration && current.GenerationOrdinal == 2
+        if (current.GenerationId == successorGeneration && current.GenerationOrdinal == successorOrdinal
             && current.LifecycleState == "active-verified" && current.VerificationState == "available")
         {
             if (!HasExactReplacementCleanupRecoveryLineage(
@@ -831,7 +845,7 @@ public sealed class CredentialHelperCoordinator
             }
             return (helper, current);
         }
-        if (current.GenerationId == successorGeneration && current.GenerationOrdinal == 2
+        if (current.GenerationId == successorGeneration && current.GenerationOrdinal == successorOrdinal
             && current.LifecycleState == "active-unverified" && current.VerificationState == "unavailable"
             && current.CleanupDisposition == "not-requested")
         {
@@ -844,7 +858,9 @@ public sealed class CredentialHelperCoordinator
             return (helper, VerifyReplacementCleanupCompletion(
                 attemptId, current, now));
         }
-        if (current.GenerationOrdinal != 1 || current.LifecycleState != "delete-pending"
+        if (CredentialTargetFingerprint(profileId, current.GenerationId) != predecessorFingerprint
+            || current.GenerationOrdinal != predecessorOrdinal
+            || current.LifecycleState != "delete-pending"
             || current.VerificationState != "unavailable" || current.CleanupDisposition != "failed"
             || !store.IsCredentialReplacementCleanupRecovery(
                 profileId, current.GenerationId, successorGeneration))

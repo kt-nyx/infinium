@@ -35,6 +35,22 @@ continuation verification profile, and the accepted
 
 ## 1. Purpose and current authority
 
+## 2026-08-21 practical-development supersession
+
+The owner-authorized [practical development continuation](development-continuation.md)
+supersedes this plan's remaining per-correction authority/review rebinding,
+credential-generation churn, and ceremony-specific retry prohibitions for
+ordinary Slice 6 defects. The sequence-44 ledger prefix and its conservative
+accounting remain immutable. The existing reserved generation 3 may be
+completed through the corrected masked helper without another credential
+generation or recovery-protocol/schema revision. Focused correction checks and
+one consolidated stable-boundary review are sufficient before live use.
+
+This does not relax secret non-exposure, Credential Manager-only persistence,
+the USD 10.00 aggregate hard limit, sequential calls, conservative accounting,
+first-structurally-valid result authority, answer isolation, private-fixture
+denial, archive/push/destructive boundaries, or the Slice 7 prohibition.
+
 The owner-authorized
 [hard-budget continuation amendment](m1-slice6-development-campaign-amendment.v2.json)
 supersedes this plan's finite five-start ceiling, repeated-defect stop, fixed

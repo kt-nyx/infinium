@@ -601,6 +601,21 @@ if (args is ["--m1-slice6-successor-credential-replacement",
     }
 }
 
+if (args is ["--m1-slice6-development-credential-enrollment"])
+{
+    try
+    {
+        return await M1Slice6SuccessorCredentialReplacementRunner.RunDevelopmentEnrollmentAsync(
+            CancellationToken.None).ConfigureAwait(false);
+    }
+    catch (Exception exception)
+    {
+        Console.Error.WriteLine(
+            $"M1 Slice 6 development credential enrollment stopped: {exception.GetType().Name}");
+        return 2;
+    }
+}
+
 if (args is ["--credential-native-qualification-v2", "--manifest", string nativeManifest,
     "--manifest-sha256", string nativeManifestSha256,
     "--output-root", string nativeOutputRoot])

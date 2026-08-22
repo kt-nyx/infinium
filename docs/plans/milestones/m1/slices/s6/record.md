@@ -9551,3 +9551,27 @@ M1_S6_CAMPAIGN_STAGE_ADMISSION candidate_commit=572a3342ac6537d42a1041e9f8a5878c
   provider effect occurred during authority construction, review, or ledger
   rollover. Fresh WP9 ordinal 9 is the next eligible package; C2C, C2D, C3,
   and Slice 7 remain unopened.
+
+## 2026-08-21 practical development continuation from sequence 44
+
+- WP9 ordinal 9 and the later generation-3 credential-entry mismatch are
+  retained unchanged. Ledger v4 remains at sequence 44/event
+  `5dc8b3f2797620b305e3616d950c62e7b2f59d5b7c1ff6ce0a84f87b09e55e16`,
+  whole-file SHA-256
+  `232d0bc9d7f9a61f1cd87c9346cb2268aee6ea28e4be96a0e072df04ecbb4e27`.
+  Total committed exposure is USD 1.02064, outstanding reservation is zero,
+  and USD 8.97936 remains.
+- The owner superseded further credential-generation, campaign/ledger-version,
+  recovery-protocol, evidence-schema, and per-correction authority/review churn
+  for ordinary Slice 6 development. Historical bytes are not reinterpreted or
+  rewritten.
+- The active implementation reuses reserved generation 3. Its masked native
+  surface displays only a safe character count and admits Submit only at the
+  exact 164-character bound. The development command carries no credential
+  argument or environment value. Credential bytes remain confined to transient
+  helper memory and Windows Credential Manager; sanitized evidence contains no
+  credential or credential-derived public digest.
+- The aggregate USD 10.00 limit, conservative accounting, sequential calls,
+  no uncontrolled retry, first-structurally-valid stage result, answer
+  isolation, private-fixture/archive/push/destructive prohibitions, and Slice 7
+  boundary remain mandatory.

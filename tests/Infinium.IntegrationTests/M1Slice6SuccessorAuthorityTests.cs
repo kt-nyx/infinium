@@ -38,9 +38,10 @@ public sealed class M1Slice6SuccessorAuthorityTests
         string campaignPath = Path.Combine(slice, "m1-slice6-successor-campaign-authorization.v7.json");
         string campaignSha = M1Slice6SuccessorAuthorityLoader.HashFile(campaignPath);
         M1Slice6SuccessorCampaignAuthority campaign =
-            M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
-        _ = M1Slice6SuccessorAuthorityLoader.Campaign(
-            campaignPath, campaignSha, requireRolloverBaseline: true);
+            M1Slice6SuccessorAuthorityLoader.Campaign(
+                campaignPath, campaignSha, requireRolloverBaseline: false);
+        Assert.ThrowsExactly<InvalidDataException>(() => M1Slice6SuccessorAuthorityLoader.Campaign(
+            campaignPath, campaignSha, requireRolloverBaseline: true));
         _ = M1Slice6SuccessorAuthorityLoader.Review(
             Path.Combine(slice, "m1-slice6-successor-campaign-v7-independent-review.v3.json"),
             "campaign-authority", campaign.CampaignId, campaign.ManifestSha256,
@@ -59,7 +60,7 @@ public sealed class M1Slice6SuccessorAuthorityTests
         Assert.AreEqual(2UL, (ulong)typeof(M1Slice6CampaignProductionStageBoundary)
             .GetField("generationOrdinal", BindingFlags.Instance | BindingFlags.NonPublic)!
             .GetValue(providerBoundary)!);
-        Assert.AreEqual("3ebb463346786506210498ea65c68af2768d2f73020e0e8e8b05c5d39b49f54e",
+        Assert.AreNotEqual("3ebb463346786506210498ea65c68af2768d2f73020e0e8e8b05c5d39b49f54e",
             M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(campaign.ProductStateRoot));
         string alternateRoot = Path.Combine(repository,
             ".infinium-rejected-v4-fork-" + Guid.NewGuid().ToString("N"));
@@ -111,7 +112,8 @@ public sealed class M1Slice6SuccessorAuthorityTests
                 "m1-slice6-successor-campaign-authorization.v7.json");
             string campaignSha = M1Slice6SuccessorAuthorityLoader.HashFile(campaignPath);
             M1Slice6SuccessorCampaignAuthority campaign =
-                M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+                M1Slice6SuccessorAuthorityLoader.Campaign(
+                    campaignPath, campaignSha, requireRolloverBaseline: false);
             string predecessor = Path.Combine(repository, "artifacts", "m1-slice6", "successor-campaign",
                 "ledger.v3.jsonl");
             string ledgerPath = Path.Combine(root, "ledger.v4.jsonl");

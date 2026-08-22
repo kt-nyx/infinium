@@ -82,7 +82,8 @@ public sealed class M1Slice6SuccessorAccountingTests
                 await using ProviderLoopbackServer server = new(highUsageResponse);
                 using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
                 OpenAiResponsesResult response = await adapter.SendSuccessorV6OnceAsync(canonical,
-                    "synthetic-secret"u8.ToArray(), new(1_000_000, 300_000, 10_000, 1_048_576,
+                    System.Text.Encoding.ASCII.GetBytes("sk-" + new string('a', 161)),
+                    new(1_000_000, 300_000, 10_000, 1_048_576,
                         1, reserved, 120_000), admission.RequestId, CancellationToken.None);
                 Assert.IsTrue(response.Admitted);
                 Assert.AreEqual(reserved, response.Usage.CalculatedNanoUsd.Value);

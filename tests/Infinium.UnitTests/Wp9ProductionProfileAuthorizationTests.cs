@@ -22,6 +22,15 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             ["--excluded-handle-probe", "123", "--spawn-containment-probe", "0"], out _));
         Assert.IsFalse(Wp9ProductionLaunchContract.TryParse(
             ["--spawn-containment-probe", "1", "--excluded-handle-probe", "123"], out _));
+        Assert.IsTrue(Wp9ProductionLaunchContract.TryParseEnrollment(
+            ["--excluded-handle-probe", "123", "--spawn-containment-probe", "1",
+                "--development-credential-continuation", "1"],
+            out Wp9ProductionLaunchOptions? developmentLaunch, out bool developmentContinuation));
+        Assert.AreEqual((nint)123, developmentLaunch!.ExcludedHandle);
+        Assert.IsTrue(developmentContinuation);
+        Assert.IsFalse(Wp9ProductionLaunchContract.TryParseEnrollment(
+            ["--excluded-handle-probe", "123", "--spawn-containment-probe", "1",
+                "--development-credential-continuation", "0"], out _, out _));
         Assert.AreEqual(new Wp9ProductionFailureClassification("launch-boundary", "containment-launch-failure"),
             Wp9ProductionFailureClassifier.ContainmentLaunch());
 
@@ -45,6 +54,14 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             ready, "submit", "submit-button", 32, 2560));
         Assert.IsTrue(Wp9ProductionEntryReadinessOracle.AdmitAction(
             ready, "cancel", "edit-escape", 0, 2560));
+        Assert.IsFalse(Wp9ProductionEntryReadinessOracle.AdmitExactLengthAction(
+            ready, "submit", "submit-button", 91, 2560, 164));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.AdmitExactLengthAction(
+            ready, "submit", "submit-button", 164, 2560, 164));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.AdmitExactLengthAction(
+            ready, "cancel", "edit-escape", 91, 2560, 164));
+        Assert.IsTrue(Wp9ProductionEntryReadinessOracle.AdmitExactLengthAction(
+            ready, "submit", "submit-button", 91, 2560, null));
         foreach (Wp9ProductionReadinessSnapshot mutation in new[]
         {
             ready with { HelperProcessOwned = false }, ready with { SameSession = false },
@@ -112,6 +129,38 @@ public sealed class Wp9ProductionProfileAuthorizationTests
     }
 
     [TestMethod]
+    public void DevelopmentContinuationBypassesOnlyTheObsoleteReplacementClock()
+    {
+        string root = RepositoryRoot();
+        string source = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "m1-slice6-successor-credential-replacement-generation-3-authorization.v2.json");
+        JsonObject expired = JsonNode.Parse(File.ReadAllBytes(source))!.AsObject();
+        expired["prepared_at_utc"] = "2026-08-20T00:00:00.0000000Z";
+        expired["not_before_utc"] = "2026-08-20T00:00:01.0000000Z";
+        expired["expires_at_utc"] = "2026-08-20T00:11:01.0000000Z";
+        string temporary = Path.Combine(Path.GetTempPath(),
+            "infinium-development-credential-clock-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(expired);
+            File.WriteAllBytes(temporary, bytes);
+            string sha = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(bytes));
+            string authorityId = expired["authority_id"]!.GetValue<string>();
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                WindowsCredentialManagerStore.FromProductionEnrollmentManifest(
+                    temporary, sha, authorityId));
+            using WindowsCredentialManagerStore store =
+                WindowsCredentialManagerStore.FromProductionEnrollmentManifest(
+                    temporary, sha, authorityId, developmentCredentialContinuation: true);
+            Assert.AreEqual(164, store.ExpectedCredentialCharacterLength);
+        }
+        finally
+        {
+            if (File.Exists(temporary)) { File.Delete(temporary); }
+        }
+    }
+
+    [TestMethod]
     public void RejectedPartialCredentialIsZeroedBeforeStoreAndRetainedOnlyForCanaryScanning()
     {
         const string manifestId = "infinium.m1-s6.test-generation3-replacement/manifest";
@@ -164,12 +213,16 @@ public sealed class Wp9ProductionProfileAuthorizationTests
             "SendMessageW(edit, EmLimitText, WindowsCredentialManagerStore.MaximumBlobBytes, 0)",
             editCreated, StringComparison.Ordinal);
         int editSubclass = source.IndexOf("editProcedure =", exactNativeLimit, StringComparison.Ordinal);
+        int safeCount = source.IndexOf("Characters: {displayedLength}", editSubclass, StringComparison.Ordinal);
+        int exactSubmitGate = source.IndexOf(
+            "Wp9ProductionEntryReadinessOracle.AdmitExactLengthAction", safeCount, StringComparison.Ordinal);
 
         Assert.IsTrue(loop >= 0);
         Assert.IsTrue(loop < topmost && topmost < notTopmost && notTopmost < bringToTop);
         Assert.IsTrue(bringToTop < setForeground && setForeground < setFocus && setFocus < measurement);
         Assert.IsTrue(measurement < loopEnd);
         Assert.IsTrue(editCreated >= 0 && editCreated < exactNativeLimit && exactNativeLimit < editSubclass);
+        Assert.IsTrue(editSubclass < safeCount && safeCount < exactSubmitGate);
 
         Wp9ProductionReadinessSnapshot foregroundDenied = new(
             true, true, true, true, true, true, true, true, true, true, false, true);

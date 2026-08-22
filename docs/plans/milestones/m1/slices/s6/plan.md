@@ -1,5 +1,11 @@
 # M1 Slice 6: Direct OpenAI credential, budget, and semantic operations
 
+> Active execution note (2026-08-21): the owner-authorized
+> [practical development continuation](development-continuation.md) supersedes
+> remaining credential-ceremony proliferation and per-correction authority or
+> independent-review requirements. This accepted plan continues to define
+> product meaning, stage order, answer isolation, and C3 obligations.
+
 Status: Accepted
 
 Disposition: Owner-accepted implementation authority; live handoff is

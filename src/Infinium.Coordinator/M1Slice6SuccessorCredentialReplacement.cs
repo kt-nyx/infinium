@@ -55,6 +55,32 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
     };
     private static readonly JsonSerializerOptions JsonLf = new(Json) { NewLine = "\n" };
 
+    internal static async Task<int> RunDevelopmentEnrollmentAsync(CancellationToken cancellationToken)
+    {
+        string coordinatorPath = Environment.ProcessPath
+            ?? throw new InvalidOperationException("The coordinator executable path is unavailable.");
+        string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(coordinatorPath);
+        string documents = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6");
+        string authorityPath = Path.Combine(documents,
+            "m1-slice6-successor-credential-replacement-generation-3-authorization.v2.json");
+        string reviewPath = Path.Combine(documents,
+            "m1-slice6-successor-credential-replacement-generation-3-review.v1.json");
+        string productStateRoot = Path.Combine(repository, "artifacts", "m1-slice6", "successor-product-state");
+        string ledgerPath = Path.Combine(repository, "artifacts", "m1-slice6", "successor-campaign", "ledger.v4.jsonl");
+        string helperPath = Path.Combine(repository, "src", "Infinium.CredentialHelper", "bin", "Release", "net10.0",
+            "Infinium.CredentialHelper.exe");
+        using FileStream enrollmentLock = AcquireDevelopmentEnrollmentLock(repository);
+        string commit = AssemblyCommit().Split('+')[^1];
+        string attemptId = DevelopmentAttemptIdentity(repository, commit);
+        string evidencePath = Path.Combine(repository, "artifacts", "m1-slice6",
+            "development-credential-continuation", commit + "-" + attemptId, "replacement-evidence.v3.json");
+        return await RunAsync(authorityPath, M1Slice6SuccessorAuthorityLoader.HashFile(authorityPath),
+            reviewPath, M1Slice6SuccessorAuthorityLoader.HashFile(reviewPath), productStateRoot,
+            ledgerPath, helperPath, M1Slice6SuccessorAuthorityLoader.HashFile(helperPath),
+            evidencePath, cancellationToken, developmentContinuation: true,
+            developmentAttemptId: attemptId).ConfigureAwait(false);
+    }
+
     internal static async Task<int> RunAsync(
         string authorityPath,
         string authoritySha256,
@@ -66,14 +92,17 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         string helperSha256,
         string evidencePath,
         CancellationToken cancellationToken,
-        ReplacementRunnerTestHooks? testHooks = null)
+        ReplacementRunnerTestHooks? testHooks = null,
+        bool developmentContinuation = false,
+        string? developmentAttemptId = null)
     {
         ReplacementFailureContext? failureContext = null;
         try
         {
             return await RunCoreAsync(authorityPath, authoritySha256, reviewPath, reviewSha256,
                 productStateRoot, ledgerPath, helperPath, helperSha256, evidencePath,
-                context => failureContext = context, testHooks, cancellationToken)
+                context => failureContext = context, testHooks, developmentContinuation,
+                developmentAttemptId, cancellationToken)
                 .ConfigureAwait(false);
         }
         catch (Exception exception)
@@ -107,6 +136,8 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         string evidencePath,
         Action<ReplacementFailureContext> admitFailureRetention,
         ReplacementRunnerTestHooks? testHooks,
+        bool developmentContinuation,
+        string? developmentAttemptId,
         CancellationToken cancellationToken)
     {
         authorityPath = Path.GetFullPath(authorityPath);
@@ -150,7 +181,15 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         DateTimeOffset expires = UtcZ(authority.GetProperty("expires_at_utc").GetString()!);
         DateTimeOffset reviewedAt = UtcZ(review.GetProperty("reviewed_at_utc").GetString()!);
         string authorityId = authority.GetProperty("authority_id").GetString()!;
-        string evidenceId = authority.GetProperty("evidence_id").GetString()!;
+        if (developmentContinuation
+            && (developmentAttemptId is null || developmentAttemptId.Length != 32
+                || !Guid.TryParseExact(developmentAttemptId, "N", out _)))
+        {
+            throw new InvalidDataException("The development credential attempt identity is not a fresh canonical UUID.");
+        }
+        string evidenceId = developmentContinuation
+            ? "infinium.m1-s6.development-credential-evidence/" + developmentAttemptId
+            : authority.GetProperty("evidence_id").GetString()!;
         string profileId = profile.GetProperty("access_profile_id").GetString()!;
         string predecessorGeneration = profile.GetProperty("predecessor_generation_id").GetString()!;
         string successorGeneration = profile.GetProperty("successor_generation_id").GetString()!;
@@ -158,12 +197,14 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         long predecessorOrdinal = successorOrdinal - 1;
         string predecessorFingerprint = profile.GetProperty("predecessor_target_fingerprint_sha256").GetString()!;
         string successorFingerprint = profile.GetProperty("successor_target_fingerprint_sha256").GetString()!;
-        string operationId = "m1s6-credential-replacement-" + authoritySha256[..32];
+        string operationId = developmentContinuation
+            ? "m1s6-development-credential-" + developmentAttemptId
+            : "m1s6-credential-replacement-" + authoritySha256[..32];
         if (authority.GetProperty("schema_identity").GetString() != authoritySchema
             || authoritySchema is not (AuthoritySchema or AuthoritySchemaV2)
             || authority.GetProperty("status").GetString() != "independently-reviewed-ready-for-owner-effect"
             || prepared > notBefore
-            || reviewedAt < prepared || reviewedAt > now || reviewedAt >= expires
+            || reviewedAt < prepared || (!developmentContinuation && reviewedAt > now) || reviewedAt >= expires
             || review.GetProperty("schema_identity").GetString() != ReviewSchema
             || review.GetProperty("verdict").GetString() != "accept"
             || !review.GetProperty("independent").GetBoolean()
@@ -190,6 +231,15 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                 Generation3ReplacementAmendmentSchema => ReplacementMode.Initial,
                 _ => ReplacementMode.Initial,
             };
+            if (developmentContinuation)
+            {
+                if (!generation3Replacement || ownerSchema != Generation3ReplacementAmendmentSchema)
+                {
+                    throw new InvalidDataException(
+                        "The development credential continuation requires the retained generation-3 package.");
+                }
+                mode = ReplacementMode.DeletePendingRecovery;
+            }
             string ownerSchemaFile = ownerSchema switch
             {
                 RecoveryAmendmentSchema => "m1-slice6-development-campaign-amendment.v4.schema.json",
@@ -206,7 +256,9 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             if (ownerDocument.RootElement.GetProperty("amendment_id").GetString()
                     != owner.GetProperty("id").GetString()
                 || ownerDocument.RootElement.GetProperty("status").GetString()
-                    != (mode switch
+                    != (developmentContinuation
+                        ? "owner-authorized-credential-replacement-generation-3"
+                        : mode switch
                     {
                         ReplacementMode.ReplacingRecovery => "owner-authorized-credential-replacement-recovery",
                         ReplacementMode.DeletePendingRecovery =>
@@ -218,7 +270,11 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             {
                 throw new InvalidDataException("The exact owner credential-replacement amendment is stale.");
             }
-            if (mode == ReplacementMode.ReplacingRecovery)
+            if (developmentContinuation)
+            {
+                ValidateGeneration3ReplacementOwner(repository, ownerDocument.RootElement);
+            }
+            else if (mode == ReplacementMode.ReplacingRecovery)
             {
                 JsonElement priorOwner = ownerDocument.RootElement.GetProperty("prior_owner_authority");
                 JsonElement failure = ownerDocument.RootElement.GetProperty("retained_failure");
@@ -308,14 +364,30 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             : Path.GetFullPath(testHooks.ClosedProductRoot);
         string expectedLedger = Path.GetFullPath(Path.Combine(repository,
             predecessor.GetProperty("path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
-        string expectedHelper = Path.GetFullPath(Path.Combine(repository,
-            release.GetProperty("helper_path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
+        string expectedHelper = developmentContinuation && testHooks is not null
+            ? helperPath
+            : developmentContinuation
+                ? Path.GetFullPath(Path.Combine(repository, "src", "Infinium.CredentialHelper", "bin", "Release",
+                    "net10.0", "Infinium.CredentialHelper.exe"))
+                : Path.GetFullPath(Path.Combine(repository,
+                    release.GetProperty("helper_path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
         string coordinatorPath = testHooks?.CoordinatorPath ?? Environment.ProcessPath
             ?? throw new InvalidOperationException("The coordinator executable path is unavailable.");
-        string expectedCoordinator = Path.GetFullPath(Path.Combine(repository,
-            release.GetProperty("coordinator_path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
-        string expectedEvidence = Path.GetFullPath(Path.Combine(repository,
-            effect.GetProperty("evidence_path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
+        string expectedCoordinator = developmentContinuation && testHooks is not null
+            ? Path.GetFullPath(coordinatorPath)
+            : developmentContinuation
+            ? Path.GetFullPath(Path.Combine(repository, "src", "Infinium.Coordinator", "bin", "Release", "net10.0",
+                "Infinium.Coordinator.exe"))
+            : Path.GetFullPath(Path.Combine(repository,
+                release.GetProperty("coordinator_path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
+        string expectedEvidence = developmentContinuation && testHooks is not null
+            ? evidencePath
+            : developmentContinuation
+            ? Path.GetFullPath(Path.Combine(repository, "artifacts", "m1-slice6",
+                "development-credential-continuation", AssemblyCommit().Split('+')[^1] + "-" + developmentAttemptId,
+                "replacement-evidence.v3.json"))
+            : Path.GetFullPath(Path.Combine(repository,
+                effect.GetProperty("evidence_path").GetString()!.Replace('/', Path.DirectorySeparatorChar)));
         string evidenceDirectory = Path.GetDirectoryName(evidencePath)!;
         bool exactRootCandidate = productStateRoot == expectedProductRoot && productStateRoot == closedProductRoot;
         bool replayBoundaryAlreadyDurable = exactRootCandidate && File.Exists(Path.Combine(
@@ -327,17 +399,23 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             || helperPath != expectedHelper || Path.GetFullPath(coordinatorPath) != expectedCoordinator
             || evidencePath != expectedEvidence || !Directory.Exists(productStateRoot)
             || !File.Exists(ledgerPath) || !File.Exists(helperPath) || File.Exists(evidencePath)
-            || evidenceDirectoryExists && (!replayBoundaryAlreadyDurable || !evidenceDirectoryIsEmpty))
+            || evidenceDirectoryExists && (!evidenceDirectoryIsEmpty
+                || !developmentContinuation && !replayBoundaryAlreadyDurable))
         {
             throw new InvalidDataException("The credential replacement effect roots differ from exact reviewed authority.");
         }
         string coordinatorSha = M1Slice6SuccessorAuthorityLoader.HashFile(coordinatorPath);
+        bool exactDevelopmentBuild = !developmentContinuation || testHooks is not null
+            || (ExecutableProductCommit(coordinatorPath) == AssemblyCommit().Split('+')[^1]
+                && ExecutableProductCommit(helperPath) == AssemblyCommit().Split('+')[^1]);
         if (M1Slice6SuccessorAuthorityLoader.HashFile(ledgerPath) != predecessor.GetProperty("sha256").GetString()
             || M1Slice6SuccessorAuthorityLoader.HashFile(helperPath) != helperSha256
-            || helperSha256 != release.GetProperty("helper_sha256").GetString()
-            || coordinatorSha != release.GetProperty("coordinator_sha256").GetString()
-            || !AssemblyCommit().EndsWith(release.GetProperty("implementation_commit").GetString()!,
-                StringComparison.Ordinal))
+            || !exactDevelopmentBuild
+            || (!developmentContinuation
+                && (helperSha256 != release.GetProperty("helper_sha256").GetString()
+                    || coordinatorSha != release.GetProperty("coordinator_sha256").GetString()
+                    || !AssemblyCommit().EndsWith(release.GetProperty("implementation_commit").GetString()!,
+                        StringComparison.Ordinal))))
         {
             throw new InvalidDataException("The reviewed replacement ledger or executable binding is stale.");
         }
@@ -345,47 +423,54 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         {
             JsonElement tail = tailDocument.RootElement;
             if (tail.GetProperty("sequence").GetInt64() != predecessor.GetProperty("sequence").GetInt64()
-                || tail.GetProperty("event_hash").GetString() != predecessor.GetProperty("event_hash").GetString())
+                || tail.GetProperty("event_hash").GetString() != predecessor.GetProperty("event_hash").GetString()
+                || generation3Replacement && (tail.GetProperty("sequence").GetInt64() != 44
+                    || tail.GetProperty("wp9_possible_starts").GetInt64() != 9
+                    || tail.GetProperty("wp10_possible_starts").GetInt64() != 0
+                    || tail.GetProperty("wp11_possible_starts").GetInt64() != 0
+                    || tail.GetProperty("wp9_authoritative").GetBoolean()
+                    || tail.GetProperty("wp10_authoritative").GetBoolean()
+                    || tail.GetProperty("wp11_authoritative").GetBoolean()
+                    || tail.GetProperty("successor_outstanding_reserved_nano_usd").GetInt64() != 0
+                    || tail.GetProperty("successor_unresolved_nano_usd").GetInt64() != 880_640_000
+                    || tail.GetProperty("prior_conservative_nano_usd").GetInt64()
+                        + tail.GetProperty("successor_unresolved_nano_usd").GetInt64()
+                        + tail.GetProperty("successor_settled_nano_usd").GetInt64() != 1_020_640_000))
             {
                 throw new InvalidDataException("The replacement predecessor is not the exact retained ledger tip.");
             }
         }
-        string campaignPath = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
-            generation3Replacement
-                ? "m1-slice6-successor-campaign-authorization.v7.json"
-                : "m1-slice6-successor-campaign-authorization.v6.json");
-        string amendmentPath = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
-            "m1-slice6-development-campaign-amendment.v2.json");
-        M1Slice6SuccessorCampaignAuthority campaign = M1Slice6SuccessorAuthorityLoader.Campaign(
-            campaignPath, M1Slice6SuccessorAuthorityLoader.HashFile(campaignPath));
-        M1Slice6HardBudgetAuthority hardBudget = M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(
-            amendmentPath, M1Slice6SuccessorAuthorityLoader.HashFile(amendmentPath), campaign);
-        M1Slice6SuccessorCampaignLedgerV3 validatedLedger = generation3Replacement
-            ? M1Slice6SuccessorCampaignRunner.OpenActiveLedger(
-                campaign, hardBudget, ledgerPath, now, requireExisting: true)
-            : M1Slice6SuccessorCampaignRunner.OpenHardBudgetLedger(
-                campaign, hardBudget, ledgerPath, now, requireExisting: true, amendmentReview: null);
-        long expectedLedgerSequence = generation3Replacement ? 44 : 39;
-        string expectedLedgerEvent = generation3Replacement
-            ? "5dc8b3f2797620b305e3616d950c62e7b2f59d5b7c1ff6ce0a84f87b09e55e16"
-            : "b5292326a65791731614a6ab75a0b838de121ea721d01d5489f4c2897f88dcc0";
-        long expectedWp9Starts = generation3Replacement ? 9 : 8;
-        long expectedUnresolved = generation3Replacement ? 880_640_000 : 770_560_000;
-        long expectedCommitted = generation3Replacement ? 1_020_640_000 : 910_560_000;
-        if (validatedLedger.Current.Sequence != expectedLedgerSequence
-            || validatedLedger.Current.EventHash != expectedLedgerEvent
-            || validatedLedger.Current.Wp9PossibleStarts != expectedWp9Starts
-            || validatedLedger.Current.Wp10PossibleStarts != 0
-            || validatedLedger.Current.Wp11PossibleStarts != 0
-            || validatedLedger.Current.Wp9Authoritative || validatedLedger.Current.Wp10Authoritative
-            || validatedLedger.Current.Wp11Authoritative
-            || validatedLedger.Current.SuccessorOutstandingReservedNanoUsd != 0
-            || validatedLedger.Current.SuccessorUnresolvedNanoUsd != expectedUnresolved
-            || validatedLedger.CommittedNanoUsd != expectedCommitted)
+        if (!generation3Replacement)
         {
-            throw new InvalidDataException("The replacement ledger does not preserve its exact accounting predecessor.");
+            string campaignPath = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+                "m1-slice6-successor-campaign-authorization.v6.json");
+            string amendmentPath = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+                "m1-slice6-development-campaign-amendment.v2.json");
+            M1Slice6SuccessorCampaignAuthority campaign = M1Slice6SuccessorAuthorityLoader.Campaign(
+                campaignPath, M1Slice6SuccessorAuthorityLoader.HashFile(campaignPath));
+            M1Slice6HardBudgetAuthority hardBudget = M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(
+                amendmentPath, M1Slice6SuccessorAuthorityLoader.HashFile(amendmentPath), campaign);
+            M1Slice6SuccessorCampaignLedgerV3 validatedLedger = M1Slice6SuccessorCampaignRunner.OpenHardBudgetLedger(
+                campaign, hardBudget, ledgerPath, now, requireExisting: true, amendmentReview: null);
+            if (validatedLedger.Current.Sequence != 39
+                || validatedLedger.Current.EventHash
+                    != "b5292326a65791731614a6ab75a0b838de121ea721d01d5489f4c2897f88dcc0"
+                || validatedLedger.Current.Wp9PossibleStarts != 8
+                || validatedLedger.Current.Wp10PossibleStarts != 0
+                || validatedLedger.Current.Wp11PossibleStarts != 0
+                || validatedLedger.Current.Wp9Authoritative || validatedLedger.Current.Wp10Authoritative
+                || validatedLedger.Current.Wp11Authoritative
+                || validatedLedger.Current.SuccessorOutstandingReservedNanoUsd != 0
+                || validatedLedger.Current.SuccessorUnresolvedNanoUsd != 770_560_000
+                || validatedLedger.CommittedNanoUsd != 910_560_000)
+            {
+                throw new InvalidDataException(
+                    "The replacement ledger does not preserve its exact accounting predecessor.");
+            }
         }
-        string beforeCheckpoint = state.GetProperty("checkpoint_sha256").GetString()!;
+        string beforeCheckpoint = developmentContinuation
+            ? M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(productStateRoot)
+            : state.GetProperty("checkpoint_sha256").GetString()!;
         string stagedReceiptPath = Path.Combine(productStateRoot, "staging", operationId, "helper-receipt.v2.pb");
         string stagedBoundaryPath = Path.Combine(productStateRoot, "staging", operationId,
             AuthoritativeStore.CredentialReplacementBoundaryFileName);
@@ -397,7 +482,9 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                 "A replacement receipt without its validated helper boundary cannot authorize replay.");
         }
         bool stagedReplay = boundaryExists;
-        if (!stagedReplay && (now < notBefore || now >= expires))
+        DateTimeOffset effectNotBefore = developmentContinuation ? now.AddSeconds(-1) : notBefore;
+        DateTimeOffset effectExpires = developmentContinuation ? now.AddMinutes(11) : expires;
+        if (!stagedReplay && (now < effectNotBefore || now >= effectExpires))
         {
             throw new InvalidDataException("The credential replacement effect window is not live.");
         }
@@ -419,13 +506,13 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                 && current.GenerationId == predecessorGeneration && current.GenerationOrdinal == 1
                 && current.LifecycleState == "replacing" && current.VerificationState == "unavailable";
             bool exactDeletePendingRecovery = mode == ReplacementMode.DeletePendingRecovery
-                && current.GenerationId == predecessorGeneration && current.GenerationOrdinal == 1
+                && current.GenerationId == predecessorGeneration && current.GenerationOrdinal == predecessorOrdinal
                 && current.LifecycleState == "delete-pending" && current.VerificationState == "unavailable"
                 && current.CleanupDisposition == "failed"
                 && store.IsCredentialReplacementCleanupRecovery(
                     profileId, predecessorGeneration, successorGeneration);
             bool exactPublishedReplay = stagedReplay && mode == ReplacementMode.DeletePendingRecovery
-                && current.GenerationId == successorGeneration && current.GenerationOrdinal == 2
+                && current.GenerationId == successorGeneration && current.GenerationOrdinal == successorOrdinal
                 && current.LifecycleState == "active-verified" && current.VerificationState == "available"
                 && store.HasExactCompletedCredentialTransition(
                     operationId + "-replacement-cleanup-recovered", profileId, successorGeneration,
@@ -434,7 +521,7 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                     operationId + "-verified-generation", profileId, successorGeneration,
                     "verify", "active-unverified", "active-verified", "active-verified", true);
             bool exactUnverifiedReplay = stagedReplay && mode == ReplacementMode.DeletePendingRecovery
-                && current.GenerationId == successorGeneration && current.GenerationOrdinal == 2
+                && current.GenerationId == successorGeneration && current.GenerationOrdinal == successorOrdinal
                 && current.LifecycleState == "active-unverified" && current.VerificationState == "unavailable"
                 && current.CleanupDisposition == "not-requested"
                 && store.HasExactCompletedCredentialTransition(
@@ -512,17 +599,17 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             if (stagedReplay)
             {
                 CredentialHelperCoordinator coordinator = new(store);
-                (helper, projection) = generation3Replacement
-                    ? coordinator.RecoverVerifiedSuccessorReplacement(
-                        repository, operationId, assignment, predecessorGeneration,
-                        predecessorFingerprint, successorFingerprint, helperSha256, now)
-                    : coordinator.RecoverVerifiedReplacementCleanup(
+                (helper, projection) = cleanupRecovery
+                    ? coordinator.RecoverVerifiedReplacementCleanup(
                         repository, operationId, assignment,
+                        predecessorFingerprint, successorFingerprint, helperSha256, now)
+                    : coordinator.RecoverVerifiedSuccessorReplacement(
+                        repository, operationId, assignment, predecessorGeneration,
                         predecessorFingerprint, successorFingerprint, helperSha256, now);
             }
             else
             {
-                DateTimeOffset helperExpiry = now.AddMinutes(11) < expires ? now.AddMinutes(11) : expires;
+                DateTimeOffset helperExpiry = effectExpires;
                 HelperPrivateFrameV2 bootstrap = Bootstrap(
                     profileId, predecessorGeneration, now, helperExpiry, authorityId);
                 using CancellationTokenSource effectDeadline =
@@ -542,15 +629,16 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
                 {
                     OneShotCredentialHelperLauncher launcher =
                         OneShotCredentialHelperLauncher.CreateSuccessorCredentialReplacement(
-                            helperPath, helperSha256, authorityPath, authoritySha256, authorityId);
+                            helperPath, helperSha256, authorityPath, authoritySha256, authorityId,
+                            developmentCredentialContinuation: developmentContinuation);
                     CredentialHelperCoordinator coordinator = new(store, launcher);
-                    (helper, projection) = generation3Replacement
-                        ? await coordinator.ExecuteVerifiedSuccessorReplacementAsync(
-                            repository, operationId, bootstrap, assignment, now,
-                            cancellationToken: effectDeadline.Token).ConfigureAwait(false)
-                        : cleanupRecovery
+                    (helper, projection) = cleanupRecovery
                         ? await coordinator.ExecuteVerifiedReplacementCleanupAsync(
                             operationId, bootstrap, assignment, now,
+                            cancellationToken: effectDeadline.Token).ConfigureAwait(false)
+                        : generation3Replacement
+                        ? await coordinator.ExecuteVerifiedSuccessorReplacementAsync(
+                            repository, operationId, bootstrap, assignment, now,
                             cancellationToken: effectDeadline.Token).ConfigureAwait(false)
                         : await coordinator.ExecuteVerifiedReplacementAsync(
                             operationId, bootstrap, assignment, now, effectDeadline.Token).ConfigureAwait(false);
@@ -2082,6 +2170,59 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
     private static string AssemblyCommit() => typeof(M1Slice6SuccessorCredentialReplacementRunner).Assembly
         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
         ?? throw new InvalidOperationException("The coordinator informational version is unavailable.");
+
+    private static string ExecutableProductCommit(string path)
+    {
+        string productVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(path).ProductVersion
+            ?? throw new InvalidDataException("A development credential executable has no product version.");
+        string commit = productVersion.Split('+')[^1];
+        if (commit.Length != 40 || !commit.All(char.IsAsciiHexDigit))
+        {
+            throw new InvalidDataException("A development credential executable is not bound to a Git commit.");
+        }
+        return commit.ToLowerInvariant();
+    }
+
+    private static string DevelopmentAttemptIdentity(string repository, string commit)
+    {
+        string root = Path.Combine(repository, "artifacts", "m1-slice6", "development-credential-continuation");
+        Directory.CreateDirectory(root);
+        string marker = Path.Combine(root, "active-attempt.v1.txt");
+        if (File.Exists(marker))
+        {
+            string[] retained = File.ReadAllText(marker, Encoding.ASCII).Trim().Split(':');
+            if (retained is [string retainedCommit, string retainedAttempt]
+                && retainedCommit == commit && Guid.TryParseExact(retainedAttempt, "N", out _))
+            {
+                string retainedEvidence = Path.Combine(root, retainedCommit + "-" + retainedAttempt,
+                    "replacement-evidence.v3.json");
+                if (!File.Exists(retainedEvidence))
+                {
+                    return retainedAttempt;
+                }
+            }
+        }
+        string attempt = Guid.NewGuid().ToString("N");
+        string temporary = Path.Combine(root, ".active-attempt-" + attempt + ".tmp");
+        using (FileStream stream = new(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None,
+                   bufferSize: 4096, FileOptions.WriteThrough))
+        {
+            byte[] bytes = Encoding.ASCII.GetBytes(commit + ":" + attempt + "\n");
+            stream.Write(bytes);
+            stream.Flush(flushToDisk: true);
+        }
+        File.Move(temporary, marker, overwrite: true);
+        return attempt;
+    }
+
+    internal static FileStream AcquireDevelopmentEnrollmentLock(string repository)
+    {
+        string root = Path.Combine(Path.GetFullPath(repository), "artifacts", "m1-slice6",
+            "development-credential-continuation");
+        Directory.CreateDirectory(root);
+        return new FileStream(Path.Combine(root, "enrollment.lock"), FileMode.OpenOrCreate,
+            FileAccess.ReadWrite, FileShare.None, bufferSize: 1, FileOptions.WriteThrough);
+    }
 
     private static JsonElement? ParseOptional(byte[]? bytes)
     {

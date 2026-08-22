@@ -19,6 +19,16 @@ requires them. Correction-count and no-retry rules belong only to an explicitly
 authorized evaluator, private-oracle, destructive, or externally effectful
 operation; they do not become the default for ordinary development.
 
+For the remaining M1 Slice 6 development, the owner-authorized
+[practical continuation](plans/milestones/m1/slices/s6/development-continuation.md)
+is the controlling execution exception. It removes ceremony-version,
+per-correction independent-review, and fresh-authority rebinding requirements
+that do not directly protect the credential, aggregate cost limit, or semantic
+answer isolation. Credential non-exposure, Windows Credential Manager-only
+storage, sequential provider effects, conservative USD 10.00 aggregate
+accounting, historical-evidence immutability, private-answer isolation, and the
+Slice 7 prohibition remain mandatory.
+
 ## Default development loop
 
 Ordinary work continues through this loop until its acceptance criteria are

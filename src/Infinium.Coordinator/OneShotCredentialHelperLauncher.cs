@@ -105,6 +105,7 @@ public sealed class OneShotCredentialHelperLauncher
     private readonly bool productionProviderTransport;
     private readonly bool wp9ProductionEnrollment;
     private readonly bool wp9CampaignProvider;
+    private readonly bool developmentCredentialContinuation;
 
     internal TimeSpan OperationTimeout => wp9ProductionEnrollment
         ? TimeSpan.FromMinutes(11)
@@ -191,7 +192,8 @@ public sealed class OneShotCredentialHelperLauncher
             nativeQualificationManifestId: null,
             productionProviderTransport: false,
             wp9ProductionEnrollment: false,
-            wp9CampaignProvider: false)
+            wp9CampaignProvider: false,
+            developmentCredentialContinuation: false)
     {
     }
 
@@ -204,7 +206,8 @@ public sealed class OneShotCredentialHelperLauncher
         string? nativeQualificationManifestId,
         bool productionProviderTransport,
         bool wp9ProductionEnrollment,
-        bool wp9CampaignProvider)
+        bool wp9CampaignProvider,
+        bool developmentCredentialContinuation = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(helperBinary);
         ArgumentException.ThrowIfNullOrWhiteSpace(expectedBinarySha256);
@@ -219,6 +222,7 @@ public sealed class OneShotCredentialHelperLauncher
         this.productionProviderTransport = productionProviderTransport;
         this.wp9ProductionEnrollment = wp9ProductionEnrollment;
         this.wp9CampaignProvider = wp9CampaignProvider;
+        this.developmentCredentialContinuation = developmentCredentialContinuation;
         this.expectedBinarySha256 = expectedBinarySha256.ToLowerInvariant();
         if (!Path.IsPathFullyQualified(this.helperBinary) || !File.Exists(this.helperBinary)
             || !string.Equals(Path.GetFileName(this.helperBinary), "Infinium.CredentialHelper.exe", StringComparison.Ordinal)
@@ -340,7 +344,8 @@ public sealed class OneShotCredentialHelperLauncher
         string expectedBinarySha256,
         string acceptedAuthorityPath,
         string acceptedAuthoritySha256,
-        string acceptedAuthorityId)
+        string acceptedAuthorityId,
+        bool developmentCredentialContinuation = false)
     {
         string authority = Path.GetFullPath(acceptedAuthorityPath);
         if (!File.Exists(authority)
@@ -370,7 +375,8 @@ public sealed class OneShotCredentialHelperLauncher
             acceptedAuthorityId,
             productionProviderTransport: false,
             wp9ProductionEnrollment: true,
-            wp9CampaignProvider: false);
+            wp9CampaignProvider: false,
+            developmentCredentialContinuation: developmentCredentialContinuation);
     }
 
     public async Task<HelperProcessReceipt> ExecuteAsync(
@@ -590,6 +596,10 @@ public sealed class OneShotCredentialHelperLauncher
                     delayMilliseconds.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 ];
             }
+        }
+        if (wp9ProductionEnrollment && developmentCredentialContinuation)
+        {
+            arguments = [.. arguments, "--development-credential-continuation", "1"];
         }
         if (nativeManifestPath is null)
         {

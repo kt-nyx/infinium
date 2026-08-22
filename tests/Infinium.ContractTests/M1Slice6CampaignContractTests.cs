@@ -122,9 +122,9 @@ public sealed class M1Slice6CampaignContractTests
         StringAssert.Contains(currentState,
             "only committed exposure counts against USD 10.00");
         StringAssert.Contains(currentState,
-            "one possible provider start per fresh attempt; attempts are sequential and automatic retry remains prohibited");
+            "Each provider attempt has at most one possible start and automatic retry remains prohibited");
         StringAssert.Contains(currentState,
-            "Credential exposure/enumeration/write/delete/replacement, semantic answer tuning or selection, private fixtures, archives, push, and destructive work remain prohibited.");
+            "Credential exposure or enumeration, semantic answer tuning or selection, private fixtures, archives, push, destructive work, and Slice 7 remain prohibited.");
         Assert.IsFalse(currentState.Replace(stateAuthority, "C2 live execution is authorized", StringComparison.Ordinal)
             .Contains(stateAuthority, StringComparison.Ordinal));
         StringAssert.Contains(verifier, "function Test-M1Slice6RemainderR1NoEffectState");

@@ -22,7 +22,14 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
     [
         "win32-error:05", "win32-error:-5", "win32-error:5 secret", "win32-error:2147483648",
     ];
-    private enum FixtureMode { Initial, Generation3Initial, ReplacingRecovery, DeletePendingRecovery }
+    private enum FixtureMode
+    {
+        Initial,
+        Generation3Initial,
+        Generation3DevelopmentContinuation,
+        ReplacingRecovery,
+        DeletePendingRecovery,
+    }
 
     [TestMethod]
     public void ActualGeneration3OwnerAuthorityClosesExactRetainedLineage()
@@ -169,6 +176,63 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
             Assert.AreEqual(fixture.SuccessorGeneration, activated.GenerationId);
             Assert.AreEqual(3, activated.GenerationOrdinal);
             Assert.AreEqual("active-verified", activated.LifecycleState);
+        }
+        finally
+        {
+            if (Directory.Exists(testRoot)) { Directory.Delete(testRoot, recursive: true); }
+        }
+    }
+
+    [TestMethod]
+    public async Task DevelopmentContinuationReusesReservedGeneration3WithoutNewAuthorityOrBegin()
+    {
+        string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(AppContext.BaseDirectory);
+        string testRoot = Path.Combine(repository, "artifacts", "m1-slice6",
+            "replacement-runner-development-continuation-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(testRoot);
+        try
+        {
+            ReplacementFixture fixture = CreateFixture(repository, testRoot, "development-continuation",
+                FixtureMode.Generation3DevelopmentContinuation);
+            int result = await M1Slice6SuccessorCredentialReplacementRunner.RunAsync(
+                fixture.AuthorityPath, fixture.AuthoritySha256, fixture.ReviewPath, fixture.ReviewSha256,
+                fixture.ProductRoot, fixture.LedgerPath, fixture.HelperPath, fixture.HelperSha256,
+                fixture.EvidencePath, CancellationToken.None, fixture.Hooks(CompleteCleanupWithoutNative),
+                developmentContinuation: true,
+                developmentAttemptId: Guid.NewGuid().ToString("N"));
+
+            Assert.AreEqual(0, result);
+            CredentialProfileProjection active = AuthoritativeStore.ReadCredentialProfileProjectionReadOnly(
+                fixture.ProductRoot, fixture.ProfileId);
+            Assert.AreEqual(fixture.SuccessorGeneration, active.GenerationId);
+            Assert.AreEqual(3, active.GenerationOrdinal);
+            Assert.AreEqual("active-verified", active.LifecycleState);
+            using JsonDocument evidence = JsonDocument.Parse(File.ReadAllBytes(fixture.EvidencePath));
+            Assert.AreEqual(164, evidence.RootElement.GetProperty("effect").GetProperty("entry_evidence")
+                .GetProperty("ActionSnapshot").GetProperty("CurrentCharacterLength").GetInt32());
+        }
+        finally
+        {
+            if (Directory.Exists(testRoot)) { Directory.Delete(testRoot, recursive: true); }
+        }
+    }
+
+    [TestMethod]
+    public void DevelopmentEnrollmentLockSerializesWholeManualInvocations()
+    {
+        string testRoot = Path.Combine(Path.GetTempPath(),
+            "infinium-development-enrollment-lock-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using (FileStream held = M1Slice6SuccessorCredentialReplacementRunner
+                       .AcquireDevelopmentEnrollmentLock(testRoot))
+            {
+                Assert.ThrowsExactly<IOException>(() =>
+                    M1Slice6SuccessorCredentialReplacementRunner.AcquireDevelopmentEnrollmentLock(testRoot));
+            }
+            using FileStream reacquired = M1Slice6SuccessorCredentialReplacementRunner
+                .AcquireDevelopmentEnrollmentLock(testRoot);
+            Assert.IsTrue(reacquired.CanWrite);
         }
         finally
         {
@@ -1127,8 +1191,10 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         string root = Path.Combine(testRoot, name);
         string product = Path.Combine(root, "product");
         string profile = "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e";
-        bool generation3 = mode == FixtureMode.Generation3Initial;
+        bool generation3 = mode is FixtureMode.Generation3Initial
+            or FixtureMode.Generation3DevelopmentContinuation;
         string successor = mode is FixtureMode.Initial or FixtureMode.Generation3Initial
+            or FixtureMode.Generation3DevelopmentContinuation
             ? "g-test" + Guid.NewGuid().ToString("N")
             : "g-e6b6a3f21ad74108ba65955850349f83";
         Directory.CreateDirectory(root);
@@ -1137,6 +1203,11 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         if (generation3)
         {
             EnsureActiveGeneration2(product, profile);
+            if (mode == FixtureMode.Generation3DevelopmentContinuation)
+            {
+                EnsureReplacementState(product, profile, successor, deletePending: true,
+                    predecessor: "g-e6b6a3f21ad74108ba65955850349f83", successorOrdinal: 3);
+            }
         }
         else if (mode != FixtureMode.Initial)
         {
@@ -1160,7 +1231,8 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
             {
                 FixtureMode.ReplacingRecovery => "m1-slice6-development-campaign-amendment.v4.json",
                 FixtureMode.DeletePendingRecovery => "m1-slice6-development-campaign-amendment.v5.json",
-                FixtureMode.Generation3Initial => "m1-slice6-development-campaign-amendment.v8.json",
+                FixtureMode.Generation3Initial or FixtureMode.Generation3DevelopmentContinuation =>
+                    "m1-slice6-development-campaign-amendment.v8.json",
                 _ => "m1-slice6-development-campaign-amendment.v3.json",
             });
         if (generation3)
@@ -1271,7 +1343,7 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                         "infinium.m1-s6.credential-replacement-recovery/20260821-pre-native-launcher-factory",
                     FixtureMode.DeletePendingRecovery =>
                         "infinium.m1-s6.credential-replacement-cleanup-recovery/20260821-pre-entry-assignment-prefix",
-                    FixtureMode.Generation3Initial =>
+                    FixtureMode.Generation3Initial or FixtureMode.Generation3DevelopmentContinuation =>
                         "infinium.m1-s6.credential-replacement-generation-3/20260822-exact-length",
                     _ => "infinium.m1-s6.credential-replacement/20260821-owner-fresh-key",
                 },
@@ -1384,15 +1456,16 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         string productRoot,
         string profile,
         string successor,
-        bool deletePending)
+        bool deletePending,
+        string predecessor = "g-ff6d82e7a7d244f6b8a9d0164991be37",
+        long successorOrdinal = 2)
     {
-        const string predecessor = "g-ff6d82e7a7d244f6b8a9d0164991be37";
         using AuthoritativeStore store = new(new StoragePaths(productRoot));
         CredentialProfileProjection current = store.GetCredentialProfile(profile);
         DateTimeOffset now = current.UpdatedAt.AddTicks(10);
         CredentialProfileProjection replacing = store.BeginCredentialReplacement(
             "fixture-replacement-begin-" + Guid.NewGuid().ToString("N"),
-            profile, predecessor, successor, 2, now);
+            profile, predecessor, successor, successorOrdinal, now);
         if (!deletePending) { return; }
         CredentialProfileProjection pending = store.ApplyCredentialTransition(new(
             "fixture-replacement-cleanup-pending-" + Guid.NewGuid().ToString("N"),
@@ -1434,7 +1507,7 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
 
     private static Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>
         CompleteCleanupWithoutNative(
-            AuthoritativeStore store, string attemptId, HelperPrivateFrameV2 _, HelperPrivateFrameV2 assignment,
+            AuthoritativeStore store, string attemptId, HelperPrivateFrameV2 bootstrap, HelperPrivateFrameV2 assignment,
             DateTimeOffset now, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -1450,8 +1523,12 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
             attemptId + "-verified-generation", old.ProfileId, generation, "verify", "active-unverified",
             "active-verified", "active-verified", old.CapabilitySnapshotId, old.AccountIdentityId,
             old.BillingScopeIdentityId, now.AddTicks(5), now.AddTicks(6)));
-        Assert.AreEqual(2, recovered.GenerationOrdinal);
-        return Task.FromResult((CompletedReplacementReceipt(attemptId, assignment, old.ProfileId, generation), verified));
+        Assert.AreEqual(checked((long)assignment.Assignment.GenerationOrdinal), recovered.GenerationOrdinal);
+        string predecessorFingerprint = Sha(Encoding.UTF8.GetBytes(
+            $"Infinium:{old.ProfileId}:{bootstrap.Bootstrap.Credential.GenerationId.Value}"));
+        return Task.FromResult((CompletedReplacementReceipt(
+            attemptId, assignment, old.ProfileId, generation,
+            predecessorFingerprint: predecessorFingerprint), verified));
     }
 
     private static Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>

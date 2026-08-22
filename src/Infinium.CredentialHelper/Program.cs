@@ -249,7 +249,9 @@ if (args is ["--wp9-production-enrollment-request-handle", string productionRequ
         ClearHandleInheritance(request.SafePipeHandle.DangerousGetHandle());
         ClearHandleInheritance(productionResponse.SafePipeHandle.DangerousGetHandle());
         productionFailureStage = "launch-boundary";
-        if (!Wp9ProductionLaunchContract.TryParse(productionOptions, out Wp9ProductionLaunchOptions? launchOptions))
+        if (!Wp9ProductionLaunchContract.TryParseEnrollment(
+                productionOptions, out Wp9ProductionLaunchOptions? launchOptions,
+                out bool developmentCredentialContinuation))
         {
             throw new InvalidDataException("WP9 production enrollment containment options are invalid.");
         }
@@ -259,7 +261,8 @@ if (args is ["--wp9-production-enrollment-request-handle", string productionRequ
         productionExcludedHandleAccessible = excludedHandleAccessible;
         productionFailureStage = "manifest-validation";
         productionStore = WindowsCredentialManagerStore.FromProductionEnrollmentManifest(
-            productionManifestPath, productionManifestSha256, productionManifestId);
+            productionManifestPath, productionManifestSha256, productionManifestId,
+            developmentCredentialContinuation);
         Wp9ProductionFailureClassification containmentLaunch =
             Wp9ProductionFailureClassifier.ContainmentLaunch();
         productionFailureStage = containmentLaunch.Stage;

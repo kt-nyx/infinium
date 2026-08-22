@@ -888,7 +888,8 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
     internal static WindowsCredentialManagerStore FromProductionEnrollmentManifest(
         string manifestPath,
         string expectedSha256,
-        string expectedManifestId)
+        string expectedManifestId,
+        bool developmentCredentialContinuation = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(manifestPath);
         ArgumentException.ThrowIfNullOrWhiteSpace(expectedSha256);
@@ -909,7 +910,8 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 is "infinium.repository.m1-slice6-successor-credential-replacement-authorization/1.0.0"
                     or "infinium.repository.m1-slice6-successor-credential-replacement-authorization/2.0.0")
             {
-                return FromProductionReplacementManifest(root, expectedManifestId);
+                return FromProductionReplacementManifest(
+                    root, expectedManifestId, developmentCredentialContinuation);
             }
             if (root.GetProperty("schema_identity").GetString() == ProductionProviderAccessV5)
             {
@@ -1077,7 +1079,8 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
 
     private static WindowsCredentialManagerStore FromProductionReplacementManifest(
         JsonElement root,
-        string expectedManifestId)
+        string expectedManifestId,
+        bool developmentCredentialContinuation)
     {
         bool exactLengthReplacement = root.GetProperty("schema_identity").GetString()
             == "infinium.repository.m1-slice6-successor-credential-replacement-authorization/2.0.0";
@@ -1120,7 +1123,8 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
             || boundary.GetProperty("overwrite").GetString() != "prohibited"
             || boundary.GetProperty("predecessor_delete").GetString()
                 != "required-after-successor-write-readback-verification"
-            || !ValidProductionReplacementWindow(root)
+            || (!developmentCredentialContinuation && !ValidProductionReplacementWindow(root))
+            || (developmentCredentialContinuation && !exactLengthReplacement)
             || !ValidProductionEntrySurface(root.GetProperty("m1_entry_surface"), exactLengthReplacement))
         {
             throw new InvalidDataException("The production replacement manifest does not preserve its exact finite authority.");
@@ -1130,7 +1134,9 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         DateTimeOffset expires = DateTimeOffset.ParseExact(root.GetProperty("expires_at_utc").GetString()!,
             "yyyy-MM-ddTHH:mm:ss.fffffff'Z'", System.Globalization.CultureInfo.InvariantCulture,
             System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal);
-        TimeSpan remaining = expires - DateTimeOffset.UtcNow;
+        TimeSpan remaining = developmentCredentialContinuation
+            ? TimeSpan.FromMinutes(11)
+            : expires - DateTimeOffset.UtcNow;
         if (remaining <= TimeSpan.Zero || remaining > TimeSpan.FromDays(1))
         {
             throw new InvalidDataException("The production replacement native-effect window is not live and finite.");

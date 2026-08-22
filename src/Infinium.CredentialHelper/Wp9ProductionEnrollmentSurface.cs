@@ -118,6 +118,17 @@ internal static class Wp9ProductionEntryReadinessOracle
     internal static bool IsAdmissibleCharacterLength(int length, int maximum) =>
         length is > 0 && length <= maximum;
 
+    internal static bool AdmitExactLengthAction(
+        Wp9ProductionReadinessSnapshot current,
+        string action,
+        string source,
+        int currentCharacterLength,
+        int maximumCharacterLength,
+        int? expectedCharacterLength) =>
+        AdmitAction(current, action, source, currentCharacterLength, maximumCharacterLength)
+        && (action != "submit" || expectedCharacterLength is null
+            || currentCharacterLength == expectedCharacterLength.Value);
+
     internal static bool ShouldClearPreReadinessContent(bool ready, int currentLength) =>
         !ready && currentLength > 0;
 
@@ -163,13 +174,36 @@ internal static class Wp9ProductionLaunchContract
         parsed = new(excluded, true);
         return true;
     }
+
+    internal static bool TryParseEnrollment(
+        string[] options,
+        out Wp9ProductionLaunchOptions? parsed,
+        out bool developmentCredentialContinuation)
+    {
+        developmentCredentialContinuation = false;
+        if (TryParse(options, out parsed))
+        {
+            return true;
+        }
+        if (options is ["--excluded-handle-probe", string handle,
+                "--spawn-containment-probe", "1", "--development-credential-continuation", "1"]
+            && nint.TryParse(handle, System.Globalization.NumberStyles.Integer,
+                System.Globalization.CultureInfo.InvariantCulture, out nint excluded))
+        {
+            parsed = new(excluded, true);
+            developmentCredentialContinuation = true;
+            return true;
+        }
+        parsed = null;
+        return false;
+    }
 }
 
 internal sealed class Wp9ProductionSecretSource : IHelperSecretSource, IDisposable
 {
     private readonly string acceptedManifestId;
     private readonly int? expectedCharacterLength;
-    private readonly Func<TimeSpan, TimeSpan, Wp9ProductionEntryCapture> capture;
+    private readonly Func<TimeSpan, TimeSpan, Wp9ProductionEntryCapture>? capture;
     private byte[] canarySecret = [];
     internal Wp9ProductionEntryEvidence? EntryEvidence { get; private set; }
 
@@ -180,7 +214,7 @@ internal sealed class Wp9ProductionSecretSource : IHelperSecretSource, IDisposab
     {
         this.acceptedManifestId = acceptedManifestId;
         this.expectedCharacterLength = expectedCharacterLength;
-        this.capture = capture ?? Wp9ProductionMaskedEntryDialog.Capture;
+        this.capture = capture;
     }
 
     public byte[] Capture(HelperAssignmentV2 assignment)
@@ -194,7 +228,10 @@ internal sealed class Wp9ProductionSecretSource : IHelperSecretSource, IDisposab
         Wp9ProductionEntryCapture capture;
         try
         {
-            capture = this.capture(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(10));
+            capture = this.capture is null
+                ? Wp9ProductionMaskedEntryDialog.Capture(
+                    TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(10), expectedCharacterLength)
+                : this.capture(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(10));
         }
         catch (Wp9ProductionEntryFailureException failure)
         {
@@ -480,14 +517,21 @@ internal static class Wp9ProductionMaskedEntryDialog
             nativeEmpty, processOwned, desktopMatched, destroyed, joined);
     }
 
-    internal static Wp9ProductionEntryCapture Capture(TimeSpan readinessDeadline, TimeSpan responseDeadline)
+    internal static Wp9ProductionEntryCapture Capture(TimeSpan readinessDeadline, TimeSpan responseDeadline) =>
+        Capture(readinessDeadline, responseDeadline, expectedCharacterLength: null);
+
+    internal static Wp9ProductionEntryCapture Capture(
+        TimeSpan readinessDeadline,
+        TimeSpan responseDeadline,
+        int? expectedCharacterLength)
     {
         if (!OperatingSystem.IsWindows())
         {
             throw new PlatformNotSupportedException("WP9 production credential entry requires Windows.");
         }
         if (readinessDeadline <= TimeSpan.Zero || readinessDeadline > TimeSpan.FromSeconds(10)
-            || responseDeadline <= TimeSpan.Zero || responseDeadline > TimeSpan.FromMinutes(10))
+            || responseDeadline <= TimeSpan.Zero || responseDeadline > TimeSpan.FromMinutes(10)
+            || expectedCharacterLength is <= 0 or > WindowsCredentialManagerStore.MaximumBlobBytes)
         {
             throw new ArgumentOutOfRangeException(nameof(responseDeadline));
         }
@@ -518,6 +562,7 @@ internal static class Wp9ProductionMaskedEntryDialog
             char[] captured = new char[WindowsCredentialManagerStore.MaximumBlobBytes + 1];
             nint window = 0;
             nint edit = 0;
+            nint status = 0;
             nint submit = 0;
             nint cancel = 0;
             string className = $"InfiniumWp9ProductionEntry-{Environment.ProcessId}-{Environment.CurrentManagedThreadId}";
@@ -580,17 +625,23 @@ internal static class Wp9ProductionMaskedEntryDialog
                 atom = RegisterClassExW(ref definition);
                 if (atom == 0) { throw new Win32Exception(Marshal.GetLastWin32Error(), "WP9 entry class registration failed."); }
                 window = CreateWindowExW(0, className, "Infinium OpenAI API key enrollment",
-                    WsCaption | WsSysMenu | WsVisible, 100, 100, 600, 220, 0, 0, module, 0);
+                    WsCaption | WsSysMenu | WsVisible, 100, 100, 600, 245, 0, 0, module, 0);
                 nint instruction = CreateWindowExW(0, "STATIC",
                     "Paste the OpenAI API key for the exact authorized profile. The value remains inside this helper.",
                     WsChild | WsVisible, 20, 15, 550, 35, window, 0, 0, 0);
                 edit = CreateWindowExW(0, "EDIT", null, WsChild | WsVisible | WsBorder | EsPassword,
                     20, 58, 550, 28, window, 0, 0, 0);
+                string initialStatus = expectedCharacterLength is int expected
+                    ? $"Characters: 0 / {expected}. Submit is accepted only at the exact reviewed length."
+                    : "Characters: 0.";
+                status = CreateWindowExW(0, "STATIC", initialStatus, WsChild | WsVisible,
+                    20, 94, 550, 24, window, 0, 0, 0);
                 submit = CreateWindowExW(0, "BUTTON", "Submit", WsChild | WsVisible,
-                    365, 105, 95, 30, window, SubmitButtonId, 0, 0);
+                    365, 125, 95, 30, window, SubmitButtonId, 0, 0);
                 cancel = CreateWindowExW(0, "BUTTON", "Cancel", WsChild | WsVisible,
-                    475, 105, 95, 30, window, CancelButtonId, 0, 0);
-                if (window == 0 || instruction == 0 || edit == 0 || submit == 0 || cancel == 0
+                    475, 125, 95, 30, window, CancelButtonId, 0, 0);
+                if (window == 0 || instruction == 0 || edit == 0 || status == 0
+                    || submit == 0 || cancel == 0
                     || (GetWindowLongPtrW(edit, GwlStyle).ToInt64() & EsPassword) == 0)
                 {
                     throw new Win32Exception(Marshal.GetLastWin32Error(), "WP9 masked entry controls failed to initialize.");
@@ -680,6 +731,10 @@ internal static class Wp9ProductionMaskedEntryDialog
                     messagePumpIterations++;
                     PumpMessages(edit, readyForActions, ref submitRequested, ref cancelRequested, ref actionSource,
                         ref preReadinessIgnoredActions);
+                    int displayedLength = GetWindowTextLengthW(edit);
+                    _ = SetWindowTextW(status, expectedCharacterLength is int displayExpected
+                        ? $"Characters: {displayedLength} / {displayExpected}. Submit is accepted only at the exact reviewed length."
+                        : $"Characters: {displayedLength}.");
                     if (cancelRequested || submitRequested)
                     {
                         int liveLength = GetWindowTextLengthW(edit);
@@ -690,8 +745,9 @@ internal static class Wp9ProductionMaskedEntryDialog
                             out helperProcessOwned, out sameSession, out inputDesktopAvailable,
                             out notCloaked, out onMonitor, out enabled, out focused,
                             out foreground, out active);
-                        bool admitted = Wp9ProductionEntryReadinessOracle.AdmitAction(
-                            current, action, source, liveLength, WindowsCredentialManagerStore.MaximumBlobBytes);
+                        bool admitted = Wp9ProductionEntryReadinessOracle.AdmitExactLengthAction(
+                            current, action, source, liveLength,
+                            WindowsCredentialManagerStore.MaximumBlobBytes, expectedCharacterLength);
                         actionSnapshot = new(action, source, current.WindowVisible, current.EditVisible,
                             current.InitiallyBlank, current.HelperProcessOwned, current.SameSession,
                             current.InputDesktopAvailable, current.NotCloaked, current.OnMonitor,

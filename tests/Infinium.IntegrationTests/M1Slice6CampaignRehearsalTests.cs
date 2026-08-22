@@ -72,7 +72,7 @@ public sealed class M1Slice6CampaignRehearsalTests
     [TestMethod]
     public void CampaignV2NonLiveCandidatePredicateRejectsAddedRemovedAndMutatedAuthority()
     {
-        const string baseline = "8c9ff5227fcc076df74f0c9faf1385640995b3d1";
+        const string acceptedCandidate = "67ca34d6de162ad64f05fbe88972105745d3e831";
         string temporary = Path.Combine(Path.GetTempPath(), "infinium-campaign-v2-predicate-"
             + Guid.NewGuid().ToString("N"));
         string clone = Path.Combine(temporary, "repo");
@@ -81,17 +81,17 @@ public sealed class M1Slice6CampaignRehearsalTests
         {
             Run("git", ["-c", "safe.directory=" + TestRepository.Root,
                 "-c", "safe.directory=" + Path.Combine(TestRepository.Root, ".git"),
+                "-c", "core.longpaths=true",
                 "clone", "--no-hardlinks", "--quiet", TestRepository.Root, clone], TestRepository.Root);
+            Run("git", ["config", "core.longpaths", "true"], clone);
 
             string Materialize(string name, string? omittedPath = null, bool addPath = false,
                 bool mutateAuthority = false)
             {
-                Run("git", ["checkout", "--detach", "--quiet", baseline], clone);
-                foreach (string relative in R2CandidatePaths.Where(path => path != omittedPath))
+                Run("git", ["checkout", "--detach", "--quiet", acceptedCandidate], clone);
+                if (omittedPath is not null)
                 {
-                    string target = Path.Combine(clone, relative.Replace('/', Path.DirectorySeparatorChar));
-                    Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-                    File.Copy(TestRepository.PathFromRoot(relative.Split('/')), target, overwrite: true);
+                    File.Delete(Path.Combine(clone, omittedPath.Replace('/', Path.DirectorySeparatorChar)));
                 }
                 if (addPath)
                 {
@@ -104,6 +104,10 @@ public sealed class M1Slice6CampaignRehearsalTests
                         "\nR2 contradictory mutation.\n", new UTF8Encoding(false));
                 }
                 Run("git", ["add", "-A"], clone);
+                if (!addPath && !mutateAuthority && omittedPath is null)
+                {
+                    return Run("git", ["rev-parse", "HEAD"], clone).Trim();
+                }
                 Run("git", ["-c", "user.name=Infinium Test", "-c", "user.email=test@invalid",
                     "commit", "--quiet", "-m", name], clone);
                 return Run("git", ["rev-parse", "HEAD"], clone).Trim();
@@ -164,7 +168,9 @@ public sealed class M1Slice6CampaignRehearsalTests
         try
         {
             Run("git", ["-c", "safe.directory=" + TestRepository.Root, "-c", "safe.directory=" + Path.Combine(TestRepository.Root, ".git"),
+                "-c", "core.longpaths=true",
                 "clone", "--no-hardlinks", "--quiet", TestRepository.Root, clone], TestRepository.Root);
+            Run("git", ["config", "core.longpaths", "true"], clone);
             string head = Run("git", ["rev-parse", "HEAD"], clone).Trim();
             File.Copy(TestRepository.PathFromRoot("eng", "validate-m1-slice6-campaign.ps1"),
                 Path.Combine(clone, "eng", "validate-m1-slice6-campaign.ps1"), overwrite: true);
@@ -224,13 +230,16 @@ public sealed class M1Slice6CampaignRehearsalTests
                 "src/Infinium.Coordinator/M1Slice6CampaignStageCoordinator.cs",
                 "src/Infinium.Coordinator/M1Slice6CampaignV2InputAdapter.cs",
                 "src/Infinium.Coordinator/M1Slice6SuccessorCampaign.cs",
+                "src/Infinium.Coordinator/M1Slice6SuccessorCredentialReplacement.cs",
                 "src/Infinium.Coordinator/M1Slice6SuccessorAttemptMaterializer.cs",
                 "src/Infinium.Coordinator/M1Slice6SuccessorPricing.cs",
+                "src/Infinium.Coordinator/OneShotCredentialHelperLauncher.cs",
                 "src/Infinium.Coordinator/SourceClaimAcquisitionCoordinator.cs",
                 "src/Infinium.Coordinator/Wp9ProductionProfileEnrollmentRunner.cs",
                 "src/Infinium.CredentialHelper/OneShotHelperEngine.cs",
                 "src/Infinium.CredentialHelper/Program.cs",
                 "src/Infinium.CredentialHelper/WindowsCredentialNativeQualification.cs",
+                "src/Infinium.CredentialHelper/Wp9ProductionEnrollmentSurface.cs",
                 "src/Infinium.Domain/Contracts/ProviderEffectRuntimeAuthority.cs",
                 "src/Infinium.OpenAI/OpenAiResponsesAdapter.cs",
                 "src/Infinium.Persistence/AuthoritativeStore.BackupRestore.cs",

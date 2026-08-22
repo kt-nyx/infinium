@@ -12,6 +12,8 @@ chronology.
 
 ## Current authority and navigation
 
+- [Owner-authorized practical development continuation](development-continuation.md),
+  the active simplified credential and C2B-C3 execution path
 - [Accepted Slice 6 plan](plan.md)
 - [Accepted Slice 6 remainder plan](remainder-plan.md), governing historical
   R1-R2 execution and preserving the original remaining obligations
@@ -41,10 +43,11 @@ chronology.
   which supersedes the obsolete five-start, repeated-defect, and cumulative-reservation
   restrictions without changing the USD 10 aggregate, one-start, sequential,
   first-valid, credential, or isolation boundaries
-- [Active generation-2 successor campaign v7](m1-slice6-successor-campaign-authorization.v7.json),
+- [Retained generation-2 successor campaign v7](m1-slice6-successor-campaign-authorization.v7.json),
   [credential-access v3](m1-slice6-successor-credential-access.v3.json), and
   [production profile v5](wp9-production-profile-authorization.v5.json), which
-  admit only the verified replacement generation and the single ledger-v4 path
+  preserve the ledger/stage baseline but whose generation-2 credential binding
+  is superseded for new development use
 - [Accepted campaign-v7 review](m1-slice6-successor-campaign-v7-independent-review.v3.json)
 - [Historical campaign v6](m1-slice6-successor-campaign-authorization.v6.json)
   and [credential-access v2](m1-slice6-successor-credential-access.v2.json),
@@ -58,14 +61,15 @@ the current package names them as exact inputs.
 
 ## Current handoff
 
-Credential replacement is complete. Independently accepted evidence proves
-generation 2 active-verified/available, the predecessor absent and ineligible,
-exact masked UI and native-call closure, and zero DNS/network/provider/billable
-effect during replacement. Campaign v7 imports immutable ledger-v3 sequence 39
-into the only active ledger-v4 path at sequence 40. Committed Slice 6 exposure
-remains USD 0.91056 with no outstanding reservation and USD 9.08944 remaining.
-The next eligible action is fresh WP9 ordinal 9; WP10, WP11, C3, and Slice 7
-remain gated exactly as stated in current state.
+The immutable ledger-v4 prefix now ends at sequence 44 after WP9 ordinal 9 was
+retained without a structurally valid result. It records USD 1.02064 committed
+exposure, no outstanding reservation, and USD 8.97936 remaining. Generation 2
+is non-dispatchable after the retained generation-3 entry mismatch; generation
+3 is already reserved but was never written. The active action is the
+simplified masked development continuation: accept exactly 164 characters,
+write and protected-read-back generation 3, then make one small request through
+the actual product path. WP10, WP11, C3, and Slice 7 remain gated as stated in
+current state.
 
 R1 is accepted at candidate
 `fcd17cd6db98019fc9e5253d5167d2487862671c`. Its final NonLiveAll receipt
