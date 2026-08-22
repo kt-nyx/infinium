@@ -25,6 +25,24 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
     private enum FixtureMode { Initial, Generation3Initial, ReplacingRecovery, DeletePendingRecovery }
 
     [TestMethod]
+    public void ActualGeneration3OwnerAuthorityClosesExactRetainedLineage()
+    {
+        string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(AppContext.BaseDirectory);
+        string path = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "m1-slice6-development-campaign-amendment.v8.json");
+        byte[] bytes = File.ReadAllBytes(path);
+        ActiveRepositoryJsonSchemaValidator.Validate(bytes,
+            File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                "m1-slice6-development-campaign-amendment.v8.schema.json")),
+            M1Slice6SuccessorCredentialReplacementRunner.Generation3ReplacementAmendmentSchema);
+        using JsonDocument owner = JsonDocument.Parse(bytes);
+        M1Slice6SuccessorCredentialReplacementRunner.ValidateGeneration3ReplacementOwner(
+            repository, owner.RootElement);
+        Assert.AreEqual(M1Slice6SuccessorCredentialReplacementRunner.Generation3CorrectionCommit,
+            owner.RootElement.GetProperty("correction").GetProperty("implementation_commit").GetString());
+    }
+
+    [TestMethod]
     public void ConsumedForegroundRecoveryOwnerCannotReopenAfterGeneration2Publication()
     {
         string repository = M1Slice6SuccessorAuthorityLoader.FindRepositoryRoot(AppContext.BaseDirectory);
