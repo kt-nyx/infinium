@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/m1-slice6-successor-campaign-authorization.v7.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_identity", "campaign_id", "status", "prepared_at_utc", "expires_at_utc", "predecessor_campaign", "owner_amendment", "terminal_predecessor", "ledger_predecessor", "active_ledger", "credential_inheritance", "stage_sources", "limits", "ordered_stages"],
+  "properties": {
+    "schema_identity": { "const": "infinium.repository.m1-slice6-successor-campaign-authorization/7.0.0" },
+    "campaign_id": { "const": "infinium.m1-s6.successor-campaign-v7/3e457821-389a-4ea8-a4c0-aed9da3b5966" },
+    "status": { "const": "owner-authorized-reviewed-and-admitted-generation-2" },
+    "prepared_at_utc": { "$ref": "#/$defs/canonicalZ" },
+    "expires_at_utc": { "$ref": "#/$defs/canonicalZ" },
+    "predecessor_campaign": { "$ref": "#/$defs/historicalBinding" },
+    "owner_amendment": { "$ref": "#/$defs/binding" },
+    "terminal_predecessor": {
+      "type": "object", "additionalProperties": false,
+      "required": ["campaign_id", "final_event_hash", "possible_starts", "conservative_nano_usd", "immutable"],
+      "properties": {
+        "campaign_id": { "const": "infinium.m1-s6.finite-live-campaign/ff2d542a-04f0-448a-bcb8-a0ecbedde5b9" },
+        "final_event_hash": { "const": "282c97151dbdcd354288b67f96c4b01d7f7ef43b1bbfb9f247cbd9b510506de9" },
+        "possible_starts": { "const": 1 }, "conservative_nano_usd": { "const": 140000000 },
+        "immutable": { "const": true }
+      }
+    },
+    "ledger_predecessor": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "final_sequence", "final_event_hash", "wp9_possible_starts", "wp10_possible_starts", "wp11_possible_starts", "wp9_authoritative", "wp10_authoritative", "wp11_authoritative", "successor_cumulative_reserved_nano_usd", "successor_unresolved_nano_usd", "successor_settled_nano_usd", "successor_outstanding_reserved_nano_usd", "committed_nano_usd", "immutable"],
+      "properties": {
+        "path": { "const": "artifacts/m1-slice6/successor-campaign/ledger.v3.jsonl" },
+        "sha256": { "const": "9a1bbb048445f3eb969e16b894f8b9d8347cba5ab89c9d3c83be66e33fda5a25" },
+        "final_sequence": { "const": 39 },
+        "final_event_hash": { "const": "b5292326a65791731614a6ab75a0b838de121ea721d01d5489f4c2897f88dcc0" },
+        "wp9_possible_starts": { "const": 8 }, "wp10_possible_starts": { "const": 0 }, "wp11_possible_starts": { "const": 0 },
+        "wp9_authoritative": { "const": false }, "wp10_authoritative": { "const": false }, "wp11_authoritative": { "const": false },
+        "successor_cumulative_reserved_nano_usd": { "const": 770560000 },
+        "successor_unresolved_nano_usd": { "const": 770560000 },
+        "successor_settled_nano_usd": { "const": 0 },
+        "successor_outstanding_reserved_nano_usd": { "const": 0 },
+        "committed_nano_usd": { "const": 910560000 }, "immutable": { "const": true }
+      }
+    },
+    "active_ledger": { "const": {
+      "path": "artifacts/m1-slice6/successor-campaign/ledger.v4.jsonl",
+      "schema_identity": "infinium.repository.m1-slice6-successor-campaign-ledger-entry/4.0.0",
+      "genesis_sequence": 40,
+      "single_writer": true,
+      "forks": "prohibited"
+    } },
+    "credential_inheritance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["access_authority_id", "access_authority_path", "access_authority_sha256", "manifest_id", "manifest_path", "manifest_sha256", "profile_id", "generation_id", "generation_ordinal", "target_fingerprint_sha256", "permitted_boundary"],
+      "properties": {
+        "access_authority_id": { "const": "infinium.m1-s6.successor-credential-access-v3/15677734-0108-4c46-9d9c-db941c7eb60d" },
+        "access_authority_path": { "const": "docs/plans/milestones/m1/slices/s6/m1-slice6-successor-credential-access.v3.json" },
+        "access_authority_sha256": { "const": "e11c1df6ac20576201b774961ccead862f73d0fc60faad75595e59e2f2e0b547" },
+        "manifest_id": { "const": "infinium.m1-s6.wp9.production-profile-authorization-v5/4ed620b0-7ee9-49e4-980a-e3251374487b" },
+        "manifest_path": { "const": "docs/plans/milestones/m1/slices/s6/wp9-production-profile-authorization.v5.json" },
+        "manifest_sha256": { "const": "49b71673b144dc5c5118f4dbfec52d22ca9f8f380ebe4cb7f9d7959746d93939" },
+        "profile_id": { "const": "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e" },
+        "generation_id": { "const": "g-e6b6a3f21ad74108ba65955850349f83" },
+        "generation_ordinal": { "const": 2 },
+        "target_fingerprint_sha256": { "const": "e7be7fd8ea2adef986806215f4a431174bab96b50789e855a2a18f96254c93ca" },
+        "permitted_boundary": { "const": "masked-helper-exact-CredReadW-CredFree-only" }
+      }
+    },
+    "stage_sources": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_set_id", "path", "sha256"],
+      "properties": {
+        "source_set_id": { "const": "infinium.m1-s6.successor-stage-sources/20260821-v6" },
+        "path": { "const": "docs/plans/milestones/m1/slices/s6/m1-slice6-successor-stage-sources.v1.json" },
+        "sha256": { "const": "a6674c9fed4f97f5cd4cb3ebbcedf8fb75a37da6f46a2bec117cc23df1659e65" }
+      }
+    },
+    "limits": {
+      "type": "object", "additionalProperties": false,
+      "required": ["maximum_slice_nano_usd", "historical_committed_nano_usd", "remaining_nano_usd", "per_stage_start_limit", "per_attempt_cost_limit", "automatic_retry", "parallel_calls", "first_structurally_valid_response"],
+      "properties": {
+        "maximum_slice_nano_usd": { "const": 10000000000 },
+        "historical_committed_nano_usd": { "const": 910560000 },
+        "remaining_nano_usd": { "const": 9089440000 },
+        "per_stage_start_limit": { "type": "null" }, "per_attempt_cost_limit": { "type": "null" },
+        "automatic_retry": { "const": false }, "parallel_calls": { "const": false },
+        "first_structurally_valid_response": { "const": "permanent-stage-authority-stop-further-provider-starts" }
+      }
+    },
+    "ordered_stages": {
+      "const": [
+        { "ordinal": 1, "work_package": "WP9", "operation": "Qualification" },
+        { "ordinal": 2, "work_package": "WP10", "operation": "SourceClaimExtraction" },
+        { "ordinal": 3, "work_package": "WP11", "operation": "CandidateInvestigation" }
+      ]
+    }
+  },
+  "$defs": {
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "canonicalZ": { "type": "string", "pattern": "^20[0-9]{2}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{7}Z$" },
+    "binding": {
+      "type": "object", "additionalProperties": false, "required": ["id", "path", "sha256"],
+      "properties": { "id": { "type": "string", "minLength": 1, "maxLength": 256 }, "path": { "type": "string", "minLength": 1, "maxLength": 512 }, "sha256": { "$ref": "#/$defs/sha" } }
+    },
+    "historicalBinding": {
+      "type": "object", "additionalProperties": false, "required": ["id", "path", "sha256", "historical_only"],
+      "properties": { "id": { "type": "string", "minLength": 1, "maxLength": 256 }, "path": { "type": "string", "minLength": 1, "maxLength": 512 }, "sha256": { "$ref": "#/$defs/sha" }, "historical_only": { "const": true } }
+    }
+  }
+}

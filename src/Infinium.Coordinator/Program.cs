@@ -298,6 +298,27 @@ if (args is ["--m1-slice6-hard-budget-initialize", "--campaign-manifest", string
     }
 }
 
+if (args is ["--m1-slice6-credential-rollover-initialize",
+    "--campaign-manifest", string rolloverCampaign,
+    "--campaign-manifest-sha256", string rolloverCampaignSha,
+    "--ledger", string rolloverLedger, "--review", string rolloverReview])
+{
+    try
+    {
+        M1Slice6SuccessorCampaignRunner.InitializeCredentialRolloverLedger(
+            rolloverCampaign, rolloverCampaignSha, rolloverLedger, rolloverReview,
+            DateTimeOffset.UtcNow);
+        Console.WriteLine("M1 Slice 6 credential rollover independently reviewed and admitted with zero effect.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException
+        or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"M1 Slice 6 credential-rollover initialization stopped: {exception.GetType().Name}");
+        return 84;
+    }
+}
+
 if (args is ["--m1-slice6-successor-materialize-attempt",
     "--campaign-manifest", string materializeCampaign,
     "--campaign-manifest-sha256", string materializeCampaignSha,

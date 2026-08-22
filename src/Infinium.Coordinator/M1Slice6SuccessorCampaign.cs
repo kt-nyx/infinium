@@ -22,6 +22,7 @@ internal sealed record M1Slice6SuccessorCampaignAuthority(
     string CredentialManifestId, string CredentialManifestSha256, string CredentialProfileId,
     string CredentialGenerationId, string CredentialTargetFingerprintSha256,
     string StageSourcesPath, string StageSourcesSha256,
+    string? ActiveLedgerPath, string? PredecessorLedgerPath,
     string ProductStateRoot, string ProductStateSnapshotOriginSha256, string SafetyIdentifierProjection,
     DateTimeOffset ExpiresAtUtc);
 
@@ -60,6 +61,7 @@ internal static class M1Slice6SuccessorAuthorityLoader
         "exact-containment-predicate-unavailable",
     ];
     internal const string CampaignSchema = "infinium.repository.m1-slice6-successor-campaign-authorization/6.0.0";
+    internal const string CampaignSchemaV7 = "infinium.repository.m1-slice6-successor-campaign-authorization/7.0.0";
     internal const string StageSchema = "infinium.repository.m1-slice6-successor-stage-attempt/6.0.0";
     internal const string RuntimeCandidateSchema = "infinium.repository.m1-slice6-successor-runtime-candidate/2.0.0";
     internal const string RuntimeSchema = "infinium.provider.effect-runtime-authority/v3";
@@ -233,10 +235,18 @@ internal static class M1Slice6SuccessorAuthorityLoader
             budget.GetProperty("maximum_slice_nano_usd").GetInt64(), expiry);
     }
 
-    internal static M1Slice6SuccessorCampaignAuthority Campaign(string path, string expectedSha)
+    internal static M1Slice6SuccessorCampaignAuthority Campaign(
+        string path, string expectedSha, bool requireRolloverBaseline = false)
     {
         (byte[] bytes, string sha) = ExactBytes(path, expectedSha);
         string repository = FindRepositoryRoot(path);
+        using (JsonDocument identity = JsonDocument.Parse(bytes))
+        {
+            if (Text(identity.RootElement, "schema_identity") == CampaignSchemaV7)
+            {
+                return CampaignV7(path, bytes, sha, repository, requireRolloverBaseline);
+            }
+        }
         ActiveRepositoryJsonSchemaValidator.Validate(bytes, File.ReadAllBytes(Path.Combine(repository,
             "contracts", "repository", "m1-slice6-successor-campaign-authorization.v6.schema.json")),
             CampaignSchema);
@@ -434,7 +444,251 @@ internal static class M1Slice6SuccessorAuthorityLoader
             Text(credential, "manifest_sha256"), Text(credential, "profile_id"),
             Text(credential, "generation_id"), Text(credential, "target_fingerprint_sha256"),
             stageSourcesPath, Text(stageSources, "sha256"),
+            null, null,
             retainedProductStateRoot, retainedSnapshotOriginSha256, retainedSafetyProjection, expiry);
+    }
+
+    private static M1Slice6SuccessorCampaignAuthority CampaignV7(
+        string path, byte[] bytes, string sha, string repository, bool requireRolloverBaseline)
+    {
+        ActiveRepositoryJsonSchemaValidator.Validate(bytes, File.ReadAllBytes(Path.Combine(repository,
+            "contracts", "repository", "m1-slice6-successor-campaign-authorization.v7.schema.json")),
+            CampaignSchemaV7);
+        using JsonDocument document = JsonDocument.Parse(bytes);
+        JsonElement root = document.RootElement;
+        Exact(root, "schema_identity", "campaign_id", "status", "prepared_at_utc", "expires_at_utc",
+            "predecessor_campaign", "owner_amendment", "terminal_predecessor", "ledger_predecessor",
+            "active_ledger", "credential_inheritance", "stage_sources", "limits", "ordered_stages");
+        JsonElement predecessor = root.GetProperty("predecessor_campaign");
+        JsonElement amendment = root.GetProperty("owner_amendment");
+        JsonElement terminal = root.GetProperty("terminal_predecessor");
+        JsonElement ledger = root.GetProperty("ledger_predecessor");
+        JsonElement activeLedger = root.GetProperty("active_ledger");
+        JsonElement credential = root.GetProperty("credential_inheritance");
+        JsonElement sources = root.GetProperty("stage_sources");
+        JsonElement limits = root.GetProperty("limits");
+        Exact(predecessor, "id", "path", "sha256", "historical_only");
+        Exact(amendment, "id", "path", "sha256");
+        Exact(terminal, "campaign_id", "final_event_hash", "possible_starts",
+            "conservative_nano_usd", "immutable");
+        Exact(ledger, "path", "sha256", "final_sequence", "final_event_hash",
+            "wp9_possible_starts", "wp10_possible_starts", "wp11_possible_starts",
+            "wp9_authoritative", "wp10_authoritative", "wp11_authoritative",
+            "successor_cumulative_reserved_nano_usd", "successor_unresolved_nano_usd",
+            "successor_settled_nano_usd", "successor_outstanding_reserved_nano_usd",
+            "committed_nano_usd", "immutable");
+        Exact(activeLedger, "path", "schema_identity", "genesis_sequence", "single_writer", "forks");
+        Exact(credential, "access_authority_id", "access_authority_path", "access_authority_sha256",
+            "manifest_id", "manifest_path", "manifest_sha256", "profile_id", "generation_id",
+            "generation_ordinal", "target_fingerprint_sha256", "permitted_boundary");
+        Exact(sources, "source_set_id", "path", "sha256");
+        Exact(limits, "maximum_slice_nano_usd", "historical_committed_nano_usd",
+            "remaining_nano_usd", "per_stage_start_limit", "per_attempt_cost_limit",
+            "automatic_retry", "parallel_calls", "first_structurally_valid_response");
+        JsonElement[] stages = root.GetProperty("ordered_stages").EnumerateArray().ToArray();
+        if (Text(root, "status") != "owner-authorized-reviewed-and-admitted-generation-2"
+            || stages.Length != 3
+            || limits.GetProperty("maximum_slice_nano_usd").GetInt64() != 10_000_000_000
+            || limits.GetProperty("historical_committed_nano_usd").GetInt64() != 910_560_000
+            || limits.GetProperty("remaining_nano_usd").GetInt64() != 9_089_440_000
+            || limits.GetProperty("per_stage_start_limit").ValueKind != JsonValueKind.Null
+            || limits.GetProperty("per_attempt_cost_limit").ValueKind != JsonValueKind.Null
+            || limits.GetProperty("automatic_retry").GetBoolean()
+            || limits.GetProperty("parallel_calls").GetBoolean()
+            || Text(limits, "first_structurally_valid_response")
+                != "permanent-stage-authority-stop-further-provider-starts")
+        {
+            throw new InvalidDataException("The generation-2 campaign limits are not exact.");
+        }
+        for (int index = 0; index < stages.Length; index++)
+        {
+            Exact(stages[index], "ordinal", "work_package", "operation");
+            string operation = index switch
+            { 0 => "Qualification", 1 => "SourceClaimExtraction", _ => "CandidateInvestigation" };
+            if (stages[index].GetProperty("ordinal").GetInt32() != index + 1
+                || Text(stages[index], "work_package") != $"WP{index + 9}"
+                || Text(stages[index], "operation") != operation)
+            { throw new InvalidDataException("The generation-2 campaign stage order changed."); }
+        }
+
+        string predecessorPath = ResolveRepositoryPath(repository, Text(predecessor, "path"));
+        if (Text(predecessor, "id") != "infinium.m1-s6.successor-campaign-v6/20260821-hard-budget"
+            || HashFile(predecessorPath) != Text(predecessor, "sha256")
+            || !predecessor.GetProperty("historical_only").GetBoolean())
+        { throw new InvalidDataException("The generation-2 campaign predecessor is stale."); }
+        _ = Campaign(predecessorPath, Text(predecessor, "sha256"));
+
+        string amendmentPath = ResolveRepositoryPath(repository, Text(amendment, "path"));
+        if (Text(amendment, "id") != "infinium.m1-s6.hard-budget-continuation/20260821-c2b-c3"
+            || HashFile(amendmentPath) != Text(amendment, "sha256")
+            || Text(amendment, "sha256")
+                != "a79502da0ebea9ded5f6b10b72ad70f8b482d9de28e97e3bd09541936683a5b3")
+        { throw new InvalidDataException("The generation-2 campaign owner amendment is stale."); }
+
+        string predecessorLedgerPath = ResolveRepositoryPath(repository, Text(ledger, "path"));
+        string activeLedgerPath = ResolveRepositoryPath(repository, Text(activeLedger, "path"));
+        if (HashFile(predecessorLedgerPath) != Text(ledger, "sha256")
+            || ledger.GetProperty("final_sequence").GetInt64() != 39
+            || Text(ledger, "final_event_hash")
+                != "b5292326a65791731614a6ab75a0b838de121ea721d01d5489f4c2897f88dcc0"
+            || ledger.GetProperty("wp9_possible_starts").GetInt32() != 8
+            || ledger.GetProperty("wp10_possible_starts").GetInt32() != 0
+            || ledger.GetProperty("wp11_possible_starts").GetInt32() != 0
+            || ledger.GetProperty("wp9_authoritative").GetBoolean()
+            || ledger.GetProperty("wp10_authoritative").GetBoolean()
+            || ledger.GetProperty("wp11_authoritative").GetBoolean()
+            || ledger.GetProperty("successor_cumulative_reserved_nano_usd").GetInt64() != 770_560_000
+            || ledger.GetProperty("successor_unresolved_nano_usd").GetInt64() != 770_560_000
+            || ledger.GetProperty("successor_settled_nano_usd").GetInt64() != 0
+            || ledger.GetProperty("successor_outstanding_reserved_nano_usd").GetInt64() != 0
+            || ledger.GetProperty("committed_nano_usd").GetInt64() != 910_560_000
+            || !ledger.GetProperty("immutable").GetBoolean()
+            || Text(activeLedger, "schema_identity")
+                != "infinium.repository.m1-slice6-successor-campaign-ledger-entry/4.0.0"
+            || activeLedger.GetProperty("genesis_sequence").GetInt64() != 40
+            || !activeLedger.GetProperty("single_writer").GetBoolean()
+            || Text(activeLedger, "forks") != "prohibited"
+            || activeLedgerPath.Equals(predecessorLedgerPath, StringComparison.OrdinalIgnoreCase))
+        { throw new InvalidDataException("The generation-2 campaign does not bind the exact v3 ledger tail."); }
+        M1Slice6SuccessorCampaignLedgerV3 predecessorLedger = new(
+            predecessorLedgerPath,
+            "infinium.m1-s6.successor-campaign-v6/20260821-hard-budget",
+            Text(predecessor, "sha256"),
+            M1Slice6SuccessorCampaignLedgerV3.RequiredTerminalCampaignId,
+            M1Slice6SuccessorCampaignLedgerV3.RequiredTerminalEventHash,
+            8,
+            "be76dfd4d47b33e97f8585c66c951df7184b9995e02e9539e2c5bdf2ee089f2b",
+            "infinium.m1-s6.hard-budget-continuation/20260821-c2b-c3",
+            "a79502da0ebea9ded5f6b10b72ad70f8b482d9de28e97e3bd09541936683a5b3",
+            "infinium.m1-s6.hard-budget-amendment-review/20260821-c2b-c3",
+            "cd655e7711c85a9cb746a3a2dcd7baa126378f0451711bee37ddf5ac35bfe103",
+            2, 0, 0, false, false, false, 110_080_000, 110_080_000, 0,
+            DateTimeOffset.UtcNow);
+        if (predecessorLedger.Current.Sequence != 39
+            || predecessorLedger.Current.EventHash != Text(ledger, "final_event_hash")
+            || predecessorLedger.CommittedNanoUsd != 910_560_000)
+        { throw new InvalidDataException("The generation-2 campaign predecessor ledger failed full validation."); }
+
+        string sourcePath = ResolveRepositoryPath(repository, Text(sources, "path"));
+        if (Text(sources, "source_set_id") != "infinium.m1-s6.successor-stage-sources/20260821-v6"
+            || HashFile(sourcePath) != Text(sources, "sha256"))
+        { throw new InvalidDataException("The generation-2 stage sources are stale."); }
+
+        string accessPath = ResolveRepositoryPath(repository, Text(credential, "access_authority_path"));
+        byte[] accessBytes = File.ReadAllBytes(accessPath);
+        if (Hash(accessBytes) != Text(credential, "access_authority_sha256"))
+        { throw new InvalidDataException("The generation-2 credential-access bytes are stale."); }
+        ActiveRepositoryJsonSchemaValidator.Validate(accessBytes, File.ReadAllBytes(Path.Combine(repository,
+            "contracts", "repository", "m1-slice6-successor-credential-access.v3.schema.json")),
+            "infinium.repository.m1-slice6-successor-credential-access/3.0.0");
+        using JsonDocument accessDocument = JsonDocument.Parse(accessBytes);
+        JsonElement access = accessDocument.RootElement;
+        Exact(access, "schema_identity", "authority_id", "status", "expires_at_utc", "owner_amendment",
+            "predecessor_access", "active_profile", "replacement_closure", "retained_product_state",
+            "per_attempt_boundary");
+        JsonElement active = access.GetProperty("active_profile");
+        JsonElement closure = access.GetProperty("replacement_closure");
+        JsonElement productState = access.GetProperty("retained_product_state");
+        JsonElement boundary = access.GetProperty("per_attempt_boundary");
+        if (Text(access, "authority_id") != Text(credential, "access_authority_id")
+            || Text(access, "status") != "reviewed-and-admitted-active-verified-generation-2"
+            || Text(active, "manifest_id") != Text(credential, "manifest_id")
+            || Text(active, "manifest_sha256") != Text(credential, "manifest_sha256")
+            || Text(active, "profile_id") != Text(credential, "profile_id")
+            || Text(active, "generation_id") != Text(credential, "generation_id")
+            || active.GetProperty("generation_ordinal").GetInt32() != 2
+            || Text(active, "target_fingerprint_sha256") != Text(credential, "target_fingerprint_sha256")
+            || Text(credential, "permitted_boundary") != "masked-helper-exact-CredReadW-CredFree-only"
+            || !boundary.GetProperty("masked_helper_only").GetBoolean()
+            || boundary.GetProperty("maximum_reads").GetInt32() != 1
+            || boundary.GetProperty("maximum_frees").GetInt32() != 1
+            || boundary.GetProperty("maximum_writes").GetInt32() != 0
+            || boundary.GetProperty("maximum_deletes").GetInt32() != 0
+            || !boundary.GetProperty("exact_native_call_order").EnumerateArray()
+                .Select(item => item.GetString()!).SequenceEqual(["CredReadW", "CredFree"], StringComparer.Ordinal)
+            || Text(boundary, "enumeration") != "prohibited"
+            || Text(boundary, "exposure") != "prohibited"
+            || Text(boundary, "replacement") != "prohibited"
+            || Utc(Text(access, "expires_at_utc")) < Utc(Text(root, "expires_at_utc")))
+        { throw new InvalidDataException("The generation-2 credential-access boundary changed."); }
+
+        string evidencePath = ResolveRepositoryPath(repository, Text(closure, "evidence_path"));
+        string reviewPath = ResolveRepositoryPath(repository, Text(closure, "review_path"));
+        byte[] evidenceBytes = File.ReadAllBytes(evidencePath);
+        if (Hash(evidenceBytes) != Text(closure, "evidence_sha256")
+            || HashFile(reviewPath) != Text(closure, "review_sha256"))
+        { throw new InvalidDataException("The accepted replacement evidence or review is stale."); }
+        ActiveRepositoryJsonSchemaValidator.Validate(evidenceBytes, File.ReadAllBytes(Path.Combine(repository,
+            "contracts", "repository", "m1-slice6-successor-credential-replacement-evidence.v2.schema.json")),
+            "infinium.repository.m1-slice6-successor-credential-replacement-evidence/2.0.0");
+        using (JsonDocument evidenceDocument = JsonDocument.Parse(evidenceBytes))
+        {
+            JsonElement evidence = evidenceDocument.RootElement;
+            JsonElement evidenceProfile = evidence.GetProperty("profile");
+            JsonElement evidenceState = evidence.GetProperty("product_state");
+            if (Text(evidence, "evidence_id") != Text(closure, "evidence_id")
+                || Text(evidence, "status") != "passed-active-verified-predecessor-absent"
+                || Text(evidenceProfile, "final_generation_id") != Text(credential, "generation_id")
+                || evidenceProfile.GetProperty("final_generation_ordinal").GetInt32() != 2
+                || Text(evidenceProfile, "final_lifecycle_state") != "active-verified"
+                || Text(evidenceProfile, "final_verification_state") != "available"
+                || Text(evidenceState, "checkpoint_after_sha256")
+                    != Text(productState, "current_checkpoint_sha256"))
+            { throw new InvalidDataException("The replacement evidence does not prove active generation 2."); }
+        }
+        _ = Review(reviewPath, "attempt-evidence", Text(closure, "evidence_id"),
+            Text(closure, "evidence_sha256"), false, successorV6: true);
+
+        string credentialPath = ResolveRepositoryPath(repository, Text(credential, "manifest_path"));
+        byte[] credentialBytes = File.ReadAllBytes(credentialPath);
+        if (Hash(credentialBytes) != Text(credential, "manifest_sha256"))
+        { throw new InvalidDataException("The generation-2 credential manifest bytes are stale."); }
+        ActiveRepositoryJsonSchemaValidator.Validate(credentialBytes, File.ReadAllBytes(Path.Combine(repository,
+            "contracts", "repository", "wp9-production-profile-authorization.v5.schema.json")),
+            "infinium.repository.wp9-production-profile-authorization/5.0.0");
+        using (JsonDocument credentialDocument = JsonDocument.Parse(credentialBytes))
+        {
+            JsonElement credentialRoot = credentialDocument.RootElement;
+            JsonElement profile = credentialRoot.GetProperty("profile");
+            if (Text(credentialRoot, "manifest_id") != Text(credential, "manifest_id")
+                || Text(profile, "access_profile_id") != Text(credential, "profile_id")
+                || Text(profile, "generation_id") != Text(credential, "generation_id")
+                || profile.GetProperty("generation_ordinal").GetInt32() != 2
+                || Text(profile, "target_fingerprint_sha256") != Text(credential, "target_fingerprint_sha256"))
+            { throw new InvalidDataException("The generation-2 credential manifest identity changed."); }
+        }
+
+        string sourceProductRoot = Path.GetFullPath(Text(productState, "source_root_absolute"));
+        string productRoot = Path.GetFullPath(Text(productState, "successor_root_absolute"));
+        string originPath = Path.GetFullPath(Path.Combine(productRoot, Text(productState, "snapshot_origin_path")));
+        if (!Directory.Exists(sourceProductRoot) || !Directory.Exists(productRoot)
+            || sourceProductRoot.Equals(productRoot, StringComparison.OrdinalIgnoreCase)
+            || !originPath.StartsWith(productRoot.TrimEnd(Path.DirectorySeparatorChar)
+                + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+            || HashFile(originPath) != Text(productState, "snapshot_origin_sha256"))
+        { throw new InvalidDataException("The generation-2 product-state lineage is stale."); }
+        ValidateProductStateSnapshot(repository, originPath, sourceProductRoot, productRoot);
+        CredentialProfileProjection projection =
+            AuthoritativeStore.ReadCredentialProfileProjectionReadOnly(productRoot, Text(credential, "profile_id"));
+        if (projection.GenerationId != Text(credential, "generation_id")
+            || projection.GenerationOrdinal != 2 || projection.LifecycleState != "active-verified"
+            || projection.VerificationState != "available" || projection.CleanupDisposition != "not-requested"
+            || requireRolloverBaseline
+                && ComputeProductStateCheckpointSha256(productRoot)
+                    != Text(productState, "current_checkpoint_sha256"))
+        { throw new InvalidDataException("The generation-2 product-state projection is not exact active-verified authority."); }
+
+        _ = Utc(Text(root, "prepared_at_utc"));
+        DateTimeOffset expiry = Utc(Text(root, "expires_at_utc"));
+        return new(Text(root, "campaign_id"), sha, Text(terminal, "campaign_id"),
+            Text(terminal, "final_event_hash"), Text(amendment, "id"), Text(amendment, "sha256"),
+            Text(credential, "access_authority_id"), Text(credential, "access_authority_sha256"),
+            Text(credential, "manifest_id"), Text(credential, "manifest_sha256"),
+            Text(credential, "profile_id"), Text(credential, "generation_id"),
+            Text(credential, "target_fingerprint_sha256"), sourcePath, Text(sources, "sha256"),
+            activeLedgerPath, predecessorLedgerPath,
+            productRoot, Text(productState, "snapshot_origin_sha256"),
+            Text(productState, "safety_identifier_projection"), expiry);
     }
 
     internal static M1Slice6SuccessorCampaignAuthority HistoricalCampaign(
@@ -1038,7 +1292,7 @@ internal static class M1Slice6SuccessorCampaignRunner
         {
             throw new InvalidDataException("Successor fresh evidence roots are not disjoint from retained product state or terminal execution roots.");
         }
-        M1Slice6SuccessorCampaignLedgerV3 ledger = OpenHardBudgetLedger(
+        M1Slice6SuccessorCampaignLedgerV3 ledger = OpenActiveLedger(
             campaign, hardBudget, ledgerPath, now, requireExisting: true);
         (M1Slice6CampaignStageAuthority authority, M1Slice6SuccessorAttemptIdentity attempt) =
             M1Slice6SuccessorAuthorityLoader.Stage(stagePath, stageSha, campaign, hardBudget, runtime);
@@ -1192,6 +1446,11 @@ internal static class M1Slice6SuccessorCampaignRunner
         { throw new InvalidOperationException("The hard-budget ledger path is not fresh."); }
         M1Slice6SuccessorCampaignAuthority campaign =
             M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+        if (campaign.ActiveLedgerPath is not null)
+        {
+            throw new InvalidOperationException(
+                "Campaign v7 must be initialized only through the credential-rollover ledger entry point.");
+        }
         M1Slice6HardBudgetAuthority hardBudget =
             M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(amendmentPath, amendmentSha, campaign);
         if (now >= hardBudget.ExpiresAtUtc)
@@ -1240,10 +1499,70 @@ internal static class M1Slice6SuccessorCampaignRunner
         return ledger;
     }
 
+    internal static M1Slice6SuccessorCampaignLedgerV3 OpenActiveLedger(
+        M1Slice6SuccessorCampaignAuthority campaign, M1Slice6HardBudgetAuthority hardBudget,
+        string ledgerPath, DateTimeOffset now, bool requireExisting)
+    {
+        if (campaign.CampaignId
+            != "infinium.m1-s6.successor-campaign-v7/3e457821-389a-4ea8-a4c0-aed9da3b5966")
+        { return OpenHardBudgetLedger(campaign, hardBudget, ledgerPath, now, requireExisting); }
+        ledgerPath = Path.GetFullPath(ledgerPath);
+        if (campaign.ActiveLedgerPath is null || campaign.PredecessorLedgerPath is null
+            || !ledgerPath.Equals(campaign.ActiveLedgerPath, StringComparison.OrdinalIgnoreCase))
+        { throw new InvalidDataException("The v4 ledger path differs from the single active campaign path."); }
+        if (requireExisting && !File.Exists(ledgerPath))
+        { throw new InvalidOperationException("The independently admitted credential-rollover ledger is absent."); }
+        M1Slice6SuccessorCampaignLedgerV3 ledger = new(ledgerPath, campaign.CampaignId,
+            campaign.ManifestSha256, campaign.PredecessorLedgerPath,
+            "9a1bbb048445f3eb969e16b894f8b9d8347cba5ab89c9d3c83be66e33fda5a25",
+            "infinium.m1-s6.successor-credential-replacement-evidence/0dd95374-f9e1-400a-888d-ffd56f680214",
+            "4778cb8e9275c34a5eab70d32635261f5ebf9eda75247960e7389e01fe448feb",
+            null, null, now);
+        if (!ledger.HardBudgetAuthorityActive
+            || ledger.Current.Sequence < 40 || ledger.CommittedNanoUsd > 10_000_000_000)
+        { throw new InvalidDataException("The v4 ledger lacks durable rollover and hard-budget authority."); }
+        return ledger;
+    }
+
+    internal static void InitializeCredentialRolloverLedger(
+        string campaignPath, string campaignSha, string ledgerPath, string reviewPath,
+        DateTimeOffset now)
+    {
+        ledgerPath = Path.GetFullPath(ledgerPath);
+        if (File.Exists(ledgerPath))
+        { throw new InvalidOperationException("The credential-rollover ledger path is not fresh."); }
+        M1Slice6SuccessorCampaignAuthority campaign =
+            M1Slice6SuccessorAuthorityLoader.Campaign(
+                campaignPath, campaignSha, requireRolloverBaseline: true);
+        if (campaign.CampaignId
+            != "infinium.m1-s6.successor-campaign-v7/3e457821-389a-4ea8-a4c0-aed9da3b5966"
+            || now >= campaign.ExpiresAtUtc
+            || campaign.ActiveLedgerPath is null || campaign.PredecessorLedgerPath is null
+            || !ledgerPath.Equals(campaign.ActiveLedgerPath, StringComparison.OrdinalIgnoreCase))
+        { throw new InvalidDataException("Credential-rollover initialization requires live campaign v7."); }
+        M1Slice6SuccessorIndependentReview review = M1Slice6SuccessorAuthorityLoader.Review(
+            reviewPath, "campaign-authority", campaign.CampaignId, campaign.ManifestSha256,
+            false, successorV6: true);
+        M1Slice6SuccessorCampaignLedgerV3 ledger = new(ledgerPath, campaign.CampaignId,
+            campaign.ManifestSha256, campaign.PredecessorLedgerPath,
+            "9a1bbb048445f3eb969e16b894f8b9d8347cba5ab89c9d3c83be66e33fda5a25",
+            "infinium.m1-s6.successor-credential-replacement-evidence/0dd95374-f9e1-400a-888d-ffd56f680214",
+            "4778cb8e9275c34a5eab70d32635261f5ebf9eda75247960e7389e01fe448feb",
+            review.ReviewId, review.ManifestSha256, now);
+        if (ledger.Current.State != M1Slice6SuccessorCampaignV3State.CredentialAuthorityRolledOver
+            || ledger.Current.Sequence != 40 || ledger.CommittedNanoUsd != 910_560_000)
+        { throw new InvalidDataException("The credential-rollover ledger genesis is not exact."); }
+    }
+
     internal static void InitializeCampaign(string campaignPath, string campaignSha, string ledgerPath,
         string reviewPath, DateTimeOffset now)
     {
         M1Slice6SuccessorCampaignAuthority campaign = M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+        if (campaign.ActiveLedgerPath is not null)
+        {
+            throw new InvalidOperationException(
+                "Campaign v7 must be initialized only through the credential-rollover ledger entry point.");
+        }
         M1Slice6SuccessorCampaignLedger ledger = new(ledgerPath, campaign.CampaignId, campaign.ManifestSha256,
             campaign.TerminalCampaignId, campaign.TerminalEventHash, now);
         if (ledger.Current.State == M1Slice6SuccessorCampaignState.Ready)
@@ -1262,7 +1581,7 @@ internal static class M1Slice6SuccessorCampaignRunner
         M1Slice6SuccessorCampaignAuthority campaign = M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
         M1Slice6HardBudgetAuthority hardBudget = M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(
             amendmentPath, amendmentSha, campaign);
-        M1Slice6SuccessorCampaignLedgerV3 ledger = OpenHardBudgetLedger(
+        M1Slice6SuccessorCampaignLedgerV3 ledger = OpenActiveLedger(
             campaign, hardBudget, ledgerPath, now, requireExisting: true);
         M1Slice6SuccessorAttemptIdentity attempt = ledger.Current.Attempt
             ?? throw new InvalidOperationException("The successor ledger has no attempt evidence handoff.");
@@ -1376,7 +1695,7 @@ internal static class M1Slice6SuccessorCampaignRunner
             credentialPath, credentialSha, ledgerPath, originalEvidencePath, recoveryPath);
         (M1Slice6CampaignStageAuthority authority, M1Slice6SuccessorAttemptIdentity attempt) =
             M1Slice6SuccessorAuthorityLoader.Stage(stagePath, stageSha, campaign, hardBudget, runtime);
-        M1Slice6SuccessorCampaignLedgerV3 ledger = OpenHardBudgetLedger(
+        M1Slice6SuccessorCampaignLedgerV3 ledger = OpenActiveLedger(
             campaign, hardBudget, ledgerPath, now, requireExisting: true);
         if (ledger.Current.State != M1Slice6SuccessorCampaignV3State.AttemptEvidenceHandoff
             || ledger.Current.Attempt != attempt || ledger.Current.FailureDisposition.Length != 0
@@ -1472,7 +1791,7 @@ internal static class M1Slice6SuccessorCampaignRunner
             credentialPath, credentialSha, ledgerPath, evidencePath);
         (M1Slice6CampaignStageAuthority authority, M1Slice6SuccessorAttemptIdentity attempt) =
             M1Slice6SuccessorAuthorityLoader.Stage(stagePath, stageSha, campaign, hardBudget, runtime);
-        M1Slice6SuccessorCampaignLedgerV3 ledger = OpenHardBudgetLedger(
+        M1Slice6SuccessorCampaignLedgerV3 ledger = OpenActiveLedger(
             campaign, hardBudget, ledgerPath, now, requireExisting: true);
         if (ledger.Current.State == M1Slice6SuccessorCampaignV3State.AttemptEvidenceHandoff
             && ledger.Current.Attempt == attempt && File.Exists(Path.GetFullPath(evidencePath)))
@@ -1560,7 +1879,7 @@ internal static class M1Slice6SuccessorCampaignRunner
         M1Slice6SuccessorCampaignAuthority campaign = M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
         M1Slice6HardBudgetAuthority hardBudget = M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(
             amendmentPath, amendmentSha, campaign);
-        M1Slice6SuccessorCampaignLedgerV3 ledger = OpenHardBudgetLedger(
+        M1Slice6SuccessorCampaignLedgerV3 ledger = OpenActiveLedger(
             campaign, hardBudget, ledgerPath, now, requireExisting: true);
         M1Slice6SuccessorAttemptIdentity attempt = ledger.Current.Attempt
             ?? throw new InvalidOperationException("The accepted failure has no exact attempt identity.");
@@ -1583,7 +1902,7 @@ internal static class M1Slice6SuccessorCampaignRunner
         M1Slice6SuccessorCampaignAuthority campaign = M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
         M1Slice6HardBudgetAuthority hardBudget = M1Slice6SuccessorAuthorityLoader.HardBudgetAmendment(
             amendmentPath, amendmentSha, campaign);
-        M1Slice6SuccessorCampaignLedgerV3 ledger = OpenHardBudgetLedger(
+        M1Slice6SuccessorCampaignLedgerV3 ledger = OpenActiveLedger(
             campaign, hardBudget, ledgerPath, now, requireExisting: true);
         if (ledger.Current.State is not (M1Slice6SuccessorCampaignV3State.StageAccepted
                 or M1Slice6SuccessorCampaignV3State.ComposedEvidenceHandoff)

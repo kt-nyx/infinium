@@ -29,6 +29,129 @@ public sealed class M1Slice6SuccessorAuthorityTests
         "HttpRequestError.ConnectionError.SocketError.Success",
         "HttpRequestError.ConnectionError.SocketError.999",
     ];
+
+    [TestMethod]
+    public void CheckedInGeneration2CampaignClosesReplacementAndImmutableLedgerLineage()
+    {
+        string repository = RepositoryRoot();
+        string slice = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6");
+        string campaignPath = Path.Combine(slice, "m1-slice6-successor-campaign-authorization.v7.json");
+        string campaignSha = M1Slice6SuccessorAuthorityLoader.HashFile(campaignPath);
+        M1Slice6SuccessorCampaignAuthority campaign =
+            M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+        Assert.AreEqual("infinium.m1-s6.successor-campaign-v7/3e457821-389a-4ea8-a4c0-aed9da3b5966",
+            campaign.CampaignId);
+        Assert.AreEqual("g-e6b6a3f21ad74108ba65955850349f83", campaign.CredentialGenerationId);
+        Assert.AreEqual("49b71673b144dc5c5118f4dbfec52d22ca9f8f380ebe4cb7f9d7959746d93939",
+            campaign.CredentialManifestSha256);
+        string helper = Path.Combine(repository, "src", "Infinium.CredentialHelper", "bin", "Debug", "net10.0",
+            "Infinium.CredentialHelper.exe");
+        M1Slice6CampaignProductionStageBoundary providerBoundary = new(helper,
+            M1Slice6SuccessorAuthorityLoader.HashFile(helper),
+            Path.Combine(slice, "wp9-production-profile-authorization.v5.json"),
+            campaign.CredentialManifestSha256, campaign.CredentialManifestId);
+        Assert.AreEqual(2UL, (ulong)typeof(M1Slice6CampaignProductionStageBoundary)
+            .GetField("generationOrdinal", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(providerBoundary)!);
+        Assert.AreEqual("3ebb463346786506210498ea65c68af2768d2f73020e0e8e8b05c5d39b49f54e",
+            M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(campaign.ProductStateRoot));
+        string alternateRoot = Path.Combine(repository,
+            ".infinium-rejected-v4-fork-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            string amendmentPath = Path.Combine(slice, "m1-slice6-development-campaign-amendment.v2.json");
+            string amendmentSha = M1Slice6SuccessorAuthorityLoader.HashFile(amendmentPath);
+            string rejectedHardBudgetLedger = Path.Combine(alternateRoot, "legacy-hard-budget-ledger.jsonl");
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                M1Slice6SuccessorCampaignRunner.InitializeHardBudget(campaignPath, campaignSha,
+                    amendmentPath, amendmentSha, rejectedHardBudgetLedger,
+                    Path.Combine(alternateRoot, "missing-review.json"),
+                    new DateTimeOffset(2026, 8, 22, 1, 0, 0, TimeSpan.Zero)));
+            Assert.IsFalse(File.Exists(rejectedHardBudgetLedger));
+            string rejectedLegacyLedger = Path.Combine(alternateRoot, "legacy-v2-ledger.jsonl");
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                M1Slice6SuccessorCampaignRunner.InitializeCampaign(campaignPath, campaignSha,
+                    rejectedLegacyLedger, Path.Combine(alternateRoot, "missing-review.json"),
+                    new DateTimeOffset(2026, 8, 22, 1, 0, 0, TimeSpan.Zero)));
+            Assert.IsFalse(File.Exists(rejectedLegacyLedger));
+            string output = Path.Combine(alternateRoot, "attempt");
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                M1Slice6SuccessorAttemptMaterializer.Materialize(campaignPath, campaignSha,
+                    amendmentPath, amendmentSha,
+                    Path.Combine(alternateRoot, "ledger.v4.jsonl"), "Qualification", 9, output,
+                    new string('a', 40),
+                    Path.Combine(repository, "src", "Infinium.Coordinator", "bin", "Debug", "net10.0",
+                        "Infinium.Coordinator.exe"),
+                    Path.Combine(repository, "src", "Infinium.CredentialHelper", "bin", "Debug", "net10.0",
+                        "Infinium.CredentialHelper.exe"),
+                    new DateTimeOffset(2026, 8, 22, 1, 0, 0, TimeSpan.Zero)));
+            Assert.IsFalse(Directory.Exists(output));
+        }
+        finally
+        {
+            if (Directory.Exists(alternateRoot)) { Directory.Delete(alternateRoot, recursive: true); }
+        }
+    }
+
+    [TestMethod]
+    public void CredentialRolloverLedgerImportsSequence39AndAdmitsFreshOrdinal9WithoutCountCap()
+    {
+        string repository = RepositoryRoot();
+        string root = Path.Combine(repository, ".infinium-successor-v4-ledger-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            string campaignPath = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+                "m1-slice6-successor-campaign-authorization.v7.json");
+            string campaignSha = M1Slice6SuccessorAuthorityLoader.HashFile(campaignPath);
+            M1Slice6SuccessorCampaignAuthority campaign =
+                M1Slice6SuccessorAuthorityLoader.Campaign(campaignPath, campaignSha);
+            string predecessor = Path.Combine(repository, "artifacts", "m1-slice6", "successor-campaign",
+                "ledger.v3.jsonl");
+            string ledgerPath = Path.Combine(root, "ledger.v4.jsonl");
+            DateTimeOffset now = new DateTimeOffset(2026, 8, 22, 0, 55, 0, TimeSpan.Zero).AddTicks(1);
+            M1Slice6SuccessorCampaignLedgerV3 ledger = new(ledgerPath, campaign.CampaignId,
+                campaign.ManifestSha256, predecessor,
+                "9a1bbb048445f3eb969e16b894f8b9d8347cba5ab89c9d3c83be66e33fda5a25",
+                "infinium.m1-s6.successor-credential-replacement-evidence/0dd95374-f9e1-400a-888d-ffd56f680214",
+                "4778cb8e9275c34a5eab70d32635261f5ebf9eda75247960e7389e01fe448feb",
+                "test-generation-2-campaign-review", new string('a', 64), now);
+            Assert.AreEqual(40L, ledger.Current.Sequence);
+            Assert.AreEqual(M1Slice6SuccessorCampaignV3State.CredentialAuthorityRolledOver,
+                ledger.Current.State);
+            Assert.AreEqual(910_560_000L, ledger.CommittedNanoUsd);
+            M1Slice6SuccessorAttemptIdentity attempt = new(M1Slice6CampaignStage.Qualification, 9,
+                "test-v4-wp9-attempt-9", "test-v4-wp9-stage-9", new string('b', 64),
+                "test-v4-wp9-runtime-9", new string('c', 64), "test-v4-wp9-request-9",
+                "test-v4-wp9-reservation-9", "test-v4-wp9-fence-9");
+            ledger.ReserveAttempt(attempt, 110_080_000, now.AddTicks(1));
+            Assert.AreEqual(41L, ledger.Current.Sequence);
+            Assert.AreEqual(1_020_640_000L, ledger.CommittedNanoUsd);
+            ActiveRepositoryJsonSchemaValidator.Validate(
+                System.Text.Encoding.UTF8.GetBytes(File.ReadLines(ledgerPath).First()),
+                File.ReadAllBytes(Path.Combine(repository, "contracts", "repository",
+                    "m1-slice6-successor-campaign-ledger.v4.schema.json")),
+                "infinium.repository.m1-slice6-successor-campaign-ledger-entry/4.0.0");
+            string unknownMemberLedger = Path.Combine(root, "unknown-member-ledger.v4.jsonl");
+            string first = File.ReadLines(ledgerPath).First();
+            File.WriteAllText(unknownMemberLedger,
+                first.Insert(1, "\"unknown_member\":\"must-reject\",") + Environment.NewLine);
+            Assert.ThrowsExactly<JsonException>(() => new M1Slice6SuccessorCampaignLedgerV3(
+                unknownMemberLedger, campaign.CampaignId, campaign.ManifestSha256, predecessor,
+                "9a1bbb048445f3eb969e16b894f8b9d8347cba5ab89c9d3c83be66e33fda5a25",
+                "infinium.m1-s6.successor-credential-replacement-evidence/0dd95374-f9e1-400a-888d-ffd56f680214",
+                "4778cb8e9275c34a5eab70d32635261f5ebf9eda75247960e7389e01fe448feb",
+                null, null, now));
+            Assert.ThrowsExactly<InvalidDataException>(() => new M1Slice6SuccessorCampaignLedgerV3(
+                Path.Combine(root, "tampered.jsonl"), campaign.CampaignId, campaign.ManifestSha256,
+                predecessor, new string('0', 64), "evidence", new string('1', 64),
+                "review", new string('2', 64), now));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) { Directory.Delete(root, recursive: true); }
+        }
+    }
     [TestMethod]
     public void CheckedInSuccessorAuthorityIsSchemaValidAndBindsTheReviewedSnapshot()
     {

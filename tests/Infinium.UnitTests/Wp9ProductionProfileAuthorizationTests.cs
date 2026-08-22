@@ -115,6 +115,43 @@ public sealed class Wp9ProductionProfileAuthorizationTests
     }
 
     [TestMethod]
+    public void ActiveVerifiedGeneration2ManifestAdmitsOnlyTheExactReadFreeStoreBoundary()
+    {
+        string root = RepositoryRoot();
+        string source = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp9-production-profile-authorization.v5.json");
+        byte[] bytes = File.ReadAllBytes(source);
+        string sha = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(bytes));
+        const string manifestId =
+            "infinium.m1-s6.wp9.production-profile-authorization-v5/4ed620b0-7ee9-49e4-980a-e3251374487b";
+        using (WindowsCredentialManagerStore store =
+            WindowsCredentialManagerStore.FromProductionEnrollmentManifest(source, sha, manifestId))
+        {
+            Assert.IsTrue(store.IsProductionEnrollment);
+            Assert.AreEqual(0, store.CallTrace.Count);
+        }
+
+        string temporary = Path.Combine(Path.GetTempPath(),
+            "infinium-generation2-provider-access-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            JsonObject tampered = JsonNode.Parse(bytes)!.AsObject();
+            tampered["native_boundary"]!["maximum_calls"]!["CredWriteW"] = 1;
+            byte[] changed = JsonSerializer.SerializeToUtf8Bytes(tampered);
+            File.WriteAllBytes(temporary, changed);
+            string changedSha = Convert.ToHexStringLower(
+                System.Security.Cryptography.SHA256.HashData(changed));
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+                WindowsCredentialManagerStore.FromProductionEnrollmentManifest(
+                    temporary, changedSha, manifestId));
+        }
+        finally
+        {
+            if (File.Exists(temporary)) { File.Delete(temporary); }
+        }
+    }
+
+    [TestMethod]
     public void ProductionCollisionClassifierIsExactAndCannotReinterpretOtherFailures()
     {
         Assert.IsTrue(Wp9ProductionCollisionClassifier.IsKnownCollision(

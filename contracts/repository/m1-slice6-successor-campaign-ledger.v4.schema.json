@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.repository.m1-slice6-successor-campaign-ledger-entry/4.0.0",
+  "type": "object", "additionalProperties": false,
+  "required": ["sequence", "campaign_id", "campaign_manifest_sha256", "terminal_campaign_id", "terminal_event_hash", "amendment_review_id", "amendment_review_sha256", "state", "event", "attempt", "evidence_id", "evidence_sha256", "failure_disposition", "wp9_possible_starts", "wp10_possible_starts", "wp11_possible_starts", "wp9_authoritative", "wp10_authoritative", "wp11_authoritative", "prior_conservative_nano_usd", "successor_cumulative_reserved_nano_usd", "successor_outstanding_reserved_nano_usd", "successor_unresolved_nano_usd", "successor_settled_nano_usd", "previous_hash", "event_hash", "recorded_at_utc"],
+  "properties": {
+    "sequence": { "type": "integer", "minimum": 40 },
+    "campaign_id": { "$ref": "#/$defs/id" },
+    "campaign_manifest_sha256": { "$ref": "#/$defs/sha" },
+    "terminal_campaign_id": { "$ref": "#/$defs/id" },
+    "terminal_event_hash": { "$ref": "#/$defs/sha" },
+    "amendment_review_id": { "$ref": "#/$defs/id" },
+    "amendment_review_sha256": { "$ref": "#/$defs/sha" },
+    "state": { "enum": ["credential-authority-rolled-over", "attempt-reserved", "attempt-started", "attempt-evidence-handoff", "authoritative-recovery-handoff", "attempt-failure-accepted", "correction-reviewed", "stage-accepted", "composed-evidence-handoff", "completed", "stopped"] },
+    "event": { "$ref": "#/$defs/id" },
+    "attempt": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/attempt" }] },
+    "evidence_id": { "type": "string", "maxLength": 256, "pattern": "^(?:|[A-Za-z0-9._:/-]+)$" },
+    "evidence_sha256": { "type": "string", "pattern": "^(?:|[0-9a-f]{64})$" },
+    "failure_disposition": { "type": "string", "maxLength": 256 },
+    "wp9_possible_starts": { "type": "integer", "minimum": 8 },
+    "wp10_possible_starts": { "type": "integer", "minimum": 0 },
+    "wp11_possible_starts": { "type": "integer", "minimum": 0 },
+    "wp9_authoritative": { "type": "boolean" }, "wp10_authoritative": { "type": "boolean" }, "wp11_authoritative": { "type": "boolean" },
+    "prior_conservative_nano_usd": { "const": 140000000 },
+    "successor_cumulative_reserved_nano_usd": { "type": "integer", "minimum": 770560000 },
+    "successor_outstanding_reserved_nano_usd": { "type": "integer", "minimum": 0 },
+    "successor_unresolved_nano_usd": { "type": "integer", "minimum": 770560000 },
+    "successor_settled_nano_usd": { "type": "integer", "minimum": 0 },
+    "previous_hash": { "$ref": "#/$defs/sha" }, "event_hash": { "$ref": "#/$defs/sha" },
+    "recorded_at_utc": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9._:/-]+$" },
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "attempt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["stage", "attempt_ordinal", "attempt_id", "stage_manifest_id", "stage_manifest_sha256", "runtime_authority_id", "runtime_authority_sha256", "request_id", "reservation_id", "dispatch_fence_id"],
+      "properties": {
+        "stage": { "enum": ["qualification", "source-claim-extraction", "candidate-investigation"] },
+        "attempt_ordinal": { "type": "integer", "minimum": 1 },
+        "attempt_id": { "$ref": "#/$defs/id" }, "stage_manifest_id": { "$ref": "#/$defs/id" },
+        "stage_manifest_sha256": { "$ref": "#/$defs/sha" }, "runtime_authority_id": { "$ref": "#/$defs/id" },
+        "runtime_authority_sha256": { "$ref": "#/$defs/sha" }, "request_id": { "$ref": "#/$defs/id" },
+        "reservation_id": { "$ref": "#/$defs/id" }, "dispatch_fence_id": { "$ref": "#/$defs/id" }
+      }
+    }
+  }
+}

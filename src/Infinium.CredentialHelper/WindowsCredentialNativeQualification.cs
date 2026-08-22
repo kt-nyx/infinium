@@ -712,6 +712,8 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         "d65cefe9c2a71231c8fd9a6c4105f26acd742f49af248f38be989b059a93a515";
     private const string ProductionEnrollmentV4 =
         "infinium.repository.wp9-production-profile-authorization/4.0.0";
+    private const string ProductionProviderAccessV5 =
+        "infinium.repository.wp9-production-profile-authorization/5.0.0";
     private static readonly HashSet<string> RetiredProductionManifestIds = new(StringComparer.Ordinal)
     {
         "infinium.m1-s6.wp9.production-profile-authorization/09b8e309-ead8-441e-8307-5a4a1a2c43d5",
@@ -907,6 +909,10 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
             {
                 return FromProductionReplacementManifest(root, expectedManifestId);
             }
+            if (root.GetProperty("schema_identity").GetString() == ProductionProviderAccessV5)
+            {
+                return FromProductionProviderAccessManifest(root, expectedManifestId);
+            }
             JsonElement profile = root.GetProperty("profile");
             JsonElement boundary = root.GetProperty("native_boundary");
             string manifestId = root.GetProperty("manifest_id").GetString()!;
@@ -975,6 +981,96 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         {
             throw new InvalidDataException("The production enrollment manifest structure is invalid.", exception);
         }
+    }
+
+    private static WindowsCredentialManagerStore FromProductionProviderAccessManifest(
+        JsonElement root,
+        string expectedManifestId)
+    {
+        JsonElement profile = root.GetProperty("profile");
+        JsonElement closure = root.GetProperty("replacement_closure");
+        JsonElement intent = root.GetProperty("provider_intent");
+        JsonElement boundary = root.GetProperty("native_boundary");
+        JsonElement maxima = boundary.GetProperty("maximum_calls");
+        NativeTarget target = new(
+            "successor-active-verified-provider-access",
+            profile.GetProperty("access_profile_id").GetString()!,
+            profile.GetProperty("generation_id").GetString()!,
+            profile.GetProperty("target_fingerprint_sha256").GetString()!);
+        string actualFingerprint = Convert.ToHexStringLower(
+            SHA256.HashData(Encoding.UTF8.GetBytes(target.RawTarget)));
+        string[] callOrder = boundary.GetProperty("exact_call_order").EnumerateArray()
+            .Select(item => item.GetString()!).ToArray();
+        if (root.GetProperty("manifest_id").GetString() != expectedManifestId
+            || expectedManifestId
+                != "infinium.m1-s6.wp9.production-profile-authorization-v5/4ed620b0-7ee9-49e4-980a-e3251374487b"
+            || root.GetProperty("status").GetString()
+                != "active-verified-read-only-provider-use"
+            || profile.GetProperty("mode").GetString() != "existing-active-verified-only"
+            || target.AccessProfileId != "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e"
+            || target.GenerationId != "g-e6b6a3f21ad74108ba65955850349f83"
+            || profile.GetProperty("generation_ordinal").GetInt32() != 2
+            || profile.GetProperty("revocation_epoch").GetInt32() != 0
+            || profile.GetProperty("target_derivation").GetString()
+                != "Infinium:<access_profile_id>:<generation_id>"
+            || profile.GetProperty("target_encoding").GetString() != "utf-8"
+            || target.TargetFingerprintSha256 != actualFingerprint
+            || profile.GetProperty("predecessor_generation_id").GetString()
+                != "g-ff6d82e7a7d244f6b8a9d0164991be37"
+            || profile.GetProperty("predecessor_dispatch_eligible").GetBoolean()
+            || !profile.GetProperty("predecessor_absent").GetBoolean()
+            || closure.GetProperty("evidence_sha256").GetString()
+                != "4778cb8e9275c34a5eab70d32635261f5ebf9eda75247960e7389e01fe448feb"
+            || closure.GetProperty("review_sha256").GetString()
+                != "85d09936320fd393abacb337031b6519843e580fcb93fb10d93eb82aee9db160"
+            || closure.GetProperty("product_state_checkpoint_sha256").GetString()
+                != "3ebb463346786506210498ea65c68af2768d2f73020e0e8e8b05c5d39b49f54e"
+            || intent.GetProperty("provider").GetString() != "openai"
+            || intent.GetProperty("purpose").GetString() != "user-owned-platform-api-inference"
+            || intent.GetProperty("account_identity_id").GetString()
+                != "openai-account-owner-confirmed-at-enrollment"
+            || intent.GetProperty("billing_scope_identity_id").GetString()
+                != "openai-direct-usage-owner-confirmed-at-enrollment"
+            || !intent.GetProperty("provider_request_permitted").GetBoolean()
+            || !callOrder.SequenceEqual(["CredReadW", "CredFree"], StringComparer.Ordinal)
+            || maxima.GetProperty("CredWriteW").GetInt32() != 0
+            || maxima.GetProperty("CredReadW").GetInt32() != 1
+            || maxima.GetProperty("CredDeleteW").GetInt32() != 0
+            || maxima.GetProperty("CredFree").GetInt32() != 1
+            || maxima.GetProperty("total").GetInt32() != 2
+            || boundary.GetProperty("enumeration").GetString() != "prohibited"
+            || boundary.GetProperty("write").GetString() != "prohibited"
+            || boundary.GetProperty("delete").GetString() != "prohibited"
+            || boundary.GetProperty("replacement").GetString() != "prohibited"
+            || boundary.GetProperty("exposure").GetString() != "prohibited")
+        {
+            throw new InvalidDataException(
+                "The active-verified production access manifest changed its exact read/free authority.");
+        }
+        const string format = "yyyy-MM-ddTHH:mm:ss.fffffff'Z'";
+        if (!DateTimeOffset.TryParseExact(root.GetProperty("prepared_at_utc").GetString(), format,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.AssumeUniversal
+                    | System.Globalization.DateTimeStyles.AdjustToUniversal,
+                out DateTimeOffset prepared)
+            || !DateTimeOffset.TryParseExact(root.GetProperty("expires_at_utc").GetString(), format,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.AssumeUniversal
+                    | System.Globalization.DateTimeStyles.AdjustToUniversal,
+                out DateTimeOffset expires)
+            || prepared >= expires || DateTimeOffset.UtcNow >= expires)
+        {
+            throw new InvalidDataException(
+                "The active-verified production access manifest is not in its finite lifetime.");
+        }
+        Validate(target);
+        WindowsCredentialManagerStore store = new(
+            new NativeNamespaceReuseGuard(), FiniteNativeDeadline.Start(expires - DateTimeOffset.UtcNow))
+            { IsProductionEnrollment = true };
+        store.manifestTargets.Add(new(target.AccessProfileId, target.GenerationId), target);
+        store.manifestTargetOrder.Add(target);
+        store.BeginScenario("m1-slice6-successor-provider-read-only-generation-2");
+        return store;
     }
 
     private static WindowsCredentialManagerStore FromProductionReplacementManifest(

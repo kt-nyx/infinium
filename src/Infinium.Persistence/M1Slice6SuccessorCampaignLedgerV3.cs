@@ -17,6 +17,7 @@ public enum M1Slice6SuccessorCampaignV3State
     AttemptFailureAccepted,
     CorrectionReviewed,
     HardBudgetAmended,
+    CredentialAuthorityRolledOver,
     StageAccepted,
     ComposedEvidenceHandoff,
     Completed,
@@ -72,6 +73,7 @@ public sealed class M1Slice6SuccessorCampaignLedgerV3
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         WriteIndented = false,
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
     };
 
     static M1Slice6SuccessorCampaignLedgerV3() =>
@@ -87,6 +89,7 @@ public sealed class M1Slice6SuccessorCampaignLedgerV3
     private readonly long baseSequence;
     private readonly string basePreviousHash;
     private readonly bool importedHardBudgetLineage;
+    private readonly bool importedCredentialRolloverLineage;
     private readonly int inheritedWp9AttemptCount;
     private readonly List<M1Slice6SuccessorCampaignLedgerV3Entry> entries;
 
@@ -119,6 +122,7 @@ public sealed class M1Slice6SuccessorCampaignLedgerV3
         baseSequence = predecessorSequence;
         basePreviousHash = Hex(predecessorEventHash);
         importedHardBudgetLineage = true;
+        importedCredentialRolloverLineage = false;
         inheritedWp9AttemptCount = 1;
         if (this.terminalCampaignId != RequiredTerminalCampaignId
             || Hex(terminalEventHash) != RequiredTerminalEventHash
@@ -161,10 +165,104 @@ public sealed class M1Slice6SuccessorCampaignLedgerV3
         }
     }
 
+    public M1Slice6SuccessorCampaignLedgerV3(
+        string path, string campaignId, string campaignManifestSha256,
+        string predecessorLedgerPath, string predecessorLedgerSha256,
+        string replacementEvidenceId, string replacementEvidenceSha256,
+        string? campaignReviewId, string? campaignReviewSha256,
+        DateTimeOffset now)
+    {
+        this.path = Path.GetFullPath(path);
+        lockPath = this.path + ".lock";
+        if (campaignReviewId is null && File.Exists(this.path))
+        {
+            string firstLine = File.ReadLines(this.path, Encoding.UTF8).FirstOrDefault()
+                ?? throw new InvalidDataException("The v4 ledger is empty.");
+            M1Slice6SuccessorCampaignLedgerV3Entry retained =
+                JsonSerializer.Deserialize<M1Slice6SuccessorCampaignLedgerV3Entry>(firstLine, Json)
+                ?? throw new InvalidDataException("The v4 ledger genesis is invalid.");
+            campaignReviewId = retained.AmendmentReviewId;
+            campaignReviewSha256 = retained.AmendmentReviewSha256;
+        }
+        this.campaignId = Identity(campaignId);
+        this.campaignManifestSha256 = Hex(campaignManifestSha256);
+        terminalCampaignId = RequiredTerminalCampaignId;
+        amendmentReviewId = campaignReviewId is null ? "" : Identity(campaignReviewId);
+        amendmentReviewSha256 = campaignReviewSha256 is null ? "" : Hex(campaignReviewSha256);
+        baseSequence = 39;
+        basePreviousHash =
+            "b5292326a65791731614a6ab75a0b838de121ea721d01d5489f4c2897f88dcc0";
+        importedHardBudgetLineage = false;
+        importedCredentialRolloverLineage = true;
+        inheritedWp9AttemptCount = 7;
+        string immutablePredecessor = Path.GetFullPath(predecessorLedgerPath);
+        if (HashFile(immutablePredecessor) != Hex(predecessorLedgerSha256)
+            || predecessorLedgerSha256
+                != "9a1bbb048445f3eb969e16b894f8b9d8347cba5ab89c9d3c83be66e33fda5a25")
+        {
+            throw new InvalidDataException("The v4 ledger import does not bind the exact immutable v3 bytes.");
+        }
+        M1Slice6SuccessorCampaignLedgerV3 predecessor = new(
+            immutablePredecessor,
+            "infinium.m1-s6.successor-campaign-v6/20260821-hard-budget",
+            "41dc8f4c31461f10ec4da68ff8a0c65284b23bbdeec6489cc6d09347c6643a98",
+            RequiredTerminalCampaignId, RequiredTerminalEventHash, 8,
+            "be76dfd4d47b33e97f8585c66c951df7184b9995e02e9539e2c5bdf2ee089f2b",
+            "infinium.m1-s6.hard-budget-continuation/20260821-c2b-c3",
+            "a79502da0ebea9ded5f6b10b72ad70f8b482d9de28e97e3bd09541936683a5b3",
+            "infinium.m1-s6.hard-budget-amendment-review/20260821-c2b-c3",
+            "cd655e7711c85a9cb746a3a2dcd7baa126378f0451711bee37ddf5ac35bfe103",
+            2, 0, 0, false, false, false, 110_080_000, 110_080_000, 0,
+            now);
+        if (predecessor.Current.Sequence != 39 || predecessor.Current.EventHash != basePreviousHash
+            || predecessor.Current.Wp9PossibleStarts != 8
+            || predecessor.Current.Wp10PossibleStarts != 0
+            || predecessor.Current.Wp11PossibleStarts != 0
+            || predecessor.Current.Wp9Authoritative || predecessor.Current.Wp10Authoritative
+            || predecessor.Current.Wp11Authoritative
+            || predecessor.Current.SuccessorCumulativeReservedNanoUsd != 770_560_000
+            || predecessor.Current.SuccessorOutstandingReservedNanoUsd != 0
+            || predecessor.Current.SuccessorUnresolvedNanoUsd != 770_560_000
+            || predecessor.Current.SuccessorSettledNanoUsd != 0
+            || predecessor.CommittedNanoUsd != 910_560_000)
+        {
+            throw new InvalidDataException("The v4 ledger import does not validate the exact v3 tail and accounting.");
+        }
+        Directory.CreateDirectory(Path.GetDirectoryName(this.path)!);
+        if (File.Exists(this.path))
+        {
+            using FileStream lease = Lock();
+            entries = ReadAndValidate();
+            M1Slice6SuccessorCampaignLedgerV3Entry first = entries[0];
+            if (first.CampaignId != this.campaignId
+                || first.CampaignManifestSha256 != this.campaignManifestSha256
+                || first.PreviousHash != basePreviousHash
+                || first.AmendmentReviewId != amendmentReviewId
+                || first.AmendmentReviewSha256 != amendmentReviewSha256
+                || first.EvidenceId != Identity(replacementEvidenceId)
+                || first.EvidenceSha256 != Hex(replacementEvidenceSha256))
+            {
+                throw new InvalidDataException("The v4 ledger identity differs from its immutable rollover event.");
+            }
+            RequireClock(now);
+        }
+        else
+        {
+            if (amendmentReviewId.Length == 0 || amendmentReviewSha256.Length == 0)
+            { throw new InvalidDataException("A fresh v4 ledger requires the accepting campaign review binding."); }
+            entries = [];
+            Append(M1Slice6SuccessorCampaignV3State.CredentialAuthorityRolledOver,
+                "credential-authority-rolled-over", null, Identity(replacementEvidenceId),
+                Hex(replacementEvidenceSha256), "", 8, 0, 0, false, false, false,
+                PriorConservativeNanoUsd, 770_560_000, 0, 770_560_000, 0, now);
+        }
+    }
+
     public IReadOnlyList<M1Slice6SuccessorCampaignLedgerV3Entry> Entries => entries.AsReadOnly();
     public M1Slice6SuccessorCampaignLedgerV3Entry Current => entries[^1];
     public bool HardBudgetAuthorityActive =>
-        entries.Any(entry => entry.State == M1Slice6SuccessorCampaignV3State.HardBudgetAmended);
+        importedCredentialRolloverLineage
+        || entries.Any(entry => entry.State == M1Slice6SuccessorCampaignV3State.HardBudgetAmended);
 
     public long CommittedNanoUsd => checked(Current.PriorConservativeNanoUsd
         + Current.SuccessorSettledNanoUsd + Current.SuccessorUnresolvedNanoUsd
@@ -178,6 +276,7 @@ public sealed class M1Slice6SuccessorCampaignLedgerV3
         ValidateAttempt(attempt);
         if (Current.State is not (M1Slice6SuccessorCampaignV3State.CorrectionReviewed
             or M1Slice6SuccessorCampaignV3State.HardBudgetAmended
+            or M1Slice6SuccessorCampaignV3State.CredentialAuthorityRolledOver
             or M1Slice6SuccessorCampaignV3State.StageAccepted))
         {
             throw new InvalidOperationException("A successor attempt requires admitted or independently accepted predecessor authority.");
@@ -501,7 +600,7 @@ public sealed class M1Slice6SuccessorCampaignLedgerV3
         M1Slice6SuccessorCampaignLedgerV3Entry entry = material with { EventHash = hash };
         ValidateEvolution(entries.Count == 0 ? null : entries[^1], entry,
             entries.Any(item => item.State == M1Slice6SuccessorCampaignV3State.HardBudgetAmended),
-            importedHardBudgetLineage);
+            importedHardBudgetLineage, importedCredentialRolloverLineage);
         byte[] line = [.. JsonSerializer.SerializeToUtf8Bytes(entry, Json), (byte)'\n'];
         using FileStream lease = Lock();
         if (File.Exists(path) && new FileInfo(path).Length > 0)
@@ -535,7 +634,7 @@ public sealed class M1Slice6SuccessorCampaignLedgerV3
             }
             ValidateEvolution(result.Count == 0 ? null : result[^1], entry,
                 result.Any(item => item.State == M1Slice6SuccessorCampaignV3State.HardBudgetAmended),
-                importedHardBudgetLineage);
+                importedHardBudgetLineage, importedCredentialRolloverLineage);
             if (entry.Event == "fresh-attempt-reserved" && entry.Attempt is { } fresh)
             {
                 M1Slice6SuccessorAttemptIdentity[] priorAttempts = result
@@ -557,7 +656,7 @@ public sealed class M1Slice6SuccessorCampaignLedgerV3
 
     private static void ValidateEvolution(M1Slice6SuccessorCampaignLedgerV3Entry? prior,
         M1Slice6SuccessorCampaignLedgerV3Entry entry, bool hardBudgetAuthorityActive,
-        bool importedHardBudgetLineage = false)
+        bool importedHardBudgetLineage = false, bool importedCredentialRolloverLineage = false)
     {
         if (entry.CampaignId.Length == 0 || entry.CampaignManifestSha256.Length != 64
             || entry.TerminalCampaignId != RequiredTerminalCampaignId
@@ -578,6 +677,30 @@ public sealed class M1Slice6SuccessorCampaignLedgerV3
         }
         if (prior is null)
         {
+            if (importedCredentialRolloverLineage)
+            {
+                if (entry.Sequence != 40
+                    || entry.State != M1Slice6SuccessorCampaignV3State.CredentialAuthorityRolledOver
+                    || entry.Event != "credential-authority-rolled-over"
+                    || entry.PreviousHash
+                        != "b5292326a65791731614a6ab75a0b838de121ea721d01d5489f4c2897f88dcc0"
+                    || entry.Wp9PossibleStarts != 8 || entry.Wp10PossibleStarts != 0
+                    || entry.Wp11PossibleStarts != 0 || entry.Attempt is not null
+                    || entry.EvidenceId.Length == 0 || entry.EvidenceSha256.Length != 64
+                    || entry.AmendmentReviewId.Length == 0
+                    || entry.AmendmentReviewSha256.Length != 64
+                    || entry.SuccessorOutstandingReservedNanoUsd != 0
+                    || entry.SuccessorUnresolvedNanoUsd != 770_560_000
+                    || entry.SuccessorSettledNanoUsd != 0
+                    || entry.SuccessorCumulativeReservedNanoUsd != 770_560_000
+                    || entry.Wp9Authoritative || entry.Wp10Authoritative
+                    || entry.Wp11Authoritative)
+                {
+                    throw new InvalidDataException(
+                        "The v4 ledger import event is not exact immutable v3 and credential-rollover lineage.");
+                }
+                return;
+            }
             if (importedHardBudgetLineage)
             {
                 if (entry.Sequence != 9
@@ -646,6 +769,8 @@ public sealed class M1Slice6SuccessorCampaignLedgerV3
             case (M1Slice6SuccessorCampaignV3State.Admitted, M1Slice6SuccessorCampaignV3State.AttemptReserved):
             case (M1Slice6SuccessorCampaignV3State.CorrectionReviewed, M1Slice6SuccessorCampaignV3State.AttemptReserved):
             case (M1Slice6SuccessorCampaignV3State.HardBudgetAmended, M1Slice6SuccessorCampaignV3State.AttemptReserved):
+            case (M1Slice6SuccessorCampaignV3State.CredentialAuthorityRolledOver,
+                  M1Slice6SuccessorCampaignV3State.AttemptReserved):
             case (M1Slice6SuccessorCampaignV3State.StageAccepted, M1Slice6SuccessorCampaignV3State.AttemptReserved):
                 {
                     long delta = entry.SuccessorCumulativeReservedNanoUsd
@@ -823,6 +948,9 @@ public sealed class M1Slice6SuccessorCampaignLedgerV3
 
     private static string Hash(M1Slice6SuccessorCampaignLedgerV3Entry entry) =>
         Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(entry, Json)));
+
+    private static string HashFile(string filePath) =>
+        Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(filePath)));
 
     private FileStream Lock() => new(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite,
         FileShare.None, 1, FileOptions.WriteThrough);

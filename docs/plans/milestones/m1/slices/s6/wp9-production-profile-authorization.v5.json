@@ -1,0 +1,45 @@
+{
+  "schema_identity": "infinium.repository.wp9-production-profile-authorization/5.0.0",
+  "manifest_id": "infinium.m1-s6.wp9.production-profile-authorization-v5/4ed620b0-7ee9-49e4-980a-e3251374487b",
+  "status": "active-verified-read-only-provider-use",
+  "prepared_at_utc": "2026-08-22T00:51:38.7869803Z",
+  "expires_at_utc": "2026-08-31T23:56:00.0000000Z",
+  "replacement_closure": {
+    "evidence_id": "infinium.m1-s6.successor-credential-replacement-evidence/0dd95374-f9e1-400a-888d-ffd56f680214",
+    "evidence_path": "artifacts/m1-slice6/successor-credential-replacement-foreground-recovery/68898542-71bb-464e-a381-7e3829d65a37/replacement-evidence.v2.json",
+    "evidence_sha256": "4778cb8e9275c34a5eab70d32635261f5ebf9eda75247960e7389e01fe448feb",
+    "review_id": "infinium.m1-s6.successor-credential-replacement-evidence-review-v3/18cabac3-02ce-4f54-b19d-778ee7f94367",
+    "review_path": "docs/plans/milestones/m1/slices/s6/m1-slice6-successor-credential-replacement-foreground-recovery-evidence-review.v3.json",
+    "review_sha256": "85d09936320fd393abacb337031b6519843e580fcb93fb10d93eb82aee9db160",
+    "product_state_checkpoint_sha256": "3ebb463346786506210498ea65c68af2768d2f73020e0e8e8b05c5d39b49f54e"
+  },
+  "profile": {
+    "mode": "existing-active-verified-only",
+    "access_profile_id": "openai-platform-dc68f2ca9775415eb6fa78de5cafe14e",
+    "generation_id": "g-e6b6a3f21ad74108ba65955850349f83",
+    "generation_ordinal": 2,
+    "revocation_epoch": 0,
+    "target_derivation": "Infinium:<access_profile_id>:<generation_id>",
+    "target_fingerprint_sha256": "e7be7fd8ea2adef986806215f4a431174bab96b50789e855a2a18f96254c93ca",
+    "target_encoding": "utf-8",
+    "predecessor_generation_id": "g-ff6d82e7a7d244f6b8a9d0164991be37",
+    "predecessor_dispatch_eligible": false,
+    "predecessor_absent": true
+  },
+  "provider_intent": {
+    "provider": "openai",
+    "purpose": "user-owned-platform-api-inference",
+    "account_identity_id": "openai-account-owner-confirmed-at-enrollment",
+    "billing_scope_identity_id": "openai-direct-usage-owner-confirmed-at-enrollment",
+    "provider_request_permitted": true
+  },
+  "native_boundary": {
+    "exact_call_order": ["CredReadW", "CredFree"],
+    "maximum_calls": { "CredWriteW": 0, "CredReadW": 1, "CredDeleteW": 0, "CredFree": 1, "total": 2 },
+    "enumeration": "prohibited",
+    "write": "prohibited",
+    "delete": "prohibited",
+    "replacement": "prohibited",
+    "exposure": "prohibited"
+  }
+}

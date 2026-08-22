@@ -167,6 +167,7 @@ public sealed class M1Slice6CampaignProductionStageBoundary : IM1Slice6CampaignS
         TimeSpan, DateTimeOffset, CancellationToken, Task<HelperProcessReceipt>> executeHelper;
     private readonly string profileId;
     private readonly string generationId;
+    private readonly ulong generationOrdinal;
     private readonly string targetFingerprint;
     private readonly string accountIdentityId;
     private readonly string billingScopeIdentityId;
@@ -184,13 +185,23 @@ public sealed class M1Slice6CampaignProductionStageBoundary : IM1Slice6CampaignS
         JsonElement root = document.RootElement;
         JsonElement profile = root.GetProperty("profile");
         JsonElement providerIntent = root.GetProperty("provider_intent");
+        string schemaIdentity = root.GetProperty("schema_identity").GetString()!;
+        bool activeGeneration2 = schemaIdentity
+            == "infinium.repository.wp9-production-profile-authorization/5.0.0";
         if (root.GetProperty("manifest_id").GetString() != credentialManifestId
-            || root.GetProperty("status").GetString() != "ready-for-owner-acceptance")
+            || schemaIdentity is not (
+                "infinium.repository.wp9-production-profile-authorization/4.0.0"
+                or "infinium.repository.wp9-production-profile-authorization/5.0.0")
+            || root.GetProperty("status").GetString() != (activeGeneration2
+                ? "active-verified-read-only-provider-use" : "ready-for-owner-acceptance"))
         {
             throw new InvalidDataException("Campaign provider boundary requires the exact production credential identity.");
         }
         profileId = profile.GetProperty("access_profile_id").GetString()!;
         generationId = profile.GetProperty("generation_id").GetString()!;
+        generationOrdinal = checked((ulong)profile.GetProperty("generation_ordinal").GetInt64());
+        if (generationOrdinal != (activeGeneration2 ? 2UL : 1UL))
+        { throw new InvalidDataException("Campaign provider boundary has a stale credential generation ordinal."); }
         targetFingerprint = profile.GetProperty("target_fingerprint_sha256").GetString()!;
         accountIdentityId = providerIntent.GetProperty("account_identity_id").GetString()!;
         billingScopeIdentityId = providerIntent.GetProperty("billing_scope_identity_id").GetString()!;
@@ -214,6 +225,7 @@ public sealed class M1Slice6CampaignProductionStageBoundary : IM1Slice6CampaignS
     {
         this.profileId = profileId;
         this.generationId = generationId;
+        generationOrdinal = 1;
         this.targetFingerprint = targetFingerprint;
         this.accountIdentityId = accountIdentityId;
         this.billingScopeIdentityId = billingScopeIdentityId;
@@ -319,7 +331,7 @@ public sealed class M1Slice6CampaignProductionStageBoundary : IM1Slice6CampaignS
                 OperationKind = operation,
                 AccessProfileId = new() { Value = profileId },
                 GenerationId = new() { Value = generationId },
-                GenerationOrdinal = 1,
+                GenerationOrdinal = generationOrdinal,
                 RevocationEpoch = 0,
                 Credential = new() { AccessProfileId = new() { Value = profileId }, GenerationId = new() { Value = generationId } },
                 ProviderDispatch = new() { OperationId = new() { Value = operationId }, AttemptId = new() { Value = attemptId } },

@@ -270,6 +270,20 @@ internal static class M1Slice6SuccessorAttemptMaterializer
         M1Slice6SuccessorCampaignAuthority campaign, M1Slice6HardBudgetAuthority amendment,
         string ledgerPath, DateTimeOffset now)
     {
+        if (campaign.CampaignId
+            == "infinium.m1-s6.successor-campaign-v7/3e457821-389a-4ea8-a4c0-aed9da3b5966")
+        {
+            ledgerPath = Path.GetFullPath(ledgerPath);
+            if (campaign.ActiveLedgerPath is null || campaign.PredecessorLedgerPath is null
+                || !ledgerPath.Equals(campaign.ActiveLedgerPath, StringComparison.OrdinalIgnoreCase))
+            { throw new InvalidDataException("Attempt materialization requires the single active v4 ledger path."); }
+            return new(ledgerPath, campaign.CampaignId, campaign.ManifestSha256,
+                campaign.PredecessorLedgerPath,
+                "9a1bbb048445f3eb969e16b894f8b9d8347cba5ab89c9d3c83be66e33fda5a25",
+                "infinium.m1-s6.successor-credential-replacement-evidence/0dd95374-f9e1-400a-888d-ffd56f680214",
+                "4778cb8e9275c34a5eab70d32635261f5ebf9eda75247960e7389e01fe448feb",
+                null, null, now);
+        }
         M1Slice6SuccessorCampaignLedger predecessor = new(amendment.PredecessorLedgerPath,
             "infinium.m1-s6.successor-campaign/a4f66e58-6456-4c90-a6e2-20260820c2b1",
             "ff0a8a1cd499f5639c85fa7d43737643dc4b3494643d150b72d2772fc2fc18ef",
