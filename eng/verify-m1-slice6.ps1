@@ -58,7 +58,7 @@ param(
     [switch] $CampaignV2CandidateOnly
 )
 
-if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProductSemanticConformance', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'HistoricalSemanticPackageIntegrity', 'CampaignV2NonLive', 'C1Readiness', 'NonLiveAll') -and $PSVersionTable.PSEdition -ne 'Core') {
+if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'SourceClaimSemantics', 'CandidateSemantics', 'ProductSemanticConformance', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'HistoricalSemanticPackageIntegrity', 'CampaignV2NonLive', 'C1Readiness', 'NonLiveAll') -and $PSVersionTable.PSEdition -ne 'Core') {
     $pwsh = Get-Command pwsh.exe -ErrorAction Stop
     $arguments = @(
         '-NoProfile',
@@ -2407,7 +2407,7 @@ function Invoke-SourceClaimSemanticsGate {
     Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' 'FullyQualifiedName~SourceClaim|FullyQualifiedName~ProviderContext'
     Invoke-DotnetTest 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' 'FullyQualifiedName~SourceClaim|FullyQualifiedName~ProviderProvenance'
     Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' 'FullyQualifiedName~SourceClaimAdmission|FullyQualifiedName~SourceClaimReplay'
-    Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' 'FullyQualifiedName~LlmClaimTransparency|FullyQualifiedName~Slice5ProviderAdmission'
+    Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' 'FullyQualifiedName~SourceClaimTransparencyEvaluationTests'
     Assert-Slice5V1Unchanged
     Write-Receipt 'SourceClaimSemantics' ([ordered]@{
         prompt_id = 'infinium.m1-s6.source-claim-prompt/v1'

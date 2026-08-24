@@ -10208,3 +10208,51 @@ product behavior, retained evidence, authority identity, or effect boundary.
 The closed product-path authority remains exactly 192 paths. A new clean
 commit must restart the complete accepted floor from locked restore; none of
 `e15ebce`'s results bind that successor.
+
+### Product-closeout `NonLiveAll` filter correction
+
+Formatting candidate `786fb19339a7ed061325ab40731ee740a03c0177` was clean,
+matched the exact 192-path authority, and restarted the accepted floor from
+locked restore. Restore, the zero-warning/zero-error Release build, all six
+category commands, the unfiltered solution run, formatter verification,
+dependency-manifest verification, `git diff --check`, documentation
+validation, and `verify-analysis-pipeline.ps1 -Gate All` passed. The
+product-closeout `NonLiveAll` gate then passed every component through the
+source-claim semantics evaluation step, where its Evaluation filter named two
+removed predecessor test classes. `dotnet test` returned success with “No test
+matches,” but the verifier correctly rejected the absence of exactly one
+parseable result summary. No `NonLiveAll` receipt or later direct Layer 6
+receipt was created. `786fb193` is diagnostic only and is not the final
+candidate.
+
+The source-claim semantics gate now runs the current
+`SourceClaimTransparencyEvaluationTests` class, which performs byte-bound,
+non-authorizing historical source-package transparency checks and does not
+compare historical expected labels with product output. A contract test binds
+that current class name and rejects both stale predecessor names. The change
+does not broaden semantic authority, access private or archive material, or
+permit any effect. Focused source-claim gate and contract verification,
+fresh read-only delta review, a new clean commit, and a complete accepted-floor
+restart are required before any candidate may be accepted.
+
+The first direct focused rerun used the repository's Windows PowerShell entry
+syntax and exposed that `SourceClaimSemantics` alone was missing from the
+existing PowerShell-7 relaunch set used by the other current product gates.
+Windows PowerShell therefore could not use `ProcessStartInfo.ArgumentList`.
+The entry point now relaunches this gate through `pwsh` before invoking the
+focused test helper, and the same contract test binds that placement. This is
+an entry-point compatibility correction only; it does not alter the tests or
+their authority.
+
+Focused verification then passed formatter and diff checks, the new contract
+guard 1/1, and the direct Windows-entry `SourceClaimSemantics` gate: Unit 9/9,
+Contract 19/19, Integration 4/4, and Evaluation 2/2. Its 2,227-byte receipt has
+SHA-256 `74fb6b225e10ff58701eee79bb34680a10e6a4972cd11d42d270ef3cc1bdf88e`.
+Fresh read-only governance and safety/tooling delta reviewers both returned
+`ACCEPT` with no must-fix. They confirmed the selected evaluation class hashes
+and validates retained public history while hard-reporting no current semantic
+authority, the obsolete comparator remains unreachable, the focused-summary
+parser fails closed on no-match output, the PowerShell relaunch preserves the
+gate arguments, and the exact baseline-to-candidate authority remains 192/192.
+Neither reviewer edited the repository, accessed private/archive material,
+compared semantic labels, or performed an effect.

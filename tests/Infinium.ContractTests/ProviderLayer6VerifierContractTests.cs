@@ -7,6 +7,18 @@ public sealed class ProviderLayer6VerifierContractTests
 {
     [TestMethod]
     [TestCategory("Contract")]
+    public void SourceClaimSemanticsGateRunsTheCurrentTransparencyEvaluationSurface()
+    {
+        string script = TestRepository.Read("eng", "verify-m1-slice6.ps1");
+        StringAssert.Contains(script,
+            "'FullyQualifiedName~SourceClaimTransparencyEvaluationTests'");
+        StringAssert.Contains(script, "'CredentialNativeRecovery', 'SourceClaimSemantics', 'CandidateSemantics'");
+        Assert.IsFalse(script.Contains("FullyQualifiedName~LlmClaimTransparency", StringComparison.Ordinal));
+        Assert.IsFalse(script.Contains("FullyQualifiedName~Slice5ProviderAdmission", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
     public void Wp9OwnerStopLayer6ModeIsExactAndDoesNotWeakenGenericModes()
     {
         string script = TestRepository.Read("eng", "verify-m1-slice6.ps1");
