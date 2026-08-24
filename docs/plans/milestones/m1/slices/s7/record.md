@@ -1,8 +1,8 @@
 # M1 Slice 7 implementation record
 
-Status: Completed
+Status: Accepted
 Last reviewed: 2026-08-24
-Owner: Implementation orchestrator; project-owner acceptance pending
+Owner: Project owner
 
 ## Authority and preflight
 
@@ -320,6 +320,23 @@ held-out, live, billable, and protocol-5 use as `not-used`.
 | `infinium.analysis.scope-reversion/v1` | `Producer-consumer-validated` | Production composition, both adapters, generic analyzer, schema/codec, malformed and mixed-version rejection, schema-10 persistence, readback, invalidation, reopen, backup/restore, replay, fixtures, JSON/CLI, and the complete floor. |
 | Storage `1.9.0` / schema 10 | `Producer-consumer-validated` | Exact schema-9 source fingerprint, exact schema-10 output fingerprint, schema-7 through schema-10 successor replay admission, and full Integration/Replay evidence. |
 
-No new contract is self-frozen. Slice 7 is implementation-complete and ready
-for the project owner's final acceptance decision. No push or Slice 8 work has
-occurred.
+At the implementation handoff, no new contract was self-frozen. Slice 7 was
+implementation-complete and ready for the project owner's final acceptance
+decision. No push or Slice 8 work occurred.
+
+## Owner acceptance
+
+Decision: Accepted by the project owner on 2026-08-24.
+
+The owner accepts exact product candidate
+`8209e93901cbc7865adad390ca913b62fe7a1650` and documentation-only handoff
+commit `88c78c135fc68a4f100b67a881ca631622b7f53b` as the completed Slice 7
+implementation. The complete accepted verification floor, consolidated review
+and correction ledger, bounded claim, retained Slice 6 replay boundary, and
+zero-effect declarations in this record are accepted as the slice closeout.
+
+The `infinium.analysis.scope-reversion/v1` family and storage `1.9.0` / schema
+10 boundary advance from `Producer-consumer-validated` to `Slice-frozen`.
+Frozen Slice 6 families remain unchanged. This acceptance does not create an
+independent semantic verdict, authorize private material or external effects,
+push changes, complete M1, or open Slice 8.
