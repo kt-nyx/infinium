@@ -1,7 +1,7 @@
 {
   "traceability_schema_version": 2,
-  "maturity": "Implementation-active",
-  "authority_boundary": "M1/S6/WP1 accepted contract closure; later-package execution remains separately gated",
+  "maturity": "Slice-frozen",
+  "authority_boundary": "M1/S6 owner-accepted contract closure at product candidate a17ff8f05ca916b4a6db2b4b3e78ba99e1313442; successor-slice implementation remains separately gated",
   "contracts": [
     {
       "schema": "provider-access-profile.v1.schema.json",

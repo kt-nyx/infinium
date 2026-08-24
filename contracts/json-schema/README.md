@@ -50,7 +50,9 @@ network.
 `common.v1.schema.json` contains shared closed definitions and is not itself an
 instance contract.
 
-The nine Slice 6 contracts are `Implementation-active` after WP1 acceptance.
+The nine Slice 6 contract families are `Slice-frozen` after owner acceptance
+of exact verified product candidate
+`a17ff8f05ca916b4a6db2b4b3e78ba99e1313442`.
 The v2 configuration and output contracts are additive provider-active
 supplements. They bind the exact frozen local v1 artifact by identity or
 fingerprint and do not reinterpret or replace the Slice 5 v1 bytes. All nine

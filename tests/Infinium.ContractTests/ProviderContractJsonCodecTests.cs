@@ -1730,7 +1730,7 @@ public sealed class ProviderContractJsonCodecTests
     {
         using JsonDocument inventory = JsonDocument.Parse(File.ReadAllBytes(TestRepository.PathFromRoot(
             "docs", "plans", "milestones", "m1", "slices", "s6", "wp1-contract-traceability.v1.json")));
-        Assert.AreEqual("Implementation-active", inventory.RootElement.GetProperty("maturity").GetString());
+        Assert.AreEqual("Slice-frozen", inventory.RootElement.GetProperty("maturity").GetString());
         JsonElement[] contracts = inventory.RootElement.GetProperty("contracts").EnumerateArray().ToArray();
         Assert.AreEqual(9, contracts.Length);
         CollectionAssert.AreEquivalent(

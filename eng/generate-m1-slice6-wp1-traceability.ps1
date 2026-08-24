@@ -371,6 +371,10 @@ function Get-Persistence([string] $Schema, [string] $Path) {
         'cli-summary.v2.schema.json' { $column = switch ($leaf) { 'provider_state' {'provider_operation_projection.state'} 'unresolved_hold' {'provider_operation_projection.unresolved_hold'} 'accepted_input_bound_policy_id' {@('provider_operation_authorizations.input_bound_policy_id','provider_requests.input_bound_policy_id')} 'accepted_input_bound_policy_version' {@('provider_operation_authorizations.input_bound_policy_version','provider_requests.input_bound_policy_version')} default {$null} } }
         default { $column = $null }
     }
+    if ($Schema -eq 'source-claim-extraction.v1.schema.json' -and
+        $Path -eq '$defs.proposal.extraction_state') {
+        return [ordered]@{ not_persisted_reason = "$Path is retained in the source-claim payload; it is not duplicated in the semantic-admission table." }
+    }
     if ($null -eq $column) { return [ordered]@{ not_persisted_reason = "$Path is retained or derived at the $Schema contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked." } }
     if ($column -is [array]) { return [ordered]@{ table_columns = $column } }
     return [ordered]@{ table_column = $column }
@@ -485,6 +489,10 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
         }
     }
     if ($null -eq $message) {
+        if ($Replay -and $Schema -eq 'source-claim-extraction.v1.schema.json' -and
+            $Path -eq '$defs.proposal.extraction_state') {
+            return [ordered]@{ omission_reason = "$Path is replayed from the retained source-claim payload; no duplicate replay field is defined." }
+        }
         if (($Schema -in @('run-output.v2.schema.json','cli-summary.v2.schema.json')) -and ($leaf -in @('accepted_input_bound_policy_id','accepted_input_bound_policy_version'))) {
             $reason = if ($Replay) {
                 "$Path is accepted-policy publication metadata and is not a replay identity in the accepted ProviderReplayPayload contract."
@@ -518,8 +526,8 @@ foreach ($schemaName in $schemaNames) {
 }
 $result = [ordered]@{
     traceability_schema_version = 2
-    maturity = 'Implementation-active'
-    authority_boundary = 'M1/S6/WP1 accepted contract closure; later-package execution remains separately gated'
+    maturity = 'Slice-frozen'
+    authority_boundary = 'M1/S6 owner-accepted contract closure at product candidate a17ff8f05ca916b4a6db2b4b3e78ba99e1313442; successor-slice implementation remains separately gated'
     contracts = $contracts
 }
 $json = ($result | ConvertTo-Json -Depth 32) -replace "`r`n", "`n"

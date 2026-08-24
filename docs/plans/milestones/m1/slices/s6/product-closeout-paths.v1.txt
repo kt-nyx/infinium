@@ -39,10 +39,12 @@ docs/plans/milestones/m1/slices/s6/README.md
 docs/plans/milestones/m1/slices/s6/plan.md
 docs/plans/milestones/m1/slices/s6/product-closeout-paths.v1.txt
 docs/plans/milestones/m1/slices/s6/record.md
+docs/plans/milestones/m1/slices/s6/wp1-contract-traceability.v1.json
 docs/product/candidate-input-and-expansion.md
 docs/product/requirements.md
 docs/product/scope-and-milestones.md
 docs/research/deferred-question-and-residual-risk-register.md
+eng/generate-m1-slice6-wp1-traceability.ps1
 eng/validate-m1-slice6-wp8-prelive.ps1
 eng/verify-m1-slice6.ps1
 fixtures/public/provider/candidate-investigations/S6-CANDIDATE-DEV-v2/reclassification.v2.json

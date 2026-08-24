@@ -1,9 +1,9 @@
 # M1 Slice 6
 
 Status: Accepted
-Disposition: Live effects and accounting are closed and immutable; product conformance remains implementation-active, independent semantic-oracle qualification is deferred through M2, and owner acceptance and contract freeze remain pending
+Disposition: Owner-accepted and complete at exact verified product candidate `a17ff8f05ca916b4a6db2b4b3e78ba99e1313442`; live effects and accounting remain closed and immutable, verified Slice 6 contract identities are Slice-frozen, and independent semantic-oracle qualification remains deferred through M2
 
-Last reviewed: 2026-08-23
+Last reviewed: 2026-08-24
 
 Live authorization is stated only in
 [current project state](../../../../../current-state.md). This entry routes to
@@ -89,11 +89,12 @@ product output. The unaccepted v14 draft was removed without semantic review,
 registration, comparison, or archival. No successor may be authored before an
 accepted M3 plan reactivates evaluation after M2 acceptance.
 
-The current next gate is a separate fresh-agent Slice 6 product closeout under
-the six-layer product-conformance profile. It must review and correct the
-existing implementation without changing retained live requests, responses,
-evidence, ledgers, accounting, credentials, or external-effect state. Slice 6
-remains implementation-active and not accepted; Slice 7 remains unopened.
+The owner accepted exact product candidate
+`a17ff8f05ca916b4a6db2b4b3e78ba99e1313442` and its verified handoff at
+`1479da5511603596860117e732affadddcecfe5a`. Slice 6 is complete, and all
+Slice-6-owned identities covered by the nine verified contract families are
+`Slice-frozen`. Slice 7 planning is now eligible, but Slice 7 remains unopened
+and no implementation is authorized automatically.
 
 ## Accepted baseline and retained execution history
 

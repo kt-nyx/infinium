@@ -2095,8 +2095,8 @@ function Invoke-StateSurfaceGate([bool] $RequireAcceptedInputProof) {
     if ($traceability.contracts.Count -ne 9) {
         throw 'WP1 traceability inventory does not cover exactly nine contracts.'
     }
-    if ($traceability.maturity -ne 'Implementation-active') {
-        throw 'Accepted WP1 traceability must remain Implementation-active until Slice 6 acceptance.'
+    if ($traceability.maturity -ne 'Slice-frozen') {
+        throw 'Owner-accepted Slice 6 traceability must remain Slice-frozen.'
     }
     $declarationsPath = Join-Path $repoRoot 'src/Infinium.Persistence/ProviderPersistenceDeclarations.cs'
     $declarations = Get-Content -LiteralPath $declarationsPath -Raw

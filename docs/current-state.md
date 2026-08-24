@@ -1,7 +1,7 @@
 # Current project state
 
 Status: Accepted
-Disposition: Exact Slice 6 product candidate `a17ff8f05ca916b4a6db2b4b3e78ba99e1313442` passed the complete clean committed verification floor and is ready for owner acceptance and contract freeze; independent semantic-oracle qualification is deferred through M2, and Slice 7 is unopened
+Disposition: M1 Slice 6 is owner-accepted and complete at exact verified product candidate `a17ff8f05ca916b4a6db2b4b3e78ba99e1313442`; its verified contract identities are Slice-frozen, independent semantic-oracle qualification remains deferred through M2, and Slice 7 planning is eligible but unopened
 
 Last reviewed: 2026-08-24
 Owner: Project owner
@@ -16,7 +16,7 @@ chronology and evidence.
 | Field | Current value |
 |---|---|
 | Milestone | `M1` - active |
-| Active slice | `M1/S6` - exact clean committed candidate passed; owner acceptance and contract freeze pending |
+| Active slice | None. `M1/S6` is owner-accepted and complete; `M1/S7` planning is the next eligible work and remains unopened. |
 | Accepted implementation baseline | R1 candidate `fcd17cd6db98019fc9e5253d5167d2487862671c`; R2 implementation `67ca34d6de162ad64f05fbe88972105745d3e831`; R2 handoff `8c25ca7274c394e41953a0b076010c26f6ffa97e` |
 | Accepted R2 evidence | Final `CampaignV2NonLive` receipt SHA-256 `bb9455c293b3049c1561cf9a15322c0b6b79502365097b51e2c92e4014e5019d`; all credential, native, network, provider, and billable counts were zero |
 | Accepted process proposal | Commit `2c82365fd853cb2021f1772d6c572ee9fa006d01`; process-amendment SHA-256 `5d9aff4226f93ff73025573e056080530d23f66e5cb9cc92efddfd78655acc9f`; lean-plan SHA-256 `57d9a3b25201bf55281cad02c9b8a3e458639ec10d1e465cdbad85f532c464af` |
@@ -32,13 +32,13 @@ chronology and evidence.
 | Completed credential work | Generation 3 ordinal 3 is `active-verified`/`available`. Sanitized enrollment evidence SHA-256 `4016db9308160991b43a49beb3682abed332df0039dcf9bde3916d2469533ccf` proves exact 164-character protected submission and read-back equality, cleared transient buffers, and zero provider/network effect without retaining the credential or a credential-derived digest. |
 | Completed live stages | WP9 ordinal 11, WP10 ordinal 2, and WP11 ordinal 1 are the permanent first-structurally-valid results. WP10 effect-free recovery admitted three host-valid source claims from the complete nine-proposal matrix. WP11 effect-free recovery retained both provider proposals, admitted the supported candidate, and retained the explicit unsupported negative. No semantic answer was selected or replaced. |
 | Completed C3 | Composed evidence SHA-256 `901f278825d3fdbab2971b9f6bb4462f84c12dea96f1c14c8f222d1f29a1df9d` binds the frozen sequence-8 predecessor, all inherited evidence, every ledger-v4 attempt handoff, the three first-valid stage results, and exact SQLite provenance. Ledger v4 is completed at sequence 72/event `bb2094d71515b0f16edc45a5411d8689b743ff9fe5bb811beef3511c76340445`, whole-file SHA-256 `4cc47bba72ee4c6881cbe77834ac5ab79bd0e0f487145fe0942738d34c507a17`. |
-| Current implementation candidate | Exact product candidate `a17ff8f05ca916b4a6db2b4b3e78ba99e1313442` descends from governance/history commit `ba9de748d3e0c2fb9b406db5c81cfbd5dc013a9f` and product commit `1f8c4706585a201263e667f40cfe7b0be830d617`, plus focused lock, persistence, concurrency, formatting, source-transparency, and WP8 historical-binding corrections. It matches the exact 193-path authority. Fresh product, governance, and safety reviews report no remaining must-fix. The complete accepted floor passed on these exact clean committed bytes. The nine Slice 6 contracts are eligible for owner freeze but remain implementation-active until owner acceptance. |
+| Accepted Slice 6 implementation | The owner accepts exact product candidate `a17ff8f05ca916b4a6db2b4b3e78ba99e1313442` and handoff commit `1479da5511603596860117e732affadddcecfe5a`. The product candidate descends from governance/history commit `ba9de748d3e0c2fb9b406db5c81cfbd5dc013a9f` and product commit `1f8c4706585a201263e667f40cfe7b0be830d617`, plus focused lock, persistence, concurrency, formatting, source-transparency, and WP8 historical-binding corrections. It matches the exact 193-path authority. Fresh product, governance, and safety reviews report no remaining must-fix, and the complete accepted floor passed on the exact clean committed product bytes. All Slice-6-owned identities covered by the nine verified contract families are now `Slice-frozen`. |
 | Resolved post-closeout finding | The live WP10 and WP11 requests had recorded detailed `PromptV1` identities while transmitting a shorter instruction. The effect-free product candidate now rejects that mismatch and separates source support, local applicability, and host admission. Historical semantic packages remain immutable non-authorizing evidence and were not used to choose or tune the corrected behavior. |
 | Effect-free semantic correction | The working candidate based on `dde21f4f055ec7a950b3fa86676da5ed0680c41a` requires exact declared prompt text/digest and separates proposal or faithful extraction, support, applicability, and host decision through schema 9/storage `1.8.0`. Source acquisition can retain source support but cannot evaluate local applicability or admit; a distinct analysis-run-owned source-application decision binds every evaluated result to exact neutral fact bytes. Applicable-but-abstained decisions retain those facts without an admitted artifact, while only supported plus applicable decisions enter current consumers, and candidate replay reopens every fact and its bundle. Realistic populated schema-8 migration and current-only consumers preserve historical bytes without semantic authority. Public semantic packages v1-v13 and their dependent frozen-v2 live wrappers are development history; their original evidence and accounting bytes remain unchanged and grant no current product verdict. |
 | Final accounting | WP9 starts: 11; WP10 starts: 2; WP11 starts: 1. Successor settled exposure is USD 0.11332, unresolved conservative exposure is USD 1.37216, outstanding reservation is zero, and total committed exposure is USD 1.62548. USD 8.37452 of the aggregate hard limit remains unused. |
 | Independent semantic evaluation | Deferred throughout M1 and M2 by ADR-0035. Packages v1-v13 are historical non-authorizing development evidence; no current package grants a product verdict. V14 was an unaccepted draft, is not a current candidate, and has been removed without review, registration, comparison, or archival. The missing independent semantic verdict is an explicit deferred risk. |
-| Next gate | Owner final acceptance of exact candidate `a17ff8f05ca916b4a6db2b4b3e78ba99e1313442` and freeze of the nine verified Slice 6 contracts. The independent semantic verdict remains explicitly deferred; do not begin Slice 7. |
-| External-effect authority | Consumed. The completed ledger permanently closes WP9, WP10, and WP11 provider execution. Credential exposure or enumeration, further Slice 6 provider calls, semantic answer tuning or selection, private fixtures, archives, push, destructive work, and Slice 7 remain prohibited. |
+| Next gate | Prepare and obtain acceptance of a Slice 7 plan for the synthetic generic reversion proof. This approval makes planning eligible only; Slice 7 implementation is not authorized automatically. The independent semantic verdict remains explicitly deferred. |
+| External-effect authority | Consumed. The completed ledger permanently closes WP9, WP10, and WP11 provider execution. Credential exposure or enumeration, further Slice 6 provider calls, semantic answer tuning or selection, private fixtures, archives, destructive work, and Slice 7 implementation remain prohibited. Repository publication of this owner-approved closeout is separately authorized by the owner's approval request. |
 
 ## Current authority
 
@@ -64,9 +64,9 @@ exact immutable or irreversible boundary.
 ## Accepted Slice 6 baseline
 
 WP1-WP8, the R1 answer-isolated live-semantic v2 package closure, and the R2
-effect-free WP9-to-WP11 product/persistence/replay path are accepted. The nine
-Slice 6 contracts remain `Implementation-active`; Slice 5 v1 contracts remain
-`Slice-frozen`.
+effect-free WP9-to-WP11 product/persistence/replay path are accepted. The
+Slice 6 contract identities covered by the nine verified contract families are
+`Slice-frozen`; Slice 5 v1 contracts remain `Slice-frozen`.
 
 R1 accepted five answer-isolated v2 packages, 23 closed repository schemas,
 the additive registry v2, v2-only resealing, frozen-v1 preservation, and

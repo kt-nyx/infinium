@@ -10403,3 +10403,59 @@ fixture or archive was accessed; no credential was read or enumerated; no
 network/provider/billable effect occurred; no retained evidence, ledger,
 accounting, or historical package byte was changed; no push occurred; and
 Slice 7 remains unopened.
+
+## 2026-08-24 owner acceptance and Slice 6 closeout
+
+The project owner explicitly approved M1 Slice 6 and authorized the coherent
+acceptance commit, merge, and applicable push. The owner accepts exact verified
+product candidate `a17ff8f05ca916b4a6db2b4b3e78ba99e1313442`, its retained
+zero-effect verification evidence, and handoff commit
+`1479da5511603596860117e732affadddcecfe5a`.
+
+This decision marks `M1/S6` accepted and complete and advances every
+Slice-6-owned identity covered by the nine verified contract families from
+`Implementation-active` to `Slice-frozen`. The exact product candidate and its
+193-path authority remain unchanged; this approval commit changes only current
+governance, navigation, maturity metadata, and this append-only history. The
+post-approval baseline-to-repository closure is exactly 195 declared paths,
+adding only the maturity inventory and its deterministic generator to the
+previous 193-path product authority.
+
+The approval makes Slice 7 planning eligible but does not authorize Slice 7
+implementation. The next gate is an accepted Slice 7 plan for the synthetic
+generic reversion proof. Slice 8 controlled-real generalization and Slice 9
+end-to-end/replay closeout remain later dependency-ordered work. The independent
+semantic verdict remains explicitly deferred through M1 and M2 to the M3
+Evaluation Readiness Gate after M2 acceptance; this owner acceptance does not
+reinterpret historical semantic packages or create a private held-out verdict.
+
+### Approval-transition verification
+
+The complete accepted product floor remains bound to unchanged product
+candidate `a17ff8f05ca916b4a6db2b4b3e78ba99e1313442`; it was not relabeled as
+having run on the later governance-only approval commit. Focused verification
+of the approval transition passed:
+
+- `pwsh -NoProfile -File
+  eng/generate-m1-slice6-wp1-traceability.ps1` reproduced the frozen inventory
+  byte-for-byte at SHA-256
+  `8f41320153f73a7203ab14980b545617b7666311fd31d61a31d5db2dd36a422a`;
+- the traceability and Layer 6 verifier contract filter passed 8/8 with zero
+  skips or failures;
+- `pwsh -NoProfile -File eng/verify-m1-slice6.ps1 -Gate StateSurfaces
+  -OutputRoot <fresh-root>` passed its 28/28 and 17/17 unit-test groups with
+  zero skips or failures at
+  `C:\Users\vex\AppData\Local\Temp\infinium-m1s6-owner-approval-state-15c51d25b60c466c9269f1ca51908430`;
+- both changed PowerShell files parsed with zero errors;
+- documentation validation passed 181 metadata files, 183 Markdown link
+  sources, and 87 JSON files;
+- the baseline-to-worktree closure was exactly 195 declared/195 actual with
+  zero missing, extra, or duplicate paths; and
+- `git diff --check` passed.
+
+An initial direct Windows PowerShell invocation of `StateSurfaces` stopped
+diagnostically on the script's PowerShell-7 process `ArgumentList` surface and
+created no accepted receipt. The exact gate was rerun under `pwsh` and passed
+as recorded above. No credential, DNS, public-network, provider, billable,
+private-fixture, archive, live-manifest, retained-evidence, or semantic-oracle
+effect occurred during approval verification.
