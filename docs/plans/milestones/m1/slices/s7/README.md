@@ -1,8 +1,8 @@
 # M1 Slice 7
 
 Status: Accepted
-Disposition: Owner-accepted planning authority; Slice 7 implementation remains
-unopened pending a separate current-state activation naming the exact WP1 base
+Disposition: Full effect-free WP1-through-WP7 implementation is owner-activated
+on exact base `29c421d38336295e5638be0e78728d98e5c11919`; WP1 is the starting package
 
 Last reviewed: 2026-08-24
 
@@ -21,11 +21,12 @@ navigation page for the accepted Slice 7 plan.
 
 ## Decision state
 
-The project owner accepted the full WP1-through-WP7 plan on 2026-08-24. That
-decision does not by itself open Slice 7, authorize implementation, create
-external-effect authority, or reactivate independent semantic-oracle work.
-The full slice remains closed until `docs/current-state.md` records the owner's
-explicit Slice 7 activation and exact base. Once activated, WP1 is the starting
-package and each completed internal gate automatically opens its successor
-without another owner approval. The orchestrator stops only for the plan's
-genuine escalation conditions or the final implementation-acceptance decision.
+The project owner accepted the full WP1-through-WP7 plan on 2026-08-24 and
+separately activated its local effect-free implementation on exact base
+`29c421d38336295e5638be0e78728d98e5c11919`. WP1 is the starting package and
+each completed internal gate automatically opens its successor without another
+owner approval. The orchestrator corrects ordinary implementation/test/review
+defects on the same candidate and stops only for the plan's genuine escalation
+conditions or the final implementation-acceptance decision. This activation
+does not create external-effect authority or reactivate independent semantic-
+oracle work.
