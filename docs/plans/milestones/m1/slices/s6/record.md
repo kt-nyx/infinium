@@ -10147,3 +10147,37 @@ and governance delta reviews accepted the explicit-column persistence change,
 current developer input, durable prerequisite, and answer isolation with no
 remaining must-fix. A new clean commit and a complete floor restart remain
 required; no result from `bc07c04` is acceptance evidence for that successor.
+
+### Unfiltered-floor safety-identifier correction
+
+Campaign-seam candidate `9dc99014626651efc0208088be31d8ee89a95792`
+restarted the complete floor from locked restore. Restore and the zero-warning/
+zero-error build passed. The six category commands passed Unit 285/0/4,
+Contract 171/0/0, Integration 183/0/1 including its two participating checks,
+Evaluation 87/0/8, Security 174/0/6, and Fault 111/0/3. The mandatory
+unfiltered solution run then passed Security 19/0/0, Fault 7/0/0, Evaluation
+67/0/8, Contract 199/0/0, and Integration 230/0/1, but Unit completed
+314/1/4. `ConcurrentCreateAndUseLatchConvergeOnOneProjection` observed a
+Windows sharing violation while one concurrent use-latch task read the
+immutable safety-identifier seed. The remaining format, repository, and
+candidate-bound gates did not run. `9dc9901` is therefore diagnostic only and
+is not the final candidate.
+
+The safety-identifier store now performs a bounded immutable-byte read for
+both the seed and use latch: transient `IOException` is retried at most 100
+times with a two-millisecond interval, after which the operation fails closed
+as `InvalidDataException`. Missing state, malformed JSON, noncanonical bytes,
+scope/schema drift, seed/projection mismatch, and latch/projection mismatch
+retain their existing fail-closed behavior; no failure generates a replacement
+after use. A deterministic test holds the seed with `FileShare.None`, proves a
+direct read is denied, and verifies the store converges on the original
+projection after release. The focused safety-identifier class passed 7/7, and
+the concurrent-create plus held-file cases passed 20 repeated rounds (40/40
+executions). The production and test paths were added to the closed authority,
+which now contains exactly 192 paths.
+
+Fresh read-only safety and product delta reviews accepted the bounded retry,
+fail-closed exhaustion, retained canonical/identity checks, deterministic
+Windows denial coverage, buffer zeroing, and exact 192-path authority with no
+remaining must-fix. A successor clean commit must restart the complete floor
+from locked restore; none of `9dc9901`'s results bind that successor.

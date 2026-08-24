@@ -134,7 +134,8 @@ public sealed class ProductUserSafetyIdentifierStateStore
 
     private string ReadExactLatch()
     {
-        byte[] bytes = File.ReadAllBytes(useLatchPath);
+        byte[] bytes = ReadImmutableBytes(useLatchPath,
+            "The product-user safety identifier use latch is unavailable.");
         try
         {
             UseLatchRecord? record;
@@ -167,7 +168,8 @@ public sealed class ProductUserSafetyIdentifierStateStore
         {
             throw new InvalidDataException("The product-user safety identifier state is absent.");
         }
-        byte[] bytes = File.ReadAllBytes(statePath);
+        byte[] bytes = ReadImmutableBytes(statePath,
+            "The product-user safety identifier state is unavailable.");
         try
         {
             SeedRecord? record;
@@ -198,6 +200,28 @@ public sealed class ProductUserSafetyIdentifierStateStore
             return seed;
         }
         finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(bytes); }
+    }
+
+    private static byte[] ReadImmutableBytes(string path, string unavailableMessage)
+    {
+        const int maximumAttempts = 100;
+        IOException? lastSharingViolation = null;
+        for (int attempt = 0; attempt < maximumAttempts; attempt++)
+        {
+            try
+            {
+                return File.ReadAllBytes(path);
+            }
+            catch (IOException exception)
+            {
+                lastSharingViolation = exception;
+                if (attempt + 1 < maximumAttempts)
+                {
+                    Thread.Sleep(2);
+                }
+            }
+        }
+        throw new InvalidDataException(unavailableMessage, lastSharingViolation);
     }
 
     private sealed record SeedRecord(string Schema, string Scope, string SeedBase64, string Projection);

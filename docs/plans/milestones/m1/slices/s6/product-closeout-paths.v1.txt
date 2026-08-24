@@ -154,6 +154,7 @@ src/Infinium.Domain/Contracts/ProviderOperationContracts.cs
 src/Infinium.OpenAI/OpenAiResponsesAdapter.cs
 src/Infinium.Persistence/AuthoritativeStore.Migrations.cs
 src/Infinium.Persistence/AuthoritativeStore.SourceClaims.cs
+src/Infinium.Persistence/ProductUserSafetyIdentifierStateStore.cs
 src/Infinium.Persistence/ProviderPersistenceDeclarations.cs
 tests/Infinium.ContractTests/CandidateInvestigationProviderProvenanceContractTests.cs
 tests/Infinium.ContractTests/EvaluationBoundaryContractTests.cs
@@ -185,6 +186,7 @@ tests/Infinium.UnitTests/CandidateInvestigationProviderContextTests.cs
 tests/Infinium.UnitTests/Infinium.UnitTests.csproj
 tests/Infinium.UnitTests/OpenAiResponsesAdapterTests.cs
 tests/Infinium.UnitTests/PersistenceAndLifecycleTests.cs
+tests/Infinium.UnitTests/ProductUserSafetyIdentifierTests.cs
 tests/Infinium.UnitTests/ProviderContractTests.cs
 tests/Infinium.UnitTests/SourceClaimExtractionTests.cs
 tests/Infinium.UnitTests/packages.lock.json

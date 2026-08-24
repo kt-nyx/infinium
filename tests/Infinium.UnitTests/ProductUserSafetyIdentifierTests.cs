@@ -127,6 +127,36 @@ public sealed class ProductUserSafetyIdentifierTests
     }
 
     [TestMethod]
+    public async Task ImmutableSeedReadWaitsForTransientWindowsSharingLock()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "infinium-safety-id-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            ProductUserSafetyIdentifierStateStore store = new(root);
+            string projection = store.GetOrCreateProjection();
+            string seedPath = Path.Combine(root, ProductUserSafetyIdentifierStateStore.StateFileName);
+            Task<string> blocked;
+            using (FileStream exclusive = new(seedPath, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                Assert.ThrowsExactly<IOException>(() => File.ReadAllBytes(seedPath));
+                TaskCompletionSource entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                blocked = Task.Run(() =>
+                {
+                    entered.SetResult();
+                    return new ProductUserSafetyIdentifierStateStore(root).GetOrCreateProjection();
+                });
+                await entered.Task;
+                await Task.Delay(25);
+            }
+            Assert.AreEqual(projection, await blocked);
+        }
+        finally
+        {
+            if (Directory.Exists(root)) { Directory.Delete(root, recursive: true); }
+        }
+    }
+
+    [TestMethod]
     public void SerializerRejectsMissingUppercaseAndMalformedProjection()
     {
         using System.Text.Json.JsonDocument schema = System.Text.Json.JsonDocument.Parse(ProviderAdapterTestData.OutputSchemaBytes);
