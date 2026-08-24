@@ -20,6 +20,35 @@ function Resolve-InputPath([string] $Value) {
     return [IO.Path]::GetFullPath((Join-Path $repoRoot $Value))
 }
 
+function Test-Wp8RequestPromptAndSchemaBinding([object[]] $Requests, [bool] $HistoricalEvidence) {
+    if (@($Requests).Count -ne 3) { return $false }
+    $sourceSchemaPath = 'contracts/json-schema/source-claim-extraction.v1.schema.json'
+    $candidateSchemaPath = 'contracts/json-schema/candidate-investigation.v1.schema.json'
+    $sourceSchemaSha256 = if ($HistoricalEvidence) {
+        'c399af5df6c1e2de8684c45e1e549b8112a90daa8514732e85db457f47330afe'
+    } else {
+        (Get-FileHash -LiteralPath (Resolve-InputPath $sourceSchemaPath) -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+    $candidateSchemaSha256 = if ($HistoricalEvidence) {
+        '74861d5d0230fca68da30686abdafc08429c6fe6866da96a77b49e7f09d0ca4c'
+    } else {
+        (Get-FileHash -LiteralPath (Resolve-InputPath $candidateSchemaPath) -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+    return (
+        $Requests[0].request_binding.prompt_id -ceq 'pending-qualification-prompt-identity' -and
+        $Requests[0].request_binding.prompt_fingerprint_sha256 -ceq 'pending' -and
+        $Requests[0].request_binding.output_schema_path -ceq 'pending-qualification-output-schema' -and
+        $Requests[0].request_binding.output_schema_sha256 -ceq 'pending' -and
+        $Requests[1].request_binding.prompt_id -ceq 'infinium.m1-s6.source-claim-prompt/v1' -and
+        $Requests[1].request_binding.prompt_fingerprint_sha256 -ceq 'd2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84' -and
+        $Requests[1].request_binding.output_schema_path -ceq $sourceSchemaPath -and
+        $Requests[1].request_binding.output_schema_sha256 -ceq $sourceSchemaSha256 -and
+        $Requests[2].request_binding.prompt_id -ceq 'infinium.m1-s6.candidate-investigation-prompt/v1' -and
+        $Requests[2].request_binding.prompt_fingerprint_sha256 -ceq '026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e' -and
+        $Requests[2].request_binding.output_schema_path -ceq $candidateSchemaPath -and
+        $Requests[2].request_binding.output_schema_sha256 -ceq $candidateSchemaSha256)
+}
+
 function Test-Wp8ExactPathSet([string[]] $Actual, [string[]] $Expected) {
     $actualUnique = @($Actual | Sort-Object -Unique)
     $expectedUnique = @($Expected | Sort-Object -Unique)
@@ -1345,16 +1374,7 @@ for ($index = 0; $index -lt 3; $index++) {
         throw "WP8 request '$($request.packet_kind)' differs from the exact M1 provider profile."
     }
 }
-if ($requests[0].request_binding.prompt_id -ne 'pending-qualification-prompt-identity' -or
-    $requests[0].request_binding.prompt_fingerprint_sha256 -ne 'pending' -or
-    $requests[0].request_binding.output_schema_path -ne 'pending-qualification-output-schema' -or
-    $requests[0].request_binding.output_schema_sha256 -ne 'pending' -or
-    $requests[1].request_binding.prompt_id -ne 'infinium.m1-s6.source-claim-prompt/v1' -or
-    $requests[1].request_binding.prompt_fingerprint_sha256 -ne 'd2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84' -or
-    $requests[1].request_binding.output_schema_sha256 -ne (Get-FileHash -LiteralPath (Resolve-InputPath $requests[1].request_binding.output_schema_path) -Algorithm SHA256).Hash.ToLowerInvariant() -or
-    $requests[2].request_binding.prompt_id -ne 'infinium.m1-s6.candidate-investigation-prompt/v1' -or
-    $requests[2].request_binding.prompt_fingerprint_sha256 -ne '026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e' -or
-    $requests[2].request_binding.output_schema_sha256 -ne (Get-FileHash -LiteralPath (Resolve-InputPath $requests[2].request_binding.output_schema_path) -Algorithm SHA256).Hash.ToLowerInvariant()) {
+if (-not (Test-Wp8RequestPromptAndSchemaBinding $requests ([bool]$RequireAcceptedHistoricalEvidence))) {
     throw 'WP8 qualification or semantic request prompt/output-schema binding is stale.'
 }
 $allTemplateText = $profileInput.text + "`n" + ($requestInputs.text -join "`n")

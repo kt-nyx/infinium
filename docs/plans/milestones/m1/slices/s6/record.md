@@ -10256,3 +10256,36 @@ parser fails closed on no-match output, the PowerShell relaunch preserves the
 gate arguments, and the exact baseline-to-candidate authority remains 192/192.
 Neither reviewer edited the repository, accessed private/archive material,
 compared semantic labels, or performed an effect.
+
+### Product-closeout WP8 historical-binding correction
+
+Source-transparency candidate `ab44ef4a19beaac6aa867ed1da9798f99d03539a`
+was clean and restarted the complete floor. Locked restore, the zero-warning/
+zero-error Release build, all category and unfiltered tests, formatter,
+dependency-manifest, diff, documentation, and complete analysis-pipeline gates
+passed. `NonLiveAll` then passed the corrected source-claim gate and historical
+semantic-package integrity before the WP8 accepted-historical-evidence mode
+compared the retained WP8 source/candidate output-schema digests with current
+product schema bytes. Those schemas intentionally changed during Slice 6
+contract convergence, so the comparison rejected retained history as stale.
+No `NonLiveAll` or direct Layer 6 receipt was created; `ab44ef4` is diagnostic
+only and is not the final candidate.
+
+WP8 validation now separates its two meanings. Frozen-current-candidate mode
+continues to hash the current source and candidate schemas. Accepted-historical-
+evidence mode instead binds the exact retained WP8 schema paths and the exact
+accepted digests already stored in its immutable templates, without treating
+those predecessor bytes as current product truth. A pure mutation test accepts
+the two exact retained digests and rejects a single digest or path change. No
+WP8 template, receipt, historical schema, or product schema byte was rewritten.
+The closed product-path authority adds the owning WP8 mutation-test path and
+now contains exactly 193 paths.
+Focused formatter/diff verification and the retained-binding mutation check
+passed 1/1. Fresh read-only governance and safety/tooling reviewers returned
+`ACCEPT` with no must-fix. They independently confirmed the fixed digests match
+the exact schema blobs at the bound WP8 product-template commit, current mode
+still hashes current bytes, historical mode grants no semantic or effect
+authority, the PowerShell parses cleanly, and the path authority is exactly
+193/193. Neither reviewer edited the repository, accessed private/archive
+material, compared semantic labels, or performed an effect. A new clean commit
+and another complete accepted-floor restart are required.

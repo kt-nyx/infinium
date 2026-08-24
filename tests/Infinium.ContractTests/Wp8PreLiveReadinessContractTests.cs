@@ -9,6 +9,31 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class Wp8PreLiveReadinessContractTests
 {
+    [TestMethod]
+    [TestCategory("Contract")]
+    public void HistoricalWp8ValidationBindsRetainedSchemaDigestsWithoutReinterpretingCurrentSchemas()
+    {
+        string script = TestRepository.Read("eng", "validate-m1-slice6-wp8-prelive.ps1");
+        System.Text.RegularExpressions.Match function = System.Text.RegularExpressions.Regex.Match(
+            script, @"(?ms)^function Test-Wp8RequestPromptAndSchemaBinding\(.*?^\}");
+        Assert.IsTrue(function.Success, "WP8 prompt/schema binding predicate was not found.");
+        string command = $$$"""
+            {{{function.Value}}}
+            $requests=@(
+              [pscustomobject]@{request_binding=[pscustomobject]@{prompt_id='pending-qualification-prompt-identity';prompt_fingerprint_sha256='pending';output_schema_path='pending-qualification-output-schema';output_schema_sha256='pending'}},
+              [pscustomobject]@{request_binding=[pscustomobject]@{prompt_id='infinium.m1-s6.source-claim-prompt/v1';prompt_fingerprint_sha256='d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84';output_schema_path='contracts/json-schema/source-claim-extraction.v1.schema.json';output_schema_sha256='c399af5df6c1e2de8684c45e1e549b8112a90daa8514732e85db457f47330afe'}},
+              [pscustomobject]@{request_binding=[pscustomobject]@{prompt_id='infinium.m1-s6.candidate-investigation-prompt/v1';prompt_fingerprint_sha256='026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e';output_schema_path='contracts/json-schema/candidate-investigation.v1.schema.json';output_schema_sha256='74861d5d0230fca68da30686abdafc08429c6fe6866da96a77b49e7f09d0ca4c'}})
+            if(-not (Test-Wp8RequestPromptAndSchemaBinding $requests $true)){exit 10}
+            $requests[1].request_binding.output_schema_sha256=('0'*64)
+            if(Test-Wp8RequestPromptAndSchemaBinding $requests $true){exit 11}
+            $requests[1].request_binding.output_schema_sha256='c399af5df6c1e2de8684c45e1e549b8112a90daa8514732e85db457f47330afe'
+            $requests[2].request_binding.output_schema_path='contracts/json-schema/source-claim-extraction.v1.schema.json'
+            if(Test-Wp8RequestPromptAndSchemaBinding $requests $true){exit 12}
+            exit 0
+            """;
+        Assert.AreEqual(0, RunPowerShellScript(command));
+    }
+
     private static readonly string[] RelativeTemplates =
     [
         "docs/plans/milestones/m1/slices/s6/wp8-production-profile-authorization.template.v1.json",

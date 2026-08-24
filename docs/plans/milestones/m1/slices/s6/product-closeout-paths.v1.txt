@@ -165,6 +165,7 @@ tests/Infinium.ContractTests/ProviderLayer6VerifierContractTests.cs
 tests/Infinium.ContractTests/SchemaCompatibilityTests.cs
 tests/Infinium.ContractTests/SourceClaimExtractionContractTests.cs
 tests/Infinium.ContractTests/SourceClaimFixtureIntegrityTests.cs
+tests/Infinium.ContractTests/Wp8PreLiveReadinessContractTests.cs
 tests/Infinium.EvaluationTests/CandidateLlmTransparencyProviderProvenanceEvaluationTests.cs
 tests/Infinium.EvaluationTests/SemanticAdmissionAuthorityEvaluationTests.cs
 tests/Infinium.EvaluationTests/SemanticOracleDeferralBoundaryTests.cs
