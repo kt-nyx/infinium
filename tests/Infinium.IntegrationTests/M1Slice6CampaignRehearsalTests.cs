@@ -1514,8 +1514,13 @@ public sealed class M1Slice6CampaignRehearsalTests
             return File.ReadAllText(Path.Combine(clone,
                 "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/execution-input.v2.json"));
         }
-        return File.ReadAllText(Path.Combine(clone,
-            "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/execution-input.v2.json"));
+        JsonObject candidate = JsonNode.Parse(File.ReadAllText(Path.Combine(clone,
+            "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/execution-input.v2.json")))!
+            .AsObject();
+        candidate["package_id"] = "developer-current-candidate-v2";
+        candidate["contexts"]![0]!["evidence"]![0]!["host_bindings"]!["application_decision_id"] =
+            "developer-source-application-decision";
+        return candidate.ToJsonString();
     }
 
     internal static string StageProviderOutput(M1Slice6CampaignStage stage)

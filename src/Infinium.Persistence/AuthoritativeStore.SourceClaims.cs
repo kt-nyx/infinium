@@ -1062,10 +1062,16 @@ public partial class AuthoritativeStore
                         bool sourceRoot = binding.RootKind == "persisted-source-claim-application";
                         Execute(
                             """
-                        INSERT INTO candidate_evidence_authority VALUES(
+                        INSERT INTO candidate_evidence_authority(
+                          outcome_id,evidence_id,evidence_application_link_id,root_kind,evidence_root_id,
+                          applicability_record_id,source_acquisition_id,source_proposal_id,source_admission_id,
+                          admitted_artifact_id,source_application_link_id,source_revision_id,passage_id,
+                          content_sha256,local_observation_id,local_observation_sha256,input_payload_id,created_at,
+                          source_application_decision_id)
+                        VALUES(
                           $outcome,$evidence,$application,$kind,$root,$applicability,$acquisition,$proposal,
-                          $admission,$application_decision,$artifact,$source_application,$revision,$passage,$sha,$observation,
-                          $observation_sha,$input,$now);
+                          $admission,$artifact,$source_application,$revision,$passage,$sha,$observation,
+                          $observation_sha,$input,$now,$application_decision);
                         """,
                             transaction,
                             ("$outcome", request.OutcomeId), ("$evidence", binding.EvidenceId),

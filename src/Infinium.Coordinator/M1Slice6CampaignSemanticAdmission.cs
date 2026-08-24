@@ -851,7 +851,6 @@ internal static class M1Slice6CampaignSemanticAdmission
                 || applicationDecision.SupportState != "supported"
                 || applicationDecision.ApplicabilityState != "applicable"
                 || applicationDecision.DecisionState != "admitted"
-                || sourceMatrix.ContradictionEvidenceIds.Count == 0
                 || sourceMatrix.Abstentions.Count == 0 || sourceMatrix.Gaps.Count == 0)
             {
                 throw new InvalidDataException(

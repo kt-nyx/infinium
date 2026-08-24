@@ -10104,3 +10104,46 @@ closure. The five deterministic lock paths were added to the exact product
 closeout path authority. The correction grants no runtime or external-effect
 authority. Locked restore, focused verification, changed-surface re-review,
 and a new exact clean candidate are required before restarting the floor.
+
+## 2026-08-24 committed-floor integration correction
+
+Dependency-lock candidate `bc07c0489863c97cf1f1b142db6950c80d3c8ef2` was
+clean and matched the expanded 190-path authority. Its restarted floor passed
+locked restore, a zero-warning/zero-error Release build, Unit 285/0/4, and all
+171 Contract-category executions with no skips. The Integration category then
+completed with one failure, 180 passes, and one expected skip in the main
+assembly; its participating Contract and Evaluation executions also passed
+1/1 each. The failure was
+`Wp10RetryThenWp11PreserveFrozenSemanticIdsAndDurableConsumption`, which
+rejected the historical candidate-v2 input because that immutable package
+predates the clean-break `application_decision_id`. The floor stopped at this
+diagnostic; `bc07c04` is not the final candidate and no later floor result or
+candidate-bound receipt was claimed for it.
+
+Correction on the same product candidate found two further live seams. The
+developer-owned campaign rehearsal now marks its candidate input as current
+and supplies a distinct placeholder application-decision identity; the host
+rebinds that placeholder to the exact just-persisted WP10 decision before
+publication. SQLite schema 9 had appended
+`source_application_decision_id` to `candidate_evidence_authority`, while the
+campaign publication still used a positional insert that placed the new value
+in the middle. The insert now names all 19 columns explicitly, preventing
+identity shifts and allowing the database trigger to verify the exact source
+application chain.
+
+The same diagnostic also exposed a stale WP11 prerequisite requiring a
+nonempty provider-reported global contradiction label on the current
+nine-proposal source matrix. The typed contract deliberately permits that
+global label only for a single-proposal transcript, and host support does not
+derive from it. The historical-label prerequisite was removed rather than
+copying an answer from a historical oracle. WP11 still reopens the exact
+source/application identities, all nine proposals and correlations, a
+supported-and-abstained source admission, the supported/applicable/admitted
+application decision, and nonempty abstentions and gaps.
+
+The formerly failing method passed 1/1, and the complete successor-accounting
+plus campaign-rehearsal focused surface passed 10/10. Fresh read-only product
+and governance delta reviews accepted the explicit-column persistence change,
+current developer input, durable prerequisite, and answer isolation with no
+remaining must-fix. A new clean commit and a complete floor restart remain
+required; no result from `bc07c04` is acceptance evidence for that successor.
