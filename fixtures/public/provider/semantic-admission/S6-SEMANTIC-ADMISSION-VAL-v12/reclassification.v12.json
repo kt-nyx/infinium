@@ -1,0 +1,19 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-reclassification/12.0.0",
+  "schema_version": "12",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v12",
+  "reclassified_at": "2026-08-23",
+  "from_partition": "validation",
+  "to_partition": "development",
+  "current_status": "historical-development-evidence-invalidated-post-comparison",
+  "precomparison_manifest_file": "precomparison-manifest.v12.json",
+  "reason": "The exact v12 package was compared with product behavior only after it appeared to pass the required three pre-seal gates. Complete changed-surface review then proved that the persisted Gate 1 authority-audit receipt is timestamped 2026-08-23T07:27:40.0703749Z, after the Gate 2 semantic review at 2026-08-23T07:24:22.8126210Z, so the package does not prove the required Gate 1 before Gate 2 chronology. Review also proved that eight expected source-consumer application links were backed by only two neutral applicability facts: several applicable or admitted consumer outcomes had no exact linked local fact, and the package's review record did not derive every consumer result. V12 therefore cannot remain current validation truth.",
+  "retention": "The oracle, provenance, automated-audit receipt, both independent review receipts, original manifest, comparison history, and every correction remain immutable and audit-visible. This record changes only their current authority classification.",
+  "comparison_consequence": "The v12 product comparison grants no product verdict. The oracle path is paused. Before another successor is authored, repository rules must require persisted, exact-byte gate receipts in strict audit-then-semantic-review-then-adversarial-review order and must require every expected consumer applicability outcome to bind independently sufficient neutral local facts through an exact application-link reference.",
+  "prohibited_authority": [
+    "current validation truth",
+    "owner acceptance",
+    "contract freeze",
+    "runtime semantic admission"
+  ]
+}

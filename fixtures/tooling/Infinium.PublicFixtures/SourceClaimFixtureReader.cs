@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Infinium.Application.Evaluation;
 using Infinium.Application.Provider;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 
 namespace Infinium.PublicFixtures;
@@ -75,8 +76,10 @@ public static class SourceClaimFixtureReader
         "docs/architecture/decisions/ADR-0013-openai-first-llm-capability-boundary.md",
     ];
 
-    public static SourceClaimFixturePackage Read(string directory)
-        => ReadCore(directory, validateRegistry: true);
+    [Obsolete("Historical source-claim semantic oracles cannot be loaded by current product gates.", error: true)]
+    public static SourceClaimFixturePackage Read(string directory) =>
+        throw new InvalidOperationException(
+            "Historical source-claim semantic oracles are retained bytes and grant no current authority.");
 
     internal static SourceClaimFixturePackage ReadForContractTest(string directory)
         => ReadCore(directory, validateRegistry: false);
@@ -90,7 +93,11 @@ public static class SourceClaimFixtureReader
         string fullDirectory = Path.GetFullPath(directory);
         string[] files = Directory.EnumerateFiles(fullDirectory).Select(Path.GetFileName).OfType<string>()
             .OrderBy(x => x, StringComparer.Ordinal).ToArray();
-        if (!files.SequenceEqual(ExactFiles, StringComparer.Ordinal))
+        string[] expectedFiles = File.Exists(Path.Combine(fullDirectory, "reclassification.v1.json"))
+            ? ExactFiles.Append("reclassification.v1.json")
+                .OrderBy(value => value, StringComparer.Ordinal).ToArray()
+            : ExactFiles;
+        if (!files.SequenceEqual(expectedFiles, StringComparer.Ordinal))
         {
             throw new InvalidDataException("Source-claim fixture package closure is not exact.");
         }
@@ -314,6 +321,48 @@ public static class SourceClaimFixtureReader
         BoundedJsonDocumentReader.Read(path, MaximumDocumentBytes, maximumDepth: 32);
 }
 
+public sealed record SourceClaimHistoricalAuditReceipt(
+    string PackageId,
+    int HistoricalFileCount,
+    string ManifestSha256,
+    string OracleSha256,
+    string RetainedTranscriptsSha256,
+    bool CurrentSemanticAuthority);
+
+public static class SourceClaimHistoricalAudit
+{
+    public static SourceClaimHistoricalAuditReceipt Verify(string packageRoot)
+    {
+        string Sha(string file) => Convert.ToHexStringLower(SHA256.HashData(
+            File.ReadAllBytes(Path.Combine(packageRoot, file))));
+        using JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(
+            Path.Combine(packageRoot, "public-manifest.json")));
+        JsonElement root = manifest.RootElement;
+        string packageId = root.GetProperty("package_identity").GetString()
+            ?? throw new InvalidDataException("Historical source manifest has no package identity.");
+        int fileCount = 0;
+        foreach (JsonElement identity in root.GetProperty("file_identities").EnumerateArray())
+        {
+            string path = identity.GetProperty("path").GetString()!;
+            byte[] bytes = File.ReadAllBytes(Path.Combine(packageRoot, path));
+            if (bytes.Length != identity.GetProperty("bytes").GetInt32()
+                || Convert.ToHexStringLower(SHA256.HashData(bytes)) != identity.GetProperty("sha256").GetString())
+            {
+                throw new InvalidDataException($"Historical source package byte drifted: {path}");
+            }
+            fileCount++;
+        }
+        return new SourceClaimHistoricalAuditReceipt(
+            packageId,
+            fileCount,
+            Sha("public-manifest.json"),
+            Sha("oracle.v1.json"),
+            Sha("retained-transcripts.v1.json"),
+            CurrentSemanticAuthority: false);
+    }
+}
+
+[Obsolete("The frozen single-state oracle is historical evidence and cannot verify current product semantics.", error: true)]
 public static class SourceClaimOracleVerifier
 {
     public static void Verify(SourceClaimFixturePackage package, SourceClaimAcquisitionResult actual)

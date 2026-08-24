@@ -1,0 +1,18 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-reclassification/2.0.0",
+  "schema_version": "2",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v2",
+  "reclassified_at": "2026-08-22",
+  "reclassified_by": "openai-codex:infinium-m1-s6-semantic-admission-v2-reclassification:2026-08-22",
+  "prior_partition": "validation",
+  "current_partition": "development",
+  "current_status": "historical-development-evidence-used-during-correction",
+  "reason": "The v2 cases were used during changed-surface review to identify and drive domain, protobuf, and producer corrections, and a read-only product-comparison diagnostic also executed against the final oracle bytes before the coordinator could prove that the final independent ACCEPT review had completed. The oracle and review remain retained history but cannot grant current validation authority.",
+  "oracle_bytes_changed": false,
+  "oracle_provenance_bytes_changed": false,
+  "independent_review_bytes_changed": false,
+  "used_to_drive_product_correction": true,
+  "comparison_timing_provable": false,
+  "current_product_authority": false,
+  "replacement_required": "materially-independent-v3"
+}

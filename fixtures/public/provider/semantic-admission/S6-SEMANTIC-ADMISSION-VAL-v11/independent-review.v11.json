@@ -1,0 +1,139 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-independent-review/v11",
+  "schema_version": "11",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v11",
+  "reviewer_identity": "infinium.clean-room-oracle-reviewer/4b57ec15-1a6c-4fb1-a55e-aab3cb0e9e64",
+  "reviewed_at_utc": "2026-08-23T05:12:04.9020526Z",
+  "verdict": "ACCEPT",
+  "reviewed_artifacts": [
+    {
+      "path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v11/oracle.v11.json",
+      "byte_length": 77253,
+      "sha256": "27242722c14fdf9d22cc28ce48264c13f944340b01e00a1d6bd547ed6b314ad4"
+    },
+    {
+      "path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v11/oracle-provenance.v11.json",
+      "byte_length": 6795,
+      "sha256": "8cedc2444a74271b326c7fc7bf957c191b79b86fa5f190bb1e622e2208a1cf98"
+    }
+  ],
+  "identity_and_chronology": {
+    "author_identity": "infinium.semantic-admission-clean-room-author/v11",
+    "author_differs_from_reviewer": true,
+    "triggering_reviewed_at_utc": "2026-08-23T04:54:46.5251077Z",
+    "corrected_author_time_utc": "2026-08-23T05:09:39.1509590Z",
+    "oracle_observed_last_write_utc": "2026-08-23T05:09:45.9116090Z",
+    "provenance_observed_last_write_utc": "2026-08-23T05:10:01.8469718Z",
+    "chronology_valid": true,
+    "comparison_status": "NOT_COMPARED"
+  },
+  "timestamp_only_reconstruction": {
+    "oracle": {
+      "replacement": "Replace corrected authored_at_utc with 2026-08-23T01:00:00.0000000+00:00.",
+      "reconstructed_byte_length": 77253,
+      "reconstructed_sha256": "97a188ac26c4dd024c2d6f305e86b0b7e78a25e93f764aa21d4633f635909033",
+      "result": "PASS"
+    },
+    "provenance": {
+      "replacement": "Replace corrected authored_at_utc and stable_time with 2026-08-23T01:00:00.0000000+00:00 and restore the immediately reviewed oracle binding.",
+      "reconstructed_byte_length": 6795,
+      "reconstructed_sha256": "5367fd926e2b1731236772671a4f7671f80c043d6ab584817cae7f79a5bfb1a5",
+      "result": "PASS"
+    }
+  },
+  "checks": [
+    {
+      "check": "exact_bytes_sha_and_provenance_binding",
+      "result": "PASS"
+    },
+    {
+      "check": "authority_and_six_active_schema_bindings",
+      "result": "PASS"
+    },
+    {
+      "check": "answer_isolation_clean_room_and_not_compared",
+      "result": "PASS"
+    },
+    {
+      "check": "closed_schema_exact_producer_shapes_ids_refs_hashes_and_model_used_reachability",
+      "result": "PASS"
+    },
+    {
+      "check": "source_sentence_boundaries_citations_fingerprints_and_visible_opposition",
+      "result": "PASS"
+    },
+    {
+      "check": "source_producer_non_authority_and_consumer_support_applicability_separation",
+      "result": "PASS"
+    },
+    {
+      "check": "candidate_hypothesis_context_evidence_and_direct_opposition_chains",
+      "result": "PASS"
+    },
+    {
+      "check": "explicit_abstention_unavailable_deleted_and_rejected_lifecycles",
+      "result": "PASS"
+    },
+    {
+      "check": "unique_complete_5x5_matrix_with_only_supported_applicable_admitted",
+      "result": "PASS"
+    },
+    {
+      "check": "all_retained_proposals_exactly_one_link_and_structurally_valid_zero_two_probes",
+      "result": "PASS"
+    },
+    {
+      "check": "structured_invalid_mutations_and_statement_boundary_probes",
+      "result": "PASS"
+    },
+    {
+      "check": "corrected_author_time_and_timestamp_only_reconstruction",
+      "result": "PASS"
+    }
+  ],
+  "prior_findings_closure": [
+    {
+      "finding": "source_unsupported_independent_derivability",
+      "result": "CLOSED"
+    },
+    {
+      "finding": "source_unavailable_underlying_proposition",
+      "result": "CLOSED"
+    },
+    {
+      "finding": "candidate_support_distinct_from_local_applicability",
+      "result": "CLOSED"
+    },
+    {
+      "finding": "hash_coherent_forbidden_boundaries_and_positive_safe_boundaries",
+      "result": "CLOSED"
+    },
+    {
+      "finding": "contradiction_second_proposal_individually_schema_valid",
+      "result": "CLOSED"
+    },
+    {
+      "finding": "corrected_package_chronology",
+      "result": "CLOSED"
+    }
+  ],
+  "must_fix_findings": [],
+  "review_boundary": {
+    "clean_room": true,
+    "product_implementation_inspected": false,
+    "tests_inspected": false,
+    "product_output_inspected": false,
+    "product_comparison_performed": false,
+    "prior_semantic_packages_inspected": false,
+    "registries_or_manifests_inspected_or_modified": false,
+    "retained_live_or_private_material_accessed": false,
+    "archives_accessed": false,
+    "credentials_accessed": false,
+    "network_accessed": false,
+    "git_history_accessed": false,
+    "files_created": [
+      "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v11/independent-review.v11.json"
+    ],
+    "oracle_or_provenance_modified": false
+  }
+}

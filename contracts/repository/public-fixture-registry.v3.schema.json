@@ -8,25 +8,34 @@
     "registry_version",
     "status",
     "package_count",
+    "family_classifications",
     "packages"
   ],
   "properties": {
     "schema_identity": {
-      "const": "infinium.repository.public-fixture-registry/1.8.0"
+      "const": "infinium.repository.public-fixture-registry/1.15.0"
     },
     "registry_version": {
-      "const": "1.8.0"
+      "const": "1.15.0"
     },
     "status": {
       "const": "current"
     },
     "package_count": {
-      "const": 44
+      "type": "integer",
+      "const": 56
+    },
+    "family_classifications": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/familyClassification" }
     },
     "packages": {
       "type": "array",
-      "minItems": 44,
-      "maxItems": 44,
+      "minItems": 56,
+      "maxItems": 56,
       "uniqueItems": true,
       "items": {
         "$ref": "#/$defs/package"
@@ -34,6 +43,18 @@
     }
   },
   "$defs": {
+    "familyClassification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family_id", "package_path_prefix", "disposition", "required_partition", "current_validation_authority_package"],
+      "properties": {
+        "family_id": { "const": "semantic-admission" },
+        "package_path_prefix": { "const": "fixtures/public/provider/semantic-admission/" },
+        "disposition": { "const": "historical-non-authorizing" },
+        "required_partition": { "const": "development" },
+        "current_validation_authority_package": { "type": "null" }
+      }
+    },
     "package": {
       "type": "object",
       "additionalProperties": false,

@@ -1,0 +1,35 @@
+{
+  "schema_identity": "infinium.public-fixture.semantic-admission-reclassification/1.0.0",
+  "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v13",
+  "from_partition": "validation",
+  "to_partition": "development",
+  "status": "historical-development-evidence-invalidated-before-product-comparison",
+  "reclassified_at_utc": "2026-08-23T19:58:46.1527677Z",
+  "product_comparison_executed": false,
+  "product_verdict_granted": false,
+  "oracle_bytes_preserved": true,
+  "precomparison_manifest": {
+    "path": "precomparison-manifest.v13.json",
+    "bytes": 2313,
+    "sha256": "5d34f75644b63253749228ed7813cd7f74270530ab47b1659fab0aab00c61a81"
+  },
+  "precise_failures": [
+    {
+      "case_id": "24e8b7c1",
+      "classification": "lifecycle-confusion",
+      "failure": "An unavailable source proposal was expected to be audit-only. Accepted authority requires unavailable material to remain unavailable/not-evaluated/abstained; audit-only is reserved for deleted material."
+    },
+    {
+      "case_id": "d6a041be",
+      "classification": "producer-reachability-gap",
+      "failure": "The expected source-producer result was deleted, but the exact raw producer input was explicitly pre-deletion and carried a present source passage. The later deletion event was not part of the producer input, so the expected result could not be produced by the declared seam."
+    }
+  ],
+  "missing_rule_correction": {
+    "path": "docs/evaluation/fixture-guidelines.md",
+    "bytes": 12654,
+    "sha256": "6138e1a8a5e26a4661bb3bfda0988bb7987aa7dfa90673e09490364224187000",
+    "rule": "Producer reachability and lifecycle closure now require exact raw-input-to-output mapping, unavailable-to-abstained, deleted-to-audit-only, and a producer-visible deletion premise before a deleted producer expectation."
+  },
+  "comparison_consequence": "No product comparison was run and no product behavior was changed from v13 expectations. The package is retained only as non-authorizing development history."
+}

@@ -1,0 +1,24 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-independent-review/5.0.0",
+  "schema_version": "5",
+  "package_id": "infinium.public-fixture-package/semantic-admission/5/bd3f551f-d1cb-4b43-91bb-84c2b6fc44f7",
+  "oracle_id": "infinium.public-oracle/semantic-admission/5/2b5df6a1-b6ef-4dea-832b-57877441fb37",
+  "reviewer_identity": "infinium.clean-room-oracle-reviewer/94b8902a-de37-4470-a60e-69eb0ab32d47",
+  "reviewed_at": "2026-08-22T20:14:48.4808900-04:00",
+  "result": "accepted",
+  "reviewed_files": [
+    {"path":"oracle.v5.json","bytes":48958,"sha256":"db6d9019f790c7dbff107340ae6d2b076f423f1a3c24aa64cf5bdd3530022310"},
+    {"path":"oracle-provenance.v5.json","bytes":5111,"sha256":"2bf859644897c4b5284333e0e5d8822d2c0581d905e36952e02f1db1b0d1fa60"}
+  ],
+  "reviewed_dimensions": [
+    "answer-free self-contained raw inputs and independently derivable expected truth",
+    "source citation span lifecycle and deleted binding",
+    "source and candidate producer and consumer semantics",
+    "complete support by applicability current-decision matrix",
+    "explicit abstention unavailable deletion rejection and opposing evidence",
+    "exactly one decision link and atomic zero or multiple link rejection",
+    "authorship provenance exact-byte binding and pre-comparison timing"
+  ],
+  "findings": [],
+  "boundary_statement": "The reviewer used only accepted public authority and the exact v5 oracle and provenance. The reviewer did not inspect implementation, tests, product output, v1 through v4 packages, retained live evidence or accounting, private fixtures, credentials, archives, network material, or Git history; made no edits; and performed no product comparison."
+}

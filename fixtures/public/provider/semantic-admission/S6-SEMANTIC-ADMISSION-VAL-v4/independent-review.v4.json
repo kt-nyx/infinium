@@ -1,0 +1,23 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-independent-review/4.0.0",
+  "schema_version": "4",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v4",
+  "reviewer_identity": "openai-codex:infinium:m1-s6:semantic-admission-v4:independent-reviewer:2026-08-22",
+  "reviewed_at": "2026-08-22",
+  "result": "accepted",
+  "reviewed_files": [
+    {"path":"oracle.v4.json","bytes":50223,"sha256":"1c6822d3c4accce9a83e6cd5b968a1d4884f2d5f5576ca60ec902ecb594448c8"},
+    {"path":"oracle-provenance.v4.json","bytes":5085,"sha256":"7359b7171055a0f42f3b6be1a3abf4be5acae1158fd5da19ca1e09dda7852024"}
+  ],
+  "reviewed_dimensions": [
+    "complete support applicability and decision matrix",
+    "source citation and deleted preimage binding",
+    "source and candidate producer and consumer cases",
+    "raw input sufficiency and answer isolation",
+    "explicit abstention unavailable deletion and rejection",
+    "exactly one decision link cardinality",
+    "authorship provenance and comparison timing"
+  ],
+  "findings": [],
+  "boundary_statement": "The reviewer used only accepted public authority and the exact v4 oracle and provenance. The reviewer did not inspect implementation, tests, product output, v1 through v3 packages, private or retained-live evidence, credentials, archives, network material, or Git history, and made no edits or product comparison."
+}

@@ -1,0 +1,17 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-reclassification/6.0.0",
+  "schema_version": "6",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v6",
+  "reclassified_at": "2026-08-22",
+  "from_partition": "validation",
+  "to_partition": "development",
+  "current_status": "historical-development-evidence-invalidated-at-first-comparison",
+  "reason": "The corrected exact v6 package was independently accepted and sealed before its first product comparison. That comparison found its deleted-material terminal rule and candidate deletion case used applicability unknown with audit-only. The accepted separated cross-axis contract requires deliberately deleted material to retain support unavailable, applicability not-evaluated, and decision audit-only; unknown represents an applicability evaluation and is not valid for deleted payloads. The product already enforced the accepted tuple, so no product change was made.",
+  "retention": "The original oracle, provenance, and independent-review bytes remain immutable and audit-visible. This record changes only their current authority classification.",
+  "comparison_consequence": "V6 cannot grant current validation authority. A materially independent successor must be authored and reviewed before product comparison.",
+  "prohibited_authority": [
+    "current validation truth",
+    "owner acceptance",
+    "runtime semantic admission"
+  ]
+}

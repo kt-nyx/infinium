@@ -1,0 +1,75 @@
+{
+  "schema_identity": "infinium.public-fixture.semantic-admission/13.0.0",
+  "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v13",
+  "package_stable_identity": "infinium.public.provider.semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v13",
+  "package_version": "13.0.0",
+  "fixture_id": "S6-SEMANTIC-ADMISSION-VAL-v13",
+  "fixture_version": "13.0.0",
+  "partition": "development",
+  "status": "historical-development-evidence-invalidated-before-product-comparison",
+  "sealed_at_utc": "2026-08-23T19:55:56.4903163Z",
+  "product_input_files": [],
+  "oracle_file": "oracle.v13.json",
+  "oracle_provenance_file": "oracle-provenance.v13.json",
+  "authority_audit_file": "authority-audit.v13.json",
+  "independent_review_file": "independent-review.v13.json",
+  "adversarial_review_file": "adversarial-review.v13.json",
+  "precomparison_manifest_file": "precomparison-manifest.v13.json",
+  "reclassification_file": "reclassification.v13.json",
+  "file_identities": [
+    {
+      "path": "oracle.v13.json",
+      "role": "historical-development-oracle",
+      "bytes": 55300,
+      "sha256": "17b06cd57fdeea10cc4287f13702927ed185436f241b3ef6fc1700706d7897ff"
+    },
+    {
+      "path": "oracle-provenance.v13.json",
+      "role": "historical-oracle-provenance",
+      "bytes": 6934,
+      "sha256": "a5f9be1677505662d52c2e8edbd79c18f85d32aa34c0eff8137a52d1b3bce876"
+    },
+    {
+      "path": "authority-audit.v13.json",
+      "role": "historical-preseal-authority-audit-receipt",
+      "bytes": 8524,
+      "sha256": "f01801e4a458cf37fb3ec8b5c6f39cd3a2774acca4474e3c6f2a4ee79af2b865"
+    },
+    {
+      "path": "independent-review.v13.json",
+      "role": "historical-independent-semantic-review",
+      "bytes": 14011,
+      "sha256": "b54df51d240f52dfc726f7c3f8086705a7fdad2f5564a30804890348f81c08f0"
+    },
+    {
+      "path": "adversarial-review.v13.json",
+      "role": "historical-distinct-adversarial-package-review",
+      "bytes": 6493,
+      "sha256": "9abe6c31a0c3fbbba0d00254db3f5be63dda554fe692b3ac8bef2563c6ccc3fe"
+    },
+    {
+      "path": "precomparison-manifest.v13.json",
+      "role": "immutable-precomparison-authority-manifest-history",
+      "bytes": 2313,
+      "sha256": "5d34f75644b63253749228ed7813cd7f74270530ab47b1659fab0aab00c61a81"
+    },
+    {
+      "path": "reclassification.v13.json",
+      "role": "current-non-authorizing-reclassification",
+      "bytes": 1991,
+      "sha256": "a49e484f04d0fb822aae8bdebf7df43e7bca8e4e9d930385a7a292998626f469"
+    }
+  ],
+  "preseal_gate_status": {
+    "authority_only_automated_audit": "historical-pass-invalidated-by-lifecycle-review-gap",
+    "independent_semantic_review": "historical-acceptance-invalidated",
+    "distinct_adversarial_package_review": "historical-acceptance-invalidated"
+  },
+  "comparison_status": "not-run-oracle-invalidated-before-product-comparison",
+  "answer_free_product_inputs": true,
+  "oracle_frozen_before_product_comparison": true,
+  "current_validation_authority": false,
+  "network_required": false,
+  "provider_request_count": 0,
+  "credential_operation_count": 0
+}

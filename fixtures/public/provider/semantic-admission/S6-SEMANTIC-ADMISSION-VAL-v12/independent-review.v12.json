@@ -1,0 +1,155 @@
+{
+  "schema_id": "infinium.public.semantic-admission-independent-review/v12",
+  "schema_version": "12",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v12",
+  "review_id": "infinium.m1-s6.semantic-admission.independent-review/gate-2-v12",
+  "review_gate": "PRE-SEAL_GATE_2",
+  "reviewer": {
+    "reviewer_identity": "infinium.clean-room-oracle-reviewer/4b57ec15-1a6c-4fb1-a55e-aab3cb0e9e64",
+    "reviewer_role": "independent-clean-room-semantic-reviewer"
+  },
+  "reviewed_at_utc": "2026-08-23T07:24:22.8126210Z",
+  "verdict": "ACCEPT",
+  "reviewed_files": [
+    {
+      "role": "semantic-oracle",
+      "path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v12/oracle.v12.json",
+      "byte_length": 86265,
+      "sha256": "c817a611d89a1a610405984dd68415d99f2183a16566c6631e5f0f423789b9ba"
+    },
+    {
+      "role": "oracle-provenance",
+      "path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v12/oracle-provenance.v12.json",
+      "byte_length": 5807,
+      "sha256": "32a0e11c9f2a51fb5b3bf053b43b3a428d99a229d2c5cdd94d96a3b5bee78778"
+    }
+  ],
+  "findings": {
+    "must_fix": [],
+    "follow_up": [],
+    "must_fix_count": 0,
+    "follow_up_count": 0
+  },
+  "derivation_method": {
+    "basis": "Each expected result was independently derived from neutral raw facts plus accepted public authority and the exact bound current schemas.",
+    "excluded_as_evidence_for_own_result": [
+      "provider raw state labels",
+      "provider relationship labels",
+      "suggestive identifiers",
+      "provider reason strings",
+      "expected fields",
+      "package assertions"
+    ],
+    "answer_free_producer_inputs_confirmed": true,
+    "independent_derivability_confirmed": true
+  },
+  "result_derivations": {
+    "source_producer_cases": [
+      {
+        "case_id": "source-supported-v12",
+        "derivation": "The exact cited sentence states the revision-seven and service-hatch-use conditions and the silver-latch requirement. The condition IDs bind those source phrases. Support is established, source-producer applicability remains not evaluated, and the host abstains from a local conclusion."
+      },
+      {
+        "case_id": "source-unsupported-v12",
+        "derivation": "The exact quartz-dial claim is retained, while the same source passage identifies it as an unverified report and supplies neither a test result nor an authoritative basis. Available evidence is insufficient without directly opposing the claim, so support is unsupported, applicability is not evaluated, and the host abstains."
+      },
+      {
+        "case_id": "source-contradicted-v12",
+        "derivation": "The exact amber-relay positive sentence is paired with visible, hash-bound evidence stating its direct negation. The proposition is contradicted, source-producer applicability remains not evaluated, and the host abstains."
+      },
+      {
+        "case_id": "source-unavailable-v12",
+        "derivation": "The retained MB-7 locator is present, but the referenced proposition payload is absent with zero payload bytes. The attempted proposition and its version and startup condition spans are hash-bound without asserting local applicability. Support is unavailable, applicability is not evaluated, and the host abstains rather than retaining audit-only material."
+      },
+      {
+        "case_id": "source-abstained-v12",
+        "derivation": "The exact citation says the author does not state whether the blue valve is required. It therefore supports an explicit cannot-determine response for the attempted blue-valve proposition. Both semantic axes remain not evaluated and the host abstains."
+      },
+      {
+        "case_id": "source-deleted-v12",
+        "derivation": "The source execution passage contains only the hash-bound deletion marker and is marked deleted; the pre-deletion source-body payload is absent from that passage input. The historical retained claim survives as derived audit material bound to the 60-byte preimage fingerprint and its temporal condition span. The result is deleted with unavailable support, applicability not evaluated, and audit-only retention."
+      },
+      {
+        "case_id": "source-rejected-v12",
+        "derivation": "The exact imperative requests launching a calibration executable and actuating a switch, while no effect authority is present. The faithful proposal and extraction remain retained, but the host rejects it on policy grounds before evaluating support or applicability."
+      },
+      {
+        "case_id": "source-revision-seven-v12",
+        "derivation": "The exact source sentence states that the installed unit is revision seven. It is supported as source evidence, while source-producer applicability is not evaluated and the host abstains from local admission."
+      },
+      {
+        "case_id": "source-amber-opposition-v12",
+        "derivation": "The exact source sentence states that the amber relay does not enable night mode. The negative proposition is supported as source evidence, while source-producer applicability is not evaluated and the host abstains from local admission."
+      }
+    ],
+    "source_consumer_cases": [
+      {
+        "fact_id": "neutral.fact.v12.01",
+        "derivation": "The hash-bound local fact establishes a revision-seven local unit, the installed silver latch, and service-hatch use. It satisfies both typed source conditions, making the supported source proposition locally applicable and admitted for the consuming analysis."
+      },
+      {
+        "fact_id": "neutral.fact.v12.02",
+        "derivation": "The hash-bound local fact establishes a revision-seven local unit with the amber relay installed on its night-mode circuit. It makes the amber proposition locally applicable while the directly opposing evidence keeps the positive proposition contradicted and abstained."
+      }
+    ],
+    "candidate_cases": [
+      {
+        "case_id": "candidate-supported-v12",
+        "derivation": "The exact silver-latch source claim supplies support and the local unit fact establishes its version and use-state conditions. The candidate is supported and applicable, so it is admitted."
+      },
+      {
+        "case_id": "candidate-unsupported-v12",
+        "derivation": "The available quartz evidence describes selection of a quiet profile and identifies the installed revision-seven unit, but supplies no evidence of excessive startup delay. The hypothesis is unsupported but locally applicable, so the host abstains."
+      },
+      {
+        "case_id": "candidate-contradicted-v12",
+        "derivation": "Visible hash-bound source evidence states both the amber proposition and its direct negation, and the local fact establishes the relevant installed relay. The candidate is contradicted and applicable, so the host abstains."
+      },
+      {
+        "case_id": "candidate-unavailable-v12",
+        "derivation": "The candidate depends on the absent MB-7 payload rather than merely the retained locator. Support is unavailable, applicability is not evaluated, and the host abstains; unavailable material is not audit-only."
+      },
+      {
+        "case_id": "candidate-abstained-v12",
+        "derivation": "The bounded evidence expressly cannot determine whether the blue valve is required. The provider abstention is retained separately, both axes remain not evaluated, and the host abstains."
+      },
+      {
+        "case_id": "candidate-rejected-v12",
+        "derivation": "The hypothesis is the same protected-effect imperative and no effect authority is present. The provider proposal survives, while the host rejects it before evaluating either semantic axis."
+      }
+    ],
+    "cross_case_checks": {
+      "source_extraction_shape": "All nine expected source proposals use exactly proposal_id, passage_id, claim, condition_ids, extraction_state, and reason. Transcript-only condition_scope is omitted from the extraction expectation while transcript scopes and matching condition IDs preserve the source semantics.",
+      "source_application_and_candidate_chains": "All eight source admission, source application, passage, evidence, candidate-context, and local-fact chains close exactly with matching identifiers and content fingerprints.",
+      "opposition": "Direct opposing amber evidence is visible and bound to the exact passage text and SHA-256 fingerprint.",
+      "lifecycle": "Unavailable material abstains and is never audit-only; deleted material alone uses deleted, unavailable, not-evaluated, and audit-only. The deletion mutation remains a generically valid supported-applicable-admitted tuple rejected solely by deleted-lifecycle policy.",
+      "structural_and_policy_rejection": "Citation, span, fingerprint, prompt, owner, response, proposal, contradiction-cardinality, model-used, and protected-effect defects have explicit structured rejection expectations.",
+      "matrix": "The support by applicability matrix contains all 25 unique pairs and admits only supported plus applicable.",
+      "decision_cardinality": "Every normal retained source or candidate proposal has exactly one host decision record. Source and candidate probe families independently supply concrete zero-record and two-record invalid cases whose two records are individually complete and schema-valid."
+    }
+  },
+  "provenance_checks": {
+    "oracle_binding_matches": true,
+    "provenance_binding_matches": true,
+    "candidate_status": "UNACCEPTED_DRAFT",
+    "comparison_status": "NOT_COMPARED",
+    "authoring_precedes_review": true,
+    "distinct_author_and_reviewer_roles": true
+  },
+  "clean_room_boundary": {
+    "accepted_public_authority_and_bound_schemas_only": true,
+    "product_implementation_accessed": false,
+    "product_tests_accessed": false,
+    "product_output_accessed": false,
+    "product_output_compared": false,
+    "prior_v1_through_v11_packages_accessed": false,
+    "manifest_or_registry_accessed": false,
+    "git_history_accessed": false,
+    "private_fixture_accessed": false,
+    "live_evidence_accessed": false,
+    "archive_material_accessed": false,
+    "credential_material_accessed": false,
+    "network_accessed": false
+  },
+  "record_boundary": "This record documents the independent Gate 2 semantic review verdict for the exact two bound files. It is not a product comparison, seal, manifest, registry entry, private held-out result, reliability claim, or product-readiness claim."
+}

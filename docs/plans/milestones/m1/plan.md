@@ -4,8 +4,17 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-08-17
+Last reviewed: 2026-08-23
 Target milestone: M1 — Backend semantic proof
+
+> Current evaluation-timing amendment (2026-08-23):
+> [ADR-0035](../../../architecture/decisions/ADR-0035-defer-independent-semantic-oracle-qualification.md)
+> and the accepted
+> [focused amendment](amendments/semantic-oracle-deferral.md) defer independent
+> semantic-oracle qualification throughout M1 and M2. Earlier oracle
+> authoring, sealing, comparison, and `PASS` instructions below remain
+> historical plan context and do not gate current M1 acceptance. The active
+> requirement is the six-layer product-conformance profile.
 
 ## Authority and start condition
 
@@ -57,6 +66,13 @@ eligible under the accepted
 [M1 continuation verification profile](../../../evaluation/m1-continuation-verification-profile.md).
 This does not weaken the M1 required-case set or authorize private work; it
 replaces only the held-out-`PASS` sequencing prerequisite for Slices 5-9.
+
+On 2026-08-23, the owner accepted ADR-0035 and the focused M1 semantic-oracle
+deferral amendment. M1 retains its product semantics, ordinary evaluation
+tests, controlled integration/generalization, replay/safety, and fresh review,
+but no current independent semantic package or oracle verdict gates
+acceptance. The next Slice 6 package is a separate fresh product closeout; it
+must not author or compare a successor oracle.
 
 The plan consumes:
 
@@ -422,7 +438,7 @@ Gates:
   [M1 continuation verification profile](../../../evaluation/m1-continuation-verification-profile.md).
 
 The Slice 5 implementation record must include exact contracts, schemas,
-independently expected public fixtures, replay identities, commands and
+developer-owned bounded examples and deterministic references, replay identities, commands and
 counts, coverage/gaps/unsupported surfaces, fresh semantic/diff review, and an
 explicit statement that no private held-out verdict exists.
 
@@ -655,9 +671,10 @@ M1 is complete only when:
 
 M1 completion under this profile is public product conformance for the exact
 declared scope. It does not create a private held-out verdict or establish M3
-reliability/readiness. Evaluator reconsideration requires a new ADR and plan
-after Slice 9 during M3 planning; no future protocol identity is selected by
-M1.
+reliability/readiness. Independent semantic evaluation may be reconsidered
+only after M2 acceptance at the M3 Evaluation Readiness Gate and requires all
+ADR-0035 prerequisites plus a new accepted M3 plan; no future protocol
+identity is selected by M1.
 
 ## Rollback and migration
 

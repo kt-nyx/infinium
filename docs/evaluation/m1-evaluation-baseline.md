@@ -4,8 +4,16 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-23
 Target milestone: M1 — Backend semantic proof
+
+Current supersession notice: ADR-0035 and the active
+[M1/M2 product-conformance profile](m1-continuation-verification-profile.md)
+supersede any requirement in this historical baseline to author, seal, or pass
+an independent semantic oracle during M1 or M2. Case meanings, contracts,
+deterministic truth, safety, replay, and ordinary evaluation tests remain
+applicable. Independent semantic qualification may be reconsidered only at the
+M3 Evaluation Readiness Gate.
 
 ## Purpose
 

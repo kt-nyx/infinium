@@ -1,8 +1,17 @@
 {
-  "schema_identity": "infinium.repository.public-fixture-registry/1.8.0",
-  "registry_version": "1.8.0",
+  "schema_identity": "infinium.repository.public-fixture-registry/1.15.0",
+  "registry_version": "1.15.0",
   "status": "current",
-  "package_count": 44,
+  "package_count": 56,
+  "family_classifications": [
+    {
+      "family_id": "semantic-admission",
+      "package_path_prefix": "fixtures/public/provider/semantic-admission/",
+      "disposition": "historical-non-authorizing",
+      "required_partition": "development",
+      "current_validation_authority_package": null
+    }
+  ],
   "packages": [
     {
       "package_identity": "S6-CANDIDATE-DEV-v1",
@@ -27,70 +36,72 @@
     {
       "package_identity": "S6-CANDIDATE-VAL-v3",
       "package_version": "2.0.0",
-      "partition": "validation",
+      "partition": "development",
       "package_path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3",
-      "authority_file": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/public-manifest.json",
-      "authority_bytes": 2035,
-      "authority_sha256": "b42dff12144f192c1e7a913a3a99433398f0f2d41148a3353f7aa9cf89154323",
-      "authority_status": "oracle-frozen-pre-comparison-current-validation-authority"
+      "authority_file": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/reclassification.v3.json",
+      "authority_bytes": 866,
+      "authority_sha256": "66d74c86e3e19d38559fe1bcaa096cb070c7bbe129c7a5d149ed60715087308e",
+      "authority_status": "historical-development-evidence-clean-break-semantic-contract"
     },
     {
       "package_identity": "S6-CANDIDATE-DEV-v2",
       "package_version": "2.0.0",
       "partition": "development",
       "package_path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-DEV-v2",
-      "authority_file": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-DEV-v2/public-manifest.json",
-      "authority_bytes": 1740,
-      "authority_sha256": "87a1a6013c01809121732fbf5e9e908e2985344cd5c17bd742bab005c42c08a5",
-      "authority_status": "oracle-frozen-pre-comparison-mechanical-development-rebind"
+      "authority_file": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-DEV-v2/reclassification.v2.json",
+      "authority_bytes": 842,
+      "authority_sha256": "7c07672c46f5577e1d441f569c502b6c1e8e5f211c6ee5dc318492b986683b5e",
+      "authority_status": "historical-development-evidence-clean-break-semantic-contract"
     },
     {
       "package_identity": "S6-CLAIM-DEV-v1",
       "package_version": "1.0.0",
       "partition": "development",
       "package_path": "fixtures/public/provider/source-claims/S6-CLAIM-DEV-v1",
-      "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-DEV-v1/public-manifest.json",
-      "authority_bytes": 1321,
-      "authority_sha256": "7a7b3ea24a218ec1ebb811c96f39a3b7f197938960bcbd9ec15eb2f54b1ff61b"
+      "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-DEV-v1/reclassification.v1.json",
+      "authority_bytes": 840,
+      "authority_sha256": "a8def8e984bed356f3ba96c9ab43ca8007e4d6ae80c3577f12f1e7e2e4d3fe87",
+      "authority_status": "historical-development-evidence-clean-break-semantic-contract"
     },
     {
       "package_identity": "S6-CLAIM-VAL-v1",
       "package_version": "1.0.0",
-      "partition": "validation",
+      "partition": "development",
       "package_path": "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1",
-      "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1/public-manifest.json",
-      "authority_bytes": 1320,
-      "authority_sha256": "0f95265340873dc4abb083c6f857db9e8786c6e1ba36da385f07c876afe1c13f"
+      "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1/reclassification.v1.json",
+      "authority_bytes": 919,
+      "authority_sha256": "b69b502f44511d4e1551ed6c41f6c27caa134e67a273bdfec28bd2947939bdcb",
+      "authority_status": "historical-development-evidence-clean-break-semantic-contract"
     },
     {
       "package_identity": "LLM-CLAIM-LIVE-VAL",
       "package_version": "1.0.0",
-      "partition": "validation",
+      "partition": "development",
       "package_path": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL",
-      "authority_file": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/public-manifest.json",
-      "authority_bytes": 933,
-      "authority_sha256": "83a63ba290966f27f7f6ddc581f63f7e2cb7b4d745f6958177f17043f220b3e6",
-      "authority_status": "oracle-frozen-pre-live-comparison"
+      "authority_file": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/reclassification.v1.json",
+      "authority_bytes": 1151,
+      "authority_sha256": "f3538c5d5f58d4e76fa50e790cc7e16b96081cf746fee05f64d6db0f6db87a6a",
+      "authority_status": "historical-development-evidence-clean-break-semantic-contract"
     },
     {
       "package_identity": "LLM-INVESTIGATE-LIVE-VAL",
       "package_version": "1.0.0",
-      "partition": "validation",
+      "partition": "development",
       "package_path": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL",
-      "authority_file": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/public-manifest.json",
-      "authority_bytes": 971,
-      "authority_sha256": "486181221a67311ca14e5454451f40012465535e0f09e999561a58ed5110a135",
-      "authority_status": "oracle-frozen-pre-live-comparison"
+      "authority_file": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/reclassification.v1.json",
+      "authority_bytes": 1061,
+      "authority_sha256": "089bbff2f49c2ebd02216805ef521e856ec667767103abc26a2702601ae01aa1",
+      "authority_status": "historical-development-evidence-clean-break-semantic-contract"
     },
     {
       "package_identity": "PROV-LIVE-COMPOSED-VAL",
       "package_version": "1.0.0",
-      "partition": "validation",
+      "partition": "development",
       "package_path": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL",
-      "authority_file": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json",
-      "authority_bytes": 704,
-      "authority_sha256": "da6b6b05456a2ed956393c3a0f7c7d470a947adba8e991cae72e9dd7f28250c8",
-      "authority_status": "oracle-frozen-pre-live-comparison"
+      "authority_file": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/reclassification.v1.json",
+      "authority_bytes": 1050,
+      "authority_sha256": "b9be055425befc3ca74e63074f73a90ec9d33ef4f614d9f988c46ce6da3a82b5",
+      "authority_status": "historical-development-evidence-clean-break-semantic-contract"
     },
     {
       "package_identity": "M1-PLAT-PROVIDER-CAPABILITY-DEV-v1",
@@ -358,62 +369,182 @@
     {
       "package_identity": "S6-CLAIM-LIVE-VAL-v2",
       "package_version": "2.0.0",
-      "partition": "validation",
+      "partition": "development",
       "package_path": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2",
-      "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/public-manifest.json",
-      "authority_bytes": 1684,
-      "authority_sha256": "926963ca067da52ec8d6d7ecdd824df3cb2e2efed6dd12fe3418f3e63b29b4b7",
-      "authority_status": "oracle-frozen-pre-comparison"
+      "authority_file": "fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/reclassification.v2.json",
+      "authority_bytes": 886,
+      "authority_sha256": "cc817d8713d018c463c2dae3349aa150328d6c254b06e42ed1454d7ac72aa942",
+      "authority_status": "historical-development-evidence-clean-break-semantic-contract"
     },
     {
       "package_identity": "LLM-CLAIM-LIVE-VAL-v2",
       "package_version": "2.0.0",
-      "partition": "validation",
+      "partition": "development",
       "package_path": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2",
-      "authority_file": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/public-manifest.json",
-      "authority_bytes": 1126,
-      "authority_sha256": "1231c98875c3ba3ca0ce3b60773e566c791b4a313c1fd691233be1a1bc60ba09",
-      "authority_status": "oracle-frozen-pre-live-comparison"
+      "authority_file": "fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL-v2/reclassification.v2.json",
+      "authority_bytes": 890,
+      "authority_sha256": "d426b8894990cb4454d9b82cb75452e64550ef857d17bc3dcba2468a58dc35f2",
+      "authority_status": "historical-development-evidence-clean-break-semantic-contract"
     },
     {
       "package_identity": "S6-CANDIDATE-LIVE-VAL-v2",
       "package_version": "2.0.0",
-      "partition": "validation",
+      "partition": "development",
       "package_path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2",
-      "authority_file": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/public-manifest.json",
-      "authority_bytes": 1714,
-      "authority_sha256": "c607ca873edb888502c9511ee5d9663b87247565d88b302edf3de55fb2750942",
-      "authority_status": "oracle-frozen-pre-comparison"
+      "authority_file": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-LIVE-VAL-v2/reclassification.v2.json",
+      "authority_bytes": 877,
+      "authority_sha256": "f7482b969d71f0107d2006e84ba0b6792809fb48611ae6d25bfe18b7ee46b527",
+      "authority_status": "historical-development-evidence-clean-break-semantic-contract"
     },
     {
       "package_identity": "LLM-INVESTIGATE-LIVE-VAL-v2",
       "package_version": "2.0.0",
-      "partition": "validation",
+      "partition": "development",
       "package_path": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2",
-      "authority_file": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/public-manifest.json",
-      "authority_bytes": 1185,
-      "authority_sha256": "f531447c5d7a1a3efc45b0787b319e3467d35197fbfea85436e3e003a789bb50",
-      "authority_status": "oracle-frozen-pre-live-comparison"
+      "authority_file": "fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL-v2/reclassification.v2.json",
+      "authority_bytes": 896,
+      "authority_sha256": "85d824579f543c6753ea5ac98cdacb84dc131f37d0f66c069758a52bed56a3cb",
+      "authority_status": "historical-development-evidence-clean-break-semantic-contract"
     },
     {
       "package_identity": "PROV-LIVE-COMPOSED-VAL-v2",
       "package_version": "2.0.0",
-      "partition": "validation",
+      "partition": "development",
       "package_path": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL-v2",
-      "authority_file": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL-v2/public-manifest.json",
-      "authority_bytes": 2346,
-      "authority_sha256": "61368c3b8da3808724d64e796b85a3b26043ca4ef1a2e3ad1dd441daf2405be8",
-      "authority_status": "oracle-frozen-pre-live-comparison"
+      "authority_file": "fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL-v2/reclassification.v2.json",
+      "authority_bytes": 923,
+      "authority_sha256": "e0a811f35b9bb51ff0ac344cfee7a49d6bae965f47778c655b139122cbe304f1",
+      "authority_status": "historical-development-evidence-clean-break-semantic-contract"
     },
     {
       "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v1",
       "package_version": "1.0.0",
-      "partition": "validation",
+      "partition": "development",
       "package_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v1",
-      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v1/public-manifest.json",
-      "authority_bytes": 965,
-      "authority_sha256": "99c40fbc7fb7b26a3308ca9238246c71365fa90903e5b3bbf10291791bab22f9",
-      "authority_status": "oracle-frozen-pre-comparison-current-validation-authority"
+      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v1/reclassification.v1.json",
+      "authority_bytes": 1259,
+      "authority_sha256": "8341d3bc91ef07f2f911debac24b012422a3db627fb95e53abedb986e2c2fdee",
+      "authority_status": "historical-development-evidence-used-during-correction"
+    },
+    {
+      "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v2",
+      "package_version": "2.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v2",
+      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v2/public-manifest.json",
+      "authority_bytes": 1424,
+      "authority_sha256": "c9d215cdbf452b71e94f9bd8c7b8858a90c6d4c02a996f091b6f6ef089156998",
+      "authority_status": "historical-development-evidence-used-during-correction"
+    },
+    {
+      "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v3",
+      "package_version": "3.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v3",
+      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v3/public-manifest.json",
+      "authority_bytes": 1459,
+      "authority_sha256": "a3ee2877e759d4146378240279543fd2ad201c25c42a3f3744b7646ca8794e67",
+      "authority_status": "historical-development-evidence-used-during-correction"
+    },
+    {
+      "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v4",
+      "package_version": "4.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v4",
+      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v4/public-manifest.json",
+      "authority_bytes": 1459,
+      "authority_sha256": "e742ae7a706bb1113620a5a2a3b931e84149228ae14649baf87450019ee3074a",
+      "authority_status": "historical-development-evidence-used-during-correction"
+    },
+    {
+      "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v5",
+      "package_version": "5.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v5",
+      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v5/public-manifest.json",
+      "authority_bytes": 1590,
+      "authority_sha256": "002dd4235dfaa8871c2a8289e9f0c75d494663df6aa420e784d5d131573b2983",
+      "authority_status": "historical-development-evidence-invalidated-at-first-comparison"
+    },
+    {
+      "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v6",
+      "package_version": "6.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v6",
+      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v6/public-manifest.json",
+      "authority_bytes": 1573,
+      "authority_sha256": "d84ef16dbb3c4dfcd410e3fa8678778b396a0c2c6ac0832188a565d1f43e31ae",
+      "authority_status": "historical-development-evidence-invalidated-at-first-comparison"
+    },
+    {
+      "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v7",
+      "package_version": "7.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v7",
+      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v7/public-manifest.json",
+      "authority_bytes": 1573,
+      "authority_sha256": "bc8d19e13c423fd44eb63b26e28301f9a292483392e795d32dacb684e7bb2f26",
+      "authority_status": "historical-development-evidence-invalidated-at-first-comparison"
+    },
+    {
+      "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v8",
+      "package_version": "8.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v8",
+      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v8/public-manifest.json",
+      "authority_bytes": 1573,
+      "authority_sha256": "b897f7e45c76fa7933da25b1f7a938fefa6e0b52fb48b9344cb22e2eb9d307ae",
+      "authority_status": "historical-development-evidence-invalidated-at-first-comparison"
+    },
+    {
+      "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v9",
+      "package_version": "9.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v9",
+      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v9/public-manifest.json",
+      "authority_bytes": 1564,
+      "authority_sha256": "cc17dc5fc20929b8de92417f8d8afaae45a68c29bcfb909f1a80bc46454b0a81",
+      "authority_status": "historical-development-evidence-used-during-correction"
+    },
+    {
+      "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v10",
+      "package_version": "10.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v10",
+      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v10/public-manifest.json",
+      "authority_bytes": 1587,
+      "authority_sha256": "0a17a607afb8900500964a50aeebb0823410a5c2e9afce2e0b3ecb868b307fd5",
+      "authority_status": "historical-development-evidence-invalidated-at-first-comparison"
+    },
+    {
+      "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v11",
+      "package_version": "11.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v11",
+      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v11/public-manifest.json",
+      "authority_bytes": 1587,
+      "authority_sha256": "9d5d31e5e07a25958aea13c054fb42fb080b15596ddffa4df0a7fa4a719d5ada",
+      "authority_status": "historical-development-evidence-invalidated-at-first-comparison"
+    },
+    {
+      "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v12",
+      "package_version": "12.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v12",
+      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v12/public-manifest.json",
+      "authority_bytes": 2971,
+      "authority_sha256": "5c104141a6d8b0a12f657cd8f92d8ba1e1297d27c9fd5d7cd25071192c50fd7c",
+      "authority_status": "historical-development-evidence-invalidated-post-comparison"
+    },
+    {
+      "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v13",
+      "package_version": "13.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v13",
+      "authority_file": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v13/public-manifest.json",
+      "authority_bytes": 3064,
+      "authority_sha256": "b5aa41668ac388a5c2e59de7208d59fdb3b9063a8b4675b86f3d209d7da14421",
+      "authority_status": "historical-development-evidence-invalidated-before-product-comparison"
     }
   ]
 }

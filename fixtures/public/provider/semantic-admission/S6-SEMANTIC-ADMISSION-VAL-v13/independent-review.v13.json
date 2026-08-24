@@ -1,0 +1,170 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-independent-review/v13",
+  "schema_version": "13",
+  "package_id": "infinium.m1-s6.semantic-admission-validation/13.0.0",
+  "partition": "validation",
+  "gate": "PRE-SEAL-GATE-2",
+  "verdict": "ACCEPT",
+  "reviewed_at_utc": "2026-08-23T19:50:03.6849853+00:00",
+  "timestamp_source": "host-utc-clock",
+  "reviewer": {
+    "reviewer_id": "637ea986-7254-428c-9165-e6f7b46b08b2",
+    "role": "independent-clean-room-semantic-reviewer",
+    "distinct_from_oracle_author_id": "cf72180d-1f23-4a4c-98dd-48df2451122a",
+    "distinct_from_authority_auditor_id": "9fc335c4-a38c-46c0-b899-3fae1cb2824f"
+  },
+  "exact_review_bindings": {
+    "oracle": {
+      "path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v13/oracle.v13.json",
+      "byte_length": 55300,
+      "sha256": "17b06cd57fdeea10cc4287f13702927ed185436f241b3ef6fc1700706d7897ff"
+    },
+    "provenance": {
+      "path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v13/oracle-provenance.v13.json",
+      "byte_length": 6934,
+      "sha256": "a5f9be1677505662d52c2e8edbd79c18f85d32aa34c0eff8137a52d1b3bce876"
+    },
+    "authority_audit": {
+      "path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v13/authority-audit.v13.json",
+      "byte_length": 8524,
+      "sha256": "f01801e4a458cf37fb3ec8b5c6f39cd3a2774acca4474e3c6f2a4ee79af2b865",
+      "gate": "PRE-SEAL-GATE-1",
+      "result": "PASS",
+      "finding_count": 0,
+      "audited_at_utc": "2026-08-23T19:45:12.7714080+00:00"
+    }
+  },
+  "chronology": {
+    "gate_1_receipt_existed_before_review": true,
+    "review_timestamp_after_gate_1_audit": true,
+    "stale_independent_review_used_as_authority": false
+  },
+  "boundary": {
+    "authority_only": true,
+    "clean_room": true,
+    "product_implementation_inspected": false,
+    "product_tests_inspected": false,
+    "product_output_inspected": false,
+    "prior_semantic_oracle_packages_inspected": false,
+    "stale_independent_review_used_as_authority": false,
+    "sibling_package_or_directory_inspected": false,
+    "registry_or_manifest_inspected": false,
+    "git_history_inspected": false,
+    "private_fixture_material_inspected": false,
+    "live_or_credential_material_inspected": false,
+    "archive_material_inspected": false,
+    "network_used": false,
+    "comparison_executed": false,
+    "provider_labels_ids_reasons_assertions_or_expected_fields_used_as_semantic_evidence": false,
+    "raw_response_preimages_used_for_fingerprint_recomputation_only": true,
+    "raw_response_preimages_decoded_as_text_for_semantic_review": false,
+    "raw_response_proposal_content_used_as_expected_semantic_authority": false,
+    "prompt_text_inspected_or_used_as_oracle_evidence": false
+  },
+  "raw_response_preimage_verification": {
+    "payload_role": "untrusted-provider-response-fingerprint-preimage-only",
+    "preimage_count": 7,
+    "strict_base64_decode_passed": true,
+    "decoded_byte_lengths_recomputed": true,
+    "sha256_values_recomputed_from_decoded_bytes": true,
+    "transcript_fingerprints_match": true,
+    "transcript_ids_one_to_one": true,
+    "response_record_ids_one_to_one": true,
+    "semantic_derivations_used_only_neutral_facts_and_accepted_authority": true
+  },
+  "producer_reachability_derivations": [
+    { "case_id": "8f31c6a2", "basis": "The v1 input contains the exact passage, purpose, ownership, and condition; the transcript preserves the same proposition and condition.", "result": "One acquisition-owned source output is reachable with exact input, transcript, response, authorization, proposal, and condition correlation." },
+    { "case_id": "24e8b7c1", "basis": "The v1 input and transcript retain the attempted proposition while the neutral record independently establishes absence of its underlying payload.", "result": "One unavailable audit result is reachable without treating retained proposition text as supporting payload." },
+    { "case_id": "d6a041be", "basis": "The v1 input and transcript prove extraction before deletion, including the exact condition; the neutral record independently proves later source-body deletion.", "result": "One deleted audit result is reachable while the surviving claim and condition remain distinct from the deleted source body." },
+    { "case_id": "7ad3c508", "basis": "The v1 input contains the exact claim and the same-source statement that no confirming observation is supplied.", "result": "One faithful extraction with insufficient support is reachable without treating insufficiency as falsehood." },
+    { "case_id": "c9157e2a", "basis": "The v1 input states that the source cannot determine the exact proposition.", "result": "One proposal abstention with support not evaluated is reachable without relabeling it unsupported." }
+  ],
+  "source_producer_derivations": [
+    { "case_id": "8f31c6a2", "basis": "The passage exactly states a conditional proposition and condition but supplies no installation fact.", "result": "Extracted, supported at source scope, applicability not evaluated, host abstained, acquisition-owned." },
+    { "case_id": "24e8b7c1", "basis": "The attempted proposition survives, while the separate absence fact establishes that its underlying payload is unavailable and nonsupporting.", "result": "Unavailable support, applicability not evaluated, audit-only, acquisition-owned, with abstention and payload gap." },
+    { "case_id": "d6a041be", "basis": "The derived claim and condition survive in an audit record, while the source body is deleted and uninspectable.", "result": "Deleted proposal, unavailable support, applicability not evaluated, audit-only, acquisition-owned, with source-body gap." },
+    { "case_id": "7ad3c508", "basis": "The first sentence supplies the claim, while the second establishes that no confirming observation is supplied.", "result": "Faithfully extracted but unsupported through insufficient evidence, applicability not evaluated, host abstained, acquisition-owned." },
+    { "case_id": "c9157e2a", "basis": "The source says it cannot determine the proposition and supplies no resolving fact.", "result": "Proposal abstention with support and applicability not evaluated, host abstained, acquisition-owned, with explicit gap." }
+  ],
+  "source_consumer_derivations": [
+    { "result_id": "4a1de709", "fact_bundle_id": "d0c4a831", "basis": "The source proposition is supported and the independently hashed local fact establishes its switch-closed condition.", "result": "Analysis-owned, supported, applicable, admitted." },
+    { "result_id": "c2e9065b", "fact_bundle_id": "47e2d09a", "basis": "The independently hashed local fact establishes that no value payload exists to evaluate the proposition.", "result": "Analysis-owned, unavailable support, applicability not evaluated, abstained." },
+    { "result_id": "18f4ca63", "fact_bundle_id": "a9b175c0", "basis": "The independently hashed deletion fact confirms the historical fingerprint but supplies no current source body.", "result": "Analysis-owned, unavailable support, applicability not evaluated, audit-only." },
+    { "result_id": "f6b2094d", "fact_bundle_id": "e2047b6a", "source_condition_id": "5b09ae41", "basis": "The source requires switch R closed, while the local fact bundle establishes only indicator existence and does not establish that condition.", "result": "Analysis-owned, supported, conditional-unestablished, abstained." }
+  ],
+  "candidate_derivations": [
+    { "case_id": "9e1b4c70", "basis": "Latch C is open and an open latch C makes relay D inactive; the neutral facts close the conditional chain.", "result": "Analysis-owned, supported, applicable, admitted." },
+    { "case_id": "50ca2e17", "basis": "The neutral fact explicitly says channel F is not active, directly opposing the proposition that it is active.", "result": "Analysis-owned, contradicted, applicable, abstained." }
+  ],
+  "lifecycle_and_ownership_derivations": [
+    { "proposal_id": "97af26d0", "result": "One acquisition-owned producer decision and two separately analysis-owned fact-bound applications." },
+    { "proposal_id": "cd30a5e7", "result": "One acquisition-owned producer decision and one separately analysis-owned fact-bound application." },
+    { "proposal_id": "64ab0e92", "result": "One acquisition-owned producer decision and one separately analysis-owned fact-bound application." },
+    { "proposal_id": "be63d019", "result": "One acquisition-owned producer decision and no asserted consumer application." },
+    { "proposal_id": "4a9f02d6", "result": "One acquisition-owned producer decision and no asserted consumer application." },
+    { "proposal_id": "d09e45b1", "result": "One analysis-owned candidate decision." },
+    { "proposal_id": "25a7e0d9", "result": "One analysis-owned candidate decision." }
+  ],
+  "matrix_derivations": [
+    { "cell_id": "7b4d2a91", "basis": "Neither axis is established.", "result": "abstained" },
+    { "cell_id": "1e8c53f0", "basis": "Applicability cannot replace unevaluated support.", "result": "abstained" },
+    { "cell_id": "ac0597d2", "basis": "Support is unevaluated and the condition is unestablished.", "result": "abstained" },
+    { "cell_id": "42f6b18c", "basis": "Support is unevaluated and the proposition is not applicable.", "result": "abstained" },
+    { "cell_id": "d39106ae", "basis": "Support is unevaluated and applicability is unknown.", "result": "abstained" },
+    { "cell_id": "095ec4b7", "basis": "Support cannot replace unevaluated applicability.", "result": "abstained" },
+    { "cell_id": "e6a21f83", "basis": "Both admission prerequisites are established.", "result": "admitted" },
+    { "cell_id": "38bd70c5", "basis": "Support exists but the condition is unestablished.", "result": "abstained" },
+    { "cell_id": "b1f45a09", "basis": "Support exists but the proposition is not applicable.", "result": "abstained" },
+    { "cell_id": "6c0a9de4", "basis": "Support exists but applicability is unknown.", "result": "abstained" },
+    { "cell_id": "fa312b68", "basis": "Evidence is insufficient and applicability is unevaluated.", "result": "abstained" },
+    { "cell_id": "2d87c10e", "basis": "Applicability cannot cure insufficient support.", "result": "abstained" },
+    { "cell_id": "c540e793", "basis": "Evidence is insufficient and the condition is unestablished.", "result": "abstained" },
+    { "cell_id": "81ab36f4", "basis": "Evidence is insufficient and the proposition is not applicable.", "result": "abstained" },
+    { "cell_id": "0f69d2bc", "basis": "Evidence is insufficient and applicability is unknown.", "result": "abstained" },
+    { "cell_id": "da728501", "basis": "Direct opposition prevents admission and applicability is unevaluated.", "result": "abstained" },
+    { "cell_id": "54c19e7a", "basis": "Applicability cannot overcome direct opposition.", "result": "abstained" },
+    { "cell_id": "9b063fd2", "basis": "Direct opposition exists and the condition is unestablished.", "result": "abstained" },
+    { "cell_id": "317ac8e5", "basis": "Direct opposition exists and the proposition is not applicable.", "result": "abstained" },
+    { "cell_id": "c8e4501f", "basis": "Direct opposition exists and applicability is unknown.", "result": "abstained" },
+    { "cell_id": "63b19d47", "basis": "Required evidence is unavailable and applicability is unevaluated.", "result": "abstained" },
+    { "cell_id": "f2058ac1", "basis": "Applicability cannot replace unavailable support evidence.", "result": "abstained" },
+    { "cell_id": "0ca74e96", "basis": "Required evidence is unavailable and the condition is unestablished.", "result": "abstained" },
+    { "cell_id": "a86f310d", "basis": "Required evidence is unavailable and the proposition is not applicable.", "result": "abstained" },
+    { "cell_id": "45d9b72e", "basis": "Required evidence is unavailable and applicability is unknown.", "result": "abstained" }
+  ],
+  "cardinality_derivations": [
+    { "probe_id": "6d2a81f0", "basis": "Both outputs are schema-reachable and differ from normal outputs only by empty link arrays.", "result": "Zero links violates exact-one policy and is rejected in source and candidate domains." },
+    { "probe_id": "a4057c9e", "basis": "Both outputs are schema-reachable, use distinct link identifiers, and differ from normal outputs only by link cardinality.", "result": "Two links violates exact-one policy and is rejected in source and candidate domains." }
+  ],
+  "reject_derivations": [
+    { "reject_id": "0c47e9a1", "basis": "A retained proposal has zero decision links.", "result": "Policy rejection required." },
+    { "reject_id": "b9135d60", "basis": "A retained proposal has two decision links.", "result": "Policy rejection required." },
+    { "reject_id": "5e0a72cf", "basis": "Reason is the sole missing required candidate-proposal property.", "result": "Structural rejection required." }
+  ],
+  "structural_and_count_verification": {
+    "source_v1_execution_inputs_schema_reachable": true,
+    "source_v1_retained_transcripts_schema_reachable": true,
+    "candidate_v1_execution_input_schema_reachable": true,
+    "candidate_v1_retained_transcripts_schema_reachable": true,
+    "normal_outputs_schema_reachable": true,
+    "zero_and_two_link_probes_schema_reachable": true,
+    "zero_and_two_link_probes_differ_only_in_link_cardinality": true,
+    "neutral_and_raw_text_hashes_byte_lengths_and_citation_spans_recomputed": true,
+    "condition_and_fact_bundle_mappings_close": true,
+    "matrix_cells": 25,
+    "matrix_cells_unique_and_exhaustive": true,
+    "source_producer_cases": 5,
+    "source_consumer_application_results": 4,
+    "candidate_cases": 2,
+    "retained_proposals": 7,
+    "source_execution_inputs": 5,
+    "source_retained_transcripts": 5,
+    "candidate_execution_contexts": 2,
+    "candidate_retained_transcripts": 2,
+    "link_cardinality_probes": 2,
+    "structural_policy_rejects": 3,
+    "declared_counts_match": true
+  },
+  "finding_count": 0,
+  "findings": []
+}

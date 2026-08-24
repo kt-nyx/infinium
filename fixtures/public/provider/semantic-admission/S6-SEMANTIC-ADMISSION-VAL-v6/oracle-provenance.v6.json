@@ -1,0 +1,78 @@
+{
+  "schemaIdentity": "infinium.fixture.semantic-admission.oracle-provenance/v6",
+  "provenanceIdentity": "infinium.public.provider.semantic-admission.oracle-provenance/9a06044a-bf7f-47a3-9c08-622b63ce773b",
+  "packageIdentity": "infinium.public.provider.semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v6",
+  "oracleIdentity": "infinium.public.provider.semantic-admission.oracle/c8fd0c2f-4f6f-487a-a904-8691b3c3d506",
+  "authoredDate": "2026-08-22",
+  "partition": "VALIDATION",
+  "authoringRole": {
+    "roleIdentity": "infinium.public.semantic-admission.clean-room-author/9f44a40b-26e7-4cf2-a905-02d8524955d1",
+    "role": "FRESH_CLEAN_ROOM_INDEPENDENT_PUBLIC_ORACLE_AUTHOR",
+    "scope": "Author answer-free raw inputs and independently derived expected truth for the v6 semantic-admission package."
+  },
+  "packagePath": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v6",
+  "packageFileSet": [
+    "oracle.v6.json",
+    "oracle-provenance.v6.json"
+  ],
+  "oracleByteBinding": {
+    "relativePath": "oracle.v6.json",
+    "bindingMode": "EXACT_FILE_BYTES",
+    "encoding": "UTF-8",
+    "byteOrderMark": false,
+    "lineEndings": "LF",
+    "terminalLineFeed": true,
+    "lengthBytes": 37139,
+    "sha256": "ab2c9254b102d9797e87b3734053dd7102ffb3a54972b569be81d5baa5c00017"
+  },
+  "authorityInputs": [
+    "docs/README.md",
+    "docs/current-state.md",
+    "docs/execution-policy.md",
+    "docs/product/domain-model.md",
+    "docs/architecture/decisions/ADR-0034-prompt-fidelity-and-semantic-admission-axes.md",
+    "docs/plans/milestones/m1/plan.md",
+    "docs/plans/milestones/m1/slices/s6/README.md",
+    "docs/plans/milestones/m1/slices/s6/plan.md",
+    "docs/evaluation/evaluation-strategy.md",
+    "docs/evaluation/case-catalog.md",
+    "docs/evaluation/fixture-guidelines.md",
+    "docs/evaluation/anti-overfitting-rules.md",
+    "docs/evaluation/m1-continuation-verification-profile.md"
+  ],
+  "independenceStatement": {
+    "expectedTruthMethod": "Expected states were derived only from the listed accepted public authority and the neutral facts embedded in each raw input.",
+    "materialNovelty": "All v6 package identities, case identities, fictional source names, propositions, evidence facts, local conditions, and positive and negative constructions were newly authored for this package.",
+    "answerIsolation": "Expected truth was kept in expectedTruth objects and was not placed in provider-facing raw source text or candidate evidence as an oracle label.",
+    "productOutputUsedAsTruth": false,
+    "existingSemanticAdmissionPackageInspected": false,
+    "productImplementationInspected": false,
+    "productTestsInspected": false,
+    "retainedLiveEvidenceOrAccountingInspected": false,
+    "privateFixtureOrRepositoryInspected": false,
+    "credentialInspected": false,
+    "archiveInspected": false,
+    "networkUsed": false,
+    "gitHistoryInspected": false
+  },
+  "comparisonState": {
+    "state": "NOT_COMPARED",
+    "productComparisonPerformed": false,
+    "priorOracleComparisonPerformed": false,
+    "liveResponseComparisonPerformed": false,
+    "statement": "The bound oracle bytes were authored and frozen before any product, prior semantic-admission oracle, or live-response comparison."
+  },
+  "constructionBoundary": {
+    "created": [
+      "oracle.v6.json",
+      "oracle-provenance.v6.json"
+    ],
+    "notCreated": [
+      "manifest",
+      "review record",
+      "registry entry",
+      "product comparison result"
+    ],
+    "externalEffects": "NONE"
+  }
+}

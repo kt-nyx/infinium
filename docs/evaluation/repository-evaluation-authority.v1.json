@@ -1,8 +1,24 @@
 {
   "schema_id": "infinium.repository.evaluation-authority/v1",
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "status": "current",
-  "authority": "project-owner-authorized-protocol-4-retirement-2026-08-10",
+  "authority": "project-owner-authorized-semantic-oracle-deferral-2026-08-23",
+  "semantic_oracle_policy": {
+    "status": "deferred",
+    "current_authority_package": null,
+    "gates_m1_acceptance": false,
+    "gates_m2_acceptance": false,
+    "reconsideration_boundary": "m2-accepted-m3-planning",
+    "claim_boundary": "no-independent-semantic-verdict",
+    "permitted_evidence": [
+      "developer-conformance",
+      "deterministic-reference",
+      "controlled-integration",
+      "persistence-and-replay",
+      "operational-safety",
+      "fresh-review"
+    ]
+  },
   "surfaces": [
     {
       "id": "current-product-contracts",
@@ -33,6 +49,14 @@
       ],
       "default_solution_member": false,
       "claim": "Git-identified historical evaluator evidence and external protocol-4 archive navigation; not current fixture input, executable workflow, review gate, or product authority"
+    },
+    {
+      "id": "historical-semantic-packages",
+      "paths": [
+        "fixtures/public/provider/semantic-admission/"
+      ],
+      "default_solution_member": false,
+      "claim": "immutable historical development evidence only; no current semantic validation authority, product verdict, or M1/M2 acceptance gate"
     },
     {
       "id": "fixture-governance-vocabulary",

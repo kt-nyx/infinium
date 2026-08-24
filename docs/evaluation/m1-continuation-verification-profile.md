@@ -1,64 +1,42 @@
-# M1 continuation verification profile
+# M1 and M2 product-conformance verification profile
 
 Status: Accepted
 Disposition: Active and effective
-Last reviewed: 2026-08-17
+Last reviewed: 2026-08-23
 
-Date: 2026-08-08
-
-Authority: [ADR-0032](../architecture/decisions/ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md)
+Authority: [ADR-0032](../architecture/decisions/ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md),
+[ADR-0035](../architecture/decisions/ADR-0035-defer-independent-semantic-oracle-qualification.md),
 and the accepted
-[evaluator-deferral and M1-continuation plan](../plans/milestones/m1/slices/s4.5/plan.md)
+[M1 semantic-oracle deferral amendment](../plans/milestones/m1/amendments/semantic-oracle-deferral.md)
 
-Applies to: M1 Slices 5 through 9
+Applies to: remaining M1 work and all M2 acceptance work
 
 Execution policy: [Development execution policy](../execution-policy.md)
 
-## Claim and activation boundary
+## Plain-language purpose and claim boundary
 
-This is the normative development and validation gate that replaces the
-held-out-`PASS` sequencing prerequisite for the remaining M1 slices.
-`M1/S4.5/EVAL-CLOSEOUT` is accepted and complete, so Slice 4.5 is closed.
-The current eligible package is stated in
-[`../current-state.md`](../current-state.md). The profile's activation evidence
-is the [closeout acceptance record](evaluator-history.md).
+This profile verifies that Infinium behaves according to its accepted product
+contracts and safety rules while M1 and M2 build a functional product. It does
+not require a separately authored semantic answer key. Passing this profile
+establishes **product conformance within the delivered scope**; it does not
+establish an independent semantic verdict, held-out qualification, semantic
+reliability, production readiness, or M3's "Trusted personal preflight" claim.
 
-The profile proves public product conformance within each accepted slice's
-declared scope. It does not produce a private held-out verdict, qualify an
-evaluator or corpus, demonstrate production reliability/readiness, or complete
-M1 by itself. Retired evaluator protocols provide no current supporting tool,
-review evidence, or replacement layer.
+Independent semantic-oracle work is deferred until the M2 acceptance / M3
+planning boundary. Historical semantic packages have no product authority and
+are checked only for immutable integrity and non-authorizing classification.
+Private evaluator isolation remains default-deny.
 
-This profile defines evidence required for acceptance; it does not impose a
-finite correction budget on ordinary product work. A failed command, fixture
-defect, schema mismatch, incomplete implementation, or review finding returns
-to correction and re-review under the development execution policy. Only an
-authority decision or safety/isolation escalation condition pauses the affected
-path. Evaluator-specific freeze and no-retry rules remain confined to a
-separately authorized evaluator task.
-
-The accepted
-[M1 process-continuation amendment](../plans/milestones/m1/amendments/process-continuation.md)
-governs verification cadence for remaining M1 work. Focused checks discover
-and correct defects while one coherent working candidate is assembled. The
-complete common floor confirms a review-ready candidate; it is not rerun after
-every local edit. A failed complete floor is diagnostic, and only a passing
-floor against the exact accepted commit is retained as acceptance evidence.
-This timing rule does not change any required layer, command, fixture/oracle
-freeze, effect manifest, no-retry boundary, or evidence strength below.
-
-For every row below, the owning slice must retain the exact executed command,
-commit, fixture and result identities, pass/fail/skip counts, unsupported
-surfaces, coverage and gaps, and fresh-review result in its implementation
-record. A listed case remains pending until retained evidence from the owning
-slice shows that its applicable assertions passed.
+For every accepted work package, retain the exact commands, candidate commit,
+contract and fixture identities, pass/fail/skip counts, coverage and gaps,
+unsupported surfaces, and fresh-review result in the owning implementation
+record. Failed tests and review findings return to correction and re-review
+under the execution policy; they do not authorize weaker evidence.
 
 ## Common command floor
 
-Every Slice 5-9 implementation runs the applicable focused commands during
-development and, once consolidated review and corrections make the package
-review-ready, this accumulated public floor from the repository root before
-acceptance:
+Every implementation runs focused checks during development and this
+accumulated floor once its coherent candidate is review-ready:
 
 ```powershell
 dotnet restore Infinium.sln --locked-mode --nologo
@@ -75,169 +53,108 @@ powershell -NoProfile -ExecutionPolicy Bypass -File eng/update-dependency-manife
 git diff --check
 ```
 
-Each accepted slice execution plan must add exact commands for its new
-contracts, fixtures, manifests, replay artifacts, security boundaries, and
-end-to-end operations. A placeholder command, broad green suite, or historical
-result does not satisfy an unexercised obligation.
+`TestCategory=Evaluation` remains mandatory because product-behavior tests are
+useful. Only independent semantic answer-key qualification is deferred. Each
+owning plan adds exact commands for its contracts, fixtures, manifests,
+replay, security boundaries, and end-to-end operations.
 
 ## Six required layers
 
-### Layer 1 — Contract and schema conformance
+### 1. Contract and schema conformance
 
-Accepted public product requirements and ADRs are the only source of expected
-behavior. Producers, consumers, storage, wire artifacts, exports, and replay
-must be updated together for a clean-break contract change. Tests directly
-exercise schema, canonicalization, typed null/unknown/omission, terminal,
-coverage, and gap behavior. Unsupported states fail or degrade exactly as
-declared.
+JSON, protobuf, repository metadata, SQL constraints, typed invariants,
+canonicalization, and invalid/null/unknown/omitted/unsupported states must match
+accepted requirements and ADRs. Producer, consumer, persistence, wire, export,
+and replay seams change together. Product output cannot define its own
+contract.
 
-| Mapping | Required value |
-|---|---|
-| Requirements | `EVID-001` through `EVID-003`, `EVID-006`, `COVER-001` through `COVER-003`, `ANALYSIS-016`, `ANALYSIS-019`, `SNAP-005`, `SNAP-006`, `OPS-002`, `OPS-003` |
-| Cases | EVAL-0052, EVAL-0065, EVAL-0067, EVAL-0082, EVAL-0083, EVAL-0085, EVAL-0086, plus every slice-specific contract case |
-| Evidence | Versioned schemas/contracts; producer-consumer-storage-wire-output-replay compatibility evidence; positive, invalid, null, unknown, omitted, unsupported, terminal, coverage, and gap assertions; exact schema and producer identities |
-| Commands | Common `M1Unit`, `M1Contract`, `M1Integration`, and `M1Evaluation` commands; schema/manifest parsers and slice-specific round-trip commands named by the accepted slice plan |
-| Owning slices | Each slice owns its changed contracts; Slice 5 first owns evidence/case/replay contracts, Slice 6 provider-operation contracts, Slice 7 generic analyzer contracts, Slice 8 controlled-real bindings, and Slice 9 the stable end-to-end output contract |
+### 2. Developer-owned bounded examples
 
-### Layer 2 — Independently expected public fixtures
+Small positive, negative, malformed, lifecycle, abstention, and boundary
+examples must exercise the current product contract. Their expected results
+come from accepted requirements, deterministic format rules, or explicit
+developer reasoning and are reviewed with the implementation. They are
+conformance evidence, not independent semantic qualification. Deterministic
+golden tests for exact bytes, codecs, hashes, or algorithms remain permitted.
 
-Expected values are pre-authored from format rules, retained bytes,
-authoritative documentation, or explicit manual adjudication independent of
-the implementation path under test. Every positive has a meaningful negative
-or abstention case. Expected-output changes require new independent evidence
-and review. Product output is never copied into an expected fixture as truth.
+### 3. Invalid-state, mutation, and metamorphic coverage
 
-| Mapping | Required value |
-|---|---|
-| Requirements | `EVID-002`, `EVID-003`, `EVID-006`, `EVID-007`, `COVER-001`, `ANALYSIS-003` through `ANALYSIS-005`, `ANALYSIS-019` |
-| Cases | EVAL-0001, EVAL-0002, EVAL-0016, EVAL-0017, EVAL-0032, EVAL-0052, EVAL-0085, EVAL-0086 |
-| Evidence | Pre-execution expected observations and outcomes; independent byte/format/source/adjudication provenance; partition history; matched negative or abstention for every positive; reviewed explanation and successor evidence for any expectation change |
-| Commands | Common `M1Contract` and `M1Evaluation` commands; deterministic fixture-generation/validation commands and exact oracle/expectation checks declared by the owning slice without using product output |
-| Owning slices | Slice 5 uses staged ownership: WP2 owns documentation/claim/provenance cases, WP3 owns joins/candidates/hypotheses/abstention including scale/stress, WP4 owns findings/cases/taxonomy/lineage/coverage/gaps, WP5 owns publication/replay/recovery/query/output/platform cases, and WP6 assembles the comprehensive cross-stage corpus. Slice 7 owns both synthetic domain packages; Slice 8 owns the controlled-real EVAL-0016/EVAL-0017 packages; Slice 9 audits retained expected-value provenance across the complete runs |
+Tests must exercise missing, malformed, unsupported, ambiguous, partial, and
+forbidden states. Meaning-preserving transformations—such as renaming opaque
+identities or reordering unrelated inputs—must preserve results; changing one
+relevant dependency must affect only dependent output. Raw candidates,
+failures, abstentions, coverage, and gaps remain visible.
 
-### Layer 3 — Model-derived, mutation, and metamorphic checks
+### 4. Persistence, migration, replay, and operational safety
 
-The owning slice exercises all bounded state classes relevant to its change,
-including missing, malformed, unsupported, ambiguous, and partial evidence.
-Renaming identities and reordering unrelated inputs preserve semantics;
-changing one relevant dependency changes only dependent output. Tests prove
-forbidden facts remain absent and retain complete raw candidates, failures,
-abstentions, coverage, and gaps.
+SQL constraints, migrations, backup/restore, clean versus incremental runs,
+and retained replay must preserve accepted meaning. Dependency or identity
+drift fails closed. Writes remain confined. Credential, privacy, budget,
+authorization, lifecycle, fault, and external-effect boundaries must pass
+their applicable tests.
 
-| Mapping | Required value |
-|---|---|
-| Requirements | `EVID-006`, `EVID-007`, `COVER-001` through `COVER-003`, `ANALYSIS-003` through `ANALYSIS-005`, `ANALYSIS-016`, `ANALYSIS-019`, `SNAP-002`, `SNAP-004` |
-| Cases | EVAL-0001, EVAL-0002, EVAL-0026, EVAL-0032, EVAL-0052, EVAL-0082, EVAL-0085, EVAL-0086 |
-| Evidence | State-class inventory; positive/negative/abstention matrix; mutation and metamorphic outcomes; dependency-change closure; forbidden-fact-absence assertions; retained raw candidate/failure/coverage/gap artifacts |
-| Commands | Common `M1Unit`, `M1Contract`, and `M1Evaluation` commands plus deterministic model/state enumeration, mutation, metamorphic, and raw-artifact validation commands defined by each accepted slice plan |
-| Owning slices | Each slice owns changed-state coverage; Slice 7 owns the complete generic-mechanism mutation/metamorphic gate; Slice 8 repeats applicable transformations against controlled-real packages; Slice 9 audits accumulated coverage |
+### 5. Controlled integration and generalization evidence
 
-### Layer 4 — Determinism, replay, and operational safety
+Each milestone must exercise the interfaces and representative scope it
+actually delivers. M1 retains the accepted two-domain generic proof and
+controlled-real obligations owned by later slices. M2 must exercise its
+producer and consumer interfaces end to end. Unevaluated regions remain
+explicit gaps, and product-driving cases are development evidence.
 
-Clean and incremental execution agree for identical resolved inputs. Retained
-replay reproduces deterministic downstream artifacts. Output paths and writes
-remain confined, dependency or identity drift fails closed, and the full
-applicable unit, contract, integration, evaluation, security, fault, format,
-and manifest checks pass.
+### 6. Fresh semantic, security, provenance, and diff review
 
-| Mapping | Required value |
-|---|---|
-| Requirements | `SNAP-001` through `SNAP-006`, `SCAN-005` through `SCAN-007`, `SCAN-009`, `SEC-001` through `SEC-004`, `AUTH-001` through `AUTH-003`, `OPS-001` through `OPS-003`, `AI-003`, `AI-004`, `AI-006`, `AI-007` |
-| Cases | EVAL-0026, EVAL-0033 through EVAL-0040 as applicable, EVAL-0046, EVAL-0064, EVAL-0076, EVAL-0077, EVAL-0080 through EVAL-0083, EVAL-0087 through EVAL-0089 |
-| Evidence | Repeated clean/incremental and replay artifact identities; dependency and resolved-input manifests; write/non-mutation and secret-canary reports; lifecycle/fault evidence; exact build, format, dependency, and full-suite results |
-| Commands | Entire common command floor; slice-specific clean/incremental comparison, replay verification, write-confinement, non-mutation, fault, credential, budget, and manifest commands |
-| Owning slices | Slices 5-8 own each operational surface they introduce; Slice 9 owns complete clean/replay equivalence, non-mutation/secret reports, and the accumulated operational gate |
+A fresh reviewer checks correctness, plan fidelity, product meaning,
+producer/consumer ownership, provenance, security, coverage, gaps, changed
+paths, and claim wording. Passing tests do not replace this review. Findings
+are classified under the execution policy and corrected on the same candidate
+until accepted or genuinely escalated. The review must state that no current
+semantic-oracle or private held-out verdict was used.
 
-### Layer 5 — Generalization and controlled-real evidence
+## Explicitly deferred requirements
 
-Slice 7 must prove the generic mechanism across the two materially different
-accepted domains—actor/AI/FaceGen and REFR/link/placement—with matched
-negatives. Slice 8 must run the qualified controlled-real EVAL-0016 and
-EVAL-0017 packages. Any case that changes implementation is development or
-validation evidence, not held-out evidence, and unevaluated taxonomy regions
-remain explicit gaps.
+M1 and M2 acceptance do **not** require:
 
-| Mapping | Required value |
-|---|---|
-| Requirements | `ANALYSIS-003` through `ANALYSIS-005`, `ANALYSIS-016`, `FIND-001` through `FIND-004`, `FIND-011`, `FIND-014`, `COVER-002`, `COVER-003` |
-| Cases | EVAL-0001, EVAL-0002, EVAL-0016, EVAL-0017, EVAL-0032, EVAL-0079, EVAL-0084 through EVAL-0086 |
-| Evidence | Two generic-domain positive/negative packages and shared-mechanism proof; qualified controlled-real manifests, fingerprints, purpose passages, positives and patch controls; taxonomy-stratified coverage and explicit unevaluated gaps; partition-transition records for product-driving cases |
-| Commands | Slice 7 synthetic generic-mechanism command(s), full applicable `M1Evaluation`, and Slice 8 exact EVAL-0016/EVAL-0017 manifest-validation and execution commands named by their accepted execution plan |
-| Owning slices | Slice 7 owns the two-domain generic proof. Slice 8 owns EVAL-0016 and EVAL-0017 controlled-real execution. Slice 9 verifies both are present in the required-case result index |
+- independent semantic-oracle authoring;
+- oracle pre-seal audit;
+- clean-room semantic-review or adversarial-package receipts;
+- oracle sealing or registration as current validation authority;
+- comparison of current product output with historical semantic labels; or
+- an oracle `PASS`.
 
-### Layer 6 — Fresh review and claim control
+No active verification command may synthesize current product output from
+historical expected fields, run the current producer or consumer against those
+fields, or report historical integrity as semantic success.
 
-Every later slice receives a fresh semantic and diff review against its
-accepted plan and public authority. Passing tests do not replace review of
-correctness, completeness, provenance, gaps, and plan drift. Each
-implementation record states exactly what passed, what remains unsupported,
-and that no private held-out verdict exists. No M1 or later claim uses
-`held-out`, `independently validated`, `reliable`, `ready`, or equivalent
-language beyond the evidence actually obtained.
+## Historical semantic packages
 
-Reviewers classify findings as must-fix, follow-up, non-blocking,
-owner/authority decision, or safety/isolation breach and return `ACCEPT`,
-`CORRECT`, or `ESCALATE`. `CORRECT` may repeat until must-fix findings close;
-correction count is retained as evidence, not used as a stop threshold.
-Mechanical or local corrections receive changed-surface review; consolidated
-review repeats only after a material semantic, architecture, authority,
-immutable-fixture/oracle, or package-scope change.
+Historical integrity checks are limited to immutable files, bytes, hashes,
+manifests, registry bindings, reclassification records, and proof that no
+package grants current authority. Package identities and retained effect
+evidence remain unchanged. A changed historical expected answer may not be
+resealed or promoted through an ordinary tooling command.
 
-| Mapping | Required value |
-|---|---|
-| Requirements | `EVID-002`, `EVID-006`, `EVID-007`, `COVER-001` through `COVER-003`, `ANALYSIS-016`, `PROD-002`, `PROD-004`, `SNAP-006` |
-| Cases | Every case claimed by the slice, with EVAL-0083, EVAL-0084, and EVAL-0085 always reviewed for provenance, case construction, coverage, and claim wording |
-| Evidence | Fresh review record with exact input commit, authority/plan checklist, findings, correction count, final judgment, changed paths, verification results, unsupported/gap inventory, private-access prohibition, and claim-boundary statement |
-| Commands | `git diff --check`, changed-path/protected-path scan, relative-link validation, strict changed-JSON parsing, status/claim occurrence scan, common full suite, and every owning-slice command cited in the review record |
-| Owning slices | Every Slice 5-9 implementation record owns its review and claim boundary; Slice 9 owns the final requirement/case/slice traceability and M1 completion review |
+## Milestone sequencing
 
-## Slice sequencing and implementation records
+- Slice 6 remains implementation-active and must finish its ordinary product
+  conformance in a separate fresh closeout pass. This profile does not accept
+  or repair it.
+- Slice 7 remains unopened until Slice 6 is accepted.
+- Remaining M1 slices satisfy the applicable six layers and their accepted
+  plans.
+- M2 acceptance exercises its stable product interfaces end to end and records
+  the explicit absence of independent semantic qualification.
+- M4 remains the public-facing MVP.
 
-- Slice 5 packages must satisfy their applicable Layers 1-4 and 6 in the
-  dependency order declared by the active plan; `current-state.md` identifies
-  the live handoff.
-- Slice 6 must satisfy applicable Layers 1-4 and 6 before any live provider
-  operation; live authorization remains separate and bounded.
-- Slice 7 must satisfy all applicable layers and the exact two-materially-
-  different-domain obligation in Layer 5.
-- Slice 8 must satisfy all six layers, including EVAL-0016 and EVAL-0017 with
-  their package-specific matched controls.
-- Slice 9 must satisfy all six layers across the accumulated M1 surface and
-  produce the required-case index, stable versioned end-to-end output, and M1
-  completion record.
+## M3 Evaluation Readiness Gate
 
-Each Slice 5-9 implementation record must contain: accepted plan and input
-commit; implementation commit; changed paths and intentional behavior; exact
-contract/schema/fixture/run identities; commands and pass/fail/skip counts;
-coverage, gaps, abstentions, and unsupported surfaces; clean/replay and safety
-evidence where applicable; fresh-review inputs, findings, corrections, and
-judgment; proof that no private material or held-out verdict entered the work;
-and the precise next-slice/M1 status.
+After M2 is accepted, M3 planning may consider independent semantic evaluation
+only when ADR-0035's complete prerequisites hold: exercised end-to-end
+producer/consumer interfaces; a stable versioned user-meaningful output
+contract; comparable persistence and replay; a bounded written claim;
+independently authorable neutral truth; an accepted budget and stopping rule;
+one small feasibility package; and a new accepted M3 evaluation plan explicitly
+authorizing authoring, review, sealing, and comparison.
 
-## Archived evaluator protocols
-
-Protocols `/2` through `/5` are retired historical identities and provide no
-current command, test, review gate, or product evidence. Protocol `/4`'s final
-public closure is archived under ADR-0033, but ordinary work must not inspect,
-execute, restore, or cite that archive as current verification. Slices 5-9 use
-only the six public layers above and their owning plans.
-
-## Future evaluator reconsideration
-
-A new evaluator plan may be proposed only after Slice 9 and during M3 planning,
-when all of the following hold:
-
-1. a stable versioned end-to-end output contract exists;
-2. the surface is limited to user-meaningful semantic outcomes rather than
-   internal IDs, incidental prose, or implementation-specific diagnostics;
-3. every expected value is independently authorable without product output or
-   the implementation path under test;
-4. an answer-free totality and authorability review passes before candidate or
-   private access;
-5. public evaluator implementation, private corpus qualification, scoring, and
-   closeout retain separate roles and authority; and
-6. a new accepted ADR and milestone plan define the protocol identity, scope,
-   correction limits, contamination handling, and claim boundary.
-
-No future protocol identity is selected here. Retired protocol `/5` cannot be
-reused, and neither `/6` nor private work is authorized by this profile.
+The gate authorizes planning and bounded evaluation work; it neither requires
+nor guarantees a large oracle program. No future protocol or package identity
+is selected here.

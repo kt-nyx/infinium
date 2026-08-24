@@ -133,7 +133,8 @@ public sealed class ProviderLayer6VerifierContractTests
             "[switch] $Wp4OwnerReviewHandoff",
             "[switch] $Wp8PreLiveCloseout",
             "[switch] $OwnerTestProcessCleanup",
-            "[switch] $PromptFidelitySemanticAdmissionReview",
+            "'ProductSemanticConformance'",
+            "'HistoricalSemanticPackageIntegrity'",
             "merge-base --is-ancestor",
             "layer6-changed-paths.json",
             "docs/evaluation/specifications/semantic-fixture-catalog.md",
@@ -147,8 +148,11 @@ public sealed class ProviderLayer6VerifierContractTests
             "wp8_pre_live_closeout = [bool]$Wp8PreLiveCloseoutMode",
             "network_permitted = $false",
             "credential_access_permitted = $false",
-            "PromptFidelitySemanticAdmissionReview requires the exact base, current one-commit candidate, and closed correction path set.",
-            "prompt_fidelity_semantic_admission_review = [bool]$PromptFidelitySemanticAdmissionReviewMode",
+            "independent_semantic_oracle = 'deferred'",
+            "semantic_pass = 'not-reported'",
+            "m1_slice6_product_closeout = [bool]$ProductCloseoutMode",
+            "$CredentialNativePostEffectAudit -or $CampaignV2CandidateOnly",
+            "-not [string]::IsNullOrWhiteSpace($AuthorizationManifest)",
         ];
 
         foreach (string required in requiredInterfaceAndEvidence)
@@ -179,6 +183,15 @@ public sealed class ProviderLayer6VerifierContractTests
         StringAssert.Contains(script, "Never terminate by process name alone");
         StringAssert.Contains(script, "JsonDocumentOptions");
         StringAssert.Contains(script, "Assert-NoDuplicateJsonProperties");
+        Assert.DoesNotContain("PromptFidelitySemanticAdmissionReview", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("LiveSemanticV2TypedOracleVerifier", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("FrozenWp10AndWp11ValidationPackagesExecuteTypedProductOraclesOffline", script,
+            StringComparison.Ordinal);
+        StringAssert.Contains(script,
+            "CampaignV2NonLive is retained historical gate identity and is permanently fail-closed");
+        StringAssert.Contains(script,
+            "$currentStateDisposition -eq 'exact-m1-s6-product-closeout-no-effect-state'");
+        StringAssert.Contains(script, "Invoke-Layer6ReviewGate $baseline $candidate");
     }
 
     [TestMethod]

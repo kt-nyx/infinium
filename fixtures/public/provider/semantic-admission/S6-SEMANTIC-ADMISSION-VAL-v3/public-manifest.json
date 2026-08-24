@@ -1,0 +1,25 @@
+{
+  "schema_identity": "infinium.public-fixture.semantic-admission/3.0.0",
+  "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v3",
+  "package_version": "3.0.0",
+  "fixture_id": "S6-SEMANTIC-ADMISSION-VAL-v3",
+  "fixture_version": "3.0.0",
+  "partition": "development",
+  "status": "historical-development-evidence-used-during-correction",
+  "product_input_files": [],
+  "oracle_file": "oracle.v3.json",
+  "oracle_provenance_file": "oracle-provenance.v3.json",
+  "independent_review_file": "independent-review.v3.json",
+  "reclassification_file": "reclassification.v3.json",
+  "file_identities": [
+    {"path":"oracle.v3.json","role":"historical-development-oracle","bytes":40369,"sha256":"a170f3b854dd76a32e59aa0104ec8b687592d1a4839b732b32ddb52a1bc8416d"},
+    {"path":"oracle-provenance.v3.json","role":"historical-oracle-provenance","bytes":5486,"sha256":"08908f9d697d95d40d570c0cc7fa4af3c51d2d550421b6caf59d159d155f5c0e"},
+    {"path":"independent-review.v3.json","role":"historical-independent-review","bytes":1393,"sha256":"b46a2f6bd891d1dd2c250b76c4103d2c44e1d3104060bc08bac21e41afc86c7c"},
+    {"path":"reclassification.v3.json","role":"current-reclassification-authority","bytes":1114,"sha256":"293d918c1545144133f60b054ba4a4781acd54ba456504761f8aca56ee6bdf22"}
+  ],
+  "answer_free_product_inputs": true,
+  "oracle_frozen_before_product_comparison": false,
+  "network_required": false,
+  "provider_request_count": 0,
+  "credential_operation_count": 0
+}

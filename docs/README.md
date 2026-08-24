@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active navigation
 
-Last reviewed: 2026-08-22
+Last reviewed: 2026-08-23
 
 This directory is the authoritative entry point for the rebuilt Infinium
 project. It records product intent, accepted decisions, current execution,
@@ -48,7 +48,7 @@ operation that explicitly requires them.
   [case catalog](evaluation/case-catalog.md),
   [product/evaluator authority boundary](evaluation/product-evaluator-boundary.md),
   [evaluator history](evaluation/evaluator-history.md),
-  [M1 continuation verification profile](evaluation/m1-continuation-verification-profile.md),
+  [M1/M2 product-conformance verification profile](evaluation/m1-continuation-verification-profile.md),
   [fixture guidelines](evaluation/fixture-guidelines.md), and
   [anti-overfitting rules](evaluation/anti-overfitting-rules.md)
 - Research: [open questions](research/open-questions.md),
@@ -59,6 +59,7 @@ operation that explicitly requires them.
   [work-breakdown notation](plans/work-breakdown-notation.md),
   [active M1 plan](plans/milestones/m1/plan.md),
   [accepted M1 process amendment](plans/milestones/m1/amendments/process-continuation.md),
+  [accepted semantic-oracle deferral amendment](plans/milestones/m1/amendments/semantic-oracle-deferral.md),
   and [current Slice 6 entry](plans/milestones/m1/slices/s6/README.md)
 - Product: [product definition](product/product-definition.md),
   [requirements](product/requirements.md),
@@ -126,7 +127,12 @@ and proof fixtures are summarized in
 [Evaluator history](evaluation/evaluator-history.md) and retained by exact Git
 blob rather than copied through current navigation.
 
-Private held-out evaluation is deferred with no valid current product verdict.
+Independent semantic-oracle qualification is deferred throughout M1 and M2 by
+[ADR-0035](architecture/decisions/ADR-0035-defer-independent-semantic-oracle-qualification.md).
+No current semantic-oracle package grants a product verdict. Ordinary product
+conformance remains mandatory, and evaluation may be reconsidered only after
+M2 acceptance at the M3 Evaluation Readiness Gate. Private held-out evaluation
+remains deferred with no valid current product verdict.
 Protocols `/4` and `/5` are retired and have no active execution or review
 role. The current evaluator inventory and exact
 version-axis boundary live in

@@ -1,0 +1,16 @@
+{
+  "schema_identity": "infinium.evaluation.candidate-investigation-reclassification/2.0.0",
+  "package_identity": "S6-CANDIDATE-LIVE-VAL-v2",
+  "reclassified_at": "2026-08-23",
+  "from_partition": "validation",
+  "to_partition": "development",
+  "current_status": "historical-development-evidence-clean-break-semantic-contract",
+  "retained_manifest": {
+    "path": "public-manifest.json",
+    "bytes": 1714,
+    "sha256": "c607ca873edb888502c9511ee5d9663b87247565d88b302edf3de55fb2750942"
+  },
+  "reason": "The frozen v2 candidate package depends on the historical source-admission meaning and cannot serve as expected truth for the current separated-axis source-application seam.",
+  "retention": "All original input, transcript, oracle, provenance, manifest, live evidence, and accounting bytes remain unchanged and audit-visible.",
+  "current_semantic_authority": false
+}

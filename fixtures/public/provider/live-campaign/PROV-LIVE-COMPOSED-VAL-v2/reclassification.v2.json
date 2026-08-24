@@ -1,0 +1,16 @@
+{
+  "schema_identity": "infinium.evaluation.live-composed-reclassification/2.0.0",
+  "package_identity": "PROV-LIVE-COMPOSED-VAL-v2",
+  "reclassified_at": "2026-08-23",
+  "from_partition": "validation",
+  "to_partition": "development",
+  "current_status": "historical-development-evidence-clean-break-semantic-contract",
+  "retained_manifest": {
+    "path": "public-manifest.json",
+    "bytes": 2346,
+    "sha256": "61368c3b8da3808724d64e796b85a3b26043ca4ef1a2e3ad1dd441daf2405be8"
+  },
+  "reason": "The composed v2 package includes historical source and candidate semantic expectations. Its immutable effect and accounting evidence remains history, but its semantic oracle cannot authorize the current contract.",
+  "retention": "The original manifest, oracle, effect evidence, and accounting remain byte-for-byte unchanged. Only current closed-world discovery authority changes.",
+  "current_semantic_authority": false
+}

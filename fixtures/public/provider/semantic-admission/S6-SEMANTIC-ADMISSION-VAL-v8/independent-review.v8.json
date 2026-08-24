@@ -1,0 +1,109 @@
+{
+  "schema_id": "infinium.public.semantic-admission-independent-review/v8",
+  "schema_version": "8",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v8",
+  "review_id": "infinium.m1-s6.semantic-admission-independent-review/8.0.0",
+  "reviewer": {
+    "role": "independent-clean-room-public-oracle-reviewer",
+    "identity": "infinium.clean-room-oracle-reviewer/4b57ec15-1a6c-4fb1-a55e-aab3cb0e9e64"
+  },
+  "reviewed_at_utc": "2026-08-23T02:41:29.4989219Z",
+  "verdict": "ACCEPT",
+  "reviewed_artifacts": [
+    {
+      "role": "semantic-admission-oracle",
+      "path": "oracle.v8.json",
+      "byte_count": 56037,
+      "sha256": "5ce0305785baec924c9ae6ff74526045ac65e03dc76ee9c8fb5795a82d859ab5",
+      "oracle_id": "infinium.m1-s6.semantic-admission-oracle/8.0.0"
+    },
+    {
+      "role": "oracle-provenance",
+      "path": "oracle-provenance.v8.json",
+      "byte_count": 3341,
+      "sha256": "b3c40a66188440a86c3ffa222c94c898101419bed3fde8febfb2cfac18c65a7d",
+      "provenance_id": "infinium.m1-s6.semantic-admission-oracle-provenance/8.0.0"
+    }
+  ],
+  "review_boundary": {
+    "method": "inert-clean-room-structural-and-semantic-review",
+    "accepted_public_authority_only": true,
+    "reviewed_package_files": [
+      "oracle.v8.json",
+      "oracle-provenance.v8.json"
+    ],
+    "product_implementation_read": false,
+    "product_tests_read": false,
+    "product_output_read": false,
+    "product_comparison_performed": false,
+    "prior_semantic_admission_packages_read": false,
+    "registry_read": false,
+    "retained_live_evidence_or_accounting_read": false,
+    "private_fixture_material_read": false,
+    "archives_read": false,
+    "credentials_read": false,
+    "network_used": false,
+    "files_edited_during_review": false
+  },
+  "checks": [
+    {
+      "check_id": "exact-artifact-identity-and-provenance-binding",
+      "result": "PASS",
+      "detail": "Both reviewed files parsed as JSON at the recorded byte counts and SHA-256 identities; provenance binds the exact oracle identity and remains NOT_COMPARED."
+    },
+    {
+      "check_id": "independent-authorship-and-timing",
+      "result": "PASS",
+      "detail": "Provenance records stable oracle author identity infinium.clean-room.semantic-oracle-author/v8/agent-8f3c2a17 and authored_at_utc 2026-08-23T02:31:55.7856779Z; that identity differs from the reviewer identity and precedes this review."
+    },
+    {
+      "check_id": "answer-isolation-and-input-seams",
+      "result": "PASS",
+      "detail": "Expected semantic labels are separated from neutral product inputs; reachable source and candidate producer documents satisfy their five accepted public input, transcript, and semantic-state schema seams, while abstract matrix premises are explicitly non-producer cases."
+    },
+    {
+      "check_id": "source-fidelity-and-citation-binding",
+      "result": "PASS",
+      "detail": "Source passages retain exact revision, passage, span, offsets, text, and hashes. Complete-sentence extraction is admitted, only/may/all omissions and mismatched or out-of-context claims reject, and the unknown-citation case fails closed."
+    },
+    {
+      "check_id": "candidate-evidence-semantics",
+      "result": "PASS",
+      "detail": "Candidate contexts and proposals retain required identities and evidence fields; support, insufficiency, direct opposition, unavailable evidence, deliberate deletion, hostile policy, and unknown identity cases have independently derivable outcomes."
+    },
+    {
+      "check_id": "semantic-state-lifecycle",
+      "result": "PASS",
+      "detail": "Explicit provider abstention maps to not-evaluated/not-evaluated/abstained; merely unavailable evidence abstains and never becomes audit-only; deliberate deletion maps to unavailable/not-evaluated/audit-only; structural and policy failures map to not-evaluated/not-evaluated/rejected."
+    },
+    {
+      "check_id": "support-applicability-matrix",
+      "result": "PASS",
+      "detail": "The matrix contains exactly 25 unique support-by-applicability cells. Only supported/applicable is admitted and every other semantic cell abstains; structural or policy rejection and deletion audit-only remain outside the matrix."
+    },
+    {
+      "check_id": "producer-consumer-separation",
+      "result": "PASS",
+      "detail": "Source producer inputs remain evidence-only and contain no local applicability facts; consumer cases state bounded local applicability separately. Candidate consumer reasoning remains bound to the selected context and visible supporting or opposing evidence."
+    },
+    {
+      "check_id": "decision-link-cardinality",
+      "result": "PASS",
+      "detail": "Each of the 22 retained consumer proposals or abstentions has exactly one unique decision link; explicit zero-link and multiple-link direct invalid cases reject."
+    }
+  ],
+  "closed_findings": [
+    {
+      "finding_id": "semantic-non-admission-was-rejected",
+      "status": "CLOSED",
+      "closure": "Contradicted and not-applicable semantic cells, including both concrete opposing-evidence cases, now abstain; rejected remains limited to structural and policy failures."
+    },
+    {
+      "finding_id": "provenance-authority-and-timing-incomplete",
+      "status": "CLOSED",
+      "closure": "Provenance now includes source-claim-extraction.v1.schema.json as the fifth producer/semantic authority and records a stable author identity and authored-at timestamp."
+    }
+  ],
+  "must_fix_findings": [],
+  "status": "REVIEW_COMPLETE"
+}

@@ -1,0 +1,16 @@
+{
+  "schema_identity": "infinium.evaluation.live-candidate-investigation-reclassification/2.0.0",
+  "package_identity": "LLM-INVESTIGATE-LIVE-VAL-v2",
+  "reclassified_at": "2026-08-23",
+  "from_partition": "validation",
+  "to_partition": "development",
+  "current_status": "historical-development-evidence-clean-break-semantic-contract",
+  "retained_manifest": {
+    "path": "public-manifest.json",
+    "bytes": 1185,
+    "sha256": "f531447c5d7a1a3efc45b0787b319e3467d35197fbfea85436e3e003a789bb50"
+  },
+  "reason": "This immutable live wrapper depends on the historical v2 source and candidate semantic oracles. It remains retained execution history but is not current expected truth.",
+  "retention": "The original manifest, oracle, effect evidence, and accounting remain byte-for-byte unchanged. Only current closed-world discovery authority changes.",
+  "current_semantic_authority": false
+}

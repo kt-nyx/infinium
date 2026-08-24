@@ -1,0 +1,115 @@
+{
+  "schema_id": "infinium.public.semantic-admission-oracle-provenance/v9",
+  "schema_version": "9",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v9",
+  "partition": "validation",
+  "authored_at": "2026-08-23T03:07:20.6726484+00:00",
+  "last_corrected_at": "2026-08-23T03:24:40.0369202+00:00",
+  "comparison_timing": "NOT_COMPARED",
+  "author": {
+    "author_id": "infinium.public-oracle-author/cedar-meridian",
+    "author_identity_version": "1",
+    "role": "independent-clean-room-semantic-oracle-author",
+    "identity_statement": "Cedar Meridian is the stable, package-distinct author identity for this independently authored v9 oracle."
+  },
+  "artifact_binding": {
+    "oracle_path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v9/oracle.v9.json",
+    "oracle_byte_count": 71091,
+    "oracle_sha256": "4b656926df4a5dac61adbbcdaa3b657462a5a69d3e591b4f550a485e807693c1",
+    "canonical_byte_rule": "The SHA-256 binds the exact repository file bytes as authored; no semantic reserialization is implied."
+  },
+  "authority_inputs": [
+    "AGENTS.md",
+    "docs/README.md",
+    "docs/current-state.md",
+    "docs/execution-policy.md",
+    "docs/product/domain-model.md",
+    "docs/product/analysis-catalog.md",
+    "docs/architecture/decisions/ADR-0034-prompt-fidelity-and-semantic-admission-axes.md",
+    "docs/plans/milestones/m1/plan.md",
+    "docs/plans/milestones/m1/slices/s6/README.md",
+    "docs/plans/milestones/m1/slices/s6/plan.md",
+    "docs/evaluation/evaluation-strategy.md",
+    "docs/evaluation/case-catalog.md",
+    "docs/evaluation/fixture-guidelines.md",
+    "docs/evaluation/anti-overfitting-rules.md",
+    "docs/evaluation/m1-continuation-verification-profile.md",
+    "docs/evaluation/product-evaluator-boundary.md",
+    "contracts/json-schema/source-claim-execution-input.v1.schema.json",
+    "contracts/json-schema/source-claim-retained-transcripts.v1.schema.json",
+    "contracts/json-schema/source-claim-extraction.v1.schema.json",
+    "contracts/json-schema/candidate-investigation-execution-input.v1.schema.json",
+    "contracts/json-schema/candidate-investigation-retained-transcripts.v1.schema.json",
+    "contracts/json-schema/common.v1.schema.json"
+  ],
+  "active_schema_bindings": [
+    {
+      "path": "contracts/json-schema/source-claim-execution-input.v1.schema.json",
+      "sha256": "e411ed66c4e74799e3b764a535593049e709d05bc477cd78b7bcc888f2a8f4d1"
+    },
+    {
+      "path": "contracts/json-schema/source-claim-retained-transcripts.v1.schema.json",
+      "sha256": "612179397e40182b9c0c7b63597316d35f4907e95b95d50de12cb59f230d3fb7",
+      "bound_invariant": "A transcript with nonempty contradiction_evidence_ids contains exactly one proposal."
+    },
+    {
+      "path": "contracts/json-schema/source-claim-extraction.v1.schema.json",
+      "sha256": "77f4e316ef4072883df34f59b7f5070a0e08c6013c776819671d3049f39d6722"
+    },
+    {
+      "path": "contracts/json-schema/candidate-investigation-execution-input.v1.schema.json",
+      "sha256": "ed93555566eb2aff178799d5c36a1e185c58834b3b098df91f6acacc14aad83d"
+    },
+    {
+      "path": "contracts/json-schema/candidate-investigation-retained-transcripts.v1.schema.json",
+      "sha256": "036de9ce8d8569d52510053faef00ea101afc21a5097d90f93336e15fe1d1c89"
+    },
+    {
+      "path": "contracts/json-schema/common.v1.schema.json",
+      "sha256": "9e59c56932ae3b1290b9cb862483bd90d8b9d75e12ef46c4dd610e41ca1db28f"
+    }
+  ],
+  "ground_truth_method": {
+    "method": "Manual clean-room derivation from accepted product semantics, ADR-0034, public evaluation rules, and the active closed schemas.",
+    "source_cases": "Neutral synthetic source statements were authored specifically for v9. Raw source-producer tuples remain separate from later analysis-run consumer tuples, source production always leaves local applicability not evaluated, and every consumer applicability decision is derived from a bounded answer-free local input identified in the oracle.",
+    "source_opposition": "The contradicted source case retains one self-contained visible opposing statement with an independent source identity, explicit availability, exact UTF-8 byte count, SHA-256, and references that resolve to the same artifact ID without treating it as the cited passage.",
+    "candidate_cases": "Neutral selected contexts and evidence relationships were authored specifically for v9. Supporting, insufficient, directly opposing, unavailable, and explicitly indeterminate evidence lead to independent proposal, support, applicability, and host-decision expectations.",
+    "matrix": "The five active support states were crossed with the five active applicability states exactly once. Only supported plus applicable is admitted; every other ordinary cell abstains. Rejection and deliberate-deletion audit retention are specified as separate policy branches.",
+    "cardinality": "Every retained source or candidate proposal has one and only one consumer decision link. The rejection corpus contains a concrete empty link collection and a concrete two-link collection with individually well-formed links.",
+    "rejection_derivation": "Structural and policy rejects use exact JSON-pointer replacements with asserted old values against oracle.v9.json; cardinality rejects use exact structured link collections bound to real proposal identities."
+  },
+  "answer_isolation": {
+    "product_output_accessed": false,
+    "implementation_accessed": false,
+    "tests_accessed": false,
+    "prior_semantic_admission_packages_accessed": false,
+    "registry_or_manifest_accessed": false,
+    "git_history_accessed": false,
+    "private_fixture_or_evidence_accessed": false,
+    "archives_accessed": false,
+    "credentials_accessed": false,
+    "network_accessed": false,
+    "expected_truth_exposed_to_producer_inputs": false
+  },
+  "excluded_inputs": [
+    "Production implementation and product output",
+    "Product tests and generated artifacts",
+    "Semantic-admission v1 through v8 packages",
+    "Repository registries and manifests",
+    "Git history",
+    "Live or private fixtures and evidence",
+    "Sibling or legacy archives",
+    "Credentials and network sources"
+  ],
+  "comparison_state": {
+    "product_comparison_performed": false,
+    "review_or_manifest_created": false,
+    "registry_created_or_modified": false,
+    "status": "NOT_COMPARED"
+  },
+  "known_limitations": [
+    "This public validation oracle establishes only the bounded semantic-admission expectations declared in oracle.v9.json.",
+    "It is not a private held-out verdict, reliability claim, readiness claim, or broader semantic generalization result.",
+    "The package does not authorize provider, credential, network, protected-root, or other external effects."
+  ]
+}

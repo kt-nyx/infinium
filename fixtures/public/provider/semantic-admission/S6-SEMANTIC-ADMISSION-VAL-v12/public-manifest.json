@@ -1,0 +1,74 @@
+{
+  "schema_identity": "infinium.public-fixture.semantic-admission/12.0.0",
+  "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v12",
+  "package_stable_identity": "infinium.public.provider.semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v12",
+  "package_version": "12.0.0",
+  "fixture_id": "S6-SEMANTIC-ADMISSION-VAL-v12",
+  "fixture_version": "12.0.0",
+  "partition": "development",
+  "status": "historical-development-evidence-invalidated-post-comparison",
+  "product_input_files": [],
+  "oracle_file": "oracle.v12.json",
+  "oracle_provenance_file": "oracle-provenance.v12.json",
+  "authority_audit_file": "authority-audit.v12.json",
+  "independent_review_file": "independent-review.v12.json",
+  "adversarial_review_file": "adversarial-review.v12.json",
+  "reclassification_file": "reclassification.v12.json",
+  "precomparison_manifest_file": "precomparison-manifest.v12.json",
+  "file_identities": [
+    {
+      "path": "oracle.v12.json",
+      "role": "historical-development-oracle",
+      "bytes": 86265,
+      "sha256": "c817a611d89a1a610405984dd68415d99f2183a16566c6631e5f0f423789b9ba"
+    },
+    {
+      "path": "oracle-provenance.v12.json",
+      "role": "historical-oracle-provenance",
+      "bytes": 5807,
+      "sha256": "32a0e11c9f2a51fb5b3bf053b43b3a428d99a229d2c5cdd94d96a3b5bee78778"
+    },
+    {
+      "path": "authority-audit.v12.json",
+      "role": "historical-preseal-authority-audit-receipt",
+      "bytes": 9047,
+      "sha256": "27a992b772555d8a84469979519e575924bb6bc9ff99acf12996f2ef37b54fdb"
+    },
+    {
+      "path": "independent-review.v12.json",
+      "role": "historical-independent-semantic-review",
+      "bytes": 10426,
+      "sha256": "f75280436da6a3eaaa7e8fd986418108298faa57d45d009d1be1da2db7ef59e1"
+    },
+    {
+      "path": "adversarial-review.v12.json",
+      "role": "historical-distinct-adversarial-review",
+      "bytes": 9539,
+      "sha256": "6cb6ca308f3fa1cf1c07c0112938938d07d2f4d1f6ba07563fa6379dd9af3fd8"
+    },
+    {
+      "path": "precomparison-manifest.v12.json",
+      "role": "immutable-precomparison-authority-manifest-history",
+      "bytes": 2212,
+      "sha256": "485bf80e5fd6b54612eaa98f9f2ad80ab9be391c9a422ba34292b9ddf3822eb9"
+    },
+    {
+      "path": "reclassification.v12.json",
+      "role": "current-non-authorizing-reclassification",
+      "bytes": 2013,
+      "sha256": "10c7378a66792a28be0c6029917909a8c4e3819677a75f4d735defbba75115b9"
+    }
+  ],
+  "preseal_gate_status": {
+    "authority_only_automated_audit": "historical-receipt-order-invalid",
+    "independent_semantic_review": "historical-acceptance-invalidated",
+    "distinct_adversarial_package_review": "historical-acceptance-invalidated"
+  },
+  "comparison_status": "historical-comparison-grants-no-product-verdict",
+  "answer_free_product_inputs": true,
+  "oracle_frozen_before_product_comparison": true,
+  "current_validation_authority": false,
+  "network_required": false,
+  "provider_request_count": 0,
+  "credential_operation_count": 0
+}

@@ -1,0 +1,17 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-reclassification/10.0.0",
+  "schema_version": "10",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v10",
+  "reclassified_at": "2026-08-23",
+  "from_partition": "validation",
+  "to_partition": "development",
+  "current_status": "historical-development-evidence-invalidated-at-first-comparison",
+  "reason": "The exact v10 oracle and provenance were independently accepted and sealed before their first product comparison. That comparison showed that a source producer case claimed a faithful extraction from text following a colon even though the active producer has no citation-span proof capable of distinguishing neutral framing from meaning-inverting framing. The same package supplied unavailable and deleted provider proposals while declaring that the model was not used, exposing a schema/product envelope inconsistency. V10 therefore cannot remain current validation truth.",
+  "retention": "The oracle, provenance, reviewer-authored acceptance, and original seal remain immutable and audit-visible. This record changes only their current authority classification.",
+  "comparison_consequence": "V10 cannot grant current validation authority. The active transcript schemas must close the no-model proposal ambiguity, and a materially independent successor must use conservative producer-reachable exact-sentence inputs before separate review and product comparison.",
+  "prohibited_authority": [
+    "current validation truth",
+    "owner acceptance",
+    "runtime semantic admission"
+  ]
+}

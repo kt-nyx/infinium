@@ -1,0 +1,72 @@
+{
+  "schema_id": "infinium.public.semantic-admission-oracle-provenance/v12",
+  "schema_version": "12",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v12",
+  "oracle_id": "infinium.m1-s6.semantic-admission.oracle/cleanroom-v12",
+  "provenance_id": "infinium.m1-s6.semantic-admission.oracle-provenance/cleanroom-v12",
+  "candidate_status": "UNACCEPTED_DRAFT",
+  "comparison_status": "NOT_COMPARED",
+  "author": {
+    "author_id": "infinium.public-oracle-author.semantic-admission-cleanroom-v12",
+    "author_role": "independent-public-oracle-author",
+    "authoring_method": "clean-room-derivation-from-accepted-public-authority-and-current-producer-schemas"
+  },
+  "authored_at_utc": "2026-08-23T07:20:10.0827239+00:00",
+  "oracle_binding": {
+    "path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v12/oracle.v12.json",
+    "byte_length": 86265,
+    "sha256": "c817a611d89a1a610405984dd68415d99f2183a16566c6631e5f0f423789b9ba"
+  },
+  "answer_isolation": {
+    "product_output_accessed": false,
+    "product_output_compared": false,
+    "implementation_accessed": false,
+    "tests_accessed": false,
+    "prior_v1_through_v11_packages_accessed": false,
+    "manifest_or_registry_accessed": false,
+    "git_history_accessed": false,
+    "private_fixture_accessed": false,
+    "live_or_network_material_accessed": false,
+    "archive_material_accessed": false,
+    "credential_material_accessed": false,
+    "expected_truth_basis": "Accepted public product meaning, ADR-0034, accepted M1 and Slice 6 plans, ordinary public evaluation rules, and the exact current producer schemas listed below."
+  },
+  "authority_bindings": [
+    {"path":"docs/README.md","byte_length":7510,"sha256":"3b60b6617140576fcc35532f9f1928b61606714d00dff5731555b6a2cfb78591"},
+    {"path":"docs/current-state.md","byte_length":14507,"sha256":"b585fe70cd9f450faa52f931801bcd71c240a53359166e66f19e1085af06cac4"},
+    {"path":"docs/execution-policy.md","byte_length":15815,"sha256":"50168c020a924516578f83452c0c1fd28780497a5a06534f9b08035a013f610b"},
+    {"path":"docs/product/domain-model.md","byte_length":32221,"sha256":"9d5e33c9f5318dfdf7a62be0e0743ce1a272fb40a6c2f0c29eda6011d1f2ced3"},
+    {"path":"docs/product/analysis-catalog.md","byte_length":15866,"sha256":"521f20f39421c46e1945c83d61fcc08e38a56bb801f82d6412d20b8ea5b1933c"},
+    {"path":"docs/architecture/decisions/ADR-0034-prompt-fidelity-and-semantic-admission-axes.md","byte_length":7426,"sha256":"9d6ac00ea4235822cd75e2887a93e27c4b5b6ae1b6700d0c64c5dce1535728f8"},
+    {"path":"docs/plans/milestones/m1/plan.md","byte_length":33298,"sha256":"5e3b28168b195cafead789a5ccbe5f18b31298d278edf5aa12a22f739a71b2cf"},
+    {"path":"docs/plans/milestones/m1/slices/s6/README.md","byte_length":19169,"sha256":"b6f2b602414f4d46b03596f0404e8dc6bfc5591a37fdc9d4a2afa8b60770befe"},
+    {"path":"docs/plans/milestones/m1/slices/s6/plan.md","byte_length":84209,"sha256":"aca47b8276a7e1ff199e8c3cec4b752c6f213bee424da1bbe0d2993aa8a65b16"},
+    {"path":"docs/evaluation/evaluation-strategy.md","byte_length":20542,"sha256":"2d90ce9e601dac32ee64ec3ab1e04728efe4c31c1a4176f185bcf4f66ab4e814"},
+    {"path":"docs/evaluation/case-catalog.md","byte_length":36603,"sha256":"216bcbead8b3963a8d1632da9e43514d9f6c4dcfae7963cec7413566a18bf19b"},
+    {"path":"docs/evaluation/fixture-guidelines.md","byte_length":8745,"sha256":"0fc582d22a96a62177982c1008c7fcab82117192457890b14d54f8e81097e1c6"},
+    {"path":"docs/evaluation/anti-overfitting-rules.md","byte_length":7611,"sha256":"ab9416a11e7b523f558e8b7914e4095bf2befeb82999a2fff409f6e4dce458f0"},
+    {"path":"docs/evaluation/m1-continuation-verification-profile.md","byte_length":16503,"sha256":"5ea92b2bbbf935cd8625b6bf7805bbcecc91478cb6125d6affac7d74621fcc75"},
+    {"path":"docs/evaluation/product-evaluator-boundary.md","byte_length":2038,"sha256":"18577cfeeb1af7e71fb86a6fa59d8d677c0904a132180cbfa11d97683eb21f3f"}
+  ],
+  "schema_bindings": [
+    {"path":"contracts/json-schema/common.v1.schema.json","byte_length":14452,"sha256":"9e59c56932ae3b1290b9cb862483bd90d8b9d75e12ef46c4dd610e41ca1db28f"},
+    {"path":"contracts/json-schema/source-claim-execution-input.v1.schema.json","byte_length":2135,"sha256":"e411ed66c4e74799e3b764a535593049e709d05bc477cd78b7bcc888f2a8f4d1"},
+    {"path":"contracts/json-schema/source-claim-retained-transcripts.v1.schema.json","byte_length":3068,"sha256":"c56ea942541088a449e4d3170b253762e8b5431b51df24ac29c35357b17f11dd"},
+    {"path":"contracts/json-schema/source-claim-extraction.v1.schema.json","byte_length":6144,"sha256":"77f4e316ef4072883df34f59b7f5070a0e08c6013c776819671d3049f39d6722"},
+    {"path":"contracts/json-schema/candidate-investigation-execution-input.v1.schema.json","byte_length":3985,"sha256":"5b2e72d9b8949286688a08a613a59b296007eb824b559b5c80712ac1813c7328"},
+    {"path":"contracts/json-schema/candidate-investigation-retained-transcripts.v1.schema.json","byte_length":3684,"sha256":"94d13377acc910e18f3dd4d12547917ec94d2da66af88e7b675e3f53ad26c162"},
+    {"path":"contracts/json-schema/candidate-investigation.v1.schema.json","byte_length":2832,"sha256":"fece2fd9a4003e52dad7df97f5f288cc2dc88b84f988b1724e87524c16fa5bda"}
+  ],
+  "inert_qa_scope": [
+    "strict-json-parse",
+    "exact-two-file-set",
+    "current-producer-schema-shape",
+    "passage-and-evidence-sha256",
+    "citation-and-reference-closure",
+    "source-admission-application-passage-chain",
+    "unique-25-cell-support-applicability-matrix",
+    "exact-one-link-expectations-and-zero-two-link-probes",
+    "oracle-byte-and-sha256-binding"
+  ],
+  "claim_boundary": "This file records an independently authored unaccepted public validation candidate. It is not a product comparison, review verdict, acceptance, seal, private held-out result, reliability claim, or product-readiness claim."
+}

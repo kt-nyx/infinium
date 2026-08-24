@@ -1,0 +1,17 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-reclassification/7.0.0",
+  "schema_version": "7",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v7",
+  "reclassified_at": "2026-08-22",
+  "from_partition": "validation",
+  "to_partition": "development",
+  "current_status": "historical-development-evidence-invalidated-at-first-comparison",
+  "reason": "The exact v7 oracle and provenance were independently accepted and sealed before the first product comparison. That comparison showed the evaluation harness copied expected tuples into domain documents instead of executing the source and candidate producer seams. It also showed the oracle described invented producer fields rather than the accepted transcript contracts and exposed that the source producer validated passage identity without independently rejecting claims that were not grounded in the cited passage. The comparison drove a generic source-ingress correction, so v7 cannot remain independent current validation authority.",
+  "retention": "The oracle, provenance, and reviewer-authored acceptance bytes remain immutable and audit-visible. This record changes only their current authority classification.",
+  "comparison_consequence": "V7 cannot grant current validation authority or serve as expected truth. A materially independent successor must use exact product-reachable input and transcript contracts, execute the real producers, and be independently reviewed before comparison.",
+  "prohibited_authority": [
+    "current validation truth",
+    "owner acceptance",
+    "runtime semantic admission"
+  ]
+}

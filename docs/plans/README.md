@@ -18,6 +18,12 @@ applies the repository policy's coherent-candidate, proportional-verification,
 consolidated-review, and bind-once lifecycle. Narrow immutable fixture/oracle
 and external-effect rules still govern their exact boundaries.
 
+The accepted
+[semantic-oracle deferral amendment](milestones/m1/amendments/semantic-oracle-deferral.md)
+removes independent semantic answer-key qualification from M1 and M2
+acceptance while preserving ordinary product conformance. Re-entry is possible
+only after M2 acceptance during M3 planning under ADR-0035.
+
 ## Hierarchy
 
 - [Milestone plans](milestones/README.md)

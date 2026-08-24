@@ -3,15 +3,34 @@
   "$id": "https://schemas.infinium.dev/repository/repository-evaluation-authority.v1.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_id", "schema_version", "status", "authority", "surfaces"],
+  "required": ["schema_id", "schema_version", "status", "authority", "semantic_oracle_policy", "surfaces"],
   "properties": {
     "schema_id": { "const": "infinium.repository.evaluation-authority/v1" },
-    "schema_version": { "const": "1.1.0" },
+    "schema_version": { "const": "1.2.0" },
     "status": { "const": "current" },
-    "authority": { "const": "project-owner-authorized-protocol-4-retirement-2026-08-10" },
+    "authority": { "const": "project-owner-authorized-semantic-oracle-deferral-2026-08-23" },
+    "semantic_oracle_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "current_authority_package", "gates_m1_acceptance", "gates_m2_acceptance", "reconsideration_boundary", "claim_boundary", "permitted_evidence"],
+      "properties": {
+        "status": { "const": "deferred" },
+        "current_authority_package": { "type": "null" },
+        "gates_m1_acceptance": { "const": false },
+        "gates_m2_acceptance": { "const": false },
+        "reconsideration_boundary": { "const": "m2-accepted-m3-planning" },
+        "claim_boundary": { "const": "no-independent-semantic-verdict" },
+        "permitted_evidence": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 6,
+          "items": { "enum": ["developer-conformance", "deterministic-reference", "controlled-integration", "persistence-and-replay", "operational-safety", "fresh-review"] }
+        }
+      }
+    },
     "surfaces": {
       "type": "array",
-      "minItems": 5,
+      "minItems": 6,
       "uniqueItems": true,
       "items": { "$ref": "#/$defs/surface" }
     }

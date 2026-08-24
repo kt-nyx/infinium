@@ -1,0 +1,374 @@
+{
+  "oracle_format_id": "infinium.public.semantic-admission-oracle/v10",
+  "oracle_version": "10",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v10",
+  "partition": "validation",
+  "comparison_status": "NOT_COMPARED",
+  "purpose": "Answer-isolated public validation of proposal or faithful extraction, bounded support, local applicability, and host decision as four separate facts.",
+  "semantic_vocabulary": {
+    "proposal_or_extraction_state": ["proposed", "extracted", "rejected", "abstained", "unavailable", "deleted"],
+    "support_state": ["not-evaluated", "supported", "unsupported", "contradicted", "unavailable"],
+    "applicability_state": ["not-evaluated", "applicable", "conditional-unestablished", "not-applicable", "unknown"],
+    "decision_state": ["admitted", "rejected", "abstained", "audit-only"]
+  },
+  "invariants": [
+    "Every retained proposal has exactly one decision link.",
+    "Only supported plus applicable may be admitted.",
+    "Rejected is reserved for structural or policy failure and has support and applicability not-evaluated.",
+    "Unsupported means insufficient supporting evidence and is not contradiction.",
+    "Contradicted requires a visible, directly opposing, SHA-256-bound artifact.",
+    "Ordinary unavailability abstains; only deliberate deletion is audit-only.",
+    "A source producer has no local-applicability authority and cannot admit a local conclusion.",
+    "Source-consumer applicability facts are answer-free inputs separate from producer output."
+  ],
+  "fingerprint_basis": {
+    "text_sha256": "SHA-256 of the exact UTF-8 text field, without BOM or trailing newline",
+    "response_fingerprint": "SHA-256 of the exact UTF-8 response_record_id, without BOM or trailing newline",
+    "span_coordinates": "zero-based UTF-8 byte offsets, start inclusive and end exclusive"
+  },
+  "source_execution_input": {
+    "schema_id": "infinium.llm.source-claim-execution-input/v1",
+    "schema_version": "1",
+    "package_id": "S6-SEMANTIC-ADMISSION-VAL-v10",
+    "acquisition_run_id": "s10.source.acquisition",
+    "operation_id": "s10.source.operation",
+    "host_authorization_id": "s10.source.authorization",
+    "owner_kind": "evidence-acquisition-run",
+    "owner_id": "s10.source.acquisition",
+    "parent_analysis_run_id": "s10.analysis.parent",
+    "application_scope_id": "s10.scope.source",
+    "cost_attribution_scope_id": "s10.cost.source",
+    "source_revision_id": "s10.source.revision",
+    "declared_purpose": "Extract bounded documentation claims only; do not decide local applicability or admit a local conclusion.",
+    "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+    "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+    "passages": [
+      {
+        "passage_id": "s10.passage.supported",
+        "source_revision_id": "s10.source.revision",
+        "text": "Guide revision 3 states: Set cache mode to compact when profile flag alpha is enabled.",
+        "text_sha256": "7ee1e26e9816e9b6f60884be4df4082be9d6e8a96003175a83f20c2ac81c5e2a",
+        "deleted": false
+      },
+      {
+        "passage_id": "s10.passage.unsupported",
+        "source_revision_id": "s10.source.revision",
+        "text": "Community note states: Turbo mode prevents duplicate entries.",
+        "text_sha256": "ff19983a203cbec889e39f620b3542f6a7df3b1391a7ae22d83b5ceae2b67939",
+        "deleted": false
+      },
+      {
+        "passage_id": "s10.passage.contradicted",
+        "source_revision_id": "s10.source.revision",
+        "text": "Author guide states: Enable compatibility layer Z for build 7.",
+        "text_sha256": "c16c234a51d6196731ee007b5733bef421884efafa87cd21dd36190d0c55c596",
+        "deleted": false
+      },
+      {
+        "passage_id": "s10.passage.unavailable",
+        "source_revision_id": "s10.source.revision",
+        "text": "UNAVAILABLE: source bytes were not retained.",
+        "text_sha256": "a2be759b5e705980cb5d1e7d14a42ac1f26128373e75cc1812c3a00d957845e0",
+        "deleted": false
+      },
+      {
+        "passage_id": "s10.passage.abstained",
+        "source_revision_id": "s10.source.revision",
+        "text": "The document lists mode omega but gives no behavior claim.",
+        "text_sha256": "9931f21b1a2807b4b4041a9311e6947199fa8c8481f145235cc3b7b5dfb1bac6",
+        "deleted": false
+      },
+      {
+        "passage_id": "s10.passage.deleted",
+        "source_revision_id": "s10.source.revision",
+        "text": "DELETED: source content was deliberately removed by policy.",
+        "text_sha256": "438a5da39183ca434b8452708e46b164dc4fa4635b43a70a56f2bf31c1d63abe",
+        "deleted": true
+      }
+    ]
+  },
+  "source_artifacts": [
+    {
+      "artifact_id": "s10.evidence.direct-opposition",
+      "role": "direct-opposition",
+      "text": "Direct opposition: Compatibility layer Z must not be enabled for build 7.",
+      "content_sha256": "bc21fe37cbedc2de402d04a4c899f8c005ae24d81994dfd6f0dd039268e020a2"
+    },
+    {
+      "artifact_id": "s10.evidence.deleted-original",
+      "role": "deleted-original-fingerprint-only",
+      "text_retained": false,
+      "content_sha256": "bf8b429a25673a00b40f63c3b954c74441d15a17dbc9b2bd38a5a15d17dd6ac6"
+    }
+  ],
+  "source_retained_transcripts": {
+    "schema_id": "infinium.llm.source-claim-retained-transcripts/v1",
+    "schema_version": "1",
+    "transcripts": [
+      {
+        "transcript_id": "s10.source.supported.transcript",
+        "operation_id": "s10.source.operation",
+        "response_record_id": "s10.source.supported.response",
+        "response_state": "completed",
+        "response_fingerprint": "0b3b8014a5a94f2198c5d36e7cd7acaf1c67f20205edcd55fe04bc1d601c8ac3",
+        "source_revision_id": "s10.source.revision",
+        "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+        "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+        "proposals": [{"proposal_id":"s10.source.supported.proposal","passage_id":"s10.passage.supported","claim":"Set cache mode to compact when profile flag alpha is enabled.","condition_ids":["s10.condition.alpha-enabled"],"claim_kind":"documentation-claim","condition_scope":"conditional","authority_category":"informational","application_semantics":"evidence-only","state":"proposed","reason":"The claim is an exact cited span; local applicability is outside producer authority."}],
+        "contradiction_evidence_ids": [],
+        "abstentions": [],
+        "gaps": [],
+        "model_used": true
+      },
+      {
+        "transcript_id": "s10.source.unsupported.transcript",
+        "operation_id": "s10.source.operation",
+        "response_record_id": "s10.source.unsupported.response",
+        "response_state": "completed",
+        "response_fingerprint": "0adeb01650e2bdbc46e9a7710de693b8e9750de935141bbe19e8d2d7a8cfcb7b",
+        "source_revision_id": "s10.source.revision",
+        "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+        "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+        "proposals": [{"proposal_id":"s10.source.unsupported.proposal","passage_id":"s10.passage.unsupported","claim":"Turbo mode prevents duplicate entries.","condition_ids":[],"claim_kind":"documentation-claim","condition_scope":"unconditional","authority_category":"informational","application_semantics":"evidence-only","state":"unsupported","reason":"The words are grounded exactly, but the bounded evidence is insufficient to support the proposition."}],
+        "contradiction_evidence_ids": [],
+        "abstentions": [],
+        "gaps": ["No independent supporting evidence is present."],
+        "model_used": true
+      },
+      {
+        "transcript_id": "s10.source.contradicted.transcript",
+        "operation_id": "s10.source.operation",
+        "response_record_id": "s10.source.contradicted.response",
+        "response_state": "completed",
+        "response_fingerprint": "a02848c7587fecb79f78594bcacb918292bd9dc34990560ade57effb51b46b3d",
+        "source_revision_id": "s10.source.revision",
+        "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+        "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+        "proposals": [{"proposal_id":"s10.source.contradicted.proposal","passage_id":"s10.passage.contradicted","claim":"Enable compatibility layer Z for build 7.","condition_ids":["s10.condition.build-7"],"claim_kind":"documentation-claim","condition_scope":"version-scoped","authority_category":"informational","application_semantics":"evidence-only","state":"proposed","reason":"The cited claim is faithful, while a separate visible artifact directly opposes it."}],
+        "contradiction_evidence_ids": ["s10.evidence.direct-opposition"],
+        "abstentions": [],
+        "gaps": [],
+        "model_used": true
+      },
+      {
+        "transcript_id": "s10.source.unavailable.transcript",
+        "operation_id": "s10.source.operation",
+        "response_record_id": "s10.source.unavailable.response",
+        "response_state": "not-used",
+        "response_fingerprint": "3ce72c6e9fe66c98bee3e5162152d9ba9e58ff15f3a937d8ab533bed5ba02a50",
+        "source_revision_id": "s10.source.revision",
+        "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+        "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+        "proposals": [{"proposal_id":"s10.source.unavailable.proposal","passage_id":"s10.passage.unavailable","claim":"Source claim unavailable.","condition_ids":[],"claim_kind":"documentation-claim","condition_scope":"unconditional","authority_category":"informational","application_semantics":"evidence-only","state":"unavailable","reason":"No source bytes are available for evaluation."}],
+        "contradiction_evidence_ids": [],
+        "abstentions": ["Source bytes unavailable."],
+        "gaps": ["Current citation support is unavailable."],
+        "model_used": false
+      },
+      {
+        "transcript_id": "s10.source.abstained.transcript",
+        "operation_id": "s10.source.operation",
+        "response_record_id": "s10.source.abstained.response",
+        "response_state": "completed",
+        "response_fingerprint": "25a7992a0a27f92c7e412b23da438ce71a477411a540d3f7d1021bd43325accc",
+        "source_revision_id": "s10.source.revision",
+        "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+        "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+        "proposals": [{"proposal_id":"s10.source.abstained.proposal","passage_id":"s10.passage.abstained","claim":"Cannot determine a behavior claim for mode omega.","condition_ids":[],"claim_kind":"documentation-claim","condition_scope":"unconditional","authority_category":"informational","application_semantics":"evidence-only","state":"abstained","reason":"The provider explicitly declined to propose a behavior claim."}],
+        "contradiction_evidence_ids": [],
+        "abstentions": ["No behavior claim can be determined."],
+        "gaps": [],
+        "model_used": true
+      },
+      {
+        "transcript_id": "s10.source.deleted.transcript",
+        "operation_id": "s10.source.operation",
+        "response_record_id": "s10.source.deleted.response",
+        "response_state": "not-used",
+        "response_fingerprint": "8212eb9ec8a129ec94ae41e6906b89df8ca3055b1ca0f71c592e6b294e46d156",
+        "source_revision_id": "s10.source.revision",
+        "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+        "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+        "proposals": [{"proposal_id":"s10.source.deleted.proposal","passage_id":"s10.passage.deleted","claim":"Previously retained source material was deliberately deleted.","condition_ids":[],"claim_kind":"documentation-claim","condition_scope":"unconditional","authority_category":"informational","application_semantics":"evidence-only","state":"unavailable","reason":"Only deletion provenance and the original fingerprint remain."}],
+        "contradiction_evidence_ids": [],
+        "abstentions": [],
+        "gaps": ["Original source text is deliberately deleted."],
+        "model_used": false
+      }
+    ]
+  },
+  "source_producer_cases": [
+    {
+      "case_id": "s10.source.supported",
+      "citation": {"passage_id":"s10.passage.supported","start_utf8":25,"end_utf8":86,"exact_text":"Set cache mode to compact when profile flag alpha is enabled.","passage_sha256":"7ee1e26e9816e9b6f60884be4df4082be9d6e8a96003175a83f20c2ac81c5e2a"},
+      "expected": {"proposal_or_extraction_state":"extracted","support_state":"supported","applicability_state":"not-evaluated","decision_state":"abstained"},
+      "expected_decision_links": [{"admission_id":"s10.source.supported.admission","proposal_id":"s10.source.supported.proposal","authorization_id":"s10.source.authorization","operation_id":"s10.source.operation","response_record_id":"s10.source.supported.response","owner_kind":"evidence-acquisition-run","owner_id":"s10.source.acquisition","root_subject_id":"s10.source.revision","validation_id":"s10.source.supported.validation","admission_correlation_id":"s10.source.supported.correlation","support_state":"supported","applicability_state":"not-evaluated","decision_state":"abstained"}]
+    },
+    {
+      "case_id": "s10.source.unsupported",
+      "citation": {"passage_id":"s10.passage.unsupported","start_utf8":23,"end_utf8":61,"exact_text":"Turbo mode prevents duplicate entries.","passage_sha256":"ff19983a203cbec889e39f620b3542f6a7df3b1391a7ae22d83b5ceae2b67939"},
+      "expected": {"proposal_or_extraction_state":"extracted","support_state":"unsupported","applicability_state":"not-evaluated","decision_state":"abstained"},
+      "expected_decision_links": [{"admission_id":"s10.source.unsupported.admission","proposal_id":"s10.source.unsupported.proposal","authorization_id":"s10.source.authorization","operation_id":"s10.source.operation","response_record_id":"s10.source.unsupported.response","owner_kind":"evidence-acquisition-run","owner_id":"s10.source.acquisition","root_subject_id":"s10.source.revision","validation_id":"s10.source.unsupported.validation","admission_correlation_id":"s10.source.unsupported.correlation","support_state":"unsupported","applicability_state":"not-evaluated","decision_state":"abstained"}]
+    },
+    {
+      "case_id": "s10.source.contradicted",
+      "citation": {"passage_id":"s10.passage.contradicted","start_utf8":21,"end_utf8":62,"exact_text":"Enable compatibility layer Z for build 7.","passage_sha256":"c16c234a51d6196731ee007b5733bef421884efafa87cd21dd36190d0c55c596"},
+      "opposition": {"artifact_id":"s10.evidence.direct-opposition","relationship":"directly-opposes","content_sha256":"bc21fe37cbedc2de402d04a4c899f8c005ae24d81994dfd6f0dd039268e020a2"},
+      "expected": {"proposal_or_extraction_state":"extracted","support_state":"contradicted","applicability_state":"not-evaluated","decision_state":"abstained"},
+      "expected_decision_links": [{"admission_id":"s10.source.contradicted.admission","proposal_id":"s10.source.contradicted.proposal","authorization_id":"s10.source.authorization","operation_id":"s10.source.operation","response_record_id":"s10.source.contradicted.response","owner_kind":"evidence-acquisition-run","owner_id":"s10.source.acquisition","root_subject_id":"s10.source.revision","validation_id":"s10.source.contradicted.validation","admission_correlation_id":"s10.source.contradicted.correlation","support_state":"contradicted","applicability_state":"not-evaluated","decision_state":"abstained"}]
+    },
+    {
+      "case_id": "s10.source.unavailable",
+      "citation": {"passage_id":"s10.passage.unavailable","start_utf8":0,"end_utf8":44,"exact_text":"UNAVAILABLE: source bytes were not retained.","passage_sha256":"a2be759b5e705980cb5d1e7d14a42ac1f26128373e75cc1812c3a00d957845e0"},
+      "expected": {"proposal_or_extraction_state":"unavailable","support_state":"unavailable","applicability_state":"not-evaluated","decision_state":"abstained"},
+      "expected_decision_links": [{"admission_id":"s10.source.unavailable.admission","proposal_id":"s10.source.unavailable.proposal","authorization_id":"s10.source.authorization","operation_id":"s10.source.operation","response_record_id":"s10.source.unavailable.response","owner_kind":"evidence-acquisition-run","owner_id":"s10.source.acquisition","root_subject_id":"s10.source.revision","validation_id":"s10.source.unavailable.validation","admission_correlation_id":"s10.source.unavailable.correlation","support_state":"unavailable","applicability_state":"not-evaluated","decision_state":"abstained"}]
+    },
+    {
+      "case_id": "s10.source.abstained",
+      "citation": {"passage_id":"s10.passage.abstained","start_utf8":0,"end_utf8":58,"exact_text":"The document lists mode omega but gives no behavior claim.","passage_sha256":"9931f21b1a2807b4b4041a9311e6947199fa8c8481f145235cc3b7b5dfb1bac6"},
+      "expected": {"proposal_or_extraction_state":"abstained","support_state":"not-evaluated","applicability_state":"not-evaluated","decision_state":"abstained"},
+      "expected_decision_links": [{"admission_id":"s10.source.abstained.admission","proposal_id":"s10.source.abstained.proposal","authorization_id":"s10.source.authorization","operation_id":"s10.source.operation","response_record_id":"s10.source.abstained.response","owner_kind":"evidence-acquisition-run","owner_id":"s10.source.acquisition","root_subject_id":"s10.source.revision","validation_id":"s10.source.abstained.validation","admission_correlation_id":"s10.source.abstained.correlation","support_state":"not-evaluated","applicability_state":"not-evaluated","decision_state":"abstained"}]
+    },
+    {
+      "case_id": "s10.source.deleted",
+      "citation": {"passage_id":"s10.passage.deleted","start_utf8":0,"end_utf8":59,"exact_text":"DELETED: source content was deliberately removed by policy.","passage_sha256":"438a5da39183ca434b8452708e46b164dc4fa4635b43a70a56f2bf31c1d63abe","deleted_original_sha256":"bf8b429a25673a00b40f63c3b954c74441d15a17dbc9b2bd38a5a15d17dd6ac6"},
+      "expected": {"proposal_or_extraction_state":"deleted","support_state":"unavailable","applicability_state":"not-evaluated","decision_state":"audit-only"},
+      "expected_decision_links": [{"admission_id":"s10.source.deleted.admission","proposal_id":"s10.source.deleted.proposal","authorization_id":"s10.source.authorization","operation_id":"s10.source.operation","response_record_id":"s10.source.deleted.response","owner_kind":"evidence-acquisition-run","owner_id":"s10.source.acquisition","root_subject_id":"s10.source.revision","validation_id":"s10.source.deleted.validation","admission_correlation_id":"s10.source.deleted.correlation","support_state":"unavailable","applicability_state":"not-evaluated","decision_state":"audit-only"}]
+    }
+  ],
+  "source_consumer_applicability": {
+    "producer_result_reference": "s10.source.supported.proposal",
+    "producer_result_is_non_admitting": true,
+    "neutral_answer_free_facts": [
+      {"fact_id":"s10.consumer.fact.enabled","text":"Selected analysis context records profile flag alpha as enabled.","content_sha256":"411ffb46c9d121644d4324becd14b97541e172a99df0350857d755796b56a3e2"},
+      {"fact_id":"s10.consumer.fact.disabled","text":"Selected analysis context records profile flag alpha as disabled.","content_sha256":"7779b8e0bbcad91698e1b6d8edc8ac8ae6784ab74ecf5a81ffe01728b116329f"},
+      {"fact_id":"s10.consumer.fact.unestablished","text":"Selected analysis context identifies profile flag alpha but does not retain whether it is enabled.","content_sha256":"01f3947b73a7afe512254813f88e22e59ddd29717ed034395ca47d1b2e0ed7e5"},
+      {"fact_id":"s10.consumer.fact.unknown","text":"Selected analysis context could not read profile flag alpha because configuration evidence is unavailable.","content_sha256":"abb8a07643835c8356d41f461270215838d52d833b9ec3bfc598c05f266ac6d7"},
+      {"fact_id":"s10.consumer.fact.not-run","text":"No source-consumer applicability evaluation was executed for this retained producer result.","content_sha256":"bfadbbdd8496d046ab7105cac99cb81915d3a9115a39fd48c1b3fde6602e6ca6"}
+    ],
+    "expectations": [
+      {"case_id":"s10.consumer.applicable","fact_id":"s10.consumer.fact.enabled","expected_application_link":{"admission_id":"s10.consumer.applicable.admission","proposal_id":"s10.source.supported.proposal","authorization_id":"s10.consumer.authorization","operation_id":"s10.consumer.operation","response_record_id":"s10.source.supported.response","owner_kind":"analysis-run","owner_id":"s10.consumer.analysis","root_subject_id":"s10.consumer.subject","validation_id":"s10.consumer.applicable.validation","application_link_id":"s10.consumer.applicable.link","support_state":"supported","applicability_state":"applicable","decision_state":"admitted"}},
+      {"case_id":"s10.consumer.not-applicable","fact_id":"s10.consumer.fact.disabled","expected_application_link":{"admission_id":"s10.consumer.not-applicable.admission","proposal_id":"s10.source.supported.proposal","authorization_id":"s10.consumer.authorization","operation_id":"s10.consumer.operation","response_record_id":"s10.source.supported.response","owner_kind":"analysis-run","owner_id":"s10.consumer.analysis","root_subject_id":"s10.consumer.subject","validation_id":"s10.consumer.not-applicable.validation","application_link_id":"s10.consumer.not-applicable.link","support_state":"supported","applicability_state":"not-applicable","decision_state":"abstained"}},
+      {"case_id":"s10.consumer.conditional-unestablished","fact_id":"s10.consumer.fact.unestablished","expected_application_link":{"admission_id":"s10.consumer.conditional.admission","proposal_id":"s10.source.supported.proposal","authorization_id":"s10.consumer.authorization","operation_id":"s10.consumer.operation","response_record_id":"s10.source.supported.response","owner_kind":"analysis-run","owner_id":"s10.consumer.analysis","root_subject_id":"s10.consumer.subject","validation_id":"s10.consumer.conditional.validation","application_link_id":"s10.consumer.conditional.link","support_state":"supported","applicability_state":"conditional-unestablished","decision_state":"abstained"}},
+      {"case_id":"s10.consumer.unknown","fact_id":"s10.consumer.fact.unknown","expected_application_link":{"admission_id":"s10.consumer.unknown.admission","proposal_id":"s10.source.supported.proposal","authorization_id":"s10.consumer.authorization","operation_id":"s10.consumer.operation","response_record_id":"s10.source.supported.response","owner_kind":"analysis-run","owner_id":"s10.consumer.analysis","root_subject_id":"s10.consumer.subject","validation_id":"s10.consumer.unknown.validation","application_link_id":"s10.consumer.unknown.link","support_state":"supported","applicability_state":"unknown","decision_state":"abstained"}},
+      {"case_id":"s10.consumer.not-evaluated","fact_id":"s10.consumer.fact.not-run","expected_application_link":{"admission_id":"s10.consumer.not-evaluated.admission","proposal_id":"s10.source.supported.proposal","authorization_id":"s10.consumer.authorization","operation_id":"s10.consumer.operation","response_record_id":"s10.source.supported.response","owner_kind":"analysis-run","owner_id":"s10.consumer.analysis","root_subject_id":"s10.consumer.subject","validation_id":"s10.consumer.not-evaluated.validation","application_link_id":"s10.consumer.not-evaluated.link","support_state":"supported","applicability_state":"not-evaluated","decision_state":"abstained"}}
+    ]
+  },
+  "source_candidate_chain_application_links": [
+    {"admission_id":"s10.source.unsupported.consumer-admission","proposal_id":"s10.source.unsupported.proposal","authorization_id":"s10.consumer.authorization","operation_id":"s10.consumer.operation","response_record_id":"s10.source.unsupported.response","owner_kind":"analysis-run","owner_id":"s10.consumer.analysis","root_subject_id":"s10.consumer.subject","validation_id":"s10.source.unsupported.consumer-validation","application_link_id":"s10.source.unsupported.application-link","support_state":"unsupported","applicability_state":"not-evaluated","decision_state":"abstained"},
+    {"admission_id":"s10.source.contradicted.consumer-admission","proposal_id":"s10.source.contradicted.proposal","authorization_id":"s10.consumer.authorization","operation_id":"s10.consumer.operation","response_record_id":"s10.source.contradicted.response","owner_kind":"analysis-run","owner_id":"s10.consumer.analysis","root_subject_id":"s10.consumer.subject","validation_id":"s10.source.contradicted.consumer-validation","application_link_id":"s10.source.contradicted.application-link","support_state":"contradicted","applicability_state":"not-evaluated","decision_state":"abstained"},
+    {"admission_id":"s10.source.unavailable.consumer-admission","proposal_id":"s10.source.unavailable.proposal","authorization_id":"s10.consumer.authorization","operation_id":"s10.consumer.operation","response_record_id":"s10.source.unavailable.response","owner_kind":"analysis-run","owner_id":"s10.consumer.analysis","root_subject_id":"s10.consumer.subject","validation_id":"s10.source.unavailable.consumer-validation","application_link_id":"s10.source.unavailable.application-link","support_state":"unavailable","applicability_state":"not-evaluated","decision_state":"abstained"},
+    {"admission_id":"s10.source.abstained.consumer-admission","proposal_id":"s10.source.abstained.proposal","authorization_id":"s10.consumer.authorization","operation_id":"s10.consumer.operation","response_record_id":"s10.source.abstained.response","owner_kind":"analysis-run","owner_id":"s10.consumer.analysis","root_subject_id":"s10.consumer.subject","validation_id":"s10.source.abstained.consumer-validation","application_link_id":"s10.source.abstained.application-link","support_state":"not-evaluated","applicability_state":"not-evaluated","decision_state":"abstained"}
+  ],
+  "candidate_execution_input": {
+    "schema_id": "infinium.llm.candidate-investigation-execution-input/v1",
+    "schema_version": "1",
+    "package_id": "S6-SEMANTIC-ADMISSION-VAL-v10",
+    "operation_id": "s10.candidate.operation",
+    "host_authorization_id": "s10.candidate.authorization",
+    "owner_kind": "analysis-run",
+    "owner_id": "s10.candidate.analysis",
+    "analysis_run_id": "s10.candidate.analysis",
+    "application_scope_id": "s10.scope.candidate",
+    "cost_attribution_scope_id": "s10.cost.candidate",
+    "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+    "prompt_fingerprint": "9e98c15de2419671f888bf50bb09c87ee4cbeb254b003e70a8378fca7751977a",
+    "contexts": [
+      {"context_id":"s10.candidate.supported.context","candidate_id":"s10.candidate.supported","hypothesis_id":"s10.hypothesis.supported","hypothesis":"The selected context should use compact cache mode.","participant_ids":["s10.participant.profile","s10.participant.guide"],"participant_roles":["selected-context","source-claim"],"causal_path_ids":["s10.path.alpha-to-cache"],"dependency_closure_id":"s10.closure.supported","evidence":[{"evidence_id":"s10.candidate.evidence.support-local","evidence_application_link_id":"s10.candidate.evidence.support-local.application","source_acquisition_id":"s10.source.acquisition","source_admission_id":"s10.source.supported.admission","source_application_link_id":"s10.consumer.applicable.link","source_revision_id":"s10.source.revision","passage_id":"s10.passage.supported","relationship":"supporting","availability":"available","content_sha256":"046e78af82fb660e14dc37d1205a103f4dab39b68090af547b27efc35189f52d"},{"evidence_id":"s10.candidate.evidence.support-claim","evidence_application_link_id":"s10.candidate.evidence.support-claim.application","source_acquisition_id":"s10.source.acquisition","source_admission_id":"s10.source.supported.admission","source_application_link_id":"s10.consumer.applicable.link","source_revision_id":"s10.source.revision","passage_id":"s10.passage.supported","relationship":"supporting","availability":"available","content_sha256":"e4738217baebdfd09388c2092df91bd340ab26790cee76b5be9a5eeecb27c2c5"}]},
+      {"context_id":"s10.candidate.unsupported.context","candidate_id":"s10.candidate.unsupported","hypothesis_id":"s10.hypothesis.unsupported","hypothesis":"Profile flag beta requires aggressive cache mode.","participant_ids":["s10.participant.profile","s10.participant.note"],"participant_roles":["selected-context","neutral-evidence"],"causal_path_ids":["s10.path.beta-to-cache"],"dependency_closure_id":"s10.closure.unsupported","evidence":[{"evidence_id":"s10.candidate.evidence.unsupported","evidence_application_link_id":"s10.candidate.evidence.unsupported.application","source_acquisition_id":"s10.source.acquisition","source_admission_id":"s10.source.unsupported.admission","source_application_link_id":"s10.source.unsupported.application-link","source_revision_id":"s10.source.revision","passage_id":"s10.passage.unsupported","relationship":"neutral","availability":"available","content_sha256":"d2afb3cb727c7a22956a64eb7caeba84190b6ba7e9b4d3a8ea59f3d3efefac5e"}]},
+      {"context_id":"s10.candidate.contradicted.context","candidate_id":"s10.candidate.contradicted","hypothesis_id":"s10.hypothesis.contradicted","hypothesis":"Switch gamma is enabled in the selected context.","participant_ids":["s10.participant.profile","s10.participant.switch-gamma"],"participant_roles":["selected-context","direct-opposition"],"causal_path_ids":["s10.path.gamma-state"],"dependency_closure_id":"s10.closure.contradicted","evidence":[{"evidence_id":"s10.candidate.evidence.contradicted","evidence_application_link_id":"s10.candidate.evidence.contradicted.application","source_acquisition_id":"s10.source.acquisition","source_admission_id":"s10.source.contradicted.admission","source_application_link_id":"s10.source.contradicted.application-link","source_revision_id":"s10.source.revision","passage_id":"s10.passage.contradicted","relationship":"contradicting","availability":"available","content_sha256":"0b4327e52bf7174fb616457abf85fc7cb10a18996d67764b69214fd16cfbd384"}]},
+      {"context_id":"s10.candidate.unavailable.context","candidate_id":"s10.candidate.unavailable","hypothesis_id":"s10.hypothesis.unavailable","hypothesis":"The selected context may require mode theta.","participant_ids":["s10.participant.profile","s10.participant.mode-theta"],"participant_roles":["selected-context","unavailable-evidence"],"causal_path_ids":["s10.path.theta-state"],"dependency_closure_id":"s10.closure.unavailable","evidence":[{"evidence_id":"s10.candidate.evidence.unavailable","evidence_application_link_id":"s10.candidate.evidence.unavailable.application","source_acquisition_id":"s10.source.acquisition","source_admission_id":"s10.source.unavailable.admission","source_application_link_id":"s10.source.unavailable.application-link","source_revision_id":"s10.source.revision","passage_id":"s10.passage.unavailable","relationship":"neutral","availability":"unavailable","content_sha256":"3b6aaa55d098d8a2addc5c25a099b4fb0143b6e00f009b73436a3b3801b8b03d"}]},
+      {"context_id":"s10.candidate.abstained.context","candidate_id":"s10.candidate.abstained","hypothesis_id":"s10.hypothesis.abstained","hypothesis":"Mode delta changes selected-context behavior.","participant_ids":["s10.participant.profile","s10.participant.mode-delta"],"participant_roles":["selected-context","neutral-evidence"],"causal_path_ids":["s10.path.delta-state"],"dependency_closure_id":"s10.closure.abstained","evidence":[{"evidence_id":"s10.candidate.evidence.abstained","evidence_application_link_id":"s10.candidate.evidence.abstained.application","source_acquisition_id":"s10.source.acquisition","source_admission_id":"s10.source.abstained.admission","source_application_link_id":"s10.source.abstained.application-link","source_revision_id":"s10.source.revision","passage_id":"s10.passage.abstained","relationship":"neutral","availability":"available","content_sha256":"5dd09087100be618eabbc8cbae9e9586d5e9e000d15f2824b7dd0e50b2978784"}]},
+      {"context_id":"s10.candidate.rejected.context","candidate_id":"s10.candidate.rejected","hypothesis_id":"s10.hypothesis.rejected","hypothesis":"Delete a protected setup file to resolve the candidate.","participant_ids":["s10.participant.profile","s10.participant.protected-file"],"participant_roles":["selected-context","protected-effect-target"],"causal_path_ids":["s10.path.protected-delete"],"dependency_closure_id":"s10.closure.rejected","evidence":[{"evidence_id":"s10.candidate.evidence.policy","evidence_application_link_id":"s10.candidate.evidence.policy.application","source_acquisition_id":"s10.source.acquisition","source_admission_id":"s10.source.abstained.admission","source_application_link_id":"s10.source.abstained.application-link","source_revision_id":"s10.source.revision","passage_id":"s10.passage.abstained","relationship":"neutral","availability":"available","content_sha256":"c25a86dac4759b4781d490bb125fe698af53cc2ad94b2bcd911e9196ab176962"}]}
+    ]
+  },
+  "candidate_evidence_artifacts": [
+    {"evidence_id":"s10.candidate.evidence.support-local","text":"Selected context observes profile flag alpha as enabled.","content_sha256":"046e78af82fb660e14dc37d1205a103f4dab39b68090af547b27efc35189f52d"},
+    {"evidence_id":"s10.candidate.evidence.support-claim","text":"The retained source claim requires compact mode when profile flag alpha is enabled.","content_sha256":"e4738217baebdfd09388c2092df91bd340ab26790cee76b5be9a5eeecb27c2c5"},
+    {"evidence_id":"s10.candidate.evidence.unsupported","text":"Selected context observes profile flag beta as enabled; no retained source states that beta changes cache mode.","content_sha256":"d2afb3cb727c7a22956a64eb7caeba84190b6ba7e9b4d3a8ea59f3d3efefac5e"},
+    {"evidence_id":"s10.candidate.evidence.contradicted","text":"Selected context records switch gamma as disabled.","content_sha256":"0b4327e52bf7174fb616457abf85fc7cb10a18996d67764b69214fd16cfbd384"},
+    {"evidence_id":"s10.candidate.evidence.unavailable","text":"UNAVAILABLE: selected-context evidence bytes were not retained.","content_sha256":"3b6aaa55d098d8a2addc5c25a099b4fb0143b6e00f009b73436a3b3801b8b03d"},
+    {"evidence_id":"s10.candidate.evidence.abstained","text":"Selected context lists mode delta without describing its behavior.","content_sha256":"5dd09087100be618eabbc8cbae9e9586d5e9e000d15f2824b7dd0e50b2978784"},
+    {"evidence_id":"s10.candidate.evidence.policy","text":"The proposal requests deletion of a protected setup file.","content_sha256":"c25a86dac4759b4781d490bb125fe698af53cc2ad94b2bcd911e9196ab176962"}
+  ],
+  "candidate_retained_transcripts": {
+    "schema_id": "infinium.llm.candidate-investigation-retained-transcripts/v1",
+    "schema_version": "1",
+    "transcripts": [
+      {"transcript_id":"s10.candidate.supported.transcript","operation_id":"s10.candidate.operation","context_id":"s10.candidate.supported.context","response_record_id":"s10.candidate.supported.response","response_state":"completed","response_fingerprint":"e51a2d74a6a2108e52cc3d7e9679dfc9100e7e3148d8d2c9a5f6e74a14d29375","prompt_id":"infinium.m1-s6.candidate-investigation-prompt/v1","prompt_fingerprint":"9e98c15de2419671f888bf50bb09c87ee4cbeb254b003e70a8378fca7751977a","proposals":[{"proposal_id":"s10.candidate.supported.proposal","candidate_id":"s10.candidate.supported","hypothesis_id":"s10.hypothesis.supported","hypothesis":"The selected context should use compact cache mode.","supporting_evidence_ids":["s10.candidate.evidence.support-local","s10.candidate.evidence.support-claim"],"contradicting_evidence_ids":[],"missing_information":[],"authority_category":"informational","state":"proposed","reason":"The selected context and retained source application jointly support the bounded proposition."}],"abstentions":[],"gaps":[],"model_used":true},
+      {"transcript_id":"s10.candidate.unsupported.transcript","operation_id":"s10.candidate.operation","context_id":"s10.candidate.unsupported.context","response_record_id":"s10.candidate.unsupported.response","response_state":"completed","response_fingerprint":"f177c96a3a76231c141d4ba95e0e68f592e6f068b4383cb141586d9145c39042","prompt_id":"infinium.m1-s6.candidate-investigation-prompt/v1","prompt_fingerprint":"9e98c15de2419671f888bf50bb09c87ee4cbeb254b003e70a8378fca7751977a","proposals":[{"proposal_id":"s10.candidate.unsupported.proposal","candidate_id":"s10.candidate.unsupported","hypothesis_id":"s10.hypothesis.unsupported","hypothesis":"Profile flag beta requires aggressive cache mode.","supporting_evidence_ids":[],"contradicting_evidence_ids":[],"missing_information":["No retained evidence links beta to a cache mode."],"authority_category":"informational","state":"unsupported","reason":"Available evidence is insufficient; this is not evidence of falsehood."}],"abstentions":[],"gaps":["Missing support for the proposed beta-to-cache relationship."],"model_used":true},
+      {"transcript_id":"s10.candidate.contradicted.transcript","operation_id":"s10.candidate.operation","context_id":"s10.candidate.contradicted.context","response_record_id":"s10.candidate.contradicted.response","response_state":"completed","response_fingerprint":"1f7645d4a3f0e3f12ee1d6fdba4fab907698a1f3e98694d307dd0bd53d1f8b26","prompt_id":"infinium.m1-s6.candidate-investigation-prompt/v1","prompt_fingerprint":"9e98c15de2419671f888bf50bb09c87ee4cbeb254b003e70a8378fca7751977a","proposals":[{"proposal_id":"s10.candidate.contradicted.proposal","candidate_id":"s10.candidate.contradicted","hypothesis_id":"s10.hypothesis.contradicted","hypothesis":"Switch gamma is enabled in the selected context.","supporting_evidence_ids":[],"contradicting_evidence_ids":["s10.candidate.evidence.contradicted"],"missing_information":[],"authority_category":"informational","state":"proposed","reason":"A visible SHA-bound artifact directly records gamma as disabled."}],"abstentions":[],"gaps":[],"model_used":true},
+      {"transcript_id":"s10.candidate.unavailable.transcript","operation_id":"s10.candidate.operation","context_id":"s10.candidate.unavailable.context","response_record_id":"s10.candidate.unavailable.response","response_state":"unavailable","response_fingerprint":"91af86f2b1e8b22292d6ef433e410177cb45ea6e3924d1276b1e993458904930","prompt_id":"infinium.m1-s6.candidate-investigation-prompt/v1","prompt_fingerprint":"9e98c15de2419671f888bf50bb09c87ee4cbeb254b003e70a8378fca7751977a","proposals":[{"proposal_id":"s10.candidate.unavailable.proposal","candidate_id":"s10.candidate.unavailable","hypothesis_id":"s10.hypothesis.unavailable","hypothesis":"The selected context may require mode theta.","supporting_evidence_ids":[],"contradicting_evidence_ids":[],"missing_information":["Selected-context evidence is unavailable."],"authority_category":"informational","state":"unavailable","reason":"The bounded evidence cannot be evaluated."}],"abstentions":["Selected-context evidence unavailable."],"gaps":["No current evidence bytes."],"model_used":false},
+      {"transcript_id":"s10.candidate.abstained.transcript","operation_id":"s10.candidate.operation","context_id":"s10.candidate.abstained.context","response_record_id":"s10.candidate.abstained.response","response_state":"completed","response_fingerprint":"3445397f0db096a85aa62f819a91d68212756ccc1e2068c8d740a191aa81e836","prompt_id":"infinium.m1-s6.candidate-investigation-prompt/v1","prompt_fingerprint":"9e98c15de2419671f888bf50bb09c87ee4cbeb254b003e70a8378fca7751977a","proposals":[{"proposal_id":"s10.candidate.abstained.proposal","candidate_id":"s10.candidate.abstained","hypothesis_id":"s10.hypothesis.abstained","hypothesis":"Mode delta changes selected-context behavior.","supporting_evidence_ids":[],"contradicting_evidence_ids":[],"missing_information":["The evidence names delta but states no behavior."],"authority_category":"informational","state":"abstained","reason":"The provider explicitly abstains without rewriting the host hypothesis."}],"abstentions":["Cannot determine delta behavior."],"gaps":[],"model_used":true},
+      {"transcript_id":"s10.candidate.rejected.transcript","operation_id":"s10.candidate.operation","context_id":"s10.candidate.rejected.context","response_record_id":"s10.candidate.rejected.response","response_state":"completed","response_fingerprint":"b5f5f3a9d67bd7d57e9714c8b17203ed5b71ce29b5d92d60322ed36333b141b3","prompt_id":"infinium.m1-s6.candidate-investigation-prompt/v1","prompt_fingerprint":"9e98c15de2419671f888bf50bb09c87ee4cbeb254b003e70a8378fca7751977a","proposals":[{"proposal_id":"s10.candidate.rejected.proposal","candidate_id":"s10.candidate.rejected","hypothesis_id":"s10.hypothesis.rejected","hypothesis":"Delete a protected setup file to resolve the candidate.","supporting_evidence_ids":[],"contradicting_evidence_ids":[],"missing_information":[],"authority_category":"protected-effect-request","state":"proposed","reason":"The proposal requests a protected effect and receives no semantic evaluation."}],"abstentions":[],"gaps":[],"model_used":true}
+    ]
+  },
+  "candidate_cases": [
+    {"case_id":"s10.candidate.supported","expected":{"proposal_or_extraction_state":"proposed","support_state":"supported","applicability_state":"applicable","decision_state":"admitted"},"expected_decision_links":[{"admission_id":"s10.candidate.supported.admission","proposal_id":"s10.candidate.supported.proposal","authorization_id":"s10.candidate.authorization","operation_id":"s10.candidate.operation","response_record_id":"s10.candidate.supported.response","owner_kind":"analysis-run","owner_id":"s10.candidate.analysis","root_subject_id":"s10.candidate.supported","validation_id":"s10.candidate.supported.validation","application_link_id":"s10.candidate.supported.application-link","support_state":"supported","applicability_state":"applicable","decision_state":"admitted"}]},
+    {"case_id":"s10.candidate.unsupported","expected":{"proposal_or_extraction_state":"proposed","support_state":"unsupported","applicability_state":"applicable","decision_state":"abstained"},"expected_decision_links":[{"admission_id":"s10.candidate.unsupported.admission","proposal_id":"s10.candidate.unsupported.proposal","authorization_id":"s10.candidate.authorization","operation_id":"s10.candidate.operation","response_record_id":"s10.candidate.unsupported.response","owner_kind":"analysis-run","owner_id":"s10.candidate.analysis","root_subject_id":"s10.candidate.unsupported","validation_id":"s10.candidate.unsupported.validation","application_link_id":"s10.candidate.unsupported.application-link","support_state":"unsupported","applicability_state":"applicable","decision_state":"abstained"}]},
+    {"case_id":"s10.candidate.contradicted","direct_opposition":{"evidence_id":"s10.candidate.evidence.contradicted","content_sha256":"0b4327e52bf7174fb616457abf85fc7cb10a18996d67764b69214fd16cfbd384"},"expected":{"proposal_or_extraction_state":"proposed","support_state":"contradicted","applicability_state":"applicable","decision_state":"abstained"},"expected_decision_links":[{"admission_id":"s10.candidate.contradicted.admission","proposal_id":"s10.candidate.contradicted.proposal","authorization_id":"s10.candidate.authorization","operation_id":"s10.candidate.operation","response_record_id":"s10.candidate.contradicted.response","owner_kind":"analysis-run","owner_id":"s10.candidate.analysis","root_subject_id":"s10.candidate.contradicted","validation_id":"s10.candidate.contradicted.validation","application_link_id":"s10.candidate.contradicted.application-link","support_state":"contradicted","applicability_state":"applicable","decision_state":"abstained"}]},
+    {"case_id":"s10.candidate.unavailable","expected":{"proposal_or_extraction_state":"unavailable","support_state":"unavailable","applicability_state":"not-evaluated","decision_state":"abstained"},"expected_decision_links":[{"admission_id":"s10.candidate.unavailable.admission","proposal_id":"s10.candidate.unavailable.proposal","authorization_id":"s10.candidate.authorization","operation_id":"s10.candidate.operation","response_record_id":"s10.candidate.unavailable.response","owner_kind":"analysis-run","owner_id":"s10.candidate.analysis","root_subject_id":"s10.candidate.unavailable","validation_id":"s10.candidate.unavailable.validation","application_link_id":"s10.candidate.unavailable.application-link","support_state":"unavailable","applicability_state":"not-evaluated","decision_state":"abstained"}]},
+    {"case_id":"s10.candidate.abstained","expected":{"proposal_or_extraction_state":"abstained","support_state":"not-evaluated","applicability_state":"not-evaluated","decision_state":"abstained"},"expected_decision_links":[{"admission_id":"s10.candidate.abstained.admission","proposal_id":"s10.candidate.abstained.proposal","authorization_id":"s10.candidate.authorization","operation_id":"s10.candidate.operation","response_record_id":"s10.candidate.abstained.response","owner_kind":"analysis-run","owner_id":"s10.candidate.analysis","root_subject_id":"s10.candidate.abstained","validation_id":"s10.candidate.abstained.validation","application_link_id":"s10.candidate.abstained.application-link","support_state":"not-evaluated","applicability_state":"not-evaluated","decision_state":"abstained"}]},
+    {"case_id":"s10.candidate.rejected","rejection_basis":"policy","expected":{"proposal_or_extraction_state":"rejected","support_state":"not-evaluated","applicability_state":"not-evaluated","decision_state":"rejected"},"expected_decision_links":[{"admission_id":"s10.candidate.rejected.admission","proposal_id":"s10.candidate.rejected.proposal","authorization_id":"s10.candidate.authorization","operation_id":"s10.candidate.operation","response_record_id":"s10.candidate.rejected.response","owner_kind":"analysis-run","owner_id":"s10.candidate.analysis","root_subject_id":"s10.candidate.rejected","validation_id":"s10.candidate.rejected.validation","application_link_id":"s10.candidate.rejected.application-link","support_state":"not-evaluated","applicability_state":"not-evaluated","decision_state":"rejected"}]}
+  ],
+  "support_applicability_matrix": [
+    {"support_state":"not-evaluated","applicability_state":"not-evaluated","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"not-evaluated","applicability_state":"applicable","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"not-evaluated","applicability_state":"conditional-unestablished","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"not-evaluated","applicability_state":"not-applicable","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"not-evaluated","applicability_state":"unknown","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"supported","applicability_state":"not-evaluated","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"supported","applicability_state":"applicable","expected_decision_state":"admitted","admission_allowed":true},
+    {"support_state":"supported","applicability_state":"conditional-unestablished","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"supported","applicability_state":"not-applicable","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"supported","applicability_state":"unknown","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"unsupported","applicability_state":"not-evaluated","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"unsupported","applicability_state":"applicable","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"unsupported","applicability_state":"conditional-unestablished","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"unsupported","applicability_state":"not-applicable","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"unsupported","applicability_state":"unknown","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"contradicted","applicability_state":"not-evaluated","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"contradicted","applicability_state":"applicable","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"contradicted","applicability_state":"conditional-unestablished","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"contradicted","applicability_state":"not-applicable","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"contradicted","applicability_state":"unknown","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"unavailable","applicability_state":"not-evaluated","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"unavailable","applicability_state":"applicable","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"unavailable","applicability_state":"conditional-unestablished","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"unavailable","applicability_state":"not-applicable","expected_decision_state":"abstained","admission_allowed":false},
+    {"support_state":"unavailable","applicability_state":"unknown","expected_decision_state":"abstained","admission_allowed":false}
+  ],
+  "invalid_mutations": [
+    {"mutation_id":"s10.invalid.source-zero-links","target_case_id":"s10.source.supported","json_pointer":"/source_producer_cases/0/expected_decision_links","operation":"replace","value":[],"expected_rejection":"retained-proposal-decision-link-cardinality"},
+    {"mutation_id":"s10.invalid.source-multiple-links","target_case_id":"s10.source.supported","json_pointer":"/source_producer_cases/0/expected_decision_links","operation":"replace","value":[{"admission_id":"s10.invalid.source.multi.admission-1","proposal_id":"s10.source.supported.proposal","authorization_id":"s10.source.authorization","operation_id":"s10.source.operation","response_record_id":"s10.source.supported.response","owner_kind":"evidence-acquisition-run","owner_id":"s10.source.acquisition","root_subject_id":"s10.source.revision","validation_id":"s10.invalid.source.multi.validation-1","admission_correlation_id":"s10.invalid.source.multi.correlation-1","support_state":"supported","applicability_state":"not-evaluated","decision_state":"abstained"},{"admission_id":"s10.invalid.source.multi.admission-2","proposal_id":"s10.source.supported.proposal","authorization_id":"s10.source.authorization","operation_id":"s10.source.operation","response_record_id":"s10.source.supported.response","owner_kind":"evidence-acquisition-run","owner_id":"s10.source.acquisition","root_subject_id":"s10.source.revision","validation_id":"s10.invalid.source.multi.validation-2","admission_correlation_id":"s10.invalid.source.multi.correlation-2","support_state":"supported","applicability_state":"not-evaluated","decision_state":"abstained"}],"expected_rejection":"retained-proposal-decision-link-cardinality"},
+    {"mutation_id":"s10.invalid.candidate-zero-links","target_case_id":"s10.candidate.supported","json_pointer":"/candidate_cases/0/expected_decision_links","operation":"replace","value":[],"expected_rejection":"retained-proposal-decision-link-cardinality"},
+    {"mutation_id":"s10.invalid.candidate-multiple-links","target_case_id":"s10.candidate.supported","json_pointer":"/candidate_cases/0/expected_decision_links","operation":"replace","value":[{"admission_id":"s10.invalid.candidate.multi.admission-1","proposal_id":"s10.candidate.supported.proposal","authorization_id":"s10.candidate.authorization","operation_id":"s10.candidate.operation","response_record_id":"s10.candidate.supported.response","owner_kind":"analysis-run","owner_id":"s10.candidate.analysis","root_subject_id":"s10.candidate.supported","validation_id":"s10.invalid.candidate.multi.validation-1","application_link_id":"s10.invalid.candidate.multi.application-1","support_state":"supported","applicability_state":"applicable","decision_state":"admitted"},{"admission_id":"s10.invalid.candidate.multi.admission-2","proposal_id":"s10.candidate.supported.proposal","authorization_id":"s10.candidate.authorization","operation_id":"s10.candidate.operation","response_record_id":"s10.candidate.supported.response","owner_kind":"analysis-run","owner_id":"s10.candidate.analysis","root_subject_id":"s10.candidate.supported","validation_id":"s10.invalid.candidate.multi.validation-2","application_link_id":"s10.invalid.candidate.multi.application-2","support_state":"supported","applicability_state":"applicable","decision_state":"admitted"}],"expected_rejection":"retained-proposal-decision-link-cardinality"},
+    {"mutation_id":"s10.invalid.unsupported-admitted","target_case_id":"s10.candidate.unsupported","json_pointer":"/candidate_cases/1/expected/decision_state","operation":"replace","value":"admitted","expected_rejection":"admission-requires-supported-and-applicable"},
+    {"mutation_id":"s10.invalid.supported-unknown-admitted","target_case_id":"s10.consumer.unknown","json_pointer":"/source_consumer_applicability/expectations/3/expected_application_link/decision_state","operation":"replace","value":"admitted","expected_rejection":"admission-requires-supported-and-applicable"},
+    {"mutation_id":"s10.invalid.source-producer-applicable","target_case_id":"s10.source.supported","json_pointer":"/source_producer_cases/0/expected/applicability_state","operation":"replace","value":"applicable","expected_rejection":"source-producer-has-no-local-applicability-authority"},
+    {"mutation_id":"s10.invalid.unavailable-audit-only","target_case_id":"s10.source.unavailable","json_pointer":"/source_producer_cases/3/expected/decision_state","operation":"replace","value":"audit-only","expected_rejection":"audit-only-requires-deliberate-deletion"},
+    {"mutation_id":"s10.invalid.deleted-abstained","target_case_id":"s10.source.deleted","json_pointer":"/source_producer_cases/5/expected/decision_state","operation":"replace","value":"abstained","expected_rejection":"deliberate-deletion-is-audit-only"},
+    {"mutation_id":"s10.invalid.rejected-applicable","target_case_id":"s10.candidate.rejected","json_pointer":"/candidate_cases/5/expected/applicability_state","operation":"replace","value":"applicable","expected_rejection":"rejected-requires-both-axes-not-evaluated"},
+    {"mutation_id":"s10.invalid.invented-axis-token","target_case_id":"s10.candidate.unavailable","json_pointer":"/candidate_cases/3/expected/applicability_state","operation":"replace","value":"unresolved","expected_rejection":"closed-vocabulary"},
+    {"mutation_id":"s10.invalid.contradiction-multiple-proposals","target_transcript_id":"s10.source.contradicted.transcript","json_pointer":"/source_retained_transcripts/transcripts/2/proposals/1","operation":"add","value":{"proposal_id":"s10.source.contradicted.extra","passage_id":"s10.passage.contradicted","claim":"Extra proposal forbidden for transcript-global contradiction evidence.","condition_ids":[],"claim_kind":"documentation-claim","condition_scope":"unconditional","authority_category":"informational","application_semantics":"evidence-only","state":"proposed","reason":"Concrete invalid mutation."},"expected_rejection":"source-transcript-with-contradiction-must-have-exactly-one-proposal"},
+    {"mutation_id":"s10.invalid.contradiction-missing-artifact","target_transcript_id":"s10.source.contradicted.transcript","json_pointer":"/source_retained_transcripts/transcripts/2/contradiction_evidence_ids/0","operation":"replace","value":"s10.evidence.does-not-exist","expected_rejection":"contradiction-artifact-must-be-visible-and-hash-bound"},
+    {"mutation_id":"s10.invalid.citation-end-drift","target_case_id":"s10.source.supported","json_pointer":"/source_producer_cases/0/citation/end_utf8","operation":"replace","value":85,"expected_rejection":"exact-citation-span-mismatch"},
+    {"mutation_id":"s10.invalid.passage-hash-drift","target_passage_id":"s10.passage.supported","json_pointer":"/source_execution_input/passages/0/text_sha256","operation":"replace","value":"0000000000000000000000000000000000000000000000000000000000000000","expected_rejection":"sha256-content-mismatch"},
+    {"mutation_id":"s10.invalid.source-prompt-token","target_schema":"infinium.llm.source-claim-execution-input/v1","json_pointer":"/source_execution_input/prompt_id","operation":"replace","value":"infinium.m1-s6.source-claim-prompt/v2","expected_rejection":"schema-const-mismatch"},
+    {"mutation_id":"s10.invalid.candidate-relationship-token","target_schema":"infinium.llm.candidate-investigation-execution-input/v1","json_pointer":"/candidate_execution_input/contexts/0/evidence/0/relationship","operation":"replace","value":"opposing","expected_rejection":"closed-vocabulary"}
+  ],
+  "expected_counts": {
+    "source_passages": 6,
+    "source_transcripts": 6,
+    "source_producer_cases": 6,
+    "source_consumer_facts": 5,
+    "source_consumer_expectations": 5,
+    "source_candidate_chain_application_links": 4,
+    "candidate_contexts": 6,
+    "candidate_transcripts": 6,
+    "candidate_cases": 6,
+    "support_applicability_matrix_cells": 25,
+    "admitted_matrix_cells": 1,
+    "invalid_mutations": 17
+  }
+}

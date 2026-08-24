@@ -1,9 +1,9 @@
 # M1 Slice 6
 
 Status: Accepted
-Disposition: Live effects and accounting are closed and immutable; the effect-free prompt-fidelity and semantic-admission correction is complete and review-ready, with owner acceptance and contract freeze pending
+Disposition: Live effects and accounting are closed and immutable; product conformance remains implementation-active, independent semantic-oracle qualification is deferred through M2, and owner acceptance and contract freeze remain pending
 
-Last reviewed: 2026-08-22
+Last reviewed: 2026-08-23
 
 Live authorization is stated only in
 [current project state](../../../../../current-state.md). This entry routes to
@@ -20,7 +20,8 @@ chronology.
 - [Accepted lean continuation plan](continuation-plan.md), superseding post-R2
   orchestration only after activation
 - [Accepted M1 process-continuation amendment](../../amendments/process-continuation.md)
-- [M1 continuation verification profile](../../../../../evaluation/m1-continuation-verification-profile.md)
+- [Accepted semantic-oracle deferral amendment](../../amendments/semantic-oracle-deferral.md)
+- [M1/M2 product-conformance verification profile](../../../../../evaluation/m1-continuation-verification-profile.md)
 - [Replacement C2 inert authority-package report](c2-replacement-authority-package-report.md),
   whose exact package commit and digest are now owner-accepted
 - [Replacement C2 typed package](m1-slice6-c2-replacement-authority-package.v2.json),
@@ -81,13 +82,18 @@ contradicted requires direct opposing evidence; abstained publishes no host
 conclusion. Schema 9/storage `1.8.0`, producers, consumers, backup/restore,
 replay, schemas/codecs, and tests carry those distinctions together.
 
-The answer-isolated `S6-SEMANTIC-ADMISSION-VAL-v1` package independently covers
-five source and five candidate cases. Registry v3 adds that authority while
-preserving the exact v1/v2 packages through fixture-reader-only projections.
-The complete review and accepted non-live floor passed without changing any
-retained response, ledger event, accounting fact, or prior evidence. The next
-gate is owner acceptance and contract freeze. No provider or credential effect
-is authorized, and Slice 7 remains unopened.
+Public semantic-admission packages v1-v13 are retained as historical
+non-authorizing development evidence. They remain byte/hash and manifest
+visible but are not current validation authority and are not compared with
+product output. The unaccepted v14 draft was removed without semantic review,
+registration, comparison, or archival. No successor may be authored before an
+accepted M3 plan reactivates evaluation after M2 acceptance.
+
+The current next gate is a separate fresh-agent Slice 6 product closeout under
+the six-layer product-conformance profile. It must review and correct the
+existing implementation without changing retained live requests, responses,
+evidence, ledgers, accounting, credentials, or external-effect state. Slice 6
+remains implementation-active and not accepted; Slice 7 remains unopened.
 
 ## Accepted baseline and retained execution history
 

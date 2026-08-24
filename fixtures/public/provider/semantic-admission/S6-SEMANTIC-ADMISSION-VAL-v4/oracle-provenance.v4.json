@@ -1,0 +1,113 @@
+{
+  "$schema": "infinium.public.semantic-admission-oracle-provenance/v4",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v4",
+  "oracle_id": "infinium.m1.s6.semantic-admission-validation/v4",
+  "fixture_partition": "validation",
+  "public_answer_isolation": "independently-authored",
+  "authorship": {
+    "stable_author_id": "semantic-oracle-v4-clean-room-author-20260822",
+    "author_role": "independent public semantic-oracle author",
+    "authored_date": "2026-08-22",
+    "authored_at_utc": "2026-08-22T23:26:05.8894260Z",
+    "corrected_at_utc": "2026-08-22T23:39:38.4519050Z",
+    "citation_binding_corrected_at_utc": "2026-08-22T23:47:21.5409021Z"
+  },
+  "comparison_state": {
+    "state": "not-compared",
+    "not_compared_through_utc": "2026-08-22T23:47:21.5409021Z",
+    "product_implementation_inspected": false,
+    "product_tests_inspected": false,
+    "product_output_inspected": false,
+    "prior_semantic_admission_packages_inspected": false,
+    "comparison_executed": false
+  },
+  "authoring_authority": [
+    "docs/README.md",
+    "docs/current-state.md",
+    "docs/execution-policy.md",
+    "docs/architecture/decisions/ADR-0034-prompt-fidelity-and-semantic-admission-axes.md",
+    "docs/plans/milestones/m1/README.md",
+    "docs/plans/milestones/m1/plan.md",
+    "docs/plans/milestones/m1/slices/s6/README.md",
+    "docs/plans/milestones/m1/slices/s6/plan.md",
+    "docs/evaluation/evaluation-strategy.md",
+    "docs/evaluation/case-catalog.md",
+    "docs/evaluation/fixture-guidelines.md",
+    "docs/evaluation/anti-overfitting-rules.md",
+    "docs/evaluation/m1-continuation-verification-profile.md"
+  ],
+  "excluded_material": [
+    "product implementation",
+    "product tests",
+    "product output",
+    "S6 semantic-admission packages v1, v2, and v3",
+    "private fixtures and private answers",
+    "retained live responses and effect evidence",
+    "credentials and credential stores",
+    "legacy or evaluator archives",
+    "network sources",
+    "Git history"
+  ],
+  "construction_boundary": {
+    "method": "clean-room manual semantic derivation from accepted public authority",
+    "input_style": "neutral self-contained source-passage objects with passage and span identities or candidate inputs, raw provider claim/proposal or abstention payloads, bounded observations, local condition facts, structural or policy defect bytes, and explicit missing/deleted payload facts; no real mod, fixture, file, or record names and no expected axis or host-decision labels in product inputs",
+    "expected_truth_source": "accepted semantic rules applied to independently authored raw case relationships; every source claim citation resolves to exactly one identified span before faithful extraction is authorable, unknown citations are structural failures, and deleted cases resolve exact byte-length and SHA-256 bindings to oracle-only pre-deletion material excluded from raw product input",
+    "self_contained_relationships": "Each live source case contains its neutral passage_id, span_id, span text, provider claim or abstention payload, and citation relationship. The deleted source case binds exact pre-deletion passage-object and provider bytes and a prior receipt naming the same passage_id, span_id, and provider citation.",
+    "product_output_used_as_truth": false,
+    "network_used": false,
+    "private_material_used": false,
+    "comparison_performed": false
+  },
+  "coverage": {
+    "operation_kinds": [
+      "source-claim",
+      "candidate-investigation"
+    ],
+    "surface_roles": [
+      "producer",
+      "consumer"
+    ],
+    "support_applicability_cross_axis_rows": 25,
+    "valid_cases": 22,
+    "invalid_cases": 18,
+    "answer_free_raw_product_input_cases": 22,
+    "oracle_only_deleted_payload_bindings": 4,
+    "faithfully_extracted_source_citation_bindings": 9,
+    "unknown_citation_structural_rejections": 1,
+    "required_boundaries": [
+      "faithful source extraction is not downstream truth",
+      "candidate proposal is not host authority",
+      "source citations resolve to exactly one bound passage span",
+      "unknown source citations are structurally rejected",
+      "proposal abstention",
+      "support not-evaluated",
+      "applicability not-evaluated",
+      "host abstained",
+      "unsupported is insufficient support rather than false",
+      "contradicted retains visible opposing evidence",
+      "unavailable evidence",
+      "deleted audit-only retention",
+      "structural rejection",
+      "policy rejection",
+      "exactly one host decision link",
+      "zero host decision links invalid",
+      "multiple host decision links invalid"
+    ]
+  },
+  "oracle_artifact": {
+    "path": "oracle.v4.json",
+    "bytes": 50223,
+    "sha256": "1c6822d3c4accce9a83e6cd5b968a1d4884f2d5f5576ca60ec902ecb594448c8"
+  },
+  "package_boundary": {
+    "files_authored": [
+      "oracle.v4.json",
+      "oracle-provenance.v4.json"
+    ],
+    "manifest_authored": false,
+    "registry_changed": false,
+    "review_record_authored": false,
+    "comparison_run": false,
+    "product_or_test_files_changed": false
+  }
+}

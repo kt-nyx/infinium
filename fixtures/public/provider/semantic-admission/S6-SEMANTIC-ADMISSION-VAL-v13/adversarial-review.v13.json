@@ -1,0 +1,103 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-adversarial-review/v13",
+  "schema_version": "13",
+  "package_id": "infinium.m1-s6.semantic-admission-validation/13.0.0",
+  "partition": "validation",
+  "gate": "PRE-SEAL-GATE-3",
+  "verdict": "ACCEPT",
+  "reviewed_at_utc": "2026-08-23T19:54:22.6815097+00:00",
+  "timestamp_source": "host-utc-clock",
+  "reviewer": {
+    "reviewer_id": "9ee68014-4dd1-4764-b0ef-b3e363fe1cc8",
+    "role": "genuinely-distinct-clean-room-adversarial-reviewer",
+    "distinct_from_oracle_author_id": "cf72180d-1f23-4a4c-98dd-48df2451122a",
+    "distinct_from_authority_auditor_id": "9fc335c4-a38c-46c0-b899-3fae1cb2824f",
+    "distinct_from_semantic_reviewer_id": "637ea986-7254-428c-9165-e6f7b46b08b2"
+  },
+  "exact_review_bindings": {
+    "oracle": {
+      "path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v13/oracle.v13.json",
+      "byte_length": 55300,
+      "sha256": "17b06cd57fdeea10cc4287f13702927ed185436f241b3ef6fc1700706d7897ff"
+    },
+    "provenance": {
+      "path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v13/oracle-provenance.v13.json",
+      "byte_length": 6934,
+      "sha256": "a5f9be1677505662d52c2e8edbd79c18f85d32aa34c0eff8137a52d1b3bce876"
+    },
+    "authority_audit": {
+      "path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v13/authority-audit.v13.json",
+      "byte_length": 8524,
+      "sha256": "f01801e4a458cf37fb3ec8b5c6f39cd3a2774acca4474e3c6f2a4ee79af2b865",
+      "gate": "PRE-SEAL-GATE-1",
+      "result": "PASS",
+      "finding_count": 0,
+      "audited_at_utc": "2026-08-23T19:45:12.7714080+00:00"
+    },
+    "semantic_review": {
+      "path": "fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v13/independent-review.v13.json",
+      "byte_length": 14011,
+      "sha256": "b54df51d240f52dfc726f7c3f8086705a7fdad2f5564a30804890348f81c08f0",
+      "gate": "PRE-SEAL-GATE-2",
+      "verdict": "ACCEPT",
+      "finding_count": 0,
+      "reviewed_at_utc": "2026-08-23T19:50:03.6849853+00:00"
+    }
+  },
+  "chronology": {
+    "gate_1_receipt_existed_before_gate_2": true,
+    "gate_2_receipt_existed_before_gate_3": true,
+    "gate_3_timestamp_after_gate_2_review": true,
+    "persisted_file_order_matches_embedded_gate_order": true
+  },
+  "boundary": {
+    "authority_only": true,
+    "clean_room": true,
+    "product_implementation_inspected": false,
+    "product_tests_inspected": false,
+    "product_output_inspected": false,
+    "prior_semantic_oracle_packages_inspected": false,
+    "sibling_package_or_directory_inspected": false,
+    "registry_or_manifest_inspected": false,
+    "git_history_inspected": false,
+    "private_fixture_material_inspected": false,
+    "live_or_credential_material_inspected": false,
+    "archive_material_inspected": false,
+    "network_used": false,
+    "comparison_executed": false,
+    "provider_labels_ids_reasons_assertions_or_expected_fields_used_as_semantic_evidence": false,
+    "raw_response_preimages_used_for_fingerprint_recomputation_only": true,
+    "raw_response_preimages_decoded_as_text_for_semantic_review": false,
+    "raw_response_proposal_content_used_as_expected_semantic_authority": false,
+    "prompt_text_inspected_or_used_as_oracle_evidence": false
+  },
+  "adversarial_checks": [
+    { "check_id": "G3-001", "name": "strict-persisted-gate-chronology-and-exact-receipt-binding", "result": "PASS" },
+    { "check_id": "G3-002", "name": "candidate-provenance-audit-and-semantic-review-byte-length-sha256-binding", "result": "PASS" },
+    { "check_id": "G3-003", "name": "thirty-two-authority-and-current-public-schema-bindings", "result": "PASS" },
+    { "check_id": "G3-004", "name": "utf8-no-bom-lf-only-terminal-newline", "result": "PASS" },
+    { "check_id": "G3-005", "name": "seven-response-preimages-strict-base64-unique-and-one-to-one", "result": "PASS" },
+    { "check_id": "G3-006", "name": "seven-response-byte-length-and-sha256-recomputation", "result": "PASS" },
+    { "check_id": "G3-007", "name": "response-preimage-noncircularity-no-self-hash-or-receipt-metadata", "result": "PASS" },
+    { "check_id": "G3-008", "name": "response-preimage-semantic-isolation-no-state-reason-relationship-or-decision-fields", "result": "PASS" },
+    { "check_id": "G3-009", "name": "source-producer-input-transcript-output-and-authorization-chain", "result": "PASS" },
+    { "check_id": "G3-010", "name": "candidate-input-context-transcript-output-and-authorization-chain", "result": "PASS" },
+    { "check_id": "G3-011", "name": "unavailable-and-deleted-lifecycle-separation-with-retained-audit-provenance", "result": "PASS" },
+    { "check_id": "G3-012", "name": "unsupported-falsehood-and-provider-abstention-separation", "result": "PASS" },
+    { "check_id": "G3-013", "name": "condition-and-qualifier-preservation-including-deleted-source-audit", "result": "PASS" },
+    { "check_id": "G3-014", "name": "source-application-fact-id-bundle-hash-and-link-derivation-closure", "result": "PASS" },
+    { "check_id": "G3-015", "name": "conditional-unestablished-does-not-invent-condition-satisfaction", "result": "PASS" },
+    { "check_id": "G3-016", "name": "direct-opposition-derived-from-neutral-fact-not-relationship-label", "result": "PASS" },
+    { "check_id": "G3-017", "name": "normal-source-and-candidate-schema-reachability-and-complete-link-closure", "result": "PASS" },
+    { "check_id": "G3-018", "name": "zero-and-two-link-probes-have-no-unrelated-masking-invalidity", "result": "PASS" },
+    { "check_id": "G3-019", "name": "missing-reason-probe-has-no-unrelated-masking-invalidity", "result": "PASS" },
+    { "check_id": "G3-020", "name": "support-applicability-matrix-twenty-five-cell-totality-uniqueness-and-policy", "result": "PASS" },
+    { "check_id": "G3-021", "name": "all-text-payload-citation-condition-fact-and-response-hashes-and-spans", "result": "PASS" },
+    { "check_id": "G3-022", "name": "declared-counts-normal-link-inventory-and-reference-exhaustiveness", "result": "PASS" },
+    { "check_id": "G3-023", "name": "opaque-identifiers-and-no-answer-bearing-neutral-labels-ids-or-reasons", "result": "PASS" },
+    { "check_id": "G3-024", "name": "gate-1-and-gate-2-zero-finding-claims-do-not-overreach-reviewed-boundary", "result": "PASS" },
+    { "check_id": "G3-025", "name": "no-product-prior-package-private-live-archive-registry-git-or-network-access", "result": "PASS" }
+  ],
+  "finding_count": 0,
+  "findings": []
+}

@@ -38,6 +38,7 @@ network.
 | `provider-operation.v1.schema.json` | `infinium.provider.operation/v1` |
 | `provider-response.v1.schema.json` | `infinium.provider.response/v1` |
 | `source-claim-extraction.v1.schema.json` | `infinium.llm.source-claim-extraction/v1` |
+| `source-claim-application-decision.v1.schema.json` | `infinium.host.source-claim-application-decision/v1` |
 | `candidate-investigation.v1.schema.json` | `infinium.llm.candidate-investigation/v1` |
 | `provider-execution-input.v1.schema.json` | `infinium.provider.execution-input/v1` |
 | `provider-effect-runtime-authority.v1.schema.json` | `infinium.provider.effect-runtime-authority/v1` |

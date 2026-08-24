@@ -3,11 +3,17 @@
 Status: Accepted
 Accepted: 2026-07-28
 Accepted by: Project owner
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-23
 Companion specification:
 [M1 semantic and local-ground-truth evaluation specifications](../specifications/m1-semantic-and-ground-truth.md)
 with the accepted
 [revision 2 amendment](../specifications/m1-semantic-and-ground-truth-v2-amendment.md)
+
+Current supersession notice: ADR-0035 defers independent semantic-oracle
+authoring, review, sealing, registration, and comparison throughout M1 and M2.
+The slots and oracle workflows below remain historical or future design
+inventory. They grant no current package authority and may be reactivated only
+by a new accepted M3 evaluation plan after M2 acceptance.
 
 Current M1 execution amendment: ADR-0032 defers private held-out evaluation
 without a product verdict. Slices 5-9 use independently expected public

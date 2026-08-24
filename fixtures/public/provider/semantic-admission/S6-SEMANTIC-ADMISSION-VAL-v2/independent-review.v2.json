@@ -1,0 +1,32 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-independent-review/2.0.0",
+  "schema_version": "2",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v2",
+  "reviewer_identity": "openai-codex:infinium:m1-s6:semantic-admission-v2:independent-reviewer:2026-08-22",
+  "reviewed_at": "2026-08-22",
+  "result": "accepted",
+  "reviewed_files": [
+    {"path":"oracle.v2.json","bytes":7844,"sha256":"651dac3f249c96dfa0f7008cf8089c00dfd533c363be88d9e8e9f6b12a1bbd4b"},
+    {"path":"oracle-provenance.v2.json","bytes":1275,"sha256":"18e91a28790887da5db1b68456f3074d8e8263d7df15b1b17ca3adc09929a883"}
+  ],
+  "reviewed_dimensions": [
+    "proposal and extraction state",
+    "support",
+    "local applicability",
+    "host decision",
+    "admission gating",
+    "unsupported contradicted and unavailable distinctions",
+    "explicit abstention",
+    "deletion and audit-only behavior",
+    "structural and policy rejection",
+    "decision cardinality",
+    "authority-case references",
+    "source and candidate coverage",
+    "JSON integrity",
+    "authorship",
+    "answer isolation",
+    "comparison timing"
+  ],
+  "findings": [],
+  "boundary_statement": "The reviewer used only the repository-required public authority, the revised oracle, and its provenance. The reviewer did not inspect implementation, tests, product output, v1 material, private fixtures, retained live evidence, credentials, archives, or network material, and made no edits or external effects."
+}

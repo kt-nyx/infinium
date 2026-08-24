@@ -15,27 +15,22 @@ workflow, or product runtime dependency. It does not reference archived
 evaluator code or schemas, private fixture material, or candidate/product
 output. Public product-fixture tests reference this project directly.
 
-`LiveSemanticV2AuthorityVerifier` is the read-only R1 successor-authority
-reader. It closes all five v2 packages, their 23 repository schemas, the
-additive 43-row registry, the exact WP10-to-WP11 semantic join, and the
-qualification/WP10/WP11 no-fourth-call composition. It never reseals fixtures,
-executes product behavior, reads credentials, or performs network/provider
-operations. The named `LiveSemanticV2Authority` Slice 6 gate runs its focused
-positive and mutation contract suite and separately proves the five v1 package
-trees plus registry v1 remain unchanged.
+`HistoricalLiveSemanticPackageVerifier` checks only current deferral metadata,
+historical registry/reclassification bindings, and immutable file bytes and
+hashes. It does not interpret expected semantic labels, execute a current
+producer or consumer, synthesize product output, or report semantic success.
+The `HistoricalSemanticPackageIntegrity` Slice 6 gate runs this read-only
+boundary check.
 
-`reseal-live-semantic-v2.mjs` is the only resealer for this successor family.
-It defaults to `--check`; explicit `--write` can update only the five v2
-manifests and registry v2. Its fixed allowlist cannot write a v1 path, and its
-round-trip contract test proves canonical write/check stability while retaining
-registry v1 byte-for-byte.
+`reseal-live-semantic-v2.mjs` is retained as a check-only historical-integrity
+command. It accepts only `--check`; `--write` fails. There is no supported path
+that can reseal changed historical answers or promote them to current
+validation authority.
 
-The source-claim reader closes the registered `S6-CLAIM-DEV-v1` and
-`S6-CLAIM-VAL-v1` packages. It strictly parses only their answer-free execution
-input, minimized-context manifest, deterministic retained transcripts, and
-separately frozen harness oracle/provenance. Product code receives no oracle
-document, and these packages perform no network, credential, or source-refresh
-operation. The reader verifies registry-bound manifest bytes, transitive hashes
-for every non-manifest file, exact deterministic context derivation, recursive
-answer isolation, typed oracle/provenance closure, and all fourteen scenario
-expectation families before comparison.
+The registered `S6-CLAIM-DEV-v1` and `S6-CLAIM-VAL-v1` packages are retained as
+historical development evidence. Their answer-bearing oracle and provenance
+bytes remain audit-visible but are not loaded by a current product acceptance
+gate and grant no semantic authority. Current source-claim verification uses
+developer-authored product conformance tests plus the separate historical-byte
+integrity gate; neither produces an independent semantic verdict or performs a
+network, credential, or source-refresh operation.

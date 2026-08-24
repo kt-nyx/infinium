@@ -1,0 +1,2160 @@
+{
+  "schema_id": "infinium.public.semantic-admission-oracle/v12",
+  "schema_version": "12",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v12",
+  "oracle_id": "infinium.m1-s6.semantic-admission.oracle/cleanroom-v12",
+  "partition": "validation",
+  "answer_isolation": {
+    "expected_truth_source": "accepted-public-authority-and-current-producer-schemas-only",
+    "product_output_compared": false,
+    "prior_semantic_admission_packages_read": false,
+    "expected_labels_present_in_producer_inputs": false
+  },
+  "contract_bindings": {
+    "source_execution_input": "infinium.llm.source-claim-execution-input/v1",
+    "source_retained_transcripts": "infinium.llm.source-claim-retained-transcripts/v1",
+    "source_result": "infinium.llm.source-claim-extraction/v1",
+    "candidate_execution_input": "infinium.llm.candidate-investigation-execution-input/v1",
+    "candidate_retained_transcripts": "infinium.llm.candidate-investigation-retained-transcripts/v1",
+    "candidate_result": "infinium.llm.candidate-investigation/v1"
+  },
+  "semantic_rules": {
+    "admission_rule": "Only supported plus applicable is admitted.",
+    "unsupported_rule": "Unsupported means insufficient support and does not mean false.",
+    "contradiction_rule": "Contradicted requires visible direct opposing evidence.",
+    "abstention_rule": "Abstained publishes no host conclusion.",
+    "source_rule": "Source extraction remains evidence-only and does not grant local applicability.",
+    "link_rule": "Every retained proposal has exactly one host decision link."
+  },
+  "producer_documents": {
+    "source_execution_input": {
+      "schema_id": "infinium.llm.source-claim-execution-input/v1",
+      "schema_version": "1",
+      "package_id": "S6-SEMANTIC-ADMISSION-VAL-v12",
+      "acquisition_run_id": "opaque.v12.001",
+      "operation_id": "opaque.v12.002",
+      "host_authorization_id": "opaque.v12.003",
+      "owner_kind": "evidence-acquisition-run",
+      "owner_id": "opaque.v12.001",
+      "parent_analysis_run_id": "opaque.v12.004",
+      "application_scope_id": "opaque.v12.005",
+      "cost_attribution_scope_id": "opaque.v12.006",
+      "source_revision_id": "opaque.v12.007",
+      "declared_purpose": "Extract bounded propositions from the supplied passages.",
+      "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+      "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+      "passages": [
+        {
+          "passage_id": "opaque.v12.008",
+          "source_revision_id": "opaque.v12.007",
+          "text": "For revision-seven units, the silver latch must remain closed while the service hatch is in use.",
+          "text_sha256": "6518784ce4c628d994e5a7716cf21f7c799c73b28b02c2828768e4fe544dcf2e",
+          "deleted": false
+        },
+        {
+          "passage_id": "opaque.v12.009",
+          "source_revision_id": "opaque.v12.007",
+          "text": "The quartz dial selects the quiet operating profile. This statement is an unverified report, and the document provides no test result or authoritative basis.",
+          "text_sha256": "8f109ec940e90fed09e5eae79d41344600c8a08ac62636013ba41363a77eea67",
+          "deleted": false
+        },
+        {
+          "passage_id": "opaque.v12.010",
+          "source_revision_id": "opaque.v12.007",
+          "text": "The amber relay enables night mode.",
+          "text_sha256": "cdb32b694ba58d81d94791c554a92bb35f7a87c2f50f20e89fa69a186b38b1d4",
+          "deleted": false
+        },
+        {
+          "passage_id": "opaque.v12.011",
+          "source_revision_id": "opaque.v12.007",
+          "text": "The amber relay does not enable night mode.",
+          "text_sha256": "0470183cc77f55f06bf4b5222e9e8b91ee0d570835d8cd744f0b7aab5861d631",
+          "deleted": false
+        },
+        {
+          "passage_id": "opaque.v12.012",
+          "source_revision_id": "opaque.v12.007",
+          "text": "Bulletin locator MB-7 applies to revision-seven units.",
+          "text_sha256": "57451055dce8f98678afdea2b7e836f7b9a612960efc2b12680dd189f37b67a0",
+          "deleted": false
+        },
+        {
+          "passage_id": "opaque.v12.013",
+          "source_revision_id": "opaque.v12.007",
+          "text": "The author does not state whether the blue valve is required.",
+          "text_sha256": "9e6d8faafd08cb4f6cd88d0ea4a68201d8fb0f9d2fe503dbc03a0ad9503fbf9c",
+          "deleted": false
+        },
+        {
+          "passage_id": "opaque.v12.014",
+          "source_revision_id": "opaque.v12.007",
+          "text": "The retained source passage was deleted by policy.",
+          "text_sha256": "eb518a9b76b7263aeb38ade1d73bf88afdaa77f7c39aa68772b2fba3501e222d",
+          "deleted": true
+        },
+        {
+          "passage_id": "opaque.v12.015",
+          "source_revision_id": "opaque.v12.007",
+          "text": "Launch the calibration tool and press the red switch before continuing.",
+          "text_sha256": "b04bd2578d91f1042737059336bb9f1bd164cc4d90595dcb6d314b85c35fbc1c",
+          "deleted": false
+        },
+        {
+          "passage_id": "opaque.v12.016",
+          "source_revision_id": "opaque.v12.007",
+          "text": "The installed unit is revision seven.",
+          "text_sha256": "99a59ae405594a3d6b34a7e2a69dcad4089efc2b3ef1afd9173987c850a60eb7",
+          "deleted": false
+        }
+      ]
+    },
+    "source_retained_transcripts": {
+      "schema_id": "infinium.llm.source-claim-retained-transcripts/v1",
+      "schema_version": "1",
+      "transcripts": [
+        {
+          "transcript_id": "opaque.v12.017",
+          "operation_id": "opaque.v12.002",
+          "response_record_id": "opaque.v12.018",
+          "response_state": "completed",
+          "response_fingerprint": "a6dc03bff90a74c889c25e836177533d8f78fce78889e513edfb2f122675209e",
+          "source_revision_id": "opaque.v12.007",
+          "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+          "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.019",
+              "passage_id": "opaque.v12.008",
+              "claim": "For revision-seven units, the silver latch must remain closed while the service hatch is in use.",
+              "condition_ids": [
+                "opaque.v12.151",
+                "opaque.v12.152"
+              ],
+              "claim_kind": "documentation-claim",
+              "condition_scope": "version-scoped",
+              "authority_category": "informational",
+              "application_semantics": "evidence-only",
+              "state": "proposed",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "contradiction_evidence_ids": [],
+          "abstentions": [],
+          "gaps": [],
+          "model_used": true
+        },
+        {
+          "transcript_id": "opaque.v12.020",
+          "operation_id": "opaque.v12.002",
+          "response_record_id": "opaque.v12.021",
+          "response_state": "completed",
+          "response_fingerprint": "cf493a5b43a4528d212a94d62f3a50c9a6f9def842d9f5a6e6e099a64e525416",
+          "source_revision_id": "opaque.v12.007",
+          "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+          "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.022",
+              "passage_id": "opaque.v12.009",
+              "claim": "The quartz dial selects the quiet operating profile.",
+              "condition_ids": [],
+              "claim_kind": "documentation-claim",
+              "condition_scope": "unconditional",
+              "authority_category": "informational",
+              "application_semantics": "evidence-only",
+              "state": "unsupported",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "contradiction_evidence_ids": [],
+          "abstentions": [],
+          "gaps": [
+            "A bounded input dependency is absent."
+          ],
+          "model_used": true
+        },
+        {
+          "transcript_id": "opaque.v12.024",
+          "operation_id": "opaque.v12.002",
+          "response_record_id": "opaque.v12.025",
+          "response_state": "completed",
+          "response_fingerprint": "6730224f1a0aa5a1be9b50021b3813dcd78d07001eb59a0707d830c885bb4bd1",
+          "source_revision_id": "opaque.v12.007",
+          "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+          "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.026",
+              "passage_id": "opaque.v12.010",
+              "claim": "The amber relay enables night mode.",
+              "condition_ids": [],
+              "claim_kind": "documentation-claim",
+              "condition_scope": "unconditional",
+              "authority_category": "informational",
+              "application_semantics": "evidence-only",
+              "state": "proposed",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "contradiction_evidence_ids": [
+            "opaque.v12.027"
+          ],
+          "abstentions": [],
+          "gaps": [],
+          "model_used": true
+        },
+        {
+          "transcript_id": "opaque.v12.028",
+          "operation_id": "opaque.v12.002",
+          "response_record_id": "opaque.v12.029",
+          "response_state": "completed",
+          "response_fingerprint": "7714d8667410c69681fa6c7e95c89a427daf4fad5760b5f2496928b12b9c4992",
+          "source_revision_id": "opaque.v12.007",
+          "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+          "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.030",
+              "passage_id": "opaque.v12.012",
+              "claim": "Revision-seven units require the blue valve during startup.",
+              "condition_ids": [
+                "opaque.v12.159",
+                "opaque.v12.160"
+              ],
+              "claim_kind": "documentation-claim",
+              "condition_scope": "version-scoped",
+              "authority_category": "informational",
+              "application_semantics": "evidence-only",
+              "state": "unavailable",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "contradiction_evidence_ids": [],
+          "abstentions": [],
+          "gaps": [
+            "A bounded input dependency is absent."
+          ],
+          "model_used": true
+        },
+        {
+          "transcript_id": "opaque.v12.031",
+          "operation_id": "opaque.v12.002",
+          "response_record_id": "opaque.v12.032",
+          "response_state": "completed",
+          "response_fingerprint": "2405683bc05f0a74a50f8c2e6f1d43220392fc3429fcbfc9fbdf349b21f4c849",
+          "source_revision_id": "opaque.v12.007",
+          "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+          "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.033",
+              "passage_id": "opaque.v12.013",
+              "claim": "The blue valve is required.",
+              "condition_ids": [],
+              "claim_kind": "documentation-claim",
+              "condition_scope": "unconditional",
+              "authority_category": "informational",
+              "application_semantics": "evidence-only",
+              "state": "abstained",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "contradiction_evidence_ids": [],
+          "abstentions": [
+            "The bounded passages do not establish the proposition."
+          ],
+          "gaps": [],
+          "model_used": true
+        },
+        {
+          "transcript_id": "opaque.v12.034",
+          "operation_id": "opaque.v12.002",
+          "response_record_id": "opaque.v12.035",
+          "response_state": "completed",
+          "response_fingerprint": "7ad2ba705b1b0a58a3359ec80fff2e9526c80ab3015a6c9064b8b754ddef1502",
+          "source_revision_id": "opaque.v12.007",
+          "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+          "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.036",
+              "passage_id": "opaque.v12.014",
+              "claim": "The brass safety pin must remain installed during transport.",
+              "condition_ids": [
+                "opaque.v12.154"
+              ],
+              "claim_kind": "documentation-claim",
+              "condition_scope": "conditional",
+              "authority_category": "informational",
+              "application_semantics": "evidence-only",
+              "state": "unavailable",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "contradiction_evidence_ids": [],
+          "abstentions": [],
+          "gaps": [
+            "A bounded input dependency is absent."
+          ],
+          "model_used": true
+        },
+        {
+          "transcript_id": "opaque.v12.037",
+          "operation_id": "opaque.v12.002",
+          "response_record_id": "opaque.v12.038",
+          "response_state": "completed",
+          "response_fingerprint": "4db0ea8d1727db2823fa5b93f25e33c48982859e3548b97b4179478dcc41fa4d",
+          "source_revision_id": "opaque.v12.007",
+          "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+          "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.039",
+              "passage_id": "opaque.v12.015",
+              "claim": "Launch the calibration tool and press the red switch before continuing.",
+              "condition_ids": [],
+              "claim_kind": "documentation-claim",
+              "condition_scope": "unconditional",
+              "authority_category": "protected-effect-request",
+              "application_semantics": "evidence-only",
+              "state": "proposed",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "contradiction_evidence_ids": [],
+          "abstentions": [],
+          "gaps": [],
+          "model_used": true
+        },
+        {
+          "transcript_id": "opaque.v12.040",
+          "operation_id": "opaque.v12.002",
+          "response_record_id": "opaque.v12.041",
+          "response_state": "completed",
+          "response_fingerprint": "a3a0b6da1dd74c5b8386820c8b40a295ebb7c0aa8e522c22d6e69b4d65e4c3df",
+          "source_revision_id": "opaque.v12.007",
+          "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+          "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.042",
+              "passage_id": "opaque.v12.016",
+              "claim": "The installed unit is revision seven.",
+              "condition_ids": [],
+              "claim_kind": "documentation-claim",
+              "condition_scope": "unconditional",
+              "authority_category": "informational",
+              "application_semantics": "applicability-only",
+              "state": "proposed",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "contradiction_evidence_ids": [],
+          "abstentions": [],
+          "gaps": [],
+          "model_used": true
+        },
+        {
+          "transcript_id": "opaque.v12.043",
+          "operation_id": "opaque.v12.002",
+          "response_record_id": "opaque.v12.044",
+          "response_state": "completed",
+          "response_fingerprint": "12121e56fe2de866baeb0c11e764df46ad8fcebb17007533014db107890856d8",
+          "source_revision_id": "opaque.v12.007",
+          "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+          "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.045",
+              "passage_id": "opaque.v12.011",
+              "claim": "The amber relay does not enable night mode.",
+              "condition_ids": [],
+              "claim_kind": "documentation-claim",
+              "condition_scope": "unconditional",
+              "authority_category": "informational",
+              "application_semantics": "evidence-only",
+              "state": "proposed",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "contradiction_evidence_ids": [],
+          "abstentions": [],
+          "gaps": [],
+          "model_used": true
+        }
+      ]
+    },
+    "candidate_execution_input": {
+      "schema_id": "infinium.llm.candidate-investigation-execution-input/v1",
+      "schema_version": "1",
+      "package_id": "S6-SEMANTIC-ADMISSION-VAL-v12",
+      "operation_id": "opaque.v12.046",
+      "host_authorization_id": "opaque.v12.047",
+      "owner_kind": "analysis-run",
+      "owner_id": "opaque.v12.004",
+      "analysis_run_id": "opaque.v12.004",
+      "application_scope_id": "opaque.v12.005",
+      "cost_attribution_scope_id": "opaque.v12.006",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "contexts": [
+        {
+          "context_id": "opaque.v12.048",
+          "candidate_id": "opaque.v12.049",
+          "hypothesis_id": "opaque.v12.050",
+          "hypothesis": "The installed unit requires the silver latch to remain closed.",
+          "participant_ids": [
+            "opaque.v12.051"
+          ],
+          "participant_roles": [
+            "installed-unit"
+          ],
+          "causal_path_ids": [
+            "opaque.v12.052"
+          ],
+          "dependency_closure_id": "opaque.v12.053",
+          "evidence": [
+            {
+              "evidence_id": "opaque.v12.054",
+              "evidence_application_link_id": "opaque.v12.055",
+              "source_acquisition_id": "opaque.v12.001",
+              "source_admission_id": "opaque.v12.056",
+              "source_application_link_id": "opaque.v12.057",
+              "source_revision_id": "opaque.v12.007",
+              "passage_id": "opaque.v12.008",
+              "relationship": "supporting",
+              "availability": "available",
+              "content_sha256": "6518784ce4c628d994e5a7716cf21f7c799c73b28b02c2828768e4fe544dcf2e"
+            }
+          ]
+        },
+        {
+          "context_id": "opaque.v12.058",
+          "candidate_id": "opaque.v12.059",
+          "hypothesis_id": "opaque.v12.060",
+          "hypothesis": "The quartz dial causes excessive startup delay.",
+          "participant_ids": [
+            "opaque.v12.061"
+          ],
+          "participant_roles": [
+            "installed-unit"
+          ],
+          "causal_path_ids": [
+            "opaque.v12.062"
+          ],
+          "dependency_closure_id": "opaque.v12.063",
+          "evidence": [
+            {
+              "evidence_id": "opaque.v12.129",
+              "evidence_application_link_id": "opaque.v12.130",
+              "source_acquisition_id": "opaque.v12.001",
+              "source_admission_id": "opaque.v12.131",
+              "source_application_link_id": "opaque.v12.132",
+              "source_revision_id": "opaque.v12.007",
+              "passage_id": "opaque.v12.009",
+              "relationship": "neutral",
+              "availability": "available",
+              "content_sha256": "8f109ec940e90fed09e5eae79d41344600c8a08ac62636013ba41363a77eea67"
+            },
+            {
+              "evidence_id": "opaque.v12.064",
+              "evidence_application_link_id": "opaque.v12.065",
+              "source_acquisition_id": "opaque.v12.001",
+              "source_admission_id": "opaque.v12.066",
+              "source_application_link_id": "opaque.v12.067",
+              "source_revision_id": "opaque.v12.007",
+              "passage_id": "opaque.v12.016",
+              "relationship": "neutral",
+              "availability": "available",
+              "content_sha256": "99a59ae405594a3d6b34a7e2a69dcad4089efc2b3ef1afd9173987c850a60eb7"
+            }
+          ]
+        },
+        {
+          "context_id": "opaque.v12.068",
+          "candidate_id": "opaque.v12.069",
+          "hypothesis_id": "opaque.v12.070",
+          "hypothesis": "The amber relay enables night mode.",
+          "participant_ids": [
+            "opaque.v12.071"
+          ],
+          "participant_roles": [
+            "installed-unit"
+          ],
+          "causal_path_ids": [
+            "opaque.v12.072"
+          ],
+          "dependency_closure_id": "opaque.v12.073",
+          "evidence": [
+            {
+              "evidence_id": "opaque.v12.074",
+              "evidence_application_link_id": "opaque.v12.075",
+              "source_acquisition_id": "opaque.v12.001",
+              "source_admission_id": "opaque.v12.076",
+              "source_application_link_id": "opaque.v12.077",
+              "source_revision_id": "opaque.v12.007",
+              "passage_id": "opaque.v12.010",
+              "relationship": "supporting",
+              "availability": "available",
+              "content_sha256": "cdb32b694ba58d81d94791c554a92bb35f7a87c2f50f20e89fa69a186b38b1d4"
+            },
+            {
+              "evidence_id": "opaque.v12.027",
+              "evidence_application_link_id": "opaque.v12.078",
+              "source_acquisition_id": "opaque.v12.001",
+              "source_admission_id": "opaque.v12.079",
+              "source_application_link_id": "opaque.v12.080",
+              "source_revision_id": "opaque.v12.007",
+              "passage_id": "opaque.v12.011",
+              "relationship": "contradicting",
+              "availability": "available",
+              "content_sha256": "0470183cc77f55f06bf4b5222e9e8b91ee0d570835d8cd744f0b7aab5861d631"
+            }
+          ]
+        },
+        {
+          "context_id": "opaque.v12.081",
+          "candidate_id": "opaque.v12.082",
+          "hypothesis_id": "opaque.v12.083",
+          "hypothesis": "The missing bulletin requires replacing the blue valve.",
+          "participant_ids": [
+            "opaque.v12.084"
+          ],
+          "participant_roles": [
+            "installed-unit"
+          ],
+          "causal_path_ids": [
+            "opaque.v12.085"
+          ],
+          "dependency_closure_id": "opaque.v12.086",
+          "evidence": [
+            {
+              "evidence_id": "opaque.v12.087",
+              "evidence_application_link_id": "opaque.v12.088",
+              "source_acquisition_id": "opaque.v12.001",
+              "source_admission_id": "opaque.v12.089",
+              "source_application_link_id": "opaque.v12.090",
+              "source_revision_id": "opaque.v12.007",
+              "passage_id": "opaque.v12.012",
+              "relationship": "neutral",
+              "availability": "unavailable",
+              "content_sha256": "57451055dce8f98678afdea2b7e836f7b9a612960efc2b12680dd189f37b67a0"
+            }
+          ]
+        },
+        {
+          "context_id": "opaque.v12.091",
+          "candidate_id": "opaque.v12.092",
+          "hypothesis_id": "opaque.v12.093",
+          "hypothesis": "The blue valve is required.",
+          "participant_ids": [
+            "opaque.v12.094"
+          ],
+          "participant_roles": [
+            "installed-unit"
+          ],
+          "causal_path_ids": [
+            "opaque.v12.095"
+          ],
+          "dependency_closure_id": "opaque.v12.096",
+          "evidence": [
+            {
+              "evidence_id": "opaque.v12.097",
+              "evidence_application_link_id": "opaque.v12.098",
+              "source_acquisition_id": "opaque.v12.001",
+              "source_admission_id": "opaque.v12.099",
+              "source_application_link_id": "opaque.v12.100",
+              "source_revision_id": "opaque.v12.007",
+              "passage_id": "opaque.v12.013",
+              "relationship": "neutral",
+              "availability": "available",
+              "content_sha256": "9e6d8faafd08cb4f6cd88d0ea4a68201d8fb0f9d2fe503dbc03a0ad9503fbf9c"
+            }
+          ]
+        },
+        {
+          "context_id": "opaque.v12.101",
+          "candidate_id": "opaque.v12.102",
+          "hypothesis_id": "opaque.v12.103",
+          "hypothesis": "Launch the calibration tool and press the red switch before continuing.",
+          "participant_ids": [
+            "opaque.v12.104"
+          ],
+          "participant_roles": [
+            "installed-unit"
+          ],
+          "causal_path_ids": [
+            "opaque.v12.105"
+          ],
+          "dependency_closure_id": "opaque.v12.106",
+          "evidence": [
+            {
+              "evidence_id": "opaque.v12.107",
+              "evidence_application_link_id": "opaque.v12.108",
+              "source_acquisition_id": "opaque.v12.001",
+              "source_admission_id": "opaque.v12.109",
+              "source_application_link_id": "opaque.v12.110",
+              "source_revision_id": "opaque.v12.007",
+              "passage_id": "opaque.v12.015",
+              "relationship": "supporting",
+              "availability": "available",
+              "content_sha256": "b04bd2578d91f1042737059336bb9f1bd164cc4d90595dcb6d314b85c35fbc1c"
+            }
+          ]
+        }
+      ]
+    },
+    "candidate_retained_transcripts": {
+      "schema_id": "infinium.llm.candidate-investigation-retained-transcripts/v1",
+      "schema_version": "1",
+      "transcripts": [
+        {
+          "transcript_id": "opaque.v12.111",
+          "operation_id": "opaque.v12.046",
+          "context_id": "opaque.v12.048",
+          "response_record_id": "opaque.v12.112",
+          "response_state": "completed",
+          "response_fingerprint": "1bfecd61a0435fe0e1a4a327ba6895bfb06ea58bf791e093c3a1f6def0da8f60",
+          "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+          "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.113",
+              "candidate_id": "opaque.v12.049",
+              "hypothesis_id": "opaque.v12.050",
+              "hypothesis": "The installed unit requires the silver latch to remain closed.",
+              "supporting_evidence_ids": [
+                "opaque.v12.054"
+              ],
+              "contradicting_evidence_ids": [],
+              "missing_information": [],
+              "authority_category": "informational",
+              "state": "proposed",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "abstentions": [],
+          "gaps": [],
+          "model_used": true
+        },
+        {
+          "transcript_id": "opaque.v12.114",
+          "operation_id": "opaque.v12.046",
+          "context_id": "opaque.v12.058",
+          "response_record_id": "opaque.v12.115",
+          "response_state": "completed",
+          "response_fingerprint": "abd21c07a85b8998d94d8f72e24f256ce0979d45effd847b6bfc3edabc372923",
+          "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+          "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.116",
+              "candidate_id": "opaque.v12.059",
+              "hypothesis_id": "opaque.v12.060",
+              "hypothesis": "The quartz dial causes excessive startup delay.",
+              "supporting_evidence_ids": [],
+              "contradicting_evidence_ids": [],
+              "missing_information": [
+                "A bounded input dependency is absent."
+              ],
+              "authority_category": "informational",
+              "state": "unsupported",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "abstentions": [],
+          "gaps": [
+            "A bounded input dependency is absent."
+          ],
+          "model_used": true
+        },
+        {
+          "transcript_id": "opaque.v12.117",
+          "operation_id": "opaque.v12.046",
+          "context_id": "opaque.v12.068",
+          "response_record_id": "opaque.v12.118",
+          "response_state": "completed",
+          "response_fingerprint": "3b90bfe19a1879cadd8e1fee6a89f3d17d469f39d576b9712138f05f90028af0",
+          "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+          "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.119",
+              "candidate_id": "opaque.v12.069",
+              "hypothesis_id": "opaque.v12.070",
+              "hypothesis": "The amber relay enables night mode.",
+              "supporting_evidence_ids": [
+                "opaque.v12.074"
+              ],
+              "contradicting_evidence_ids": [
+                "opaque.v12.027"
+              ],
+              "missing_information": [],
+              "authority_category": "informational",
+              "state": "proposed",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "abstentions": [],
+          "gaps": [],
+          "model_used": true
+        },
+        {
+          "transcript_id": "opaque.v12.120",
+          "operation_id": "opaque.v12.046",
+          "context_id": "opaque.v12.081",
+          "response_record_id": "opaque.v12.121",
+          "response_state": "completed",
+          "response_fingerprint": "c9e5846b4a735ab137391436e1898acdd66aef81067536e201233ad40afa2615",
+          "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+          "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.122",
+              "candidate_id": "opaque.v12.082",
+              "hypothesis_id": "opaque.v12.083",
+              "hypothesis": "The missing bulletin requires replacing the blue valve.",
+              "supporting_evidence_ids": [],
+              "contradicting_evidence_ids": [],
+              "missing_information": [
+                "A bounded input dependency is absent."
+              ],
+              "authority_category": "informational",
+              "state": "unavailable",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "abstentions": [],
+          "gaps": [
+            "A bounded input dependency is absent."
+          ],
+          "model_used": true
+        },
+        {
+          "transcript_id": "opaque.v12.123",
+          "operation_id": "opaque.v12.046",
+          "context_id": "opaque.v12.091",
+          "response_record_id": "opaque.v12.124",
+          "response_state": "completed",
+          "response_fingerprint": "fb19c9aeb0288566c6b11e71d25d20709aa2a835d5ac23159710d9f8e018dd68",
+          "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+          "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.125",
+              "candidate_id": "opaque.v12.092",
+              "hypothesis_id": "opaque.v12.093",
+              "hypothesis": "The blue valve is required.",
+              "supporting_evidence_ids": [],
+              "contradicting_evidence_ids": [],
+              "missing_information": [
+                "A bounded input dependency is absent."
+              ],
+              "authority_category": "informational",
+              "state": "abstained",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "abstentions": [
+            "The bounded evidence does not establish the proposition."
+          ],
+          "gaps": [],
+          "model_used": true
+        },
+        {
+          "transcript_id": "opaque.v12.126",
+          "operation_id": "opaque.v12.046",
+          "context_id": "opaque.v12.101",
+          "response_record_id": "opaque.v12.127",
+          "response_state": "completed",
+          "response_fingerprint": "32ddf5b4845e820bf9cff46761bf2c74c58e9be2500ca3a49bdda7d83b6d9361",
+          "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+          "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+          "proposals": [
+            {
+              "proposal_id": "opaque.v12.128",
+              "candidate_id": "opaque.v12.102",
+              "hypothesis_id": "opaque.v12.103",
+              "hypothesis": "Launch the calibration tool and press the red switch before continuing.",
+              "supporting_evidence_ids": [
+                "opaque.v12.107"
+              ],
+              "contradicting_evidence_ids": [],
+              "missing_information": [],
+              "authority_category": "protected-effect-request",
+              "state": "proposed",
+              "reason": "Bounded provider proposal record."
+            }
+          ],
+          "abstentions": [],
+          "gaps": [],
+          "model_used": true
+        }
+      ]
+    }
+  },
+  "visible_opposing_evidence": [
+    {
+      "evidence_id": "opaque.v12.027",
+      "source_revision_id": "opaque.v12.007",
+      "passage_id": "opaque.v12.011",
+      "text": "The amber relay does not enable night mode.",
+      "content_sha256": "0470183cc77f55f06bf4b5222e9e8b91ee0d570835d8cd744f0b7aab5861d631",
+      "relationship": "contradicting"
+    }
+  ],
+  "source_case_expectations": [
+    {
+      "case_id": "source-supported-v12",
+      "transcript_id": "opaque.v12.017",
+      "claim_span": {
+        "passage_id": "opaque.v12.008",
+        "start": 0,
+        "length": 96,
+        "text": "For revision-seven units, the silver latch must remain closed while the service hatch is in use."
+      },
+      "expected_proposal": {
+        "proposal_id": "opaque.v12.019",
+        "passage_id": "opaque.v12.008",
+        "claim": "For revision-seven units, the silver latch must remain closed while the service hatch is in use.",
+        "condition_ids": [
+          "opaque.v12.151",
+          "opaque.v12.152"
+        ],
+        "extraction_state": "extracted",
+        "reason": "The claim is an exact sentence span."
+      },
+      "expected_admission_correlation": {
+        "admission_id": "opaque.v12.056",
+        "proposal_id": "opaque.v12.019",
+        "authorization_id": "opaque.v12.003",
+        "operation_id": "opaque.v12.002",
+        "response_record_id": "opaque.v12.018",
+        "owner_kind": "evidence-acquisition-run",
+        "owner_id": "opaque.v12.001",
+        "root_subject_id": "opaque.v12.007",
+        "validation_id": "validation.source.supported.v12",
+        "admission_correlation_id": "correlation.source.supported.v12",
+        "support_state": "supported",
+        "applicability_state": "not-evaluated",
+        "decision_state": "abstained"
+      }
+    },
+    {
+      "case_id": "source-unsupported-v12",
+      "transcript_id": "opaque.v12.020",
+      "claim_span": {
+        "passage_id": "opaque.v12.009",
+        "start": 0,
+        "length": 52,
+        "text": "The quartz dial selects the quiet operating profile."
+      },
+      "expected_proposal": {
+        "proposal_id": "opaque.v12.022",
+        "passage_id": "opaque.v12.009",
+        "claim": "The quartz dial selects the quiet operating profile.",
+        "condition_ids": [],
+        "extraction_state": "extracted",
+        "reason": "The exact claim remains retained while support is insufficient."
+      },
+      "expected_admission_correlation": {
+        "admission_id": "opaque.v12.131",
+        "proposal_id": "opaque.v12.022",
+        "authorization_id": "opaque.v12.003",
+        "operation_id": "opaque.v12.002",
+        "response_record_id": "opaque.v12.021",
+        "owner_kind": "evidence-acquisition-run",
+        "owner_id": "opaque.v12.001",
+        "root_subject_id": "opaque.v12.007",
+        "validation_id": "validation.source.unsupported.v12",
+        "admission_correlation_id": "correlation.source.unsupported.v12",
+        "support_state": "unsupported",
+        "applicability_state": "not-evaluated",
+        "decision_state": "abstained"
+      }
+    },
+    {
+      "case_id": "source-contradicted-v12",
+      "transcript_id": "opaque.v12.024",
+      "claim_span": {
+        "passage_id": "opaque.v12.010",
+        "start": 0,
+        "length": 35,
+        "text": "The amber relay enables night mode."
+      },
+      "expected_proposal": {
+        "proposal_id": "opaque.v12.026",
+        "passage_id": "opaque.v12.010",
+        "claim": "The amber relay enables night mode.",
+        "condition_ids": [],
+        "extraction_state": "extracted",
+        "reason": "The exact claim is retained with direct opposing evidence."
+      },
+      "expected_admission_correlation": {
+        "admission_id": "opaque.v12.076",
+        "proposal_id": "opaque.v12.026",
+        "authorization_id": "opaque.v12.003",
+        "operation_id": "opaque.v12.002",
+        "response_record_id": "opaque.v12.025",
+        "owner_kind": "evidence-acquisition-run",
+        "owner_id": "opaque.v12.001",
+        "root_subject_id": "opaque.v12.007",
+        "validation_id": "validation.source.contradicted.v12",
+        "admission_correlation_id": "correlation.source.contradicted.v12",
+        "support_state": "contradicted",
+        "applicability_state": "not-evaluated",
+        "decision_state": "abstained"
+      }
+    },
+    {
+      "case_id": "source-unavailable-v12",
+      "transcript_id": "opaque.v12.028",
+      "expected_proposal": {
+        "proposal_id": "opaque.v12.030",
+        "passage_id": "opaque.v12.012",
+        "claim": "Revision-seven units require the blue valve during startup.",
+        "condition_ids": [
+          "opaque.v12.159",
+          "opaque.v12.160"
+        ],
+        "extraction_state": "unavailable",
+        "reason": "The bounded source cannot be evaluated."
+      },
+      "expected_admission_correlation": {
+        "admission_id": "opaque.v12.089",
+        "proposal_id": "opaque.v12.030",
+        "authorization_id": "opaque.v12.003",
+        "operation_id": "opaque.v12.002",
+        "response_record_id": "opaque.v12.029",
+        "owner_kind": "evidence-acquisition-run",
+        "owner_id": "opaque.v12.001",
+        "root_subject_id": "opaque.v12.007",
+        "validation_id": "validation.source.unavailable.v12",
+        "admission_correlation_id": "correlation.source.unavailable.v12",
+        "support_state": "unavailable",
+        "applicability_state": "not-evaluated",
+        "decision_state": "abstained"
+      },
+      "citation_span": {
+        "passage_id": "opaque.v12.012",
+        "start": 0,
+        "length": 54,
+        "text": "Bulletin locator MB-7 applies to revision-seven units."
+      },
+      "attempted_proposition": "Revision-seven units require the blue valve during startup."
+    },
+    {
+      "case_id": "source-abstained-v12",
+      "transcript_id": "opaque.v12.031",
+      "citation_span": {
+        "passage_id": "opaque.v12.013",
+        "start": 0,
+        "length": 61,
+        "text": "The author does not state whether the blue valve is required."
+      },
+      "attempted_proposition": "The blue valve is required.",
+      "expected_proposal": {
+        "proposal_id": "opaque.v12.033",
+        "passage_id": "opaque.v12.013",
+        "claim": "The blue valve is required.",
+        "condition_ids": [],
+        "extraction_state": "abstained",
+        "reason": "The provider explicitly abstains."
+      },
+      "expected_admission_correlation": {
+        "admission_id": "opaque.v12.099",
+        "proposal_id": "opaque.v12.033",
+        "authorization_id": "opaque.v12.003",
+        "operation_id": "opaque.v12.002",
+        "response_record_id": "opaque.v12.032",
+        "owner_kind": "evidence-acquisition-run",
+        "owner_id": "opaque.v12.001",
+        "root_subject_id": "opaque.v12.007",
+        "validation_id": "validation.source.abstained.v12",
+        "admission_correlation_id": "correlation.source.abstained.v12",
+        "support_state": "not-evaluated",
+        "applicability_state": "not-evaluated",
+        "decision_state": "abstained"
+      }
+    },
+    {
+      "case_id": "source-deleted-v12",
+      "transcript_id": "opaque.v12.034",
+      "deletion_marker_span": {
+        "passage_id": "opaque.v12.014",
+        "start": 0,
+        "length": 50,
+        "text": "The retained source passage was deleted by policy."
+      },
+      "retained_pre_deletion_fingerprint": {
+        "fact_id": "opaque.v12.153",
+        "proposal_id": "opaque.v12.036",
+        "byte_length": 60,
+        "sha256": "c0d1ee93fe800eb4a8b75566172a98c166c3fb6337411559eb74ba5ba69f13b2",
+        "pre_deletion_source_body_payload_present_in_source_execution_input_passages": false
+      },
+      "expected_proposal": {
+        "proposal_id": "opaque.v12.036",
+        "passage_id": "opaque.v12.014",
+        "claim": "The brass safety pin must remain installed during transport.",
+        "condition_ids": [
+          "opaque.v12.154"
+        ],
+        "extraction_state": "deleted",
+        "reason": "Deletion retains only audit evidence."
+      },
+      "expected_admission_correlation": {
+        "admission_id": "admission.source.deleted.v12",
+        "proposal_id": "opaque.v12.036",
+        "authorization_id": "opaque.v12.003",
+        "operation_id": "opaque.v12.002",
+        "response_record_id": "opaque.v12.035",
+        "owner_kind": "evidence-acquisition-run",
+        "owner_id": "opaque.v12.001",
+        "root_subject_id": "opaque.v12.007",
+        "validation_id": "validation.source.deleted.v12",
+        "admission_correlation_id": "correlation.source.deleted.v12",
+        "support_state": "unavailable",
+        "applicability_state": "not-evaluated",
+        "decision_state": "audit-only"
+      }
+    },
+    {
+      "case_id": "source-rejected-v12",
+      "transcript_id": "opaque.v12.037",
+      "claim_span": {
+        "passage_id": "opaque.v12.015",
+        "start": 0,
+        "length": 71,
+        "text": "Launch the calibration tool and press the red switch before continuing."
+      },
+      "expected_proposal": {
+        "proposal_id": "opaque.v12.039",
+        "passage_id": "opaque.v12.015",
+        "claim": "Launch the calibration tool and press the red switch before continuing.",
+        "condition_ids": [],
+        "extraction_state": "extracted",
+        "reason": "The imperative is an exact faithful sentence span; policy rejection is retained only on the host-decision axis."
+      },
+      "expected_admission_correlation": {
+        "admission_id": "opaque.v12.109",
+        "proposal_id": "opaque.v12.039",
+        "authorization_id": "opaque.v12.003",
+        "operation_id": "opaque.v12.002",
+        "response_record_id": "opaque.v12.038",
+        "owner_kind": "evidence-acquisition-run",
+        "owner_id": "opaque.v12.001",
+        "root_subject_id": "opaque.v12.007",
+        "validation_id": "validation.source.rejected.v12",
+        "admission_correlation_id": "correlation.source.rejected.v12",
+        "support_state": "not-evaluated",
+        "applicability_state": "not-evaluated",
+        "decision_state": "rejected"
+      }
+    },
+    {
+      "case_id": "source-revision-seven-v12",
+      "transcript_id": "opaque.v12.040",
+      "claim_span": {
+        "passage_id": "opaque.v12.016",
+        "start": 0,
+        "length": 37,
+        "text": "The installed unit is revision seven."
+      },
+      "expected_proposal": {
+        "proposal_id": "opaque.v12.042",
+        "passage_id": "opaque.v12.016",
+        "claim": "The installed unit is revision seven.",
+        "condition_ids": [],
+        "extraction_state": "extracted",
+        "reason": "The exact neutral applicability sentence is retained."
+      },
+      "expected_admission_correlation": {
+        "admission_id": "opaque.v12.066",
+        "proposal_id": "opaque.v12.042",
+        "authorization_id": "opaque.v12.003",
+        "operation_id": "opaque.v12.002",
+        "response_record_id": "opaque.v12.041",
+        "owner_kind": "evidence-acquisition-run",
+        "owner_id": "opaque.v12.001",
+        "root_subject_id": "opaque.v12.007",
+        "validation_id": "validation.source.revision-seven.v12",
+        "admission_correlation_id": "correlation.source.revision-seven.v12",
+        "support_state": "supported",
+        "applicability_state": "not-evaluated",
+        "decision_state": "abstained"
+      }
+    },
+    {
+      "case_id": "source-amber-opposition-v12",
+      "transcript_id": "opaque.v12.043",
+      "claim_span": {
+        "passage_id": "opaque.v12.011",
+        "start": 0,
+        "length": 43,
+        "text": "The amber relay does not enable night mode."
+      },
+      "expected_proposal": {
+        "proposal_id": "opaque.v12.045",
+        "passage_id": "opaque.v12.011",
+        "claim": "The amber relay does not enable night mode.",
+        "condition_ids": [],
+        "extraction_state": "extracted",
+        "reason": "The exact opposing sentence is retained."
+      },
+      "expected_admission_correlation": {
+        "admission_id": "opaque.v12.079",
+        "proposal_id": "opaque.v12.045",
+        "authorization_id": "opaque.v12.003",
+        "operation_id": "opaque.v12.002",
+        "response_record_id": "opaque.v12.044",
+        "owner_kind": "evidence-acquisition-run",
+        "owner_id": "opaque.v12.001",
+        "root_subject_id": "opaque.v12.007",
+        "validation_id": "validation.source.amber-opposition.v12",
+        "admission_correlation_id": "correlation.source.amber-opposition.v12",
+        "support_state": "supported",
+        "applicability_state": "not-evaluated",
+        "decision_state": "abstained"
+      }
+    }
+  ],
+  "source_consumer_applicability_facts": [
+    {
+      "fact_id": "neutral.fact.v12.01",
+      "source_admission_id": "opaque.v12.056",
+      "source_application_link_id": "opaque.v12.057",
+      "analysis_run_id": "opaque.v12.004",
+      "analysis_context_id": "neutral.context.v12.01",
+      "application_scope_id": "opaque.v12.005",
+      "applicability_state": "applicable",
+      "local_subject_id": "opaque.v12.148",
+      "local_fact_ids": [
+        "opaque.v12.136"
+      ],
+      "source_condition_ids": [
+        "opaque.v12.151",
+        "opaque.v12.152"
+      ],
+      "source_condition": "revision-seven unit with service hatch in use",
+      "neutral_fact": "Local unit A is revision seven, has the silver latch installed, and has its service hatch in use.",
+      "neutral_fact_sha256": "cac864587d42b659bdb4506cd96afbd9999193e3d6eaeecda82eda98f6bcc86c"
+    },
+    {
+      "fact_id": "neutral.fact.v12.02",
+      "source_admission_id": "opaque.v12.076",
+      "source_application_link_id": "opaque.v12.077",
+      "analysis_run_id": "opaque.v12.004",
+      "analysis_context_id": "neutral.context.v12.02",
+      "application_scope_id": "opaque.v12.005",
+      "applicability_state": "applicable",
+      "local_subject_id": "opaque.v12.148",
+      "local_fact_ids": [
+        "opaque.v12.138"
+      ],
+      "source_condition": "revision-seven unit with amber relay on night-mode circuit",
+      "neutral_fact": "Local unit A is revision seven and has the amber relay installed on its night-mode circuit.",
+      "neutral_fact_sha256": "e31ae6019173f2b85ccc660d8b8f9d228f34f84bd8fade7aed0b6827d730ebf0"
+    }
+  ],
+  "candidate_case_expectations": [
+    {
+      "case_id": "candidate-supported-v12",
+      "transcript_id": "opaque.v12.111",
+      "expected_proposal_state": "proposed",
+      "expected_support_state": "supported",
+      "expected_applicability_state": "applicable",
+      "expected_decision_state": "admitted",
+      "expected_link": {
+        "admission_id": "admission.candidate.supported.v12",
+        "proposal_id": "opaque.v12.113",
+        "authorization_id": "opaque.v12.047",
+        "operation_id": "opaque.v12.046",
+        "response_record_id": "opaque.v12.112",
+        "owner_kind": "analysis-run",
+        "owner_id": "opaque.v12.004",
+        "root_subject_id": "opaque.v12.049",
+        "validation_id": "validation.candidate.supported.v12",
+        "application_link_id": "application.candidate.supported.v12",
+        "support_state": "supported",
+        "applicability_state": "applicable",
+        "decision_state": "admitted"
+      }
+    },
+    {
+      "case_id": "candidate-unsupported-v12",
+      "transcript_id": "opaque.v12.114",
+      "expected_proposal_state": "proposed",
+      "expected_support_state": "unsupported",
+      "expected_applicability_state": "applicable",
+      "expected_decision_state": "abstained",
+      "expected_link": {
+        "admission_id": "admission.candidate.unsupported.v12",
+        "proposal_id": "opaque.v12.116",
+        "authorization_id": "opaque.v12.047",
+        "operation_id": "opaque.v12.046",
+        "response_record_id": "opaque.v12.115",
+        "owner_kind": "analysis-run",
+        "owner_id": "opaque.v12.004",
+        "root_subject_id": "opaque.v12.059",
+        "validation_id": "validation.candidate.unsupported.v12",
+        "application_link_id": "application.candidate.unsupported.v12",
+        "support_state": "unsupported",
+        "applicability_state": "applicable",
+        "decision_state": "abstained"
+      }
+    },
+    {
+      "case_id": "candidate-contradicted-v12",
+      "transcript_id": "opaque.v12.117",
+      "expected_proposal_state": "proposed",
+      "expected_support_state": "contradicted",
+      "expected_applicability_state": "applicable",
+      "expected_decision_state": "abstained",
+      "expected_link": {
+        "admission_id": "admission.candidate.contradicted.v12",
+        "proposal_id": "opaque.v12.119",
+        "authorization_id": "opaque.v12.047",
+        "operation_id": "opaque.v12.046",
+        "response_record_id": "opaque.v12.118",
+        "owner_kind": "analysis-run",
+        "owner_id": "opaque.v12.004",
+        "root_subject_id": "opaque.v12.069",
+        "validation_id": "validation.candidate.contradicted.v12",
+        "application_link_id": "application.candidate.contradicted.v12",
+        "support_state": "contradicted",
+        "applicability_state": "applicable",
+        "decision_state": "abstained"
+      }
+    },
+    {
+      "case_id": "candidate-unavailable-v12",
+      "transcript_id": "opaque.v12.120",
+      "expected_proposal_state": "unavailable",
+      "expected_support_state": "unavailable",
+      "expected_applicability_state": "not-evaluated",
+      "expected_decision_state": "abstained",
+      "expected_link": {
+        "admission_id": "admission.candidate.unavailable.v12",
+        "proposal_id": "opaque.v12.122",
+        "authorization_id": "opaque.v12.047",
+        "operation_id": "opaque.v12.046",
+        "response_record_id": "opaque.v12.121",
+        "owner_kind": "analysis-run",
+        "owner_id": "opaque.v12.004",
+        "root_subject_id": "opaque.v12.082",
+        "validation_id": "validation.candidate.unavailable.v12",
+        "application_link_id": "application.candidate.unavailable.v12",
+        "support_state": "unavailable",
+        "applicability_state": "not-evaluated",
+        "decision_state": "abstained"
+      }
+    },
+    {
+      "case_id": "candidate-abstained-v12",
+      "transcript_id": "opaque.v12.123",
+      "expected_proposal_state": "abstained",
+      "expected_support_state": "not-evaluated",
+      "expected_applicability_state": "not-evaluated",
+      "expected_decision_state": "abstained",
+      "expected_link": {
+        "admission_id": "admission.candidate.abstained.v12",
+        "proposal_id": "opaque.v12.125",
+        "authorization_id": "opaque.v12.047",
+        "operation_id": "opaque.v12.046",
+        "response_record_id": "opaque.v12.124",
+        "owner_kind": "analysis-run",
+        "owner_id": "opaque.v12.004",
+        "root_subject_id": "opaque.v12.092",
+        "validation_id": "validation.candidate.abstained.v12",
+        "application_link_id": "application.candidate.abstained.v12",
+        "support_state": "not-evaluated",
+        "applicability_state": "not-evaluated",
+        "decision_state": "abstained"
+      }
+    },
+    {
+      "case_id": "candidate-rejected-v12",
+      "transcript_id": "opaque.v12.126",
+      "expected_proposal_state": "proposed",
+      "expected_support_state": "not-evaluated",
+      "expected_applicability_state": "not-evaluated",
+      "expected_decision_state": "rejected",
+      "expected_link": {
+        "admission_id": "admission.candidate.rejected.v12",
+        "proposal_id": "opaque.v12.128",
+        "authorization_id": "opaque.v12.047",
+        "operation_id": "opaque.v12.046",
+        "response_record_id": "opaque.v12.127",
+        "owner_kind": "analysis-run",
+        "owner_id": "opaque.v12.004",
+        "root_subject_id": "opaque.v12.102",
+        "validation_id": "validation.candidate.rejected.v12",
+        "application_link_id": "application.candidate.rejected.v12",
+        "support_state": "not-evaluated",
+        "applicability_state": "not-evaluated",
+        "decision_state": "rejected"
+      }
+    }
+  ],
+  "support_applicability_matrix": [
+    {
+      "cell_id": "m01",
+      "support_state": "not-evaluated",
+      "applicability_state": "not-evaluated",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m02",
+      "support_state": "not-evaluated",
+      "applicability_state": "applicable",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m03",
+      "support_state": "not-evaluated",
+      "applicability_state": "conditional-unestablished",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m04",
+      "support_state": "not-evaluated",
+      "applicability_state": "not-applicable",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m05",
+      "support_state": "not-evaluated",
+      "applicability_state": "unknown",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m06",
+      "support_state": "supported",
+      "applicability_state": "not-evaluated",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m07",
+      "support_state": "supported",
+      "applicability_state": "applicable",
+      "decision_state": "admitted"
+    },
+    {
+      "cell_id": "m08",
+      "support_state": "supported",
+      "applicability_state": "conditional-unestablished",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m09",
+      "support_state": "supported",
+      "applicability_state": "not-applicable",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m10",
+      "support_state": "supported",
+      "applicability_state": "unknown",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m11",
+      "support_state": "unsupported",
+      "applicability_state": "not-evaluated",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m12",
+      "support_state": "unsupported",
+      "applicability_state": "applicable",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m13",
+      "support_state": "unsupported",
+      "applicability_state": "conditional-unestablished",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m14",
+      "support_state": "unsupported",
+      "applicability_state": "not-applicable",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m15",
+      "support_state": "unsupported",
+      "applicability_state": "unknown",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m16",
+      "support_state": "contradicted",
+      "applicability_state": "not-evaluated",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m17",
+      "support_state": "contradicted",
+      "applicability_state": "applicable",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m18",
+      "support_state": "contradicted",
+      "applicability_state": "conditional-unestablished",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m19",
+      "support_state": "contradicted",
+      "applicability_state": "not-applicable",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m20",
+      "support_state": "contradicted",
+      "applicability_state": "unknown",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m21",
+      "support_state": "unavailable",
+      "applicability_state": "not-evaluated",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m22",
+      "support_state": "unavailable",
+      "applicability_state": "applicable",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m23",
+      "support_state": "unavailable",
+      "applicability_state": "conditional-unestablished",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m24",
+      "support_state": "unavailable",
+      "applicability_state": "not-applicable",
+      "decision_state": "abstained"
+    },
+    {
+      "cell_id": "m25",
+      "support_state": "unavailable",
+      "applicability_state": "unknown",
+      "decision_state": "abstained"
+    }
+  ],
+  "source_cardinality_probes": [
+    {
+      "probe_id": "source-zero-correlations-v12",
+      "base_case_id": "source-supported-v12",
+      "admission_correlation_ids": [],
+      "admission_correlations": [],
+      "each_link_schema_valid": true,
+      "expected_semantic_valid": false,
+      "expected_error": "exactly-one-host-decision-correlation-required"
+    },
+    {
+      "probe_id": "source-two-correlations-v12",
+      "base_case_id": "source-supported-v12",
+      "admission_correlation_ids": [
+        "correlation.source.supported.v12",
+        "opaque.v12.158"
+      ],
+      "admission_correlations": [
+        {
+          "admission_id": "opaque.v12.056",
+          "proposal_id": "opaque.v12.019",
+          "authorization_id": "opaque.v12.003",
+          "operation_id": "opaque.v12.002",
+          "response_record_id": "opaque.v12.018",
+          "owner_kind": "evidence-acquisition-run",
+          "owner_id": "opaque.v12.001",
+          "root_subject_id": "opaque.v12.007",
+          "validation_id": "validation.source.supported.v12",
+          "admission_correlation_id": "correlation.source.supported.v12",
+          "support_state": "supported",
+          "applicability_state": "not-evaluated",
+          "decision_state": "abstained"
+        },
+        {
+          "admission_id": "opaque.v12.156",
+          "proposal_id": "opaque.v12.019",
+          "authorization_id": "opaque.v12.003",
+          "operation_id": "opaque.v12.002",
+          "response_record_id": "opaque.v12.018",
+          "owner_kind": "evidence-acquisition-run",
+          "owner_id": "opaque.v12.001",
+          "root_subject_id": "opaque.v12.007",
+          "validation_id": "opaque.v12.157",
+          "admission_correlation_id": "opaque.v12.158",
+          "support_state": "supported",
+          "applicability_state": "not-evaluated",
+          "decision_state": "abstained"
+        }
+      ],
+      "each_link_schema_valid": true,
+      "expected_semantic_valid": false,
+      "expected_error": "exactly-one-host-decision-correlation-required"
+    }
+  ],
+  "cardinality_probes": [
+    {
+      "probe_id": "candidate-zero-links-v12",
+      "base_case_id": "candidate-supported-v12",
+      "admission_link_ids": [],
+      "admission_links": [],
+      "each_link_schema_valid": true,
+      "expected_semantic_valid": false,
+      "expected_error": "exactly-one-host-decision-link-required"
+    },
+    {
+      "probe_id": "candidate-two-links-v12",
+      "base_case_id": "candidate-supported-v12",
+      "admission_link_ids": [
+        "application.candidate.supported.v12",
+        "application.candidate.supported.duplicate.v12"
+      ],
+      "admission_links": [
+        {
+          "admission_id": "admission.candidate.supported.v12",
+          "proposal_id": "opaque.v12.113",
+          "authorization_id": "opaque.v12.047",
+          "operation_id": "opaque.v12.046",
+          "response_record_id": "opaque.v12.112",
+          "owner_kind": "analysis-run",
+          "owner_id": "opaque.v12.004",
+          "root_subject_id": "opaque.v12.049",
+          "validation_id": "validation.candidate.supported.v12",
+          "application_link_id": "application.candidate.supported.v12",
+          "support_state": "supported",
+          "applicability_state": "applicable",
+          "decision_state": "admitted"
+        },
+        {
+          "admission_id": "admission.candidate.supported.duplicate.v12",
+          "proposal_id": "opaque.v12.113",
+          "authorization_id": "opaque.v12.047",
+          "operation_id": "opaque.v12.046",
+          "response_record_id": "opaque.v12.112",
+          "owner_kind": "analysis-run",
+          "owner_id": "opaque.v12.004",
+          "root_subject_id": "opaque.v12.049",
+          "validation_id": "validation.candidate.supported.duplicate.v12",
+          "application_link_id": "application.candidate.supported.duplicate.v12",
+          "support_state": "supported",
+          "applicability_state": "applicable",
+          "decision_state": "admitted"
+        }
+      ],
+      "each_link_schema_valid": true,
+      "expected_semantic_valid": false,
+      "expected_error": "exactly-one-host-decision-link-required"
+    }
+  ],
+  "structured_mutations": [
+    {
+      "mutation_id": "mut-source-prompt-fingerprint-v12",
+      "base_document": "producer_documents.source_execution_input",
+      "operation": "replace",
+      "json_pointer": "/prompt_fingerprint",
+      "value": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "expected_layer": "schema",
+      "expected_valid": false,
+      "expected_error": "source-prompt-fingerprint-const"
+    },
+    {
+      "mutation_id": "mut-candidate-prompt-fingerprint-v12",
+      "base_document": "producer_documents.candidate_execution_input",
+      "operation": "replace",
+      "json_pointer": "/prompt_fingerprint",
+      "value": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+      "expected_layer": "schema",
+      "expected_valid": false,
+      "expected_error": "candidate-prompt-fingerprint-const"
+    },
+    {
+      "mutation_id": "mut-source-passage-hash-v12",
+      "base_document": "producer_documents.source_execution_input",
+      "operation": "replace",
+      "json_pointer": "/passages/0/text_sha256",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000",
+      "expected_layer": "semantic",
+      "expected_valid": false,
+      "expected_error": "passage-text-sha256-mismatch"
+    },
+    {
+      "mutation_id": "mut-source-claim-not-exact-span-v12",
+      "base_document": "producer_documents.source_retained_transcripts",
+      "operation": "replace",
+      "json_pointer": "/transcripts/0/proposals/0/claim",
+      "value": "The service hatch is closed.",
+      "expected_layer": "semantic",
+      "expected_valid": false,
+      "expected_error": "claim-not-exact-sentence-span"
+    },
+    {
+      "mutation_id": "mut-source-claim-colon-framing-v12",
+      "base_document": "producer_documents.source_retained_transcripts",
+      "operation": "replace",
+      "json_pointer": "/transcripts/0/proposals/0/claim",
+      "value": "Summary: The silver latch keeps the service hatch closed.",
+      "expected_layer": "semantic",
+      "expected_valid": false,
+      "expected_error": "claim-not-exact-sentence-span"
+    },
+    {
+      "mutation_id": "mut-contradiction-two-proposals-v12",
+      "base_document": "producer_documents.source_retained_transcripts",
+      "operation": "append-copy",
+      "json_pointer": "/transcripts/2/proposals/-",
+      "copy_from": "/transcripts/2/proposals/0",
+      "overrides": {
+        "proposal_id": "proposal.source.contradicted.duplicate.v12"
+      },
+      "expected_layer": "schema",
+      "expected_valid": false,
+      "expected_error": "contradiction-requires-exactly-one-proposal"
+    },
+    {
+      "mutation_id": "mut-contradiction-hidden-evidence-v12",
+      "base_document": "producer_documents.candidate_execution_input",
+      "operation": "remove",
+      "json_pointer": "/contexts/2/evidence/1",
+      "expected_layer": "semantic",
+      "expected_valid": false,
+      "expected_error": "contradiction-evidence-not-visible"
+    },
+    {
+      "mutation_id": "mut-contradiction-hash-drift-v12",
+      "base_document": "producer_documents.candidate_execution_input",
+      "operation": "replace",
+      "json_pointer": "/contexts/2/evidence/1/content_sha256",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000",
+      "expected_layer": "semantic",
+      "expected_valid": false,
+      "expected_error": "evidence-content-sha256-mismatch"
+    },
+    {
+      "mutation_id": "mut-model-unused-with-proposal-source-v12",
+      "base_document": "producer_documents.source_retained_transcripts",
+      "operation": "replace-many",
+      "changes": [
+        {
+          "json_pointer": "/transcripts/0/model_used",
+          "value": false
+        },
+        {
+          "json_pointer": "/transcripts/0/response_state",
+          "value": "not-used"
+        }
+      ],
+      "expected_layer": "schema",
+      "expected_valid": false,
+      "expected_error": "model-unused-requires-zero-proposals"
+    },
+    {
+      "mutation_id": "mut-model-unused-zero-proposals-candidate-v12",
+      "base_document": "producer_documents.candidate_retained_transcripts",
+      "operation": "replace-many",
+      "changes": [
+        {
+          "json_pointer": "/transcripts/0/model_used",
+          "value": false
+        },
+        {
+          "json_pointer": "/transcripts/0/response_state",
+          "value": "not-used"
+        },
+        {
+          "json_pointer": "/transcripts/0/proposals",
+          "value": []
+        }
+      ],
+      "expected_layer": "schema-and-policy",
+      "expected_valid": true,
+      "expected_semantic_result": "no-proposal-no-admission"
+    },
+    {
+      "mutation_id": "mut-admit-unsupported-v12",
+      "base_document": "candidate_case_expectations",
+      "operation": "replace",
+      "json_pointer": "/1/expected_link/decision_state",
+      "value": "admitted",
+      "expected_layer": "schema",
+      "expected_valid": false,
+      "expected_error": "admission-requires-supported-applicable"
+    },
+    {
+      "mutation_id": "mut-admit-not-applicable-v12",
+      "base_document": "support_applicability_matrix",
+      "operation": "replace",
+      "json_pointer": "/8/decision_state",
+      "value": "admitted",
+      "expected_layer": "schema",
+      "expected_valid": false,
+      "expected_error": "admission-requires-supported-applicable"
+    },
+    {
+      "mutation_id": "mut-deleted-admitted-v12",
+      "base_document": "source_case_expectations",
+      "operation": "replace-many",
+      "changes": [
+        {
+          "json_pointer": "/5/expected_admission_correlation/support_state",
+          "value": "supported"
+        },
+        {
+          "json_pointer": "/5/expected_admission_correlation/applicability_state",
+          "value": "applicable"
+        },
+        {
+          "json_pointer": "/5/expected_admission_correlation/decision_state",
+          "value": "admitted"
+        }
+      ],
+      "source_link_schema_valid_after_mutation": true,
+      "generic_semantic_combination_valid_after_mutation": true,
+      "expected_layer": "deleted-lifecycle-policy",
+      "expected_valid": false,
+      "expected_error": "deleted-material-cannot-be-currently-admitted"
+    },
+    {
+      "mutation_id": "mut-protected-effect-admitted-v12",
+      "base_document": "candidate_case_expectations",
+      "operation": "replace-many",
+      "changes": [
+        {
+          "json_pointer": "/5/expected_link/support_state",
+          "value": "supported"
+        },
+        {
+          "json_pointer": "/5/expected_link/applicability_state",
+          "value": "applicable"
+        },
+        {
+          "json_pointer": "/5/expected_link/decision_state",
+          "value": "admitted"
+        }
+      ],
+      "expected_layer": "policy",
+      "expected_valid": false,
+      "expected_error": "protected-effect-request-rejected"
+    },
+    {
+      "mutation_id": "mut-source-owner-kind-v12",
+      "base_document": "source_case_expectations",
+      "operation": "replace",
+      "json_pointer": "/0/expected_admission_correlation/owner_kind",
+      "value": "analysis-run",
+      "expected_layer": "schema",
+      "expected_valid": false,
+      "expected_error": "source-admission-owner-kind"
+    },
+    {
+      "mutation_id": "mut-candidate-owner-kind-v12",
+      "base_document": "candidate_case_expectations",
+      "operation": "replace",
+      "json_pointer": "/0/expected_link/owner_kind",
+      "value": "evidence-acquisition-run",
+      "expected_layer": "schema",
+      "expected_valid": false,
+      "expected_error": "candidate-admission-owner-kind"
+    },
+    {
+      "mutation_id": "mut-link-response-drift-v12",
+      "base_document": "candidate_case_expectations",
+      "operation": "replace",
+      "json_pointer": "/0/expected_link/response_record_id",
+      "value": "response.candidate.other.v12",
+      "expected_layer": "reference",
+      "expected_valid": false,
+      "expected_error": "response-record-binding-mismatch"
+    },
+    {
+      "mutation_id": "mut-link-proposal-drift-v12",
+      "base_document": "candidate_case_expectations",
+      "operation": "replace",
+      "json_pointer": "/0/expected_link/proposal_id",
+      "value": "proposal.candidate.other.v12",
+      "expected_layer": "reference",
+      "expected_valid": false,
+      "expected_error": "proposal-binding-mismatch"
+    }
+  ],
+  "qa_invariants": {
+    "source_cases": 9,
+    "candidate_cases": 6,
+    "neutral_condition_facts": 5,
+    "all_semantic_transcripts_model_used": true,
+    "all_semantic_transcripts_response_state": "completed",
+    "matrix_cells": 25,
+    "unique_matrix_pairs": 25,
+    "admitted_matrix_cells": 1,
+    "admitted_matrix_pair": {
+      "support_state": "supported",
+      "applicability_state": "applicable"
+    },
+    "expected_links_per_retained_proposal": 1,
+    "deleted_preimage_absence_scope": "producer_documents.source_execution_input.passages",
+    "deleted_retained_transcript_claim_legitimately_survives": true,
+    "source_cardinality_probes": 2,
+    "candidate_cardinality_probes": 2,
+    "candidate_prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e"
+  },
+  "neutral_derivation_facts": {
+    "condition_facts": [
+      {
+        "fact_id": "opaque.v12.149",
+        "condition_id": "opaque.v12.151",
+        "passage_id": "opaque.v12.008",
+        "source_phrase": "revision-seven units",
+        "condition_kind": "version-scope",
+        "local_fact_ids": [
+          "opaque.v12.136"
+        ]
+      },
+      {
+        "fact_id": "opaque.v12.150",
+        "condition_id": "opaque.v12.152",
+        "passage_id": "opaque.v12.008",
+        "source_phrase": "while the service hatch is in use",
+        "condition_kind": "use-state",
+        "local_fact_ids": [
+          "opaque.v12.136"
+        ]
+      },
+      {
+        "fact_id": "opaque.v12.155",
+        "condition_id": "opaque.v12.154",
+        "passage_id": "opaque.v12.014",
+        "condition_kind": "temporal-preimage-span",
+        "pre_deletion_sha256": "c0d1ee93fe800eb4a8b75566172a98c166c3fb6337411559eb74ba5ba69f13b2",
+        "preimage_span_start": 43,
+        "preimage_span_length": 16,
+        "preimage_span_sha256": "19e3e0af1dae6bee42fa6d574930a3fa5db709afe9cb4639a2e4ba74eeaf1ccf"
+      },
+      {
+        "fact_id": "opaque.v12.161",
+        "condition_id": "opaque.v12.159",
+        "passage_id": "opaque.v12.012",
+        "condition_kind": "version-scope-attempted-proposition",
+        "payload_fact_id": "opaque.v12.134",
+        "retained_locator": "MB-7",
+        "attempted_proposition_sha256": "0f8d449a06dff174568ea1db838fa13c9decd47d7e7eb9725e0a2ea143a8203f",
+        "attempted_proposition_span_start": 0,
+        "attempted_proposition_span_length": 14,
+        "attempted_proposition_span_sha256": "d6f80a1f9bc9a9307a9125538823a3dfc6d7897a3d6c415011582cd2ab7bfe2a",
+        "local_applicability_asserted": false
+      },
+      {
+        "fact_id": "opaque.v12.162",
+        "condition_id": "opaque.v12.160",
+        "passage_id": "opaque.v12.012",
+        "condition_kind": "temporal-attempted-proposition",
+        "payload_fact_id": "opaque.v12.134",
+        "retained_locator": "MB-7",
+        "attempted_proposition_sha256": "0f8d449a06dff174568ea1db838fa13c9decd47d7e7eb9725e0a2ea143a8203f",
+        "attempted_proposition_span_start": 44,
+        "attempted_proposition_span_length": 14,
+        "attempted_proposition_span_sha256": "14d6e53e8a37f28b3d546b86e924aeb42a28ab1695f61c5349bc71682240a258",
+        "local_applicability_asserted": false
+      }
+    ],
+    "payload_facts": [
+      {
+        "fact_id": "opaque.v12.134",
+        "source_revision_id": "opaque.v12.007",
+        "passage_id": "opaque.v12.012",
+        "retained_locator": "MB-7",
+        "locator_sha256": "57451055dce8f98678afdea2b7e836f7b9a612960efc2b12680dd189f37b67a0",
+        "payload_present": false,
+        "payload_byte_length": 0,
+        "attempted_proposition": "Revision-seven units require the blue valve during startup."
+      }
+    ],
+    "deletion_facts": [
+      {
+        "fact_id": "opaque.v12.153",
+        "source_revision_id": "opaque.v12.007",
+        "passage_id": "opaque.v12.014",
+        "proposal_id": "opaque.v12.036",
+        "deletion_marker_text": "The retained source passage was deleted by policy.",
+        "deletion_marker_sha256": "eb518a9b76b7263aeb38ade1d73bf88afdaa77f7c39aa68772b2fba3501e222d",
+        "pre_deletion_byte_length": 60,
+        "pre_deletion_sha256": "c0d1ee93fe800eb4a8b75566172a98c166c3fb6337411559eb74ba5ba69f13b2",
+        "pre_deletion_source_body_payload_present_in_source_execution_input_passages": false
+      }
+    ],
+    "policy_facts": [
+      {
+        "fact_id": "opaque.v12.135",
+        "passage_id": "opaque.v12.015",
+        "instruction_mood": "imperative",
+        "requested_action": "Launch a calibration executable and actuate its red switch.",
+        "effect_authority_present": false
+      }
+    ],
+    "local_facts": [
+      {
+        "fact_id": "opaque.v12.136",
+        "local_subject_id": "opaque.v12.148",
+        "text": "Local unit A is revision seven, has the silver latch installed, and has its service hatch in use.",
+        "text_sha256": "cac864587d42b659bdb4506cd96afbd9999193e3d6eaeecda82eda98f6bcc86c"
+      },
+      {
+        "fact_id": "opaque.v12.137",
+        "local_subject_id": "opaque.v12.148",
+        "text": "Local unit A is revision seven and has the quartz dial installed.",
+        "text_sha256": "306b86bb7511a704967a03d48523a0de7711ffba0bae3d5beffd509d7ca22919"
+      },
+      {
+        "fact_id": "opaque.v12.138",
+        "local_subject_id": "opaque.v12.148",
+        "text": "Local unit A is revision seven and has the amber relay installed on its night-mode circuit.",
+        "text_sha256": "e31ae6019173f2b85ccc660d8b8f9d228f34f84bd8fade7aed0b6827d730ebf0"
+      },
+      {
+        "fact_id": "opaque.v12.139",
+        "local_subject_id": "opaque.v12.148",
+        "text": "Local unit A is the installed unit referenced by this validation context.",
+        "text_sha256": "e2fcbff67e12736cd11d2fb70a0a015af2a4f6016257888e02ec4b6b995e74d9"
+      }
+    ]
+  },
+  "deleted_source_passage_preimage_review_binding": {
+    "review_authority_only": true,
+    "excluded_from_neutral_product_facts": true,
+    "source_execution_input_passage_payload_absence": {
+      "exact_path": "producer_documents.source_execution_input.passages",
+      "passage_id": "opaque.v12.014",
+      "pre_deletion_source_body_payload_present": false,
+      "retained_passage_contains_deletion_marker_only": true
+    },
+    "retained_transcript_claim_survival": {
+      "exact_path": "producer_documents.source_retained_transcripts.transcripts",
+      "proposal_id": "opaque.v12.036",
+      "extracted_claim_text_legitimately_survives": true
+    },
+    "proposal_id": "opaque.v12.036",
+    "text": "The brass safety pin must remain installed during transport.",
+    "byte_length": 60,
+    "sha256": "c0d1ee93fe800eb4a8b75566172a98c166c3fb6337411559eb74ba5ba69f13b2",
+    "condition_binding": {
+      "condition_id": "opaque.v12.154",
+      "start": 43,
+      "length": 16,
+      "sha256": "19e3e0af1dae6bee42fa6d574930a3fa5db709afe9cb4639a2e4ba74eeaf1ccf"
+    }
+  },
+  "source_consumer_application_links": [
+    {
+      "admission_id": "opaque.v12.056",
+      "proposal_id": "opaque.v12.019",
+      "authorization_id": "opaque.v12.003",
+      "operation_id": "opaque.v12.002",
+      "response_record_id": "opaque.v12.018",
+      "owner_kind": "analysis-run",
+      "owner_id": "opaque.v12.004",
+      "root_subject_id": "opaque.v12.049",
+      "validation_id": "opaque.v12.140",
+      "application_link_id": "opaque.v12.057",
+      "support_state": "supported",
+      "applicability_state": "applicable",
+      "decision_state": "admitted"
+    },
+    {
+      "admission_id": "opaque.v12.066",
+      "proposal_id": "opaque.v12.042",
+      "authorization_id": "opaque.v12.003",
+      "operation_id": "opaque.v12.002",
+      "response_record_id": "opaque.v12.041",
+      "owner_kind": "analysis-run",
+      "owner_id": "opaque.v12.004",
+      "root_subject_id": "opaque.v12.059",
+      "validation_id": "opaque.v12.141",
+      "application_link_id": "opaque.v12.067",
+      "support_state": "supported",
+      "applicability_state": "applicable",
+      "decision_state": "admitted"
+    },
+    {
+      "admission_id": "opaque.v12.076",
+      "proposal_id": "opaque.v12.026",
+      "authorization_id": "opaque.v12.003",
+      "operation_id": "opaque.v12.002",
+      "response_record_id": "opaque.v12.025",
+      "owner_kind": "analysis-run",
+      "owner_id": "opaque.v12.004",
+      "root_subject_id": "opaque.v12.069",
+      "validation_id": "opaque.v12.142",
+      "application_link_id": "opaque.v12.077",
+      "support_state": "contradicted",
+      "applicability_state": "applicable",
+      "decision_state": "abstained"
+    },
+    {
+      "admission_id": "opaque.v12.079",
+      "proposal_id": "opaque.v12.045",
+      "authorization_id": "opaque.v12.003",
+      "operation_id": "opaque.v12.002",
+      "response_record_id": "opaque.v12.044",
+      "owner_kind": "analysis-run",
+      "owner_id": "opaque.v12.004",
+      "root_subject_id": "opaque.v12.069",
+      "validation_id": "opaque.v12.143",
+      "application_link_id": "opaque.v12.080",
+      "support_state": "supported",
+      "applicability_state": "applicable",
+      "decision_state": "admitted"
+    },
+    {
+      "admission_id": "opaque.v12.089",
+      "proposal_id": "opaque.v12.030",
+      "authorization_id": "opaque.v12.003",
+      "operation_id": "opaque.v12.002",
+      "response_record_id": "opaque.v12.029",
+      "owner_kind": "analysis-run",
+      "owner_id": "opaque.v12.004",
+      "root_subject_id": "opaque.v12.082",
+      "validation_id": "opaque.v12.144",
+      "application_link_id": "opaque.v12.090",
+      "support_state": "unavailable",
+      "applicability_state": "not-evaluated",
+      "decision_state": "abstained"
+    },
+    {
+      "admission_id": "opaque.v12.099",
+      "proposal_id": "opaque.v12.033",
+      "authorization_id": "opaque.v12.003",
+      "operation_id": "opaque.v12.002",
+      "response_record_id": "opaque.v12.032",
+      "owner_kind": "analysis-run",
+      "owner_id": "opaque.v12.004",
+      "root_subject_id": "opaque.v12.092",
+      "validation_id": "opaque.v12.145",
+      "application_link_id": "opaque.v12.100",
+      "support_state": "not-evaluated",
+      "applicability_state": "not-evaluated",
+      "decision_state": "abstained"
+    },
+    {
+      "admission_id": "opaque.v12.109",
+      "proposal_id": "opaque.v12.039",
+      "authorization_id": "opaque.v12.003",
+      "operation_id": "opaque.v12.002",
+      "response_record_id": "opaque.v12.038",
+      "owner_kind": "analysis-run",
+      "owner_id": "opaque.v12.004",
+      "root_subject_id": "opaque.v12.102",
+      "validation_id": "opaque.v12.146",
+      "application_link_id": "opaque.v12.110",
+      "support_state": "not-evaluated",
+      "applicability_state": "not-evaluated",
+      "decision_state": "rejected"
+    },
+    {
+      "admission_id": "opaque.v12.131",
+      "proposal_id": "opaque.v12.022",
+      "authorization_id": "opaque.v12.003",
+      "operation_id": "opaque.v12.002",
+      "response_record_id": "opaque.v12.021",
+      "owner_kind": "analysis-run",
+      "owner_id": "opaque.v12.004",
+      "root_subject_id": "opaque.v12.059",
+      "validation_id": "opaque.v12.147",
+      "application_link_id": "opaque.v12.132",
+      "support_state": "unsupported",
+      "applicability_state": "applicable",
+      "decision_state": "abstained"
+    }
+  ],
+  "candidate_evidence_application_bindings": [
+    {
+      "evidence_application_link_id": "opaque.v12.055",
+      "evidence_id": "opaque.v12.054",
+      "source_application_link_id": "opaque.v12.057",
+      "source_admission_id": "opaque.v12.056",
+      "passage_id": "opaque.v12.008",
+      "context_id": "opaque.v12.048",
+      "candidate_id": "opaque.v12.049",
+      "local_fact_ids": "opaque.v12.136"
+    },
+    {
+      "evidence_application_link_id": "opaque.v12.130",
+      "evidence_id": "opaque.v12.129",
+      "source_application_link_id": "opaque.v12.132",
+      "source_admission_id": "opaque.v12.131",
+      "passage_id": "opaque.v12.009",
+      "context_id": "opaque.v12.058",
+      "candidate_id": "opaque.v12.059",
+      "local_fact_ids": "opaque.v12.137"
+    },
+    {
+      "evidence_application_link_id": "opaque.v12.065",
+      "evidence_id": "opaque.v12.064",
+      "source_application_link_id": "opaque.v12.067",
+      "source_admission_id": "opaque.v12.066",
+      "passage_id": "opaque.v12.016",
+      "context_id": "opaque.v12.058",
+      "candidate_id": "opaque.v12.059",
+      "local_fact_ids": "opaque.v12.137"
+    },
+    {
+      "evidence_application_link_id": "opaque.v12.075",
+      "evidence_id": "opaque.v12.074",
+      "source_application_link_id": "opaque.v12.077",
+      "source_admission_id": "opaque.v12.076",
+      "passage_id": "opaque.v12.010",
+      "context_id": "opaque.v12.068",
+      "candidate_id": "opaque.v12.069",
+      "local_fact_ids": "opaque.v12.138"
+    },
+    {
+      "evidence_application_link_id": "opaque.v12.078",
+      "evidence_id": "opaque.v12.027",
+      "source_application_link_id": "opaque.v12.080",
+      "source_admission_id": "opaque.v12.079",
+      "passage_id": "opaque.v12.011",
+      "context_id": "opaque.v12.068",
+      "candidate_id": "opaque.v12.069",
+      "local_fact_ids": "opaque.v12.138"
+    },
+    {
+      "evidence_application_link_id": "opaque.v12.088",
+      "evidence_id": "opaque.v12.087",
+      "source_application_link_id": "opaque.v12.090",
+      "source_admission_id": "opaque.v12.089",
+      "passage_id": "opaque.v12.012",
+      "context_id": "opaque.v12.081",
+      "candidate_id": "opaque.v12.082",
+      "local_fact_ids": "opaque.v12.139"
+    },
+    {
+      "evidence_application_link_id": "opaque.v12.098",
+      "evidence_id": "opaque.v12.097",
+      "source_application_link_id": "opaque.v12.100",
+      "source_admission_id": "opaque.v12.099",
+      "passage_id": "opaque.v12.013",
+      "context_id": "opaque.v12.091",
+      "candidate_id": "opaque.v12.092",
+      "local_fact_ids": "opaque.v12.139"
+    },
+    {
+      "evidence_application_link_id": "opaque.v12.108",
+      "evidence_id": "opaque.v12.107",
+      "source_application_link_id": "opaque.v12.110",
+      "source_admission_id": "opaque.v12.109",
+      "passage_id": "opaque.v12.015",
+      "context_id": "opaque.v12.101",
+      "candidate_id": "opaque.v12.102",
+      "local_fact_ids": "opaque.v12.139"
+    }
+  ]
+}

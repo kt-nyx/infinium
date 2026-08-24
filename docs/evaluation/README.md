@@ -3,10 +3,16 @@
 Status: Accepted
 Disposition: Active navigation
 
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-23
 
 Evaluation documents define how product claims are demonstrated. They do not
 make implementation, fixture, or product-acceptance claims by themselves.
+
+[ADR-0035](../architecture/decisions/ADR-0035-defer-independent-semantic-oracle-qualification.md)
+defers independent semantic-oracle qualification throughout M1 and M2. The
+[active profile](m1-continuation-verification-profile.md) requires ordinary
+product conformance and reserves independent evaluation for the M3 Evaluation
+Readiness Gate after M2 acceptance.
 
 ## Product verification
 
@@ -15,7 +21,7 @@ make implementation, fixture, or product-acceptance claims by themselves.
 - [Fixture guidelines](fixture-guidelines.md)
 - [Anti-overfitting rules](anti-overfitting-rules.md)
 - [M1 evaluation baseline](m1-evaluation-baseline.md)
-- [M1 continuation verification profile](m1-continuation-verification-profile.md)
+- [M1/M2 product-conformance verification profile](m1-continuation-verification-profile.md)
 - [Platform and operational specifications](specifications/m1-platform-and-operational.md)
 - [Semantic and ground-truth specifications](specifications/m1-semantic-and-ground-truth.md)
 - [Platform fixture catalog](specifications/platform-fixture-catalog.md)

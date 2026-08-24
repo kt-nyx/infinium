@@ -42,6 +42,7 @@ public sealed class EvaluationBoundaryContractTests
         "current-product-contracts",
         "current-public-fixtures",
         "retained-historical-authorability-evidence",
+        "historical-semantic-packages",
         "fixture-governance-vocabulary",
         "retired-material",
     ];
@@ -73,6 +74,12 @@ public sealed class EvaluationBoundaryContractTests
         CollectionAssert.AreEquivalent(
             CurrentAuthoritySurfaceIds,
             surfaceIds);
+
+        JsonElement semanticPolicy = authority.RootElement.GetProperty("semantic_oracle_policy");
+        Assert.AreEqual("deferred", semanticPolicy.GetProperty("status").GetString());
+        Assert.AreEqual(JsonValueKind.Null, semanticPolicy.GetProperty("current_authority_package").ValueKind);
+        Assert.IsFalse(semanticPolicy.GetProperty("gates_m1_acceptance").GetBoolean());
+        Assert.IsFalse(semanticPolicy.GetProperty("gates_m2_acceptance").GetBoolean());
 
         JsonElement publicFixtureSurface = authority.RootElement.GetProperty("surfaces")
             .EnumerateArray()
@@ -139,16 +146,39 @@ public sealed class EvaluationBoundaryContractTests
         {
             FixtureRegistryEntry registered = actual[identity];
             Assert.AreEqual(source.Version, registered.Version, identity);
-            Assert.AreEqual(source.Partition, registered.Partition, identity);
-            Assert.AreEqual(source.PackagePath, registered.PackagePath, identity);
-            Assert.AreEqual(source.AuthorityFile, registered.AuthorityFile, identity);
-            if (source.AuthorityStatus is not null)
+            bool reclassifiedHistoricalSource = identity is "S6-CLAIM-DEV-v1" or "S6-CLAIM-VAL-v1"
+                or "S6-CANDIDATE-DEV-v2" or "S6-CANDIDATE-VAL-v3"
+                or "LLM-CLAIM-LIVE-VAL" or "LLM-INVESTIGATE-LIVE-VAL"
+                or "PROV-LIVE-COMPOSED-VAL"
+                || identity.StartsWith("S6-SEMANTIC-ADMISSION-VAL-", StringComparison.Ordinal);
+            if (reclassifiedHistoricalSource)
             {
-                Assert.AreEqual(source.AuthorityStatus, registered.AuthorityStatus, identity);
+                Assert.AreEqual("development", registered.Partition, identity);
+                if (identity.StartsWith("S6-SEMANTIC-ADMISSION-VAL-", StringComparison.Ordinal))
+                {
+                    StringAssert.StartsWith(registered.AuthorityStatus!,
+                        "historical-development-evidence-", identity);
+                }
+                else
+                {
+                    Assert.AreEqual("historical-development-evidence-clean-break-semantic-contract",
+                        registered.AuthorityStatus, identity);
+                }
+                Assert.AreEqual(source.PackagePath, registered.PackagePath, identity);
             }
-            else if (registered.AuthorityStatus is not null)
+            else
             {
-                Assert.IsFalse(string.IsNullOrWhiteSpace(registered.AuthorityStatus), identity);
+                Assert.AreEqual(source.Partition, registered.Partition, identity);
+                Assert.AreEqual(source.PackagePath, registered.PackagePath, identity);
+                Assert.AreEqual(source.AuthorityFile, registered.AuthorityFile, identity);
+                if (source.AuthorityStatus is not null)
+                {
+                    Assert.AreEqual(source.AuthorityStatus, registered.AuthorityStatus, identity);
+                }
+                else if (registered.AuthorityStatus is not null)
+                {
+                    Assert.IsFalse(string.IsNullOrWhiteSpace(registered.AuthorityStatus), identity);
+                }
             }
 
             string authorityPath = TestRepository.PathFromRoot([.. registered.AuthorityFile.Split('/')]);
@@ -158,6 +188,19 @@ public sealed class EvaluationBoundaryContractTests
                 Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(),
                 registered.AuthoritySha256,
                 identity);
+        }
+        foreach (string identity in R1V2PackageAuthorities.Keys)
+        {
+            FixtureRegistryEntry registered = actual[identity];
+            Assert.AreEqual("development", registered.Partition, identity);
+            Assert.AreEqual("historical-development-evidence-clean-break-semantic-contract",
+                registered.AuthorityStatus, identity);
+            StringAssert.EndsWith(registered.AuthorityFile, "/reclassification.v2.json", identity);
+            byte[] bytes = File.ReadAllBytes(TestRepository.PathFromRoot(
+                [.. registered.AuthorityFile.Split('/')]));
+            Assert.AreEqual(bytes.LongLength, registered.AuthorityBytes, identity);
+            Assert.AreEqual(Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(),
+                registered.AuthoritySha256, identity);
         }
     }
 
@@ -201,7 +244,7 @@ public sealed class EvaluationBoundaryContractTests
 
     [TestMethod]
     [TestCategory("Contract")]
-    public void ProviderPublicFixtureRegistryV3PreservesV2AndAddsOnlySemanticAdmissionAuthority()
+    public void ProviderPublicFixtureRegistryV3PreservesV2AndRecordsOnlyNonAuthorizingSemanticAdmissionHistory()
     {
         using JsonDocument v2 = ReadAndValidate(
             "fixtures/public/public-fixture-registry.v2.json", "public-fixture-registry.v2.schema.json");
@@ -209,19 +252,50 @@ public sealed class EvaluationBoundaryContractTests
             "fixtures/public/public-fixture-registry.v3.json", "public-fixture-registry.v3.schema.json");
         JsonElement[] retained = v2.RootElement.GetProperty("packages").EnumerateArray().ToArray();
         JsonElement[] rows = v3.RootElement.GetProperty("packages").EnumerateArray().ToArray();
-        Assert.AreEqual(43, retained.Length);
-        Assert.AreEqual(44, rows.Length);
+        Assert.IsGreaterThanOrEqualTo(retained.Length, rows.Length);
         for (int index = 0; index < retained.Length; index++)
         {
+            string identity = retained[index].GetProperty("package_identity").GetString()!;
+            if (identity is "S6-CLAIM-DEV-v1" or "S6-CLAIM-VAL-v1"
+                or "S6-CANDIDATE-DEV-v2" or "S6-CANDIDATE-VAL-v3"
+                or "LLM-CLAIM-LIVE-VAL" or "LLM-INVESTIGATE-LIVE-VAL"
+                or "PROV-LIVE-COMPOSED-VAL"
+                or "S6-CLAIM-LIVE-VAL-v2" or "LLM-CLAIM-LIVE-VAL-v2"
+                or "S6-CANDIDATE-LIVE-VAL-v2" or "LLM-INVESTIGATE-LIVE-VAL-v2"
+                or "PROV-LIVE-COMPOSED-VAL-v2")
+            {
+                Assert.AreEqual("development", rows[index].GetProperty("partition").GetString(), identity);
+                Assert.AreEqual("historical-development-evidence-clean-break-semantic-contract",
+                    rows[index].GetProperty("authority_status").GetString(), identity);
+                continue;
+            }
             Assert.IsTrue(JsonElement.DeepEquals(retained[index], rows[index]), $"Registry v2 row {index} drifted in v3.");
         }
-        JsonElement semantic = rows[^1];
-        Assert.AreEqual("S6-SEMANTIC-ADMISSION-VAL-v1", semantic.GetProperty("package_identity").GetString());
-        string authority = semantic.GetProperty("authority_file").GetString()!;
-        byte[] bytes = File.ReadAllBytes(TestRepository.PathFromRoot([.. authority.Split('/')]));
-        Assert.AreEqual(bytes.LongLength, semantic.GetProperty("authority_bytes").GetInt64());
-        Assert.AreEqual(Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(),
-            semantic.GetProperty("authority_sha256").GetString());
+        JsonElement family = v3.RootElement.GetProperty("family_classifications")
+            .EnumerateArray().Single(item => item.GetProperty("family_id").GetString() == "semantic-admission");
+        Assert.AreEqual("historical-non-authorizing", family.GetProperty("disposition").GetString());
+        Assert.AreEqual("development", family.GetProperty("required_partition").GetString());
+        Assert.AreEqual(JsonValueKind.Null, family.GetProperty("current_validation_authority_package").ValueKind);
+        JsonElement[] historical = rows.Where(row => row.GetProperty("package_path").GetString()!
+            .StartsWith(family.GetProperty("package_path_prefix").GetString()!, StringComparison.Ordinal)).ToArray();
+        Assert.IsGreaterThan(0, historical.Length);
+        foreach (JsonElement item in historical)
+        {
+            Assert.AreEqual("development", item.GetProperty("partition").GetString());
+            StringAssert.StartsWith(item.GetProperty("authority_status").GetString()!,
+                "historical-development-evidence-");
+        }
+        Assert.IsFalse(rows.Any(row => row.GetProperty("package_identity").GetString()!
+            .StartsWith("S6-SEMANTIC-ADMISSION-VAL-", StringComparison.Ordinal)
+            && row.GetProperty("partition").GetString() == "validation"));
+        foreach (JsonElement semantic in historical)
+        {
+            string authority = semantic.GetProperty("authority_file").GetString()!;
+            byte[] bytes = File.ReadAllBytes(TestRepository.PathFromRoot([.. authority.Split('/')]));
+            Assert.AreEqual(bytes.LongLength, semantic.GetProperty("authority_bytes").GetInt64());
+            Assert.AreEqual(Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(),
+                semantic.GetProperty("authority_sha256").GetString());
+        }
     }
 
     [TestMethod]

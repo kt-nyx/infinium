@@ -1,0 +1,16 @@
+{
+  "schema_identity": "infinium.evaluation.candidate-investigation-reclassification/3.0.0",
+  "package_identity": "S6-CANDIDATE-VAL-v3",
+  "reclassified_at": "2026-08-23",
+  "from_partition": "validation",
+  "to_partition": "development",
+  "current_status": "historical-development-evidence-clean-break-semantic-contract",
+  "retained_manifest": {
+    "path": "public-manifest.json",
+    "bytes": 2035,
+    "sha256": "b42dff12144f192c1e7a913a3a99433398f0f2d41148a3353f7aa9cf89154323"
+  },
+  "reason": "The former candidate validation oracle contains historical expected semantic answers and cannot authorize current product acceptance while independent semantic qualification is deferred.",
+  "retention": "All original input, transcript, oracle, provenance, manifest, and review bytes remain unchanged and audit-visible.",
+  "current_semantic_authority": false
+}

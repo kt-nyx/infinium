@@ -2,7 +2,13 @@
 
 Status: Accepted
 Disposition: actively maintained
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-23
+Current timing authority: [ADR-0035](../architecture/decisions/ADR-0035-defer-independent-semantic-oracle-qualification.md)
+defers independent semantic-oracle packages throughout M1 and M2. Developer-
+owned conformance fixtures and deterministic reference tests remain required;
+semantic-admission v1-v13 are historical non-authorizing packages. Any later
+pre-seal workflow described here is dormant unless a new accepted M3 plan
+reactivates it.
 Wave B's target boundaries and fixture/conformance obligations are accepted by
 ADR-0008 through ADR-0011, and the M1 Wave F case specifications are accepted.
 Execution is partial: completed early M1 slices have exact retained package and
@@ -80,22 +86,23 @@ v2 rules and scoring remain public. Private corpus authoring and scoring occur
 only in their later purpose-bound fresh tasks, and public closeout receives no
 raw answer-bearing return.
 
-ADR-0032 defers the current M1 private held-out effort with no valid product
-verdict. Slices 5-9 therefore use public development/validation fixtures under
-the M1 continuation verification profile: expectations remain independently
-pre-authored, every positive has a meaningful negative or abstention, and any
-product-driving result is development/validation evidence rather than held-out
-evidence. This deferral does not permit private access or weaken partition,
-contamination, replacement, or answer-isolation rules.
+ADR-0035 defers independent semantic-oracle qualification throughout M1 and
+M2. Current fixtures serve product conformance: small developer-owned positive,
+negative, malformed, lifecycle, abstention, mutation, and metamorphic cases;
+deterministic byte/reference cases; and controlled integration cases. Product
+output may not be copied into expected fields merely to make a test pass.
 
-For M1 Slice 5, public semantic fixtures are authored and reviewed by the work
-package that owns the behavior. WP1 provides only closed contracts, invariants,
-boundary enforcement, and minimal answer-free examples. WP2 owns documentation
-and provenance truth, WP3 owns candidate and scale/stress truth, WP4 owns
-finding/case/taxonomy/lineage/coverage truth, WP5 owns publication/replay/
-recovery/query/output/platform truth, and WP6 assembles the comprehensive
-cross-stage corpus. Each expected set freezes before product comparison.
+Historical semantic-admission packages remain development/history. Current
+verification may check only their immutable files, hashes, manifests, registry
+bindings, reclassification, and lack of current authority. It must not execute
+the current producer or consumer against historical expected labels or report
+semantic success.
 
+No new independent semantic package may be authored, audited, reviewed,
+sealed, registered, or compared until the M3 Evaluation Readiness Gate and a
+new accepted M3 evaluation plan authorize that work. The former pre-seal order
+and derivation-closure rules remain historical evidence in the Slice 6 record;
+they are not an M1/M2 gate.
 ## Required fixture metadata
 
 - fixture ID and version;
@@ -191,8 +198,9 @@ oracle-authority matrix; see [Evaluator history](evaluator-history.md).
 Product output, product ID algorithms, exact product diagnostics, and Mutagen
 interpretation alone cannot supply a hidden expected value.
 
-No current M1 held-out authoring is authorized. A future evaluator requires a
-new ADR and plan after Slice 9 during M3 planning; it must retain independently
-authorable expected values, answer-free totality review, and separate public
-implementation/private qualification/scoring/closeout roles. No future
-protocol identity is selected here.
+No current M1 or M2 independent semantic-oracle or held-out authoring is
+authorized. Re-entry is considered only after M2 acceptance at the M3
+Evaluation Readiness Gate, and requires all ADR-0035 prerequisites plus a new
+accepted M3 evaluation plan. Private isolation and separate public
+implementation/private qualification/scoring/closeout roles remain unchanged.
+No future protocol identity is selected here.

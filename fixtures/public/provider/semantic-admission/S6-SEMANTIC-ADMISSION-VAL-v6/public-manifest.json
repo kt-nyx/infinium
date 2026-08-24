@@ -1,0 +1,26 @@
+{
+  "schema_identity": "infinium.public-fixture.semantic-admission/6.0.0",
+  "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v6",
+  "package_stable_identity": "infinium.public.provider.semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v6",
+  "package_version": "6.0.0",
+  "fixture_id": "S6-SEMANTIC-ADMISSION-VAL-v6",
+  "fixture_version": "6.0.0",
+  "partition": "development",
+  "status": "historical-development-evidence-invalidated-at-first-comparison",
+  "product_input_files": [],
+  "oracle_file": "oracle.v6.json",
+  "oracle_provenance_file": "oracle-provenance.v6.json",
+  "independent_review_file": "independent-review.v6.json",
+  "reclassification_file": "reclassification.v6.json",
+  "file_identities": [
+    {"path":"oracle.v6.json","role":"historical-development-oracle","bytes":37139,"sha256":"ab2c9254b102d9797e87b3734053dd7102ffb3a54972b569be81d5baa5c00017"},
+    {"path":"oracle-provenance.v6.json","role":"historical-oracle-provenance","bytes":3520,"sha256":"7cbfae980a295c60cc9dd7b9abef1219395544093186cf20b251a3d3bc1ba835"},
+    {"path":"independent-review.v6.json","role":"historical-independent-review","bytes":1719,"sha256":"50eff4f9d641381cdbd744e6c0cccdba5f90da01db30362c31834a5d77896d19"},
+    {"path":"reclassification.v6.json","role":"current-reclassification-authority","bytes":1400,"sha256":"a8b3f36759526577b3fd33139c5f365c98859b52ab873a76da2979d4e65f970b"}
+  ],
+  "answer_free_product_inputs": true,
+  "oracle_frozen_before_product_comparison": false,
+  "network_required": false,
+  "provider_request_count": 0,
+  "credential_operation_count": 0
+}

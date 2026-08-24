@@ -1,7 +1,13 @@
 # Anti-overfitting rules
 
 Status: Accepted
-Last reviewed: 2026-08-07
+Last reviewed: 2026-08-23
+
+ADR-0035 defers independent semantic-oracle qualification through M1 and M2.
+These anti-overfitting rules still apply to developer-owned conformance,
+deterministic references, mutation/metamorphic testing, and claims. Historical
+or held-out isolation rules remain intact but grant no current evaluation
+authority.
 
 The first semantic proof may use one category, technical surface, affected game
 area, or interaction shape because it exercises useful product capabilities.
@@ -143,9 +149,11 @@ attempt is historical; ADR-0032 retired it unqualified before implementation
 or freeze. Its failed proof artifacts, product output, private answers, and
 fixture identities cannot become expected truth.
 
-For M1 Slices 5-9, the continuation profile requires independently expected
-public fixtures, model-derived mutation/metamorphic checks, matched negatives,
-visible abstention/coverage/gaps, and fresh semantic/diff review. Slice 7 must
+For M1 Slices 5-9, the continuation profile requires developer-authored public
+conformance cases, mutation/metamorphic checks, matched negatives, visible
+abstention/coverage/gaps, and fresh semantic/diff review. An independent
+semantic verdict is explicitly deferred under ADR-0035 and is not implied by
+these checks. Slice 7 must
 exercise the same generic mechanism across the two materially different
 actor/AI/FaceGen and REFR/link/placement domains. Slice 8 must execute
 controlled-real EVAL-0016 and EVAL-0017. Product-driving results are

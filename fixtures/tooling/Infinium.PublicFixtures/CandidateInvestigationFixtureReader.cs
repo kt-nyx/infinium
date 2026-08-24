@@ -176,7 +176,12 @@ public static class CandidateInvestigationFixtureReader
         string fullDirectory = Path.GetFullPath(directory);
         string[] files = Directory.EnumerateFiles(fullDirectory).Select(Path.GetFileName).OfType<string>()
             .OrderBy(x => x, StringComparer.Ordinal).ToArray();
-        if (!files.SequenceEqual(ExactFiles, StringComparer.Ordinal))
+        string? reclassification = files.SingleOrDefault(file =>
+            file.StartsWith("reclassification.v", StringComparison.Ordinal)
+            && file.EndsWith(".json", StringComparison.Ordinal));
+        string[] expectedFiles = reclassification is null ? ExactFiles : ExactFiles.Append(reclassification)
+            .OrderBy(file => file, StringComparer.Ordinal).ToArray();
+        if (!files.SequenceEqual(expectedFiles, StringComparer.Ordinal))
         {
             throw new InvalidDataException("Candidate-investigation fixture package closure is not exact.");
         }
@@ -415,13 +420,8 @@ public static class CandidateInvestigationOracleVerifier
     {
         ArgumentNullException.ThrowIfNull(package);
         ArgumentNullException.ThrowIfNull(actual);
-        if (package.Oracle is not null)
-        {
-            VerifyTyped(package, package.Oracle, actual);
-            return;
-        }
-        VerifyLegacy(package.LegacyOracle
-            ?? throw new InvalidDataException("Candidate-investigation package has no oracle."), actual);
+        throw new InvalidDataException(
+            "Historical candidate semantic oracles are retained bytes and cannot compare current product output.");
     }
 
     private static void VerifyTyped(

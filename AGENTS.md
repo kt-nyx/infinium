@@ -117,7 +117,9 @@ do not become current defaults merely because an old record is linked.
   persistence, round-trip, invalid-state, and focused fixture evidence support
   freezing them. Update all affected seams together when implementation
   evidence requires a clean-break revision.
-- Freeze exact independent fixture/oracle inputs, external-effect manifests,
+- Freeze exact independent fixture/oracle inputs only when a current accepted
+  plan authorizes them; ADR-0035 defers independent semantic-oracle work
+  throughout M1 and M2. Freeze external-effect manifests,
   durable effect evidence, and final accepted contracts/implementation at
   their owning immutable boundary. Do not freeze ordinary intermediate
   corrections.
@@ -165,15 +167,16 @@ package versions, evaluator protocol/scorer/projection versions, and repository
 authority-manifest versions are independent axes and must never be substituted
 for one another.
 
-For M1 Slice 5, semantic fixtures are staged work-package evidence. WP1 owns
+For M1 and M2, ordinary semantic fixtures are developer-owned conformance
+evidence, not independent semantic-oracle qualification. WP1 owns
 closed product contracts, codecs, state invariants, schema-4 migration, and
 repository-boundary enforcement plus minimal answer-free contract examples.
-WP2-WP5 each author, freeze, and independently review the small semantic cases
-for behavior introduced by that package before comparing them with product
-output. WP3 owns candidate scale/stress construction and any product-reachable
-expansion contract. WP6 assembles and independently reviews the comprehensive
-cross-package corpus. No rejected or preauthored comprehensive Slice 5 corpus
-is a prerequisite for product implementation.
+WP2-WP5 each own small positive, negative, malformed, lifecycle, abstention,
+mutation, and metamorphic cases for behavior introduced by that package. WP3
+owns candidate scale/stress construction and any product-reachable expansion
+contract. WP6 assembles cross-package conformance evidence. No rejected or
+preauthored comprehensive Slice 5 corpus is a prerequisite for product
+implementation.
 
 The current M1 handoff is stated only in `docs/current-state.md`; do not infer
 it from this file or historical records. For Slice 5, the rejected WP1-generated
@@ -203,7 +206,7 @@ scorer has no maintenance authority.
 
 Protocol `/4` is retired and archived. It may not be run, restored, resumed,
 or used as review evidence. Its identities are permanently reserved. Current
-product review uses only the accepted M1 continuation verification profile and
+product review uses only the accepted M1/M2 product-conformance verification profile and
 owning slice plans.
 
 ADR-0032 supersedes ADR-0030's active protocol `/5` authorization and
@@ -213,6 +216,10 @@ its identities must not be reused or resumed. Private held-out evaluation is
 deferred with no valid current product verdict. Do not access private material
 or run corpus qualification, B2, C2, Stage D, adaptation, comparison, or
 scoring. Evaluator-deferral closeout is accepted. M1 Slices 5-9 use the
-accepted continuation verification profile. Do not select a
+accepted product-conformance verification profile. ADR-0035 also defers every
+independent semantic-oracle package through M2: no current semantic package is
+validation authority, and no authoring, review, sealing, registration,
+comparison, or oracle `PASS` is authorized before an accepted M3 plan reopens
+that work at the M3 Evaluation Readiness Gate. Do not select a
 future protocol identity or weaken any isolation, no-retry, identity, freeze,
 layered-evidence, coverage, gap, provenance, or answer-isolation rule.

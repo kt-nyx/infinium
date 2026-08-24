@@ -2,7 +2,7 @@
 
 Status: Accepted
 
-Last reviewed: 2026-08-17
+Last reviewed: 2026-08-23
 Owner: Project owner
 
 ## Purpose and scope
@@ -18,6 +18,14 @@ specific accepted plan may add constraints only where its work genuinely
 requires them. Correction-count and no-retry rules belong only to an explicitly
 authorized evaluator, private-oracle, destructive, or externally effectful
 operation; they do not become the default for ordinary development.
+
+Under [ADR-0035](architecture/decisions/ADR-0035-defer-independent-semantic-oracle-qualification.md),
+M1 and M2 do not authorize independent semantic-oracle authoring, sealing, or
+comparison. Their ordinary work uses the accepted product-conformance profile:
+developer-owned bounded examples, deterministic references, invalid-state and
+metamorphic coverage, persistence/replay, integration/safety evidence, and
+fresh review. Historical semantic-package integrity is read-only and grants no
+product verdict.
 
 For the remaining M1 Slice 6 development, the owner-authorized
 [practical continuation](plans/milestones/m1/slices/s6/development-continuation.md)
@@ -80,7 +88,8 @@ commit as acceptance evidence.
 
 Mechanical or local corrections do not restart a consolidated review. Review
 the changed surface. Repeat consolidated review only when a correction changes
-semantics, architecture, authority, an independently frozen fixture/oracle, or
+semantics, architecture, authority, an independently frozen fixture currently
+authorized by an accepted plan, or
 the declared package scope.
 
 ## Recurrent conceptual defects
@@ -262,8 +271,9 @@ gap, or recovery authority.
 
 The proportional candidate lifecycle does not relax genuine immutable
 boundaries. Continue to freeze and bind independently authored fixture inputs
-before oracle access where required, independent oracles before product
-comparison, accepted public package bytes and provenance, exact external-effect
+and independent oracles only where a current accepted plan authorizes them;
+ADR-0035 does not authorize that work during M1 or M2. Continue to bind
+accepted public package bytes and provenance, exact external-effect
 manifests immediately before admission, durable evidence for any known or
 possible effect, final accepted implementation/evidence, and contracts at their
 accepted maturity boundary.

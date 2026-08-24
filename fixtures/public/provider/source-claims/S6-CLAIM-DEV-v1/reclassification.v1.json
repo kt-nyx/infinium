@@ -1,0 +1,16 @@
+{
+  "schema_identity": "infinium.evaluation.source-claim-reclassification/1.0.0",
+  "package_identity": "S6-CLAIM-DEV-v1",
+  "reclassified_at": "2026-08-23",
+  "from_partition": "development",
+  "to_partition": "development",
+  "current_status": "historical-development-evidence-clean-break-semantic-contract",
+  "retained_manifest": {
+    "path": "public-manifest.json",
+    "bytes": 1321,
+    "sha256": "7a7b3ea24a218ec1ebb811c96f39a3b7f197938960bcbd9ec15eb2f54b1ff61b"
+  },
+  "reason": "The package contains historical source-claim expected answers and is retained only as audit-visible development evidence under the separated source and application decision contract.",
+  "retention": "All original input, transcript, oracle, provenance, and manifest bytes remain unchanged and audit-visible.",
+  "current_semantic_authority": false
+}

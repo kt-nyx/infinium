@@ -1,0 +1,16 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-oracle-provenance/2.0.0",
+  "schema_version": "2",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v2",
+  "partition": "validation",
+  "authored_at": "2026-08-22",
+  "author_identity": "openai-codex:infinium-m1-s6-semantic-admission-v2-author:2026-08-22",
+  "authority_basis": [
+    "ADR-0034 semantic support, local applicability, and host decision separation",
+    "accepted rule that admission requires supported evidence and applicable local context",
+    "accepted preservation of abstention, contradiction, unavailability, deletion, and rejection meanings"
+  ],
+  "authoring_statement": "The v2 matrix was authored solely from accepted public product, architecture, and evaluation authority before product comparison. It is an abstract cross-axis semantic authority: its valid and invalid tuples define permitted relationships and rejection invariants, not a claim that every tuple is directly emitted by current product producers. No product implementation, product output, tests, private fixtures, retained live responses or evidence, credentials, archives, or network material was inspected or used.",
+  "comparison_status": "not-compared-at-authoring",
+  "independent_review_file": "independent-review.v2.json"
+}

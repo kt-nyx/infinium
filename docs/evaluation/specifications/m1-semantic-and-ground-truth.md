@@ -3,8 +3,15 @@
 Status: Accepted  
 Accepted: 2026-07-28  
 Accepted by: Project owner  
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-23
 Target milestone: M1 — Backend semantic proof
+
+Current supersession notice: ADR-0035 preserves these product meanings and
+case obligations but defers independently authored semantic answer-key
+qualification through M1 and M2. Oracle authoring, sealing, comparison, and
+`PASS` instructions below are historical design requirements, not current
+execution authority. The active acceptance rules are in the
+[product-conformance profile](../m1-continuation-verification-profile.md).
 
 ## 1. Purpose and authority
 

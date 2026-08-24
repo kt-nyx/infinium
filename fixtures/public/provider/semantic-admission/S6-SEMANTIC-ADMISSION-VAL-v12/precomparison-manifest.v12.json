@@ -1,0 +1,58 @@
+{
+  "schema_identity": "infinium.public-fixture.semantic-admission/12.0.0",
+  "package_identity": "S6-SEMANTIC-ADMISSION-VAL-v12",
+  "package_stable_identity": "infinium.public.provider.semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v12",
+  "package_version": "12.0.0",
+  "fixture_id": "S6-SEMANTIC-ADMISSION-VAL-v12",
+  "fixture_version": "12.0.0",
+  "partition": "validation",
+  "status": "independently-authored-three-gate-reviewed-current-validation-authority",
+  "product_input_files": [],
+  "oracle_file": "oracle.v12.json",
+  "oracle_provenance_file": "oracle-provenance.v12.json",
+  "authority_audit_file": "authority-audit.v12.json",
+  "independent_review_file": "independent-review.v12.json",
+  "adversarial_review_file": "adversarial-review.v12.json",
+  "file_identities": [
+    {
+      "path": "oracle.v12.json",
+      "role": "current-independent-validation-oracle",
+      "bytes": 86265,
+      "sha256": "c817a611d89a1a610405984dd68415d99f2183a16566c6631e5f0f423789b9ba"
+    },
+    {
+      "path": "oracle-provenance.v12.json",
+      "role": "current-oracle-provenance",
+      "bytes": 5807,
+      "sha256": "32a0e11c9f2a51fb5b3bf053b43b3a428d99a229d2c5cdd94d96a3b5bee78778"
+    },
+    {
+      "path": "authority-audit.v12.json",
+      "role": "preseal-authority-only-automated-audit",
+      "bytes": 9047,
+      "sha256": "27a992b772555d8a84469979519e575924bb6bc9ff99acf12996f2ef37b54fdb"
+    },
+    {
+      "path": "independent-review.v12.json",
+      "role": "preseal-independent-semantic-review",
+      "bytes": 10426,
+      "sha256": "f75280436da6a3eaaa7e8fd986418108298faa57d45d009d1be1da2db7ef59e1"
+    },
+    {
+      "path": "adversarial-review.v12.json",
+      "role": "preseal-distinct-adversarial-package-review",
+      "bytes": 9539,
+      "sha256": "6cb6ca308f3fa1cf1c07c0112938938d07d2f4d1f6ba07563fa6379dd9af3fd8"
+    }
+  ],
+  "preseal_gate_status": {
+    "authority_only_automated_audit": "pass",
+    "independent_semantic_review": "accept",
+    "distinct_adversarial_package_review": "accept"
+  },
+  "answer_free_product_inputs": true,
+  "oracle_frozen_before_product_comparison": true,
+  "network_required": false,
+  "provider_request_count": 0,
+  "credential_operation_count": 0
+}

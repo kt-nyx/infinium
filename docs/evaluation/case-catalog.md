@@ -2,7 +2,10 @@
 
 Status: Accepted
 Disposition: actively maintained
-Last reviewed: 2026-08-22
+Last reviewed: 2026-08-23
+ADR-0035 defers independent semantic-oracle qualification throughout M1 and
+M2. Case tests remain part of product conformance, but no historical semantic
+package or oracle `PASS` gates those milestones.
 Executable evaluation fixtures now exist for completed early M1 slices; most
 later cases remain planned. This catalog records both executed status and
 planned cases. The Requirements column provides baseline traceability; a case
@@ -132,7 +135,7 @@ The exact public successor handoff is
 | EVAL-0064 | Contract/integration | Offline/provider boundary | A local-only run requires no provider credentials; unavailable network/LLM capabilities are explicit; OpenAI may be the sole initial provider; later adapters declare their own capabilities without altering provider-independent domain/evidence contracts or being required to emulate OpenAI search | AI-001, AI-002, OPS-001 | Wave F specification accepted; execution pending |
 | EVAL-0065 | Contract/boundary | Analyzer modularity | One analyzer can be configured and run independently with declared scope, dependencies, evidence threshold, coverage, cost/scale, maturity, and evaluation links intact | SCAN-001, ANALYSIS-016 | Wave F specification accepted for M1; execution pending |
 | EVAL-0066 | Calibrated operational | Estimate/presets | Pre-run time/cost/coverage estimates and user presets are derived from retained measurements, expose uncertainty and overrides, and respect configured limits | SCAN-003, SCAN-010 | Planned for M3 |
-| EVAL-0067 | Synthetic contract | Evidence/LLM transparency | Typed observations, claims, candidates, hypotheses, findings, recommendations, gaps, OpenAI Response/search items, discovery leads, and admitted outputs remain distinct; LLM involvement and raw development intermediates are retained and visible as required | EVID-001, EVID-004, EVID-007, OPS-002 | Slice 6 provider semantics passed the independently authored `S6-SEMANTIC-ADMISSION-VAL-v1` source/candidate matrix for faithful extraction or proposal, support, applicability, and host decision. Broader M1 execution remains incremental. |
+| EVAL-0067 | Synthetic contract | Evidence/LLM transparency | Typed observations, claims, candidates, hypotheses, findings, recommendations, gaps, OpenAI Response/search items, discovery leads, and admitted outputs remain distinct; LLM involvement and raw development intermediates are retained and visible as required | EVID-001, EVID-004, EVID-007, OPS-002 | Product-side Slice 6 separated-axis and historical-migration regressions are implementation-active. Public semantic-admission packages v1-v13 are historical non-authorizing development evidence. ADR-0035 defers independent semantic qualification through M2, so no current package or verdict gates Slice 6 acceptance. |
 | EVAL-0068 | Synthetic boundary | Source policy/history | Nexus latest-capable v3/v2/v1 routing, schema drift/fallback, unsupported API surfaces, and no-page fallback are explicit; web search, landing acquisition, extraction, and local application are separately provenanced; permitted material remains available through required work and later deletion/minimization produces honest gaps | DOC-006, DOC-007, DOC-008 | Planned |
 | EVAL-0069 | Synthetic boundary | Disposition/readiness | Per-finding decisions remain canonical; accepted risk or readiness-policy change creates a new time/policy/disposition-bound evaluation without rewriting the run, semantic context, or prior evaluations; case-level bulk action records each member change | FIND-007, FIND-008, FIND-009, FIND-010, FIND-012 | Planned |
 | EVAL-0070 | Operational | Resource defaults | Conservative defaults permit background use, basic user limits are honored, and limiting one resource exposes resulting delay or coverage loss | SCAN-008 | Planned if delivered |

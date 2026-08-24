@@ -1,0 +1,741 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-oracle/v13",
+  "schema_version": "13",
+  "package_id": "infinium.m1-s6.semantic-admission-validation/13.0.0",
+  "partition": "validation",
+  "status": "UNACCEPTED_DRAFT",
+  "comparison_state": "NOT_COMPARED",
+  "scope": {
+    "source_schema_id": "infinium.llm.source-claim-extraction/v1",
+    "candidate_schema_id": "infinium.llm.candidate-investigation/v1",
+    "support_states": [
+      "not-evaluated",
+      "supported",
+      "unsupported",
+      "contradicted",
+      "unavailable"
+    ],
+    "applicability_states": [
+      "not-evaluated",
+      "applicable",
+      "conditional-unestablished",
+      "not-applicable",
+      "unknown"
+    ],
+    "decision_states": [
+      "admitted",
+      "rejected",
+      "abstained",
+      "audit-only"
+    ]
+  },
+  "answer_free_authority_bindings": {
+    "source": {
+      "execution_input_schema_id": "infinium.llm.source-claim-execution-input/v2",
+      "output_schema_id": "infinium.llm.source-claim-extraction/v1",
+      "context_schema_id": "infinium.llm.source-claim-context/v2",
+      "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+      "prompt_sha256": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+      "prompt_text_not_part_of_normative_oracle_input": true,
+      "selection_policy": "retained-text-with-deletion-audit-in-declared-order/v2"
+    },
+    "candidate": {
+      "execution_input_schema_id": "infinium.llm.candidate-investigation-execution-input/v2",
+      "output_schema_id": "infinium.llm.candidate-investigation/v1",
+      "context_schema_id": "infinium.llm.candidate-investigation-context/v2",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_sha256": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "prompt_text_not_part_of_normative_oracle_input": true,
+      "selection_policy": "two-matched-contexts-with-declared-host-evidence/v2"
+    },
+    "prompt_text_boundary": "No accepted public authority supplies the exact UTF-8 prompt text as normative oracle input; exact prompt-byte fidelity remains developer-owned regression coverage."
+  },
+  "producer_reachable_raw_inputs": {
+    "source_execution_inputs": [
+      {
+        "case_id": "8f31c6a2", "input_phase": "extraction-time", "current_source_payload_state": "available",
+        "execution_input": { "schema_id": "infinium.llm.source-claim-execution-input/v1", "schema_version": "1", "package_id": "2e70c1a9", "acquisition_run_id": "ac9e40d1", "operation_id": "36b1f80c", "host_authorization_id": "4e2b901d", "owner_kind": "evidence-acquisition-run", "owner_id": "ac9e40d1", "parent_analysis_run_id": "79d503ab", "application_scope_id": "2148ce76", "cost_attribution_scope_id": "c6821f05", "source_revision_id": "1a7d903e", "declared_purpose": "Extract the bounded statement and its exact condition.", "prompt_id": "infinium.m1-s6.source-claim-prompt/v1", "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84", "passages": [{ "passage_id": "e4c18b72", "source_revision_id": "1a7d903e", "text": "When switch R is closed, indicator T emits one amber pulse.", "text_sha256": "0098862f1aa7ba3481e00d7249085d3729411f98112b6e0cc62d89cd9b343b6d", "deleted": false }] }
+      },
+      {
+        "case_id": "24e8b7c1", "input_phase": "extraction-time", "current_source_payload_state": "unavailable",
+        "execution_input": { "schema_id": "infinium.llm.source-claim-execution-input/v1", "schema_version": "1", "package_id": "6c14a9e2", "acquisition_run_id": "eb4679a0", "operation_id": "3d8a250f", "host_authorization_id": "0b9c74a2", "owner_kind": "evidence-acquisition-run", "owner_id": "eb4679a0", "parent_analysis_run_id": "71c5fe24", "application_scope_id": "9a032d7e", "cost_attribution_scope_id": "4f8db160", "source_revision_id": "60f2ad93", "declared_purpose": "Retain the attempted proposition while exposing the unavailable underlying payload.", "prompt_id": "infinium.m1-s6.source-claim-prompt/v1", "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84", "passages": [{ "passage_id": "b57c108e", "source_revision_id": "60f2ad93", "text": "Register V contains value 17.", "text_sha256": "085391e355e2e76c108e9c4d3bd0d0ed4167f6f5875c2d5efc779a3dcc3ed65f", "deleted": false }] }
+      },
+      {
+        "case_id": "d6a041be", "input_phase": "extraction-time-before-later-deletion", "current_source_payload_state": "deleted",
+        "execution_input": { "schema_id": "infinium.llm.source-claim-execution-input/v1", "schema_version": "1", "package_id": "b8310f6d", "acquisition_run_id": "51e7ca38", "operation_id": "b20d6f49", "host_authorization_id": "e3f7081a", "owner_kind": "evidence-acquisition-run", "owner_id": "51e7ca38", "parent_analysis_run_id": "07c3a5ed", "application_scope_id": "f9812b64", "cost_attribution_scope_id": "3e4c10a7", "source_revision_id": "2c94f7a1", "declared_purpose": "Extract the exact qualified claim before source-specific deletion.", "prompt_id": "infinium.m1-s6.source-claim-prompt/v1", "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84", "passages": [{ "passage_id": "8eb135d0", "source_revision_id": "2c94f7a1", "text": "Module H emits a tone after input J.", "text_sha256": "d71d56ae03651cafe8131f41454b7e779bdb235589819730459596b58c7ab3ce", "deleted": false }] }
+      },
+      {
+        "case_id": "7ad3c508", "input_phase": "extraction-time", "current_source_payload_state": "available",
+        "execution_input": { "schema_id": "infinium.llm.source-claim-execution-input/v1", "schema_version": "1", "package_id": "09e6d24a", "acquisition_run_id": "0c5e91a7", "operation_id": "d37a206f", "host_authorization_id": "8f14b3e6", "owner_kind": "evidence-acquisition-run", "owner_id": "0c5e91a7", "parent_analysis_run_id": "ab841d52", "application_scope_id": "68c0f39e", "cost_attribution_scope_id": "91b4e72a", "source_revision_id": "f1428c6d", "declared_purpose": "Extract the exact claim and same-source insufficiency statement.", "prompt_id": "infinium.m1-s6.source-claim-prompt/v1", "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84", "passages": [{ "passage_id": "2ea9057b", "source_revision_id": "f1428c6d", "text": "Panel K displays a green mark. The same source supplies no observation confirming the mark.", "text_sha256": "c26ee5ec00bcdb81a632fd6c6bd235740dea51cc94f312b96a987d29e58fb1d7", "deleted": false }] }
+      },
+      {
+        "case_id": "c9157e2a", "input_phase": "extraction-time", "current_source_payload_state": "available",
+        "execution_input": { "schema_id": "infinium.llm.source-claim-execution-input/v1", "schema_version": "1", "package_id": "f5b8201c", "acquisition_run_id": "84d1f30b", "operation_id": "1e7b4a95", "host_authorization_id": "6c18e4a9", "owner_kind": "evidence-acquisition-run", "owner_id": "84d1f30b", "parent_analysis_run_id": "5ca920e7", "application_scope_id": "d6401b8a", "cost_attribution_scope_id": "2f7e93c1", "source_revision_id": "6b02d4f9", "declared_purpose": "Retain the exact cannot-determine statement and underlying proposition.", "prompt_id": "infinium.m1-s6.source-claim-prompt/v1", "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84", "passages": [{ "passage_id": "a81e36c5", "source_revision_id": "6b02d4f9", "text": "The retained source cannot determine whether valve L is open.", "text_sha256": "b6130ab01eceff67b3e2f318030f49e2efc4ba04ecf13beb92f144b59df2b946", "deleted": false }] }
+      }
+    ],
+    "source_retained_transcripts": {
+      "schema_id": "infinium.llm.source-claim-retained-transcripts/v1", "schema_version": "1",
+      "transcripts": [
+        { "transcript_id": "a05f3c18", "operation_id": "36b1f80c", "response_record_id": "c9a650e2", "response_state": "completed", "response_fingerprint": "3b48cf53d9e613221bd5c1a635ec68b61d76fa20281b3983bf303d26a15804ec", "source_revision_id": "1a7d903e", "prompt_id": "infinium.m1-s6.source-claim-prompt/v1", "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84", "proposals": [{ "proposal_id": "97af26d0", "passage_id": "e4c18b72", "claim": "When switch R is closed, indicator T emits one amber pulse.", "condition_ids": ["5b09ae41"], "claim_kind": "documentation-claim", "condition_scope": "conditional", "authority_category": "informational", "application_semantics": "applicability-only", "state": "proposed", "reason": "The passage states the exact conditional proposition." }], "contradiction_evidence_ids": [], "abstentions": [], "gaps": [], "model_used": true },
+        { "transcript_id": "c70b4e29", "operation_id": "3d8a250f", "response_record_id": "68f2d51b", "response_state": "completed", "response_fingerprint": "2ec6a1ab6688492e8b3fe262d0895512ef8dc5797e1d07fc310718a299f38b40", "source_revision_id": "60f2ad93", "prompt_id": "infinium.m1-s6.source-claim-prompt/v1", "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84", "proposals": [{ "proposal_id": "cd30a5e7", "passage_id": "b57c108e", "claim": "Register V contains value 17.", "condition_ids": [], "claim_kind": "documentation-claim", "condition_scope": "unconditional", "authority_category": "informational", "application_semantics": "evidence-only", "state": "unavailable", "reason": "The attempted proposition is retained while the underlying payload is unavailable." }], "contradiction_evidence_ids": [], "abstentions": ["The underlying payload is unavailable."], "gaps": ["The payload needed to evaluate support is absent."], "model_used": true },
+        { "transcript_id": "18d6a4f0", "operation_id": "b20d6f49", "response_record_id": "05a9c2de", "response_state": "completed", "response_fingerprint": "d868fd8f46df91419238330cbcbf82c79ff8399340db85fc667ccac3bd28216b", "source_revision_id": "2c94f7a1", "prompt_id": "infinium.m1-s6.source-claim-prompt/v1", "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84", "proposals": [{ "proposal_id": "64ab0e92", "passage_id": "8eb135d0", "claim": "Module H emits a tone after input J.", "condition_ids": ["4c1e9a70"], "claim_kind": "documentation-claim", "condition_scope": "conditional", "authority_category": "informational", "application_semantics": "evidence-only", "state": "proposed", "reason": "The extraction-time passage includes the exact after-input qualifier." }], "contradiction_evidence_ids": [], "abstentions": [], "gaps": [], "model_used": true },
+        { "transcript_id": "e42a9c71", "operation_id": "d37a206f", "response_record_id": "c6a2097d", "response_state": "completed", "response_fingerprint": "17bf5adb7321bb83d58807753e9c01984b1565e7aa19ea581c185deaa0aa947a", "source_revision_id": "f1428c6d", "prompt_id": "infinium.m1-s6.source-claim-prompt/v1", "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84", "proposals": [{ "proposal_id": "be63d019", "passage_id": "2ea9057b", "claim": "Panel K displays a green mark.", "condition_ids": [], "claim_kind": "documentation-claim", "condition_scope": "unconditional", "authority_category": "informational", "application_semantics": "evidence-only", "state": "unsupported", "reason": "The same source supplies no observation confirming the claim." }], "contradiction_evidence_ids": [], "abstentions": ["Support is insufficient."], "gaps": ["No confirming observation is supplied."], "model_used": true },
+        { "transcript_id": "5b0e8d23", "operation_id": "1e7b4a95", "response_record_id": "07c3f1de", "response_state": "completed", "response_fingerprint": "d25f161774d1f65ae81069544c49a98111182c45116c7f37483cea89ab40887b", "source_revision_id": "6b02d4f9", "prompt_id": "infinium.m1-s6.source-claim-prompt/v1", "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84", "proposals": [{ "proposal_id": "4a9f02d6", "passage_id": "a81e36c5", "claim": "Valve L is open.", "condition_ids": [], "claim_kind": "documentation-claim", "condition_scope": "unconditional", "authority_category": "informational", "application_semantics": "evidence-only", "state": "abstained", "reason": "The exact passage says the proposition cannot be determined." }], "contradiction_evidence_ids": [], "abstentions": ["The provider cannot determine whether valve L is open."], "gaps": ["No bounded fact determines the proposition."], "model_used": true }
+      ]
+    },
+    "candidate_execution_input": {
+      "schema_id": "infinium.llm.candidate-investigation-execution-input/v1", "schema_version": "1", "package_id": "6f2a90c4", "operation_id": "6a0d4e82", "host_authorization_id": "7f2b16e9", "owner_kind": "analysis-run", "owner_id": "f2c81739", "analysis_run_id": "f2c81739", "application_scope_id": "5d1e8a30", "cost_attribution_scope_id": "c4072b9e", "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1", "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "contexts": [
+        { "context_id": "61e0c7a4", "candidate_id": "3b61a0de", "hypothesis_id": "8b4e20d1", "hypothesis": "Relay D is inactive.", "participant_ids": ["0e5a7c91", "bc24d806"], "participant_roles": ["observed input", "bounded output"], "causal_path_ids": ["27d8a0f1", "e5a9136c"], "dependency_closure_id": "8c3f10a7", "evidence": [
+          { "evidence_id": "27d8a0f1", "evidence_application_link_id": "41c7e2a9", "source_acquisition_id": "8e0a51d4", "source_admission_id": "c36b790f", "source_application_link_id": "12f4a8e6", "source_revision_id": "a91d2c70", "passage_id": "5e8b14c3", "relationship": "supporting", "availability": "available", "content_sha256": "c2f6634f1fadd654340d9543ee205a8fac2c6e74345449efbce4eae17923811f" },
+          { "evidence_id": "e5a9136c", "evidence_application_link_id": "b70d3f26", "source_acquisition_id": "4a6e91c8", "source_admission_id": "d1207b5e", "source_application_link_id": "89c4e2a1", "source_revision_id": "7f3b60d9", "passage_id": "2c8a15e4", "relationship": "supporting", "availability": "available", "content_sha256": "1e19edff8a4a74f330361f9d9268675976952ffa40a867000b2eac0182c460b3" }
+        ] },
+        { "context_id": "d7a42e09", "candidate_id": "a83d50e1", "hypothesis_id": "30c8f16b", "hypothesis": "Channel F is active.", "participant_ids": ["6f31bd08"], "participant_roles": ["observed channel"], "causal_path_ids": ["c71f408a"], "dependency_closure_id": "8c3f10a7", "evidence": [
+          { "evidence_id": "c71f408a", "evidence_application_link_id": "0e5b7a31", "source_acquisition_id": "f48c10d2", "source_admission_id": "69a2e5b7", "source_application_link_id": "c30d8f14", "source_revision_id": "1b7e49a5", "passage_id": "e62c0d83", "relationship": "contradicting", "availability": "available", "content_sha256": "cc62560aaa42a74f4dd88b015e1e3307f6d48da171f95815c8323928fec12d1d" }
+        ] }
+      ]
+    },
+    "candidate_retained_transcripts": {
+      "schema_id": "infinium.llm.candidate-investigation-retained-transcripts/v1", "schema_version": "1",
+      "transcripts": [
+        { "transcript_id": "a14e6c80", "operation_id": "6a0d4e82", "context_id": "61e0c7a4", "response_record_id": "ae9143f6", "response_state": "completed", "response_fingerprint": "89d22363ca47f165da2aaed04611cfdca661bfa49d6cc374585330066ef8d04e", "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1", "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e", "proposals": [{ "proposal_id": "d09e45b1", "candidate_id": "3b61a0de", "hypothesis_id": "8b4e20d1", "hypothesis": "Relay D is inactive.", "supporting_evidence_ids": ["27d8a0f1", "e5a9136c"], "contradicting_evidence_ids": [], "missing_information": [], "authority_category": "informational", "state": "proposed", "reason": "The bounded evidence forms the declared chain." }], "abstentions": [], "gaps": [], "model_used": true },
+        { "transcript_id": "f30b7d25", "operation_id": "6a0d4e82", "context_id": "d7a42e09", "response_record_id": "b54d90e7", "response_state": "completed", "response_fingerprint": "1d8fc5fe21b04fd4bd9eb26024b8d510026ff45d536bfd9bd28f3b6953185215", "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1", "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e", "proposals": [{ "proposal_id": "25a7e0d9", "candidate_id": "a83d50e1", "hypothesis_id": "30c8f16b", "hypothesis": "Channel F is active.", "supporting_evidence_ids": [], "contradicting_evidence_ids": ["c71f408a"], "missing_information": [], "authority_category": "informational", "state": "proposed", "reason": "The retained statement explicitly says channel F is not active." }], "abstentions": [], "gaps": [], "model_used": true }
+      ]
+    }
+  },
+  "raw_provider_response_preimages": {
+    "payload_role": "untrusted-provider-response-fingerprint-preimage-only",
+    "review_use_boundary": "These bytes establish response fingerprints only. Provider proposal content, state, reason, and relationship labels are not evidence for expected semantics; expected semantics derive only from the independent neutral facts and accepted public authority recorded elsewhere in this oracle.",
+    "preimages": [
+      { "transcript_id": "a05f3c18", "response_record_id": "c9a650e2", "encoding": "base64", "byte_length": 149, "sha256": "3b48cf53d9e613221bd5c1a635ec68b61d76fa20281b3983bf303d26a15804ec", "base64_bytes": "eyJwcm9wb3NhbF9pZCI6Ijk3YWYyNmQwIiwicGFzc2FnZV9pZCI6ImU0YzE4YjcyIiwiY2xhaW0iOiJXaGVuIHN3aXRjaCBSIGlzIGNsb3NlZCwgaW5kaWNhdG9yIFQgZW1pdHMgb25lIGFtYmVyIHB1bHNlLiIsImNvbmRpdGlvbl9pZHMiOlsiNWIwOWFlNDEiXX0=" },
+      { "transcript_id": "c70b4e29", "response_record_id": "68f2d51b", "encoding": "base64", "byte_length": 109, "sha256": "2ec6a1ab6688492e8b3fe262d0895512ef8dc5797e1d07fc310718a299f38b40", "base64_bytes": "eyJwcm9wb3NhbF9pZCI6ImNkMzBhNWU3IiwicGFzc2FnZV9pZCI6ImI1N2MxMDhlIiwiY2xhaW0iOiJSZWdpc3RlciBWIGNvbnRhaW5zIHZhbHVlIDE3LiIsImNvbmRpdGlvbl9pZHMiOltdfQ==" },
+      { "transcript_id": "18d6a4f0", "response_record_id": "05a9c2de", "encoding": "base64", "byte_length": 126, "sha256": "d868fd8f46df91419238330cbcbf82c79ff8399340db85fc667ccac3bd28216b", "base64_bytes": "eyJwcm9wb3NhbF9pZCI6IjY0YWIwZTkyIiwicGFzc2FnZV9pZCI6IjhlYjEzNWQwIiwiY2xhaW0iOiJNb2R1bGUgSCBlbWl0cyBhIHRvbmUgYWZ0ZXIgaW5wdXQgSi4iLCJjb25kaXRpb25faWRzIjpbIjRjMWU5YTcwIl19" },
+      { "transcript_id": "e42a9c71", "response_record_id": "c6a2097d", "encoding": "base64", "byte_length": 110, "sha256": "17bf5adb7321bb83d58807753e9c01984b1565e7aa19ea581c185deaa0aa947a", "base64_bytes": "eyJwcm9wb3NhbF9pZCI6ImJlNjNkMDE5IiwicGFzc2FnZV9pZCI6IjJlYTkwNTdiIiwiY2xhaW0iOiJQYW5lbCBLIGRpc3BsYXlzIGEgZ3JlZW4gbWFyay4iLCJjb25kaXRpb25faWRzIjpbXX0=" },
+      { "transcript_id": "5b0e8d23", "response_record_id": "07c3f1de", "encoding": "base64", "byte_length": 96, "sha256": "d25f161774d1f65ae81069544c49a98111182c45116c7f37483cea89ab40887b", "base64_bytes": "eyJwcm9wb3NhbF9pZCI6IjRhOWYwMmQ2IiwicGFzc2FnZV9pZCI6ImE4MWUzNmM1IiwiY2xhaW0iOiJWYWx2ZSBMIGlzIG9wZW4uIiwiY29uZGl0aW9uX2lkcyI6W119" },
+      { "transcript_id": "a14e6c80", "response_record_id": "ae9143f6", "encoding": "base64", "byte_length": 127, "sha256": "89d22363ca47f165da2aaed04611cfdca661bfa49d6cc374585330066ef8d04e", "base64_bytes": "eyJwcm9wb3NhbF9pZCI6ImQwOWU0NWIxIiwiY2FuZGlkYXRlX2lkIjoiM2I2MWEwZGUiLCJoeXBvdGhlc2lzIjoiUmVsYXkgRCBpcyBpbmFjdGl2ZS4iLCJldmlkZW5jZV9pZHMiOlsiMjdkOGEwZjEiLCJlNWE5MTM2YyJdfQ==" },
+      { "transcript_id": "f30b7d25", "response_record_id": "b54d90e7", "encoding": "base64", "byte_length": 116, "sha256": "1d8fc5fe21b04fd4bd9eb26024b8d510026ff45d536bfd9bd28f3b6953185215", "base64_bytes": "eyJwcm9wb3NhbF9pZCI6IjI1YTdlMGQ5IiwiY2FuZGlkYXRlX2lkIjoiYTgzZDUwZTEiLCJoeXBvdGhlc2lzIjoiQ2hhbm5lbCBGIGlzIGFjdGl2ZS4iLCJldmlkZW5jZV9pZHMiOlsiYzcxZjQwOGEiXX0=" }
+    ]
+  },
+  "support_applicability_matrix": [
+    { "cell_id": "7b4d2a91", "support_state": "not-evaluated", "applicability_state": "not-evaluated", "decision_state": "abstained" },
+    { "cell_id": "1e8c53f0", "support_state": "not-evaluated", "applicability_state": "applicable", "decision_state": "abstained" },
+    { "cell_id": "ac0597d2", "support_state": "not-evaluated", "applicability_state": "conditional-unestablished", "decision_state": "abstained" },
+    { "cell_id": "42f6b18c", "support_state": "not-evaluated", "applicability_state": "not-applicable", "decision_state": "abstained" },
+    { "cell_id": "d39106ae", "support_state": "not-evaluated", "applicability_state": "unknown", "decision_state": "abstained" },
+    { "cell_id": "095ec4b7", "support_state": "supported", "applicability_state": "not-evaluated", "decision_state": "abstained" },
+    { "cell_id": "e6a21f83", "support_state": "supported", "applicability_state": "applicable", "decision_state": "admitted" },
+    { "cell_id": "38bd70c5", "support_state": "supported", "applicability_state": "conditional-unestablished", "decision_state": "abstained" },
+    { "cell_id": "b1f45a09", "support_state": "supported", "applicability_state": "not-applicable", "decision_state": "abstained" },
+    { "cell_id": "6c0a9de4", "support_state": "supported", "applicability_state": "unknown", "decision_state": "abstained" },
+    { "cell_id": "fa312b68", "support_state": "unsupported", "applicability_state": "not-evaluated", "decision_state": "abstained" },
+    { "cell_id": "2d87c10e", "support_state": "unsupported", "applicability_state": "applicable", "decision_state": "abstained" },
+    { "cell_id": "c540e793", "support_state": "unsupported", "applicability_state": "conditional-unestablished", "decision_state": "abstained" },
+    { "cell_id": "81ab36f4", "support_state": "unsupported", "applicability_state": "not-applicable", "decision_state": "abstained" },
+    { "cell_id": "0f69d2bc", "support_state": "unsupported", "applicability_state": "unknown", "decision_state": "abstained" },
+    { "cell_id": "da728501", "support_state": "contradicted", "applicability_state": "not-evaluated", "decision_state": "abstained" },
+    { "cell_id": "54c19e7a", "support_state": "contradicted", "applicability_state": "applicable", "decision_state": "abstained" },
+    { "cell_id": "9b063fd2", "support_state": "contradicted", "applicability_state": "conditional-unestablished", "decision_state": "abstained" },
+    { "cell_id": "317ac8e5", "support_state": "contradicted", "applicability_state": "not-applicable", "decision_state": "abstained" },
+    { "cell_id": "c8e4501f", "support_state": "contradicted", "applicability_state": "unknown", "decision_state": "abstained" },
+    { "cell_id": "63b19d47", "support_state": "unavailable", "applicability_state": "not-evaluated", "decision_state": "abstained" },
+    { "cell_id": "f2058ac1", "support_state": "unavailable", "applicability_state": "applicable", "decision_state": "abstained" },
+    { "cell_id": "0ca74e96", "support_state": "unavailable", "applicability_state": "conditional-unestablished", "decision_state": "abstained" },
+    { "cell_id": "a86f310d", "support_state": "unavailable", "applicability_state": "not-applicable", "decision_state": "abstained" },
+    { "cell_id": "45d9b72e", "support_state": "unavailable", "applicability_state": "unknown", "decision_state": "abstained" }
+  ],
+  "source_producer_cases": [
+    {
+      "case_id": "8f31c6a2",
+      "neutral_source": {
+        "source_revision_id": "1a7d903e",
+        "passage_id": "e4c18b72",
+        "source_body_availability": "available",
+        "source_body": "When switch R is closed, indicator T emits one amber pulse.",
+        "source_body_sha256": "0098862f1aa7ba3481e00d7249085d3729411f98112b6e0cc62d89cd9b343b6d",
+        "citation": {
+          "byte_start": 0,
+          "byte_length": 59,
+          "text_sha256": "0098862f1aa7ba3481e00d7249085d3729411f98112b6e0cc62d89cd9b343b6d"
+        },
+        "conditions": [
+          { "condition_id": "5b09ae41", "text": "Switch R is closed." }
+        ]
+      },
+      "expected_output": {
+        "schema_id": "infinium.llm.source-claim-extraction/v1",
+        "schema_version": "1",
+        "acquisition_run_id": "ac9e40d1",
+        "operation_id": "36b1f80c",
+        "owner_kind": "evidence-acquisition-run",
+        "owner_id": "ac9e40d1",
+        "parent_analysis_run_id": "79d503ab",
+        "application_scope_id": "2148ce76",
+        "cost_attribution_scope_id": "c6821f05",
+        "source_revision_id": "1a7d903e",
+        "passage_ids": ["e4c18b72"],
+        "declared_purpose": "Extract the bounded statement and its exact condition.",
+        "claim_proposals": [
+          {
+            "proposal_id": "97af26d0",
+            "passage_id": "e4c18b72",
+            "claim": "When switch R is closed, indicator T emits one amber pulse.",
+            "condition_ids": ["5b09ae41"],
+            "extraction_state": "extracted",
+            "reason": "The exact retained passage states the conditional proposition."
+          }
+        ],
+        "contradiction_evidence_ids": [],
+        "abstentions": [],
+        "gaps": [],
+        "validation_ids": ["0ed7c439"],
+        "admission_correlation_ids": ["13ba4f68"],
+        "admission_correlations": [
+          {
+            "admission_id": "76dc81a9",
+            "proposal_id": "97af26d0",
+            "authorization_id": "4e2b901d",
+            "operation_id": "36b1f80c",
+            "response_record_id": "c9a650e2",
+            "owner_kind": "evidence-acquisition-run",
+            "owner_id": "ac9e40d1",
+            "root_subject_id": "1a7d903e",
+            "validation_id": "0ed7c439",
+            "admission_correlation_id": "13ba4f68",
+            "support_state": "supported",
+            "applicability_state": "not-evaluated",
+            "decision_state": "abstained"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "24e8b7c1",
+      "neutral_source": {
+        "source_revision_id": "60f2ad93",
+        "passage_id": "b57c108e",
+        "source_body_availability": "unavailable",
+        "source_body": null,
+        "absence_fact": {
+          "fact_id": "d10a63f8",
+          "payload": "The retained material contains no payload for register V.",
+          "payload_sha256": "8879d944a84db38429acbe3c78fb5b075a71139a8a47a72fc5280b53fcb93323"
+        },
+        "retained_attempted_proposition": {
+          "record_id": "91e4b72c",
+          "proposition_text": "Register V contains value 17.",
+          "proposition_text_byte_length": 29,
+          "proposition_text_sha256": "085391e355e2e76c108e9c4d3bd0d0ed4167f6f5875c2d5efc779a3dcc3ed65f",
+          "underlying_payload_present": false,
+          "payload_absence_fact_id": "d10a63f8",
+          "evidentiary_boundary": "This neutral retained record supplies the exact attempted proposition; the separately recorded absent payload supplies no support for that proposition."
+        }
+      },
+      "expected_output": {
+        "schema_id": "infinium.llm.source-claim-extraction/v1",
+        "schema_version": "1",
+        "acquisition_run_id": "eb4679a0",
+        "operation_id": "3d8a250f",
+        "owner_kind": "evidence-acquisition-run",
+        "owner_id": "eb4679a0",
+        "parent_analysis_run_id": "71c5fe24",
+        "application_scope_id": "9a032d7e",
+        "cost_attribution_scope_id": "4f8db160",
+        "source_revision_id": "60f2ad93",
+        "passage_ids": ["b57c108e"],
+        "declared_purpose": "Retain the attempted proposition while exposing the unavailable underlying payload.",
+        "claim_proposals": [
+          {
+            "proposal_id": "cd30a5e7",
+            "passage_id": "b57c108e",
+            "claim": "Register V contains value 17.",
+            "condition_ids": [],
+            "extraction_state": "unavailable",
+            "reason": "The proposition's underlying source payload is absent."
+          }
+        ],
+        "contradiction_evidence_ids": [],
+        "abstentions": ["The proposition cannot be evaluated without its source payload."],
+        "gaps": ["The source payload for register V is unavailable."],
+        "validation_ids": ["582af1c6"],
+        "admission_correlation_ids": ["f4108b2d"],
+        "admission_correlations": [
+          {
+            "admission_id": "a37ed960",
+            "proposal_id": "cd30a5e7",
+            "authorization_id": "0b9c74a2",
+            "operation_id": "3d8a250f",
+            "response_record_id": "68f2d51b",
+            "owner_kind": "evidence-acquisition-run",
+            "owner_id": "eb4679a0",
+            "root_subject_id": "60f2ad93",
+            "validation_id": "582af1c6",
+            "admission_correlation_id": "f4108b2d",
+            "support_state": "unavailable",
+            "applicability_state": "not-evaluated",
+            "decision_state": "audit-only"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "d6a041be",
+      "neutral_source": {
+        "source_revision_id": "2c94f7a1",
+        "passage_id": "8eb135d0",
+        "source_body_availability": "deleted",
+        "source_body": null,
+        "retained_source_body_sha256": "d71d56ae03651cafe8131f41454b7e779bdb235589819730459596b58c7ab3ce",
+        "retained_source_body_byte_length": 36,
+        "retained_claim_audit": {
+          "record_id": "3f7a10d5",
+          "claim_text": "Module H emits a tone after input J.",
+          "claim_text_byte_length": 36,
+          "claim_text_sha256": "d71d56ae03651cafe8131f41454b7e779bdb235589819730459596b58c7ab3ce",
+          "condition_ids": ["4c1e9a70"],
+          "neutral_condition_facts": [
+            {
+              "condition_id": "4c1e9a70",
+              "condition_text": "after input J",
+              "condition_text_byte_start": 22,
+              "condition_text_byte_length": 13,
+              "condition_text_sha256": "408ed3293ce064595592d57102d7f1ae7e6caad22b21fd80fb904b3a14cfc948"
+            }
+          ],
+          "source_payload_present": false,
+          "source_payload_state": "deleted",
+          "evidentiary_boundary": "The derived claim text survives as an audit record; the deleted source payload does not survive and is not represented as inspectable evidence."
+        }
+      },
+      "expected_output": {
+        "schema_id": "infinium.llm.source-claim-extraction/v1",
+        "schema_version": "1",
+        "acquisition_run_id": "51e7ca38",
+        "operation_id": "b20d6f49",
+        "owner_kind": "evidence-acquisition-run",
+        "owner_id": "51e7ca38",
+        "parent_analysis_run_id": "07c3a5ed",
+        "application_scope_id": "f9812b64",
+        "cost_attribution_scope_id": "3e4c10a7",
+        "source_revision_id": "2c94f7a1",
+        "passage_ids": ["8eb135d0"],
+        "declared_purpose": "Extract the exact qualified claim before source-specific deletion.",
+        "claim_proposals": [
+          {
+            "proposal_id": "64ab0e92",
+            "passage_id": "8eb135d0",
+            "claim": "Module H emits a tone after input J.",
+            "condition_ids": ["4c1e9a70"],
+            "extraction_state": "deleted",
+            "reason": "The retained claim survives, but its source body was deleted."
+          }
+        ],
+        "contradiction_evidence_ids": [],
+        "abstentions": [],
+        "gaps": ["The cited source body is no longer inspectable."],
+        "validation_ids": ["ca56701d"],
+        "admission_correlation_ids": ["19d3e8b4"],
+        "admission_correlations": [
+          {
+            "admission_id": "72bc4f06",
+            "proposal_id": "64ab0e92",
+            "authorization_id": "e3f7081a",
+            "operation_id": "b20d6f49",
+            "response_record_id": "05a9c2de",
+            "owner_kind": "evidence-acquisition-run",
+            "owner_id": "51e7ca38",
+            "root_subject_id": "2c94f7a1",
+            "validation_id": "ca56701d",
+            "admission_correlation_id": "19d3e8b4",
+            "support_state": "unavailable",
+            "applicability_state": "not-evaluated",
+            "decision_state": "audit-only"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "7ad3c508",
+      "neutral_source": {
+        "source_revision_id": "f1428c6d",
+        "passage_id": "2ea9057b",
+        "source_body_availability": "available",
+        "source_body": "Panel K displays a green mark. The same source supplies no observation confirming the mark.",
+        "source_body_sha256": "c26ee5ec00bcdb81a632fd6c6bd235740dea51cc94f312b96a987d29e58fb1d7",
+        "claim_citation": { "byte_start": 0, "byte_length": 30, "text": "Panel K displays a green mark.", "text_sha256": "8a12e315b1b8da7b0dfcd8a7c6e87e6608b767156fb77d3ca68475bcf6a93349" },
+        "same_source_insufficiency": { "byte_start": 31, "byte_length": 60, "text": "The same source supplies no observation confirming the mark.", "text_sha256": "31e91a442aaf571cbd0491d14dfd3a4036c71c4f01d6a583293f29a677935f42" }
+      },
+      "expected_output": {
+        "schema_id": "infinium.llm.source-claim-extraction/v1", "schema_version": "1", "acquisition_run_id": "0c5e91a7", "operation_id": "d37a206f", "owner_kind": "evidence-acquisition-run", "owner_id": "0c5e91a7", "parent_analysis_run_id": "ab841d52", "application_scope_id": "68c0f39e", "cost_attribution_scope_id": "91b4e72a", "source_revision_id": "f1428c6d", "passage_ids": ["2ea9057b"], "declared_purpose": "Extract the exact claim and same-source insufficiency statement.",
+        "claim_proposals": [{ "proposal_id": "be63d019", "passage_id": "2ea9057b", "claim": "Panel K displays a green mark.", "condition_ids": [], "extraction_state": "extracted", "reason": "The claim is exact, while the same source supplies no observation sufficient to support it." }],
+        "contradiction_evidence_ids": [], "abstentions": ["The bounded same-source material is insufficient to support the claim."], "gaps": ["No confirming observation is supplied."], "validation_ids": ["43f8a1c0"], "admission_correlation_ids": ["e61b5d92"],
+        "admission_correlations": [{ "admission_id": "2d70ca48", "proposal_id": "be63d019", "authorization_id": "8f14b3e6", "operation_id": "d37a206f", "response_record_id": "c6a2097d", "owner_kind": "evidence-acquisition-run", "owner_id": "0c5e91a7", "root_subject_id": "f1428c6d", "validation_id": "43f8a1c0", "admission_correlation_id": "e61b5d92", "support_state": "unsupported", "applicability_state": "not-evaluated", "decision_state": "abstained" }]
+      }
+    },
+    {
+      "case_id": "c9157e2a",
+      "neutral_source": {
+        "source_revision_id": "6b02d4f9",
+        "passage_id": "a81e36c5",
+        "source_body_availability": "available",
+        "source_body": "The retained source cannot determine whether valve L is open.",
+        "source_body_sha256": "b6130ab01eceff67b3e2f318030f49e2efc4ba04ecf13beb92f144b59df2b946",
+        "cannot_determine_citation": { "byte_start": 0, "byte_length": 61, "text": "The retained source cannot determine whether valve L is open.", "text_sha256": "b6130ab01eceff67b3e2f318030f49e2efc4ba04ecf13beb92f144b59df2b946" },
+        "underlying_proposition": { "record_id": "36e5a10c", "text": "Valve L is open.", "text_byte_length": 16, "text_sha256": "0f3330aff9a1992e479a90331b9a1cabdf16bd52844e48510fe41802da96be7f" }
+      },
+      "expected_output": {
+        "schema_id": "infinium.llm.source-claim-extraction/v1", "schema_version": "1", "acquisition_run_id": "84d1f30b", "operation_id": "1e7b4a95", "owner_kind": "evidence-acquisition-run", "owner_id": "84d1f30b", "parent_analysis_run_id": "5ca920e7", "application_scope_id": "d6401b8a", "cost_attribution_scope_id": "2f7e93c1", "source_revision_id": "6b02d4f9", "passage_ids": ["a81e36c5"], "declared_purpose": "Retain the exact cannot-determine statement and underlying proposition.",
+        "claim_proposals": [{ "proposal_id": "4a9f02d6", "passage_id": "a81e36c5", "claim": "Valve L is open.", "condition_ids": [], "extraction_state": "abstained", "reason": "The exact cited source says the underlying proposition cannot be determined." }],
+        "contradiction_evidence_ids": [], "abstentions": ["The provider explicitly cannot determine the underlying proposition."], "gaps": ["No bounded source fact determines whether valve L is open."], "validation_ids": ["b05c78e1"], "admission_correlation_ids": ["39e6a2f4"],
+        "admission_correlations": [{ "admission_id": "f27d5b80", "proposal_id": "4a9f02d6", "authorization_id": "6c18e4a9", "operation_id": "1e7b4a95", "response_record_id": "07c3f1de", "owner_kind": "evidence-acquisition-run", "owner_id": "84d1f30b", "root_subject_id": "6b02d4f9", "validation_id": "b05c78e1", "admission_correlation_id": "39e6a2f4", "support_state": "not-evaluated", "applicability_state": "not-evaluated", "decision_state": "abstained" }]
+      }
+    }
+  ],
+  "source_consumer_application_results": [
+    {
+      "result_id": "4a1de709",
+      "proposal_id": "97af26d0",
+      "neutral_local_facts": [
+        {
+          "fact_id": "b8c241f3",
+          "payload": "Switch R is closed in snapshot N.",
+          "payload_sha256": "44116053d0b0e208ead233d55a173d52898a3b8874bdd0da4de9d7472bceb518"
+        }
+      ],
+      "derivation": "The cited conditional proposition is source-supported, and the independent local fact establishes its condition for snapshot N.",
+      "application_fact_binding": {
+        "result_id": "4a1de709",
+        "application_link_id": "90ce7b43",
+        "fact_bundle_id": "d0c4a831",
+        "fact_ids": ["b8c241f3"],
+        "fact_bundle_sha256": "44116053d0b0e208ead233d55a173d52898a3b8874bdd0da4de9d7472bceb518"
+      },
+      "expected_application_link": {
+        "admission_id": "76dc81a9",
+        "proposal_id": "97af26d0",
+        "authorization_id": "a9510c7e",
+        "operation_id": "36b1f80c",
+        "response_record_id": "c9a650e2",
+        "owner_kind": "analysis-run",
+        "owner_id": "e07a54d1",
+        "root_subject_id": "f3b9286c",
+        "validation_id": "2d6f01a8",
+        "application_link_id": "90ce7b43",
+        "support_state": "supported",
+        "applicability_state": "applicable",
+        "decision_state": "admitted"
+      }
+    },
+    {
+      "result_id": "c2e9065b",
+      "proposal_id": "cd30a5e7",
+      "neutral_local_facts": [
+        {
+          "fact_id": "0f6b3d8a",
+          "payload": "Register V has no available value payload in snapshot N.",
+          "payload_sha256": "6e1f435a0e78ed91b67bb4a06e981ebbf2a8efe2a7841bf54219d8971e96d7f4"
+        }
+      ],
+      "derivation": "The independent local fact establishes unavailability of the payload needed to evaluate support, so no local applicability conclusion is published.",
+      "application_fact_binding": {
+        "result_id": "c2e9065b",
+        "application_link_id": "7ca219e5",
+        "fact_bundle_id": "47e2d09a",
+        "fact_ids": ["0f6b3d8a"],
+        "fact_bundle_sha256": "6e1f435a0e78ed91b67bb4a06e981ebbf2a8efe2a7841bf54219d8971e96d7f4"
+      },
+      "expected_application_link": {
+        "admission_id": "a37ed960",
+        "proposal_id": "cd30a5e7",
+        "authorization_id": "6e1c4a92",
+        "operation_id": "3d8a250f",
+        "response_record_id": "68f2d51b",
+        "owner_kind": "analysis-run",
+        "owner_id": "14b7e830",
+        "root_subject_id": "a06c59df",
+        "validation_id": "843d0f21",
+        "application_link_id": "7ca219e5",
+        "support_state": "unavailable",
+        "applicability_state": "not-evaluated",
+        "decision_state": "abstained"
+      }
+    },
+    {
+      "result_id": "18f4ca63",
+      "proposal_id": "64ab0e92",
+      "neutral_local_facts": [
+        {
+          "fact_id": "d53a807c",
+          "payload": "The source body for revision Q is unavailable and its retained fingerprint matches the deletion record.",
+          "payload_sha256": "86df1a649b85ea0f38e1b822f7b719238076bac5b2a64378cc56e5e1b870a3f8",
+          "retained_source_body_sha256": "d71d56ae03651cafe8131f41454b7e779bdb235589819730459596b58c7ab3ce"
+        }
+      ],
+      "derivation": "The independent deletion fact preserves the historical fingerprint but supplies no current source body, so the retained claim remains audit-only.",
+      "application_fact_binding": {
+        "result_id": "18f4ca63",
+        "application_link_id": "a48c7f15",
+        "fact_bundle_id": "a9b175c0",
+        "fact_ids": ["d53a807c"],
+        "fact_bundle_sha256": "86df1a649b85ea0f38e1b822f7b719238076bac5b2a64378cc56e5e1b870a3f8"
+      },
+      "expected_application_link": {
+        "admission_id": "72bc4f06",
+        "proposal_id": "64ab0e92",
+        "authorization_id": "39b7d10e",
+        "operation_id": "b20d6f49",
+        "response_record_id": "05a9c2de",
+        "owner_kind": "analysis-run",
+        "owner_id": "c51e802a",
+        "root_subject_id": "7f24a9b0",
+        "validation_id": "06de31c8",
+        "application_link_id": "a48c7f15",
+        "support_state": "unavailable",
+        "applicability_state": "not-evaluated",
+        "decision_state": "audit-only"
+      }
+    },
+    {
+      "result_id": "f6b2094d",
+      "proposal_id": "97af26d0",
+      "source_condition_binding": {
+        "condition_id": "5b09ae41",
+        "condition_text": "Switch R is closed.",
+        "condition_text_byte_length": 19,
+        "condition_text_sha256": "e9d6cfab37b6398520058e675f7d04362984d745e01d92b8bde93b1f6da7dbbf"
+      },
+      "neutral_local_facts": [
+        { "fact_id": "3b7e10c9", "payload": "Indicator T exists in snapshot N.", "payload_sha256": "9e9a94407dfd1da1ac8e3586ab567f05796c8d6cbe08fb8db3b43cc7a898a1ec" }
+      ],
+      "derivation": "The local fact establishes the bounded indicator context but does not establish that switch R is closed, so the exact source condition remains unestablished.",
+      "application_fact_binding": {
+        "result_id": "f6b2094d",
+        "application_link_id": "5c8a31e7",
+        "fact_bundle_id": "e2047b6a",
+        "fact_ids": ["3b7e10c9"],
+        "fact_bundle_sha256": "9e9a94407dfd1da1ac8e3586ab567f05796c8d6cbe08fb8db3b43cc7a898a1ec"
+      },
+      "expected_application_link": {
+        "admission_id": "76dc81a9", "proposal_id": "97af26d0", "authorization_id": "d19e4b70", "operation_id": "36b1f80c", "response_record_id": "c9a650e2", "owner_kind": "analysis-run", "owner_id": "8a2f61d4", "root_subject_id": "47c0e9b3", "validation_id": "b516d08e", "application_link_id": "5c8a31e7", "support_state": "supported", "applicability_state": "conditional-unestablished", "decision_state": "abstained"
+      }
+    }
+  ],
+  "candidate_cases": [
+    {
+      "case_id": "9e1b4c70",
+      "neutral_local_facts": [
+        { "fact_id": "27d8a0f1", "payload": "Latch C is open.", "payload_sha256": "c2f6634f1fadd654340d9543ee205a8fac2c6e74345449efbce4eae17923811f" },
+        { "fact_id": "e5a9136c", "payload": "When latch C is open, relay D is inactive.", "payload_sha256": "1e19edff8a4a74f330361f9d9268675976952ffa40a867000b2eac0182c460b3" }
+      ],
+      "coherent_chain": ["27d8a0f1", "e5a9136c"],
+      "expected_output": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "6a0d4e82",
+        "owner_kind": "analysis-run",
+        "owner_id": "f2c81739",
+        "analysis_run_id": "f2c81739",
+        "candidate_id": "3b61a0de",
+        "participant_ids": ["0e5a7c91", "bc24d806"],
+        "participant_roles": ["observed input", "bounded output"],
+        "causal_path_ids": ["27d8a0f1", "e5a9136c"],
+        "dependency_closure_id": "8c3f10a7",
+        "evidence_ids": ["27d8a0f1", "e5a9136c"],
+        "hypothesis_proposals": [
+          {
+            "proposal_id": "d09e45b1",
+            "candidate_id": "3b61a0de",
+            "hypothesis": "Relay D is inactive.",
+            "supporting_evidence_ids": ["27d8a0f1", "e5a9136c"],
+            "contradicting_evidence_ids": [],
+            "missing_information": [],
+            "proposal_state": "proposed",
+            "reason": "The two independent facts form a complete conditional chain."
+          }
+        ],
+        "abstentions": [],
+        "gaps": [],
+        "validation_ids": ["54bf209e"],
+        "admission_link_ids": ["b7a603dc"],
+        "admission_links": [
+          {
+            "admission_id": "1c8d5a40",
+            "proposal_id": "d09e45b1",
+            "authorization_id": "7f2b16e9",
+            "operation_id": "6a0d4e82",
+            "response_record_id": "ae9143f6",
+            "owner_kind": "analysis-run",
+            "owner_id": "f2c81739",
+            "root_subject_id": "3b61a0de",
+            "validation_id": "54bf209e",
+            "application_link_id": "b7a603dc",
+            "support_state": "supported",
+            "applicability_state": "applicable",
+            "decision_state": "admitted"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "50ca2e17",
+      "neutral_local_facts": [
+        { "fact_id": "c71f408a", "payload": "Sensor E reports that channel F is not active.", "payload_sha256": "cc62560aaa42a74f4dd88b015e1e3307f6d48da171f95815c8323928fec12d1d" }
+      ],
+      "coherent_chain": ["c71f408a"],
+      "expected_output": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "schema_version": "1",
+        "operation_id": "6a0d4e82",
+        "owner_kind": "analysis-run",
+        "owner_id": "f2c81739",
+        "analysis_run_id": "f2c81739",
+        "candidate_id": "a83d50e1",
+        "participant_ids": ["6f31bd08"],
+        "participant_roles": ["observed channel"],
+        "causal_path_ids": ["c71f408a"],
+        "dependency_closure_id": "8c3f10a7",
+        "evidence_ids": ["c71f408a"],
+        "hypothesis_proposals": [
+          {
+            "proposal_id": "25a7e0d9",
+            "candidate_id": "a83d50e1",
+            "hypothesis": "Channel F is active.",
+            "supporting_evidence_ids": [],
+            "contradicting_evidence_ids": ["c71f408a"],
+            "missing_information": [],
+            "proposal_state": "proposed",
+            "reason": "The retained observation directly opposes the hypothesis."
+          }
+        ],
+        "abstentions": ["No host conclusion is published for the directly contradicted hypothesis."],
+        "gaps": [],
+        "validation_ids": ["03f6ac82"],
+        "admission_link_ids": ["e41c709b"],
+        "admission_links": [
+          {
+            "admission_id": "97b0e6d4",
+            "proposal_id": "25a7e0d9",
+            "authorization_id": "7f2b16e9",
+            "operation_id": "6a0d4e82",
+            "response_record_id": "b54d90e7",
+            "owner_kind": "analysis-run",
+            "owner_id": "f2c81739",
+            "root_subject_id": "a83d50e1",
+            "validation_id": "03f6ac82",
+            "application_link_id": "e41c709b",
+            "support_state": "contradicted",
+            "applicability_state": "applicable",
+            "decision_state": "abstained"
+          }
+        ]
+      }
+    }
+  ],
+  "normal_link_inventory": [
+    { "proposal_id": "97af26d0", "producer_link_ids": ["13ba4f68"], "consumer_link_ids": ["90ce7b43", "5c8a31e7"] },
+    { "proposal_id": "cd30a5e7", "producer_link_ids": ["f4108b2d"], "consumer_link_ids": ["7ca219e5"] },
+    { "proposal_id": "64ab0e92", "producer_link_ids": ["19d3e8b4"], "consumer_link_ids": ["a48c7f15"] },
+    { "proposal_id": "be63d019", "producer_link_ids": ["e61b5d92"], "consumer_link_ids": [] },
+    { "proposal_id": "4a9f02d6", "producer_link_ids": ["39e6a2f4"], "consumer_link_ids": [] },
+    { "proposal_id": "d09e45b1", "producer_link_ids": ["b7a603dc"], "consumer_link_ids": [] },
+    { "proposal_id": "25a7e0d9", "producer_link_ids": ["e41c709b"], "consumer_link_ids": [] }
+  ],
+  "link_cardinality_probes": [
+    {
+      "probe_id": "6d2a81f0",
+      "link_count": 0,
+      "source": {
+        "json_schema_shape_valid": true,
+        "output": {
+          "schema_id": "infinium.llm.source-claim-extraction/v1", "schema_version": "1", "acquisition_run_id": "ac9e40d1", "operation_id": "36b1f80c", "owner_kind": "evidence-acquisition-run", "owner_id": "ac9e40d1", "parent_analysis_run_id": "79d503ab", "application_scope_id": "2148ce76", "cost_attribution_scope_id": "c6821f05", "source_revision_id": "1a7d903e", "passage_ids": ["e4c18b72"], "declared_purpose": "Extract the bounded statement and its exact condition.",
+          "claim_proposals": [{ "proposal_id": "97af26d0", "passage_id": "e4c18b72", "claim": "When switch R is closed, indicator T emits one amber pulse.", "condition_ids": ["5b09ae41"], "extraction_state": "extracted", "reason": "The exact retained passage states the conditional proposition." }],
+          "contradiction_evidence_ids": [], "abstentions": [], "gaps": [], "validation_ids": ["0ed7c439"], "admission_correlation_ids": [], "admission_correlations": []
+        }
+      },
+      "candidate": {
+        "json_schema_shape_valid": true,
+        "output": {
+          "schema_id": "infinium.llm.candidate-investigation/v1", "schema_version": "1", "operation_id": "6a0d4e82", "owner_kind": "analysis-run", "owner_id": "f2c81739", "analysis_run_id": "f2c81739", "candidate_id": "3b61a0de", "participant_ids": ["0e5a7c91", "bc24d806"], "participant_roles": ["observed input", "bounded output"], "causal_path_ids": ["27d8a0f1", "e5a9136c"], "dependency_closure_id": "8c3f10a7", "evidence_ids": ["27d8a0f1", "e5a9136c"],
+          "hypothesis_proposals": [{ "proposal_id": "d09e45b1", "candidate_id": "3b61a0de", "hypothesis": "Relay D is inactive.", "supporting_evidence_ids": ["27d8a0f1", "e5a9136c"], "contradicting_evidence_ids": [], "missing_information": [], "proposal_state": "proposed", "reason": "The two independent facts form a complete conditional chain." }],
+          "abstentions": [], "gaps": [], "validation_ids": ["54bf209e"], "admission_link_ids": [], "admission_links": []
+        }
+      },
+      "exact_one_policy_valid": false
+    },
+    {
+      "probe_id": "a4057c9e",
+      "link_count": 2,
+      "source": {
+        "json_schema_shape_valid": true,
+        "output": {
+          "schema_id": "infinium.llm.source-claim-extraction/v1", "schema_version": "1", "acquisition_run_id": "ac9e40d1", "operation_id": "36b1f80c", "owner_kind": "evidence-acquisition-run", "owner_id": "ac9e40d1", "parent_analysis_run_id": "79d503ab", "application_scope_id": "2148ce76", "cost_attribution_scope_id": "c6821f05", "source_revision_id": "1a7d903e", "passage_ids": ["e4c18b72"], "declared_purpose": "Extract the bounded statement and its exact condition.",
+          "claim_proposals": [{ "proposal_id": "97af26d0", "passage_id": "e4c18b72", "claim": "When switch R is closed, indicator T emits one amber pulse.", "condition_ids": ["5b09ae41"], "extraction_state": "extracted", "reason": "The exact retained passage states the conditional proposition." }],
+          "contradiction_evidence_ids": [], "abstentions": [], "gaps": [], "validation_ids": ["0ed7c439"], "admission_correlation_ids": ["4b0e2d71", "c83a591f"],
+          "admission_correlations": [
+            { "admission_id": "76dc81a9", "proposal_id": "97af26d0", "authorization_id": "4e2b901d", "operation_id": "36b1f80c", "response_record_id": "c9a650e2", "owner_kind": "evidence-acquisition-run", "owner_id": "ac9e40d1", "root_subject_id": "1a7d903e", "validation_id": "0ed7c439", "admission_correlation_id": "4b0e2d71", "support_state": "supported", "applicability_state": "not-evaluated", "decision_state": "abstained" },
+            { "admission_id": "76dc81a9", "proposal_id": "97af26d0", "authorization_id": "4e2b901d", "operation_id": "36b1f80c", "response_record_id": "c9a650e2", "owner_kind": "evidence-acquisition-run", "owner_id": "ac9e40d1", "root_subject_id": "1a7d903e", "validation_id": "0ed7c439", "admission_correlation_id": "c83a591f", "support_state": "supported", "applicability_state": "not-evaluated", "decision_state": "abstained" }
+          ]
+        }
+      },
+      "candidate": {
+        "json_schema_shape_valid": true,
+        "output": {
+          "schema_id": "infinium.llm.candidate-investigation/v1", "schema_version": "1", "operation_id": "6a0d4e82", "owner_kind": "analysis-run", "owner_id": "f2c81739", "analysis_run_id": "f2c81739", "candidate_id": "3b61a0de", "participant_ids": ["0e5a7c91", "bc24d806"], "participant_roles": ["observed input", "bounded output"], "causal_path_ids": ["27d8a0f1", "e5a9136c"], "dependency_closure_id": "8c3f10a7", "evidence_ids": ["27d8a0f1", "e5a9136c"],
+          "hypothesis_proposals": [{ "proposal_id": "d09e45b1", "candidate_id": "3b61a0de", "hypothesis": "Relay D is inactive.", "supporting_evidence_ids": ["27d8a0f1", "e5a9136c"], "contradicting_evidence_ids": [], "missing_information": [], "proposal_state": "proposed", "reason": "The two independent facts form a complete conditional chain." }],
+          "abstentions": [], "gaps": [], "validation_ids": ["54bf209e"], "admission_link_ids": ["019f7a2c", "d4c850e1"],
+          "admission_links": [
+            { "admission_id": "1c8d5a40", "proposal_id": "d09e45b1", "authorization_id": "7f2b16e9", "operation_id": "6a0d4e82", "response_record_id": "ae9143f6", "owner_kind": "analysis-run", "owner_id": "f2c81739", "root_subject_id": "3b61a0de", "validation_id": "54bf209e", "application_link_id": "019f7a2c", "support_state": "supported", "applicability_state": "applicable", "decision_state": "admitted" },
+            { "admission_id": "1c8d5a40", "proposal_id": "d09e45b1", "authorization_id": "7f2b16e9", "operation_id": "6a0d4e82", "response_record_id": "ae9143f6", "owner_kind": "analysis-run", "owner_id": "f2c81739", "root_subject_id": "3b61a0de", "validation_id": "54bf209e", "application_link_id": "d4c850e1", "support_state": "supported", "applicability_state": "applicable", "decision_state": "admitted" }
+          ]
+        }
+      },
+      "exact_one_policy_valid": false
+    }
+  ],
+  "structural_policy_rejects": [
+    {
+      "reject_id": "0c47e9a1",
+      "kind": "policy",
+      "probe_refs": ["6d2a81f0"],
+      "expected_decision_state": "rejected",
+      "reason": "A retained proposal with zero decision links violates the exact-one host-decision policy in both source and candidate domains."
+    },
+    {
+      "reject_id": "b9135d60",
+      "kind": "policy",
+      "probe_refs": ["a4057c9e"],
+      "expected_decision_state": "rejected",
+      "reason": "A retained proposal with two decision links violates the exact-one host-decision policy in both source and candidate domains."
+    },
+    {
+      "reject_id": "5e0a72cf",
+      "kind": "structural",
+      "probe": {
+        "schema_id": "infinium.llm.candidate-investigation/v1",
+        "proposal": {
+          "proposal_id": "d09e45b1",
+          "candidate_id": "3b61a0de",
+          "hypothesis": "Relay D is inactive.",
+          "supporting_evidence_ids": ["27d8a0f1", "e5a9136c"],
+          "contradicting_evidence_ids": [],
+          "missing_information": [],
+          "proposal_state": "proposed"
+        }
+      },
+      "expected_decision_state": "rejected",
+      "reason": "The candidate proposal omits the active schema's required reason field."
+    }
+  ],
+  "declared_counts": {
+    "matrix_cells": 25,
+    "source_producer_cases": 5,
+    "source_consumer_application_results": 4,
+    "candidate_cases": 2,
+    "retained_proposals": 7,
+    "source_execution_inputs": 5,
+    "source_retained_transcripts": 5,
+    "candidate_execution_contexts": 2,
+    "candidate_retained_transcripts": 2,
+    "link_cardinality_probes": 2,
+    "structural_policy_rejects": 3
+  }
+}

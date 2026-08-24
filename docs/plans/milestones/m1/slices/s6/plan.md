@@ -1,5 +1,13 @@
 # M1 Slice 6: Direct OpenAI credential, budget, and semantic operations
 
+> Current evaluation-timing supersession (2026-08-23): ADR-0035 and the
+> accepted M1 semantic-oracle deferral amendment preserve this plan's product
+> meanings, contracts, safety rules, and ordinary verification, but supersede
+> every requirement to author, review, seal, compare, or pass an independent
+> semantic oracle during M1 or M2. Those passages remain historical. Slice 6
+> closeout now uses the active product-conformance profile and cannot claim an
+> independent semantic verdict.
+
 > Active execution note (2026-08-21): the owner-authorized
 > [practical development continuation](development-continuation.md) supersedes
 > remaining credential-ceremony proliferation and per-correction authority or

@@ -1,0 +1,17 @@
+{
+  "schema_id": "infinium.evaluation.semantic-admission-reclassification/9.0.0",
+  "schema_version": "9",
+  "package_id": "S6-SEMANTIC-ADMISSION-VAL-v9",
+  "reclassified_at": "2026-08-22",
+  "from_partition": "validation",
+  "to_partition": "development",
+  "current_status": "historical-development-evidence-used-during-correction",
+  "reason": "The exact v9 oracle and provenance were independently accepted and sealed before the first product comparison. That comparison exposed a coherent product defect: the source producer did not mark an exact faithfully grounded evidence-only claim as supported, and source unsupported, contradicted, and unavailable results used local applicability unknown even though source production has no local-applicability authority. Candidate unavailable processing and its persistence replay mirror likewise claimed applicability despite unavailable evidence. V9 therefore drove the correction to supported or unavailable support with applicability not-evaluated at those producer seams and cannot remain independent current validation authority.",
+  "retention": "The original oracle, provenance, and reviewer-authored acceptance bytes remain immutable and audit-visible. This record changes only their current authority classification.",
+  "comparison_consequence": "V9 cannot grant current validation authority or serve as expected truth. A materially independent successor must test the corrected source producer, candidate producer, consumer decision, persistence, and replay semantics after independent review and before product comparison.",
+  "prohibited_authority": [
+    "current validation truth",
+    "owner acceptance",
+    "runtime semantic admission"
+  ]
+}

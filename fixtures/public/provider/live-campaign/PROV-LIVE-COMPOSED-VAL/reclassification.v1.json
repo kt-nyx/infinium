@@ -1,0 +1,24 @@
+{
+  "schema_identity": "infinium.evaluation.live-campaign-reclassification/1.0.0",
+  "package_identity": "PROV-LIVE-COMPOSED-VAL",
+  "reclassified_at": "2026-08-23",
+  "from_partition": "validation",
+  "to_partition": "development",
+  "current_status": "historical-development-evidence-clean-break-semantic-contract",
+  "retained_manifest": {
+    "path": "public-manifest.json",
+    "bytes": 704,
+    "sha256": "da6b6b05456a2ed956393c3a0f7c7d470a947adba8e991cae72e9dd7f28250c8"
+  },
+  "file_identities": [
+    {
+      "path": "oracle.v1.json",
+      "role": "historical-oracle-bytes",
+      "bytes": 740,
+      "sha256": "2b8174e58cfdda414883aff245b8f9087647d05a9d4ca6c11e7b0ac076634f8e"
+    }
+  ],
+  "reason": "The historical composed semantic oracle cannot authorize current product semantics after the independent semantic verdict was explicitly deferred.",
+  "retention": "All original oracle, manifest, live evidence, ledger, accounting, and credential-related bytes remain unchanged and audit-visible.",
+  "current_semantic_authority": false
+}

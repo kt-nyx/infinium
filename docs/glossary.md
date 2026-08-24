@@ -3,11 +3,38 @@
 Status: Accepted
 Disposition: Active reference
 
-Last reviewed: 2026-08-08
+Last reviewed: 2026-08-23
 
 This glossary supplies short definitions. Normative semantics live in the
 [domain model](product/domain-model.md) and accepted
 [Skyrim SE mod-impact taxonomy](product/mod-impact-taxonomy.md).
+
+- **Developer-owned conformance test:** A test written alongside product work
+  to show that implementation follows an accepted contract, invariant,
+  bounded example, or safety rule. It is useful product evidence but is not an
+  independently qualified answer key.
+- **Deterministic reference or golden test:** A comparison with a stable
+  expected byte sequence, hash, codec result, algorithm result, or other exact
+  reference. It may be developer-owned and does not by itself claim semantic
+  reliability.
+- **Independent semantic oracle:** Expected product meaning authored and
+  reviewed independently of the implementation, sealed before comparison, and
+  used to assess a bounded semantic claim.
+- **Held-out evaluation:** An evaluation whose answer-bearing cases remain
+  inaccessible to the product-development and tuning path until the declared
+  evaluation point.
+- **Historical non-authorizing package:** Retained bytes and metadata that
+  preserve what earlier work used or attempted but cannot grant current
+  product behavior, validation authority, acceptance, or a verdict.
+- **Product conformance:** Evidence that implementation follows accepted
+  contracts, invariants, bounded behavior, persistence/replay, and safety rules
+  within the delivered scope.
+- **Semantic reliability:** Evidence that product meanings remain correct
+  across a bounded, representative claim surface. Product conformance alone
+  does not establish this stronger claim.
+- **M3 Evaluation Readiness Gate:** The checkpoint after M2 acceptance where
+  M3 planning may authorize bounded independent semantic evaluation, but only
+  after ADR-0035's prerequisites and a new accepted M3 evaluation plan exist.
 
 - **Analyzer:** A bounded module that consumes declared evidence and emits
   typed observations, claims, candidates, hypotheses, findings,

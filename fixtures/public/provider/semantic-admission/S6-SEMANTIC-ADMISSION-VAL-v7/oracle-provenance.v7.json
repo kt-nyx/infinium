@@ -1,0 +1,173 @@
+{
+  "$id": "infinium.public.semantic-admission.oracle-provenance/7.0.0",
+  "provenance_id": "fe2e8658-c50c-4957-b36a-e9a886e7959d",
+  "author_identity": "infinium.clean-room-oracle-author/ec47e9cf-5c8d-4969-9aa2-944e5bcb2ae1",
+  "oracle_id": "S6-SEMANTIC-ADMISSION-VAL-v7",
+  "oracle_instance_id": "2b0a80e8-f2c3-4cd4-afb9-96ef3a1c65eb",
+  "version": "7.0.0",
+  "partition": "validation",
+  "status": "NOT_COMPARED",
+  "authored_at_utc": "2026-08-23T01:19:09.4563506Z",
+  "authorship_role": "Fresh clean-room independent public semantic-admission oracle author",
+  "authorship_statement": "The raw Glasswind relay source, local contexts, candidate inputs, matrix, producer expectations, consumer expectations, rejection cases, and decision-link cardinality cases were authored from accepted public product and evaluation meaning without inspecting product implementation, product schemas, tests, outputs, previous semantic-admission packages, or retained live semantic results.",
+  "authority_inputs": [
+    {
+      "path": "docs/README.md",
+      "byte_length": 7510,
+      "sha256": "3b60b6617140576fcc35532f9f1928b61606714d00dff5731555b6a2cfb78591",
+      "use": "core navigation authority"
+    },
+    {
+      "path": "docs/current-state.md",
+      "byte_length": 14507,
+      "sha256": "b585fe70cd9f450faa52f931801bcd71c240a53359166e66f19e1085af06cac4",
+      "use": "current Slice 6 handoff and semantic-correction boundary"
+    },
+    {
+      "path": "docs/execution-policy.md",
+      "byte_length": 15815,
+      "sha256": "50168c020a924516578f83452c0c1fd28780497a5a06534f9b08035a013f610b",
+      "use": "independent-oracle freeze and ordinary public-fixture execution rules"
+    },
+    {
+      "path": "docs/product/domain-model.md",
+      "byte_length": 32221,
+      "sha256": "9d5e33c9f5318dfdf7a62be0e0743ce1a272fb40a6c2f0c29eda6011d1f2ced3",
+      "use": "external-claim, source/application, candidate, evidence, and semantic-axis meaning"
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0034-prompt-fidelity-and-semantic-admission-axes.md",
+      "byte_length": 7426,
+      "sha256": "9d6ac00ea4235822cd75e2887a93e27c4b5b6ae1b6700d0c64c5dce1535728f8",
+      "use": "normative proposal, support, applicability, decision, deletion, rejection, and cardinality semantics"
+    },
+    {
+      "path": "docs/plans/milestones/m1/plan.md",
+      "byte_length": 33298,
+      "sha256": "5e3b28168b195cafead789a5ccbe5f18b31298d278edf5aa12a22f739a71b2cf",
+      "use": "M1 Slice 6 scope and public expected-truth boundary"
+    },
+    {
+      "path": "docs/plans/milestones/m1/slices/s6/README.md",
+      "byte_length": 19169,
+      "sha256": "b6f2b602414f4d46b03596f0404e8dc6bfc5591a37fdc9d4a2afa8b60770befe",
+      "use": "Slice 6 entry and active semantic-correction statement"
+    },
+    {
+      "path": "docs/plans/milestones/m1/slices/s6/plan.md",
+      "byte_length": 84209,
+      "sha256": "aca47b8276a7e1ff199e8c3cec4b752c6f213bee424da1bbe0d2993aa8a65b16",
+      "use": "source/candidate producer and consumer seam meaning"
+    },
+    {
+      "path": "docs/evaluation/evaluation-strategy.md",
+      "byte_length": 20542,
+      "sha256": "2d90ce9e601dac32ee64ec3ab1e04728efe4c31c1a4176f185bcf4f66ab4e814",
+      "use": "citation, documentation extraction, semantic investigation, and public expected-truth rules"
+    },
+    {
+      "path": "docs/evaluation/case-catalog.md",
+      "byte_length": 36603,
+      "sha256": "216bcbead8b3963a8d1632da9e43514d9f6c4dcfae7963cec7413566a18bf19b",
+      "use": "EVAL-0067 and EVAL-0083 public claim boundary"
+    },
+    {
+      "path": "docs/evaluation/product-evaluator-boundary.md",
+      "byte_length": 2038,
+      "sha256": "18577cfeeb1af7e71fb86a6fa59d8d677c0904a132180cbfa11d97683eb21f3f",
+      "use": "current product, public-fixture, retired-evaluator, and repository-metadata authority separation"
+    },
+    {
+      "path": "docs/evaluation/fixture-guidelines.md",
+      "byte_length": 8745,
+      "sha256": "0fc582d22a96a62177982c1008c7fcab82117192457890b14d54f8e81097e1c6",
+      "use": "validation partition, raw content, negative controls, and expected-truth independence"
+    },
+    {
+      "path": "docs/evaluation/anti-overfitting-rules.md",
+      "byte_length": 7611,
+      "sha256": "ab9416a11e7b523f558e8b7914e4095bf2befeb82999a2fff409f6e4dce458f0",
+      "use": "generic content, meaningful negative, abstention, and answer-isolation rules"
+    },
+    {
+      "path": "docs/evaluation/m1-continuation-verification-profile.md",
+      "byte_length": 16503,
+      "sha256": "5ea92b2bbbf935cd8625b6bf7805bbcecc91478cb6125d6affac7d74621fcc75",
+      "use": "independently expected public-fixture and total-state coverage requirements"
+    }
+  ],
+  "oracle_integrity": {
+    "path": "oracle.v7.json",
+    "byte_encoding": "UTF-8 without BOM",
+    "line_endings": "LF",
+    "byte_length": 42152,
+    "sha256": "52570a7e29e60eaf5814bf94fd870bfa7a4b44f3f562d749b11a5146c154f056"
+  },
+  "embedded_section_integrity": {
+    "serialization": "PowerShell ConvertTo-Json -Depth 100 -Compress over parsed JSON property order; UTF-8 without BOM",
+    "sections": [
+      {
+        "name": "raw_case_content",
+        "byte_length": 4849,
+        "sha256": "2c444f130204849b8846791c4b118c71abc22c9874494f4a75e6386ffdeeb3aa"
+      },
+      {
+        "name": "producer_reachable_cases",
+        "byte_length": 10594,
+        "sha256": "802a29a93e4dd211408ddce854141a0211d0d94e3b154e46aab284c45c7ffab8"
+      },
+      {
+        "name": "abstract_current_valid_matrix",
+        "byte_length": 3345,
+        "sha256": "485acf12d476564785540dda484e0e48e4fb91fb65064250182316e9b4bc72bc"
+      },
+      {
+        "name": "consumer_expected_cases",
+        "byte_length": 7116,
+        "sha256": "a9118270373aa60e518d23eef53b91862608f9106fae7b363897566003f61022"
+      },
+      {
+        "name": "rejection_and_cardinality",
+        "byte_length": 2036,
+        "sha256": "19e2028b6c5be8e986d3887a1258766a38967abfde1db90af7fa5fa48546f05f"
+      }
+    ]
+  },
+  "authoring_sequence": [
+    "Read only the enumerated public authority documents.",
+    "Authored new Glasswind relay source passages, local contexts, and candidate evidence without product or prior-oracle access.",
+    "Authored producer-reachable structured JSON cases against only the accepted source and candidate seam fields.",
+    "Authored the complete abstract 5 by 5 current-valid matrix separately from producer cases.",
+    "Authored consumer, deletion, rejection, direct-opposition, abstention, and decision-link cardinality expected outcomes.",
+    "Computed exact oracle and embedded-section byte digests before any product comparison."
+  ],
+  "access_boundary": {
+    "inspected": [
+      "enumerated accepted public documentation",
+      "the newly authored oracle.v7.json"
+    ],
+    "not_inspected": [
+      "product implementation",
+      "product schemas or codecs",
+      "tests",
+      "product output",
+      "semantic-admission v1 through v6 packages",
+      "retained live evidence or accounting",
+      "private fixtures",
+      "credentials",
+      "archives",
+      "network resources",
+      "Git history"
+    ],
+    "external_effects": 0,
+    "product_comparisons": 0
+  },
+  "package_boundary": {
+    "files": [
+      "oracle.v7.json",
+      "oracle-provenance.v7.json"
+    ],
+    "additional_files_permitted": false,
+    "self_digest_note": "A file cannot contain its own stable cryptographic digest. The exact byte length and SHA-256 of oracle-provenance.v7.json are therefore computed and reported externally after this file is finalized."
+  }
+}

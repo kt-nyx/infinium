@@ -121,11 +121,11 @@ function Get-M1Slice6RemainderR1Paths() {
         'fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/partition-history.v2.json',
         'fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/public-manifest.json',
         'fixtures/public/public-fixture-registry.v2.json',
-        'fixtures/tooling/Infinium.PublicFixtures/LiveSemanticV2AuthorityVerifier.cs',
+        'fixtures/tooling/Infinium.PublicFixtures/HistoricalLiveSemanticPackageVerifier.cs',
         'fixtures/tooling/Infinium.PublicFixtures/README.md',
         'fixtures/tooling/reseal-live-semantic-v2.mjs',
         'tests/Infinium.ContractTests/EvaluationBoundaryContractTests.cs',
-        'tests/Infinium.ContractTests/LiveSemanticV2AuthorityContractTests.cs',
+        'tests/Infinium.ContractTests/HistoricalLiveSemanticPackageIntegrityContractTests.cs',
         'tests/Infinium.ContractTests/M1Slice6CampaignContractTests.cs',
         'tests/Infinium.ContractTests/Wp8PreLiveReadinessContractTests.cs'
     )
@@ -230,7 +230,7 @@ function Get-Wp8CampaignReviewPaths() {
         'fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/oracle.v1.json',
         'fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json',
         'fixtures/public/public-fixture-registry.v1.json',
-        'fixtures/tooling/Infinium.PublicFixtures/LiveCampaignValidationPackageVerifier.cs',
+        'fixtures/tooling/Infinium.PublicFixtures/HistoricalLiveSemanticPackageVerifier.cs',
         'src/Infinium.Application/Provider/CredentialSemanticRolloverPolicy.cs',
         'src/Infinium.Application/Provider/OpenAiResponsesInputBoundPolicy.cs',
         'src/Infinium.Application/Provider/ProviderContractFactories.cs',

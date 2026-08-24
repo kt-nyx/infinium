@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'CredentialNativeRecovery', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'LiveSemanticV2Authority', 'CampaignV2NonLive', 'C1Readiness', 'NonLiveAll', 'Layer6Review')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'CredentialNativeRecovery', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProductSemanticConformance', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'HistoricalSemanticPackageIntegrity', 'CampaignV2NonLive', 'C1Readiness', 'NonLiveAll', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -45,20 +45,20 @@ param(
 
     [switch] $M1Slice6CampaignComposedEvidenceCloseout,
 
+    [switch] $M1Slice6ProductCloseout,
+
     [string] $CampaignStageManifest,
 
     [string] $CampaignEvidence,
 
     [switch] $OwnerTestProcessCleanup,
 
-    [switch] $PromptFidelitySemanticAdmissionReview,
-
     [switch] $CredentialNativePostEffectAudit,
 
     [switch] $CampaignV2CandidateOnly
 )
 
-if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'LiveSemanticV2Authority', 'CampaignV2NonLive', 'C1Readiness', 'NonLiveAll') -and $PSVersionTable.PSEdition -ne 'Core') {
+if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProductSemanticConformance', 'ProvenanceReplay', 'LiveEvidence', 'RetainedReplay', 'ComposedProvenance', 'HistoricalSemanticPackageIntegrity', 'CampaignV2NonLive', 'C1Readiness', 'NonLiveAll') -and $PSVersionTable.PSEdition -ne 'Core') {
     $pwsh = Get-Command pwsh.exe -ErrorAction Stop
     $arguments = @(
         '-NoProfile',
@@ -103,15 +103,13 @@ if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 
     if ($M1Slice6CampaignCredentialEvidenceCloseout) { $arguments += '-M1Slice6CampaignCredentialEvidenceCloseout' }
     if ($M1Slice6CampaignStageEvidenceCloseout) { $arguments += '-M1Slice6CampaignStageEvidenceCloseout' }
     if ($M1Slice6CampaignComposedEvidenceCloseout) { $arguments += '-M1Slice6CampaignComposedEvidenceCloseout' }
+    if ($M1Slice6ProductCloseout) { $arguments += '-M1Slice6ProductCloseout' }
     if (-not [string]::IsNullOrWhiteSpace($CampaignEvidence)) { $arguments += @('-CampaignEvidence', $CampaignEvidence) }
     if (-not [string]::IsNullOrWhiteSpace($CampaignStageManifest)) {
         $arguments += @('-CampaignStageManifest', $CampaignStageManifest)
     }
     if ($OwnerTestProcessCleanup) {
         $arguments += '-OwnerTestProcessCleanup'
-    }
-    if ($PromptFidelitySemanticAdmissionReview) {
-        $arguments += '-PromptFidelitySemanticAdmissionReview'
     }
     if ($CredentialNativePostEffectAudit) {
         $arguments += '-CredentialNativePostEffectAudit'
@@ -648,11 +646,11 @@ function Get-M1Slice6RemainderR1Paths() {
         'fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/partition-history.v2.json',
         'fixtures/public/provider/source-claims/S6-CLAIM-LIVE-VAL-v2/public-manifest.json',
         'fixtures/public/public-fixture-registry.v2.json',
-        'fixtures/tooling/Infinium.PublicFixtures/LiveSemanticV2AuthorityVerifier.cs',
+        'fixtures/tooling/Infinium.PublicFixtures/HistoricalLiveSemanticPackageVerifier.cs',
         'fixtures/tooling/Infinium.PublicFixtures/README.md',
         'fixtures/tooling/reseal-live-semantic-v2.mjs',
         'tests/Infinium.ContractTests/EvaluationBoundaryContractTests.cs',
-        'tests/Infinium.ContractTests/LiveSemanticV2AuthorityContractTests.cs',
+        'tests/Infinium.ContractTests/HistoricalLiveSemanticPackageIntegrityContractTests.cs',
         'tests/Infinium.ContractTests/M1Slice6CampaignContractTests.cs',
         'tests/Infinium.ContractTests/Wp8PreLiveReadinessContractTests.cs'
     )
@@ -920,68 +918,6 @@ function Test-Wp1ProtectedPath([string] $Path) {
     return $Path.StartsWith('contracts/protobuf/infinium/helper/v1/', [System.StringComparison]::Ordinal)
 }
 
-function Get-PromptFidelitySemanticAdmissionReviewPaths {
-    return @(
-        'contracts/json-schema/candidate-investigation.v1.schema.json',
-        'contracts/json-schema/source-claim-extraction.v1.schema.json',
-        'contracts/protobuf/infinium/application/v1/application.proto',
-        'contracts/repository/public-fixture-registry.v3.schema.json',
-        'docs/README.md',
-        'docs/architecture/data-and-trust-model.md',
-        'docs/architecture/decisions/ADR-0034-prompt-fidelity-and-semantic-admission-axes.md',
-        'docs/architecture/decisions/README.md',
-        'docs/current-state.md',
-        'docs/evaluation/case-catalog.md',
-        'docs/evaluation/evaluation-strategy.md',
-        'docs/evaluation/repository-evaluation-authority.v1.json',
-        'docs/plans/milestones/m1/slices/s6/README.md',
-        'docs/plans/milestones/m1/slices/s6/record.md',
-        'docs/plans/milestones/m1/slices/s6/wp1-contract-traceability.v1.json',
-        'docs/product/domain-model.md',
-        'eng/verify-m1-slice6.ps1',
-        'fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v1/oracle-provenance.v1.json',
-        'fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v1/oracle.v1.json',
-        'fixtures/public/provider/semantic-admission/S6-SEMANTIC-ADMISSION-VAL-v1/public-manifest.json',
-        'fixtures/public/public-fixture-registry.v3.json',
-        'fixtures/tooling/Infinium.PublicFixtures/CandidateInvestigationFixtureReader.cs',
-        'fixtures/tooling/Infinium.PublicFixtures/ProviderContractExampleReader.cs',
-        'fixtures/tooling/Infinium.PublicFixtures/SourceClaimFixtureReader.cs',
-        'src/Infinium.Application/Provider/ApplicationProviderContractValidator.cs',
-        'src/Infinium.Application/Provider/CandidateInvestigation.cs',
-        'src/Infinium.Application/Provider/SourceClaimAcquisition.cs',
-        'src/Infinium.Application/Runtime/ProtocolConstants.cs',
-        'src/Infinium.Coordinator/M1Slice6CampaignProviderAccounting.cs',
-        'src/Infinium.Coordinator/M1Slice6CampaignSemanticAdmission.cs',
-        'src/Infinium.Coordinator/M1Slice6CampaignV2InputAdapter.cs',
-        'src/Infinium.Coordinator/M1Slice6SuccessorAttemptMaterializer.cs',
-        'src/Infinium.Coordinator/M1Slice6SuccessorCampaign.cs',
-        'src/Infinium.Coordinator/ProviderAccountingCoordinator.cs',
-        'src/Infinium.Coordinator/SourceClaimAcquisitionCoordinator.cs',
-        'src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs',
-        'src/Infinium.Domain/Contracts/ProviderOperationContracts.cs',
-        'src/Infinium.Persistence/AuthoritativeStore.Migrations.cs',
-        'src/Infinium.Persistence/AuthoritativeStore.SourceClaims.cs',
-        'src/Infinium.Persistence/AuthoritativeStore.cs',
-        'src/Infinium.Persistence/ProviderPersistenceDeclarations.cs',
-        'tests/Infinium.ContractTests/CandidateInvestigationProviderProvenanceContractTests.cs',
-        'tests/Infinium.ContractTests/EvaluationBoundaryContractTests.cs',
-        'tests/Infinium.ContractTests/ProviderContractJsonCodecTests.cs',
-        'tests/Infinium.ContractTests/ProviderLayer6VerifierContractTests.cs',
-        'tests/Infinium.ContractTests/SourceClaimExtractionContractTests.cs',
-        'tests/Infinium.EvaluationTests/SemanticAdmissionAuthorityEvaluationTests.cs',
-        'tests/Infinium.EvaluationTests/SourceClaimTransparencyEvaluationTests.cs',
-        'tests/Infinium.IntegrationTests/M1Slice6CampaignRehearsalTests.cs',
-        'tests/Infinium.IntegrationTests/M1Slice6SuccessorAccountingTests.cs',
-        'tests/Infinium.IntegrationTests/M1Slice6SuccessorAuthorityTests.cs',
-        'tests/Infinium.IntegrationTests/ProviderBudgetIntegrationTests.cs',
-        'tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs',
-        'tests/Infinium.UnitTests/CandidateInvestigationProviderContextTests.cs',
-        'tests/Infinium.UnitTests/PersistenceAndLifecycleTests.cs',
-        'tests/Infinium.UnitTests/ProviderContractTests.cs',
-        'tests/Infinium.UnitTests/SourceClaimExtractionTests.cs'
-    )
-}
-
 function Invoke-Layer6ReviewGate(
     [string] $ReviewBaseline = $BaselineCommit,
     [string] $ReviewCandidate = $CandidateCommit,
@@ -998,12 +934,38 @@ function Invoke-Layer6ReviewGate(
     [bool] $CampaignCredentialEvidenceCloseoutMode = [bool]$M1Slice6CampaignCredentialEvidenceCloseout,
     [bool] $CampaignStageEvidenceCloseoutMode = [bool]$M1Slice6CampaignStageEvidenceCloseout,
     [bool] $CampaignComposedEvidenceCloseoutMode = [bool]$M1Slice6CampaignComposedEvidenceCloseout,
-    [bool] $PromptFidelitySemanticAdmissionReviewMode = [bool]$PromptFidelitySemanticAdmissionReview) {
+    [bool] $ProductCloseoutMode = [bool]$M1Slice6ProductCloseout) {
     $baselineHash = Resolve-GitCommit $ReviewBaseline 'BaselineCommit'
     $candidateHash = Resolve-GitCommit $ReviewCandidate 'CandidateCommit'
     & git -C $repoRoot merge-base --is-ancestor $baselineHash $candidateHash
     if ($LASTEXITCODE -ne 0) {
         throw "Layer6Review baseline $baselineHash is not an ancestor of candidate $candidateHash."
+    }
+    [string[]]$productCloseoutPaths = @()
+    if ($ProductCloseoutMode) {
+        $head = (& git -C $repoRoot rev-parse HEAD).Trim()
+        $pathAuthority = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/product-closeout-paths.v1.txt'
+        $productCloseoutPaths = @(Get-Content -LiteralPath $pathAuthority | Where-Object {
+            -not [string]::IsNullOrWhiteSpace($_)
+        } | Sort-Object -Unique)
+        if (($baselineHash -cne 'dde21f4f055ec7a950b3fa86676da5ed0680c41a') -or
+            ($candidateHash -cne $head) -or
+            (-not [string]::IsNullOrWhiteSpace((& git -C $repoRoot status --porcelain))) -or
+            ($productCloseoutPaths.Count -eq 0) -or
+            $Wp8PreLiveCloseoutMode -or $Wp9OwnerStopMode -or $Wp9ReviewCloseoutMode -or
+            $Wp9OwnerAcceptanceCloseoutMode -or $CampaignReviewMode -or $CampaignReviewCloseoutMode -or
+            $CampaignAdmissionCloseoutMode -or $CampaignRolloverCloseoutMode -or
+            $CampaignStageReviewCloseoutMode -or $CampaignStageAdmissionCloseoutMode -or
+            $CampaignCredentialEvidenceCloseoutMode -or $CampaignStageEvidenceCloseoutMode -or
+            $CampaignComposedEvidenceCloseoutMode -or $HandoffCloseout -or
+            $Wp4OwnerReviewHandoff -or $OwnerTestProcessCleanup -or
+            $CredentialNativePostEffectAudit -or $CampaignV2CandidateOnly -or
+            -not [string]::IsNullOrWhiteSpace($InputRoot) -or
+            -not [string]::IsNullOrWhiteSpace($AuthorizationManifest) -or
+            -not [string]::IsNullOrWhiteSpace($CampaignStageManifest) -or
+            -not [string]::IsNullOrWhiteSpace($CampaignEvidence)) {
+            throw 'M1Slice6ProductCloseout requires the exact clean HEAD candidate, baseline dde21f4, closed path authority, and no other Layer 6 mode.'
+        }
     }
     $isRemainderR1Candidate = Test-M1Slice6RemainderR1Candidate $candidateHash
     $wp8CurrentStateDisposition = if ($Wp8PreLiveCloseoutMode) {
@@ -1116,7 +1078,7 @@ function Invoke-Layer6ReviewGate(
         'fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/oracle.v1.json',
         'fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/public-manifest.json',
         'fixtures/public/public-fixture-registry.v1.json',
-        'fixtures/tooling/Infinium.PublicFixtures/LiveCampaignValidationPackageVerifier.cs',
+        'fixtures/tooling/Infinium.PublicFixtures/HistoricalLiveSemanticPackageVerifier.cs',
         'src/Infinium.Application/Provider/CredentialSemanticRolloverPolicy.cs',
         'src/Infinium.Application/Provider/OpenAiResponsesInputBoundPolicy.cs',
         'src/Infinium.Application/Provider/ProviderContractFactories.cs',
@@ -1509,31 +1471,6 @@ function Invoke-Layer6ReviewGate(
         throw 'Layer6Review could not derive the candidate change set.'
     }
 
-    [string[]]$promptFidelitySemanticAdmissionPaths = if ($PromptFidelitySemanticAdmissionReviewMode) {
-        @(Get-PromptFidelitySemanticAdmissionReviewPaths)
-    } else { @() }
-    if ($PromptFidelitySemanticAdmissionReviewMode) {
-        if ($HandoffCloseout -or $Wp4OwnerReviewHandoff -or $Wp8PreLiveCloseoutMode -or
-            $Wp9OwnerStopMode -or $Wp9ReviewCloseoutMode -or $Wp9OwnerAcceptanceCloseoutMode -or
-            $CampaignReviewMode -or $CampaignReviewCloseoutMode -or $CampaignAdmissionCloseoutMode -or
-            $CampaignRolloverCloseoutMode -or $CampaignStageReviewCloseoutMode -or
-            $CampaignStageAdmissionCloseoutMode -or $CampaignCredentialEvidenceCloseoutMode -or
-            $CampaignStageEvidenceCloseoutMode -or $CampaignComposedEvidenceCloseoutMode -or
-            $OwnerTestProcessCleanup) {
-            throw 'PromptFidelitySemanticAdmissionReview cannot be combined with another Layer6 authority mode.'
-        }
-        $expectedBaseline = '1676e148be513040396489fbf0d317b3af34bee4'
-        $head = (& git -C $repoRoot rev-parse HEAD).Trim()
-        [string[]]$actualPaths = @(& git -C $repoRoot -c core.quotePath=false diff --name-only $baselineHash $candidateHash --)
-        [Array]::Sort($actualPaths, [StringComparer]::Ordinal)
-        [Array]::Sort($promptFidelitySemanticAdmissionPaths, [StringComparer]::Ordinal)
-        if ($baselineHash -cne $expectedBaseline -or $candidateHash -cne $head -or
-            (& git -C $repoRoot rev-list --count "$baselineHash..$candidateHash").Trim() -ne '1' -or
-            [string]::Join("`n", $actualPaths) -cne [string]::Join("`n", $promptFidelitySemanticAdmissionPaths)) {
-            throw 'PromptFidelitySemanticAdmissionReview requires the exact base, current one-commit candidate, and closed correction path set.'
-        }
-    }
-
     $changedPaths = [System.Collections.Generic.List[object]]::new()
     foreach ($line in $nameStatusLines) {
         if ([string]::IsNullOrWhiteSpace($line)) {
@@ -1559,8 +1496,7 @@ function Invoke-Layer6ReviewGate(
                 $campaignCloseoutPaths -ccontains $path
             $isOwnerTestProcessCleanupPolicy = $OwnerTestProcessCleanup -and
                 $path -ceq 'docs/execution-policy.md'
-            $isPromptFidelitySemanticAdmissionPath = $PromptFidelitySemanticAdmissionReviewMode -and
-                $promptFidelitySemanticAdmissionPaths -ccontains $path
+            $isProductCloseoutPath = $ProductCloseoutMode -and $productCloseoutPaths -ccontains $path
             $isProtected = (Test-Wp1ProtectedPath $path) -and
                 -not $isRemainderR1Candidate -and
                 -not $isHandoffCurrentState -and
@@ -1571,7 +1507,7 @@ function Invoke-Layer6ReviewGate(
                 -not $isCampaignReviewPath -and
                 -not $isCampaignCloseoutPath -and
                 -not $isOwnerTestProcessCleanupPolicy -and
-                -not $isPromptFidelitySemanticAdmissionPath
+                -not $isProductCloseoutPath
             $isAllowed = (Test-Wp1AllowedPath $path) -or
                 $isRemainderR1Candidate -or
                 $isHandoffCurrentState -or
@@ -1582,7 +1518,7 @@ function Invoke-Layer6ReviewGate(
                 $isCampaignReviewPath -or
                 $isCampaignCloseoutPath -or
                 $isOwnerTestProcessCleanupPolicy -or
-                $isPromptFidelitySemanticAdmissionPath
+                $isProductCloseoutPath
             $privateOrArchive = $path -match '(?i)(^|/)(private|legacy|archive)(/|$)' -or
                 $path -match '(?i)independent-slice3-evaluator' -or
                 $path -match '(?i)^docs/evaluation/fixtures/'
@@ -1624,12 +1560,20 @@ function Invoke-Layer6ReviewGate(
             $failures.Add('M1Slice6CampaignReview requires the exact finite amendment path set and no extra path.')
         }
     }
+    if ($ProductCloseoutMode) {
+        [string[]]$actualProductCloseoutPaths = @($changedPaths | ForEach-Object { [string]$_.path })
+        [Array]::Sort($actualProductCloseoutPaths, [StringComparer]::Ordinal)
+        [Array]::Sort($productCloseoutPaths, [StringComparer]::Ordinal)
+        if ([string]::Join("`n", $actualProductCloseoutPaths) -cne
+            [string]::Join("`n", $productCloseoutPaths)) {
+            $failures.Add('M1Slice6ProductCloseout changed paths do not exactly match the closed Slice 6 product path authority.')
+        }
+    }
 
     $pathFailures = @($changedPaths | Where-Object { -not $_.allowed -or $_.protected -or $_.private_or_archive })
     $pathReport = Write-JsonReport 'layer6-changed-paths.json' ([ordered]@{
         baseline_commit = $baselineHash
         candidate_commit = $candidateHash
-        prompt_fidelity_semantic_admission_review = [bool]$PromptFidelitySemanticAdmissionReviewMode
         wp8_current_state_disposition = $wp8CurrentStateDisposition
         changed_path_count = $changedPaths.Count
         failure_count = $pathFailures.Count
@@ -1856,6 +1800,7 @@ function Invoke-Layer6ReviewGate(
         m1_slice6_campaign_credential_evidence_closeout = [bool]$CampaignCredentialEvidenceCloseoutMode
         m1_slice6_campaign_stage_evidence_closeout = [bool]$CampaignStageEvidenceCloseoutMode
         m1_slice6_campaign_composed_evidence_closeout = [bool]$CampaignComposedEvidenceCloseoutMode
+        m1_slice6_product_closeout = [bool]$ProductCloseoutMode
         campaign_stage_manifest = $CampaignStageManifest
         campaign_evidence = $CampaignEvidence
         wp9_current_state_disposition = $wp9CurrentStateDisposition
@@ -1980,49 +1925,58 @@ function Invoke-ContractsGate {
     })
 }
 
-function Invoke-LiveSemanticV2AuthorityGate {
-    $preservedPaths = @(
-        'fixtures/public/provider/source-claims/S6-CLAIM-VAL-v1/',
-        'fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v3/',
-        'fixtures/public/provider/live-campaign/LLM-CLAIM-LIVE-VAL/',
-        'fixtures/public/provider/live-campaign/LLM-INVESTIGATE-LIVE-VAL/',
-        'fixtures/public/provider/live-campaign/PROV-LIVE-COMPOSED-VAL/',
-        'fixtures/public/public-fixture-registry.v1.json',
-        'contracts/repository/public-fixture-registry.v1.schema.json'
-    )
-    & git diff --quiet 5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98 -- @preservedPaths
-    if ($LASTEXITCODE -ne 0) {
-        throw 'LiveSemanticV2Authority rejected modified frozen v1 fixture or registry bytes.'
-    }
-
-    & node 'fixtures/tooling/reseal-live-semantic-v2.mjs' '--check'
-    if ($LASTEXITCODE -ne 0) {
-        throw 'LiveSemanticV2Authority rejected stale v2 manifest or registry seals.'
-    }
-
+function Invoke-ProductSemanticConformanceGate {
     Invoke-DotnetTest `
-        'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' `
-        'FullyQualifiedName~LiveSemanticV2AuthorityContractTests'
-
-    $registryPath = Join-Path $repoRoot 'fixtures/public/public-fixture-registry.v2.json'
-    $registry = Get-Content -Raw -LiteralPath $registryPath | ConvertFrom-Json
-    Write-Receipt 'LiveSemanticV2Authority' ([ordered]@{
-        registry_identity = $registry.schema_identity
-        registry_version = $registry.registry_version
-        package_count = [int]$registry.package_count
-        preserved_registry_entry_count = 38
-        appended_v2_package_count = 5
-        schema_count = 23
-        resealer_mode = 'check-only'
-        registry_sha256 = (Get-FileHash -LiteralPath $registryPath -Algorithm SHA256).Hash.ToLowerInvariant()
-        product_comparison = 'absent'
+        'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' `
+        'FullyQualifiedName~SourceClaimTransparencyEvaluationTests|FullyQualifiedName~CandidateLlmTransparencyProviderProvenanceEvaluationTests'
+    Invoke-DotnetTest `
+        'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' `
+        'FullyQualifiedName~SourceClaimAdmissionIntegrationTests|FullyQualifiedName~CandidateAdmissionProviderReplayIntegrationTests|FullyQualifiedName~CandidatePipelineIntegrationTests'
+    Invoke-DotnetTest `
+        'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' `
+        'FullyQualifiedName~CandidateInvestigationProviderContextTests|FullyQualifiedName~SourceClaimExtractionTests'
+    Write-Receipt 'ProductSemanticConformance' ([ordered]@{
+        evidence_kind = 'developer-owned-current-contract-conformance'
+        independent_semantic_oracle = 'deferred'
+        semantic_verdict = 'not-claimed'
         provider_requests = 0
         credential_operations = 0
-        frozen_v1_authority = 'unchanged-from-5cb20ad8697901fc5dcbaccdf70d8eaa89ae8e98'
+    })
+}
+
+function Invoke-HistoricalSemanticPackageIntegrityGate {
+    & node 'fixtures/tooling/reseal-live-semantic-v2.mjs' '--check'
+    if ($LASTEXITCODE -ne 0) {
+        throw 'HistoricalSemanticPackageIntegrity rejected historical reclassification or manifest drift.'
+    }
+    Invoke-DotnetTest `
+        'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' `
+        'FullyQualifiedName~HistoricalLiveSemanticPackageIntegrityContractTests|FullyQualifiedName~EvaluationBoundaryContractTests'
+
+    $registryPath = Join-Path $repoRoot 'fixtures/public/public-fixture-registry.v3.json'
+    $registry = Get-Content -Raw -LiteralPath $registryPath | ConvertFrom-Json
+    $semanticRows = @($registry.packages | Where-Object {
+        $_.package_path.StartsWith('fixtures/public/provider/semantic-admission/', [StringComparison]::Ordinal)
+    })
+    if (@($semanticRows | Where-Object { $_.partition -ne 'development' -or -not $_.authority_status.StartsWith('historical-', [StringComparison]::Ordinal) }).Count -ne 0) {
+        throw 'HistoricalSemanticPackageIntegrity found an authorizing semantic-admission row.'
+    }
+    Write-Receipt 'HistoricalSemanticPackageIntegrity' ([ordered]@{
+        registry_identity = $registry.schema_identity
+        registry_version = $registry.registry_version
+        semantic_admission_package_count = $semanticRows.Count
+        current_semantic_authority_package = $null
+        product_comparison = 'prohibited'
+        semantic_pass = 'not-reported'
+        registry_sha256 = (Get-FileHash -LiteralPath $registryPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        provider_requests = 0
+        credential_operations = 0
     })
 }
 
 function Invoke-CampaignV2NonLiveGate {
+    throw 'CampaignV2NonLive is retained historical gate identity and is permanently fail-closed; current product verification must use ProductSemanticConformance and HistoricalSemanticPackageIntegrity.'
+
     $baseline = '8c9ff5227fcc076df74f0c9faf1385640995b3d1'
     $candidate = if ([string]::IsNullOrWhiteSpace($CandidateCommit)) { 'HEAD' } else { $CandidateCommit }
     $candidateHash = (& git -C $repoRoot rev-parse --verify "$candidate^{commit}").Trim()
@@ -2046,7 +2000,6 @@ function Invoke-CampaignV2NonLiveGate {
         'eng/validate-m1-slice6-campaign-v2.ps1',
         'eng/validate-m1-slice6-wp9-profile-authorization-v2.ps1',
         'eng/verify-m1-slice6.ps1',
-        'fixtures/tooling/Infinium.PublicFixtures/LiveSemanticV2TypedOracleVerifier.cs',
         'src/Infinium.Application/Evaluation/ActiveRepositoryJsonSchemaValidator.cs',
         'src/Infinium.Application/Provider/CandidateInvestigation.cs',
         'src/Infinium.Application/Provider/SourceClaimAcquisition.cs',
@@ -2102,7 +2055,7 @@ function Invoke-CampaignV2NonLiveGate {
         return
     }
     Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' `
-        'FullyQualifiedName~M1Slice6CampaignV2InputAdapterTests|FullyQualifiedName~FrozenWp10AndWp11ValidationPackagesExecuteTypedProductOraclesOffline|FullyQualifiedName~SourceClaimAdmissionPersistsReadsBackAndPublishesExactAcquisitionOwnership|FullyQualifiedName~CandidateAdmissionPersistsReadsBackBacksUpAndRebuildsWithoutSending|FullyQualifiedName~FreshCloneRehearsesReviewedAdmissionFakeCredentialAndThreeLiteralLoopbackStages'
+        'FullyQualifiedName~M1Slice6CampaignV2InputAdapterTests|FullyQualifiedName~SourceClaimAdmissionPersistsReadsBackAndPublishesExactAcquisitionOwnership|FullyQualifiedName~CandidateAdmissionPersistsReadsBackBacksUpAndRebuildsWithoutSending|FullyQualifiedName~FreshCloneRehearsesReviewedAdmissionFakeCredentialAndThreeLiteralLoopbackStages'
     Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' `
         'FullyQualifiedName~M1Slice6FiniteCampaignLedgerTests'
     Write-Receipt 'CampaignV2NonLive' ([ordered]@{
@@ -2456,57 +2409,12 @@ function Invoke-SourceClaimSemanticsGate {
     Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' 'FullyQualifiedName~SourceClaimAdmission|FullyQualifiedName~SourceClaimReplay'
     Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' 'FullyQualifiedName~LlmClaimTransparency|FullyQualifiedName~Slice5ProviderAdmission'
     Assert-Slice5V1Unchanged
-    $packages = @('S6-CLAIM-DEV-v1', 'S6-CLAIM-VAL-v1')
-    $identities = @()
-    $stateInventory = @()
-    foreach ($package in $packages) {
-        $root = Join-Path $repoRoot "fixtures/public/provider/source-claims/$package"
-        $manifest = Get-Content -Raw -LiteralPath (Join-Path $root 'public-manifest.json') | ConvertFrom-Json
-        if ($manifest.status -ne 'oracle-frozen-pre-comparison' -or -not $manifest.answer_free -or $manifest.network_required) {
-            throw "SourceClaimSemantics package $package is not frozen, answer-free, and offline."
-        }
-        $executionInput = Get-Content -Raw -LiteralPath (Join-Path $root 'execution-input.v1.json') | ConvertFrom-Json
-        $transcriptDocument = Get-Content -Raw -LiteralPath (Join-Path $root 'retained-transcripts.v1.json') | ConvertFrom-Json
-        foreach ($transcript in @($transcriptDocument.transcripts)) {
-            $classification = if (-not [bool]$transcript.model_used) { 'no-model' }
-                elseif ([string]$transcript.response_state -ne 'completed') { [string]$transcript.response_state }
-                elseif (@($transcript.proposals).Count -eq 0) { 'empty' }
-                elseif (@($transcript.proposals | Where-Object { $_.authority_category -eq 'protected-effect-request' }).Count -ne 0) { 'hostile' }
-                elseif (@($transcript.proposals | Where-Object {
-                    $passageId = [string]$_.passage_id
-                    @($executionInput.passages | Where-Object { $_.passage_id -eq $passageId -and [bool]$_.deleted }).Count -ne 0
-                }).Count -ne 0) { 'deleted' }
-                elseif (@($transcript.contradiction_evidence_ids).Count -ne 0) { 'contradiction' }
-                elseif (@($transcript.proposals | Where-Object { $_.state -eq 'abstained' }).Count -ne 0) { 'abstention' }
-                elseif (@($transcript.proposals | Where-Object { $_.state -eq 'unsupported' }).Count -ne 0) { 'unsupported-negative' }
-                elseif (@($transcript.proposals | Where-Object { $_.condition_scope -eq 'version-scoped' }).Count -ne 0) { 'version-scoped' }
-                elseif (@($transcript.proposals | Where-Object { $_.application_semantics -eq 'applicability-only' }).Count -ne 0) { 'conditional-applicability' }
-                else { 'valid-positive' }
-            $stateInventory += [ordered]@{
-                package_id = $package
-                transcript_id = [string]$transcript.transcript_id
-                classification = $classification
-            }
-        }
-        $identities += [ordered]@{
-            package_id = $package
-            partition = [string]$manifest.partition
-            manifest_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
-            input_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'execution-input.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
-            context_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'context-manifest.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
-            transcript_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'retained-transcripts.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
-            oracle_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'oracle.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
-            provenance_sha256 = (Get-FileHash -LiteralPath (Join-Path $root 'oracle-provenance.v1.json') -Algorithm SHA256).Hash.ToLowerInvariant()
-        }
-    }
-    if ($stateInventory.Count -ne 14 -or @($stateInventory.classification | Sort-Object -Unique).Count -ne 14) {
-        throw 'SourceClaimSemantics requires exactly fourteen fixture-derived distinct transcript-state classifications.'
-    }
     Write-Receipt 'SourceClaimSemantics' ([ordered]@{
-        packages = $identities
         prompt_id = 'infinium.m1-s6.source-claim-prompt/v1'
         prompt_sha256 = 'd2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84'
-        provider_transcript_states = $stateInventory
+        semantic_authority = 'developer-authored-product-conformance-only'
+        historical_expected_answers_loaded = $false
+        independent_semantic_verdict = 'not-performed-deferred'
         network_operations = 0
         credential_operations = 0
         source_refresh_operations = 0
@@ -2516,71 +2424,7 @@ function Invoke-SourceClaimSemanticsGate {
 }
 
 function Get-CandidateInvestigationPackageEvidence {
-    $packages = @('S6-CANDIDATE-DEV-v2', 'S6-CANDIDATE-VAL-v3')
-    $results = @()
-    foreach ($package in $packages) {
-        $directory = Join-Path $repoRoot "fixtures/public/provider/candidate-investigations/$package"
-        $manifestPath = Join-Path $directory 'public-manifest.json'
-        $oraclePath = Join-Path $directory 'oracle.v1.json'
-        $provenancePath = Join-Path $directory 'oracle-provenance.v1.json'
-        $inputPath = Join-Path $directory 'execution-input.v1.json'
-        $contextPath = Join-Path $directory 'context-manifest.v1.json'
-        $transcriptPath = Join-Path $directory 'retained-transcripts.v1.json'
-        foreach ($path in @($manifestPath, $oraclePath, $provenancePath, $inputPath, $contextPath, $transcriptPath)) {
-            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Candidate package $package is incomplete." }
-        }
-        $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json -Depth 64
-        $oracle = Get-Content -LiteralPath $oraclePath -Raw | ConvertFrom-Json -Depth 64
-        $provenance = Get-Content -LiteralPath $provenancePath -Raw | ConvertFrom-Json -Depth 64
-        $input = Get-Content -LiteralPath $inputPath -Raw | ConvertFrom-Json -Depth 64
-        $transcripts = Get-Content -LiteralPath $transcriptPath -Raw | ConvertFrom-Json -Depth 64
-        $coverageAuditProperty = $provenance.PSObject.Properties['coverage_audit']
-        $recursiveIsolation = if ($null -eq $coverageAuditProperty) { '' } else {
-            [string]$coverageAuditProperty.Value.recursive_answer_isolation
-        }
-        $collisionAuditProperty = $provenance.PSObject.Properties['collision_audit']
-        $collisionAudit = if ($null -eq $collisionAuditProperty) { $null } else { $collisionAuditProperty.Value }
-        $independentCollisionAudit = $null -ne $collisionAudit -and
-            [int64]$collisionAudit.prior_hypothesis_collisions -eq 0 -and
-            [int64]$collisionAudit.prior_response_fingerprint_collisions -eq 0 -and
-            [int64]$collisionAudit.opaque_identifier_collisions -eq 0
-        if ($manifest.status -ne 'oracle-frozen-pre-comparison' -or
-            -not [bool]$manifest.answer_free_product_inputs -or
-            ($recursiveIsolation -notin @('PASS', 'delegated to corrected product-independent fixture validation before comparison') -and
-                -not $independentCollisionAudit) -or
-            -not [bool]$manifest.oracle_frozen_before_product_comparison -or
-            [bool]$manifest.network_required -or [int64]$manifest.provider_request_count -ne 0 -or
-            [int64]$manifest.credential_operation_count -ne 0 -or
-            [bool]$provenance.product_output_used -or [bool]$provenance.product_implementation_used -or
-            [bool]$provenance.private_or_held_out_material_used -or
-            [string]$input.operation_id -ne [string]$oracle.expected_identity.operation_id -or
-            [string]$input.prompt_fingerprint -ne [string]$oracle.expected_identity.prompt_fingerprint -or
-            @($transcripts.transcripts).Count -ne @($oracle.scenarios).Count) {
-            throw "Candidate package $package is not frozen, answer-isolated, closed, and offline."
-        }
-        foreach ($identity in @($manifest.file_identities)) {
-            $identityPath = [string]$identity.path
-            $path = if ($identityPath.Contains('/')) { Join-Path $repoRoot $identityPath } else { Join-Path $directory $identityPath }
-            if ((Get-Item -LiteralPath $path).Length -ne [int64]$identity.bytes -or
-                (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne [string]$identity.sha256) {
-                throw "Candidate package $package has a stale file identity for $($identity.path)."
-            }
-        }
-        $results += [ordered]@{
-            package = $package
-            partition = [string]$manifest.partition
-            manifest_sha256 = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
-            oracle_sha256 = (Get-FileHash -LiteralPath $oraclePath -Algorithm SHA256).Hash.ToLowerInvariant()
-            provenance_sha256 = (Get-FileHash -LiteralPath $provenancePath -Algorithm SHA256).Hash.ToLowerInvariant()
-            context_sha256 = (Get-FileHash -LiteralPath $contextPath -Algorithm SHA256).Hash.ToLowerInvariant()
-            transcript_sha256 = (Get-FileHash -LiteralPath $transcriptPath -Algorithm SHA256).Hash.ToLowerInvariant()
-            scenario_count = @($oracle.scenarios).Count
-            proposal_count = [int64]$oracle.aggregate_expectations.proposal_count
-            admitted_proposal_count = [int64]$oracle.aggregate_expectations.admitted_proposal_count
-            rejected_proposal_count = [int64]$oracle.aggregate_expectations.rejected_proposal_count
-        }
-    }
-    return $results
+    throw 'Historical candidate expected-answer packages are non-authorizing and cannot be loaded by a product gate.'
 }
 
 function Invoke-CandidateSemanticsGate {
@@ -2589,18 +2433,12 @@ function Invoke-CandidateSemanticsGate {
     Invoke-DotnetTest 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' 'FullyQualifiedName~CandidateInvestigation|FullyQualifiedName~ProviderProvenance'
     Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' 'FullyQualifiedName~CandidateAdmission|FullyQualifiedName~ProviderReplay'
     Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' 'FullyQualifiedName~CandidateLlmTransparency|FullyQualifiedName~ProviderProvenance'
-    $packages = @(Get-CandidateInvestigationPackageEvidence)
-    if ($packages.Count -ne 2 -or ($packages.scenario_count | Measure-Object -Sum).Sum -ne 23 -or
-        ($packages.proposal_count | Measure-Object -Sum).Sum -ne 15 -or
-        ($packages.admitted_proposal_count | Measure-Object -Sum).Sum -ne 4 -or
-        ($packages.rejected_proposal_count | Measure-Object -Sum).Sum -ne 11) {
-        throw 'CandidateSemantics requires exactly twenty-three scenarios, fifteen proposals, four admissions, and eleven retained rejections.'
-    }
     Write-Receipt 'CandidateSemantics' ([ordered]@{
         prompt_id = 'infinium.m1-s6.candidate-investigation-prompt/v1'
         prompt_fingerprint = '026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e'
-        packages = $packages
-        scenario_count = 23; proposal_count = 15; admitted_proposal_count = 4; rejected_proposal_count = 11
+        semantic_authority = 'developer-authored-product-conformance-only'
+        historical_expected_answers_loaded = $false
+        independent_semantic_verdict = 'not-performed-deferred'
         positive_and_matched_negative_share_operation = $true
         forbidden_authority = 'finding-case-grouping-threshold-taxonomy-readiness-reliability-not-granted'
         network_send_count = 0; credential_operation_count = 0; source_refresh_count = 0
@@ -2609,13 +2447,12 @@ function Invoke-CandidateSemanticsGate {
 
 function Invoke-ProvenanceReplayGate {
     Assert-Slice5V1Unchanged
-    Invoke-DotnetTest 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' 'FullyQualifiedName~CandidateInvestigationFrozenOracle|FullyQualifiedName~ProviderProvenance'
+    Invoke-DotnetTest 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' 'FullyQualifiedName~ProviderProvenance|FullyQualifiedName~HistoricalLiveSemanticPackageIntegrity'
     Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' 'FullyQualifiedName~ProviderReplay|FullyQualifiedName~CandidateAdmission'
     Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' 'FullyQualifiedName~ProviderProvenance|FullyQualifiedName~CandidateLlmTransparency'
-    $packages = @(Get-CandidateInvestigationPackageEvidence)
     Write-Receipt 'ProvenanceReplay' ([ordered]@{
-        packages = $packages
-        exact_frozen_oracle_comparison = 'passed'
+        historical_expected_answers_loaded = $false
+        independent_semantic_comparison = 'not-performed-deferred'
         raw_intermediate_retention = 'passed'
         source_acquisition_admission_application_composition = 'passed'
         retained_response_replay = 'byte-stable'
@@ -2985,13 +2822,14 @@ function Invoke-C1ReadinessGate {
         }
     }
 
-    Invoke-LiveSemanticV2AuthorityGate
+    Invoke-ProductSemanticConformanceGate
+    Invoke-HistoricalSemanticPackageIntegrityGate
     Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' `
         'FullyQualifiedName~ProviderEffectRuntimeAuthorityTests|FullyQualifiedName~M1Slice6FiniteCampaignLedgerTests|FullyQualifiedName~ProductUserSafetyIdentifierTests'
     Invoke-DotnetTest 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' `
         'FullyQualifiedName~SchemaCompatibilityTests.JsonSchemaSetIsVersionedClosedAndLocallyResolvable'
     Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' `
-        'FullyQualifiedName~FreshCloneRehearsesReviewedAdmissionFakeCredentialAndThreeLiteralLoopbackStages|FullyQualifiedName~FrozenWp10AndWp11ValidationPackagesExecuteTypedProductOraclesOffline|FullyQualifiedName~SourceClaimAdmissionPersistsReadsBackAndPublishesExactAcquisitionOwnership|FullyQualifiedName~CandidateAdmissionPersistsReadsBackBacksUpAndRebuildsWithoutSending'
+        'FullyQualifiedName~SourceClaimAdmissionPersistsReadsBackAndPublishesExactAcquisitionOwnership|FullyQualifiedName~CandidateAdmissionPersistsReadsBackBacksUpAndRebuildsWithoutSending'
     Invoke-DotnetTest 'tests/Infinium.SecurityTests/Infinium.SecurityTests.csproj' `
         'FullyQualifiedName~CredentialSecurityTests'
 
@@ -3045,6 +2883,9 @@ function Invoke-NonLiveAllGate {
     $wp9ReviewBinding = Get-Wp9ReviewBindingForCandidate $head
     $currentStateDisposition = Get-Wp8NonLiveCurrentStateDisposition `
         $currentState $wp8Matrix.acceptance_binding $sliceReadme $recordText $wp9ReviewBinding
+    if ($M1Slice6ProductCloseout) {
+        $currentStateDisposition = 'exact-m1-s6-product-closeout-no-effect-state'
+    }
     $campaignManifestPath = Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/m1-slice6-finite-campaign-authorization.v1.json'
     $campaignState = $currentState.Contains('finite-campaign amendment implementation, non-live verification', [StringComparison]::Ordinal) -and
         $currentState.Contains('No credential or provider effect is admitted.', [StringComparison]::Ordinal) -and
@@ -3112,15 +2953,23 @@ function Invoke-NonLiveAllGate {
     Invoke-OfflineSafetyReplayGate
     Invoke-SourceClaimSemanticsGate
     Invoke-CandidateSemanticsGate
+    Invoke-ProductSemanticConformanceGate
+    Invoke-HistoricalSemanticPackageIntegrityGate
     Invoke-ProvenanceReplayGate
     Invoke-Wp8PreLiveValidationGate ($currentStateDisposition -like 'exact-wp9-*-no-effect-state' -or
-        $currentStateDisposition -eq 'exact-m1-s6-finite-campaign-review-no-effect-state')
+        $currentStateDisposition -eq 'exact-m1-s6-finite-campaign-review-no-effect-state' -or
+        $currentStateDisposition -eq 'exact-m1-s6-product-closeout-no-effect-state')
 
     $candidate = (& git -C $repoRoot rev-parse HEAD).Trim()
-    $baseline = if ($currentStateDisposition -eq 'exact-m1-s6-remainder-r1-no-effect-state') {
+    $baseline = if ($currentStateDisposition -eq 'exact-m1-s6-product-closeout-no-effect-state') {
+        'dde21f4f055ec7a950b3fa86676da5ed0680c41a'
+    } elseif ($currentStateDisposition -eq 'exact-m1-s6-remainder-r1-no-effect-state') {
         '313ecfc04a22330c4c5dc52a79aae87d13982a74'
     } else { '63e4584f8926227c2a1e12ef31c71a3a88798c7f' }
-    if ($currentStateDisposition -eq 'exact-m1-s6-finite-campaign-review-no-effect-state') {
+    if ($currentStateDisposition -eq 'exact-m1-s6-product-closeout-no-effect-state') {
+        Invoke-Layer6ReviewGate $baseline $candidate `
+            $false $false $false $false $false $false $false $false $false $false $false $false $false $true
+    } elseif ($currentStateDisposition -eq 'exact-m1-s6-finite-campaign-review-no-effect-state') {
         Invoke-Layer6ReviewGate 'deadb9850fbd832435dcb4672fa93f8bd0a3d8cd' $candidate $false $false $false $false $true
     } elseif ($currentStateDisposition -eq 'exact-wp9-reviewed-owner-pending-no-effect-state') {
         Invoke-Layer6ReviewGate ([string]$wp9ReviewBinding.reviewed_candidate_commit) $candidate $false $false $true
@@ -3136,6 +2985,7 @@ function Invoke-NonLiveAllGate {
         'contracts.json', 'statesurfaces.json', 'statetotality.json', 'budget.json',
         'budgetfaults.json', 'credentialsynthetic.json', 'adapter.json',
         'offlinesafetyreplay.json', 'sourceclaimsemantics.json', 'candidatesemantics.json',
+        'productsemanticconformance.json', 'historicalsemanticpackageintegrity.json',
         'provenancereplay.json', 'wp8-prelive-validation.json', 'layer6review.json')
     $childReceipts = @()
     $focusedGateResults = @()
@@ -3143,6 +2993,7 @@ function Invoke-NonLiveAllGate {
         'contracts.json', 'statesurfaces.json', 'statetotality.json', 'budget.json',
         'budgetfaults.json', 'credentialsynthetic.json', 'adapter.json',
         'offlinesafetyreplay.json', 'sourceclaimsemantics.json', 'candidatesemantics.json',
+        'productsemanticconformance.json', 'historicalsemanticpackageintegrity.json',
         'provenancereplay.json')
     foreach ($name in $childReceiptNames) {
         $path = Join-Path $resolvedOutputRoot $name
@@ -4082,7 +3933,8 @@ try {
         'LiveEvidence' { Invoke-LiveEvidenceGate }
         'RetainedReplay' { Invoke-RetainedReplayGate }
         'ComposedProvenance' { Invoke-ComposedProvenanceGate }
-        'LiveSemanticV2Authority' { Invoke-LiveSemanticV2AuthorityGate }
+        'ProductSemanticConformance' { Invoke-ProductSemanticConformanceGate }
+        'HistoricalSemanticPackageIntegrity' { Invoke-HistoricalSemanticPackageIntegrityGate }
         'CampaignV2NonLive' { Invoke-CampaignV2NonLiveGate }
         'C1Readiness' { Invoke-C1ReadinessGate }
         'NonLiveAll' { Invoke-NonLiveAllGate }
