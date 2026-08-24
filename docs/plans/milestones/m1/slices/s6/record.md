@@ -10181,3 +10181,30 @@ fail-closed exhaustion, retained canonical/identity checks, deterministic
 Windows denial coverage, buffer zeroing, and exact 192-path authority with no
 remaining must-fix. A successor clean commit must restart the complete floor
 from locked restore; none of `9dc9901`'s results bind that successor.
+
+### Complete-floor formatter correction
+
+Safety-concurrency candidate `e15ebce3f40a61ff6770705affb62ac2b80d7cb1`
+restarted the complete floor from locked restore. Locked restore and the
+zero-warning/zero-error Release build passed. The six category commands passed
+Unit 286/0/4, Contract 171/0/0, Integration 183/0/1, Evaluation 87/0/8,
+Security 174/0/6, and Fault 111/0/3. The mandatory unfiltered solution run
+also passed Security 19/0/0, Fault 7/0/0, Evaluation 67/0/8, Unit 316/0/4,
+Contract 199/0/0, and Integration 230/0/1. The next command,
+`dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity
+minimal`, failed closed on whitespace layout in exactly three already
+authorized files: the successor-attempt materializer, candidate provenance
+contract tests, and campaign rehearsal tests. No dependency, documentation,
+analysis-pipeline, or candidate-bound Slice 6 gate ran after that failure.
+`e15ebce` is diagnostic only and is not the final candidate.
+
+The repository formatter changed only layout in those three files: 22 line
+insertions and 8 deletions expanded existing initializers and `with` blocks
+without changing tokens, values, or control flow. Formatter verification and
+`git diff --check` then passed. The directly affected candidate provenance
+contract class passed 7/7, and the successor-output-schema plus campaign
+rehearsal integration surface passed 2/2. This correction changes no contract,
+product behavior, retained evidence, authority identity, or effect boundary.
+The closed product-path authority remains exactly 192 paths. A new clean
+commit must restart the complete accepted floor from locked restore; none of
+`e15ebce`'s results bind that successor.

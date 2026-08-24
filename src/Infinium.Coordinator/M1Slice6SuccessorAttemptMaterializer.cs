@@ -399,12 +399,16 @@ internal static class M1Slice6SuccessorAttemptMaterializer
     {
         JsonObject identifier = new()
         {
-            ["type"] = "string", ["minLength"] = 1, ["maxLength"] = 128,
+            ["type"] = "string",
+            ["minLength"] = 1,
+            ["maxLength"] = 128,
             ["pattern"] = "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
         };
         JsonObject sha = new()
         {
-            ["type"] = "string", ["minLength"] = 64, ["maxLength"] = 64,
+            ["type"] = "string",
+            ["minLength"] = 64,
+            ["maxLength"] = 64,
             ["pattern"] = "^[0-9a-f]{64}$",
         };
         JsonObject texts = new()

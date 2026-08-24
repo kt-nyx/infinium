@@ -87,11 +87,17 @@ public sealed class CandidateInvestigationProviderProvenanceContractTests
         CandidateInvestigationContextInput context = input.Contexts[0];
         CandidateEvidenceInput evidence = context.Evidence.Single();
         Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationContextMinimizer.ValidateInput(
-            input with { Contexts = [context with { Evidence = [evidence with
-                { SourceApplicationDecisionId = evidence.SourceAdmissionId }] }, input.Contexts[1]] }));
+            input with
+            {
+                Contexts = [context with { Evidence = [evidence with
+                { SourceApplicationDecisionId = evidence.SourceAdmissionId }] }, input.Contexts[1]]
+            }));
         Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationContextMinimizer.ValidateInput(
-            input with { Contexts = [context with { Evidence = [evidence with
-                { ContentSha256 = "A" + evidence.ContentSha256[1..] }] }, input.Contexts[1]] }));
+            input with
+            {
+                Contexts = [context with { Evidence = [evidence with
+                { ContentSha256 = "A" + evidence.ContentSha256[1..] }] }, input.Contexts[1]]
+            }));
         Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationContextMinimizer.ValidateInput(
             input with { Contexts = [context with { ContextId = "invalid context" }, input.Contexts[1]] }));
     }
