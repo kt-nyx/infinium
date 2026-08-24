@@ -1,5 +1,9 @@
 # M1 Slice 7 implementation record
 
+Status: Completed
+Last reviewed: 2026-08-24
+Owner: Implementation orchestrator; project-owner acceptance pending
+
 ## Authority and preflight
 
 Implementation began on 2026-08-24 under the accepted Slice 7 plan and the
@@ -256,3 +260,66 @@ This does not establish independent semantic correctness, held-out
 performance, broad generalization, real-mod behavior, controlled-real
 behavior, runtime effects, compatibility, safety, production readiness, or M3
 trust.
+
+## Final accepted verification floor
+
+The complete accepted floor passed on the exact clean committed product
+candidate `8209e93901cbc7865adad390ca913b62fe7a1650`. The command sequence was
+the exact Section 12 floor: locked restore; zero-warning Release build; Unit,
+Contract, Integration, Evaluation, Security, and Fault filters; unfiltered
+solution tests; format verification; dependency-manifest check; `Gate All`;
+diff check; and clean-worktree check.
+
+| Verification layer | Passed | Skipped | Failed |
+| --- | ---: | ---: | ---: |
+| Unit filter | 293 | 4 | 0 |
+| Contract filter, all participating assemblies | 177 | 0 | 0 |
+| Integration filter, all participating assemblies | 189 | 1 | 0 |
+| Evaluation filter, all participating assemblies | 90 | 8 | 0 |
+| Security filter, all participating assemblies | 176 | 6 | 0 |
+| Fault filter, all participating assemblies | 114 | 3 | 0 |
+| Unfiltered solution | 864 | 13 | 0 |
+
+All skips were pre-existing declared environment/platform or retained-artifact
+conditions; no mandatory Slice 7 test was skipped. Restore was current, the
+Release build completed with zero warnings and zero errors, formatting had no
+changes, the dependency manifest was current, `git diff --check` passed, the
+worktree remained clean, and every category plus `Gate All` cleanup retained
+the exact repository root and zero matching survivors.
+
+The final proof root is
+`C:\Users\vex\AppData\Local\Temp\infinium-m1-s7-final-017db5d344dd4b1090db38db9cda8ec3`.
+Its combined receipt is `all.json`, 764 bytes, SHA-256
+`6cd835446bd34ec0bd4496a421d351fbba55fe667ea8097cd18b737789771c56`,
+verified at `2026-08-24T21:36:01.9958348+00:00`. It reports `passed`, includes
+Contracts, Documentation, Candidates, CandidateScale, Cases, Replay, Output,
+Safety, and Comprehensive, binds the claim boundary
+`public-synthetic-local-analysis-conformance-only`, and records private,
+held-out, live, billable, and protocol-5 use as `not-used`.
+
+| Final receipt | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `contracts.json` | 8,262 | `fb9ac7c25eed997d9322920ea86475a26b65e664c901477f512e81e3fb5e9ca8` |
+| `documentation.json` | 8,638 | `967fc194ccb7ae86f12e9430febc1a10e1dd731e551599f6834a6d3523f0002e` |
+| `candidates.json` | 4,051 | `e4ac0309cfd98bb04c51eafd69d6a672210d7ab0a9e0d5efd0e75c7bfc398b19` |
+| `candidatescale.json` | 3,293 | `97d2dd23c2ba7fa5058214604f2cd23a3d062d76b075b14d6e2b63a4e3ab6d0e` |
+| `cases.json` | 4,662 | `27b36490fba06d120b75f51f846628f42ccfeff92719bbcd6e71122b45a8a2d2` |
+| `replay.json` | 26,089 | `7012504fa6856353d444a754ea2f7c22af73ddfea995303e9307f88f12103407` |
+| `output.json` | 58,046 | `ef32fdfc2c89aaad0b9757382c45e0f1ddb0ee903dd9681e5bf0e2d2d99252bc` |
+| `safety.json` | 26,933 | `14ce6139d969510191ba39edd4ff4faa4767e4a220b0c7c4176d11761e4b7251` |
+| `comprehensive.json` | 4,155 | `8b57a94a850ebf7e91f70ad8afaaf7be83ad169beeeca60446eec1750e8cadb5` |
+| `traceability.json` | 10,043 | `02211dc794c63cb6611650e9fddc18059a87908a79bb8bad7b727cdb604a733c` |
+| `scope-reversion-conformance.json` | 10,013 | `bcef2e76d13f8325f1c4c0a78779b91984565f3ea44b9cc398505da7c4ccb3f7` |
+| `scope-reversion-analysis.v1.json` | 54,721 | `9440294def8efa6131509aa8b9af3bd427a4348813ac2d4eb69a9acf0126a4d9` |
+
+## Contract maturity and owner handoff
+
+| Contract family | Final implementation maturity | Evidence |
+| --- | --- | --- |
+| Frozen Slice 6 families | `Slice-frozen`, unchanged | Exact predecessor tests, retained-byte replay, schema-9 migration-source binding, and no incompatible producer/consumer change. |
+| `infinium.analysis.scope-reversion/v1` | `Producer-consumer-validated` | Production composition, both adapters, generic analyzer, schema/codec, malformed and mixed-version rejection, schema-10 persistence, readback, invalidation, reopen, backup/restore, replay, fixtures, JSON/CLI, and the complete floor. |
+| Storage `1.9.0` / schema 10 | `Producer-consumer-validated` | Exact schema-9 source fingerprint, exact schema-10 output fingerprint, schema-7 through schema-10 successor replay admission, and full Integration/Replay evidence. |
+
+No new contract is self-frozen. Slice 7 is implementation-complete and ready
+for the project owner's final acceptance decision. No push or Slice 8 work has
+occurred.
