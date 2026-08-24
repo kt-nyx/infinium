@@ -9852,3 +9852,234 @@ expected skips. The unfiltered solution run passed 835 tests with 13 expected
 skips. No final-floor command accessed credentials, sent a provider request,
 used private fixtures or archives, changed retained evidence, or opened Slice
 7.
+
+## 2026-08-23 strengthened oracle gate and v12 invalidation
+
+The working correction resumed from
+`dde21f4f055ec7a950b3fa86676da5ed0680c41a` in the dedicated
+`codex/m1-s6-c2-authority` worktree. Product corrections remained on one
+mutable candidate. No credential, provider, public-network, private-fixture,
+archive, retained-live-evidence, accounting, push, destructive, or Slice 7
+operation occurred.
+
+The effect-free product surface now includes exact prompt-byte validation,
+closed semantic-axis invariants across domain/JSON/protobuf/SQLite, a realistic
+populated schema-8 migration using the historical single-state JSON wire shape,
+immutable source and candidate historical-payload audit reads, and current-only
+consumption, resolution, accounting, replay, and publication filters. Focused
+schema, domain, persistence, migration, and historical-audit checks passed
+during correction. The final committed-byte floor has not run and no final
+candidate commit exists yet.
+
+Public semantic package v12 reached comparison with these exact original
+bindings:
+
+- oracle: 86,265 bytes, SHA-256
+  `c817a611d89a1a610405984dd68415d99f2183a16566c6631e5f0f423789b9ba`;
+- provenance: 5,807 bytes, SHA-256
+  `32a0e11c9f2a51fb5b3bf053b43b3a428d99a229d2c5cdd94d96a3b5bee78778`;
+- automated audit: 9,047 bytes, SHA-256
+  `27a992b772555d8a84469979519e575924bb6bc9ff99acf12996f2ef37b54fdb`;
+- independent semantic review: 10,426 bytes, SHA-256
+  `f75280436da6a3eaaa7e8fd986418108298faa57d45d009d1be1da2db7ef59e1`;
+- adversarial review: 9,539 bytes, SHA-256
+  `6cb6ca308f3fa1cf1c07c0112938938d07d2f4d1f6ba07563fa6379dd9af3fd8`;
+  and
+- original pre-comparison manifest: 2,212 bytes, SHA-256
+  `485bf80e5fd6b54612eaa98f9f2ad80ab9be391c9a422ba34292b9ddf3822eb9`.
+
+Complete changed-surface review then found a basic package/process defect. The
+semantic review records `2026-08-23T07:24:22.8126210Z`, while the persisted
+automated-audit receipt records `2026-08-23T07:27:40.0703749Z`; the required
+Gate 1 before Gate 2 chronology was therefore not proved. The review also
+found eight expected source-consumer application links but only two exact
+neutral applicability facts and only two consumer derivations. Conditionless
+source proposals had been treated as locally applicable by an empty-set
+predicate, masking the missing consumer evidence.
+
+V12 and v1-v11 are retained as non-authorizing development history. V12's
+original manifest is preserved as `precomparison-manifest.v12.json`; its
+reclassification states that the comparison grants no product verdict. The
+oracle path is paused under the owner's strengthened rule: v12 is not resealed
+or compared again, v13 is not started, and any future successor first requires
+persisted strict audit-review-adversarial chronology plus independently
+sufficient neutral local-fact binding and derivation for every expected
+consumer result. `fixture-guidelines.md` now records those package rules.
+
+The independent product gap was then closed on the same working candidate.
+Source extraction remains evidence-acquisition-owned and non-authorizing. A
+separate consuming-analysis adjudicator emits one analysis-run-owned decision
+per retained proposal, requires explicit neutral applicability facts before
+any applicability axis is evaluated, and never rewrites the source admission.
+Schema 9 now persists exact application decisions, fact payloads, fact joins,
+source-admission lineage, and admitted artifacts as separate append-only
+records. Applicable-but-abstained decisions retain their local facts and no
+admitted artifact; current read, exact-byte resolution, candidate evidence,
+accounting, and terminal publication require a complete supported/applicable/
+admitted application decision and exact fact cardinality. The legacy schema-8
+application table remains available only through the historical audit read.
+
+Focused verification after this correction passed a zero-warning solution
+build; 10 source/persistence unit tests; 2 realistic source/candidate populated
+schema-8 migration integrations; 35 focused schema, codec, historical-authority,
+and Layer 6 contract tests; 3 focused public evaluation tests; and the campaign
+rehearsal's two current effect-free checks. Its frozen v2 semantic-oracle
+rehearsal is explicitly skipped because those expected states are retained
+history rather than current product truth. Historical source tooling now emits
+only byte/hash audit receipts; the former expected-label-to-product-output
+materializer was removed.
+
+The candidate remains implementation-active until the consolidated changed-
+surface review is clean, a compact independently authored successor passes the
+strengthened pre-seal gates and one real full-seam comparison, the exact two
+commits are created, and the final accepted committed-byte floor passes once.
+
+## 2026-08-23 product convergence after v12 invalidation
+
+The consolidated product review was completed on the same working candidate.
+It found and corrected three remaining authority paths: direct source-extraction
+contracts could still carry consumer-owned applicability, candidate replay did
+not reopen every neutral applicability-fact object, and five frozen-v2 live
+semantic packages still appeared as current validation authority.
+
+Source producer output is now closed across domain invariants, JSON Schema,
+protobuf validation, and SQLite insertion guards. Faithful source claims may be
+supported, unsupported, or contradicted, but their applicability remains
+`not-evaluated` and their source decision remains `abstained`; structural or
+policy rejection and unavailable/deleted lifecycle outcomes remain distinct.
+Only the analysis-owned source-application decision can carry evaluated
+applicability and admission. Candidate replay accepts the contract's 1-64 fact
+cardinality, checks the persisted count, reopens and hashes every fact payload
+and the exact fact bundle, and rejects cross-source-revision fact joins.
+
+`S6-CLAIM-LIVE-VAL-v2`, `LLM-CLAIM-LIVE-VAL-v2`,
+`S6-CANDIDATE-LIVE-VAL-v2`, `LLM-INVESTIGATE-LIVE-VAL-v2`, and
+`PROV-LIVE-COMPOSED-VAL-v2` are now explicit non-authorizing development
+history. Reclassification files bind each original manifest by exact byte
+length and SHA-256. No original manifest, oracle, live evidence, or accounting
+byte changed. Active tests verify those immutable bindings and current registry
+classification without synthesizing product output from historical expected
+labels; the obsolete v2 resealer is fail-closed.
+
+Focused verification after these corrections passed a zero-warning solution
+build, all 314 unit tests with 4 environment-dependent skips, all 204 contract
+tests, all 67 public evaluation tests with 8 expected private-target skips, and
+the six focused source, candidate, historical-package, and rehearsal integration
+checks with one expected historical rehearsal skip. The final committed-byte
+floor has not yet run.
+
+## 2026-08-23 independent semantic-oracle deferral
+
+The owner accepted ADR-0035 and the focused M1 amendment. Independent
+semantic-oracle qualification no longer gates Slice 6, M1, or M2. Packages
+v1-v13 are retained as historical non-authorizing development evidence and
+grant no product verdict. The untracked v14 draft contained only its three
+unaccepted draft files, had no tracked/current authority reference, and was
+removed without semantic inspection, review, registration, comparison, or
+archival.
+
+Slice 6 remains implementation-active. Its next gate is a separate fresh-agent
+product closeout under ordinary contract/schema, bounded-example,
+invalid-state/mutation/metamorphic, persistence/migration/replay/safety,
+controlled-integration, and fresh-review evidence. This governance change did
+not alter product semantics, retained live evidence, ledgers, accounting,
+credentials, provider state, or external-effect authority. Slice 7 remains
+unopened, and the missing independent semantic verdict is an explicit deferred
+risk until the M3 Evaluation Readiness Gate after M2 acceptance.
+
+## 2026-08-23 Slice 6 product closeout candidate
+
+The separate product closeout organized the retained dirty candidate into two
+coherent commits without changing or discarding retained live requests,
+responses, evidence, ledgers, accounting, credentials, or historical package
+bytes:
+
+- governance/history commit
+  `ba9de748d3e0c2fb9b406db5c81cfbd5dc013a9f` classifies all semantic packages
+  as immutable non-authorizing history, makes active historical checks
+  byte/integrity-only, closes the product-closeout verifier mode, and records
+  ADR-0035's independent-semantic deferral; and
+- product commit `1f8c4706585a201263e667f40cfe7b0be830d617`
+  closes the source-extraction, analysis-owned application, candidate,
+  persistence/migration/replay, campaign accounting, protobuf/JSON, strict
+  response-schema, and transparency vertical path.
+
+The retained completed ledger remains 70,862 bytes with SHA-256
+`4cc47bba72ee4c6881cbe77834ac5ab79bd0e0f487145fe0942738d34c507a17`.
+The retained composed evidence remains 8,653 bytes with SHA-256
+`901f278825d3fdbab2971b9f6bb4462f84c12dea96f1c14c8f222d1f29a1df9`.
+No private fixture or archive was accessed, no historical semantic label was
+compared with product output, no credential was accessed, no network/provider
+or billable operation occurred, no retained authority byte was rewritten, no
+push occurred, and Slice 7 remained unopened.
+
+### Review and correction findings
+
+Three fresh read-only reviewers examined governance/history, safety/tooling,
+and the complete product path. Must-fix findings were corrected on the same
+candidate and re-reviewed. The corrections covered:
+
+- recursive retained-manifest and package-closure integrity, including direct
+  bindings, nested file identities, reclassification bindings, and
+  non-vacuous mutation evidence;
+- removal of every callable historical semantic-oracle comparison and
+  fail-closed mutual exclusion for the product `NonLiveAll`/Layer 6 modes;
+- the exact `dde21f4f055ec7a950b3fa86676da5ed0680c41a` product baseline,
+  retained-historical WP8 mode, clean-HEAD requirement, and exact 185-path
+  closeout authority;
+- a distinct source-admission identity and source-application-decision
+  identity through JSON/protobuf/domain contracts, SQLite schema 9,
+  migration, candidate publication/replay, campaign accounting, stage and
+  composed evidence;
+- a closed candidate-evidence root union for persisted source applications and
+  frozen host evidence, with full input/output/transparency provenance and
+  durable round trips for both roots;
+- independent source support, local applicability, and host decision axes,
+  including refusal, abstention, no-model, unsupported, contradicted, and
+  applicable-without-admission states;
+- exact identifier, text, collection, participant, and lowercase SHA-256
+  parity across producer schemas, typed consumers, codecs, retained
+  transcripts, and strict provider response admission;
+- complete source and candidate transparency projections, including raw
+  proposal/correlation/application links, audit reasons, and root identities;
+- exact payload, artifact, applicability-fact, fact-bundle, and frozen-host
+  byte validation before consumption, resolution, candidate publication, and
+  replay, with atomic corruption and metadata-drift mutations; and
+- a closed response-schema pattern allowlist that is enforced before instance
+  walking, including isolated non-allowlisted and malformed-regex rejection.
+
+Every reviewer returned `ACCEPT` after correction. The governance review
+recomputed 139 retained history bindings and found no current semantic
+authority or private/archive path. The safety review accepted the no-effect
+closeout modes, historical-only checks, baseline, path closure, and zero-effect
+receipt semantics. The product review accepted the producer/consumer,
+persistence/migration/replay, contract, transparency, bounds, invalid-state,
+and exact-byte surface; its final isolated schema-pattern check passed 1/1.
+No reviewer edited the repository or performed an external effect.
+
+### Focused verification and contract maturity
+
+Focused correction checks included a zero-warning/zero-error Release build;
+source/candidate unit checks 9/9; source/candidate/JSON/protobuf contract checks
+16/16 plus the focused protobuf projection 1/1; source consumption and
+candidate publication/persistence/replay integration 2/2; successor schema and
+accounting checks 3/3; and the final closed-pattern unit check 1/1. Earlier
+complete project runs on the same mutable candidate passed all Unit, Contract,
+Evaluation, Security, and Fault projects. The five Integration failures found
+by that diagnostic run were corrected and each affected path was re-run
+successfully before final review. `git diff --check` passed and no repository-
+owned test process remained.
+
+The nine Slice 6 product contracts stayed `Implementation-active` throughout
+correction. Producer, consumer, persistence, migration, backup/restore,
+round-trip, invalid-state, mutation, bounded integration, and fresh-review
+evidence now support freezing them if and only if the exact clean closeout
+candidate passes the complete accepted verification floor and the owner gives
+final acceptance. This is a product-conformance maturity decision, not an
+independent semantic verdict. The independent semantic verdict remains
+explicitly deferred through M1 and M2 under ADR-0035 and may be reconsidered
+only at the M3 Evaluation Readiness Gate after M2 acceptance.
+
+The exact clean committed candidate and its complete-floor commands, results,
+expected skips, receipts, and final disposition are recorded in the next
+append-only closeout entry after the floor runs.
