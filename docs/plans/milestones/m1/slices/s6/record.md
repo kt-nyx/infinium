@@ -10007,7 +10007,7 @@ bytes:
 The retained completed ledger remains 70,862 bytes with SHA-256
 `4cc47bba72ee4c6881cbe77834ac5ab79bd0e0f487145fe0942738d34c507a17`.
 The retained composed evidence remains 8,653 bytes with SHA-256
-`901f278825d3fdbab2971b9f6bb4462f84c12dea96f1c14c8f222d1f29a1df9`.
+`901f278825d3fdbab2971b9f6bb4462f84c12dea96f1c14c8f222d1f29a1df9d`.
 No private fixture or archive was accessed, no historical semantic label was
 compared with product output, no credential was accessed, no network/provider
 or billable operation occurred, no retained authority byte was rewritten, no
@@ -10289,3 +10289,117 @@ authority, the PowerShell parses cleanly, and the path authority is exactly
 193/193. Neither reviewer edited the repository, accessed private/archive
 material, compared semantic labels, or performed an effect. A new clean commit
 and another complete accepted-floor restart are required.
+
+## 2026-08-24 exact committed product-candidate acceptance handoff
+
+Exact candidate `a17ff8f05ca916b4a6db2b4b3e78ba99e1313442` is the
+clean committed Slice 6 product candidate presented for owner acceptance. It
+descends from the coherent closeout sequence:
+
+- `ba9de748d3e0c2fb9b406db5c81cfbd5dc013a9f` — governance/history and
+  independent-semantic deferral;
+- `1f8c4706585a201263e667f40cfe7b0be830d617` — complete Slice 6 product
+  contracts and vertical path;
+- `05d1fd517b923b29fbd75f540da577218c99f2a6` — pre-floor closeout record;
+- `bc07c0489863c97cf1f1b142db6950c80d3c8ef2` — deterministic dependency
+  locks;
+- `9dc99014626651efc0208088be31d8ee89a95792` — campaign persistence seam;
+- `e15ebce3f40a61ff6770705affb62ac2b80d7cb1` — safety-identifier
+  concurrency;
+- `786fb19339a7ed061325ab40731ee740a03c0177` — repository formatting;
+- `ab44ef4a19beaac6aa867ed1da9798f99d03539a` — current source-transparency
+  gate; and
+- `a17ff8f05ca916b4a6db2b4b3e78ba99e1313442` — retained WP8 historical
+  schema binding.
+
+The exact baseline-to-candidate changed-path set is 193/193 with no missing,
+extra, or duplicate authority path. The completed ledger is still 70,862 bytes
+with SHA-256
+`4cc47bba72ee4c6881cbe77834ac5ab79bd0e0f487145fe0942738d34c507a17`.
+The composed evidence is still 8,653 bytes with SHA-256
+`901f278825d3fdbab2971b9f6bb4462f84c12dea96f1c14c8f222d1f29a1df9d`.
+
+### Exact accepted verification floor
+
+The following commands ran from a clean worktree at exact HEAD
+`a17ff8f05ca916b4a6db2b4b3e78ba99e1313442` and all exited zero:
+
+1. `dotnet restore Infinium.sln --locked-mode --nologo`
+2. `dotnet build Infinium.sln -c Release --no-restore --nologo`
+3. `dotnet test Infinium.sln -c Release --no-build --nologo --filter
+   "TestCategory=Unit"`
+4. the same command for `Contract`, `Integration`, `Evaluation`, `Security`,
+   and `Fault`
+5. `dotnet test Infinium.sln -c Release --no-build --nologo`
+6. `dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity
+   minimal`
+7. `powershell -NoProfile -ExecutionPolicy Bypass -File
+   eng/update-dependency-manifest.ps1 -Check`
+8. `git diff --check`
+9. `powershell -NoProfile -ExecutionPolicy Bypass -File
+   eng/validate-documentation.ps1`
+10. `powershell -NoProfile -ExecutionPolicy Bypass -File
+    eng/verify-analysis-pipeline.ps1 -Gate All -OutputRoot <fresh-root>`
+11. `powershell -NoProfile -ExecutionPolicy Bypass -File
+    eng/verify-m1-slice6.ps1 -Gate NonLiveAll -OutputRoot <fresh-root>
+    -M1Slice6ProductCloseout`
+12. `powershell -NoProfile -ExecutionPolicy Bypass -File
+    eng/verify-m1-slice6.ps1 -Gate Layer6Review -BaselineCommit
+    dde21f4f055ec7a950b3fa86676da5ed0680c41a -CandidateCommit
+    a17ff8f05ca916b4a6db2b4b3e78ba99e1313442 -OutputRoot <fresh-root>
+    -M1Slice6ProductCloseout`
+
+The Release build reported zero warnings and zero errors. Category results
+were Unit 286 passed/4 skipped, Contract 173/0, Integration 183/1, Evaluation
+87/8, Security 174/6, and Fault 111/3. The unfiltered assembly results were
+Security 19/0, Fault 7/0, Evaluation 67/8, Unit 316/4, Contract 201/0, and
+Integration 230/1. The skips are the documented private-target,
+environment/symlink, recovery-environment, and retained historical campaign
+checks; no unexpected skip occurred. Documentation validation passed 181
+metadata files, 183 Markdown link sources, and 87 JSON files.
+
+The complete analysis root was
+`C:\Users\vex\AppData\Local\Temp\infinium-m1s6-analysis-a17ff8f-fd7592f34fcf48cb83fbf18d7856cf51`;
+`all.json` is 764 bytes with SHA-256
+`387432440102023f5abf9ccee743cda3ae4189e209a2173dc4eb122c13d56926`.
+The `NonLiveAll` root was
+`C:\Users\vex\AppData\Local\Temp\infinium-m1s6-nonliveall-a17ff8f-35a873fefa4a4145b86a478e188497e9`;
+`nonliveall.json` is 22,956 bytes with SHA-256
+`35af046c552a1dd9e510a340ab7c8baf4685ca1eb20d0543d66ae5c19f6cd6c6`.
+Its WP8 retained-historical receipt is 1,895 bytes with SHA-256
+`298543df90a8ad92a1b598bfcad33a52498c2cb9fc281e5aa0c90a6add7874ea`.
+The separate Layer 6 root was
+`C:\Users\vex\AppData\Local\Temp\infinium-m1s6-layer6-a17ff8f-7debca5af7924c96ae2089bbc210a9b4`;
+`layer6review.json` is 2,126 bytes with SHA-256
+`97df4f474e637255c23c37ce236d9ecaf10d1248a171d48cf4ca2cd1d5a90d82`.
+Every credential-manager, DNS, public-network, provider-request, billable,
+private-fixture, archive, and live-manifest execution count was zero.
+
+### Final review and contract maturity
+
+Fresh read-only product, governance/oracle-isolation, and safety/tooling
+reviewers iterated over the complete candidate and each late correction. All
+returned `ACCEPT` with no remaining must-fix. Findings corrected on the same
+candidate included product identity/provenance/persistence seams, contract and
+schema parity, exact-byte pre-publication and replay checks, transparency,
+historical package closure, effect-free verifier mode exclusion, dependency
+locks, campaign persistence, safety-identifier concurrency, response-schema
+closure, the current source-transparency filter, and the WP8 historical/current
+binding split. No reviewer edited the repository or accessed a forbidden
+surface.
+
+Producer, consumer, JSON/protobuf codec, persistence/migration, backup/restore,
+round-trip/replay, invalid-state, mutation, bounded integration, exact-byte,
+and fresh-review evidence now support owner freeze of all nine Slice 6 product
+contracts. They remain `Implementation-active` until the owner accepts this
+exact candidate; no contract is frozen by this record alone.
+
+This is product-conformance acceptance evidence, not an independent semantic
+verdict. Under ADR-0035, the independent semantic verdict remains explicitly
+deferred through M1 and M2 to the M3 Evaluation Readiness Gate after M2
+acceptance. Historical packages v1-v13 remain immutable, non-authorizing
+development evidence and were not compared with product output. No private
+fixture or archive was accessed; no credential was read or enumerated; no
+network/provider/billable effect occurred; no retained evidence, ledger,
+accounting, or historical package byte was changed; no push occurred; and
+Slice 7 remains unopened.
