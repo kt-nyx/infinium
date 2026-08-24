@@ -13,17 +13,17 @@
   ],
   "properties": {
     "schema_identity": {
-      "const": "infinium.repository.public-fixture-registry/1.15.0"
+      "const": "infinium.repository.public-fixture-registry/1.16.0"
     },
     "registry_version": {
-      "const": "1.15.0"
+      "const": "1.16.0"
     },
     "status": {
       "const": "current"
     },
     "package_count": {
       "type": "integer",
-      "const": 56
+      "const": 57
     },
     "family_classifications": {
       "type": "array",
@@ -34,8 +34,8 @@
     },
     "packages": {
       "type": "array",
-      "minItems": 56,
-      "maxItems": 56,
+      "minItems": 57,
+      "maxItems": 57,
       "uniqueItems": true,
       "items": {
         "$ref": "#/$defs/package"

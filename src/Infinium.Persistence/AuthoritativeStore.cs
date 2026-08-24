@@ -14,8 +14,8 @@ namespace Infinium.Persistence;
 
 public sealed partial class AuthoritativeStore : IDisposable
 {
-    public const int CurrentSchemaVersion = 9;
-    public const string CurrentStorageContractVersion = "1.8.0";
+    public const int CurrentSchemaVersion = ScopeReversionPersistenceDeclarations.SchemaVersion;
+    public const string CurrentStorageContractVersion = ScopeReversionPersistenceDeclarations.StorageContractVersion;
     private const string SchemaV3Fingerprint =
         "02fed67fa5dac6c28ec2a9f477733edc9f12eaa03a08f9d7dec05b502e45d6cf";
     private const int MaximumBackupManifestBytes = 16 * 1024 * 1024;

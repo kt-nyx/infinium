@@ -23,12 +23,12 @@ public sealed class PersistenceAndLifecycleTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
-    public void Schema9ProviderPersistenceAndBackupRestoreDeclarationsAreClosed()
+    public void Schema10ProviderPersistenceAndBackupRestoreDeclarationsAreClosed()
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
 
-        Assert.AreEqual(9, store.GetSchemaVersion());
+        Assert.AreEqual(10, store.GetSchemaVersion());
         CollectionAssert.AreEquivalent(
             ProviderProjectionNames,
             ProviderPersistenceDeclarations.RebuildableProjections.ToArray());
@@ -166,7 +166,7 @@ public sealed class PersistenceAndLifecycleTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
-    public void Schema9ProviderPersistenceBackupRestoreRetainsOnlyBlockedAuthorityState()
+    public void Schema10ProviderPersistenceBackupRestoreRetainsOnlyBlockedAuthorityState()
     {
         using TemporaryStore source = new();
         BackupArtifact backup;
@@ -186,7 +186,7 @@ public sealed class PersistenceAndLifecycleTests
                 AuthoritativeStore.RestoreBackup(backup, target);
             }
             using AuthoritativeStore restored = new(new StoragePaths(targetRoot));
-            Assert.AreEqual(9, restored.GetSchemaVersion());
+            Assert.AreEqual(10, restored.GetSchemaVersion());
             using SqliteConnection connection = new($"Data Source={restored.Paths.Database};Mode=ReadOnly;Pooling=False");
             connection.Open();
             using SqliteCommand command = connection.CreateCommand();

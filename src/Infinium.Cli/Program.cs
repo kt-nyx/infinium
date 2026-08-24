@@ -4,6 +4,7 @@ using System.Text.Json;
 using Google.Protobuf;
 using Infinium.Application.Analysis;
 using Infinium.Application.Runtime;
+using Infinium.Application.ScopeReversion;
 using Infinium.Application.Serialization;
 using Infinium.Contracts.Protobuf.Application.V1;
 using Infinium.Contracts.Protobuf.Common.V1;
@@ -13,9 +14,9 @@ using CliSummaryDocumentContract = Infinium.Domain.Contracts.CliSummaryDocumentC
 string? root = FirstOption(args, "--root");
 string? command = args.FirstOrDefault(argument => !argument.StartsWith("--", StringComparison.Ordinal)
     && !string.Equals(argument, root, StringComparison.Ordinal));
-if (string.IsNullOrWhiteSpace(root)
-    || !Path.IsPathFullyQualified(root)
-    || command is not ("start" or "status" or "wait" or "cancel" or "inspect" or "results"))
+bool localScopeResults = command == "scope-results";
+if ((!localScopeResults && (string.IsNullOrWhiteSpace(root) || !Path.IsPathFullyQualified(root)))
+    || command is not ("start" or "status" or "wait" or "cancel" or "inspect" or "results" or "scope-results"))
 {
     Usage();
     return 2;
@@ -25,10 +26,14 @@ bool json = HasFlag(args, "--json");
 try
 {
     ValidateCommandArguments(args, command);
-    await EnsureCoordinatorAsync(root).ConfigureAwait(false);
+    if (localScopeResults)
+    {
+        return await ScopeResultsAsync(args, json).ConfigureAwait(false);
+    }
+    await EnsureCoordinatorAsync(root!).ConfigureAwait(false);
     using CancellationTokenSource connectTimeout = new(TimeSpan.FromSeconds(15));
     await using CoordinatorConnection connection = await CoordinatorConnection.ConnectAsync(
-        root,
+        root!,
         connectTimeout.Token).ConfigureAwait(false);
     return command switch
     {
@@ -46,6 +51,30 @@ catch (Exception exception)
 {
     Console.Error.WriteLine(Bounded(exception.Message));
     return 1;
+}
+
+static async Task<int> ScopeResultsAsync(string[] arguments, bool json)
+{
+    string path = Path.GetFullPath(PositionalAfter(arguments, "scope-results"));
+    using FileStream input = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+    if (input.Length is < 1 or > 64L * 1024 * 1024)
+    {
+        throw new InvalidOperationException("The scope-reversion result exceeds its CLI input bound.");
+    }
+    byte[] bytes = new byte[checked((int)input.Length)];
+    input.ReadExactly(bytes);
+    Infinium.Domain.Contracts.ScopeReversionAnalysisContract analysis =
+        ScopeReversionJsonCodec.Deserialize(bytes);
+    if (json)
+    {
+        await Console.OpenStandardOutput().WriteAsync(ScopeReversionJsonCodec.Serialize(analysis)).ConfigureAwait(false);
+        Console.WriteLine();
+    }
+    else
+    {
+        Console.Write(ScopeReversionOutputRenderer.RenderHuman(analysis));
+    }
+    return 0;
 }
 
 static async Task<int> ResultsAsync(
@@ -647,6 +676,10 @@ static void ValidateCommandArguments(string[] arguments, string command)
             valueOptions.Add("--command-id");
             expectedPositionals = 1;
             break;
+        case "scope-results":
+            valueOptions.Remove("--root");
+            expectedPositionals = 1;
+            break;
         default:
             expectedPositionals = 1;
             break;
@@ -714,4 +747,5 @@ static void Usage() =>
           Infinium.Cli --root <absolute-product-root> cancel <run-id> [--command-id <id>] [--json]
           Infinium.Cli --root <absolute-product-root> inspect <run-id> [--json]
           Infinium.Cli --root <absolute-product-root> results <run-id> [--json]
+          Infinium.Cli scope-results <scope-reversion-analysis-json-path> [--json]
         """);

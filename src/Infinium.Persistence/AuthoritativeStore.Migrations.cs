@@ -266,6 +266,18 @@ public sealed partial class AuthoritativeStore
             {
                 ValidateSemanticAdmissionSeparationMigration();
             }
+            using SqliteCommand scopeVersionCommand = connection.CreateCommand();
+            scopeVersionCommand.CommandText = "PRAGMA user_version;";
+            int scopeVersion = Convert.ToInt32(scopeVersionCommand.ExecuteScalar(),
+                System.Globalization.CultureInfo.InvariantCulture);
+            if (scopeVersion == 9)
+            {
+                ApplyScopeReversionMigration();
+            }
+            else if (scopeVersion == 10)
+            {
+                ValidateScopeReversionMigration();
+            }
         }
     }
 
@@ -2219,6 +2231,20 @@ public sealed partial class AuthoritativeStore
 
     private static readonly HashSet<string> RequiredSchemaObjects =
     [
+        "table:scope_reversion_analyses",
+        "table:scope_reversion_artifacts",
+        "table:scope_reversion_dependencies",
+        "table:scope_reversion_invalidations",
+        "index:scope_reversion_artifacts_identity_idx",
+        "index:scope_reversion_dependencies_artifact_idx",
+        "trigger:scope_reversion_analyses_append_only_update",
+        "trigger:scope_reversion_analyses_append_only_delete",
+        "trigger:scope_reversion_artifacts_append_only_update",
+        "trigger:scope_reversion_artifacts_append_only_delete",
+        "trigger:scope_reversion_dependencies_append_only_update",
+        "trigger:scope_reversion_dependencies_append_only_delete",
+        "trigger:scope_reversion_invalidations_append_only_update",
+        "trigger:scope_reversion_invalidations_append_only_delete",
         .. R2LiveSemanticSchema6ExtensionAppendOnlyTables.Select(table => $"table:{table}"),
         .. R2LiveSemanticSchema6ExtensionAppendOnlyTables.SelectMany(table => new[]
         {

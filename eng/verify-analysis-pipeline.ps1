@@ -62,6 +62,7 @@ function Invoke-FocusedTests([object[]] $Commands, [string] $FailurePrefix) {
     $results = @()
     foreach ($arguments in $Commands) {
         $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+        Write-Host "Focused test: dotnet $($arguments -join ' ')"
         $testOutput = @(& dotnet @arguments 2>&1)
         $stopwatch.Stop()
         $testOutput | ForEach-Object { Write-Host $_ }
@@ -94,6 +95,7 @@ function Invoke-ContractsGate {
         'candidate-delivered-expansion.v1.schema.json' = 'infinium.analysis.candidate-delivered-expansion/v1'
         'finding-case.v1.schema.json' = 'infinium.analysis.finding-case/v1'
         'finding-case-input.v1.schema.json' = 'infinium.analysis.finding-case-input/v1'
+        'scope-reversion-analysis.v1.schema.json' = 'infinium.analysis.scope-reversion/v1'
         'analysis-replay.v1.schema.json' = 'infinium.analysis.replay/v1'
         'analysis-execution-input.v1.schema.json' = 'infinium.analysis.execution-input/v1'
         'analyzer-declaration.v1.schema.json' = 'infinium.analyzer.declaration/v1'
@@ -178,6 +180,11 @@ function Invoke-ContractsGate {
         throw 'The default solution reaches a historical evaluator project.'
     }
 
+    $scopeReversionTests = Invoke-FocusedTests @(
+        @('test', 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'Category=ScopeReversion&TestCategory=Contracts'),
+        @('test', 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~ScopeReversionContractTests')
+    ) 'scope-reversion contract focused verification'
+
     Write-GateReport 'Contracts' ([ordered]@{
         schema_count = $schemaEvidence.Count
         parsed_json_schema_count = @(Get-ChildItem -LiteralPath $schemaRoot -Filter '*.json' -File).Count
@@ -189,6 +196,7 @@ function Invoke-ContractsGate {
         retired_git_blob_count = $retiredEntries.Count
         active_evaluator_in_repository = $false
         external_evaluator_archive_count = @($retirement.external_archives).Count
+        scope_reversion_focused_tests = $scopeReversionTests
     })
 }
 
@@ -275,6 +283,9 @@ function Invoke-CandidatesGate {
         'src/Infinium.Application/Candidates/CandidateDeliveredInputExpander.cs',
         'src/Infinium.Application/Candidates/CandidateAnalysisPhase.cs',
         'src/Infinium.Persistence/AuthoritativeStore.Candidates.cs',
+        'src/Infinium.Analysis/ScopeReversion/ScopeReversionAnalyzer.cs',
+        'src/Infinium.Analysis/ScopeReversion/ScopeReversionAdapters.cs',
+        'src/Infinium.Application/ScopeReversion/ScopeReversionComposition.cs',
         'fixtures/public/candidates/CAND-SEMANTIC-DEV-v1/public-manifest.json',
         'fixtures/public/candidates/CAND-SEMANTIC-DEV-v1/inputs/candidate-delivered-input.json',
         'fixtures/public/candidates/CAND-SEMANTIC-DEV-v1/oracle/semantic-population-projection.json'
@@ -294,6 +305,8 @@ function Invoke-CandidatesGate {
         Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Analysis/Candidates') -File -Filter '*.cs'
         Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Application/Candidates') -File -Filter '*.cs'
         Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Persistence/AuthoritativeStore.Candidates.cs')
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Analysis/ScopeReversion') -File -Filter '*.cs'
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Application/ScopeReversion') -File -Filter '*.cs'
     ) | ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
     $candidateSourceText = $candidateSource -join [Environment]::NewLine
     foreach ($forbidden in @(
@@ -309,7 +322,9 @@ function Invoke-CandidatesGate {
         @('test', 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~CandidateDeliveredInputContractTests|FullyQualifiedName~AnalysisContract'),
         @('test', 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~CandidateSelector|FullyQualifiedName~DeliveredCandidateSource|FullyQualifiedName~FindingThreshold'),
         @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~CandidatePipeline|FullyQualifiedName~CandidateCheckpoint'),
-        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~SemanticPackageMatchesTheFrozenIndependentProjectionExactly')
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~SemanticPackageMatchesTheFrozenIndependentProjectionExactly'),
+        @('test', 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'Category=ScopeReversion&TestCategory=Candidates'),
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'Category=ScopeReversion&TestCategory=Candidates')
     )
     $testResults = Invoke-FocusedTests $testCommands 'candidate analysis focused verification'
     $driver = [System.Diagnostics.Process]::GetCurrentProcess()
@@ -392,6 +407,8 @@ function Invoke-CasesGate {
         'src/Infinium.Application/FindingCases/FindingCaseAnalysisPhase.cs',
         'src/Infinium.Application/Serialization/AnalyzerDeclarationJsonCodec.cs',
         'src/Infinium.Persistence/AuthoritativeStore.FindingCases.cs',
+        'src/Infinium.Analysis/ScopeReversion/ScopeReversionAnalyzer.cs',
+        'src/Infinium.Application/ScopeReversion/ScopeReversionOutputRenderer.cs',
         'fixtures/public/findings-cases/README.md',
         'fixtures/public/findings-cases/finding-case-independent-truth.v1.0.3.json',
         'fixtures/public/findings-cases/independent-review.md'
@@ -427,6 +444,8 @@ function Invoke-CasesGate {
         Get-Item -LiteralPath (Join-Path $repoRoot 'contracts/json-schema/finding-case.v1.schema.json')
         Get-Item -LiteralPath (Join-Path $repoRoot 'contracts/json-schema/analyzer-declaration.v1.schema.json')
         Get-Item -LiteralPath (Join-Path $repoRoot 'contracts/json-schema/candidate-analysis.v1.schema.json')
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Analysis/ScopeReversion') -File -Filter '*.cs'
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Application/ScopeReversion') -File -Filter '*.cs'
     ) | ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
     $productSourceText = $productSources -join [Environment]::NewLine
     foreach ($forbidden in @(
@@ -441,10 +460,11 @@ function Invoke-CasesGate {
         @('test', 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'TestCategory=Cases'),
         @('test', 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'TestCategory=Cases'),
         @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'TestCategory=Cases'),
-        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'TestCategory=Cases')
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'TestCategory=Cases'),
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'Category=ScopeReversion&TestCategory=Cases')
     )
     $testResults = Invoke-FocusedTests $testCommands 'finding/case analysis focused verification'
-    $expectedTestCounts = @(2, 7, 4, 5)
+    $expectedTestCounts = @(2, 8, 4, 7, 2)
     for ($index = 0; $index -lt $expectedTestCounts.Count; $index++) {
         if ($testResults[$index].matched_tests -ne $expectedTestCounts[$index] -or
             $testResults[$index].passed_tests -ne $expectedTestCounts[$index]) {
@@ -555,7 +575,8 @@ function Invoke-OperationalFocusedTestsWithReceiptCapture([object[]] $Commands, 
 function Invoke-ReplayGate {
     $capture = Invoke-OperationalFocusedTestsWithReceiptCapture @(
         @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisReplay|FullyQualifiedName~AnalysisFailureRecovery'),
-        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~CleanIncrementalReplay')
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~CleanIncrementalReplay'),
+        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'Category=ScopeReversion&TestCategory=Replay')
     ) 'operational stage replay verification'
     $fixtures = Get-OperationalFixtureEvidence $capture.ReceiptPath
     Write-GateReport 'Replay' ([ordered]@{
@@ -570,11 +591,31 @@ function Invoke-ReplayGate {
 }
 
 function Invoke-OutputGate {
-    $capture = Invoke-OperationalFocusedTestsWithReceiptCapture @(
-        @('test', 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisOutput|FullyQualifiedName~AnalysisQuery'),
-        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisCli|FullyQualifiedName~FrozenOperationalCasesAreBoundToProductExecutionBeforeOracleComparison'),
-        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisOperational')
-    ) 'operational stage output verification'
+    $scopeReceiptPath = Join-Path $resolvedOutputRoot 'scope-reversion-conformance.json'
+    $scopeOutputPath = Join-Path $resolvedOutputRoot 'scope-reversion-analysis.v1.json'
+    $priorScopeReceiptRoot = [Environment]::GetEnvironmentVariable('INFINIUM_SCOPE_REVERSION_RECEIPT_ROOT', 'Process')
+    [Environment]::SetEnvironmentVariable('INFINIUM_SCOPE_REVERSION_RECEIPT_ROOT', $resolvedOutputRoot, 'Process')
+    try {
+        $capture = Invoke-OperationalFocusedTestsWithReceiptCapture @(
+            @('test', 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisOutput|FullyQualifiedName~AnalysisQuery'),
+            @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisCli|FullyQualifiedName~FrozenOperationalCasesAreBoundToProductExecutionBeforeOracleComparison'),
+            @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisOperational'),
+            @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'Category=ScopeReversion&TestCategory=Output'),
+            @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'Category=ScopeReversion&TestCategory=Output')
+        ) 'operational stage output verification'
+    } finally {
+        [Environment]::SetEnvironmentVariable('INFINIUM_SCOPE_REVERSION_RECEIPT_ROOT', $priorScopeReceiptRoot, 'Process')
+    }
+    $scopeReceipt = Read-StrictJson $scopeReceiptPath
+    if ([string] $scopeReceipt.schema_id -cne 'infinium.verification.scope-reversion-conformance/v1' -or
+        [string] $scopeReceipt.result -cne 'passed' -or
+        [string] $scopeReceipt.package_identity -cne 'M1-S7-SYNTHETIC-v1' -or
+        [bool] $scopeReceipt.semantic_oracle -or
+        [bool] $scopeReceipt.verdict_authority -or
+        @($scopeReceipt.output.external_boundaries | Where-Object { [string] $_.state -cne 'not-used' }).Count -ne 0 -or
+        -not (Test-Path -LiteralPath $scopeOutputPath -PathType Leaf)) {
+        throw 'scope-reversion measured conformance receipt is incomplete, authoritative, or missing its exact output artifact.'
+    }
     $fixtures = Get-OperationalFixtureEvidence $capture.ReceiptPath
     $cliProject = [System.IO.File]::ReadAllText((Join-Path $repoRoot 'src/Infinium.Cli/Infinium.Cli.csproj'))
     $cliSource = [System.IO.File]::ReadAllText((Join-Path $repoRoot 'src/Infinium.Cli/Program.cs'))
@@ -593,6 +634,9 @@ function Invoke-OutputGate {
         human_json_semantics = 'shared-run-owned-projection'
         frozen_product_comparison_cases = 12
         direct_cli_database_access = $false
+        scope_reversion_conformance = $scopeReceipt
+        scope_reversion_conformance_receipt = Get-FileEvidence $scopeReceiptPath
+        scope_reversion_output_artifact = Get-FileEvidence $scopeOutputPath
         safety_guarantee = 'none'
     })
 }
@@ -600,13 +644,17 @@ function Invoke-OutputGate {
 function Invoke-SafetyGate {
     $capture = Invoke-OperationalFocusedTestsWithReceiptCapture @(
         @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisReplayLeavesProtectedRootCanaries|FullyQualifiedName~AnalysisReplayManagedWorker|FullyQualifiedName~AnalysisFailureRecovery|FullyQualifiedName~FrozenOperationalCasesAreBoundToProductExecutionBeforeOracleComparison'),
-        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisOperational')
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisOperational'),
+        @('test', 'tests/Infinium.SecurityTests/Infinium.SecurityTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'Category=ScopeReversion&TestCategory=Safety'),
+        @('test', 'tests/Infinium.FaultTests/Infinium.FaultTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'Category=ScopeReversion')
     ) 'operational stage safety verification'
     $fixtures = Get-OperationalFixtureEvidence $capture.ReceiptPath
     $operationsSources = @(
         Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Application/Analysis') -File -Filter '*.cs'
         Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Persistence/AuthoritativeStore.AnalysisPublication.cs')
         Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Coordinator/ManagedRunExecutor.cs')
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Analysis/ScopeReversion') -File -Filter '*.cs'
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Application/ScopeReversion') -File -Filter '*.cs'
     ) | ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
     $source = $operationsSources -join [Environment]::NewLine
     foreach ($forbidden in @('HttpClient', 'OpenAIClient', 'NexusClient', 'PowerShell.Create')) {

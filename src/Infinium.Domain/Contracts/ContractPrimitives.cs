@@ -139,4 +139,5 @@ public static class ContractConstants
     public const string EffectiveScanConfigurationV2SchemaId = "infinium.scan.effective-configuration/v2";
     public const string RunOutputV2SchemaId = "infinium.run-output/v2";
     public const string CliSummaryV2SchemaId = "infinium.cli-summary/v2";
+    public const string ScopeReversionSchemaId = "infinium.analysis.scope-reversion/v1";
 }

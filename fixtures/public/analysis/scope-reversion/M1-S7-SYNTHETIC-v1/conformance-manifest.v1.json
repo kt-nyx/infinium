@@ -1,0 +1,38 @@
+{
+  "schema_id": "infinium.evaluation.developer-conformance-manifest/v1",
+  "schema_version": "1.0.0",
+  "package_identity": "M1-S7-SYNTHETIC-v1",
+  "package_version": "1.0.0",
+  "partition": "development",
+  "evidence_class": "developer-owned-product-conformance",
+  "semantic_oracle": false,
+  "verdict_authority": false,
+  "evaluation_ids": [
+    "EVAL-0001",
+    "EVAL-0002",
+    "EVAL-0032",
+    "EVAL-0065",
+    "EVAL-0067",
+    "EVAL-0083",
+    "EVAL-0084",
+    "EVAL-0085",
+    "EVAL-0086"
+  ],
+  "input": {
+    "path": "input.v1.json",
+    "bytes": 4609,
+    "sha256": "d3ce566345c1fd2845a38d292136407c64c2afa81bd405323b5d57c5ba86262f",
+    "answer_free": true
+  },
+  "expectations": {
+    "path": "expectations.v1.json",
+    "bytes": 1065,
+    "sha256": "f4630b927dd746facda0434cebfad8a938e549a18797a3a19c7128a4e60fac23",
+    "kind": "developer-owned-expected-outcomes-not-semantic-oracle"
+  },
+  "domains": [
+    "actor-ai-facegen",
+    "refr-link-placement"
+  ],
+  "created_at": "2026-08-24T00:00:00.0000000+00:00"
+}

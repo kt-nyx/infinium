@@ -1,8 +1,8 @@
 {
-  "schema_identity": "infinium.repository.public-fixture-registry/1.15.0",
-  "registry_version": "1.15.0",
+  "schema_identity": "infinium.repository.public-fixture-registry/1.16.0",
+  "registry_version": "1.16.0",
   "status": "current",
-  "package_count": 56,
+  "package_count": 57,
   "family_classifications": [
     {
       "family_id": "semantic-admission",
@@ -545,6 +545,16 @@
       "authority_bytes": 3064,
       "authority_sha256": "b5aa41668ac388a5c2e59de7208d59fdb3b9063a8b4675b86f3d209d7da14421",
       "authority_status": "historical-development-evidence-invalidated-before-product-comparison"
+    },
+    {
+      "package_identity": "M1-S7-SYNTHETIC-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/analysis/scope-reversion/M1-S7-SYNTHETIC-v1",
+      "authority_file": "fixtures/public/analysis/scope-reversion/M1-S7-SYNTHETIC-v1/conformance-manifest.v1.json",
+      "authority_bytes": 1029,
+      "authority_sha256": "1ab6567d4d30188450ff84acf7eb9a84386f133dfa9f52b3201956a9e0c55025",
+      "authority_status": "developer-owned-product-conformance-not-semantic-oracle"
     }
   ]
 }

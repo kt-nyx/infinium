@@ -519,6 +519,21 @@ public sealed partial class AuthoritativeStore
         {
             migration.CommandText =
                 "SELECT COUNT(*) FROM migration_history "
+                + "WHERE migration_id='M1-S7-WP5-0010' AND from_version=9 AND to_version=10 "
+                + "AND sqlite_source_id=$source;";
+            migration.Parameters.AddWithValue("$source", binding.SourceId);
+            if (Convert.ToInt32(migration.ExecuteScalar(),
+                    System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The Slice 7 scope-reversion persistence migration is invalid.");
+            }
+        }
+
+        using (var migration = database.CreateCommand())
+        {
+            migration.CommandText =
+                "SELECT COUNT(*) FROM migration_history "
                 + "WHERE migration_id='M1-S6-SUCCESSOR-V6-0008' AND from_version=7 AND to_version=8 "
                 + "AND sqlite_source_id=$source;";
             migration.Parameters.AddWithValue("$source", binding.SourceId);

@@ -124,29 +124,27 @@ public sealed class AnalysisStatePersistenceTests
     [TestCategory("Cases")]
     [TestProperty("Category", "Unit")]
     [TestProperty("Category", "Cases")]
-    public void AnalysisStateModelSchema9HasExactMigrationContractAndObjects()
+    public void AnalysisStateModelSchema10HasExactMigrationContractAndObjects()
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
-        Assert.AreEqual(9, store.GetSchemaVersion());
+        Assert.AreEqual(10, store.GetSchemaVersion());
 
         using SqliteConnection connection = temporary.OpenRaw();
-        Assert.AreEqual("9", ScalarText(connection, "PRAGMA user_version;"));
+        Assert.AreEqual("10", ScalarText(connection, "PRAGMA user_version;"));
         Assert.AreEqual(
-            "9",
+            "10",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_version';"));
         Assert.AreEqual(
-            "1.8.0",
+            "1.9.0",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            ProviderPersistenceDeclarations.SemanticAdmissionSeparationSchemaFingerprint,
-            ScalarText(
-                connection,
-                "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
+            ScopeReversionPersistenceDeclarations.SchemaFingerprint,
+            ScalarText(connection, "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
         Assert.AreEqual(
             ProviderPersistenceDeclarations.Wp5ExtensionMigrationId,
             ScalarText(
@@ -204,6 +202,27 @@ public sealed class AnalysisStatePersistenceTests
             ScalarText(connection,
                 "SELECT CAST(from_version AS TEXT) || '|' || CAST(to_version AS TEXT) "
                 + "FROM migration_history WHERE migration_id='M1-S6-C2-SEMANTIC-0009';"));
+        Assert.AreEqual(
+            "9|10",
+            ScalarText(connection,
+                "SELECT CAST(from_version AS TEXT) || '|' || CAST(to_version AS TEXT) "
+                + "FROM migration_history WHERE migration_id='M1-S7-WP5-0010';"));
+        string[] scopeTables =
+        [
+            "scope_reversion_analyses", "scope_reversion_artifacts",
+            "scope_reversion_dependencies", "scope_reversion_invalidations",
+        ];
+        CollectionAssert.AreEquivalent(scopeTables, SchemaNames(connection, "table", scopeTables));
+        foreach (string table in scopeTables)
+        {
+            Assert.AreEqual(1L, ScalarInt64(connection,
+                "SELECT strict FROM pragma_table_list WHERE schema='main' AND name=$name;", ("$name", table)));
+            Assert.AreEqual(2L, ScalarInt64(connection,
+                "SELECT COUNT(*) FROM sqlite_schema WHERE type='trigger' AND tbl_name=$name "
+                + "AND name IN ($update_name,$delete_name);",
+                ("$name", table), ("$update_name", table + "_append_only_update"),
+                ("$delete_name", table + "_append_only_delete")));
+        }
         Assert.AreEqual(6L, ScalarInt64(connection,
             "SELECT COUNT(*) FROM (SELECT name FROM pragma_table_info('provider_semantic_admissions') "
             + "WHERE name IN ('support_state','applicability_state','decision_state') UNION ALL "
@@ -427,7 +446,7 @@ public sealed class AnalysisStatePersistenceTests
         using TemporaryStore migration = new();
         using (AuthoritativeStore store = migration.Open())
         {
-            Assert.AreEqual(9, store.GetSchemaVersion());
+            Assert.AreEqual(10, store.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = migration.OpenRaw())
@@ -448,11 +467,16 @@ public sealed class AnalysisStatePersistenceTests
                 +
                 """
 
+                DROP TABLE scope_reversion_invalidations;
+                DROP TABLE scope_reversion_dependencies;
+                DROP TABLE scope_reversion_artifacts;
+                DROP TABLE scope_reversion_analyses;
                 DROP INDEX idx_payload_identity_size;
                 DELETE FROM migration_history WHERE migration_id = 'M1-S6-0006';
                 DELETE FROM migration_history WHERE migration_id = 'M1-S6-SUCCESSOR-0007';
                 DELETE FROM migration_history WHERE migration_id = 'M1-S6-SUCCESSOR-V6-0008';
                 DELETE FROM migration_history WHERE migration_id = 'M1-S6-C2-SEMANTIC-0009';
+                DELETE FROM migration_history WHERE migration_id = 'M1-S7-WP5-0010';
                 DELETE FROM store_metadata WHERE key = 'slice6_successor_attempt_extension_id';
                 DELETE FROM store_metadata WHERE key = 'slice6_successor_v6_persistence_id';
                 DELETE FROM store_metadata WHERE key = 'slice6_successor_v6_semantic_trigger_correction_id';
@@ -471,7 +495,7 @@ public sealed class AnalysisStatePersistenceTests
 
         using (AuthoritativeStore migrated = migration.Open())
         {
-            Assert.AreEqual(9, migrated.GetSchemaVersion());
+            Assert.AreEqual(10, migrated.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = migration.OpenRaw())
@@ -486,13 +510,13 @@ public sealed class AnalysisStatePersistenceTests
         using TemporaryStore newer = new();
         using (AuthoritativeStore store = newer.Open())
         {
-            Assert.AreEqual(9, store.GetSchemaVersion());
+            Assert.AreEqual(10, store.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = newer.OpenRaw())
         using (SqliteCommand command = connection.CreateCommand())
         {
-            command.CommandText = "PRAGMA user_version = 10;";
+            command.CommandText = "PRAGMA user_version = 11;";
             command.ExecuteNonQuery();
         }
 
@@ -500,7 +524,7 @@ public sealed class AnalysisStatePersistenceTests
         Assert.IsNotNull(exception.InnerException);
         StringAssert.Contains(
             exception.InnerException.Message,
-            "Database schema 10 is newer than supported schema 9.");
+            "Database schema 11 is newer than supported schema 10.");
     }
 
     [TestMethod]

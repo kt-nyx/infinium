@@ -244,7 +244,7 @@ public sealed class EvaluationBoundaryContractTests
 
     [TestMethod]
     [TestCategory("Contract")]
-    public void ProviderPublicFixtureRegistryV3PreservesV2AndRecordsOnlyNonAuthorizingSemanticAdmissionHistory()
+    public void ProviderPublicFixtureRegistryV3PreservesV2AndAppendsCurrentProductConformance()
     {
         using JsonDocument v2 = ReadAndValidate(
             "fixtures/public/public-fixture-registry.v2.json", "public-fixture-registry.v2.schema.json");
@@ -253,6 +253,7 @@ public sealed class EvaluationBoundaryContractTests
         JsonElement[] retained = v2.RootElement.GetProperty("packages").EnumerateArray().ToArray();
         JsonElement[] rows = v3.RootElement.GetProperty("packages").EnumerateArray().ToArray();
         Assert.IsGreaterThanOrEqualTo(retained.Length, rows.Length);
+        Assert.AreEqual(retained.Length + 14, rows.Length);
         for (int index = 0; index < retained.Length; index++)
         {
             string identity = retained[index].GetProperty("package_identity").GetString()!;
@@ -296,6 +297,13 @@ public sealed class EvaluationBoundaryContractTests
             Assert.AreEqual(Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(),
                 semantic.GetProperty("authority_sha256").GetString());
         }
+
+        JsonElement scopeReversion = rows[^1];
+        Assert.AreEqual("M1-S7-SYNTHETIC-v1",
+            scopeReversion.GetProperty("package_identity").GetString());
+        Assert.AreEqual("development", scopeReversion.GetProperty("partition").GetString());
+        Assert.AreEqual("developer-owned-product-conformance-not-semantic-oracle",
+            scopeReversion.GetProperty("authority_status").GetString());
     }
 
     [TestMethod]
@@ -507,6 +515,22 @@ public sealed class EvaluationBoundaryContractTests
                     "fixtures/public/contracts/provider-wp1",
                     providerAuthority,
                     root.GetProperty("status").GetString()));
+        }
+
+        const string scopeReversionAuthority =
+            "fixtures/public/analysis/scope-reversion/M1-S7-SYNTHETIC-v1/conformance-manifest.v1.json";
+        using (JsonDocument scopeReversion = JsonDocument.Parse(File.ReadAllBytes(
+                   TestRepository.PathFromRoot([.. scopeReversionAuthority.Split('/')]))))
+        {
+            JsonElement root = scopeReversion.RootElement;
+            packages.Add(
+                root.GetProperty("package_identity").GetString()!,
+                new FixtureSourceIdentity(
+                    root.GetProperty("package_version").GetString()!,
+                    root.GetProperty("partition").GetString()!,
+                    "fixtures/public/analysis/scope-reversion/M1-S7-SYNTHETIC-v1",
+                    scopeReversionAuthority,
+                    "developer-owned-product-conformance-not-semantic-oracle"));
         }
 
         return packages;

@@ -44,9 +44,9 @@ public static class HistoricalLiveSemanticPackageVerifier
         Require(family.GetProperty("current_validation_authority_package").ValueKind == JsonValueKind.Null, "Semantic-admission validation authority must be empty.");
 
         JsonElement[] packages = registry.RootElement.GetProperty("packages").EnumerateArray().ToArray();
-        Require(packages.Length == 56
+        Require(packages.Length == 57
             && registry.RootElement.GetProperty("package_count").GetInt32() == packages.Length,
-            "Registry must contain the exact closed 56-package set.");
+            "Registry must contain the exact closed 57-package set.");
         Require(packages.Select(PackageIdentity).Distinct(StringComparer.Ordinal).Count() == packages.Length, "Registry package identities must be unique.");
 
         JsonElement[] semanticPackages = packages.Where(value => PackagePath(value).StartsWith(SemanticPrefix, StringComparison.Ordinal)).ToArray();

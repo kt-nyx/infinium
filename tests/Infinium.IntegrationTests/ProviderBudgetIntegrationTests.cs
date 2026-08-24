@@ -731,7 +731,7 @@ public sealed class ProviderBudgetIntegrationTests
             }
             using StoragePaths migratedPaths = new(restoredRoot);
             using AuthoritativeStore migrated = new(migratedPaths);
-            Assert.AreEqual(9, migrated.GetSchemaVersion());
+            Assert.AreEqual(10, migrated.GetSchemaVersion());
             CollectionAssert.AreEqual(
                 schema8HistoricalSnapshot.Split('\n'),
                 HistoricalSemanticSnapshot(migrated.Paths.Database).Split('\n'),
@@ -1920,7 +1920,7 @@ public sealed class ProviderBudgetIntegrationTests
             }
             using StoragePaths migratedPaths = new(restoredRoot);
             using AuthoritativeStore migrated = new(migratedPaths);
-            Assert.AreEqual(9, migrated.GetSchemaVersion());
+            Assert.AreEqual(10, migrated.GetSchemaVersion());
             CollectionAssert.AreEqual(
                 schema8HistoricalSnapshot.Split('\n'),
                 HistoricalSemanticSnapshot(migrated.Paths.Database).Split('\n'),
@@ -2627,6 +2627,10 @@ public sealed class ProviderBudgetIntegrationTests
         command.CommandText =
             """
             DROP TRIGGER provider_semantic_validations_semantic_axes_guard;
+            DROP TABLE scope_reversion_invalidations;
+            DROP TABLE scope_reversion_dependencies;
+            DROP TABLE scope_reversion_artifacts;
+            DROP TABLE scope_reversion_analyses;
             DROP TRIGGER provider_semantic_admissions_semantic_axes_guard;
             DROP TRIGGER evidence_acquisition_application_semantic_axes_guard;
             DROP TRIGGER candidate_evidence_authority_application_decision_guard;
@@ -2665,6 +2669,7 @@ public sealed class ProviderBudgetIntegrationTests
             BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
             DELETE FROM store_metadata WHERE key='semantic_admission_separation_id';
             DELETE FROM migration_history WHERE migration_id='M1-S6-C2-SEMANTIC-0009';
+            DELETE FROM migration_history WHERE migration_id='M1-S7-WP5-0010';
             UPDATE store_metadata SET value='8' WHERE key='schema_version';
             UPDATE store_metadata SET value='1.7.0' WHERE key='storage_contract_version';
             UPDATE store_metadata
