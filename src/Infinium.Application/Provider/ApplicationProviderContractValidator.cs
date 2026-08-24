@@ -535,11 +535,12 @@ public static class ApplicationProviderContractValidator
         Require(value.CostAttributionScopeId, "cost_attribution_scope_id");
         Require(value.SourceRevisionId, "source_revision_id");
         if (value.OwnerKind != "evidence-acquisition-run" || value.OwnerId != value.AcquisitionRunId
-            || value.ValidationIds.Count == 0 || value.AdmissionCorrelationIds.Count == 0
             || !ValidUniqueIds(value.ValidationIds) || !ValidUniqueIds(value.AdmissionCorrelationIds)
             || !ValidSourceClaimAdmissionCorrelations(value.AdmissionCorrelations, value.OperationId!.Value,
                 value.OwnerKind, value.OwnerId, value.SourceRevisionId, value.ValidationIds,
-                value.AdmissionCorrelationIds))
+                value.AdmissionCorrelationIds)
+            || !ValidSourceClaimApplicationDecisions(value.ApplicationDecisions, value.AdmissionCorrelations,
+                value.OperationId.Value))
         {
             throw new InvalidDataException("Source-claim projection must retain exact acquisition ownership and admission correlations.");
         }
@@ -552,7 +553,6 @@ public static class ApplicationProviderContractValidator
         Require(value.AnalysisRunId, "analysis_run_id");
         Require(value.CandidateId, "candidate_id");
         if (value.OwnerKind != "analysis-run" || value.OwnerId != value.AnalysisRunId
-            || value.ValidationIds.Count == 0 || value.AdmissionLinkIds.Count == 0
             || !ValidUniqueIds(value.ValidationIds) || !ValidUniqueIds(value.AdmissionLinkIds)
             || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId!.Value, value.OwnerKind,
                 value.OwnerId, value.CandidateId, value.ValidationIds, value.AdmissionLinkIds,
@@ -844,19 +844,29 @@ public static class ApplicationProviderContractValidator
         bool declaredIdsAreAdmissions)
     {
         ProviderSemanticAdmissionLink[] items = links.ToArray();
+        string[] validations = validationIds.ToArray();
+        string[] declared = declaredLinkIds.ToArray();
+        string[] actualDeclared = declaredIdsAreAdmissions
+            ? items.Select(link => link.AdmissionId).ToArray()
+            : items.Select(link => link.ApplicationLinkId).ToArray();
         return items.Length <= 64
             && items.Select(x => x.AdmissionId).Distinct(StringComparer.Ordinal).Count() == items.Length
-            && items.All(link => Has(link.AdmissionId) && Has(link.ProposalId) && Has(link.AuthorizationId)
-                && link.OperationId?.Value == operationId && Has(link.ResponseRecordId)
+            && items.Select(x => x.ProposalId).Distinct(StringComparer.Ordinal).Count() == items.Length
+            && items.Select(x => x.ValidationId).Distinct(StringComparer.Ordinal).Count() == items.Length
+            && validations.Length == items.Length
+            && validations.Distinct(StringComparer.Ordinal).Count() == validations.Length
+            && validations.ToHashSet(StringComparer.Ordinal).SetEquals(items.Select(link => link.ValidationId))
+            && declared.Length == items.Length
+            && declared.Distinct(StringComparer.Ordinal).Count() == declared.Length
+            && declared.ToHashSet(StringComparer.Ordinal).SetEquals(actualDeclared)
+            && items.All(link => ValidId(link.AdmissionId) && ValidId(link.ProposalId)
+                && ValidId(link.AuthorizationId) && ValidId(link.OperationId?.Value)
+                && link.OperationId?.Value == operationId && ValidId(link.ResponseRecordId)
+                && ValidId(link.ApplicationLinkId)
                 && link.OwnerKind == ownerKind && link.OwnerId == ownerId
                 && link.RootSubjectId == rootSubjectId
-                && validationIds.Contains(link.ValidationId)
-                && (declaredIdsAreAdmissions
-                    ? declaredLinkIds.Contains(link.AdmissionId)
-                    : declaredLinkIds.Contains(link.ApplicationLinkId))
-                && link.SupportState is "not-evaluated" or "supported" or "unsupported" or "contradicted" or "unavailable"
-                && link.ApplicabilityState is "not-evaluated" or "applicable" or "conditional-unestablished" or "not-applicable" or "unknown"
-                && link.DecisionState is "admitted" or "rejected" or "abstained" or "audit-only");
+                && ValidId(link.OwnerId) && ValidId(link.RootSubjectId) && ValidId(link.ValidationId)
+                && ValidSemanticStates(link.SupportState, link.ApplicabilityState, link.DecisionState));
     }
 
     private static bool ValidSourceClaimAdmissionCorrelations(
@@ -869,18 +879,113 @@ public static class ApplicationProviderContractValidator
         IEnumerable<string> correlationIds)
     {
         SourceClaimAdmissionCorrelation[] items = links.ToArray();
+        string[] validations = validationIds.ToArray();
+        string[] declaredCorrelations = correlationIds.ToArray();
         return items.Length <= 64
             && items.Select(x => x.AdmissionId).Distinct(StringComparer.Ordinal).Count() == items.Length
+            && items.Select(x => x.ProposalId).Distinct(StringComparer.Ordinal).Count() == items.Length
+            && items.Select(x => x.ValidationId).Distinct(StringComparer.Ordinal).Count() == items.Length
             && items.Select(x => x.AdmissionCorrelationId).Distinct(StringComparer.Ordinal).Count() == items.Length
-            && items.All(link => Has(link.AdmissionId) && Has(link.ProposalId) && Has(link.AuthorizationId)
-                && link.OperationId?.Value == operationId && Has(link.ResponseRecordId)
+            && validations.Length == items.Length
+            && validations.Distinct(StringComparer.Ordinal).Count() == validations.Length
+            && validations.ToHashSet(StringComparer.Ordinal).SetEquals(items.Select(link => link.ValidationId))
+            && declaredCorrelations.Length == items.Length
+            && declaredCorrelations.Distinct(StringComparer.Ordinal).Count() == declaredCorrelations.Length
+            && declaredCorrelations.ToHashSet(StringComparer.Ordinal)
+                .SetEquals(items.Select(link => link.AdmissionCorrelationId))
+            && items.All(link => ValidId(link.AdmissionId) && ValidId(link.ProposalId)
+                && ValidId(link.AuthorizationId) && ValidId(link.OperationId?.Value)
+                && link.OperationId?.Value == operationId && ValidId(link.ResponseRecordId)
                 && link.OwnerKind == ownerKind && link.OwnerId == ownerId
                 && link.RootSubjectId == rootSubjectId
-                && validationIds.Contains(link.ValidationId)
-                && correlationIds.Contains(link.AdmissionCorrelationId)
-                && link.SupportState is "not-evaluated" or "supported" or "unsupported" or "contradicted" or "unavailable"
-                && link.ApplicabilityState is "not-evaluated" or "applicable" or "conditional-unestablished" or "not-applicable" or "unknown"
-                && link.DecisionState is "admitted" or "rejected" or "abstained" or "audit-only");
+                && ValidId(link.OwnerId) && ValidId(link.RootSubjectId)
+                && ValidId(link.ValidationId) && ValidId(link.AdmissionCorrelationId)
+                && ValidSourceBoundSemanticStates(
+                    link.SupportState, link.ApplicabilityState, link.DecisionState));
+    }
+
+    private static bool ValidSourceClaimApplicationDecisions(
+        IEnumerable<SourceClaimApplicationDecision> decisions,
+        IEnumerable<SourceClaimAdmissionCorrelation> sourceLinks,
+        string operationId)
+    {
+        SourceClaimApplicationDecision[] items = decisions.ToArray();
+        SourceClaimAdmissionCorrelation[] sources = sourceLinks.ToArray();
+        if (items.Length == 0)
+        {
+            return true;
+        }
+        Dictionary<string, SourceClaimAdmissionCorrelation> sourceByProposal = sources
+            .ToDictionary(item => item.ProposalId, StringComparer.Ordinal);
+        return items.Length == sources.Length
+            && items.Select(item => item.DecisionLink?.AdmissionId).Distinct(StringComparer.Ordinal).Count() == items.Length
+            && items.Select(item => item.DecisionLink?.ProposalId).Distinct(StringComparer.Ordinal).Count() == items.Length
+            && items.All(item => item.DecisionLink is not null
+                && sourceByProposal.TryGetValue(item.DecisionLink.ProposalId, out SourceClaimAdmissionCorrelation? source)
+                && item.SourceAdmissionId == source.AdmissionId
+                && item.DecisionLink.AdmissionId != source.AdmissionId
+                && item.DecisionLink.ValidationId != source.ValidationId
+                && item.DecisionLink.ApplicationLinkId != source.AdmissionCorrelationId
+                && item.DecisionLink.OperationId?.Value == operationId
+                && item.DecisionLink.AuthorizationId == source.AuthorizationId
+                && item.DecisionLink.ResponseRecordId == source.ResponseRecordId
+                && item.DecisionLink.OwnerKind == "analysis-run"
+                && ValidId(item.DecisionLink.AdmissionId) && ValidId(item.DecisionLink.ProposalId)
+                && ValidId(item.DecisionLink.AuthorizationId) && ValidId(item.DecisionLink.OperationId?.Value)
+                && ValidId(item.DecisionLink.ResponseRecordId) && ValidId(item.SourceAdmissionId)
+                && ValidId(item.DecisionLink.OwnerId) && ValidId(item.DecisionLink.RootSubjectId)
+                && ValidId(item.DecisionLink.ValidationId) && ValidId(item.DecisionLink.ApplicationLinkId)
+                && item.ApplicabilityFactIds.Count <= 64
+                && ValidUniqueIds(item.ApplicabilityFactIds)
+                && (item.DecisionLink.ApplicabilityState == "not-evaluated" || item.ApplicabilityFactIds.Count != 0)
+                && Has(item.Reason) && item.Reason.Length <= 1024
+                && ValidSemanticStates(item.DecisionLink.SupportState,
+                    item.DecisionLink.ApplicabilityState, item.DecisionLink.DecisionState));
+    }
+
+    private static bool ValidSourceBoundSemanticStates(string support, string applicability, string decision) =>
+        applicability == "not-evaluated" && (
+            decision == "abstained" && support is "supported" or "unsupported" or "contradicted"
+                or "not-evaluated" or "unavailable"
+            || decision == "rejected" && support == "not-evaluated"
+            || decision == "audit-only" && support == "unavailable");
+
+    private static bool ValidSemanticStates(string support, string applicability, string decision)
+    {
+        Infinium.Domain.Contracts.SemanticSupportState supportState = support switch
+        {
+            "not-evaluated" => Infinium.Domain.Contracts.SemanticSupportState.NotEvaluated,
+            "supported" => Infinium.Domain.Contracts.SemanticSupportState.Supported,
+            "unsupported" => Infinium.Domain.Contracts.SemanticSupportState.Unsupported,
+            "contradicted" => Infinium.Domain.Contracts.SemanticSupportState.Contradicted,
+            "unavailable" => Infinium.Domain.Contracts.SemanticSupportState.Unavailable,
+            _ => Infinium.Domain.Contracts.SemanticSupportState.Unspecified,
+        };
+        Infinium.Domain.Contracts.SemanticApplicabilityState applicabilityState = applicability switch
+        {
+            "not-evaluated" => Infinium.Domain.Contracts.SemanticApplicabilityState.NotEvaluated,
+            "applicable" => Infinium.Domain.Contracts.SemanticApplicabilityState.Applicable,
+            "conditional-unestablished" => Infinium.Domain.Contracts.SemanticApplicabilityState.ConditionalUnestablished,
+            "not-applicable" => Infinium.Domain.Contracts.SemanticApplicabilityState.NotApplicable,
+            "unknown" => Infinium.Domain.Contracts.SemanticApplicabilityState.Unknown,
+            _ => Infinium.Domain.Contracts.SemanticApplicabilityState.Unspecified,
+        };
+        Infinium.Domain.Contracts.SemanticDecisionState decisionState = decision switch
+        {
+            "admitted" => Infinium.Domain.Contracts.SemanticDecisionState.Admitted,
+            "rejected" => Infinium.Domain.Contracts.SemanticDecisionState.Rejected,
+            "abstained" => Infinium.Domain.Contracts.SemanticDecisionState.Abstained,
+            "audit-only" => Infinium.Domain.Contracts.SemanticDecisionState.AuditOnly,
+            _ => Infinium.Domain.Contracts.SemanticDecisionState.Unspecified,
+        };
+        if (supportState == Infinium.Domain.Contracts.SemanticSupportState.Unspecified
+            || applicabilityState == Infinium.Domain.Contracts.SemanticApplicabilityState.Unspecified
+            || decisionState == Infinium.Domain.Contracts.SemanticDecisionState.Unspecified)
+        {
+            return false;
+        }
+        return Infinium.Domain.Contracts.ProviderOperationContractInvariants.IsValidSemanticStateCombination(
+            supportState, applicabilityState, decisionState);
     }
 
     private static bool ValidRateLimitFact(ProviderRateLimitFact value)
@@ -927,13 +1032,16 @@ public static class ApplicationProviderContractValidator
 
     private static void Require(string? value, string field)
     {
-        if (string.IsNullOrWhiteSpace(value) || value.Length > 128)
+        if (!ValidId(value))
         {
             throw new InvalidDataException(field + " is required.");
         }
     }
 
     private static bool Has(string? value) => !string.IsNullOrWhiteSpace(value);
+
+    private static bool ValidId(string? value) => value is not null
+        && Infinium.Domain.Contracts.ProviderOperationContractInvariants.IsValidIdentifier(value);
 
     private static bool AnyValue(params OptionalProviderQuantity[] values) => values.Any(x => x.HasValue);
 
@@ -966,5 +1074,5 @@ public static class ApplicationProviderContractValidator
     }
 
     private static bool ValidUniqueIds(IEnumerable<string> values) =>
-        values.All(Has) && values.Distinct(StringComparer.Ordinal).Count() == values.Count();
+        values.All(ValidId) && values.Distinct(StringComparer.Ordinal).Count() == values.Count();
 }

@@ -130,17 +130,18 @@ values retained by candidate decisions. All population, participant, evidence,
 dependency, candidate, and hypothesis IDs remain product-owned opaque
 identities and are excluded from independent oracle construction.
 
-## Independent fixture use
+## Deferred independent fixture use
 
-A product-blind fixture author may read the accepted owning plan and public
-Bethesda/documentation-evidence authorities together with these two schemas
-and this field guide.
-The author supplies only closed delivered facts or expansion parameters and
-keeps expected candidate behavior in a separately frozen oracle. Product
-source, tests, output, builds, private fixtures, and product identity algorithms
-are not fixture-authoring inputs. Exact comparison uses a canonical semantic
-projection keyed by retained factual IDs and relationships, rather than copying
-the product's opaque-ID construction algorithm into the oracle.
+This field guide does not authorize an active independent fixture or semantic
+oracle workflow. ADR-0035 defers that work through M1 and M2. The historical
+candidate packages remain byte-integrity evidence only; no current verification
+command may parse their expected answers or compare them with product output.
+
+If the owner later accepts a new M3 evaluation-readiness plan, that plan must
+define a fresh answer-isolated authoring and qualification boundary before an
+independent fixture author can use these schemas. Product source, tests, output,
+builds, private fixtures, and product identity algorithms remain prohibited
+authoring inputs, and no historical oracle gains authority by being retained.
 
 The standard retained product artifact path is
 `inputs/candidate-delivered-input.json` for semantic packages and

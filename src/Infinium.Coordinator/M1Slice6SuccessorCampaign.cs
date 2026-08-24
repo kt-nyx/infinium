@@ -1868,10 +1868,15 @@ internal static class M1Slice6SuccessorCampaignRunner
                 throw new InvalidDataException(
                     "Retained authoritative recovery bytes differ from the exact recovered attempt.");
             }
+            bool currentSourceApplication = attempt.Stage == M1Slice6CampaignStage.SourceClaimExtraction
+                && retainedSemantic.GetProperty("provenance")
+                    .TryGetProperty("source_application_decision_id", out _);
             string expectedSemantic = attempt.Stage switch
             {
                 M1Slice6CampaignStage.Qualification => "qualification-nonsemantic",
-                M1Slice6CampaignStage.SourceClaimExtraction => "infinium.host.source-claim-admission/v1",
+                M1Slice6CampaignStage.SourceClaimExtraction => currentSourceApplication
+                    ? "infinium.host.source-claim-application/v1"
+                    : "infinium.host.source-claim-admission/v1",
                 M1Slice6CampaignStage.CandidateInvestigation => "infinium.host.candidate-investigation-admission/v1",
                 _ => throw new InvalidDataException("The retained recovery semantic stage is not closed."),
             };
@@ -1886,8 +1891,13 @@ internal static class M1Slice6SuccessorCampaignRunner
             if (attempt.Stage != M1Slice6CampaignStage.Qualification)
             {
                 JsonElement p = retainedSemantic.GetProperty("provenance");
+                string retainedApplicationDecision = p.TryGetProperty("source_application_decision_id", out JsonElement retainedDecision)
+                    ? M1Slice6SuccessorAuthorityLoader.Text(p, "source_application_decision_id")
+                    : M1Slice6SuccessorAuthorityLoader.Text(p, "source_admission_id");
                 provenance = new(M1Slice6SuccessorAuthorityLoader.Text(p, "source_acquisition_id"),
-                    M1Slice6SuccessorAuthorityLoader.Text(p, "source_admission_id"),
+                    p.TryGetProperty("source_application_decision_id", out _)
+                        ? M1Slice6SuccessorAuthorityLoader.Text(p, "source_admission_id") : "",
+                    retainedApplicationDecision,
                     M1Slice6SuccessorAuthorityLoader.Text(p, "admitted_artifact_id"),
                     M1Slice6SuccessorAuthorityLoader.Text(p, "source_application_link_id"),
                     M1Slice6SuccessorAuthorityLoader.Text(p, "evidence_application_link_id"),
@@ -2274,8 +2284,13 @@ internal static class M1Slice6SuccessorCampaignRunner
             if (exact.Attempt.Stage != M1Slice6CampaignStage.Qualification)
             {
                 JsonElement p = semantic.GetProperty("provenance");
+                string retainedApplicationDecision = p.TryGetProperty("source_application_decision_id", out JsonElement retainedDecision)
+                    ? M1Slice6SuccessorAuthorityLoader.Text(p, "source_application_decision_id")
+                    : M1Slice6SuccessorAuthorityLoader.Text(p, "source_admission_id");
                 provenance = new(M1Slice6SuccessorAuthorityLoader.Text(p, "source_acquisition_id"),
-                    M1Slice6SuccessorAuthorityLoader.Text(p, "source_admission_id"),
+                    p.TryGetProperty("source_application_decision_id", out _)
+                        ? M1Slice6SuccessorAuthorityLoader.Text(p, "source_admission_id") : "",
+                    retainedApplicationDecision,
                     M1Slice6SuccessorAuthorityLoader.Text(p, "admitted_artifact_id"),
                     M1Slice6SuccessorAuthorityLoader.Text(p, "source_application_link_id"),
                     M1Slice6SuccessorAuthorityLoader.Text(p, "evidence_application_link_id"),
@@ -2429,10 +2444,15 @@ internal static class M1Slice6SuccessorCampaignRunner
         { throw new InvalidDataException("Attempt evidence accounting exceeds its exact reservation."); }
         if (string.IsNullOrEmpty(ledger.Current.FailureDisposition))
         {
+            bool currentSourceApplication = attempt.Stage == M1Slice6CampaignStage.SourceClaimExtraction
+                && root.GetProperty("semantic_provenance")
+                    .TryGetProperty("source_application_decision_id", out _);
             string expectedSemantic = attempt.Stage switch
             {
                 M1Slice6CampaignStage.Qualification => "qualification-nonsemantic",
-                M1Slice6CampaignStage.SourceClaimExtraction => "infinium.host.source-claim-admission/v1",
+                M1Slice6CampaignStage.SourceClaimExtraction => currentSourceApplication
+                    ? "infinium.host.source-claim-application/v1"
+                    : "infinium.host.source-claim-admission/v1",
                 M1Slice6CampaignStage.CandidateInvestigation => "infinium.host.candidate-investigation-admission/v1",
                 _ => "",
             };
@@ -2533,10 +2553,15 @@ internal static class M1Slice6SuccessorCampaignRunner
         { throw new InvalidDataException("Attempt evidence accounting exceeds its exact reservation."); }
         if (string.IsNullOrEmpty(ledger.Current.FailureDisposition))
         {
+            bool currentSourceApplication = attempt.Stage == M1Slice6CampaignStage.SourceClaimExtraction
+                && root.GetProperty("semantic_provenance")
+                    .TryGetProperty("source_application_decision_id", out _);
             string expectedSemantic = attempt.Stage switch
             {
                 M1Slice6CampaignStage.Qualification => "qualification-nonsemantic",
-                M1Slice6CampaignStage.SourceClaimExtraction => "infinium.host.source-claim-admission/v1",
+                M1Slice6CampaignStage.SourceClaimExtraction => currentSourceApplication
+                    ? "infinium.host.source-claim-application/v1"
+                    : "infinium.host.source-claim-admission/v1",
                 M1Slice6CampaignStage.CandidateInvestigation => "infinium.host.candidate-investigation-admission/v1",
                 _ => "",
             };
@@ -2569,10 +2594,15 @@ internal static class M1Slice6SuccessorCampaignRunner
         using JsonDocument document = JsonDocument.Parse(bytes);
         JsonElement root = document.RootElement;
         JsonElement semantic = root.GetProperty("semantic");
+        bool currentSourceApplication = attempt.Stage == M1Slice6CampaignStage.SourceClaimExtraction
+            && semantic.TryGetProperty("provenance", out JsonElement recoveryProvenance)
+            && recoveryProvenance.TryGetProperty("source_application_decision_id", out _);
         string expected = attempt.Stage switch
         {
             M1Slice6CampaignStage.Qualification => "qualification-nonsemantic",
-            M1Slice6CampaignStage.SourceClaimExtraction => "infinium.host.source-claim-admission/v1",
+            M1Slice6CampaignStage.SourceClaimExtraction => currentSourceApplication
+                ? "infinium.host.source-claim-application/v1"
+                : "infinium.host.source-claim-admission/v1",
             M1Slice6CampaignStage.CandidateInvestigation => "infinium.host.candidate-investigation-admission/v1",
             _ => "",
         };

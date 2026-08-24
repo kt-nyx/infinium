@@ -292,17 +292,284 @@ public sealed partial class AuthoritativeStore
             + "UPDATE provider_semantic_validations SET support_state=CASE state "
             + "WHEN 'admitted' THEN 'supported' WHEN 'unsupported' THEN 'unsupported' "
             + "WHEN 'unavailable' THEN 'unavailable' WHEN 'deleted' THEN 'unavailable' ELSE 'not-evaluated' END, "
-            + "decision_state=CASE state WHEN 'admitted' THEN 'admitted' WHEN 'abstained' THEN 'abstained' "
+            + "decision_state=CASE state WHEN 'admitted' THEN 'abstained' WHEN 'abstained' THEN 'abstained' "
             + "WHEN 'unsupported' THEN 'abstained' WHEN 'unavailable' THEN 'abstained' "
             + "WHEN 'deleted' THEN 'audit-only' ELSE 'rejected' END; "
             + "UPDATE provider_semantic_admissions SET support_state=CASE state "
             + "WHEN 'admitted' THEN 'supported' WHEN 'unsupported' THEN 'unsupported' "
             + "WHEN 'unavailable' THEN 'unavailable' WHEN 'deleted' THEN 'unavailable' ELSE 'not-evaluated' END, "
-            + "decision_state=CASE state WHEN 'admitted' THEN 'admitted' WHEN 'abstained' THEN 'abstained' "
+            + "decision_state=CASE state WHEN 'admitted' THEN 'abstained' WHEN 'abstained' THEN 'abstained' "
             + "WHEN 'unsupported' THEN 'abstained' WHEN 'unavailable' THEN 'abstained' "
-            + "WHEN 'deleted' THEN 'audit-only' ELSE 'rejected' END;",
+            + "WHEN 'deleted' THEN 'audit-only' ELSE 'rejected' END; "
+            + "ALTER TABLE candidate_evidence_authority ADD COLUMN source_application_decision_id TEXT;",
             transaction);
         CreateAppendOnlyTriggers(["provider_semantic_validations", "provider_semantic_admissions"], transaction);
+        Execute(
+            """
+            CREATE TRIGGER provider_semantic_validations_semantic_axes_guard
+            BEFORE INSERT ON provider_semantic_validations
+            WHEN NOT (
+              NEW.decision_state='admitted' AND NEW.state='admitted'
+                AND NEW.support_state='supported' AND NEW.applicability_state='applicable'
+              OR NEW.decision_state='abstained' AND NEW.state='abstained' AND (
+                NEW.support_state IN ('not-evaluated','unsupported','contradicted','unavailable')
+                OR NEW.applicability_state IN ('not-evaluated','conditional-unestablished','not-applicable','unknown'))
+              OR NEW.decision_state='rejected' AND NEW.state='rejected'
+                AND NEW.support_state='not-evaluated' AND NEW.applicability_state='not-evaluated'
+              OR NEW.decision_state='audit-only' AND NEW.state='deleted'
+                AND NEW.support_state='unavailable' AND NEW.applicability_state='not-evaluated')
+              OR NOT EXISTS (
+                SELECT 1 FROM provider_semantic_proposals proposal
+                WHERE proposal.proposal_id=NEW.proposal_id
+                  AND proposal.operation_id=NEW.operation_id
+                  AND proposal.response_record_id=NEW.response_record_id
+                  AND proposal.owner_kind=NEW.owner_kind
+                  AND proposal.owner_id=NEW.owner_id
+                  AND proposal.root_subject_id=NEW.root_subject_id
+                  AND (
+                    (proposal.proposal_kind='abstention'
+                      AND NEW.support_state='not-evaluated'
+                      AND NEW.applicability_state='not-evaluated'
+                      AND NEW.decision_state='abstained')
+                    OR (proposal.proposal_kind='gap' AND (
+                      (NEW.support_state='unavailable' AND NEW.decision_state='abstained')
+                      OR (NEW.support_state='not-evaluated'
+                        AND NEW.applicability_state='not-evaluated' AND NEW.decision_state='rejected')
+                      OR (NEW.support_state='unavailable'
+                        AND NEW.applicability_state='not-evaluated' AND NEW.decision_state='audit-only')))
+                    OR (proposal.proposal_kind='source-claim'
+                      AND NEW.applicability_state='not-evaluated'
+                      AND ((NEW.support_state IN ('supported','unsupported','contradicted')
+                        AND NEW.decision_state='abstained')
+                        OR (NEW.support_state='not-evaluated' AND NEW.decision_state='rejected')))
+                    OR (proposal.proposal_kind='candidate-hypothesis'
+                      AND NEW.decision_state IN ('admitted','abstained','rejected'))))
+              OR EXISTS (
+                SELECT 1 FROM provider_semantic_validations existing
+                WHERE existing.proposal_id=NEW.proposal_id)
+            BEGIN SELECT RAISE(ABORT,'semantic validation axes are inconsistent'); END;
+
+            CREATE TRIGGER provider_semantic_admissions_semantic_axes_guard
+            BEFORE INSERT ON provider_semantic_admissions
+            WHEN NOT (
+              (NEW.decision_state='admitted' AND NEW.support_state='supported'
+                AND NEW.applicability_state='applicable' AND NEW.state='admitted'
+                AND NEW.admitted_artifact_id IS NOT NULL)
+              OR (NEW.decision_state='abstained' AND NEW.state='abstained'
+                AND NEW.admitted_artifact_id IS NULL AND (
+                  NEW.support_state IN ('not-evaluated','unsupported','contradicted','unavailable')
+                  OR NEW.applicability_state IN ('not-evaluated','conditional-unestablished','not-applicable','unknown')))
+              OR (NEW.decision_state='rejected' AND NEW.state='rejected'
+                AND NEW.admitted_artifact_id IS NULL
+                AND NEW.support_state='not-evaluated' AND NEW.applicability_state='not-evaluated')
+              OR (NEW.decision_state='audit-only' AND NEW.state='deleted'
+                AND NEW.admitted_artifact_id IS NULL
+                AND NEW.support_state='unavailable' AND NEW.applicability_state='not-evaluated'))
+              OR NOT EXISTS (
+                SELECT 1 FROM provider_semantic_validations validation
+                WHERE validation.validation_id=NEW.validation_id
+                  AND validation.proposal_id=NEW.proposal_id
+                  AND validation.operation_id=NEW.operation_id
+                  AND validation.response_record_id=NEW.response_record_id
+                  AND validation.owner_kind=NEW.owner_kind
+                  AND validation.owner_id=NEW.owner_id
+                  AND validation.root_subject_id=NEW.root_subject_id
+                  AND validation.support_state=NEW.support_state
+                  AND validation.applicability_state=NEW.applicability_state
+                  AND validation.decision_state=NEW.decision_state)
+              OR NOT EXISTS (
+                SELECT 1 FROM provider_semantic_proposals proposal
+                WHERE proposal.proposal_id=NEW.proposal_id
+                  AND proposal.operation_id=NEW.operation_id
+                  AND proposal.response_record_id=NEW.response_record_id
+                  AND proposal.owner_kind=NEW.owner_kind
+                  AND proposal.owner_id=NEW.owner_id
+                  AND proposal.root_subject_id=NEW.root_subject_id
+                  AND (
+                    (proposal.proposal_kind='abstention'
+                      AND NEW.support_state='not-evaluated'
+                      AND NEW.applicability_state='not-evaluated'
+                      AND NEW.decision_state='abstained')
+                    OR (proposal.proposal_kind='gap' AND (
+                      (NEW.support_state='unavailable' AND NEW.decision_state='abstained')
+                      OR (NEW.support_state='not-evaluated'
+                        AND NEW.applicability_state='not-evaluated' AND NEW.decision_state='rejected')
+                      OR (NEW.support_state='unavailable'
+                        AND NEW.applicability_state='not-evaluated' AND NEW.decision_state='audit-only')))
+                    OR (proposal.proposal_kind='source-claim'
+                      AND NEW.applicability_state='not-evaluated'
+                      AND ((NEW.support_state IN ('supported','unsupported','contradicted')
+                        AND NEW.decision_state='abstained')
+                        OR (NEW.support_state='not-evaluated' AND NEW.decision_state='rejected')))
+                    OR (proposal.proposal_kind='candidate-hypothesis'
+                      AND NEW.decision_state IN ('admitted','abstained','rejected'))))
+              OR EXISTS (
+                SELECT 1 FROM provider_semantic_admissions existing
+                WHERE existing.proposal_id=NEW.proposal_id)
+            BEGIN SELECT RAISE(ABORT,'semantic admission axes are inconsistent'); END;
+
+            CREATE TRIGGER evidence_acquisition_application_semantic_axes_guard
+            BEFORE INSERT ON evidence_acquisition_application_links
+            WHEN NOT EXISTS (
+              SELECT 1 FROM provider_semantic_admissions admission
+              WHERE admission.admission_id=NEW.admission_id
+                AND admission.owner_kind='evidence-acquisition-run'
+                AND admission.owner_id=NEW.acquisition_run_id
+                AND admission.admitted_artifact_id=NEW.admitted_artifact_id
+                AND admission.state='admitted'
+                AND admission.support_state='supported'
+                AND admission.applicability_state='applicable'
+                AND admission.decision_state='admitted')
+            BEGIN SELECT RAISE(ABORT,'source-claim application requires current semantic admission'); END;
+
+            CREATE TABLE source_claim_application_facts(
+              applicability_fact_id TEXT PRIMARY KEY,
+              acquisition_run_id TEXT NOT NULL REFERENCES evidence_acquisition_runs(acquisition_run_id) ON DELETE RESTRICT,
+              analysis_run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
+              source_revision_id TEXT NOT NULL REFERENCES documentation_revisions(documentation_revision_id) ON DELETE RESTRICT,
+              statement_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+              statement_sha256 TEXT NOT NULL CHECK(length(statement_sha256)=64),
+              created_at TEXT NOT NULL,
+              UNIQUE(acquisition_run_id,analysis_run_id,applicability_fact_id)
+            ) STRICT;
+            CREATE TABLE source_claim_application_decisions(
+              application_decision_id TEXT PRIMARY KEY,
+              application_link_id TEXT NOT NULL UNIQUE,
+              acquisition_run_id TEXT NOT NULL REFERENCES evidence_acquisition_runs(acquisition_run_id) ON DELETE RESTRICT,
+              proposal_id TEXT NOT NULL REFERENCES provider_semantic_proposals(proposal_id) ON DELETE RESTRICT,
+              source_admission_id TEXT NOT NULL REFERENCES provider_semantic_admissions(admission_id) ON DELETE RESTRICT,
+              authorization_id TEXT NOT NULL,
+              operation_id TEXT NOT NULL,
+              response_record_id TEXT NOT NULL,
+              analysis_run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
+              root_subject_id TEXT NOT NULL,
+              validation_id TEXT NOT NULL UNIQUE,
+              application_scope_id TEXT NOT NULL,
+              cost_attribution_scope_id TEXT NOT NULL,
+              support_state TEXT NOT NULL CHECK(support_state IN (
+                'not-evaluated','supported','unsupported','contradicted','unavailable')),
+              applicability_state TEXT NOT NULL CHECK(applicability_state IN (
+                'not-evaluated','applicable','conditional-unestablished','not-applicable','unknown')),
+              decision_state TEXT NOT NULL CHECK(decision_state IN ('admitted','rejected','abstained','audit-only')),
+              applicability_fact_bundle_payload_id TEXT REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+              applicability_fact_bundle_sha256 TEXT CHECK(
+                applicability_fact_bundle_sha256 IS NULL OR length(applicability_fact_bundle_sha256)=64),
+              applicability_fact_count INTEGER NOT NULL CHECK(applicability_fact_count BETWEEN 0 AND 64),
+              admitted_artifact_id TEXT REFERENCES source_claim_admitted_artifacts(admitted_artifact_id) ON DELETE RESTRICT,
+              reason TEXT NOT NULL,
+              created_at TEXT NOT NULL,
+              UNIQUE(acquisition_run_id,proposal_id,analysis_run_id,root_subject_id),
+              CHECK(
+                applicability_state='not-evaluated'
+                  AND applicability_fact_count=0
+                  AND applicability_fact_bundle_payload_id IS NULL
+                  AND applicability_fact_bundle_sha256 IS NULL
+                OR applicability_state!='not-evaluated'
+                  AND applicability_fact_count>0
+                  AND applicability_fact_bundle_payload_id IS NOT NULL
+                  AND applicability_fact_bundle_sha256 IS NOT NULL),
+              CHECK(
+                decision_state='admitted' AND admitted_artifact_id IS NOT NULL
+                OR decision_state!='admitted' AND admitted_artifact_id IS NULL)
+            ) STRICT;
+            CREATE TABLE source_claim_application_decision_facts(
+              application_decision_id TEXT NOT NULL
+                REFERENCES source_claim_application_decisions(application_decision_id) ON DELETE RESTRICT,
+              applicability_fact_id TEXT NOT NULL
+                REFERENCES source_claim_application_facts(applicability_fact_id) ON DELETE RESTRICT,
+              PRIMARY KEY(application_decision_id,applicability_fact_id)
+            ) STRICT;
+            CREATE TRIGGER candidate_evidence_authority_application_decision_guard
+            BEFORE INSERT ON candidate_evidence_authority
+            WHEN (NEW.root_kind='persisted-source-claim-application' AND (
+                    NEW.source_application_decision_id IS NULL OR NOT EXISTS (
+                      SELECT 1 FROM source_claim_application_decisions decision
+                      WHERE decision.application_decision_id=NEW.source_application_decision_id
+                        AND decision.application_link_id=NEW.source_application_link_id
+                        AND decision.acquisition_run_id=NEW.source_acquisition_id
+                        AND decision.proposal_id=NEW.source_proposal_id
+                        AND decision.source_admission_id=NEW.source_admission_id
+                        AND decision.admitted_artifact_id=NEW.admitted_artifact_id
+                        AND decision.support_state='supported'
+                        AND decision.applicability_state='applicable'
+                        AND decision.decision_state='admitted')))
+              OR (NEW.root_kind='frozen-host-evidence'
+                    AND NEW.source_application_decision_id IS NOT NULL)
+            BEGIN SELECT RAISE(ABORT,'candidate evidence application decision is inconsistent'); END;
+            CREATE TRIGGER source_claim_application_decisions_semantic_guard
+            BEFORE INSERT ON source_claim_application_decisions
+            WHEN NOT (
+              (NEW.decision_state='admitted' AND NEW.support_state='supported'
+                AND NEW.applicability_state='applicable')
+              OR (NEW.decision_state='abstained' AND (
+                NEW.support_state IN ('not-evaluated','unsupported','contradicted','unavailable')
+                OR NEW.applicability_state IN (
+                  'not-evaluated','conditional-unestablished','not-applicable','unknown')))
+              OR (NEW.decision_state='rejected' AND NEW.support_state='not-evaluated'
+                AND NEW.applicability_state='not-evaluated')
+              OR (NEW.decision_state='audit-only' AND NEW.support_state='unavailable'
+                AND NEW.applicability_state='not-evaluated'))
+              OR NOT EXISTS (
+                SELECT 1
+                FROM provider_semantic_admissions admission
+                JOIN provider_semantic_proposals proposal ON proposal.proposal_id=admission.proposal_id
+                JOIN evidence_acquisition_runs acquisition
+                  ON acquisition.acquisition_run_id=NEW.acquisition_run_id
+                WHERE admission.admission_id=NEW.source_admission_id
+                  AND admission.proposal_id=NEW.proposal_id
+                  AND NEW.application_decision_id!=admission.admission_id
+                  AND NEW.validation_id!=admission.validation_id
+                  AND NEW.application_link_id!=admission.semantic_link_id
+                  AND admission.owner_kind='evidence-acquisition-run'
+                  AND admission.owner_id=NEW.acquisition_run_id
+                  AND proposal.authorization_id=NEW.authorization_id
+                  AND proposal.operation_id=NEW.operation_id
+                  AND proposal.response_record_id=NEW.response_record_id
+                  AND acquisition.parent_analysis_run_id=NEW.analysis_run_id
+                  AND acquisition.application_scope_id=NEW.application_scope_id
+                  AND acquisition.cost_attribution_scope_id=NEW.cost_attribution_scope_id
+                  AND (
+                    (proposal.proposal_kind='abstention'
+                      AND NEW.support_state='not-evaluated'
+                      AND NEW.applicability_state='not-evaluated'
+                      AND NEW.decision_state='abstained')
+                    OR (proposal.proposal_kind='gap' AND NEW.decision_state IN (
+                      'abstained','rejected','audit-only'))
+                    OR (proposal.proposal_kind='source-claim'
+                      AND NEW.decision_state IN ('admitted','abstained','rejected')))
+                  AND (NEW.decision_state!='admitted' OR (
+                    proposal.proposal_kind='source-claim'
+                    AND EXISTS(
+                      SELECT 1 FROM source_claim_admitted_artifacts artifact
+                      WHERE artifact.admitted_artifact_id=NEW.admitted_artifact_id
+                        AND artifact.acquisition_run_id=NEW.acquisition_run_id
+                        AND artifact.proposal_id=NEW.proposal_id
+                        AND artifact.admission_id=NEW.source_admission_id))))
+            BEGIN SELECT RAISE(ABORT,'source-claim application decision is inconsistent'); END;
+            CREATE TRIGGER source_claim_application_decision_facts_authority_guard
+            BEFORE INSERT ON source_claim_application_decision_facts
+            WHEN NOT EXISTS (
+              SELECT 1 FROM source_claim_application_decisions decision
+              JOIN provider_semantic_admissions admission
+                ON admission.admission_id=decision.source_admission_id
+               AND admission.proposal_id=decision.proposal_id
+              JOIN provider_semantic_proposals proposal
+                ON proposal.proposal_id=admission.proposal_id
+              JOIN source_claim_application_facts fact
+                ON fact.applicability_fact_id=NEW.applicability_fact_id
+               AND fact.acquisition_run_id=decision.acquisition_run_id
+               AND fact.analysis_run_id=decision.analysis_run_id
+               AND fact.source_revision_id=proposal.root_subject_id
+              WHERE decision.application_decision_id=NEW.application_decision_id)
+            BEGIN SELECT RAISE(ABORT,'source-claim application fact authority is inconsistent'); END;
+            """,
+            transaction);
+        CreateAppendOnlyTriggers(
+            ["source_claim_application_facts", "source_claim_application_decisions",
+                "source_claim_application_decision_facts"], transaction);
+        CreateCanonicalTimestampTriggers(
+            [("source_claim_application_facts", "created_at", false),
+                ("source_claim_application_decisions", "created_at", false)], transaction);
         string fingerprint = ComputeSchemaFingerprint(connection, transaction);
         Execute(
             "UPDATE store_metadata SET value='9' WHERE key='schema_version'; "
@@ -1966,6 +2233,9 @@ public sealed partial class AuthoritativeStore
             .Where(item => SchemaV6MutableProjectionTables.Contains(item.Table))
             .Select(item => $"trigger:{item.Table}_{item.Column}_canonical_utc_update"),
         "trigger:provider_usage_response_totality_guard",
+        "trigger:provider_semantic_validations_semantic_axes_guard",
+        "trigger:provider_semantic_admissions_semantic_axes_guard",
+        "trigger:evidence_acquisition_application_semantic_axes_guard",
         "index:idx_attempts_run",
         "index:idx_attempts_one_live_per_run",
         "index:idx_candidate_decisions_run_population",
@@ -2074,6 +2344,9 @@ public sealed partial class AuthoritativeStore
         "table:taxonomy_assignments",
         "table:taxonomy_projection_edges",
         "table:evidence_acquisition_application_links",
+        "table:source_claim_application_decision_facts",
+        "table:source_claim_application_decisions",
+        "table:source_claim_application_facts",
         "table:evidence_acquisition_attempts",
         "table:evidence_acquisition_commands",
         "table:evidence_acquisition_job_nodes",
@@ -2242,6 +2515,17 @@ public sealed partial class AuthoritativeStore
         "trigger:snapshot_capture_publications_append_only_update",
         "trigger:evidence_acquisition_application_links_append_only_delete",
         "trigger:evidence_acquisition_application_links_append_only_update",
+        "trigger:candidate_evidence_authority_application_decision_guard",
+        "trigger:source_claim_application_decision_facts_append_only_delete",
+        "trigger:source_claim_application_decision_facts_append_only_update",
+        "trigger:source_claim_application_decision_facts_authority_guard",
+        "trigger:source_claim_application_decisions_append_only_delete",
+        "trigger:source_claim_application_decisions_append_only_update",
+        "trigger:source_claim_application_decisions_created_at_canonical_utc_insert",
+        "trigger:source_claim_application_decisions_semantic_guard",
+        "trigger:source_claim_application_facts_append_only_delete",
+        "trigger:source_claim_application_facts_append_only_update",
+        "trigger:source_claim_application_facts_created_at_canonical_utc_insert",
         "trigger:evidence_acquisition_attempts_append_only_delete",
         "trigger:evidence_acquisition_attempts_append_only_update",
         "trigger:evidence_acquisition_commands_append_only_delete",

@@ -8,5 +8,6 @@
     <ProjectReference Include="..\..\src\Infinium.Persistence\Infinium.Persistence.csproj" />
     <ProjectReference Include="..\..\src\Infinium.OpenAI\Infinium.OpenAI.csproj" />
     <ProjectReference Include="..\..\src\Infinium.CredentialHelper\Infinium.CredentialHelper.csproj" />
+    <ProjectReference Include="..\..\fixtures\tooling\Infinium.PublicFixtures\Infinium.PublicFixtures.csproj" />
   </ItemGroup>
 </Project>

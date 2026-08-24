@@ -46,6 +46,7 @@ public sealed partial class SchemaCompatibilityTests
         "provider-operation.v1.schema.json",
         "provider-response.v1.schema.json",
         "source-claim-extraction.v1.schema.json",
+        "source-claim-application-decision.v1.schema.json",
         "source-claim-execution-input.v1.schema.json",
         "source-claim-context.v1.schema.json",
         "source-claim-retained-transcripts.v1.schema.json",

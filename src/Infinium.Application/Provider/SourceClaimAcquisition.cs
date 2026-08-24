@@ -45,8 +45,7 @@ public sealed record SourceClaimExecutionInput(
     string DeclaredPurpose,
     string PromptId,
     string PromptFingerprint,
-    IReadOnlyList<SourceClaimPassageInput> Passages,
-    IReadOnlyList<string>? ApplicableConditionIds = null);
+    IReadOnlyList<SourceClaimPassageInput> Passages);
 
 public sealed record SourceClaimTranscriptProposal(
     string ProposalId,
@@ -95,6 +94,113 @@ public sealed record SourceClaimAcquisitionResult(
     bool CredentialUsed,
     bool SourceRefreshUsed);
 
+public sealed record SourceClaimApplicationContext(
+    string ProposalId,
+    string ApplicationDecisionId,
+    string ValidationId,
+    string ApplicationLinkId,
+    string ParentAnalysisRunId,
+    string RootSubjectId,
+    IReadOnlyList<string> ApplicabilityFactIds);
+
+public sealed record SourceClaimApplicationResult(
+    IReadOnlyList<SourceClaimApplicationDecisionContract> Decisions);
+
+public static class SourceClaimApplicationAdjudicator
+{
+    public static SourceClaimApplicationResult Evaluate(
+        SourceClaimExecutionInput input,
+        SourceClaimScenarioResult sourceBoundResult,
+        IReadOnlyList<SourceClaimApplicationContext> contexts)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        ArgumentNullException.ThrowIfNull(sourceBoundResult);
+        ArgumentNullException.ThrowIfNull(contexts);
+        SourceClaimContextMinimizer.ValidateInput(input);
+        SourceClaimExtractionDocument extraction = sourceBoundResult.Extraction;
+        if (extraction.AcquisitionRunId.Value != input.AcquisitionRunId
+            || extraction.OperationId.Value != input.OperationId
+            || extraction.SourceRevisionId.Value != input.SourceRevisionId
+            || contexts.Count != extraction.ClaimProposals.Count
+            || contexts.Select(context => context.ProposalId).Distinct(StringComparer.Ordinal).Count() != contexts.Count)
+        {
+            throw new InvalidDataException(
+                "Source-claim application requires the exact source-bound result and one context per proposal.");
+        }
+
+        Dictionary<string, SourceClaimApplicationContext> contextByProposal = contexts
+            .ToDictionary(context => context.ProposalId, StringComparer.Ordinal);
+        Dictionary<OpaqueId, SourceClaimAdmissionCorrelationContract> sourceLinks = extraction.AdmissionCorrelations
+            .ToDictionary(link => link.ProposalId);
+        List<SourceClaimApplicationDecisionContract> decisions = [];
+        foreach (CitationProposalContract proposal in extraction.ClaimProposals)
+        {
+            if (!contextByProposal.TryGetValue(proposal.ProposalId.Value, out SourceClaimApplicationContext? context)
+                || context.ApplicabilityFactIds.Count > 64
+                || context.ApplicabilityFactIds.Any(string.IsNullOrWhiteSpace)
+                || context.ApplicabilityFactIds.Distinct(StringComparer.Ordinal).Count()
+                    != context.ApplicabilityFactIds.Count)
+            {
+                throw new InvalidDataException("Source-claim application contexts are incomplete or duplicated.");
+            }
+            SourceClaimAdmissionCorrelationContract sourceLink = sourceLinks[proposal.ProposalId];
+            SourceClaimApplicationDecisionContract decision = EvaluateOne(
+                input, proposal, sourceLink, context);
+            ProviderOperationContractInvariants.ValidateSourceClaimApplicationDecision(
+                proposal, sourceLink, decision);
+            decisions.Add(decision);
+        }
+        return new(decisions);
+    }
+
+    private static SourceClaimApplicationDecisionContract EvaluateOne(
+        SourceClaimExecutionInput input,
+        CitationProposalContract proposal,
+        SourceClaimAdmissionCorrelationContract sourceLink,
+        SourceClaimApplicationContext context)
+    {
+        HashSet<string> facts = context.ApplicabilityFactIds.ToHashSet(StringComparer.Ordinal);
+        bool semanticEvaluationAllowed = sourceLink.DecisionState is not
+                (SemanticDecisionState.Rejected or SemanticDecisionState.AuditOnly)
+            && proposal.ExtractionState is SemanticProposalState.Proposed or SemanticProposalState.Extracted
+            && sourceLink.SupportState == SemanticSupportState.Supported;
+        bool conditionsEstablished = proposal.ConditionIds.Count == 0
+            || proposal.ConditionIds.All(condition => facts.Contains(condition.Value));
+        bool applicable = semanticEvaluationAllowed && facts.Count != 0 && conditionsEstablished;
+        SemanticSupportState applicationSupport = sourceLink.DecisionState switch
+        {
+            SemanticDecisionState.Rejected => SemanticSupportState.NotEvaluated,
+            SemanticDecisionState.AuditOnly => SemanticSupportState.Unavailable,
+            _ => sourceLink.SupportState,
+        };
+        SemanticApplicabilityState applicability = !semanticEvaluationAllowed || facts.Count == 0
+            ? SemanticApplicabilityState.NotEvaluated
+            : conditionsEstablished
+                ? SemanticApplicabilityState.Applicable
+                : SemanticApplicabilityState.ConditionalUnestablished;
+        SemanticDecisionState hostDecision = sourceLink.DecisionState switch
+        {
+            SemanticDecisionState.Rejected => SemanticDecisionState.Rejected,
+            SemanticDecisionState.AuditOnly => SemanticDecisionState.AuditOnly,
+            _ when applicationSupport == SemanticSupportState.Supported && applicable
+                => SemanticDecisionState.Admitted,
+            _ => SemanticDecisionState.Abstained,
+        };
+        ProviderSemanticAdmissionLinkContract link = new(
+            new(context.ApplicationDecisionId), proposal.ProposalId, sourceLink.AuthorizationId,
+            sourceLink.OperationId, sourceLink.ResponseRecordId, "analysis-run",
+            new(context.ParentAnalysisRunId), new(context.RootSubjectId), new(context.ValidationId),
+            new(context.ApplicationLinkId), applicationSupport, applicability, hostDecision);
+        return new(link, sourceLink.AdmissionId,
+            context.ApplicabilityFactIds.Select(value => new OpaqueId(value)).ToArray(),
+            hostDecision == SemanticDecisionState.Admitted
+                ? "local-facts-establish-source-claim-application"
+                : applicability == SemanticApplicabilityState.ConditionalUnestablished
+                    ? "local-facts-do-not-establish-all-source-conditions"
+                    : "source-claim-application-not-admitted");
+    }
+}
+
 public static class SourceClaimContextMinimizer
 {
     public static byte[] CreateManifest(SourceClaimExecutionInput input)
@@ -122,20 +228,21 @@ public static class SourceClaimContextMinimizer
         ArgumentNullException.ThrowIfNull(input);
         if (input.SchemaId != "infinium.llm.source-claim-execution-input/v1" || input.SchemaVersion != "1"
             || input.OwnerKind != "evidence-acquisition-run" || input.OwnerId != input.AcquisitionRunId
-            || string.IsNullOrWhiteSpace(input.HostAuthorizationId)
+            || new[] { input.PackageId, input.OperationId, input.HostAuthorizationId, input.OwnerId,
+                    input.AcquisitionRunId, input.ParentAnalysisRunId, input.ApplicationScopeId,
+                    input.CostAttributionScopeId, input.SourceRevisionId }
+                .Any(id => !ProviderOperationContractInvariants.IsValidIdentifier(id))
             || input.PromptId != SourceClaimPromptV1.Id || input.PromptFingerprint != SourceClaimPromptV1.Fingerprint
-            || input.Passages.Count is < 1 or > 64 || string.IsNullOrWhiteSpace(input.DeclaredPurpose)
-            || input.ApplicableConditionIds is not null
-                && (input.ApplicableConditionIds.Count > 64
-                    || input.ApplicableConditionIds.Any(string.IsNullOrWhiteSpace)
-                    || input.ApplicableConditionIds.Distinct(StringComparer.Ordinal).Count() != input.ApplicableConditionIds.Count)
+            || input.Passages.Count is < 1 or > 64 || !BoundedText(input.DeclaredPurpose, 1024)
             || input.Passages.Select(x => x.PassageId).Distinct(StringComparer.Ordinal).Count() != input.Passages.Count
             || input.Passages.Any(x => x.SourceRevisionId != input.SourceRevisionId
                 || (x.Deleted
                     ? x.Text.Length != 0 && x.TextSha256 != Hash(x.Text)
-                        || x.TextSha256.Length != 64 || !x.TextSha256.All(Uri.IsHexDigit)
+                        || !IsLowercaseSha256(x.TextSha256)
                     : x.TextSha256 != Hash(x.Text))
-                || string.IsNullOrWhiteSpace(x.PassageId)))
+                || x.Text.Length > 16384
+                || !x.Deleted && x.Text.Length == 0
+                || !ProviderOperationContractInvariants.IsValidIdentifier(x.PassageId)))
         {
             throw new InvalidDataException("Source-claim input is not the exact closed answer-free context contract.");
         }
@@ -143,6 +250,12 @@ public static class SourceClaimContextMinimizer
 
     private static string Hash(string value) =>
         Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
+
+    public static bool IsLowercaseSha256(string value) => value.Length == 64
+        && value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f');
+
+    internal static bool BoundedText(string value, int maximum) =>
+        !string.IsNullOrWhiteSpace(value) && value.Length <= maximum;
 
     public static JsonSerializerOptions JsonOptions { get; } = CreateJsonOptions();
 
@@ -223,7 +336,7 @@ public static class SourceClaimAcquisitionEngine
         foreach (SourceClaimTranscriptProposal candidate in transcript.Proposals)
         {
             SemanticAssessment assessment = ValidateProposal(candidate, passages,
-                input.ApplicableConditionIds ?? [], transcript.ContradictionEvidenceIds);
+                transcript.ContradictionEvidenceIds);
             OpaqueId validationId = new("validation-" + candidate.ProposalId);
             OpaqueId correlationId = new("admission-correlation-" + candidate.ProposalId);
             validations.Add(validationId);
@@ -283,13 +396,16 @@ public static class SourceClaimAcquisitionEngine
     private static SemanticAssessment ValidateProposal(
         SourceClaimTranscriptProposal proposal,
         Dictionary<string, SourceClaimPassageInput> passages,
-        IReadOnlyList<string> applicableConditionIds,
         IReadOnlyList<string> contradictionEvidenceIds)
     {
         if (string.IsNullOrWhiteSpace(proposal.ProposalId) || string.IsNullOrWhiteSpace(proposal.Claim)
             || proposal.Claim.Length > 4096 || proposal.ConditionIds.Count > 64)
         {
             return Rejected("malformed-proposal");
+        }
+        if (proposal.State is not ("proposed" or "unsupported" or "abstained" or "unavailable"))
+        {
+            return Rejected("unknown-proposal-state");
         }
         if (!passages.TryGetValue(proposal.PassageId, out SourceClaimPassageInput? passage))
         {
@@ -304,59 +420,110 @@ public static class SourceClaimAcquisitionEngine
             || proposal.ApplicationSemantics is not ("evidence-only" or "applicability-only")
             || proposal.AuthorityCategory is not ("informational" or "protected-effect-request")
             || proposal.ConditionScope is not ("unconditional" or "conditional" or "version-scoped")
-            || proposal.ApplicationSemantics == "applicability-only" && proposal.ConditionScope == "unconditional"
             || proposal.ConditionScope == "unconditional" && proposal.ConditionIds.Count != 0
             || proposal.ConditionScope != "unconditional" && proposal.ConditionIds.Count == 0)
         {
             return Rejected("structural-host-policy-rejected");
         }
+        if (!ClaimIsFaithfullyGrounded(proposal.Claim, passage.Text))
+        {
+            return Rejected("cited-passage-does-not-faithfully-ground-claim");
+        }
         if (proposal.AuthorityCategory == "protected-effect-request")
         {
-            return Rejected("model-proposed-forbidden-authority");
-        }
-
-        if (contradictionEvidenceIds.Contains(proposal.PassageId, StringComparer.Ordinal))
-        {
-            return new(proposal.State == "abstained" ? SemanticProposalState.Abstained : SemanticProposalState.Extracted,
-                SemanticSupportState.Contradicted,
-                SemanticApplicabilityState.Unknown, SemanticDecisionState.Abstained,
-                "faithful-source-claim-retained-contradiction-unresolved");
-        }
-        if (proposal.State is "unsupported" or "unavailable" or "abstained")
-        {
-            return proposal.State switch
-            {
-                "unsupported" => new(SemanticProposalState.Abstained, SemanticSupportState.Unsupported,
-                    SemanticApplicabilityState.Unknown, SemanticDecisionState.Abstained, "proposal-declared-unsupported"),
-                "unavailable" => new(SemanticProposalState.Unavailable, SemanticSupportState.Unavailable,
-                    SemanticApplicabilityState.Unknown, SemanticDecisionState.Abstained, "proposal-declared-unavailable"),
-                _ => new(SemanticProposalState.Abstained, SemanticSupportState.NotEvaluated,
-                    SemanticApplicabilityState.Unknown, SemanticDecisionState.Abstained, "proposal-declared-abstained"),
-            };
-        }
-        if (proposal.State != "proposed")
-        {
-            return Rejected("unknown-proposal-state");
-        }
-        if (proposal.ApplicationSemantics == "evidence-only")
-        {
             return new(SemanticProposalState.Extracted, SemanticSupportState.NotEvaluated,
-                SemanticApplicabilityState.NotEvaluated, SemanticDecisionState.Abstained,
-                "faithful-source-claim-retained-for-later-support-evaluation");
+                SemanticApplicabilityState.NotEvaluated, SemanticDecisionState.Rejected,
+                "model-proposed-forbidden-authority");
         }
-        bool applicable = proposal.ConditionIds.All(applicableConditionIds.Contains);
-        return applicable
-            ? new(SemanticProposalState.Extracted, SemanticSupportState.Supported,
-                SemanticApplicabilityState.Applicable, SemanticDecisionState.Admitted,
-                "faithful-source-claim-and-applicability-facts-admitted")
-            : new(SemanticProposalState.Extracted, SemanticSupportState.NotEvaluated,
-                SemanticApplicabilityState.ConditionalUnestablished, SemanticDecisionState.Abstained,
-                "faithful-source-claim-retained-condition-unestablished");
+        return new(SemanticProposalState.Extracted, SemanticSupportState.Supported,
+            SemanticApplicabilityState.NotEvaluated, SemanticDecisionState.Abstained,
+            contradictionEvidenceIds.Count == 0
+                ? "host-grounded-source-claim-supported-for-later-applicability-evaluation"
+                : "host-grounded-source-claim-supported-provider-contradiction-labels-retained-only");
     }
 
     private static SemanticAssessment Rejected(string reason) => new(SemanticProposalState.Rejected,
         SemanticSupportState.NotEvaluated, SemanticApplicabilityState.NotEvaluated,
         SemanticDecisionState.Rejected, reason);
+
+    private static bool ClaimIsFaithfullyGrounded(string claim, string passage)
+    {
+        string normalizedClaim = NormalizeSourceText(claim);
+        string normalizedPassage = NormalizeSourceText(passage);
+        if (normalizedClaim.Length == 0)
+        {
+            return false;
+        }
+
+        int searchFrom = 0;
+        while (searchFrom <= normalizedPassage.Length - normalizedClaim.Length)
+        {
+            int match = normalizedPassage.IndexOf(normalizedClaim, searchFrom, StringComparison.Ordinal);
+            if (match < 0)
+            {
+                return false;
+            }
+
+            int end = match + normalizedClaim.Length;
+            bool startsAtBoundary = StartsAtStatementBoundary(normalizedPassage, match);
+            bool endsAtBoundary = EndsAtStatementBoundary(normalizedPassage, normalizedClaim, end);
+            if (startsAtBoundary && endsAtBoundary)
+            {
+                return true;
+            }
+            searchFrom = match + 1;
+        }
+        return false;
+    }
+
+    private static bool StartsAtStatementBoundary(string passage, int match)
+    {
+        int previous = match - 1;
+        while (previous >= 0 && char.IsWhiteSpace(passage[previous]))
+        {
+            previous--;
+        }
+        return previous < 0 || IsStatementDelimiter(passage[previous]);
+    }
+
+    private static bool EndsAtStatementBoundary(string passage, string claim, int end)
+    {
+        if (IsStatementDelimiter(claim[^1]))
+        {
+            return true;
+        }
+        int next = end;
+        while (next < passage.Length && char.IsWhiteSpace(passage[next]))
+        {
+            next++;
+        }
+        return next == passage.Length || IsStatementDelimiter(passage[next]);
+    }
+
+    private static bool IsStatementDelimiter(char value) => value is '.' or '!' or '?';
+
+    private static string NormalizeSourceText(string value)
+    {
+        StringBuilder normalized = new(value.Length);
+        bool whitespacePending = false;
+        foreach (char character in value)
+        {
+            if (char.IsWhiteSpace(character))
+            {
+                whitespacePending = normalized.Length > 0;
+            }
+            else
+            {
+                if (whitespacePending)
+                {
+                    normalized.Append(' ');
+                    whitespacePending = false;
+                }
+                normalized.Append(character);
+            }
+        }
+        return normalized.ToString();
+    }
 
     private sealed record SemanticAssessment(
         SemanticProposalState ProposalState,
@@ -462,9 +629,24 @@ public static class SourceClaimAcquisitionEngine
     {
         if (transcript.OperationId != input.OperationId || transcript.SourceRevisionId != input.SourceRevisionId
             || transcript.PromptId != input.PromptId || transcript.PromptFingerprint != input.PromptFingerprint
-            || transcript.ResponseFingerprint.Length != 64
+            || new[] { transcript.TranscriptId, transcript.OperationId, transcript.SourceRevisionId,
+                    transcript.ResponseRecordId }
+                .Any(id => !ProviderOperationContractInvariants.IsValidIdentifier(id))
+            || !SourceClaimContextMinimizer.IsLowercaseSha256(transcript.ResponseFingerprint)
             || transcript.ResponseState is not ("completed" or "refusal" or "incomplete" or "malformed" or "empty" or "drift" or "not-used")
             || transcript.Proposals.Count > 64 || transcript.Abstentions.Count > 64 || transcript.Gaps.Count > 64
+            || transcript.ContradictionEvidenceIds.Count > 0 && transcript.Proposals.Count != 1
+            || transcript.ContradictionEvidenceIds.Any(id =>
+                !ProviderOperationContractInvariants.IsValidIdentifier(id))
+            || transcript.Proposals.Any(proposal =>
+                !ProviderOperationContractInvariants.IsValidIdentifier(proposal.ProposalId)
+                || !ProviderOperationContractInvariants.IsValidIdentifier(proposal.PassageId)
+                || !SourceClaimContextMinimizer.BoundedText(proposal.Claim, 4096)
+                || !SourceClaimContextMinimizer.BoundedText(proposal.Reason, 1024)
+                || proposal.ConditionIds.Any(id =>
+                    !ProviderOperationContractInvariants.IsValidIdentifier(id)))
+            || transcript.Abstentions.Any(value => !SourceClaimContextMinimizer.BoundedText(value, 4096))
+            || transcript.Gaps.Any(value => !SourceClaimContextMinimizer.BoundedText(value, 4096))
             || transcript.ModelUsed != (transcript.ResponseState != "not-used")
             || !transcript.ModelUsed && transcript.Proposals.Count != 0)
         {
@@ -478,7 +660,11 @@ public static class SourceClaimAcquisitionEngine
 
 public static class SourceClaimTransparencyRenderer
 {
-    public static byte[] RenderJson(SourceClaimAcquisitionResult result)
+    private static string Wire<T>(T value) where T : struct, Enum =>
+        JsonNamingPolicy.KebabCaseLower.ConvertName(value.ToString());
+
+    public static byte[] RenderJson(SourceClaimAcquisitionResult result,
+        SourceClaimApplicationResult? applications = null)
     {
         ArgumentNullException.ThrowIfNull(result);
         return JsonSerializer.SerializeToUtf8Bytes(new
@@ -497,10 +683,39 @@ public static class SourceClaimTransparencyRenderer
                 acquisition_run_id = scenario.Extraction.AcquisitionRunId.Value,
                 operation_id = scenario.Extraction.OperationId.Value,
                 source_revision_id = scenario.Extraction.SourceRevisionId.Value,
+                claim_proposals = scenario.Extraction.ClaimProposals.Select(proposal => new
+                {
+                    proposal_id = proposal.ProposalId.Value,
+                    passage_id = proposal.PassageId.Value,
+                    proposal.Claim,
+                    condition_ids = proposal.ConditionIds.Select(id => id.Value).ToArray(),
+                    extraction_state = Wire(proposal.ExtractionState),
+                    proposal.Reason,
+                }),
+                admission_correlations = scenario.Extraction.AdmissionCorrelations.Select(link => new
+                {
+                    source_admission_id = link.AdmissionId.Value,
+                    proposal_id = link.ProposalId.Value,
+                    authorization_id = link.AuthorizationId.Value,
+                    operation_id = link.OperationId.Value,
+                    response_record_id = link.ResponseRecordId.Value,
+                    link.OwnerKind,
+                    owner_id = link.OwnerId.Value,
+                    root_subject_id = link.RootSubjectId.Value,
+                    validation_id = link.ValidationId.Value,
+                    admission_correlation_id = link.AdmissionCorrelationId.Value,
+                    support_state = Wire(link.SupportState),
+                    applicability_state = Wire(link.ApplicabilityState),
+                    decision_state = Wire(link.DecisionState),
+                }),
                 admitted_proposal_ids = scenario.Extraction.ClaimProposals
-                    .Where(x => x.ExtractionState == SemanticProposalState.Extracted).Select(x => x.ProposalId.Value).ToArray(),
+                    .Where(proposal => scenario.Extraction.AdmissionCorrelations.Any(link =>
+                        link.ProposalId == proposal.ProposalId && link.DecisionState == SemanticDecisionState.Admitted))
+                    .Select(x => x.ProposalId.Value).ToArray(),
                 non_admitted_proposal_ids = scenario.Extraction.ClaimProposals
-                    .Where(x => x.ExtractionState != SemanticProposalState.Extracted).Select(x => x.ProposalId.Value).ToArray(),
+                    .Where(proposal => scenario.Extraction.AdmissionCorrelations.All(link =>
+                        link.ProposalId != proposal.ProposalId || link.DecisionState != SemanticDecisionState.Admitted))
+                    .Select(x => x.ProposalId.Value).ToArray(),
                 admitted_correlation_ids = scenario.Extraction.AdmissionCorrelations
                     .Where(x => x.DecisionState == SemanticDecisionState.Admitted)
                     .Select(x => x.AdmissionCorrelationId.Value).ToArray(),
@@ -509,7 +724,27 @@ public static class SourceClaimTransparencyRenderer
                 gap_count = scenario.Extraction.Gaps.Count,
                 scenario.AbstentionKinds,
                 scenario.GapKinds,
+                scenario.AuditReasons,
                 scenario.CanonicalExtractionSha256,
+            }),
+            application_decisions = (applications?.Decisions ?? []).Select(decision => new
+            {
+                application_decision_id = decision.DecisionLink.AdmissionId.Value,
+                application_link_id = decision.DecisionLink.ApplicationLinkId.Value,
+                proposal_id = decision.DecisionLink.ProposalId.Value,
+                source_admission_id = decision.SourceAdmissionId.Value,
+                authorization_id = decision.DecisionLink.AuthorizationId.Value,
+                operation_id = decision.DecisionLink.OperationId.Value,
+                response_record_id = decision.DecisionLink.ResponseRecordId.Value,
+                owner_kind = decision.DecisionLink.OwnerKind,
+                owner_id = decision.DecisionLink.OwnerId.Value,
+                root_subject_id = decision.DecisionLink.RootSubjectId.Value,
+                validation_id = decision.DecisionLink.ValidationId.Value,
+                support_state = Wire(decision.DecisionLink.SupportState),
+                applicability_state = Wire(decision.DecisionLink.ApplicabilityState),
+                decision_state = Wire(decision.DecisionLink.DecisionState),
+                applicability_fact_ids = decision.ApplicabilityFactIds.Select(id => id.Value).ToArray(),
+                decision.Reason,
             }),
             network_used = false,
             credential_used = false,
@@ -518,14 +753,21 @@ public static class SourceClaimTransparencyRenderer
         }, SourceClaimContextMinimizer.JsonOptions);
     }
 
-    public static string RenderHuman(SourceClaimAcquisitionResult result)
+    public static string RenderHuman(SourceClaimAcquisitionResult result,
+        SourceClaimApplicationResult? applications = null)
     {
         ArgumentNullException.ThrowIfNull(result);
         int admitted = result.Scenarios.Sum(x => x.Extraction.AdmissionCorrelations.Count(
             p => p.DecisionState == SemanticDecisionState.Admitted));
         int retained = result.Scenarios.Sum(x => x.Extraction.ClaimProposals.Count);
         int gaps = result.Scenarios.Sum(x => x.Extraction.Gaps.Count);
-        return $"Source claims: {admitted} admitted, {retained - admitted} not admitted, {gaps} gaps; "
+        int applicationsAdmitted = applications?.Decisions.Count(decision =>
+            decision.DecisionLink.DecisionState == SemanticDecisionState.Admitted) ?? 0;
+        int applicationsRetained = applications?.Decisions.Count ?? 0;
+        string audits = string.Join(",", result.Scenarios.SelectMany(x => x.AuditReasons).Distinct(StringComparer.Ordinal));
+        return $"Source claims: {admitted} source decisions admitted, {retained - admitted} source decisions not admitted, "
+            + $"{applicationsAdmitted} application decisions admitted, {applicationsRetained - applicationsAdmitted} application decisions not admitted, {gaps} gaps; "
+            + $"exact proposals, decision links, resolvable applicability-fact IDs, and audit reasons ({audits}) retained; "
             + "provider transcripts retained; network not used; credentials not used; private verdict not performed.";
     }
 }

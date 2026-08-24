@@ -1,6 +1,6 @@
-using System.Text.Json;
 using Infinium.Application.Provider;
 using Infinium.Coordinator;
+using Infinium.PublicFixtures;
 
 namespace Infinium.Tests;
 
@@ -11,31 +11,28 @@ public sealed class CandidateAdmissionProviderReplayIntegrationTests
     [TestCategory("Integration")]
     public void CandidateAdmissionExecutesBothPartitionsWithoutTransportOrSourceRefresh()
     {
-        foreach (string package in new[] { "S6-CANDIDATE-DEV-v2", "S6-CANDIDATE-VAL-v3" })
-        {
-            (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load(package);
-            CandidateInvestigationResult result = CandidateInvestigationCoordinator.ExecuteRetained(input, transcripts);
-            Assert.IsFalse(result.NetworkUsed || result.CredentialUsed || result.SourceRefreshUsed);
-            Assert.IsTrue(result.Scenarios.All(x => x.Investigation.OwnerId.Value == input.AnalysisRunId));
-            Assert.IsTrue(result.Scenarios.All(x => x.SourceAcquisitionLinks.Count > 0));
-            Assert.IsTrue(result.Scenarios.SelectMany(x => x.RawIntermediateIds).Any());
-        }
+        CandidateInvestigationExecutionInput input = CandidateInvestigationDeveloperExample.Input();
+        CandidateInvestigationRetainedTranscript[] transcripts =
+            [CandidateInvestigationDeveloperExample.Positive(), CandidateInvestigationDeveloperExample.Unsupported()];
+        CandidateInvestigationResult result = CandidateInvestigationCoordinator.ExecuteRetained(input, transcripts);
+        Assert.IsFalse(result.NetworkUsed || result.CredentialUsed || result.SourceRefreshUsed);
+        Assert.IsTrue(result.Scenarios.All(x => x.Investigation.OwnerId.Value == input.AnalysisRunId));
+        Assert.IsTrue(result.Scenarios.Any(x => x.SourceAcquisitionLinks.Count > 0));
+        Assert.IsTrue(result.Scenarios.SelectMany(x => x.RawIntermediateIds).Any());
     }
 
     [TestMethod]
     [TestCategory("Integration")]
     public void ProviderReplayIsByteStableAndIdentityDriftFailsAuditOnlyWithoutSend()
     {
-        (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load("S6-CANDIDATE-DEV-v2");
-        CandidateInvestigationRetainedTranscript transcript = transcripts[0];
+        CandidateInvestigationExecutionInput input = CandidateInvestigationDeveloperExample.Input();
+        CandidateInvestigationRetainedTranscript transcript = CandidateInvestigationDeveloperExample.Positive();
         CandidateInvestigationScenarioResult first = CandidateInvestigationCoordinator.ReplayRetained(input, transcript);
         CandidateInvestigationScenarioResult second = CandidateInvestigationCoordinator.ReplayRetained(input, transcript);
         Assert.AreEqual(first.CanonicalInvestigationSha256, second.CanonicalInvestigationSha256);
         Assert.AreEqual("retained-response", second.ReplayState);
-        (CandidateInvestigationExecutionInput validationInput, CandidateInvestigationRetainedTranscript[] validationTranscripts) =
-            Load("S6-CANDIDATE-VAL-v3");
-        CandidateInvestigationRetainedTranscript driftTranscript = validationTranscripts.Single(item => item.ResponseState == "drift");
-        CandidateInvestigationScenarioResult drift = CandidateInvestigationCoordinator.ReplayRetained(validationInput, driftTranscript);
+        CandidateInvestigationRetainedTranscript driftTranscript = CandidateInvestigationDeveloperExample.Drift();
+        CandidateInvestigationScenarioResult drift = CandidateInvestigationCoordinator.ReplayRetained(input, driftTranscript);
         Assert.AreEqual("failed-identity-drift", drift.ReplayState);
         Assert.AreEqual("rejected-identity-drift", drift.Disposition);
     }
@@ -44,21 +41,22 @@ public sealed class CandidateAdmissionProviderReplayIntegrationTests
     [TestCategory("Integration")]
     public void CandidateAdmissionNoModelCannotFabricateProviderUse()
     {
-        (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load("S6-CANDIDATE-DEV-v2");
-        CandidateInvestigationRetainedTranscript noModel = transcripts.Single(x => x.ResponseState == "not-used");
+        CandidateInvestigationExecutionInput input = CandidateInvestigationDeveloperExample.Input();
+        CandidateInvestigationRetainedTranscript noModel = CandidateInvestigationDeveloperExample.NoModel();
         CandidateInvestigationResult result = CandidateInvestigationCoordinator.NoModel(input, noModel);
         Assert.AreEqual("not-used", result.Scenarios.Single().Disposition);
         Assert.AreEqual(0, result.Scenarios.Single().Investigation.HypothesisProposals.Count);
-        Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationCoordinator.NoModel(input, transcripts[0]));
+        Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationCoordinator.NoModel(
+            input, CandidateInvestigationDeveloperExample.Positive()));
     }
 
-    internal static (CandidateInvestigationExecutionInput, CandidateInvestigationRetainedTranscript[]) Load(string package)
-    {
-        string directory = Path.Combine(SourceClaimAdmissionIntegrationTests.RepositoryRoot(), "fixtures", "public", "provider", "candidate-investigations", package);
-        CandidateInvestigationExecutionInput input = JsonSerializer.Deserialize<CandidateInvestigationExecutionInput>(
-            File.ReadAllBytes(Path.Combine(directory, "execution-input.v1.json")), SourceClaimContextMinimizer.JsonOptions)!;
-        using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(directory, "retained-transcripts.v1.json")));
-        return (input, JsonSerializer.Deserialize<CandidateInvestigationRetainedTranscript[]>(
-            document.RootElement.GetProperty("transcripts"), SourceClaimContextMinimizer.JsonOptions)!);
-    }
+    internal static (CandidateInvestigationExecutionInput, CandidateInvestigationRetainedTranscript[]) CurrentExample() =>
+        (CandidateInvestigationDeveloperExample.Input(),
+            [
+                CandidateInvestigationDeveloperExample.Positive(),
+                CandidateInvestigationDeveloperExample.Unsupported(),
+                CandidateInvestigationDeveloperExample.NoModel(),
+                CandidateInvestigationDeveloperExample.Unavailable(),
+                CandidateInvestigationDeveloperExample.Drift(),
+            ]);
 }

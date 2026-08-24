@@ -13,8 +13,7 @@ public sealed class M1Slice6CampaignV2InputAdapterTests
     {
         string sourceJson = File.ReadAllText(TestRepository.PathFromRoot("fixtures", "public", "provider",
             "source-claims", "S6-CLAIM-LIVE-VAL-v2", "execution-input.v2.json"));
-        string candidateJson = File.ReadAllText(TestRepository.PathFromRoot("fixtures", "public", "provider",
-            "candidate-investigations", "S6-CANDIDATE-LIVE-VAL-v2", "execution-input.v2.json"));
+        string candidateJson = CurrentCandidateJson();
 
         SourceClaimExecutionInput source = M1Slice6CampaignV2InputAdapter.ReadSourceClaim(sourceJson);
         M1Slice6CampaignCandidateInput candidate = M1Slice6CampaignV2InputAdapter.ReadCandidate(candidateJson);
@@ -33,8 +32,7 @@ public sealed class M1Slice6CampaignV2InputAdapterTests
     [TestMethod]
     public void CandidateAdapterRejectsV1CrossBindingSwappedOrParallelRoots()
     {
-        byte[] bytes = File.ReadAllBytes(TestRepository.PathFromRoot("fixtures", "public", "provider",
-            "candidate-investigations", "S6-CANDIDATE-LIVE-VAL-v2", "execution-input.v2.json"));
+        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(CurrentCandidateJson());
 
         Reject(root => root["schema_id"] = "infinium.llm.candidate-investigation-execution-input/v1");
         Reject(root => root["package_id"] = "");
@@ -51,6 +49,14 @@ public sealed class M1Slice6CampaignV2InputAdapterTests
             Assert.ThrowsExactly<InvalidDataException>(() =>
                 M1Slice6CampaignV2InputAdapter.ReadCandidate(root.ToJsonString()));
         }
+    }
+
+    [TestMethod]
+    public void HistoricalCandidateV2WithoutApplicationDecisionFailsClosed()
+    {
+        string historical = File.ReadAllText(TestRepository.PathFromRoot("fixtures", "public", "provider",
+            "candidate-investigations", "S6-CANDIDATE-LIVE-VAL-v2", "execution-input.v2.json"));
+        Assert.ThrowsExactly<InvalidDataException>(() => M1Slice6CampaignV2InputAdapter.ReadCandidate(historical));
     }
 
     [TestMethod]
@@ -89,7 +95,19 @@ public sealed class M1Slice6CampaignV2InputAdapterTests
             reference.Contains("PublicFixtures", StringComparison.Ordinal)
             || reference.Contains("Tests", StringComparison.Ordinal)));
         string tooling = File.ReadAllText(TestRepository.PathFromRoot("fixtures", "tooling",
-            "Infinium.PublicFixtures", "LiveSemanticV2TypedOracleVerifier.cs"));
-        Assert.Contains("LiveSemanticV2WordingNormalizer", tooling, StringComparison.Ordinal);
+            "Infinium.PublicFixtures", "HistoricalLiveSemanticPackageVerifier.cs"));
+        Assert.DoesNotContain("Execute(", tooling, StringComparison.Ordinal);
+        Assert.DoesNotContain("DeterministicResult", tooling, StringComparison.Ordinal);
+    }
+
+    private static string CurrentCandidateJson()
+    {
+        JsonObject root = JsonNode.Parse(File.ReadAllText(TestRepository.PathFromRoot("fixtures", "public",
+            "provider", "candidate-investigations", "S6-CANDIDATE-LIVE-VAL-v2",
+            "execution-input.v2.json")))!.AsObject();
+        root["package_id"] = "developer-current-candidate-v2";
+        root["contexts"]![0]!["evidence"]![0]!["host_bindings"]!["application_decision_id"] =
+            "developer-source-application-decision";
+        return root.ToJsonString();
     }
 }

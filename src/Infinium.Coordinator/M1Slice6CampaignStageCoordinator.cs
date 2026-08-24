@@ -98,11 +98,12 @@ public sealed record M1Slice6CampaignRecoveredSettlement(
     long InputTokens, long OutputTokens, long RawResponseBytes, long SettledNanoUsd);
 
 public sealed record M1Slice6CampaignSemanticProvenance(
-    string SourceAcquisitionId, string SourceAdmissionId, string AdmittedArtifactId,
+    string SourceAcquisitionId, string SourceAdmissionId, string SourceApplicationDecisionId,
+    string AdmittedArtifactId,
     string SourceApplicationLinkId, string EvidenceApplicationLinkId,
     string CandidateId, string HypothesisId)
 {
-    public static M1Slice6CampaignSemanticProvenance Empty { get; } = new("", "", "", "", "", "", "");
+    public static M1Slice6CampaignSemanticProvenance Empty { get; } = new("", "", "", "", "", "", "", "");
 }
 
 public sealed class M1Slice6CampaignKnownSettlementException(
@@ -1033,14 +1034,22 @@ public static class M1Slice6CampaignStageManifestValidator
 
             if (expected.Kind == M1Slice6CampaignEvidenceRootKind.PersistedSourceClaimApplication)
             {
-                Exact(root, "root_kind", "context_id", "candidate_id", "acquisition_run_id",
-                    "proposal_id", "source_admission_id", "admitted_artifact_id", "application_link_id",
-                    "source_revision_id", "passage_id", "persisted_payload_sha256",
-                    "parallel_claim_permitted");
+                bool currentRoot = root.TryGetProperty("application_decision_id", out JsonElement applicationDecision);
+                Exact(root, currentRoot
+                    ? ["root_kind", "context_id", "candidate_id", "acquisition_run_id", "proposal_id",
+                        "source_admission_id", "application_decision_id", "admitted_artifact_id",
+                        "application_link_id", "source_revision_id", "passage_id",
+                        "persisted_payload_sha256", "parallel_claim_permitted"]
+                    : ["root_kind", "context_id", "candidate_id", "acquisition_run_id", "proposal_id",
+                        "source_admission_id", "admitted_artifact_id", "application_link_id",
+                        "source_revision_id", "passage_id", "persisted_payload_sha256",
+                        "parallel_claim_permitted"]);
                 if (kind != "persisted-source-claim-application"
                     || root.GetProperty("acquisition_run_id").GetString() != expected.AcquisitionRunId
                     || root.GetProperty("proposal_id").GetString() != expected.ProposalId
                     || root.GetProperty("source_admission_id").GetString() != expected.SourceAdmissionId
+                    || currentRoot && applicationDecision.GetString() != expected.ApplicationDecisionId
+                    || !currentRoot && expected.ApplicationDecisionId.Length != 0
                     || root.GetProperty("admitted_artifact_id").GetString() != expected.AdmittedArtifactId
                     || root.GetProperty("application_link_id").GetString() != expected.ApplicationLinkId
                     || root.GetProperty("source_revision_id").GetString() != expected.SourceRevisionId
@@ -1653,6 +1662,7 @@ public sealed class M1Slice6CampaignStageCoordinator
                     result_sha256 = accountingSettlement.SemanticResultSha256,
                     source_acquisition_id = accountingSettlement.SemanticProvenance.SourceAcquisitionId,
                     source_admission_id = accountingSettlement.SemanticProvenance.SourceAdmissionId,
+                    source_application_decision_id = accountingSettlement.SemanticProvenance.SourceApplicationDecisionId,
                     admitted_artifact_id = accountingSettlement.SemanticProvenance.AdmittedArtifactId,
                     source_application_link_id = accountingSettlement.SemanticProvenance.SourceApplicationLinkId,
                     evidence_application_link_id = accountingSettlement.SemanticProvenance.EvidenceApplicationLinkId,
@@ -2011,7 +2021,13 @@ internal static class M1Slice6CampaignStageRunner
             "manifest_sha256", "product_input_path", "product_input_bytes", "product_input_sha256",
             "predecessor_manifest_path", "predecessor_manifest_bytes", "predecessor_manifest_sha256",
             "oracle_path", "oracle_sha256", "deterministic_oracle_result_sha256", "semantic_use"]);
-        RequireExactNames(validation, "semantic validation", ["validation_id", "disposition",
+        bool currentProvenance = validation.TryGetProperty("source_application_decision_id", out _);
+        RequireExactNames(validation, "semantic validation", currentProvenance
+            ? ["validation_id", "disposition",
+                "proposal_count", "admission_count", "result_sha256", "source_acquisition_id",
+                "source_admission_id", "source_application_decision_id", "admitted_artifact_id",
+                "source_application_link_id", "evidence_application_link_id", "candidate_id", "hypothesis_id"]
+            : ["validation_id", "disposition",
             "proposal_count", "admission_count", "result_sha256", "source_acquisition_id",
             "source_admission_id", "admitted_artifact_id", "source_application_link_id",
             "evidence_application_link_id", "candidate_id", "hypothesis_id"]);
@@ -2028,7 +2044,13 @@ internal static class M1Slice6CampaignStageRunner
         int expectedProposalCount = stage == M1Slice6CampaignStage.SourceClaimExtraction ? 9
             : stage == M1Slice6CampaignStage.CandidateInvestigation ? 1 : 0;
         int expectedAdmissionCount = qualification ? 0 : 1;
-        string[] provenance = ["source_acquisition_id", "source_admission_id", "admitted_artifact_id",
+        string expectedSourceValidation = currentProvenance
+            ? "infinium.host.source-claim-application/v1"
+            : "infinium.host.source-claim-admission/v1";
+        string[] provenance = currentProvenance
+            ? ["source_acquisition_id", "source_admission_id", "source_application_decision_id", "admitted_artifact_id",
+                "source_application_link_id", "evidence_application_link_id", "candidate_id", "hypothesis_id"]
+            : ["source_acquisition_id", "source_admission_id", "admitted_artifact_id",
             "source_application_link_id", "evidence_application_link_id", "candidate_id", "hypothesis_id"];
         if (package.GetProperty("semantic_use").GetBoolean() == qualification
             || qualification && (validation.GetProperty("validation_id").GetString() != "qualification-nonsemantic"
@@ -2038,20 +2060,21 @@ internal static class M1Slice6CampaignStageRunner
                 || resultSha != new string('0', 64)
                 || provenance.Any(name => validation.GetProperty(name).GetString() != ""))
             || !qualification && (validation.GetProperty("validation_id").GetString() is not
-                    ("infinium.host.source-claim-admission/v1" or "infinium.host.candidate-investigation-admission/v1")
+                    ("infinium.host.source-claim-admission/v1" or "infinium.host.source-claim-application/v1"
+                    or "infinium.host.candidate-investigation-admission/v1")
                 || !AcceptedSemanticDisposition(stage,
                     validation.GetProperty("disposition").GetString())
                 || validation.GetProperty("proposal_count").GetInt32() != expectedProposalCount
                 || validation.GetProperty("admission_count").GetInt32() != expectedAdmissionCount
                 || resultSha != package.GetProperty("deterministic_oracle_result_sha256").GetString())
-            || !qualification && provenance.Take(4).Any(name =>
+            || !qualification && provenance.Take(currentProvenance ? 5 : 4).Any(name =>
                 string.IsNullOrWhiteSpace(validation.GetProperty(name).GetString()))
             || stage == M1Slice6CampaignStage.SourceClaimExtraction
-                && provenance.Skip(4).Any(name => validation.GetProperty(name).GetString() != "")
+                && provenance.Skip(currentProvenance ? 5 : 4).Any(name => validation.GetProperty(name).GetString() != "")
             || stage == M1Slice6CampaignStage.CandidateInvestigation
-                && provenance.Skip(4).Any(name => string.IsNullOrWhiteSpace(validation.GetProperty(name).GetString()))
+                && provenance.Skip(currentProvenance ? 5 : 4).Any(name => string.IsNullOrWhiteSpace(validation.GetProperty(name).GetString()))
             || stage == M1Slice6CampaignStage.SourceClaimExtraction
-                && validation.GetProperty("validation_id").GetString() != "infinium.host.source-claim-admission/v1"
+                && validation.GetProperty("validation_id").GetString() != expectedSourceValidation
             || stage == M1Slice6CampaignStage.CandidateInvestigation
                 && validation.GetProperty("validation_id").GetString() != "infinium.host.candidate-investigation-admission/v1")
         {
@@ -2439,8 +2462,16 @@ internal static class M1Slice6CampaignStageRunner
     {
         JsonElement source = wp10.GetProperty("semantic_validation");
         JsonElement candidate = wp11.GetProperty("semantic_validation");
-        string[] shared = ["source_acquisition_id", "source_admission_id", "admitted_artifact_id",
-            "source_application_link_id"];
+        bool current = source.TryGetProperty("source_application_decision_id", out _)
+            && candidate.TryGetProperty("source_application_decision_id", out _);
+        if (source.TryGetProperty("source_application_decision_id", out _)
+            != candidate.TryGetProperty("source_application_decision_id", out _))
+        { throw new InvalidDataException("Composed provenance mixes historical and current identity shapes."); }
+        string[] shared = current
+            ? ["source_acquisition_id", "source_admission_id", "source_application_decision_id",
+                "admitted_artifact_id", "source_application_link_id"]
+            : ["source_acquisition_id", "source_admission_id", "admitted_artifact_id",
+                "source_application_link_id"];
         string[] applied = ["evidence_application_link_id", "candidate_id", "hypothesis_id"];
         if (shared.Any(name => string.IsNullOrWhiteSpace(source.GetProperty(name).GetString())
                 || source.GetProperty(name).GetString() != candidate.GetProperty(name).GetString())
@@ -2458,7 +2489,10 @@ internal static class M1Slice6CampaignStageRunner
         SourceClaimApplicationReadModel application = store.ReadSourceClaimApplicationLinks(
             source.GetProperty("source_acquisition_id").GetString()!).SingleOrDefault(item =>
                 item.ApplicationLinkId == source.GetProperty("source_application_link_id").GetString()
-                && item.AdmissionId == source.GetProperty("source_admission_id").GetString())
+                && (current
+                    ? item.SourceAdmissionId == source.GetProperty("source_admission_id").GetString()
+                        && item.ApplicationDecisionId == source.GetProperty("source_application_decision_id").GetString()
+                    : item.ApplicationDecisionId == source.GetProperty("source_admission_id").GetString()))
             ?? throw new InvalidDataException("Composed provenance has no exact authoritative WP10 application.");
         if (application.AdmittedArtifactId != source.GetProperty("admitted_artifact_id").GetString())
         {
@@ -2504,8 +2538,17 @@ internal static class M1Slice6CampaignStageRunner
                 "product_input_bytes", "product_input_sha256", "predecessor_manifest_path",
                 "predecessor_manifest_bytes", "predecessor_manifest_sha256", "oracle_path",
                 "oracle_sha256", "deterministic_oracle_result_sha256", "semantic_use"]);
-        RequireExactNames(semantic, "campaign composed semantic validation",
-            ["validation_id", "disposition", "proposal_count", "admission_count", "result_sha256",
+        bool currentProvenance = semantic.TryGetProperty("source_application_decision_id", out _);
+        if (currentProvenance && expectedStage == M1Slice6CampaignStage.SourceClaimExtraction)
+        {
+            expectedValidation = "infinium.host.source-claim-application/v1";
+        }
+        RequireExactNames(semantic, "campaign composed semantic validation", currentProvenance
+            ? ["validation_id", "disposition", "proposal_count", "admission_count", "result_sha256",
+                "source_acquisition_id", "source_admission_id", "source_application_decision_id",
+                "admitted_artifact_id", "source_application_link_id", "evidence_application_link_id",
+                "candidate_id", "hypothesis_id"]
+            : ["validation_id", "disposition", "proposal_count", "admission_count", "result_sha256",
                 "source_acquisition_id", "source_admission_id", "admitted_artifact_id",
                 "source_application_link_id", "evidence_application_link_id", "candidate_id",
                 "hypothesis_id"]);

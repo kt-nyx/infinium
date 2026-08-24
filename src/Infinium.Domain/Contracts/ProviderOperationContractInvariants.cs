@@ -517,24 +517,29 @@ public static class ProviderOperationContractInvariants
     {
         ArgumentNullException.ThrowIfNull(value);
         RequireHeader(value.SchemaId, value.SchemaVersion, ContractConstants.SourceClaimExtractionSchemaId);
-        if (string.IsNullOrWhiteSpace(value.AcquisitionRunId.Value)
-            || string.IsNullOrWhiteSpace(value.OperationId.Value)
-            || string.IsNullOrWhiteSpace(value.SourceRevisionId.Value)
-            || string.IsNullOrWhiteSpace(value.DeclaredPurpose)
+        if (!ValidIds([value.AcquisitionRunId, value.OperationId, value.SourceRevisionId,
+                value.OwnerId, value.ParentAnalysisRunId, value.ApplicationScopeId, value.CostAttributionScopeId])
+            || string.IsNullOrWhiteSpace(value.DeclaredPurpose) || value.DeclaredPurpose.Length > 1024
             || value.PassageIds.Count is 0 or > 64 || !Unique(value.PassageIds) || !ValidIds(value.PassageIds)
             || value.OwnerKind != "evidence-acquisition-run" || value.OwnerId != value.AcquisitionRunId
             || string.IsNullOrWhiteSpace(value.ParentAnalysisRunId.Value)
             || string.IsNullOrWhiteSpace(value.ApplicationScopeId.Value)
             || string.IsNullOrWhiteSpace(value.CostAttributionScopeId.Value)
             || value.ClaimProposals.Count > 64 || !Unique(value.ClaimProposals.Select(x => x.ProposalId))
+            || !ValidIds(value.ClaimProposals.Select(x => x.ProposalId))
             || value.ClaimProposals.Any(x => !Enum.IsDefined(x.ExtractionState) || x.ExtractionState == SemanticProposalState.Unspecified
-                || string.IsNullOrWhiteSpace(x.Claim) || string.IsNullOrWhiteSpace(x.Reason)
-                || !value.PassageIds.Contains(x.PassageId) || !Unique(x.ConditionIds)
+                || string.IsNullOrWhiteSpace(x.Claim) || x.Claim.Length > 4096
+                || string.IsNullOrWhiteSpace(x.Reason) || x.Reason.Length > 1024
+                || !IsValidIdentifier(x.PassageId.Value) || !ValidIds(x.ConditionIds)
+                || !value.PassageIds.Contains(x.PassageId) && x.ExtractionState != SemanticProposalState.Rejected
+                || x.ConditionIds.Count > 128 || !Unique(x.ConditionIds)
                 || (x.ExtractionState == SemanticProposalState.Extracted
                     && (value.ValidationIds.Count == 0 || value.AdmissionCorrelationIds.Count == 0)))
             || !BoundedUniqueText(value.Abstentions) || !BoundedUniqueText(value.Gaps)
-            || !Unique(value.ContradictionEvidenceIds) || !Unique(value.ValidationIds)
-            || !Unique(value.AdmissionCorrelationIds)
+            || value.ContradictionEvidenceIds.Count > 128
+            || !Unique(value.ContradictionEvidenceIds) || !ValidIds(value.ContradictionEvidenceIds)
+            || !Unique(value.ValidationIds) || !ValidIds(value.ValidationIds)
+            || !Unique(value.AdmissionCorrelationIds) || !ValidIds(value.AdmissionCorrelationIds)
             || !SourceClaimAdmissionStatesMatch(value.AdmissionCorrelations,
                 value.ClaimProposals.Select(x => new KeyValuePair<OpaqueId, SemanticProposalState>(x.ProposalId, x.ExtractionState)))
             || !ValidSourceClaimAdmissionCorrelations(value.AdmissionCorrelations, value.OperationId, value.OwnerKind,
@@ -549,27 +554,33 @@ public static class ProviderOperationContractInvariants
     {
         ArgumentNullException.ThrowIfNull(value);
         RequireHeader(value.SchemaId, value.SchemaVersion, ContractConstants.CandidateInvestigationSchemaId);
-        if (string.IsNullOrWhiteSpace(value.OperationId.Value)
-            || string.IsNullOrWhiteSpace(value.OwnerId.Value)
-            || string.IsNullOrWhiteSpace(value.AnalysisRunId.Value)
-            || string.IsNullOrWhiteSpace(value.CandidateId.Value)
-            || string.IsNullOrWhiteSpace(value.DependencyClosureId.Value)
+        if (!ValidIds([value.OperationId, value.OwnerId, value.AnalysisRunId, value.CandidateId,
+                value.DependencyClosureId])
             || value.ParticipantIds.Count is 0 or > 32 || value.ParticipantIds.Count != value.ParticipantRoles.Count
             || value.OwnerKind != "analysis-run" || value.OwnerId != value.AnalysisRunId
-            || !Unique(value.ParticipantIds) || value.ParticipantRoles.Any(string.IsNullOrWhiteSpace)
+            || !Unique(value.ParticipantIds) || !ValidIds(value.ParticipantIds)
+            || value.ParticipantRoles.Any(role => string.IsNullOrWhiteSpace(role) || role.Length > 128)
             || value.HypothesisProposals.Count > 64 || !Unique(value.HypothesisProposals.Select(x => x.ProposalId))
+            || !ValidIds(value.HypothesisProposals.Select(x => x.ProposalId))
             || value.HypothesisProposals.Any(x => !Enum.IsDefined(x.ProposalState) || x.ProposalState == SemanticProposalState.Unspecified
-                || string.IsNullOrWhiteSpace(x.Hypothesis) || string.IsNullOrWhiteSpace(x.Reason)
+                || string.IsNullOrWhiteSpace(x.Hypothesis) || x.Hypothesis.Length > 4096
+                || string.IsNullOrWhiteSpace(x.Reason) || x.Reason.Length > 1024
+                || !IsValidIdentifier(x.CandidateId.Value)
                 || x.CandidateId != value.CandidateId
-                || !Unique(x.SupportingEvidenceIds) || !Unique(x.ContradictingEvidenceIds)
+                || x.SupportingEvidenceIds.Count > 128
+                || !Unique(x.SupportingEvidenceIds) || !ValidIds(x.SupportingEvidenceIds)
+                || x.ContradictingEvidenceIds.Count > 128
+                || !Unique(x.ContradictingEvidenceIds) || !ValidIds(x.ContradictingEvidenceIds)
                 || x.SupportingEvidenceIds.Intersect(x.ContradictingEvidenceIds).Any()
                 || x.SupportingEvidenceIds.Concat(x.ContradictingEvidenceIds).Any(id => !value.EvidenceIds.Contains(id))
                 || !BoundedUniqueText(x.MissingInformation)
                 || (x.ProposalState == SemanticProposalState.Proposed
                     && (value.ValidationIds.Count == 0 || value.AdmissionLinkIds.Count == 0)))
-            || !Unique(value.CausalPathIds) || !Unique(value.EvidenceIds)
+            || value.CausalPathIds.Count > 128 || !Unique(value.CausalPathIds) || !ValidIds(value.CausalPathIds)
+            || value.EvidenceIds.Count > 128 || !Unique(value.EvidenceIds) || !ValidIds(value.EvidenceIds)
             || !BoundedUniqueText(value.Abstentions) || !BoundedUniqueText(value.Gaps)
-            || !Unique(value.ValidationIds) || !Unique(value.AdmissionLinkIds)
+            || !Unique(value.ValidationIds) || !ValidIds(value.ValidationIds)
+            || !Unique(value.AdmissionLinkIds) || !ValidIds(value.AdmissionLinkIds)
             || !value.ValidationIds.ToHashSet().SetEquals(value.AdmissionLinks.Select(x => x.ValidationId))
             || !value.AdmissionLinkIds.ToHashSet().SetEquals(value.AdmissionLinks.Select(x => x.AdmissionId))
             || !AdmissionStatesMatch(value.AdmissionLinks,
@@ -967,8 +978,18 @@ public static class ProviderOperationContractInvariants
     private static bool Unique<T>(IEnumerable<T> values) =>
         values.Distinct().Count() == values.Count();
 
+    public static bool IsValidIdentifier(string value)
+    {
+        if (value.Length is < 1 or > 128 || !char.IsAsciiLetterOrDigit(value[0]))
+        {
+            return false;
+        }
+        return value.All(character => char.IsAsciiLetterOrDigit(character)
+            || character is '.' or '_' or ':' or '/' or '-');
+    }
+
     private static bool ValidIds(IEnumerable<OpaqueId> values) =>
-        values.All(value => !string.IsNullOrWhiteSpace(value.Value));
+        values.All(value => IsValidIdentifier(value.Value));
 
     private static bool ValidAdmissionLinks(
         IReadOnlyList<ProviderSemanticAdmissionLinkContract> links,
@@ -982,11 +1003,26 @@ public static class ProviderOperationContractInvariants
         bool declaredIdsAreAdmissions)
     {
         HashSet<OpaqueId> proposalIds = proposals.ToHashSet();
+        OpaqueId[] declaredLinks = declaredIdsAreAdmissions
+            ? links.Select(link => link.AdmissionId).ToArray()
+            : links.Select(link => link.ApplicationLinkId).ToArray();
         return links.Count <= 64
             && Unique(links.Select(x => x.AdmissionId))
-            && links.All(link => !string.IsNullOrWhiteSpace(link.AdmissionId.Value)
-                && !string.IsNullOrWhiteSpace(link.ResponseRecordId.Value)
-                && !string.IsNullOrWhiteSpace(link.AuthorizationId.Value)
+            && Unique(links.Select(x => x.ValidationId))
+            && validationIds.Count == links.Count && Unique(validationIds)
+            && validationIds.ToHashSet().SetEquals(links.Select(link => link.ValidationId))
+            && declaredLinkIds.Count == links.Count && Unique(declaredLinkIds)
+            && declaredLinkIds.ToHashSet().SetEquals(declaredLinks)
+            && links.All(link => IsValidIdentifier(link.AdmissionId.Value)
+                && IsValidIdentifier(link.ProposalId.Value)
+                && IsValidIdentifier(link.ResponseRecordId.Value)
+                && IsValidIdentifier(link.AuthorizationId.Value)
+                && IsValidIdentifier(link.OperationId.Value)
+                && IsValidIdentifier(link.OwnerId.Value)
+                && IsValidIdentifier(link.RootSubjectId.Value)
+                && IsValidIdentifier(link.ValidationId.Value)
+                && link.ApplicationLinkId is not null
+                && IsValidIdentifier(link.ApplicationLinkId.Value)
                 && link.OperationId == operationId
                 && link.OwnerKind == ownerKind && link.OwnerId == ownerId
                 && link.RootSubjectId == rootSubjectId
@@ -995,7 +1031,7 @@ public static class ProviderOperationContractInvariants
                 && (declaredIdsAreAdmissions
                     ? declaredLinkIds.Contains(link.AdmissionId)
                     : declaredLinkIds.Contains(link.ApplicationLinkId))
-                && ValidSemanticStates(link.SupportState, link.ApplicabilityState, link.DecisionState));
+                && IsValidSemanticStateCombination(link.SupportState, link.ApplicabilityState, link.DecisionState));
     }
 
     private static bool AdmissionStatesMatch(
@@ -1005,9 +1041,39 @@ public static class ProviderOperationContractInvariants
         Dictionary<OpaqueId, SemanticProposalState> states = proposals.ToDictionary();
         return links.All(link => states.ContainsKey(link.ProposalId))
             && states.All(proposal => links.Count(link => link.ProposalId == proposal.Key) == 1
-                && ProposalDecisionCompatible(proposal.Value,
+                && ProposalSemanticStateCompatible(proposal.Value,
+                    links.Single(link => link.ProposalId == proposal.Key).SupportState,
+                    links.Single(link => link.ProposalId == proposal.Key).ApplicabilityState,
                     links.Single(link => link.ProposalId == proposal.Key).DecisionState));
     }
+
+    private static bool SourceProposalSemanticStateCompatible(
+        SemanticProposalState proposal,
+        SemanticSupportState support,
+        SemanticApplicabilityState applicability,
+        SemanticDecisionState decision) => proposal switch
+        {
+            SemanticProposalState.Proposed or SemanticProposalState.Extracted =>
+                applicability == SemanticApplicabilityState.NotEvaluated
+                && (decision == SemanticDecisionState.Abstained
+                    && support is SemanticSupportState.Supported or SemanticSupportState.Unsupported
+                        or SemanticSupportState.Contradicted
+                    || decision == SemanticDecisionState.Rejected
+                    && support == SemanticSupportState.NotEvaluated),
+            SemanticProposalState.Rejected => support == SemanticSupportState.NotEvaluated
+                && applicability == SemanticApplicabilityState.NotEvaluated
+                && decision == SemanticDecisionState.Rejected,
+            SemanticProposalState.Abstained => support == SemanticSupportState.NotEvaluated
+                && applicability == SemanticApplicabilityState.NotEvaluated
+                && decision == SemanticDecisionState.Abstained,
+            SemanticProposalState.Unavailable => support == SemanticSupportState.Unavailable
+                && applicability == SemanticApplicabilityState.NotEvaluated
+                && decision == SemanticDecisionState.Abstained,
+            SemanticProposalState.Deleted => support == SemanticSupportState.Unavailable
+                && applicability == SemanticApplicabilityState.NotEvaluated
+                && decision == SemanticDecisionState.AuditOnly,
+            _ => false,
+        };
 
     private static bool ValidSourceClaimAdmissionCorrelations(
         IReadOnlyList<SourceClaimAdmissionCorrelationContract> links,
@@ -1022,7 +1088,12 @@ public static class ProviderOperationContractInvariants
         HashSet<OpaqueId> proposalIds = proposals.ToHashSet();
         return links.Count <= 64
             && Unique(links.Select(x => x.AdmissionId))
+            && Unique(links.Select(x => x.ValidationId))
             && Unique(links.Select(x => x.AdmissionCorrelationId))
+            && validationIds.Count == links.Count && Unique(validationIds)
+            && validationIds.ToHashSet().SetEquals(links.Select(link => link.ValidationId))
+            && correlationIds.Count == links.Count && Unique(correlationIds)
+            && correlationIds.ToHashSet().SetEquals(links.Select(link => link.AdmissionCorrelationId))
             && links.All(link => !string.IsNullOrWhiteSpace(link.AdmissionId.Value)
                 && !string.IsNullOrWhiteSpace(link.ResponseRecordId.Value)
                 && !string.IsNullOrWhiteSpace(link.AuthorizationId.Value)
@@ -1032,7 +1103,7 @@ public static class ProviderOperationContractInvariants
                 && proposalIds.Contains(link.ProposalId)
                 && validationIds.Contains(link.ValidationId)
                 && correlationIds.Contains(link.AdmissionCorrelationId)
-                && ValidSemanticStates(link.SupportState, link.ApplicabilityState, link.DecisionState));
+                && IsValidSemanticStateCombination(link.SupportState, link.ApplicabilityState, link.DecisionState));
     }
 
     private static bool SourceClaimAdmissionStatesMatch(
@@ -1042,23 +1113,100 @@ public static class ProviderOperationContractInvariants
         Dictionary<OpaqueId, SemanticProposalState> states = proposals.ToDictionary();
         return links.All(link => states.ContainsKey(link.ProposalId))
             && states.All(proposal => links.Count(link => link.ProposalId == proposal.Key) == 1
-                && ProposalDecisionCompatible(proposal.Value,
+                && SourceProposalSemanticStateCompatible(proposal.Value,
+                    links.Single(link => link.ProposalId == proposal.Key).SupportState,
+                    links.Single(link => link.ProposalId == proposal.Key).ApplicabilityState,
                     links.Single(link => link.ProposalId == proposal.Key).DecisionState));
     }
 
-    private static bool ProposalDecisionCompatible(
+    private static bool ProposalSemanticStateCompatible(
         SemanticProposalState proposal,
+        SemanticSupportState support,
+        SemanticApplicabilityState applicability,
         SemanticDecisionState decision) => proposal switch
         {
             SemanticProposalState.Proposed or SemanticProposalState.Extracted =>
                 decision is SemanticDecisionState.Admitted or SemanticDecisionState.Abstained or SemanticDecisionState.Rejected,
-            SemanticProposalState.Rejected => decision == SemanticDecisionState.Rejected,
-            SemanticProposalState.Abstained or SemanticProposalState.Unavailable => decision == SemanticDecisionState.Abstained,
-            SemanticProposalState.Deleted => decision == SemanticDecisionState.AuditOnly,
+            SemanticProposalState.Rejected => support == SemanticSupportState.NotEvaluated
+                && applicability == SemanticApplicabilityState.NotEvaluated
+                && decision == SemanticDecisionState.Rejected,
+            SemanticProposalState.Abstained => support == SemanticSupportState.NotEvaluated
+                && applicability == SemanticApplicabilityState.NotEvaluated
+                && decision == SemanticDecisionState.Abstained,
+            SemanticProposalState.Unavailable => support == SemanticSupportState.Unavailable
+                && decision == SemanticDecisionState.Abstained,
+            SemanticProposalState.Deleted => support == SemanticSupportState.Unavailable
+                && applicability == SemanticApplicabilityState.NotEvaluated
+                && decision == SemanticDecisionState.AuditOnly,
             _ => false,
         };
 
-    private static bool ValidSemanticStates(
+    public static void ValidateSourceClaimApplicationDecision(
+        CitationProposalContract proposal,
+        SourceClaimAdmissionCorrelationContract sourceLink,
+        SourceClaimApplicationDecisionContract application)
+    {
+        ArgumentNullException.ThrowIfNull(proposal);
+        ArgumentNullException.ThrowIfNull(sourceLink);
+        ArgumentNullException.ThrowIfNull(application);
+        Validate(application);
+        ProviderSemanticAdmissionLinkContract link = application.DecisionLink;
+        bool hasEvaluatedApplicability = link.ApplicabilityState != SemanticApplicabilityState.NotEvaluated;
+        if (proposal.ProposalId != sourceLink.ProposalId || proposal.ProposalId != link.ProposalId
+            || application.SourceAdmissionId != sourceLink.AdmissionId
+            || link.AuthorizationId != sourceLink.AuthorizationId
+            || link.OperationId != sourceLink.OperationId
+            || link.ResponseRecordId != sourceLink.ResponseRecordId
+            || link.AdmissionId == sourceLink.AdmissionId
+            || link.ValidationId == sourceLink.ValidationId
+            || link.ApplicationLinkId == sourceLink.AdmissionCorrelationId
+            || link.OwnerKind != "analysis-run"
+            || string.IsNullOrWhiteSpace(link.AdmissionId.Value)
+            || string.IsNullOrWhiteSpace(link.AuthorizationId.Value)
+            || string.IsNullOrWhiteSpace(link.OperationId.Value)
+            || string.IsNullOrWhiteSpace(link.ResponseRecordId.Value)
+            || string.IsNullOrWhiteSpace(link.OwnerId.Value)
+            || string.IsNullOrWhiteSpace(link.RootSubjectId.Value)
+            || string.IsNullOrWhiteSpace(link.ValidationId.Value)
+            || string.IsNullOrWhiteSpace(link.ApplicationLinkId.Value)
+            || string.IsNullOrWhiteSpace(application.Reason) || application.Reason.Length > 1024
+            || application.ApplicabilityFactIds.Count > 64
+            || !Unique(application.ApplicabilityFactIds)
+            || !ValidIds(application.ApplicabilityFactIds)
+            || hasEvaluatedApplicability && application.ApplicabilityFactIds.Count == 0
+            || !IsValidSemanticStateCombination(link.SupportState, link.ApplicabilityState, link.DecisionState)
+            || !ProposalSemanticStateCompatible(proposal.ExtractionState,
+                link.SupportState, link.ApplicabilityState, link.DecisionState))
+        {
+            throw new InvalidOperationException(
+                "A source-claim application decision must be analysis-owned, fact-bound, and semantically closed.");
+        }
+    }
+
+    public static void Validate(SourceClaimApplicationDecisionContract application)
+    {
+        ArgumentNullException.ThrowIfNull(application);
+        ProviderSemanticAdmissionLinkContract link = application.DecisionLink;
+        bool hasEvaluatedApplicability = link.ApplicabilityState != SemanticApplicabilityState.NotEvaluated;
+        if (link.OwnerKind != "analysis-run"
+            || link.AdmissionId == application.SourceAdmissionId
+            || new[] { link.AdmissionId, link.ProposalId, link.AuthorizationId, link.OperationId,
+                    link.ResponseRecordId, link.OwnerId, link.RootSubjectId, link.ValidationId,
+                    link.ApplicationLinkId, application.SourceAdmissionId }
+                .Any(id => !IsValidIdentifier(id.Value))
+            || string.IsNullOrWhiteSpace(application.Reason)
+            || application.ApplicabilityFactIds.Count > 64
+            || !Unique(application.ApplicabilityFactIds)
+            || !ValidIds(application.ApplicabilityFactIds)
+            || hasEvaluatedApplicability && application.ApplicabilityFactIds.Count == 0
+            || !IsValidSemanticStateCombination(link.SupportState, link.ApplicabilityState, link.DecisionState))
+        {
+            throw new InvalidOperationException(
+                "A source-claim application decision must retain a closed analysis-owned wire shape.");
+        }
+    }
+
+    public static bool IsValidSemanticStateCombination(
         SemanticSupportState support,
         SemanticApplicabilityState applicability,
         SemanticDecisionState decision)
@@ -1080,14 +1228,15 @@ public static class ProviderOperationContractInvariants
                 || applicability is SemanticApplicabilityState.ConditionalUnestablished
                     or SemanticApplicabilityState.NotApplicable or SemanticApplicabilityState.Unknown
                     or SemanticApplicabilityState.NotEvaluated,
-            SemanticDecisionState.AuditOnly => support == SemanticSupportState.Unavailable,
-            SemanticDecisionState.Rejected => support != SemanticSupportState.Supported
-                || applicability != SemanticApplicabilityState.Applicable,
+            SemanticDecisionState.AuditOnly => support == SemanticSupportState.Unavailable
+                && applicability == SemanticApplicabilityState.NotEvaluated,
+            SemanticDecisionState.Rejected => support == SemanticSupportState.NotEvaluated
+                && applicability == SemanticApplicabilityState.NotEvaluated,
             _ => false,
         };
     }
 
     private static bool BoundedUniqueText(IReadOnlyList<string> values) =>
-        values.Count <= 64 && values.All(x => !string.IsNullOrWhiteSpace(x))
+        values.Count <= 64 && values.All(x => !string.IsNullOrWhiteSpace(x) && x.Length <= 4096)
         && values.Distinct(StringComparer.Ordinal).Count() == values.Count;
 }

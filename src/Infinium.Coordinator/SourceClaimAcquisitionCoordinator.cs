@@ -6,12 +6,16 @@ namespace Infinium.Coordinator;
 
 public sealed record SourceClaimAdmissionPublication(
     SourceClaimScenarioResult Scenario,
+    SourceClaimApplicationResult Applications,
     SourceClaimPersistenceReceipt Persistence,
     byte[] JsonTransparency,
     string HumanTransparency);
 
 internal sealed record SourceClaimCampaignIdentity(
-    string AdmissionId, string AdmittedArtifactId, string ApplicationLinkId);
+    string ApplicationDecisionId,
+    string ValidationId,
+    string AdmittedArtifactId,
+    string ApplicationLinkId);
 
 public sealed class SourceClaimAcquisitionCoordinator
 {
@@ -27,8 +31,8 @@ public sealed class SourceClaimAcquisitionCoordinator
         string providerAttemptId,
         string requestId,
         string dispatchFenceId,
-        DateTimeOffset occurredAt) => AdmitRetainedTranscriptCore(input, transcript, authorizationId,
-            providerAttemptId, requestId, dispatchFenceId, occurredAt, null);
+        DateTimeOffset occurredAt) => AdmitRetainedTranscriptCore(input, transcript,
+            authorizationId, providerAttemptId, requestId, dispatchFenceId, occurredAt, null);
 
     internal SourceClaimAdmissionPublication AdmitRetainedTranscript(
         SourceClaimExecutionInput input,
@@ -43,8 +47,8 @@ public sealed class SourceClaimAcquisitionCoordinator
         IReadOnlyDictionary<string, SourceClaimApplicabilityFactAuthority> applicabilityFacts,
         IReadOnlyDictionary<string, SourceClaimApplicationAuthority> applicationAuthority) =>
         AdmitRetainedTranscriptCore(input, transcript, authorizationId, providerAttemptId,
-            requestId, dispatchFenceId, occurredAt, campaignIdentities, artifactAuthority, applicabilityFacts,
-            applicationAuthority);
+            requestId, dispatchFenceId, occurredAt, campaignIdentities,
+            artifactAuthority, applicabilityFacts, applicationAuthority);
 
     private SourceClaimAdmissionPublication AdmitRetainedTranscriptCore(
         SourceClaimExecutionInput input,
@@ -65,31 +69,39 @@ public sealed class SourceClaimAcquisitionCoordinator
         }
         SourceClaimAcquisitionResult result = SourceClaimAcquisitionEngine.Execute(input, [transcript]);
         SourceClaimScenarioResult scenario = result.Scenarios.Single();
+        SourceClaimApplicationResult applications = new([]);
         Dictionary<string, string> artifactIds = new(StringComparer.Ordinal);
         if (campaignIdentities is not null)
         {
-            SourceClaimAdmissionCorrelationContract[] correlations = scenario.Extraction.AdmissionCorrelations
-                .Select(correlation =>
-                {
-                    if (correlation.DecisionState != SemanticDecisionState.Admitted)
-                    {
-                        return correlation;
-                    }
-                    if (!campaignIdentities.TryGetValue(correlation.ProposalId.Value,
-                            out SourceClaimCampaignIdentity? identity))
-                    {
-                        throw new InvalidDataException(
-                            "Campaign source admission has no exact host-owned identity tuple.");
-                    }
-                    artifactIds.Add(correlation.ProposalId.Value, identity.AdmittedArtifactId);
-                    return correlation with { AdmissionId = new OpaqueId(identity.AdmissionId) };
-                }).ToArray();
-            SourceClaimExtractionDocument extraction = scenario.Extraction with
+            if (applicationAuthority is null
+                || campaignIdentities.Keys.ToHashSet(StringComparer.Ordinal)
+                    .SetEquals(transcript.Proposals.Select(item => item.ProposalId)) is false
+                || applicationAuthority.Keys.ToHashSet(StringComparer.Ordinal)
+                    .SetEquals(campaignIdentities.Keys) is false)
             {
-                AdmissionCorrelations = correlations,
-            };
-            scenario = scenario with { Extraction = extraction };
-            result = result with { Scenarios = [scenario] };
+                throw new InvalidDataException(
+                    "Source-claim application requires one analysis-owned context for every retained proposal.");
+            }
+            SourceClaimApplicationContext[] contexts = transcript.Proposals.Select(proposal =>
+            {
+                SourceClaimCampaignIdentity identity = campaignIdentities[proposal.ProposalId];
+                SourceClaimApplicationAuthority authority = applicationAuthority[proposal.ProposalId];
+                if (identity.ApplicationLinkId != authority.ApplicationLinkId)
+                {
+                    throw new InvalidDataException(
+                        "Source-claim application identities differ from their analysis authority.");
+                }
+                return new SourceClaimApplicationContext(proposal.ProposalId,
+                    identity.ApplicationDecisionId, identity.ValidationId, identity.ApplicationLinkId,
+                    authority.ParentAnalysisRunId, authority.RootSubjectId, authority.ApplicabilityFactIds);
+            }).ToArray();
+            applications = SourceClaimApplicationAdjudicator.Evaluate(input, scenario, contexts);
+            foreach (SourceClaimApplicationDecisionContract decision in applications.Decisions.Where(
+                         item => item.DecisionLink.DecisionState == SemanticDecisionState.Admitted))
+            {
+                SourceClaimCampaignIdentity identity = campaignIdentities[decision.DecisionLink.ProposalId.Value];
+                artifactIds.Add(decision.DecisionLink.ProposalId.Value, identity.AdmittedArtifactId);
+            }
         }
         SourceClaimPersistenceReceipt persistence = store.PersistSourceClaimExtraction(new(
             scenario.Extraction, authorizationId, transcript.ResponseRecordId, providerAttemptId,
@@ -102,9 +114,12 @@ public sealed class SourceClaimAcquisitionCoordinator
                 ?? new Dictionary<string, SourceClaimApplicabilityFactAuthority>(StringComparer.Ordinal),
             ApplicationAuthorityByProposal = applicationAuthority
                 ?? new Dictionary<string, SourceClaimApplicationAuthority>(StringComparer.Ordinal),
+            ApplicationDecisionsByProposal = applications.Decisions.ToDictionary(
+                item => item.DecisionLink.ProposalId.Value, StringComparer.Ordinal),
         });
-        return new(scenario, persistence, SourceClaimTransparencyRenderer.RenderJson(result),
-            SourceClaimTransparencyRenderer.RenderHuman(result));
+        return new(scenario, applications, persistence,
+            SourceClaimTransparencyRenderer.RenderJson(result, applications),
+            SourceClaimTransparencyRenderer.RenderHuman(result, applications));
     }
 
     public static SourceClaimAcquisitionResult NoModel(

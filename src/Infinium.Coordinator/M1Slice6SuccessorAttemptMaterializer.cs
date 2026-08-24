@@ -359,17 +359,34 @@ internal static class M1Slice6SuccessorAttemptMaterializer
     internal static void RequirePromptFidelity(byte[] canonicalRequest, string promptId,
         string recordedPromptFingerprint, string recordedInstructions)
     {
-        if (string.IsNullOrWhiteSpace(promptId))
-        { throw new InvalidDataException("Prompt provenance requires an explicit prompt identity."); }
+        bool knownPrompt = promptId == SourceClaimPromptV1.Id
+                && recordedInstructions == SourceClaimPromptV1.Instructions
+                && recordedPromptFingerprint == SourceClaimPromptV1.Fingerprint
+            || promptId == CandidateInvestigationPromptV1.Id
+                && recordedInstructions == CandidateInvestigationPromptV1.Instructions
+                && recordedPromptFingerprint == CandidateInvestigationPromptV1.Fingerprint;
+        if (!knownPrompt)
+        {
+            throw new InvalidDataException(
+                "Prompt provenance requires the exact accepted prompt identity, bytes, and fingerprint.");
+        }
         using JsonDocument request = JsonDocument.Parse(canonicalRequest);
-        JsonElement developer = request.RootElement.GetProperty("input")[0];
+        JsonElement input = request.RootElement.GetProperty("input");
+        if (input.GetArrayLength() < 2
+            || input[0].GetProperty("role").GetString() != "developer"
+            || input[0].GetProperty("content").GetArrayLength() != 1
+            || input[0].GetProperty("content")[0].GetProperty("type").GetString() != "input_text"
+            || input[1].GetProperty("role").GetString() != "user")
+        {
+            throw new InvalidDataException("The accepted developer prompt must be the first exact request message.");
+        }
+        JsonElement developer = input[0];
         string transmitted = developer.GetProperty("content")[0].GetProperty("text").GetString() ?? string.Empty;
         byte[] transmittedBytes = Encoding.UTF8.GetBytes(transmitted);
         string transmittedFingerprint = Convert.ToHexStringLower(SHA256.HashData(transmittedBytes));
         string recordedFingerprint = Convert.ToHexStringLower(SHA256.HashData(
             Encoding.UTF8.GetBytes(recordedInstructions)));
-        if (developer.GetProperty("role").GetString() != "developer"
-            || transmitted != recordedInstructions
+        if (transmitted != recordedInstructions
             || transmittedFingerprint != recordedPromptFingerprint
             || recordedFingerprint != recordedPromptFingerprint)
         {
@@ -380,8 +397,16 @@ internal static class M1Slice6SuccessorAttemptMaterializer
 
     internal static byte[] OutputSchema(M1Slice6CampaignStage stage)
     {
-        JsonObject identifier = new() { ["type"] = "string", ["minLength"] = 1, ["maxLength"] = 200 };
-        JsonObject sha = new() { ["type"] = "string", ["minLength"] = 64, ["maxLength"] = 64 };
+        JsonObject identifier = new()
+        {
+            ["type"] = "string", ["minLength"] = 1, ["maxLength"] = 128,
+            ["pattern"] = "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+        };
+        JsonObject sha = new()
+        {
+            ["type"] = "string", ["minLength"] = 64, ["maxLength"] = 64,
+            ["pattern"] = "^[0-9a-f]{64}$",
+        };
         JsonObject texts = new()
         {
             ["type"] = "array",

@@ -40,12 +40,24 @@
         "response_state": { "enum": ["completed", "malformed", "refusal", "incomplete", "drift", "not-used", "unavailable"] },
         "response_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
         "prompt_id": { "const": "infinium.m1-s6.candidate-investigation-prompt/v1" },
-        "prompt_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
+        "prompt_fingerprint": { "const": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e" },
         "proposals": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/proposal" } },
         "abstentions": { "$ref": "#/$defs/texts" },
         "gaps": { "$ref": "#/$defs/texts" },
         "model_used": { "type": "boolean" }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "model_used": { "const": false } } },
+          "then": {
+            "properties": {
+              "response_state": { "enum": ["not-used", "unavailable"] },
+              "proposals": { "maxItems": 0 }
+            }
+          },
+          "else": { "properties": { "response_state": { "not": { "enum": ["not-used", "unavailable"] } } } }
+        }
+      ]
     }
   }
 }

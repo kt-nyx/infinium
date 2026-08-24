@@ -1,7 +1,12 @@
 # Scope and milestones
 
 Status: Accepted  
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-23
+Accepted evaluation-timing amendment, 2026-08-23: ADR-0035 defers independent
+semantic-oracle qualification throughout M1 and M2. The active
+[product-conformance profile](../evaluation/m1-continuation-verification-profile.md)
+retains ordinary verification. Reconsideration occurs only after M2 acceptance
+during M3 planning at the M3 Evaluation Readiness Gate.
 Accepted M1 verification amendment, 2026-08-07: ADR-0032 defers the current
 private held-out evaluator with no product verdict and makes the accepted
 [M1 continuation verification profile](../evaluation/m1-continuation-verification-profile.md)
@@ -118,16 +123,12 @@ If it exercises an external application, its configuration contract shall
 accept an explicitly supplied validated path and report unavailable
 capabilities without silently changing scope.
 
-M1 is proved through public contract/schema conformance, independently
-expected public fixtures, model-derived mutation and metamorphic checks,
+M1 is proved through public contract/schema conformance, developer-owned
+bounded examples, deterministic reference tests, mutation and metamorphic checks,
 determinism/replay/operational safety, two-domain synthetic generalization,
 controlled-real EVAL-0016/EVAL-0017 evidence, and fresh semantic/diff review.
-This public conformance package does not establish a private held-out verdict
-or the reliability/readiness required by M3. A new held-out evaluator may be
-proposed only after Slice 9 during M3 planning around a stable, versioned,
-user-meaningful output contract, with independently authorable expectations,
-answer-free totality review, separate roles, and a new accepted ADR and plan.
-No future protocol identity is selected here.
+This public conformance package does not establish an independent semantic or
+private held-out verdict, or the reliability/readiness required by M3.
 
 ## M2: Frontend workflow proof
 
@@ -137,6 +138,7 @@ contract.
 M2 exercises the expected workflow end to end with representative M1
 capabilities and stable contracts. It does not imply that the analyzer breadth,
 scale, or reliability required by M3 is already complete.
+Independent semantic-oracle comparison does not gate M2 acceptance.
 
 Expected scope:
 
@@ -157,6 +159,15 @@ Expected scope:
 
 Goal: expand analyzer coverage and reliability until the creator can rely on
 the product before a real playthrough.
+
+M3 planning begins with the **M3 Evaluation Readiness Gate** from ADR-0035.
+Only after M2 acceptance, exercised end-to-end interfaces, stable versioned
+user-meaningful output and replay contracts, a bounded claim, independently
+authorable neutral truth, an accepted budget/stopping rule, one small
+feasibility package, and a new accepted M3 evaluation plan may independent
+semantic-oracle work resume. The gate decides whether that evidence is
+proportionate and required before claiming "Trusted personal preflight"; it
+does not automatically authorize a large oracle program.
 
 Required capabilities include:
 

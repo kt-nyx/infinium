@@ -22,6 +22,7 @@ internal sealed record M1Slice6CampaignEvidenceRoot(
     string AcquisitionRunId,
     string ProposalId,
     string SourceAdmissionId,
+    string ApplicationDecisionId,
     string AdmittedArtifactId,
     string ApplicationLinkId,
     string EvidenceRootId,
@@ -100,7 +101,7 @@ internal static class M1Slice6CampaignV2InputAdapter
             Text(root, "parent_analysis_run_id"), Text(root, "application_scope_id"),
             Text(root, "cost_attribution_scope_id"), Text(root, "source_revision_id"),
             Text(root, "declared_purpose"), Text(root, "prompt_id"), Text(root, "prompt_fingerprint"),
-            normalized, facts.Keys.Order(StringComparer.Ordinal).ToArray());
+            normalized);
         SourceClaimContextMinimizer.ValidateInput(input);
         return new(input, facts, Encoding.UTF8.GetBytes(json));
     }
@@ -155,17 +156,22 @@ internal static class M1Slice6CampaignV2InputAdapter
                 metadata = new(M1Slice6CampaignEvidenceRootKind.PersistedSourceClaimApplication,
                     contextId, candidateId, evidenceId, evidenceApplication, sourceRevision, passageId,
                     contentSha, Text(source, "acquisition_run_id"), Text(source, "proposal_id"),
-                    Text(source, "source_admission_id"), Text(source, "admitted_artifact_id"),
+                    Text(source, "source_admission_id"),
+                    Text(source, "application_decision_id"),
+                    Text(source, "admitted_artifact_id"),
                     Text(source, "application_link_id"), string.Empty, string.Empty);
                 normalizedEvidence = new(evidenceId, evidenceApplication, metadata.AcquisitionRunId,
                     metadata.SourceAdmissionId, metadata.ApplicationLinkId, sourceRevision, passageId,
-                    Text(evidence, "relationship"), Text(evidence, "availability"), contentSha);
+                    Text(evidence, "relationship"), Text(evidence, "availability"), contentSha)
+                {
+                    SourceApplicationDecisionId = metadata.ApplicationDecisionId,
+                };
             }
             else
             {
                 metadata = new(M1Slice6CampaignEvidenceRootKind.FrozenHostEvidence,
                     contextId, candidateId, evidenceId, evidenceApplication, sourceRevision, passageId,
-                    contentSha, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty,
+                    contentSha, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty,
                     Text(host, "evidence_root_id"), Text(host, "applicability_record_id"));
                 normalizedEvidence = new(evidenceId, evidenceApplication, string.Empty,
                     string.Empty, string.Empty, sourceRevision, passageId,

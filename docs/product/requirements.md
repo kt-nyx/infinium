@@ -1,9 +1,17 @@
 # Product requirements
 
 Status: Accepted  
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-23
 
 Accepted amendments:
+
+- 2026-08-23 — ADR-0035 defers independent semantic-oracle qualification
+  throughout M1 and M2 and creates the M3 Evaluation Readiness Gate after M2
+  acceptance. M1/M2 continue to require product conformance, deterministic
+  references, integration/replay/safety evidence, and fresh review, but may
+  not claim an independent semantic verdict or semantic reliability. ADR-0034's
+  prompt fidelity and separate proposal/extraction, support, applicability,
+  and host-decision semantics remain accepted.
 
 - 2026-08-07 — ADR-0032 defers the current M1 private held-out evaluator
   without a product verdict, retires protocol `/5` unqualified, and replaces

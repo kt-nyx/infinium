@@ -355,6 +355,19 @@ public sealed class ProviderContractTests
             {
                 AdmissionLinkIds = [Id("admission-1"), Id("admission-phantom")],
             }));
+        HypothesisProposalContract second = admitted with { ProposalId = Id("proposal-2") };
+        ProviderSemanticAdmissionLinkContract secondLink = candidate.AdmissionLinks[0] with
+        {
+            AdmissionId = Id("admission-2"),
+            ProposalId = Id("proposal-2"),
+        };
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            ProviderOperationContractInvariants.Validate(candidate with
+            {
+                HypothesisProposals = [admitted, second],
+                AdmissionLinkIds = [Id("admission-1"), Id("admission-2")],
+                AdmissionLinks = [candidate.AdmissionLinks[0], secondLink],
+            }));
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(candidate with
             {
@@ -364,6 +377,11 @@ public sealed class ProviderContractTests
             ProviderOperationContractInvariants.Validate(candidate with
             {
                 AdmissionLinks = [candidate.AdmissionLinks[0] with { DecisionState = SemanticDecisionState.Rejected }],
+            }));
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            ProviderOperationContractInvariants.Validate(candidate with
+            {
+                AdmissionLinks = [candidate.AdmissionLinks[0] with { ApplicationLinkId = null! }],
             }));
         Assert.ThrowsExactly<ArgumentException>(() => Id(" "));
     }

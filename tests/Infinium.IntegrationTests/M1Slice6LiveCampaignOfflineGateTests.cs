@@ -26,137 +26,39 @@ public sealed class M1Slice6LiveCampaignOfflineGateTests
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.KebabCaseLower) },
     };
     [TestMethod]
-    public void FrozenWp10AndWp11ValidationPackagesExecuteTypedProductOraclesOffline()
+    public void FrozenWp10AndWp11PackagesRemainExactNonAuthorizingHistory()
     {
-        LiveSemanticV2TypedOracleReceipt source = LiveSemanticV2TypedOracleVerifier.VerifySource(
-            TestRepository.Root,
-            M1Slice6CampaignRehearsalTests.StageProviderOutput(M1Slice6CampaignStage.SourceClaimExtraction));
-        LiveSemanticV2TypedOracleReceipt candidate = LiveSemanticV2TypedOracleVerifier.VerifyCandidate(
-            TestRepository.Root,
-            M1Slice6CampaignRehearsalTests.StageProviderOutput(M1Slice6CampaignStage.CandidateInvestigation));
-        Console.WriteLine("WP10_RESULT_SHA256=" + source.DeterministicResultSha256);
-        Console.WriteLine("WP11_RESULT_SHA256=" + candidate.DeterministicResultSha256);
-        Assert.AreEqual("LLM-CLAIM-LIVE-VAL-v2", source.PackageId);
-        Assert.AreEqual("LLM-INVESTIGATE-LIVE-VAL-v2", candidate.PackageId);
-        Assert.AreEqual(8, source.StateOrContextCount);
-        Assert.AreEqual(2, candidate.StateOrContextCount);
-        Assert.AreEqual("beabc1d5cef06317d215bfa45ab481273e5995e0b4bd58ce412c78335bfc8e0f",
-            source.DeterministicResultSha256);
-        Assert.AreEqual("5d594a901257437387cf970c9456106f16461401024d206fd4c1109f207dedd5",
-            candidate.DeterministicResultSha256);
-        string exactSource = M1Slice6CampaignRehearsalTests.StageProviderOutput(
-            M1Slice6CampaignStage.SourceClaimExtraction);
-        string exactCandidate = M1Slice6CampaignRehearsalTests.StageProviderOutput(
-            M1Slice6CampaignStage.CandidateInvestigation);
-        JsonObject equivalentSource = JsonNode.Parse(exactSource)!.AsObject();
-        equivalentSource["transcripts"]![0]!["proposals"]![1]!["proposal_id"] =
-            "provider-generated-observation-id";
-        equivalentSource["transcripts"]![0]!["proposals"]![1]!["claim"] =
-            "Nearby markers are observed by the relay, which does not declare an exchange capability.";
-        equivalentSource["transcripts"]![0]!["proposals"]![1]!["reason"] =
-            "The requested capability is not established by observation without an exchange declaration.";
-        LiveSemanticV2TypedOracleReceipt equivalentSourceReceipt =
-            LiveSemanticV2TypedOracleVerifier.VerifySource(TestRepository.Root,
-                equivalentSource.ToJsonString());
-        Assert.AreEqual(source.DeterministicResultSha256,
-            equivalentSourceReceipt.DeterministicResultSha256);
-
-        JsonObject equivalentCandidate = JsonNode.Parse(exactCandidate)!.AsObject();
-        equivalentCandidate["transcripts"]![0]!["proposals"]![0]!["proposal_id"] =
-            "provider-generated-candidate-proposal";
-        equivalentCandidate["transcripts"]![0]!["proposals"]![0]!["reason"] =
-            "The bounded hypothesis is supported by exact admitted source evidence.";
-        const string equivalentUncertainty =
-            "Independently frozen neutral host evidence does not establish active declared exchange; "
-            + "the shared local observation remains conditional on exchange activation.";
-        equivalentCandidate["transcripts"]![1]!["gaps"]![0] = equivalentUncertainty;
-        equivalentCandidate["transcripts"]![1]!["abstentions"]![0] = equivalentUncertainty;
-        LiveSemanticV2TypedOracleReceipt equivalentCandidateReceipt =
-            LiveSemanticV2TypedOracleVerifier.VerifyCandidate(TestRepository.Root,
-                equivalentCandidate.ToJsonString());
-        Assert.AreEqual(candidate.DeterministicResultSha256,
-            equivalentCandidateReceipt.DeterministicResultSha256);
-        foreach (Action<JsonObject> adversarial in new Action<JsonObject>[]
+        using JsonDocument registry = JsonDocument.Parse(File.ReadAllBytes(TestRepository.PathFromRoot(
+            "fixtures", "public", "public-fixture-registry.v3.json")));
+        string[] packageIds =
         {
-            root => root["transcripts"]![0]!["proposals"]![1]!["claim"] =
-                "A fabricated reactor proves an unrelated capability.",
-            root => root["transcripts"]![0]!["proposals"]![1]!["reason"] =
-                "Observation without an exchange declaration does not establish the requested capability [source: 77].",
-            root => root["transcripts"]![0]!["proposals"]![1]!["claim"] =
-                "The relay observes nearby markers without declaring an exchange capability. A dragon is present.",
-            root => root["transcripts"]![0]!["proposals"]![1]!["claim"] =
-                "The relay observes nearby markers and declares an exchange capability.",
-            root => root["transcripts"]![0]!["proposals"]![1]!["claim"] =
-                "If the relay observes nearby markers, it does not declare an exchange capability.",
-            root => root["transcripts"]![0]!["proposals"]![1]!["claim"] =
-                "The relay observes nearby markers without declaring an exchange capability, and the.",
-        })
+            "S6-CLAIM-LIVE-VAL-v2",
+            "LLM-CLAIM-LIVE-VAL-v2",
+            "S6-CANDIDATE-LIVE-VAL-v2",
+            "LLM-INVESTIGATE-LIVE-VAL-v2",
+            "PROV-LIVE-COMPOSED-VAL-v2",
+        };
+        foreach (string packageId in packageIds)
         {
-            JsonObject changed = JsonNode.Parse(exactSource)!.AsObject();
-            adversarial(changed);
-            Assert.ThrowsExactly<InvalidDataException>(() =>
-                LiveSemanticV2TypedOracleVerifier.VerifySource(TestRepository.Root,
-                    changed.ToJsonString()));
-        }
-        JsonObject keywordStuffed = JsonNode.Parse(exactCandidate)!.AsObject();
-        keywordStuffed["transcripts"]![1]!["gaps"]![0] =
-            "Conditional active declared exchange and frozen neutral host evidence do not establish activation, "
-            + "but reactor 77 proves a second capability.";
-        keywordStuffed["transcripts"]![1]!["abstentions"]![0] =
-            keywordStuffed["transcripts"]![1]!["gaps"]![0]!.GetValue<string>();
-        Assert.ThrowsExactly<InvalidDataException>(() =>
-            LiveSemanticV2TypedOracleVerifier.VerifyCandidate(TestRepository.Root,
-                keywordStuffed.ToJsonString()));
-        JsonObject invertedCandidateReason = JsonNode.Parse(exactCandidate)!.AsObject();
-        invertedCandidateReason["transcripts"]![0]!["proposals"]![0]!["reason"] =
-            "The bounded hypothesis is not supported by exact admitted source evidence.";
-        Assert.ThrowsExactly<InvalidDataException>(() =>
-            LiveSemanticV2TypedOracleVerifier.VerifyCandidate(TestRepository.Root,
-                invertedCandidateReason.ToJsonString()));
-        JsonObject reversedCandidateRoles = JsonNode.Parse(exactCandidate)!.AsObject();
-        reversedCandidateRoles["transcripts"]![0]!["proposals"]![0]!["reason"] =
-            "The exact bounded hypothesis supports the admitted source evidence.";
-        Assert.ThrowsExactly<InvalidDataException>(() =>
-            LiveSemanticV2TypedOracleVerifier.VerifyCandidate(TestRepository.Root,
-                reversedCandidateRoles.ToJsonString()));
-        string mutated = M1Slice6CampaignRehearsalTests.StageProviderOutput(
-            M1Slice6CampaignStage.SourceClaimExtraction).Replace(
-                "\"state\":\"unsupported\"", "\"state\":\"proposed\"",
-                StringComparison.Ordinal);
-        Assert.ThrowsExactly<InvalidDataException>(() =>
-            LiveSemanticV2TypedOracleVerifier.VerifySource(TestRepository.Root, mutated));
-        foreach (Action<JsonObject> mutation in new Action<JsonObject>[]
-        {
-            root => root["transcripts"]![0]!["proposals"]![0]!.AsObject().Remove("claim"),
-            root => root["transcripts"]![0]!["proposals"]![0]!["condition_scope"] = "unconditional",
-            root => root["transcripts"]![0]!["proposals"]![0]!["authority_category"] = "protected-effect-request",
-            root => root["transcripts"]![0]!["proposals"]![0]!["application_semantics"] = "evidence-only",
-            root => root["transcripts"]![0]!["proposals"]![0]!["condition_ids"]!.AsArray().Clear(),
-            root => root["transcripts"]![0]!["contradiction_evidence_ids"]!.AsArray().RemoveAt(0),
-            root => root["transcripts"]![0]!["abstentions"]!.AsArray().RemoveAt(0),
-            root => root["transcripts"]![0]!["gaps"]!.AsArray().Clear(),
-        })
-        {
-            JsonObject changed = JsonNode.Parse(exactSource)!.AsObject();
-            mutation(changed);
-            Assert.ThrowsExactly<InvalidDataException>(() =>
-                LiveSemanticV2TypedOracleVerifier.VerifySource(TestRepository.Root, changed.ToJsonString()));
-        }
-        foreach (Action<JsonObject> mutation in new Action<JsonObject>[]
-        {
-            root => root["transcripts"]![0]!["proposals"]![0]!.AsObject().Remove("hypothesis"),
-            root => root["transcripts"]![0]!["proposals"]![0]!["candidate_id"] = "parallel-candidate",
-            root => root["transcripts"]![0]!["proposals"]![0]!["authority_category"] = "protected-effect-request",
-            root => root["transcripts"]![0]!["proposals"]![0]!["supporting_evidence_ids"]!.AsArray().Clear(),
-            root => root["transcripts"]![1]!["gaps"]!.AsArray().Clear(),
-            root => root["transcripts"]![1]!["abstentions"]![0] = "weaker uncertainty",
-            root => root["transcripts"]![1]!["operation_id"] = "parallel-operation",
-        })
-        {
-            JsonObject changed = JsonNode.Parse(exactCandidate)!.AsObject();
-            mutation(changed);
-            Assert.ThrowsExactly<InvalidDataException>(() =>
-                LiveSemanticV2TypedOracleVerifier.VerifyCandidate(TestRepository.Root, changed.ToJsonString()));
+            JsonElement package = registry.RootElement.GetProperty("packages").EnumerateArray()
+                .Single(item => item.GetProperty("package_identity").GetString() == packageId);
+            Assert.AreEqual("development", package.GetProperty("partition").GetString());
+            Assert.AreEqual("historical-development-evidence-clean-break-semantic-contract",
+                package.GetProperty("authority_status").GetString());
+            string authorityPath = package.GetProperty("authority_file").GetString()!;
+            byte[] authority = File.ReadAllBytes(Path.Combine(TestRepository.Root,
+                authorityPath.Replace('/', Path.DirectorySeparatorChar)));
+            Assert.AreEqual(package.GetProperty("authority_bytes").GetInt64(), authority.LongLength);
+            Assert.AreEqual(package.GetProperty("authority_sha256").GetString(), Sha(authority));
+            using JsonDocument reclassification = JsonDocument.Parse(authority);
+            Assert.IsFalse(reclassification.RootElement.GetProperty("current_semantic_authority").GetBoolean());
+            JsonElement retained = reclassification.RootElement.GetProperty("retained_manifest");
+            string manifestPath = Path.Combine(TestRepository.Root,
+                package.GetProperty("package_path").GetString()!.Replace('/', Path.DirectorySeparatorChar),
+                retained.GetProperty("path").GetString()!);
+            byte[] manifest = File.ReadAllBytes(manifestPath);
+            Assert.AreEqual(retained.GetProperty("bytes").GetInt64(), manifest.LongLength);
+            Assert.AreEqual(retained.GetProperty("sha256").GetString(), Sha(manifest));
         }
     }
 
@@ -322,20 +224,6 @@ public sealed class M1Slice6LiveCampaignOfflineGateTests
             OpenAiResponsesResult replay = OpenAiStagedResponseEnvelope.Replay(raw, headers, clientRequestId);
             Assert.AreEqual(ProviderResponseState.Completed, replay.State);
             Assert.IsTrue(replay.Admitted);
-            if (index == 1)
-            {
-                LiveSemanticV2TypedOracleReceipt receipt = LiveSemanticV2TypedOracleVerifier.VerifySource(
-                    root, M1Slice6CampaignSemanticAdmission.ExtractOutputText(raw));
-                Assert.AreEqual(packages[index].GetProperty("deterministic_oracle_result_sha256").GetString(),
-                    receipt.DeterministicResultSha256);
-            }
-            else if (index == 2)
-            {
-                LiveSemanticV2TypedOracleReceipt receipt = LiveSemanticV2TypedOracleVerifier.VerifyCandidate(
-                    root, M1Slice6CampaignSemanticAdmission.ExtractOutputText(raw));
-                Assert.AreEqual(packages[index].GetProperty("deterministic_oracle_result_sha256").GetString(),
-                    receipt.DeterministicResultSha256);
-            }
             JsonElement persistence = evidenceRoot.GetProperty("authoritative_persistence");
             ProviderOperationReadModel operation = store.ReadProviderOperation(
                 persistence.GetProperty("operation_id").GetString()!);
@@ -372,19 +260,10 @@ public sealed class M1Slice6LiveCampaignOfflineGateTests
             Assert.AreEqual(1, recordLines.Count(line => line == evidenceMarker));
         }
 
-        LiveSemanticV2AuthorityReceipt authority = LiveSemanticV2AuthorityVerifier.Verify(root);
-        Assert.AreEqual(43, authority.PackageCount);
-        Assert.AreEqual(5, authority.NewPackageCount);
+        HistoricalLiveSemanticPackageReceipt authority = HistoricalLiveSemanticPackageVerifier.Verify(root);
+        Assert.IsGreaterThan(0, authority.HistoricalRegistryEntryCount);
         Assert.AreEqual("LLM-CLAIM-LIVE-VAL-v2", packages[1].GetProperty("package_id").GetString());
-        Assert.AreEqual("76a631ffa02eeff301c240588d1507e3fe3cc2fe13f19aa597aecb8d2ddb3e14",
-            packages[1].GetProperty("oracle_sha256").GetString());
         Assert.AreEqual("LLM-INVESTIGATE-LIVE-VAL-v2", packages[2].GetProperty("package_id").GetString());
-        Assert.AreEqual("52f13b89f0c0cab2dc91c72e3986b8bc358e41a5ab5253ea1e8fab3b19230e3a",
-            packages[2].GetProperty("oracle_sha256").GetString());
-        Assert.AreEqual("beabc1d5cef06317d215bfa45ab481273e5995e0b4bd58ce412c78335bfc8e0f",
-            packages[1].GetProperty("deterministic_oracle_result_sha256").GetString());
-        Assert.AreEqual("5d594a901257437387cf970c9456106f16461401024d206fd4c1109f207dedd5",
-            packages[2].GetProperty("deterministic_oracle_result_sha256").GetString());
         string candidateInputPath = Path.Combine(root, "fixtures", "public", "provider",
             "candidate-investigations", "S6-CANDIDATE-LIVE-VAL-v2", "execution-input.v2.json");
         byte[] exactCandidateInput = File.ReadAllBytes(candidateInputPath);
@@ -465,7 +344,8 @@ public sealed class M1Slice6LiveCampaignOfflineGateTests
                     expectedHost["passage_id"]!.GetValue<string>(),
                     expectedHost["persisted_payload_sha256"]!.GetValue<string>());
                 Assert.AreEqual(resolved.ProposalId, actualHost["proposal_id"]!.GetValue<string>());
-                Assert.AreEqual(resolved.AdmissionId, actualHost["source_admission_id"]!.GetValue<string>());
+                Assert.AreEqual(resolved.ApplicationDecisionId,
+                    actualHost["source_admission_id"]!.GetValue<string>());
                 Assert.AreEqual(resolved.AdmittedArtifactId,
                     actualHost["admitted_artifact_id"]!.GetValue<string>());
                 Assert.AreEqual(resolved.ApplicationLinkId,

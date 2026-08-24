@@ -106,6 +106,7 @@
         "result_sha256": { "$ref": "#/$defs/sha256" },
         "source_acquisition_id": { "type": "string", "maxLength": 256 },
         "source_admission_id": { "type": "string", "maxLength": 256 },
+        "source_application_decision_id": { "type": "string", "maxLength": 256 },
         "admitted_artifact_id": { "type": "string", "maxLength": 256 },
         "source_application_link_id": { "type": "string", "maxLength": 256 },
         "evidence_application_link_id": { "type": "string", "maxLength": 256 },
@@ -159,7 +160,7 @@
           "stage_manifest_id": { "const": "infinium.m1-s6.campaign-stage/SourceClaimExtraction/5eae2494-e3fe-41a7-8b3d-ed11148744e8" },
           "evidence_id": { "const": "campaign-stage-evidence-2" },
           "validation_package": { "properties": { "package_id": { "const": "LLM-CLAIM-LIVE-VAL-v2" }, "semantic_use": { "const": true } } },
-          "semantic_validation": { "properties": { "validation_id": { "const": "infinium.host.source-claim-admission/v1" }, "proposal_count": { "const": 9 }, "admission_count": { "const": 1 } } }
+          "semantic_validation": { "properties": { "validation_id": { "enum": ["infinium.host.source-claim-admission/v1", "infinium.host.source-claim-application/v1"] }, "proposal_count": { "const": 9 }, "admission_count": { "const": 1 } } }
         } }
       ]
     },

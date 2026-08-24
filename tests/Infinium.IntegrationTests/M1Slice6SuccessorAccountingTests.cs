@@ -464,7 +464,7 @@ public sealed class M1Slice6SuccessorAccountingTests
                 accounting, campaign, wp10,
                 Attempt(M1Slice6CampaignStage.SourceClaimExtraction, 2), Start.AddSeconds(4));
             Assert.IsNotNull(wp10Persisted.Semantic);
-            Assert.AreEqual("infinium.host.source-claim-admission/v1", wp10Persisted.Semantic.ValidationId);
+            Assert.AreEqual("infinium.host.source-claim-application/v1", wp10Persisted.Semantic.ValidationId);
 
             M1Slice6CampaignStageAuthority wp11 = SemanticAuthority(repository,
                 M1Slice6CampaignStage.CandidateInvestigation);
@@ -551,7 +551,7 @@ public sealed class M1Slice6SuccessorAccountingTests
                 campaign.CampaignId, response.RawResponseBytes, headers, Start.AddSeconds(3));
             Assert.IsTrue(recovered.ResponsePersisted);
             Assert.IsNotNull(recovered.Semantic);
-            Assert.AreEqual("infinium.host.source-claim-admission/v1", recovered.Semantic.ValidationId);
+            Assert.AreEqual("infinium.host.source-claim-application/v1", recovered.Semantic.ValidationId);
 
             using SqliteConnection verification = new($"Data Source={Path.Combine(root, "data", "infinium.sqlite3")};Mode=ReadOnly;Pooling=False");
             verification.Open();
@@ -621,7 +621,7 @@ public sealed class M1Slice6SuccessorAccountingTests
                 interrupted.ResponseId, campaign.CampaignId, response.RawResponseBytes, headers,
                 Start.AddSeconds(4));
             Assert.IsNotNull(recovered.Semantic);
-            Assert.AreEqual("infinium.host.source-claim-admission/v1", recovered.Semantic.ValidationId);
+            Assert.AreEqual("infinium.host.source-claim-application/v1", recovered.Semantic.ValidationId);
             using SqliteConnection verification = new($"Data Source={Path.Combine(root, "data", "infinium.sqlite3")};Mode=ReadOnly;Pooling=False");
             verification.Open();
             using SqliteCommand count = verification.CreateCommand();

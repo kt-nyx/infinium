@@ -17,11 +17,12 @@
     "application_scope_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
     "cost_attribution_scope_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
     "prompt_id": { "const": "infinium.m1-s6.candidate-investigation-prompt/v1" },
-    "prompt_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
+    "prompt_fingerprint": { "const": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e" },
     "contexts": { "type": "array", "minItems": 2, "maxItems": 32, "items": { "$ref": "#/$defs/context" } }
   },
   "$defs": {
     "ids": { "type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+    "participantIds": { "type": "array", "minItems": 1, "maxItems": 32, "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
     "context": {
       "type": "object", "additionalProperties": false,
       "required": ["context_id", "candidate_id", "hypothesis_id", "hypothesis", "participant_ids", "participant_roles", "causal_path_ids", "dependency_closure_id", "evidence"],
@@ -30,8 +31,8 @@
         "candidate_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "hypothesis_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "hypothesis": { "type": "string", "minLength": 1, "maxLength": 4096 },
-        "participant_ids": { "$ref": "#/$defs/ids" },
-        "participant_roles": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
+        "participant_ids": { "$ref": "#/$defs/participantIds" },
+        "participant_roles": { "type": "array", "minItems": 1, "maxItems": 32, "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
         "causal_path_ids": { "$ref": "#/$defs/ids" },
         "dependency_closure_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "evidence": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/evidence" } }
@@ -39,19 +40,47 @@
     },
     "evidence": {
       "type": "object", "additionalProperties": false,
-      "required": ["evidence_id", "evidence_application_link_id", "source_acquisition_id", "source_admission_id", "source_application_link_id", "source_revision_id", "passage_id", "relationship", "availability", "content_sha256"],
+      "required": ["evidence_id", "evidence_application_link_id", "source_acquisition_id", "source_admission_id", "source_application_decision_id", "source_application_link_id", "source_revision_id", "passage_id", "relationship", "availability", "content_sha256", "root_kind", "evidence_root_id", "applicability_record_id"],
       "properties": {
         "evidence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "evidence_application_link_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "source_acquisition_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "source_admission_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "source_application_link_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "source_acquisition_id": { "type": "string" },
+        "source_admission_id": { "type": "string" },
+        "source_application_decision_id": { "type": "string" },
+        "source_application_link_id": { "type": "string" },
         "source_revision_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "passage_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "relationship": { "enum": ["supporting", "contradicting", "neutral"] },
         "availability": { "enum": ["available", "deleted", "unavailable"] },
-        "content_sha256": { "$ref": "common.v1.schema.json#/$defs/sha256" }
-      }
+        "content_sha256": { "$ref": "common.v1.schema.json#/$defs/sha256" },
+        "root_kind": { "enum": ["persisted-source-claim-application", "frozen-host-evidence"] },
+        "evidence_root_id": { "type": "string" },
+        "applicability_record_id": { "type": "string" }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "root_kind": { "const": "persisted-source-claim-application" },
+            "source_acquisition_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+            "source_admission_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+            "source_application_decision_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+            "source_application_link_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+            "evidence_root_id": { "const": "" },
+            "applicability_record_id": { "const": "" }
+          }
+        },
+        {
+          "properties": {
+            "root_kind": { "const": "frozen-host-evidence" },
+            "source_acquisition_id": { "const": "" },
+            "source_admission_id": { "const": "" },
+            "source_application_decision_id": { "const": "" },
+            "source_application_link_id": { "const": "" },
+            "evidence_root_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+            "applicability_record_id": { "$ref": "common.v1.schema.json#/$defs/identifier" }
+          }
+        }
+      ]
     }
   }
 }

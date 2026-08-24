@@ -492,6 +492,7 @@ message SourceClaimExtractionPayload {
   repeated string admission_correlation_ids = 9;
   string source_revision_id = 10;
   repeated SourceClaimAdmissionCorrelation admission_correlations = 11;
+  repeated SourceClaimApplicationDecision application_decisions = 12;
 }
 
 message SourceClaimAdmissionCorrelation {
@@ -508,6 +509,13 @@ message SourceClaimAdmissionCorrelation {
   string authorization_id = 11;
   string applicability_state = 12;
   string decision_state = 13;
+}
+
+message SourceClaimApplicationDecision {
+  ProviderSemanticAdmissionLink decision_link = 1;
+  string source_admission_id = 2;
+  repeated string applicability_fact_ids = 3;
+  string reason = 4;
 }
 
 message CandidateInvestigationPayload {

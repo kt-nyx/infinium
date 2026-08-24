@@ -189,14 +189,41 @@ internal static class M1Slice6CampaignSemanticAdmission
         string semanticResultSha256 = SourceActualSemanticResultSha256(input, retainedTranscript);
         SourceClaimRetainedTranscript transcript = retainedTranscript;
         RequireSourceRevision(store, input);
-        SourceClaimScenarioResult preview = SourceClaimAcquisitionEngine.Execute(input, [transcript]).Scenarios.Single();
-        HashSet<string> admittedProposalIds = preview.Extraction.AdmissionCorrelations
-            .Where(item => item.DecisionState == SemanticDecisionState.Admitted)
-            .Select(item => item.ProposalId.Value).ToHashSet(StringComparer.Ordinal);
         Dictionary<string, SourceClaimCampaignIdentity> identities = transcript.Proposals
-            .Where(item => admittedProposalIds.Contains(item.ProposalId))
             .ToDictionary(item => item.ProposalId, item => CampaignSourceIdentity(item.ProposalId),
                 StringComparer.Ordinal);
+        SourceClaimScenarioResult sourcePreview = SourceClaimAcquisitionEngine.Execute(input, [transcript])
+            .Scenarios.Single();
+        Dictionary<string, SourceClaimAdmissionCorrelationContract> sourceLinks = sourcePreview.Extraction
+            .AdmissionCorrelations.ToDictionary(item => item.ProposalId.Value, StringComparer.Ordinal);
+        Dictionary<string, SourceClaimApplicationAuthority> applicationAuthority = transcript.Proposals
+            .ToDictionary(item => item.ProposalId, item =>
+            {
+                SourceClaimAdmissionCorrelationContract sourceLink = sourceLinks[item.ProposalId];
+                bool mayEvaluateApplicability = sourceLink.DecisionState is not
+                        (SemanticDecisionState.Rejected or SemanticDecisionState.AuditOnly)
+                    && sourceLink.SupportState is SemanticSupportState.Supported
+                        or SemanticSupportState.Unsupported or SemanticSupportState.Contradicted;
+                return new SourceClaimApplicationAuthority(
+                    identities[item.ProposalId].ApplicationLinkId, input.ParentAnalysisRunId,
+                    input.ApplicationScopeId, input.ApplicationScopeId, input.CostAttributionScopeId,
+                    mayEvaluateApplicability
+                        ? item.ConditionIds.Where(campaignInput.ApplicabilityFacts.ContainsKey).ToArray()
+                        : []);
+            },
+                StringComparer.Ordinal);
+        SourceClaimApplicationResult applicationPreview = SourceClaimApplicationAdjudicator.Evaluate(
+            input, sourcePreview, transcript.Proposals.Select(item =>
+            {
+                SourceClaimCampaignIdentity identity = identities[item.ProposalId];
+                SourceClaimApplicationAuthority authority = applicationAuthority[item.ProposalId];
+                return new SourceClaimApplicationContext(item.ProposalId, identity.ApplicationDecisionId,
+                    identity.ValidationId, identity.ApplicationLinkId, authority.ParentAnalysisRunId,
+                    authority.RootSubjectId, authority.ApplicabilityFactIds);
+            }).ToArray());
+        HashSet<string> admittedProposalIds = applicationPreview.Decisions
+            .Where(item => item.DecisionLink.DecisionState == SemanticDecisionState.Admitted)
+            .Select(item => item.DecisionLink.ProposalId.Value).ToHashSet(StringComparer.Ordinal);
         Dictionary<string, SourceClaimPassageInput> passages = input.Passages.ToDictionary(
             item => item.PassageId, StringComparer.Ordinal);
         Dictionary<string, SourceClaimArtifactAuthority> artifactAuthority = transcript.Proposals
@@ -209,30 +236,21 @@ internal static class M1Slice6CampaignSemanticAdmission
                     passage.TextSha256, 0, Encoding.UTF8.GetByteCount(passage.Text));
             }, StringComparer.Ordinal);
         Dictionary<string, SourceClaimApplicabilityFactAuthority> applicabilityFacts =
-            campaignInput.ApplicabilityFacts.Values.Where(item => preview.Extraction.ClaimProposals
-                    .Where(proposal => preview.Extraction.AdmissionCorrelations.Any(correlation =>
-                        correlation.ProposalId == proposal.ProposalId
-                        && correlation.DecisionState == SemanticDecisionState.Admitted))
-                    .SelectMany(proposal => proposal.ConditionIds).Any(id => id.Value == item.FactId))
+            campaignInput.ApplicabilityFacts.Values.Where(item => applicationPreview.Decisions
+                    .SelectMany(decision => decision.ApplicabilityFactIds).Any(id => id.Value == item.FactId))
                 .ToDictionary(item => item.FactId,
                 item => new SourceClaimApplicabilityFactAuthority(item.FactId, item.SourceRevisionId,
                     item.Statement, item.StatementSha256), StringComparer.Ordinal);
-        Dictionary<string, SourceClaimApplicationAuthority> applicationAuthority = transcript.Proposals
-            .Where(item => admittedProposalIds.Contains(item.ProposalId))
-            .ToDictionary(item => item.ProposalId, item => new SourceClaimApplicationAuthority(
-                identities[item.ProposalId].ApplicationLinkId, input.ParentAnalysisRunId,
-                input.ApplicationScopeId, input.CostAttributionScopeId), StringComparer.Ordinal);
         SourceClaimAdmissionPublication publication = new SourceClaimAcquisitionCoordinator(store)
             .AdmitRetainedTranscript(input, transcript, SemanticAuthorizationId(admission),
                 admission.AttemptId, admission.RequestId, admission.DispatchFenceId, occurredAt,
                 identities, artifactAuthority, applicabilityFacts, applicationAuthority);
         SourceClaimScenarioResult scenario = publication.Scenario;
-        int admittedCount = scenario.Extraction.AdmissionCorrelations.Count(item =>
-            item.DecisionState == SemanticDecisionState.Admitted);
+        int admittedCount = publication.Applications.Decisions.Count(item =>
+            item.DecisionLink.DecisionState == SemanticDecisionState.Admitted);
         if (publication.Persistence.ProposalCount != input.Passages.Count
             || publication.Persistence.AdmissionCount != input.Passages.Count
             || admittedCount < 1
-            || scenario.Extraction.ContradictionEvidenceIds.Count == 0
             || scenario.Extraction.Abstentions.Count == 0
             || scenario.Extraction.Gaps.Count == 0)
         {
@@ -243,22 +261,23 @@ internal static class M1Slice6CampaignSemanticAdmission
             .ToDictionary(item => item.PassageId, item => item.index, StringComparer.Ordinal);
         Dictionary<string, string> proposalPassages = transcript.Proposals.ToDictionary(
             item => item.ProposalId, item => item.PassageId, StringComparer.Ordinal);
-        SourceClaimAdmissionCorrelationContract admitted = scenario.Extraction.AdmissionCorrelations
-            .Where(item => item.DecisionState == SemanticDecisionState.Admitted)
-            .OrderBy(item => passageOrder[proposalPassages[item.ProposalId.Value]])
+        SourceClaimApplicationDecisionContract admitted = publication.Applications.Decisions
+            .Where(item => item.DecisionLink.DecisionState == SemanticDecisionState.Admitted)
+            .OrderBy(item => passageOrder[proposalPassages[item.DecisionLink.ProposalId.Value]])
             .First();
-        SourceClaimCampaignIdentity semanticIdentity = identities[admitted.ProposalId.Value];
+        SourceClaimCampaignIdentity semanticIdentity = identities[admitted.DecisionLink.ProposalId.Value];
         SourceClaimApplicationReadModel consumed = store.ReadSourceClaimApplicationLinks(input.AcquisitionRunId)
             .Single(link => link.ApplicationLinkId == semanticIdentity.ApplicationLinkId);
         if (consumed.AdmittedArtifactId != semanticIdentity.AdmittedArtifactId
-            || consumed.AdmissionId != semanticIdentity.AdmissionId)
+            || consumed.ApplicationDecisionId != semanticIdentity.ApplicationDecisionId)
         {
             throw new InvalidDataException("WP10 admitted claim did not produce the exact WP11 provenance handoff.");
         }
-        return new("infinium.host.source-claim-admission/v1", scenario.Disposition,
+        return new("infinium.host.source-claim-application/v1", scenario.Disposition,
             publication.Persistence.ProposalCount, admittedCount,
             semanticResultSha256, new(input.AcquisitionRunId,
-                consumed.AdmissionId, consumed.AdmittedArtifactId, consumed.ApplicationLinkId,
+                consumed.SourceAdmissionId, consumed.ApplicationDecisionId,
+                consumed.AdmittedArtifactId, consumed.ApplicationLinkId,
                 "", "", ""));
     }
 
@@ -267,7 +286,8 @@ internal static class M1Slice6CampaignSemanticAdmission
         if (!BoundedOpaqueId(proposalId))
         { throw new InvalidDataException("WP10 proposal identity is not bounded."); }
         string suffix = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(proposalId)))[..24];
-        return new("wp10-source-admission-" + suffix, "wp10-artifact-" + suffix,
+        return new("wp10-source-application-decision-" + suffix,
+            "wp10-source-application-validation-" + suffix, "wp10-artifact-" + suffix,
             "wp10-application-link-" + suffix);
     }
 
@@ -456,6 +476,11 @@ internal static class M1Slice6CampaignSemanticAdmission
             || negativeRoot.Kind != M1Slice6CampaignEvidenceRootKind.FrozenHostEvidence
             || positive.Scenario.SourceAcquisitionLinks.Count != 1
             || negative.Scenario.SourceAcquisitionLinks.Count != 0
+            || positive.Scenario.EvidenceProvenanceLinks.Single().RootKind
+                != "persisted-source-claim-application"
+            || negative.Scenario.EvidenceProvenanceLinks.Single().RootKind != "frozen-host-evidence"
+            || string.IsNullOrWhiteSpace(negative.Scenario.EvidenceProvenanceLinks.Single().EvidenceRootId)
+            || string.IsNullOrWhiteSpace(negative.Scenario.EvidenceProvenanceLinks.Single().ApplicabilityRecordId)
             || positive.Persistence.ProposalCount != 1 || positive.Persistence.AdmissionCount != 1
             || negative.Persistence.AdmissionCount != negative.Persistence.ProposalCount)
         {
@@ -470,6 +495,7 @@ internal static class M1Slice6CampaignSemanticAdmission
                 link.DecisionState == SemanticDecisionState.Admitted)),
             semanticResultSha256, new(
                 evidence.SourceAcquisitionId, evidence.SourceAdmissionId,
+                evidence.SourceApplicationDecisionId,
                 store.ReadSourceClaimApplicationLinks(evidence.SourceAcquisitionId)
                     .Single(link => link.ApplicationLinkId == evidence.SourceApplicationLinkId).AdmittedArtifactId,
                 evidence.SourceApplicationLinkId, evidence.EvidenceApplicationLinkId,
@@ -596,7 +622,8 @@ internal static class M1Slice6CampaignSemanticAdmission
             || resolved.ContentSha256 != sourceRoot.ContentSha256)
         { throw new InvalidDataException("The WP11 source application changed its answer-free evidence bytes."); }
         if (sourceRoot.ProposalId == resolved.ProposalId
-            && sourceRoot.SourceAdmissionId == resolved.AdmissionId
+            && sourceRoot.SourceAdmissionId == resolved.SourceAdmissionId
+            && sourceRoot.ApplicationDecisionId == resolved.ApplicationDecisionId
             && sourceRoot.AdmittedArtifactId == resolved.AdmittedArtifactId
             && sourceRoot.ApplicationLinkId == resolved.ApplicationLinkId)
         { return campaignInput; }
@@ -606,7 +633,8 @@ internal static class M1Slice6CampaignSemanticAdmission
             .Single(item => item["context_id"]!.GetValue<string>() == sourceRoot.ContextId);
         JsonObject host = context["evidence"]![0]!["host_bindings"]!.AsObject();
         host["proposal_id"] = resolved.ProposalId;
-        host["source_admission_id"] = resolved.AdmissionId;
+        host["source_admission_id"] = resolved.SourceAdmissionId;
+        host["application_decision_id"] = resolved.ApplicationDecisionId;
         host["admitted_artifact_id"] = resolved.AdmittedArtifactId;
         host["application_link_id"] = resolved.ApplicationLinkId;
         M1Slice6CampaignCandidateInput result = M1Slice6CampaignV2InputAdapter.ReadCandidate(
@@ -639,7 +667,8 @@ internal static class M1Slice6CampaignSemanticAdmission
             SourceClaimApplicationReadModel application = store.ReadSourceClaimApplicationLinks(
                 root.AcquisitionRunId).SingleOrDefault(link =>
                     link.ApplicationLinkId == root.ApplicationLinkId
-                    && link.AdmissionId == root.SourceAdmissionId
+                    && link.ApplicationDecisionId == root.ApplicationDecisionId
+                    && link.SourceAdmissionId == root.SourceAdmissionId
                     && link.AdmittedArtifactId == root.AdmittedArtifactId
                     && link.ApplicationScopeId == input.ApplicationScopeId)
                 ?? throw new InvalidDataException(
@@ -797,7 +826,8 @@ internal static class M1Slice6CampaignSemanticAdmission
         SourceClaimApplicationReadModel? application = root.Kind == M1Slice6CampaignEvidenceRootKind.PersistedSourceClaimApplication
             ? store.ReadSourceClaimApplicationLinks(root.AcquisitionRunId).SingleOrDefault(link =>
                 link.ApplicationLinkId == root.ApplicationLinkId
-                && link.AdmissionId == root.SourceAdmissionId
+                && link.ApplicationDecisionId == root.ApplicationDecisionId
+                && link.SourceAdmissionId == root.SourceAdmissionId
                 && link.AdmittedArtifactId == root.AdmittedArtifactId
                 && link.ApplicationScopeId == input.ApplicationScopeId
                 && !string.IsNullOrWhiteSpace(link.ParentAnalysisRunId)
@@ -807,11 +837,20 @@ internal static class M1Slice6CampaignSemanticAdmission
         {
             SourceClaimExtractionDocument sourceMatrix = store.ReadSourceClaimExtraction(
                 root.AcquisitionRunId, root.SourceAdmissionId);
+            SourceClaimApplicationDecisionReadModel applicationDecision = store
+                .ReadSourceClaimApplicationDecisions(root.AcquisitionRunId).Single(item =>
+                    item.ApplicationDecisionId == root.ApplicationDecisionId
+                    && item.SourceAdmissionId == root.SourceAdmissionId
+                    && item.ApplicationLinkId == root.ApplicationLinkId);
             if (sourceMatrix.ClaimProposals.Count != 9
                 || sourceMatrix.AdmissionCorrelations.Count != 9
                 || !sourceMatrix.AdmissionCorrelations.Any(item =>
                     item.AdmissionId.Value == root.SourceAdmissionId
-                    && item.DecisionState == SemanticDecisionState.Admitted)
+                    && item.SupportState == SemanticSupportState.Supported
+                    && item.DecisionState == SemanticDecisionState.Abstained)
+                || applicationDecision.SupportState != "supported"
+                || applicationDecision.ApplicabilityState != "applicable"
+                || applicationDecision.DecisionState != "admitted"
                 || sourceMatrix.ContradictionEvidenceIds.Count == 0
                 || sourceMatrix.Abstentions.Count == 0 || sourceMatrix.Gaps.Count == 0)
             {

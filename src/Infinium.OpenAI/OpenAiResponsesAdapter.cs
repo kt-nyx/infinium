@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Infinium.Domain.Contracts;
 
 namespace Infinium.OpenAI;
@@ -1514,11 +1515,14 @@ internal static class ClosedJsonSchemaValidator
         "$schema", "$id", "$defs", "title", "description",
         "$ref", "type", "const", "enum", "oneOf", "anyOf", "allOf",
         "required", "properties", "additionalProperties", "items",
-        "minItems", "maxItems", "minLength", "maxLength", "minimum", "maximum",
+        "minItems", "maxItems", "minLength", "maxLength", "pattern", "minimum", "maximum",
     };
 
     private static readonly HashSet<string> SupportedTypes = new(StringComparer.Ordinal)
         { "object", "array", "string", "boolean", "integer", "number", "null" };
+
+    private static readonly HashSet<string> SupportedPatterns = new(StringComparer.Ordinal)
+        { "^[A-Za-z0-9][A-Za-z0-9._:/-]*$", "^[0-9a-f]{64}$" };
 
     internal static bool ValidateSchema(JsonElement schema) =>
         ValidateSchema(schema, schema, rootSchema: true, depth: 0, []);
@@ -1602,6 +1606,7 @@ internal static class ClosedJsonSchemaValidator
         if ((schema.TryGetProperty("minItems", out _) || schema.TryGetProperty("maxItems", out _)) && !declaresArray
             || (schema.TryGetProperty("minLength", out _) || schema.TryGetProperty("maxLength", out _))
                 && !DeclaresType(schema, "string")
+            || schema.TryGetProperty("pattern", out _) && !DeclaresType(schema, "string")
             || (schema.TryGetProperty("minimum", out _) || schema.TryGetProperty("maximum", out _))
                 && !DeclaresType(schema, "integer") && !DeclaresType(schema, "number"))
         {
@@ -1621,6 +1626,11 @@ internal static class ClosedJsonSchemaValidator
         if (!ValidNonnegativeBoundPair(schema, "minItems", "maxItems")
             || !ValidNonnegativeBoundPair(schema, "minLength", "maxLength")
             || !ValidNumberBoundPair(schema, "minimum", "maximum"))
+        {
+            return false;
+        }
+        if (schema.TryGetProperty("pattern", out JsonElement pattern)
+            && (pattern.ValueKind != JsonValueKind.String || !SupportedPatterns.Contains(pattern.GetString()!)))
         {
             return false;
         }
@@ -1697,7 +1707,7 @@ internal static class ClosedJsonSchemaValidator
     }
 
     internal static bool Validate(JsonElement value, JsonElement schema) =>
-        Validate(value, schema, schema, depth: 0);
+        ValidateSchema(schema) && Validate(value, schema, schema, depth: 0);
 
     private static bool Validate(JsonElement value, JsonElement schema, JsonElement root, int depth)
     {
@@ -1832,7 +1842,10 @@ internal static class ClosedJsonSchemaValidator
         {
             int length = value.GetString()!.EnumerateRunes().Count();
             if (!WithinIntegerBound(schema, "minLength", length, lowerBound: true)
-                || !WithinIntegerBound(schema, "maxLength", length, lowerBound: false))
+                || !WithinIntegerBound(schema, "maxLength", length, lowerBound: false)
+                || schema.TryGetProperty("pattern", out JsonElement pattern)
+                    && !Regex.IsMatch(value.GetString()!, pattern.GetString()!,
+                        RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100)))
             {
                 return false;
             }

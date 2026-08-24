@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 
@@ -26,13 +25,12 @@ public sealed record CandidateEvidenceInput(
     string Availability,
     string ContentSha256)
 {
-    [JsonIgnore]
+    public string SourceApplicationDecisionId { get; init; } = string.Empty;
+
     public string RootKind { get; init; } = "persisted-source-claim-application";
 
-    [JsonIgnore]
     public string EvidenceRootId { get; init; } = string.Empty;
 
-    [JsonIgnore]
     public string ApplicabilityRecordId { get; init; } = string.Empty;
 }
 
@@ -93,7 +91,24 @@ public sealed record CandidateSourceAcquisitionLink(
     string EvidenceApplicationLinkId,
     string SourceAcquisitionId,
     string SourceAdmissionId,
+    string SourceApplicationDecisionId,
     string SourceApplicationLinkId,
+    string SourceRevisionId,
+    string PassageId,
+    string Relationship,
+    string Availability,
+    string ContentSha256);
+
+public sealed record CandidateEvidenceProvenanceLink(
+    string EvidenceId,
+    string EvidenceApplicationLinkId,
+    string RootKind,
+    string SourceAcquisitionId,
+    string SourceAdmissionId,
+    string SourceApplicationDecisionId,
+    string SourceApplicationLinkId,
+    string EvidenceRootId,
+    string ApplicabilityRecordId,
     string SourceRevisionId,
     string PassageId,
     string Relationship,
@@ -115,6 +130,7 @@ public sealed record CandidateInvestigationScenarioResult(
     string HypothesisId,
     CandidateInvestigationDocument Investigation,
     IReadOnlyList<CandidateSourceAcquisitionLink> SourceAcquisitionLinks,
+    IReadOnlyList<CandidateEvidenceProvenanceLink> EvidenceProvenanceLinks,
     IReadOnlyList<string> RawIntermediateIds,
     string CanonicalInvestigationSha256,
     IReadOnlyList<string> AbstentionKinds,
@@ -160,36 +176,44 @@ public static class CandidateInvestigationContextMinimizer
         if (input.SchemaId != "infinium.llm.candidate-investigation-execution-input/v1" || input.SchemaVersion != "1"
             || input.OwnerKind != "analysis-run" || input.OwnerId != input.AnalysisRunId
             || new[] { input.PackageId, input.OperationId, input.OwnerId, input.AnalysisRunId,
-                input.ApplicationScopeId, input.CostAttributionScopeId }.Any(string.IsNullOrWhiteSpace)
+                input.HostAuthorizationId, input.ApplicationScopeId, input.CostAttributionScopeId }
+                .Any(id => !ProviderOperationContractInvariants.IsValidIdentifier(id))
             || input.PromptId != CandidateInvestigationPromptV1.Id
             || input.PromptFingerprint != CandidateInvestigationPromptV1.Fingerprint
             || input.Contexts.Count is < 2 or > 32 || string.IsNullOrWhiteSpace(input.HostAuthorizationId)
             || !Unique(input.Contexts.Select(x => x.ContextId)) || !Unique(input.Contexts.Select(x => x.CandidateId))
             || !Unique(input.Contexts.Select(x => x.HypothesisId)) || !Unique(evidence.Select(x => x.EvidenceId))
-            || input.Contexts.Any(context => new[] { context.ContextId, context.CandidateId, context.HypothesisId,
-                    context.Hypothesis, context.DependencyClosureId }.Any(string.IsNullOrWhiteSpace)
+            || input.Contexts.Any(context => new[] { context.ContextId, context.CandidateId,
+                    context.HypothesisId, context.DependencyClosureId }
+                    .Any(id => !ProviderOperationContractInvariants.IsValidIdentifier(id))
+                || !SourceClaimContextMinimizer.BoundedText(context.Hypothesis, 4096)
                 || context.ParticipantIds.Count is < 1 or > 32
                 || context.ParticipantIds.Count != context.ParticipantRoles.Count
-                || !Unique(context.ParticipantIds) || context.ParticipantRoles.Any(string.IsNullOrWhiteSpace)
+                || !Unique(context.ParticipantIds)
+                || context.ParticipantRoles.Any(role => !SourceClaimContextMinimizer.BoundedText(role, 128))
                 || context.CausalPathIds.Count is < 1 or > 64 || !Unique(context.CausalPathIds)
                 || context.Evidence.Count is < 1 or > 64)
             || evidence.Any(item => item.Relationship is not ("supporting" or "contradicting" or "neutral")
                 || item.Availability is not ("available" or "deleted" or "unavailable")
-                || item.ContentSha256.Length != 64 || !item.ContentSha256.All(Uri.IsHexDigit)
-                || string.IsNullOrWhiteSpace(item.EvidenceId)
-                || string.IsNullOrWhiteSpace(item.EvidenceApplicationLinkId)
+                || !SourceClaimContextMinimizer.IsLowercaseSha256(item.ContentSha256)
+                || !ProviderOperationContractInvariants.IsValidIdentifier(item.EvidenceId)
+                || !ProviderOperationContractInvariants.IsValidIdentifier(item.EvidenceApplicationLinkId)
                 || item.RootKind is not ("persisted-source-claim-application" or "frozen-host-evidence")
                 || item.RootKind == "persisted-source-claim-application"
-                    && (string.IsNullOrWhiteSpace(item.SourceAcquisitionId)
-                        || string.IsNullOrWhiteSpace(item.SourceAdmissionId)
-                        || string.IsNullOrWhiteSpace(item.SourceApplicationLinkId))
+                    && (!ProviderOperationContractInvariants.IsValidIdentifier(item.SourceAcquisitionId)
+                        || !ProviderOperationContractInvariants.IsValidIdentifier(item.SourceAdmissionId)
+                        || !ProviderOperationContractInvariants.IsValidIdentifier(item.SourceApplicationDecisionId)
+                        || item.SourceApplicationDecisionId == item.SourceAdmissionId
+                        || !ProviderOperationContractInvariants.IsValidIdentifier(item.SourceApplicationLinkId)
+                        || item.EvidenceRootId.Length != 0 || item.ApplicabilityRecordId.Length != 0)
                 || item.RootKind == "frozen-host-evidence"
                     && (item.SourceAcquisitionId.Length != 0 || item.SourceAdmissionId.Length != 0
+                        || item.SourceApplicationDecisionId.Length != 0
                         || item.SourceApplicationLinkId.Length != 0
-                        || string.IsNullOrWhiteSpace(item.EvidenceRootId)
-                        || string.IsNullOrWhiteSpace(item.ApplicabilityRecordId))
-                || string.IsNullOrWhiteSpace(item.SourceRevisionId)
-                || string.IsNullOrWhiteSpace(item.PassageId)))
+                        || !ProviderOperationContractInvariants.IsValidIdentifier(item.EvidenceRootId)
+                        || !ProviderOperationContractInvariants.IsValidIdentifier(item.ApplicabilityRecordId))
+                || !ProviderOperationContractInvariants.IsValidIdentifier(item.SourceRevisionId)
+                || !ProviderOperationContractInvariants.IsValidIdentifier(item.PassageId)))
         {
             throw new InvalidDataException("Candidate-investigation input is not the exact closed answer-free context contract.");
         }
@@ -198,7 +222,8 @@ public static class CandidateInvestigationContextMinimizer
     private static bool Unique(IEnumerable<string> values)
     {
         string[] items = values.ToArray();
-        return items.Length == items.Distinct(StringComparer.Ordinal).Count() && items.All(x => !string.IsNullOrWhiteSpace(x));
+        return items.Length == items.Distinct(StringComparer.Ordinal).Count()
+            && items.All(ProviderOperationContractInvariants.IsValidIdentifier);
     }
 }
 
@@ -275,7 +300,7 @@ public static class CandidateInvestigationEngine
                 proposal.MissingInformation, assessment.ProposalState, assessment.Reason));
             links.Add(new(admissionId, new(proposal.ProposalId), new(input.HostAuthorizationId), new(input.OperationId),
                 new(transcript.ResponseRecordId), input.OwnerKind, new(input.OwnerId), new(context.CandidateId), validationId,
-                new(applicationLinkId), assessment.SupportState, SemanticApplicabilityState.Applicable,
+                new(applicationLinkId), assessment.SupportState, assessment.ApplicabilityState,
                 assessment.DecisionState));
             audit.Add(proposal.ProposalId + ":" + Wire(assessment.ProposalState) + ":"
                 + Wire(assessment.SupportState) + ":" + Wire(assessment.DecisionState) + ":" + assessment.Reason);
@@ -315,9 +340,17 @@ public static class CandidateInvestigationEngine
         {
             return Rejected("candidate-hypothesis-or-evidence-identity-rejected");
         }
+        if (proposal.State is not ("proposed" or "unsupported" or "abstained" or "unavailable"))
+        {
+            return Rejected("unknown-proposal-state");
+        }
         if (proposal.AuthorityCategory == "protected-effect-request")
         {
-            return Rejected("model-proposed-forbidden-authority");
+            return proposal.State is "proposed" or "unsupported"
+                ? new(SemanticProposalState.Proposed, SemanticSupportState.NotEvaluated,
+                    SemanticApplicabilityState.NotEvaluated, SemanticDecisionState.Rejected,
+                    "model-proposed-forbidden-authority")
+                : Rejected("model-proposed-forbidden-authority");
         }
         if (proposal.AuthorityCategory != "informational")
         {
@@ -333,35 +366,27 @@ public static class CandidateInvestigationEngine
         if (referenced.Any(x => x.Availability == "deleted"))
         {
             return new(SemanticProposalState.Deleted, SemanticSupportState.Unavailable,
-                SemanticDecisionState.AuditOnly, "referenced-evidence-deleted");
+                SemanticApplicabilityState.NotEvaluated, SemanticDecisionState.AuditOnly,
+                "referenced-evidence-deleted");
         }
-        if (referenced.Any(x => x.Availability == "unavailable") || proposal.State == "unavailable")
+        if (referenced.Any(x => x.Availability == "unavailable"))
         {
             return new(SemanticProposalState.Unavailable, SemanticSupportState.Unavailable,
-                SemanticDecisionState.Abstained, "referenced-evidence-unavailable");
+                SemanticApplicabilityState.NotEvaluated, SemanticDecisionState.Abstained,
+                "referenced-evidence-unavailable");
         }
-        if (proposal.State == "unsupported")
+        if (proposal.ContradictingEvidenceIds.Count > 0)
         {
-            return new(SemanticProposalState.Proposed, SemanticSupportState.Unsupported,
-                SemanticDecisionState.Abstained, "proposal-declared-unsupported");
-        }
-        if (proposal.State == "abstained" || proposal.ContradictingEvidenceIds.Count > 0)
-        {
-            return proposal.ContradictingEvidenceIds.Count > 0
-                ? new(SemanticProposalState.Proposed, SemanticSupportState.Contradicted,
-                    SemanticDecisionState.Abstained, "contradicting-evidence-requires-abstention")
-                : new(SemanticProposalState.Abstained, SemanticSupportState.NotEvaluated,
-                    SemanticDecisionState.Abstained, "proposal-declared-abstained");
-        }
-        if (proposal.State != "proposed")
-        {
-            return Rejected("unknown-proposal-state");
+            return new(SemanticProposalState.Proposed, SemanticSupportState.Contradicted,
+                SemanticApplicabilityState.Applicable, SemanticDecisionState.Abstained,
+                "host-contradicting-evidence-requires-abstention");
         }
         if (proposal.SupportingEvidenceIds.Count == 0
             )
         {
             return new(SemanticProposalState.Proposed, SemanticSupportState.Unsupported,
-                SemanticDecisionState.Abstained, "supporting-evidence-absent");
+                SemanticApplicabilityState.Applicable, SemanticDecisionState.Abstained,
+                "supporting-evidence-absent");
         }
         string[] knownContradictions = evidence.Values
             .Where(item => item.Relationship == "contradicting" && item.Availability == "available")
@@ -369,14 +394,17 @@ public static class CandidateInvestigationEngine
         if (knownContradictions.Except(proposal.ContradictingEvidenceIds, StringComparer.Ordinal).Any())
         {
             return new(SemanticProposalState.Proposed, SemanticSupportState.Contradicted,
-                SemanticDecisionState.Abstained, "known-contradiction-omitted");
+                SemanticApplicabilityState.Applicable, SemanticDecisionState.Abstained,
+                "known-contradiction-omitted");
         }
         return new(SemanticProposalState.Proposed, SemanticSupportState.Supported,
-            SemanticDecisionState.Admitted, "exact-candidate-hypothesis-evidence-links-admitted");
+            SemanticApplicabilityState.Applicable, SemanticDecisionState.Admitted,
+            "exact-candidate-hypothesis-evidence-links-admitted");
     }
 
     private static SemanticAssessment Rejected(string reason) => new(SemanticProposalState.Rejected,
-        SemanticSupportState.NotEvaluated, SemanticDecisionState.Rejected, reason);
+        SemanticSupportState.NotEvaluated, SemanticApplicabilityState.NotEvaluated,
+        SemanticDecisionState.Rejected, reason);
 
     private static string Wire<T>(T value) where T : struct, Enum =>
         JsonNamingPolicy.KebabCaseLower.ConvertName(value.ToString());
@@ -384,6 +412,7 @@ public static class CandidateInvestigationEngine
     private sealed record SemanticAssessment(
         SemanticProposalState ProposalState,
         SemanticSupportState SupportState,
+        SemanticApplicabilityState ApplicabilityState,
         SemanticDecisionState DecisionState,
         string Reason);
 
@@ -439,15 +468,22 @@ public static class CandidateInvestigationEngine
         CandidateSourceAcquisitionLink[] sourceLinks = context.Evidence
             .Where(item => item.RootKind == "persisted-source-claim-application")
             .Select(item => new CandidateSourceAcquisitionLink(
-            item.EvidenceId, item.EvidenceApplicationLinkId, item.SourceAcquisitionId, item.SourceAdmissionId, item.SourceApplicationLinkId,
+            item.EvidenceId, item.EvidenceApplicationLinkId, item.SourceAcquisitionId, item.SourceAdmissionId,
+            item.SourceApplicationDecisionId, item.SourceApplicationLinkId,
             item.SourceRevisionId, item.PassageId, item.Relationship, item.Availability, item.ContentSha256)).ToArray();
+        CandidateEvidenceProvenanceLink[] evidenceLinks = context.Evidence.Select(item =>
+            new CandidateEvidenceProvenanceLink(item.EvidenceId, item.EvidenceApplicationLinkId, item.RootKind,
+                item.SourceAcquisitionId, item.SourceAdmissionId, item.SourceApplicationDecisionId,
+                item.SourceApplicationLinkId, item.EvidenceRootId, item.ApplicabilityRecordId,
+                item.SourceRevisionId, item.PassageId, item.Relationship, item.Availability,
+                item.ContentSha256)).ToArray();
         string[] rawIds = [transcript.TranscriptId, transcript.ResponseRecordId, .. transcript.Proposals.Select(x => x.ProposalId)];
         return new(transcript.TranscriptId, transcript.ResponseState, transcript.ResponseRecordId,
             transcript.ResponseFingerprint, transcript.ModelUsed, transcript.ModelUsed,
             replayState == "audit-only", auditReasons.Contains("model-proposed-forbidden-authority", StringComparer.Ordinal)
                 || auditReasons.Any(reason => reason.Contains("model-proposed-forbidden-authority", StringComparison.Ordinal)),
             disposition, replayState, context.ContextId,
-            context.HypothesisId, document, sourceLinks, rawIds,
+            context.HypothesisId, document, sourceLinks, evidenceLinks, rawIds,
             Convert.ToHexStringLower(SHA256.HashData(canonical)), abstentionKinds, gapKinds, auditReasons);
     }
 
@@ -457,21 +493,26 @@ public static class CandidateInvestigationEngine
     {
         CandidateInvestigationContextInput? context = input.Contexts.SingleOrDefault(x => x.ContextId == transcript.ContextId);
         if (context is null || new[] { transcript.TranscriptId, transcript.OperationId, transcript.ContextId,
-                transcript.ResponseRecordId }.Any(string.IsNullOrWhiteSpace)
+                transcript.ResponseRecordId }.Any(id => !ProviderOperationContractInvariants.IsValidIdentifier(id))
             || transcript.OperationId != input.OperationId || transcript.PromptId != input.PromptId
-            || transcript.PromptFingerprint != input.PromptFingerprint || transcript.ResponseFingerprint.Length != 64
-            || !transcript.ResponseFingerprint.All(Uri.IsHexDigit)
+            || transcript.PromptFingerprint != input.PromptFingerprint
+            || !SourceClaimContextMinimizer.IsLowercaseSha256(transcript.ResponseFingerprint)
             || transcript.ResponseState is not ("completed" or "malformed" or "refusal" or "incomplete" or "drift" or "not-used" or "unavailable")
             || transcript.Proposals.Count > 64 || transcript.Abstentions.Count > 64 || transcript.Gaps.Count > 64
             || transcript.Proposals.Select(x => x.ProposalId).Distinct(StringComparer.Ordinal).Count() != transcript.Proposals.Count
             || transcript.Proposals.Any(proposal =>
-                new[] { proposal.ProposalId, proposal.CandidateId, proposal.HypothesisId, proposal.Hypothesis,
-                    proposal.AuthorityCategory, proposal.State, proposal.Reason }.Any(string.IsNullOrWhiteSpace)
+                new[] { proposal.ProposalId, proposal.CandidateId, proposal.HypothesisId }
+                    .Any(id => !ProviderOperationContractInvariants.IsValidIdentifier(id))
+                || !SourceClaimContextMinimizer.BoundedText(proposal.Hypothesis, 4096)
+                || new[] { proposal.AuthorityCategory, proposal.State }.Any(string.IsNullOrWhiteSpace)
+                || !SourceClaimContextMinimizer.BoundedText(proposal.Reason, 1024)
                 || proposal.SupportingEvidenceIds.Count > 64 || proposal.ContradictingEvidenceIds.Count > 64
                 || proposal.MissingInformation.Count > 64
                 || !Unique(proposal.SupportingEvidenceIds) || !Unique(proposal.ContradictingEvidenceIds)
-                || proposal.MissingInformation.Any(string.IsNullOrWhiteSpace))
-            || transcript.Abstentions.Any(string.IsNullOrWhiteSpace) || transcript.Gaps.Any(string.IsNullOrWhiteSpace)
+                || proposal.MissingInformation.Any(value => !SourceClaimContextMinimizer.BoundedText(value, 4096)))
+            || transcript.Abstentions.Any(value => !SourceClaimContextMinimizer.BoundedText(value, 4096))
+            || transcript.Gaps.Any(value => !SourceClaimContextMinimizer.BoundedText(value, 4096))
+            || !transcript.ModelUsed && transcript.Proposals.Count != 0
             || transcript.ModelUsed != (transcript.ResponseState is not ("not-used" or "unavailable")))
         {
             throw new InvalidDataException("Retained candidate-investigation transcript crossed its operation, prompt, context, or bounded state envelope.");
@@ -481,7 +522,8 @@ public static class CandidateInvestigationEngine
     private static bool Unique(IEnumerable<string> values)
     {
         string[] items = values.ToArray();
-        return items.Length == items.Distinct(StringComparer.Ordinal).Count() && items.All(x => !string.IsNullOrWhiteSpace(x));
+        return items.Length == items.Distinct(StringComparer.Ordinal).Count()
+            && items.All(ProviderOperationContractInvariants.IsValidIdentifier);
     }
 }
 
@@ -519,11 +561,29 @@ public static class CandidateInvestigationTransparencyRenderer
                     proposal_state = JsonNamingPolicy.KebabCaseLower.ConvertName(proposal.ProposalState.ToString()),
                     proposal.Reason,
                 }),
+                admission_links = scenario.Investigation.AdmissionLinks.Select(link => new
+                {
+                    admission_id = link.AdmissionId.Value,
+                    proposal_id = link.ProposalId.Value,
+                    authorization_id = link.AuthorizationId.Value,
+                    operation_id = link.OperationId.Value,
+                    response_record_id = link.ResponseRecordId.Value,
+                    link.OwnerKind,
+                    owner_id = link.OwnerId.Value,
+                    root_subject_id = link.RootSubjectId.Value,
+                    validation_id = link.ValidationId.Value,
+                    application_link_id = link.ApplicationLinkId.Value,
+                    support_state = JsonNamingPolicy.KebabCaseLower.ConvertName(link.SupportState.ToString()),
+                    applicability_state = JsonNamingPolicy.KebabCaseLower.ConvertName(link.ApplicabilityState.ToString()),
+                    decision_state = JsonNamingPolicy.KebabCaseLower.ConvertName(link.DecisionState.ToString()),
+                }),
                 source_acquisition_links = scenario.SourceAcquisitionLinks,
+                evidence_provenance_links = scenario.EvidenceProvenanceLinks,
                 scenario.RawIntermediateIds,
                 scenario.CanonicalInvestigationSha256,
                 scenario.AbstentionKinds,
                 scenario.GapKinds,
+                scenario.AuditReasons,
             }),
             network_used = false,
             credential_used = false,
@@ -544,8 +604,11 @@ public static class CandidateInvestigationTransparencyRenderer
             p => p.DecisionState == SemanticDecisionState.Admitted));
         int retained = result.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count);
         int gaps = result.Scenarios.Sum(x => x.Investigation.Gaps.Count);
+        string roots = string.Join(",", result.Scenarios.SelectMany(x => x.EvidenceProvenanceLinks)
+            .Select(x => x.RootKind == "frozen-host-evidence" ? x.EvidenceRootId : x.SourceApplicationDecisionId));
+        string audits = string.Join(",", result.Scenarios.SelectMany(x => x.AuditReasons).Distinct(StringComparer.Ordinal));
         return $"Candidate investigations: {admitted} admitted, {retained - admitted} not admitted, {gaps} gaps; "
-            + "raw intermediates and source acquisition links retained; replay performed no send; "
+            + $"raw intermediates and {result.Scenarios.Sum(x => x.EvidenceProvenanceLinks.Count)} exact evidence provenance roots retained ({roots}); audit reasons ({audits}); replay performed no send; "
             + "no finding, case, taxonomy, readiness, reliability, or private-evaluation authority.";
     }
 }

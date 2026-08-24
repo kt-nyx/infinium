@@ -45,6 +45,8 @@ public sealed class AnalysisStatePersistenceTests
         "provider_profile_projection", "provider_budget_limits", "provider_budget_events",
         "provider_usage_rollup_references", "provider_budget_settlement_receipts", "provider_budget_projection",
         "source_claim_admitted_artifacts", "source_claim_applicability_facts", "candidate_evidence_authority",
+        "source_claim_application_facts", "source_claim_application_decisions",
+        "source_claim_application_decision_facts",
         "m1_slice6_successor_semantic_response_bindings",
     ];
 
@@ -207,6 +209,40 @@ public sealed class AnalysisStatePersistenceTests
             + "WHERE name IN ('support_state','applicability_state','decision_state') UNION ALL "
             + "SELECT name FROM pragma_table_info('provider_semantic_validations') "
             + "WHERE name IN ('support_state','applicability_state','decision_state'));"));
+        Assert.AreEqual(3L, ScalarInt64(connection,
+            "SELECT COUNT(*) FROM sqlite_schema WHERE type='trigger' AND name IN "
+            + "('provider_semantic_validations_semantic_axes_guard',"
+            + "'provider_semantic_admissions_semantic_axes_guard',"
+            + "'evidence_acquisition_application_semantic_axes_guard');"));
+        using (SqliteCommand invalidValidation = connection.CreateCommand())
+        {
+            invalidValidation.CommandText =
+                """
+                INSERT INTO provider_semantic_validations(
+                  validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
+                  state,host_policy_id,reason,created_at,support_state,applicability_state,decision_state)
+                VALUES('invalid-validation','invalid-proposal','invalid-operation','invalid-response','analysis-run',
+                  'invalid-owner','invalid-root','admitted','policy','invalid axes',
+                  '2026-08-10T00:00:00.0000000+00:00','unsupported','applicable','admitted');
+                """;
+            SqliteException exception = Assert.ThrowsExactly<SqliteException>(() => invalidValidation.ExecuteNonQuery());
+            StringAssert.Contains(exception.Message, "semantic validation axes are inconsistent");
+        }
+        using (SqliteCommand invalidAdmission = connection.CreateCommand())
+        {
+            invalidAdmission.CommandText =
+                """
+                INSERT INTO provider_semantic_admissions(
+                  admission_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
+                  validation_id,semantic_link_id,state,host_policy_id,reason,admitted_artifact_id,created_at,
+                  support_state,applicability_state,decision_state)
+                VALUES('invalid-admission','invalid-proposal','invalid-operation','invalid-response','analysis-run',
+                  'invalid-owner','invalid-root','invalid-validation','invalid-link','admitted','policy','invalid axes',
+                  'invalid-payload','2026-08-10T00:00:00.0000000+00:00','supported','unknown','admitted');
+                """;
+            SqliteException exception = Assert.ThrowsExactly<SqliteException>(() => invalidAdmission.ExecuteNonQuery());
+            StringAssert.Contains(exception.Message, "semantic admission axes are inconsistent");
+        }
 
         CollectionAssert.AreEquivalent(
             AnalysisTables,
@@ -238,6 +274,147 @@ public sealed class AnalysisStatePersistenceTests
                     ("$delete_name", table + "_append_only_delete")),
                 $"{table} must be append-only.");
         }
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    public void SemanticPersistenceRejectsEvaluatedApplicabilityForExplicitAbstention()
+    {
+        using TemporaryStore temporary = new();
+        using (AuthoritativeStore store = temporary.Open()) { }
+        using SqliteConnection connection = temporary.OpenRaw();
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            "PRAGMA foreign_keys=OFF; "
+            + "DROP TRIGGER provider_semantic_proposal_root_guard; "
+            + "DROP TRIGGER provider_semantic_proposal_chronology_guard; "
+            + "INSERT INTO provider_semantic_proposals("
+            + "proposal_id,authorization_id,operation_id,provider_attempt_id,request_id,response_record_id,"
+            + "dispatch_fence_id,owner_kind,owner_id,root_subject_id,semantic_link_id,proposal_kind,payload_id,created_at) "
+            + "VALUES('abstention-proposal','authorization','operation','attempt','request','response','fence',"
+            + "'analysis-run','owner','root','abstention-link','abstention','payload','2026-08-22T00:00:00.0000000+00:00'),"
+            + "('gap-proposal','authorization','operation','attempt','request','response','fence',"
+            + "'analysis-run','owner','root','gap-link','gap','payload','2026-08-22T00:00:00.0000000+00:00'),"
+            + "('source-proposal','authorization','operation','attempt','request','response','fence',"
+            + "'analysis-run','owner','root','source-link','source-claim','payload','2026-08-22T00:00:00.0000000+00:00'),"
+            + "('source-cardinality-proposal','authorization','operation','attempt','request','response','fence',"
+            + "'evidence-acquisition-run','source-owner','source-root','source-cardinality-link','source-claim','payload',"
+            + "'2026-08-22T00:00:00.0000000+00:00');";
+        Assert.AreEqual(4, command.ExecuteNonQuery());
+
+        command.CommandText =
+            "INSERT INTO provider_semantic_validations("
+            + "validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,"
+            + "state,host_policy_id,reason,created_at,support_state,applicability_state,decision_state) "
+            + "VALUES('invalid-abstention-validation','abstention-proposal','operation','response','analysis-run',"
+            + "'owner','root','abstained','policy','explicit abstention','2026-08-22T00:00:01.0000000+00:00',"
+            + "'not-evaluated','applicable','abstained');";
+        SqliteException exception = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(exception.Message, "semantic validation axes are inconsistent");
+
+        command.CommandText = command.CommandText
+            .Replace("invalid-abstention-validation", "valid-abstention-validation", StringComparison.Ordinal)
+            .Replace("'not-evaluated','applicable','abstained'",
+                "'not-evaluated','not-evaluated','abstained'", StringComparison.Ordinal);
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+
+        command.CommandText =
+            "INSERT INTO provider_semantic_validations("
+            + "validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,"
+            + "state,host_policy_id,reason,created_at,support_state,applicability_state,decision_state) "
+            + "VALUES('invalid-gap-admission','gap-proposal','operation','response','analysis-run','owner','root',"
+            + "'admitted','policy','gap cannot admit','2026-08-22T00:00:02.0000000+00:00',"
+            + "'supported','applicable','admitted');";
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.CommandText = command.CommandText
+            .Replace("invalid-gap-admission", "valid-gap-rejection", StringComparison.Ordinal)
+            .Replace("'admitted','policy','gap cannot admit'", "'rejected','policy','valid rejected gap'", StringComparison.Ordinal)
+            .Replace("'supported','applicable','admitted'",
+                "'not-evaluated','not-evaluated','rejected'", StringComparison.Ordinal);
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+
+        command.CommandText =
+            "INSERT INTO provider_semantic_validations("
+            + "validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,"
+            + "state,host_policy_id,reason,created_at,support_state,applicability_state,decision_state) "
+            + "VALUES('invalid-source-audit','source-proposal','operation','response','analysis-run','owner','root',"
+            + "'deleted','policy','normal proposal cannot be audit-only','2026-08-22T00:00:03.0000000+00:00',"
+            + "'unavailable','not-evaluated','audit-only');";
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.CommandText = command.CommandText
+            .Replace("invalid-source-audit", "valid-source-admission", StringComparison.Ordinal)
+            .Replace("'deleted','policy','normal proposal cannot be audit-only'",
+                "'abstained','policy','valid source producer abstention'", StringComparison.Ordinal)
+            .Replace("'unavailable','not-evaluated','audit-only'",
+                "'supported','not-evaluated','abstained'", StringComparison.Ordinal);
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+
+        command.CommandText =
+            "INSERT INTO provider_semantic_validations("
+            + "validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,"
+            + "state,host_policy_id,reason,created_at,support_state,applicability_state,decision_state) "
+            + "VALUES('duplicate-source-validation','source-proposal','operation','response','analysis-run','owner','root',"
+            + "'admitted','policy','duplicate decision','2026-08-22T00:00:03.2500000+00:00',"
+            + "'supported','applicable','admitted');";
+        SqliteException duplicateValidation = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(duplicateValidation.Message, "semantic validation axes are inconsistent");
+
+        command.CommandText =
+            "INSERT INTO provider_semantic_validations("
+            + "validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,"
+            + "state,host_policy_id,reason,created_at,support_state,applicability_state,decision_state) "
+            + "VALUES('invalid-validation-state','source-proposal','operation','response','analysis-run','owner','root',"
+            + "'deleted','policy','state must match decision','2026-08-22T00:00:03.5000000+00:00',"
+            + "'supported','applicable','admitted');";
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.CommandText =
+            "DROP TRIGGER provider_semantic_validations_semantic_axes_guard; "
+            + "INSERT INTO provider_semantic_validations("
+            + "validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,"
+            + "state,host_policy_id,reason,created_at,support_state,applicability_state,decision_state) "
+            + "VALUES('forced-source-audit','source-proposal','operation','response','analysis-run','owner','root',"
+            + "'deleted','policy','forced invalid validation','2026-08-22T00:00:04.0000000+00:00',"
+            + "'unavailable','not-evaluated','audit-only');";
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+
+        command.CommandText =
+            "INSERT INTO provider_semantic_validations("
+            + "validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,"
+            + "state,host_policy_id,reason,created_at,support_state,applicability_state,decision_state) "
+            + "VALUES('source-cardinality-validation','source-cardinality-proposal','operation','response',"
+            + "'evidence-acquisition-run','source-owner','source-root','abstained','policy','valid abstention',"
+            + "'2026-08-22T00:00:05.5000000+00:00','unsupported','not-evaluated','abstained');";
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            "INSERT INTO provider_semantic_admissions("
+            + "admission_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,"
+            + "validation_id,semantic_link_id,state,host_policy_id,reason,admitted_artifact_id,created_at,"
+            + "support_state,applicability_state,decision_state) "
+            + "VALUES('invalid-source-audit-admission','source-proposal','operation','response','analysis-run',"
+            + "'owner','root','forced-source-audit','source-link','deleted','policy','forced invalid admission',NULL,"
+            + "'2026-08-22T00:00:05.0000000+00:00','unavailable','not-evaluated','audit-only');";
+        SqliteException admissionException = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(admissionException.Message, "semantic admission axes are inconsistent");
+
+        command.CommandText =
+            "INSERT INTO provider_semantic_admissions("
+            + "admission_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,"
+            + "validation_id,semantic_link_id,state,host_policy_id,reason,admitted_artifact_id,created_at,"
+            + "support_state,applicability_state,decision_state) "
+            + "VALUES('valid-source-admission-row','source-cardinality-proposal','operation','response',"
+            + "'evidence-acquisition-run','source-owner','source-root','source-cardinality-validation',"
+            + "'source-cardinality-link','abstained','policy','valid abstention',NULL,"
+            + "'2026-08-22T00:00:06.0000000+00:00','unsupported','not-evaluated','abstained');";
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText = command.CommandText
+            .Replace("valid-source-admission-row", "duplicate-source-admission-row", StringComparison.Ordinal)
+            .Replace("valid abstention", "duplicate decision", StringComparison.Ordinal)
+            .Replace("00:00:06.0000000", "00:00:07.0000000", StringComparison.Ordinal);
+        SqliteException duplicateAdmission = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(duplicateAdmission.Message, "semantic admission axes are inconsistent");
     }
 
     [TestMethod]

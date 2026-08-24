@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/source-claim-application-decision.v1.schema.json",
+  "title": "infinium.host.source-claim-application-decision/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decision_link", "source_admission_id", "applicability_fact_ids", "reason"],
+  "properties": {
+    "decision_link": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["admission_id", "proposal_id", "authorization_id", "operation_id", "response_record_id", "owner_kind", "owner_id", "root_subject_id", "validation_id", "application_link_id", "support_state", "applicability_state", "decision_state"],
+      "properties": {
+        "admission_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "proposal_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "authorization_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "operation_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "response_record_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "owner_kind": { "const": "analysis-run" },
+        "owner_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "root_subject_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "validation_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "application_link_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "support_state": { "enum": ["supported", "unsupported", "contradicted", "not-evaluated", "unavailable"] },
+        "applicability_state": { "enum": ["applicable", "not-applicable", "conditional-unestablished", "unknown", "not-evaluated"] },
+        "decision_state": { "enum": ["admitted", "abstained", "rejected", "audit-only"] }
+      }
+    },
+    "source_admission_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "applicability_fact_ids": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "common.v1.schema.json#/$defs/identifier" }
+    },
+    "reason": { "type": "string", "minLength": 1, "maxLength": 1024 }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "decision_link": { "properties": { "applicability_state": { "enum": ["applicable", "not-applicable", "conditional-unestablished", "unknown"] } } }
+        }
+      },
+      "then": { "properties": { "applicability_fact_ids": { "minItems": 1 } } }
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "decision_link": { "properties": {
+              "decision_state": { "const": "admitted" },
+              "support_state": { "const": "supported" },
+              "applicability_state": { "const": "applicable" }
+            } }
+          }
+        },
+        {
+          "properties": {
+            "decision_link": { "properties": {
+              "decision_state": { "const": "abstained" }
+            }, "anyOf": [
+              { "properties": { "support_state": { "enum": ["unsupported", "contradicted", "not-evaluated", "unavailable"] } } },
+              { "properties": { "applicability_state": { "enum": ["conditional-unestablished", "not-applicable", "unknown", "not-evaluated"] } } }
+            ] }
+          }
+        },
+        {
+          "properties": {
+            "decision_link": { "properties": {
+              "decision_state": { "const": "rejected" },
+              "support_state": { "const": "not-evaluated" },
+              "applicability_state": { "const": "not-evaluated" }
+            } }
+          }
+        },
+        {
+          "properties": {
+            "decision_link": { "properties": {
+              "decision_state": { "const": "audit-only" },
+              "support_state": { "const": "unavailable" },
+              "applicability_state": { "const": "not-evaluated" }
+            } }
+          }
+        }
+      ]
+    }
+  ]
+}

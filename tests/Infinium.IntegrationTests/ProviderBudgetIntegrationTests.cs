@@ -21,7 +21,10 @@ public sealed class ProviderBudgetIntegrationTests
         DateTimeOffset.Parse("2026-08-10T00:00:00.0000000+00:00", System.Globalization.CultureInfo.InvariantCulture);
     private static readonly string[] OutputGaps =
         ["provider-billing-unavailable", "prepaid-credit-unavailable"];
-    private static readonly string[] AllSourceClaimDecisionStates = ["admitted", "abstained", "abstained", "audit-only"];
+    private static readonly string[] AllSourceClaimDecisionStates = ["abstained", "abstained", "abstained", "audit-only"];
+    private static readonly string[] AllSourceApplicationDecisionStates =
+        ["admitted", "abstained", "abstained", "audit-only"];
+    private static readonly string[] ModeCopperFactIds = ["condition-mode-copper"];
     private static readonly JsonSerializerOptions FaultEvidenceJsonOptions = new() { WriteIndented = true };
 
     [TestMethod]
@@ -467,7 +470,7 @@ public sealed class ProviderBudgetIntegrationTests
         Assert.IsEmpty(context.Store.ReadSourceClaimApplicationLinks("acquisition-restore"),
             "Acquisition registration must not pre-author provider proposal or application identities.");
         (SourceClaimExecutionInput fixtureInput, SourceClaimRetainedTranscript[] fixtureTranscripts) =
-            SourceClaimAdmissionIntegrationTests.Load("S6-CLAIM-DEV-v1");
+            SourceClaimAdmissionIntegrationTests.LoadCurrentContractPackage("S6-CLAIM-DEV-v1");
         const string deletedText = "This retained passage has been deleted and is audit-only.";
         SourceClaimExecutionInput input = fixtureInput with
         {
@@ -479,7 +482,6 @@ public sealed class ProviderBudgetIntegrationTests
             ApplicationScopeId = "application-restore",
             CostAttributionScopeId = "cost-restore",
             SourceRevisionId = "source-claim-revision",
-            ApplicableConditionIds = ["condition-mode-copper"],
             Passages =
             [
                 .. fixtureInput.Passages.Select(x => x with { SourceRevisionId = "source-claim-revision" }),
@@ -525,20 +527,54 @@ public sealed class ProviderBudgetIntegrationTests
         Assert.ThrowsExactly<InvalidDataException>(() => coordinator.AdmitRetainedTranscript(
             input, transcript, "wrong-authorization", "attempt-settlement", "request-settlement",
             gate.DispatchFenceId, BaseTime.AddSeconds(8)));
+        SourceClaimTranscriptProposal appliedProposal = transcript.Proposals[0];
+        SourceClaimPassageInput appliedPassage = input.Passages.Single(
+            passage => passage.PassageId == appliedProposal.PassageId);
+        byte[] appliedBytes = System.Text.Encoding.UTF8.GetBytes(appliedPassage.Text);
+        const string appliedArtifactId = "artifact-provider-returned-arbitrary-omega";
+        const string appliedFact = "Mode Copper is selected for the consuming analysis context.";
+        Dictionary<string, SourceClaimCampaignIdentity> applicationIdentities = transcript.Proposals
+            .ToDictionary(item => item.ProposalId, item => item.ProposalId == appliedProposal.ProposalId
+                ? new SourceClaimCampaignIdentity("application-decision-provider-returned-arbitrary-omega",
+                    "application-validation-provider-returned-arbitrary-omega", appliedArtifactId,
+                    "consumer-analysis-source-claim-link")
+                : new SourceClaimCampaignIdentity("application-decision-" + item.ProposalId,
+                    "application-validation-" + item.ProposalId, "unused-artifact-" + item.ProposalId,
+                    "application-link-" + item.ProposalId), StringComparer.Ordinal);
+        Dictionary<string, SourceClaimApplicationAuthority> applicationAuthorities = transcript.Proposals
+            .ToDictionary(item => item.ProposalId, item => new SourceClaimApplicationAuthority(
+                applicationIdentities[item.ProposalId].ApplicationLinkId, "run-restore", "application-restore",
+                "application-restore", "cost-restore",
+                item.ProposalId == "provider-returned-arbitrary-omega" ? ["condition-mode-copper"] : []),
+                StringComparer.Ordinal);
         SourceClaimAdmissionPublication admission = coordinator.AdmitRetainedTranscript(
             input, transcript, "authorization-settlement", "attempt-settlement", "request-settlement",
-            gate.DispatchFenceId, BaseTime.AddSeconds(8));
+            gate.DispatchFenceId, BaseTime.AddSeconds(8),
+            applicationIdentities,
+            new Dictionary<string, SourceClaimArtifactAuthority>(StringComparer.Ordinal)
+            {
+                [appliedProposal.ProposalId] = new(appliedArtifactId, input.SourceRevisionId,
+                    appliedPassage.PassageId, appliedBytes, appliedPassage.TextSha256, 0, appliedBytes.Length),
+            },
+            new Dictionary<string, SourceClaimApplicabilityFactAuthority>(StringComparer.Ordinal)
+            {
+                ["condition-mode-copper"] = new("condition-mode-copper", input.SourceRevisionId, appliedFact,
+                    Convert.ToHexStringLower(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(appliedFact)))),
+            },
+            applicationAuthorities);
         SourceClaimPersistenceReceipt persisted = admission.Persistence;
         Assert.AreEqual(4, persisted.AdmissionCount);
         ProviderSemanticAdmissionReadModel[] admissions = context.Store
             .ReadSourceClaimAdmissions("acquisition-restore").ToArray();
         CollectionAssert.AreEquivalent(AllSourceClaimDecisionStates, admissions.Select(x => x.DecisionState).ToArray());
+        CollectionAssert.AreEquivalent(AllSourceApplicationDecisionStates,
+            admission.Applications.Decisions.Select(x =>
+                x.DecisionLink.DecisionState.ToString().ToLowerInvariant().Replace("auditonly", "audit-only"))
+                .ToArray());
         Assert.IsTrue(admissions.All(x => !string.IsNullOrWhiteSpace(x.SupportState)
             && !string.IsNullOrWhiteSpace(x.ApplicabilityState)
             && !string.IsNullOrWhiteSpace(x.DecisionState)),
             "Persisted source admissions must expose every independent semantic axis.");
-        Assert.IsEmpty(context.Store.ReadSourceClaimApplicationLinks("acquisition-restore"),
-            "Persistence and admission must not imply later consuming-analysis application.");
         SourceClaimExtractionDocument document = context.Store.ReadSourceClaimExtraction(
             "acquisition-restore", "admission-provider-returned-arbitrary-omega");
         Assert.IsTrue(document.AdmissionCorrelations.All(
@@ -552,26 +588,117 @@ public sealed class ProviderBudgetIntegrationTests
                 "consumer-link-" + nonAdmitted.ProposalId, "acquisition-restore", nonAdmitted.AdmissionId, "run-restore",
                 "application-restore", "cost-restore", BaseTime.AddSeconds(9))));
         }
-        Assert.IsEmpty(context.Store.ReadSourceClaimApplicationLinks("acquisition-restore"));
         Assert.ThrowsExactly<InvalidDataException>(() => context.Store.ConsumeAdmittedSourceClaim(new(
             "consumer-link-before-admission", "acquisition-restore",
             "admission-provider-returned-arbitrary-omega", "run-restore",
             "application-restore", "cost-restore", BaseTime.AddSeconds(7))));
-        SourceClaimConsumptionReceipt consumed = context.Store.ConsumeAdmittedSourceClaim(new(
-            "consumer-analysis-source-claim-link", "acquisition-restore",
-            "admission-provider-returned-arbitrary-omega", "run-restore",
-            "application-restore", "cost-restore", BaseTime.AddSeconds(10)));
         SourceClaimApplicationReadModel applied = context.Store
             .ReadSourceClaimApplicationLinks("acquisition-restore").Single();
-        Assert.AreEqual(consumed.AdmittedArtifactId, applied.AdmittedArtifactId);
-        Assert.AreEqual("admission-provider-returned-arbitrary-omega", applied.AdmissionId);
+        Assert.AreEqual(appliedArtifactId, applied.AdmittedArtifactId);
+        Assert.AreEqual("application-decision-provider-returned-arbitrary-omega", applied.ApplicationDecisionId);
         Assert.AreEqual("consumer-analysis-source-claim-link", applied.ApplicationLinkId);
+        SourceClaimConsumptionRequest validConsumption = new(
+            applied.ApplicationLinkId, applied.AcquisitionRunId, applied.ApplicationDecisionId,
+            applied.ParentAnalysisRunId, applied.ApplicationScopeId, applied.CostAttributionScopeId,
+            BaseTime.AddSeconds(9));
+        Assert.AreEqual(appliedArtifactId,
+            context.Store.ConsumeAdmittedSourceClaim(validConsumption).AdmittedArtifactId);
+        Assert.AreEqual(applied.ApplicationDecisionId, context.Store.ResolveSourceClaimApplication(
+            applied.AcquisitionRunId, input.SourceRevisionId, appliedPassage.PassageId,
+            appliedPassage.TextSha256).ApplicationDecisionId);
+        string factObjectPath;
+        string factBundleObjectPath;
+        string artifactObjectPath;
+        using (SqliteConnection integrityDatabase = new(
+                   $"Data Source={context.Store.Paths.Database};Mode=ReadOnly;Pooling=False"))
+        {
+            integrityDatabase.Open();
+            using SqliteCommand paths = integrityDatabase.CreateCommand();
+            paths.CommandText =
+                "SELECT payload.object_relative_path FROM source_claim_application_facts fact "
+                + "JOIN payloads payload ON payload.payload_id=fact.statement_payload_id "
+                + "WHERE fact.applicability_fact_id='condition-mode-copper';";
+            string factRelativePath = (string)paths.ExecuteScalar()!;
+            paths.CommandText =
+                "SELECT payload.object_relative_path FROM source_claim_application_decisions decision "
+                + "JOIN payloads payload ON payload.payload_id=decision.applicability_fact_bundle_payload_id "
+                + "WHERE decision.application_decision_id=$decision;";
+            paths.Parameters.AddWithValue("$decision", applied.ApplicationDecisionId);
+            string factBundleRelativePath = (string)paths.ExecuteScalar()!;
+            paths.CommandText =
+                "SELECT payload.object_relative_path FROM source_claim_admitted_artifacts artifact "
+                + "JOIN payloads payload ON payload.payload_id=artifact.payload_id "
+                + "WHERE artifact.admitted_artifact_id=$artifact;";
+            paths.Parameters.AddWithValue("$artifact", appliedArtifactId);
+            string artifactRelativePath = (string)paths.ExecuteScalar()!;
+            factObjectPath = Path.Combine(context.Root,
+                factRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            factBundleObjectPath = Path.Combine(context.Root,
+                factBundleRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            artifactObjectPath = Path.Combine(context.Root,
+                artifactRelativePath.Replace('/', Path.DirectorySeparatorChar));
+        }
+        foreach (string objectPath in new[] { factObjectPath, factBundleObjectPath, artifactObjectPath })
+        {
+            byte[] retainedBytes = File.ReadAllBytes(objectPath);
+            try
+            {
+                File.WriteAllBytes(objectPath, "corrupted retained authority"u8.ToArray());
+                Assert.ThrowsExactly<InvalidDataException>(() =>
+                    context.Store.ConsumeAdmittedSourceClaim(validConsumption));
+                Assert.ThrowsExactly<InvalidDataException>(() => context.Store.ResolveSourceClaimApplication(
+                    applied.AcquisitionRunId, input.SourceRevisionId, appliedPassage.PassageId,
+                    appliedPassage.TextSha256));
+            }
+            finally
+            {
+                File.WriteAllBytes(objectPath, retainedBytes);
+            }
+        }
+        SourceClaimApplicationDecisionReadModel applicableAbstention = context.Store
+            .ReadSourceClaimApplicationDecisions("acquisition-restore")
+            .Single(item => item.ProposalId == "provider-returned-arbitrary-unsupported");
+        Assert.AreEqual("supported", applicableAbstention.SupportState);
+        Assert.AreEqual("not-evaluated", applicableAbstention.ApplicabilityState);
+        Assert.AreEqual("abstained", applicableAbstention.DecisionState);
+        Assert.IsNull(applicableAbstention.AdmittedArtifactId);
+        CollectionAssert.AreEqual(Array.Empty<string>(),
+            applicableAbstention.ApplicabilityFactIds.ToArray(),
+            "Unsupported application decisions must not fabricate a local supporting fact.");
+        using (SqliteConnection applicationDatabase = new(
+                   $"Data Source={context.Store.Paths.Database};Pooling=False"))
+        {
+            applicationDatabase.Open();
+            CloneRow(applicationDatabase, "documentation_revisions",
+                "documentation_revision_id='source-claim-revision'", new Dictionary<string, object?>
+                {
+                    ["documentation_revision_id"] = "source-claim-other-revision",
+                    ["source_revision"] = "source-claim-other-revision",
+                });
+            using SqliteCommand crossRevision = applicationDatabase.CreateCommand();
+            crossRevision.CommandText =
+                "INSERT INTO source_claim_application_facts "
+                + "SELECT 'cross-revision-fact',acquisition_run_id,analysis_run_id,"
+                + "'source-claim-other-revision',statement_payload_id,statement_sha256,"
+                + "'2026-08-10T00:00:09.0000000+00:00' FROM source_claim_application_facts LIMIT 1;";
+            Assert.AreEqual(1, crossRevision.ExecuteNonQuery());
+            crossRevision.CommandText =
+                "INSERT INTO source_claim_application_decision_facts VALUES("
+                + "'application-decision-provider-returned-arbitrary-omega','cross-revision-fact');";
+            SqliteException crossRevisionFailure = Assert.ThrowsExactly<SqliteException>(
+                () => crossRevision.ExecuteNonQuery());
+            StringAssert.Contains(crossRevisionFailure.Message,
+                "source-claim application fact authority is inconsistent");
+        }
         ProviderTerminalPublicationArtifacts publication = accounting.PublishTerminalV2(
             new("run-restore"), new("local-run-output-v1"), "local-output-v1"u8.ToArray(),
             "local-cli-v1"u8.ToArray(), new("operation-restore"), BaseTime.AddSeconds(11));
         Assert.AreEqual("acquisition-restore", publication.RunOutputV2.EvidenceAcquisitionRunIds.Single().Value);
-        Assert.AreEqual("admission-provider-returned-arbitrary-omega",
+        Assert.AreEqual("application-decision-provider-returned-arbitrary-omega",
             publication.RunOutputV2.ProviderOperations.Single().AdmissionId?.Value);
+
+        byte[] legacySchema8Payload = SerializeSchema8SourceClaimPayload(document);
+        string legacySchema8PayloadSha256 = Convert.ToHexStringLower(SHA256.HashData(legacySchema8Payload));
 
         BackupArtifact backup = context.Store.CreateBackup("Wp6SourceClaim", BaseTime.AddSeconds(12));
         string restoredRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp6-Restore-" + Guid.NewGuid().ToString("N"));
@@ -581,17 +708,74 @@ public sealed class ProviderBudgetIntegrationTests
             {
                 AuthoritativeStore.RestoreBackup(backup, targetPaths);
             }
-            using StoragePaths restoredPaths = new(restoredRoot);
-            using AuthoritativeStore restored = new(restoredPaths);
-            Assert.AreEqual(4, restored.ReadSourceClaimAdmissions("acquisition-restore").Count);
-            Assert.IsTrue(restored.ReadSourceClaimExtraction(
-                "acquisition-restore", "admission-provider-returned-arbitrary-omega").ClaimProposals
-                .Any(x => x.ProposalId.Value == "provider-returned-arbitrary-omega"));
-            Assert.AreEqual("consumer-analysis-source-claim-link",
-                restored.ReadSourceClaimApplicationLinks("acquisition-restore").Single().ApplicationLinkId);
-            Assert.AreEqual("admission-provider-returned-arbitrary-omega",
-                restored.ReadSourceClaimApplicationLinks("acquisition-restore").Single().AdmissionId);
-            _ = restored.RebuildProviderBudgetProjections(BaseTime.AddSeconds(13));
+            using (StoragePaths restoredPaths = new(restoredRoot))
+            using (AuthoritativeStore restored = new(restoredPaths))
+            {
+                Assert.AreEqual(4, restored.ReadSourceClaimAdmissions("acquisition-restore").Count);
+                Assert.IsTrue(restored.ReadSourceClaimExtraction(
+                    "acquisition-restore", "admission-provider-returned-arbitrary-omega").ClaimProposals
+                    .Any(x => x.ProposalId.Value == "provider-returned-arbitrary-omega"));
+                Assert.AreEqual("consumer-analysis-source-claim-link",
+                    restored.ReadSourceClaimApplicationLinks("acquisition-restore").Single().ApplicationLinkId);
+                Assert.AreEqual("application-decision-provider-returned-arbitrary-omega",
+                    restored.ReadSourceClaimApplicationLinks("acquisition-restore").Single().ApplicationDecisionId);
+                _ = restored.RebuildProviderBudgetProjections(BaseTime.AddSeconds(13));
+            }
+
+            DowngradePopulatedSemanticStoreToSchema8(
+                restoredRoot, "admission-provider-returned-arbitrary-omega", legacySchema8Payload);
+            string schema8HistoricalSnapshot;
+            using (StoragePaths schema8Paths = new(restoredRoot))
+            {
+                schema8HistoricalSnapshot = HistoricalSemanticSnapshot(schema8Paths.Database);
+            }
+            using StoragePaths migratedPaths = new(restoredRoot);
+            using AuthoritativeStore migrated = new(migratedPaths);
+            Assert.AreEqual(9, migrated.GetSchemaVersion());
+            CollectionAssert.AreEqual(
+                schema8HistoricalSnapshot.Split('\n'),
+                HistoricalSemanticSnapshot(migrated.Paths.Database).Split('\n'),
+                "Schema 8 migration must not rewrite retained proposal, validation, admission, artifact, or application evidence.");
+            ProviderSemanticAdmissionReadModel historicalAdmission = migrated
+                .ReadSourceClaimAdmissions("acquisition-restore")
+                .Single(x => x.AdmissionId == "admission-provider-returned-arbitrary-omega");
+            Assert.AreEqual("admitted", historicalAdmission.State,
+                "The legacy state remains audit-visible history.");
+            Assert.AreEqual("supported", historicalAdmission.SupportState);
+            Assert.AreEqual("not-evaluated", historicalAdmission.ApplicabilityState);
+            Assert.AreEqual("abstained", historicalAdmission.DecisionState,
+                "Historical admission cannot acquire current authority without migrated applicability evidence.");
+            Assert.IsFalse(ProviderAccountingCoordinator.IsCurrentSemanticAdmission(historicalAdmission),
+                "Terminal publication must not select a migrated legacy admission as current authority.");
+            HistoricalProviderSemanticPayloadReadModel historicalPayload = migrated.ReadHistoricalSourceClaimPayload(
+                "acquisition-restore", "admission-provider-returned-arbitrary-omega");
+            Assert.AreEqual(legacySchema8PayloadSha256, historicalPayload.ContentSha256);
+            Assert.AreEqual(legacySchema8Payload.LongLength, historicalPayload.ByteLength);
+            Assert.AreEqual("retained", historicalPayload.RetentionState);
+            CollectionAssert.AreEqual(legacySchema8Payload, historicalPayload.Payload,
+                "The exact legacy-invalid schema-8 payload must remain immutable and audit-visible.");
+            Assert.ThrowsExactly<InvalidOperationException>(() => migrated.ReadSourceClaimExtraction(
+                "acquisition-restore", "admission-provider-returned-arbitrary-omega"),
+                "Historical payload audit visibility must not make it valid current replay input.");
+            Assert.IsFalse(migrated.ReadSourceClaimAdmissions("acquisition-restore").Any(x =>
+                x.DecisionState == "admitted"
+                && (x.SupportState != "supported" || x.ApplicabilityState != "applicable")));
+            Assert.IsEmpty(migrated.ReadSourceClaimApplicationLinks("acquisition-restore"),
+                "Current consumers must not see a migrated legacy application as semantic authority.");
+            Assert.AreEqual("legacy-schema8-application-link",
+                migrated.ReadHistoricalSourceClaimApplicationLinks("acquisition-restore").Single().ApplicationLinkId,
+                "Historical live application evidence remains visible only through the audit projection.");
+            CitationProposalContract legacyProposal = document.ClaimProposals.Single(
+                proposal => proposal.ProposalId.Value == "provider-returned-arbitrary-omega");
+            SourceClaimPassageInput legacyPassage = input.Passages.Single(
+                passage => passage.PassageId == legacyProposal.PassageId.Value);
+            Assert.ThrowsExactly<InvalidDataException>(() => migrated.ResolveSourceClaimApplication(
+                "acquisition-restore", input.SourceRevisionId, legacyPassage.PassageId, legacyPassage.TextSha256),
+                "Current exact-byte resolution must not revive a migrated legacy application.");
+            Assert.ThrowsExactly<InvalidDataException>(() => migrated.ConsumeAdmittedSourceClaim(new(
+                "consumer-link-after-schema8-migration", "acquisition-restore",
+                historicalAdmission.AdmissionId, "run-restore", "application-restore", "cost-restore",
+                BaseTime.AddSeconds(14))));
         }
         finally
         {
@@ -645,8 +829,13 @@ public sealed class ProviderBudgetIntegrationTests
         {
             SupportingEvidenceIds = [new OpaqueId("candidate-evidence-unavailable")],
         };
+        CausalJoinPopulationMember frozenCandidateMember = CandidatePipelineIntegrationTests.Member("wp7-frozen") with
+        {
+            SupportingEvidenceIds = [new OpaqueId("candidate-evidence-frozen")],
+        };
         TestCandidatePopulationSource candidateSource = new(
-            new OpaqueId("analyzer-integration"), [candidateMember, deletedCandidateMember, unavailableCandidateMember]);
+            new OpaqueId("analyzer-integration"),
+            [candidateMember, deletedCandidateMember, unavailableCandidateMember, frozenCandidateMember]);
         CandidatePipelineRequest candidateAnalysisRequest = new(
             new("run-restore"), new("candidate-population"), new("candidate-policy"), new("candidate-threshold"),
             CandidateExecutionLimits.Default,
@@ -666,22 +855,37 @@ public sealed class ProviderBudgetIntegrationTests
             item.DecisionId == hostCandidate.DecisionId);
         string hostCandidateId = hostCandidate.CandidateId.Value;
         string hostHypothesisId = hostHypothesis.HypothesisId.Value;
+        CandidateAnalysisEntryContract frozenHostCandidate = candidateAnalysis.Pipeline.Analysis.Candidates.Single(item =>
+            item.SupportingEvidenceIds.Contains(new("candidate-evidence-frozen")));
+        CandidateHypothesisContract frozenHostHypothesis = candidateAnalysis.Pipeline.Analysis.Hypotheses.Single(item =>
+            item.CandidateId == frozenHostCandidate.CandidateId);
+        CandidateDecisionContract frozenHostDecision = candidateAnalysis.Pipeline.Analysis.Decisions.Single(item =>
+            item.DecisionId == frozenHostCandidate.DecisionId);
 
-        byte[] candidateRequestBytes = Enumerable.Repeat((byte)0x5a, 1024).ToArray();
+        (SourceClaimExecutionInput sourceFixture, SourceClaimRetainedTranscript[] sourceTranscripts) =
+            SourceClaimAdmissionIntegrationTests.LoadCurrentContractPackage("S6-CLAIM-DEV-v1");
+        SourceClaimPassageInput sourcePassage = sourceFixture.Passages[0] with
+        {
+            PassageId = "candidate-passage",
+            SourceRevisionId = "candidate-doc-revision",
+        };
+        byte[] candidateRequestBytes = System.Text.Encoding.UTF8.GetBytes(sourcePassage.Text);
         string candidateRequestSha256 = Convert.ToHexStringLower(SHA256.HashData(candidateRequestBytes));
         string candidatePayloadDirectory = Path.Combine(context.Root, "payloads", candidateRequestSha256[..2], candidateRequestSha256[2..4]);
         Directory.CreateDirectory(candidatePayloadDirectory);
         File.WriteAllBytes(Path.Combine(candidatePayloadDirectory, candidateRequestSha256), candidateRequestBytes);
 
+        SourceClaimApplicationReadModel? sourceApplication = null;
         using (SqliteConnection database = new($"Data Source={context.Store.Paths.Database};Pooling=False"))
         {
             database.Open();
             using (SqliteCommand seed = database.CreateCommand())
             {
                 seed.Parameters.AddWithValue("$candidate_request_sha", candidateRequestSha256);
+                seed.Parameters.AddWithValue("$candidate_request_bytes", candidateRequestBytes.Length);
                 seed.CommandText =
                     """
-                    INSERT INTO payloads VALUES('candidate-request-payload',$candidate_request_sha,1024,'application/json','retained',
+                    INSERT INTO payloads VALUES('candidate-request-payload',$candidate_request_sha,$candidate_request_bytes,'application/json','retained',
                       'payloads/' || substr($candidate_request_sha,1,2) || '/' || substr($candidate_request_sha,3,2) || '/' || $candidate_request_sha,
                       '2026-08-10T00:00:01.0000000+00:00');
                     INSERT INTO job_nodes VALUES('candidate-job','run-restore',NULL,'provider','created',0,
@@ -714,6 +918,9 @@ public sealed class ProviderBudgetIntegrationTests
                     INSERT INTO evidence_revisions VALUES('candidate-evidence-unavailable','candidate-passage-unavailable','candidate-import','fixture-evidence','1.0.0',
                       'documentation-claim','known-issue','test-result','applicable','observed','unavailable','candidate-request-payload',NULL,
                       '2026-08-10T00:00:01.0000000+00:00');
+                    INSERT INTO evidence_revisions VALUES('candidate-evidence-frozen',NULL,'candidate-import','fixture-evidence','1.0.0',
+                      'local-observation',NULL,'snapshot-bound-local','applicable',NULL,'admitted','candidate-request-payload',NULL,
+                      '2026-08-10T00:00:01.0000000+00:00');
                     INSERT INTO documentation_application_bindings VALUES('candidate-binding','run-restore','install-restore','context-restore',
                       'manifest-restore','candidate-subject','installed-entity','candidate-closure',
                       '2026-08-10T00:00:01.0000000+00:00');
@@ -726,25 +933,21 @@ public sealed class ProviderBudgetIntegrationTests
                     INSERT INTO evidence_application_links VALUES('evidence-application-unavailable','candidate-evidence-unavailable','run-restore',
                       'candidate-binding','context-restore','candidate-subject','installed-entity','candidate-closure','applicable',
                       'request-payload-restore','2026-08-10T00:00:01.0000000+00:00');
+                    INSERT INTO evidence_application_links VALUES('evidence-application-frozen','candidate-evidence-frozen','run-restore',
+                      'candidate-binding','context-restore','candidate-subject','installed-entity','candidate-closure','applicable',
+                      'request-payload-restore','2026-08-10T00:00:01.0000000+00:00');
                     INSERT INTO documentation_deletion_receipts VALUES('candidate-deletion-receipt','run-restore',
                       'candidate-doc-revision','dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
                       '["candidate-passage-deleted"]','["request-payload-restore"]','audit-only',
                       'request-payload-restore','candidate deleted fixture passage',
                       '2026-08-10T00:00:02.0000000+00:00');
                     """;
-                Assert.AreEqual(17, seed.ExecuteNonQuery());
+                Assert.AreEqual(19, seed.ExecuteNonQuery());
             }
             context.Store.RegisterSourceClaimAcquisition(new(
                 "acquisition-restore", "install-restore", "context-restore", "config-restore", "manifest-restore",
                 "run-restore", "application-restore", "cost-restore", "candidate-source-job", "candidate-source-command",
                 "candidate-source-parent", "candidate-doc-revision", BaseTime.AddSeconds(6)));
-            (SourceClaimExecutionInput sourceFixture, SourceClaimRetainedTranscript[] sourceTranscripts) =
-                SourceClaimAdmissionIntegrationTests.Load("S6-CLAIM-DEV-v1");
-            SourceClaimPassageInput sourcePassage = sourceFixture.Passages[0] with
-            {
-                PassageId = "candidate-passage",
-                SourceRevisionId = "candidate-doc-revision",
-            };
             SourceClaimPassageInput deletedSourcePassage = sourcePassage with
             {
                 PassageId = "candidate-passage-deleted",
@@ -763,7 +966,6 @@ public sealed class ProviderBudgetIntegrationTests
                 ApplicationScopeId = "application-restore",
                 CostAttributionScopeId = "cost-restore",
                 SourceRevisionId = "candidate-doc-revision",
-                ApplicableConditionIds = ["condition-mode-copper"],
                 Passages = [sourcePassage, deletedSourcePassage, unavailableSourcePassage],
             };
             SourceClaimRetainedTranscript sourceTranscript = sourceTranscripts[0] with
@@ -781,11 +983,45 @@ public sealed class ProviderBudgetIntegrationTests
             };
             SourceClaimAdmissionPublication sourceAdmission = new SourceClaimAcquisitionCoordinator(context.Store)
                 .AdmitRetainedTranscript(sourceInput, sourceTranscript, "authorization-settlement", "attempt-settlement",
-                    "request-settlement", gate.DispatchFenceId, BaseTime.AddSeconds(8));
+                    "request-settlement", gate.DispatchFenceId, BaseTime.AddSeconds(8),
+                    new Dictionary<string, SourceClaimCampaignIdentity>(StringComparer.Ordinal)
+                    {
+                        ["candidate-source-proposal"] = new("application-decision-candidate-source-proposal",
+                            "application-validation-candidate-source-proposal", "candidate-source-artifact",
+                            "source-application-d01"),
+                    },
+                    new Dictionary<string, SourceClaimArtifactAuthority>(StringComparer.Ordinal)
+                    {
+                        ["candidate-source-proposal"] = new("candidate-source-artifact",
+                            sourceInput.SourceRevisionId, sourcePassage.PassageId,
+                            System.Text.Encoding.UTF8.GetBytes(sourcePassage.Text), sourcePassage.TextSha256, 0,
+                            System.Text.Encoding.UTF8.GetByteCount(sourcePassage.Text)),
+                    },
+                    new Dictionary<string, SourceClaimApplicabilityFactAuthority>(StringComparer.Ordinal)
+                    {
+                        ["condition-mode-copper"] = new("condition-mode-copper", sourceInput.SourceRevisionId,
+                            "Mode Copper is selected for the candidate analysis context.",
+                            Convert.ToHexStringLower(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(
+                                "Mode Copper is selected for the candidate analysis context.")))),
+                        ["candidate-context-installation"] = new("candidate-context-installation",
+                            sourceInput.SourceRevisionId,
+                            "The candidate analysis context is bound to the installed unit.",
+                            Convert.ToHexStringLower(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(
+                                "The candidate analysis context is bound to the installed unit.")))),
+                    },
+                    new Dictionary<string, SourceClaimApplicationAuthority>(StringComparer.Ordinal)
+                    {
+                        ["candidate-source-proposal"] = new("source-application-d01", "run-restore",
+                            "application-restore", "application-restore", "cost-restore",
+                            ["condition-mode-copper", "candidate-context-installation"]),
+                    });
             Assert.AreEqual(1, sourceAdmission.Persistence.AdmissionCount);
-            _ = context.Store.ConsumeAdmittedSourceClaim(new(
-                "source-application-d01", "acquisition-restore", "admission-candidate-source-proposal", "run-restore",
-                "application-restore", "cost-restore", BaseTime.AddSeconds(9)));
+            sourceApplication = context.Store.ReadSourceClaimApplicationLinks("acquisition-restore").Single();
+            Assert.AreEqual("source-application-d01", sourceApplication.ApplicationLinkId);
+            Assert.AreEqual(2,
+                context.Store.ReadSourceClaimApplicationLinks("acquisition-restore").Single()
+                    .ApplicabilityFactCount,
+                "Candidate replay must accept the complete multi-fact source application rather than hard-code one fact.");
             CloneRow(database, "provider_operation_blocks", "operation_id='operation-restore'", new Dictionary<string, object?>()
             {
                 ["operation_id"] = "candidate-operation",
@@ -799,6 +1035,7 @@ public sealed class ProviderBudgetIntegrationTests
                 ["request_fingerprint"] = candidateRequestSha256,
                 ["canonical_request_payload_id"] = "candidate-request-payload",
                 ["canonical_request_fingerprint"] = candidateRequestSha256,
+                ["canonical_request_bytes"] = candidateRequestBytes.Length,
             });
             CloneRow(database, "provider_operation_authorizations", "authorization_id='authorization-settlement'", new Dictionary<string, object?>()
             {
@@ -831,6 +1068,7 @@ public sealed class ProviderBudgetIntegrationTests
                 ["canonical_request_fingerprint"] = candidateRequestSha256,
                 ["payload_id"] = "candidate-request-payload",
                 ["payload_fingerprint"] = candidateRequestSha256,
+                ["payload_bytes"] = candidateRequestBytes.Length,
             });
             CloneRow(database, "provider_reservations", "reservation_id='reservation-settlement'", new Dictionary<string, object?>()
             {
@@ -985,14 +1223,15 @@ public sealed class ProviderBudgetIntegrationTests
             retainedResponseFingerprint = (string)responseIdentity.ExecuteScalar()!;
         }
         (CandidateInvestigationExecutionInput fixtureInput, CandidateInvestigationRetainedTranscript[] fixtureTranscripts) =
-            CandidateAdmissionProviderReplayIntegrationTests.Load("S6-CANDIDATE-DEV-v2");
+            CandidateAdmissionProviderReplayIntegrationTests.CurrentExample();
         CandidateInvestigationContextInput fixtureContext = fixtureInput.Contexts[0];
         CandidateEvidenceInput durableEvidence = fixtureContext.Evidence[0] with
         {
             EvidenceId = "candidate-evidence",
             EvidenceApplicationLinkId = "evidence-application-d01",
             SourceAcquisitionId = "acquisition-restore",
-            SourceAdmissionId = "admission-candidate-source-proposal",
+            SourceAdmissionId = sourceApplication!.SourceAdmissionId,
+            SourceApplicationDecisionId = sourceApplication.ApplicationDecisionId,
             SourceApplicationLinkId = "source-application-d01",
             SourceRevisionId = "candidate-doc-revision",
             PassageId = "candidate-passage",
@@ -1034,6 +1273,52 @@ public sealed class ProviderBudgetIntegrationTests
                 HypothesisId = hostHypothesisId,
                 Hypothesis = hostHypothesis.ProposedExplanation,
                 SupportingEvidenceIds = ["candidate-evidence"],
+            }],
+        };
+        CandidateEvidenceInput frozenEvidence = fixtureInput.Contexts[1].Evidence[0] with
+        {
+            EvidenceId = "candidate-evidence-frozen",
+            EvidenceApplicationLinkId = "evidence-application-frozen",
+            SourceAcquisitionId = "",
+            SourceAdmissionId = "",
+            SourceApplicationDecisionId = "",
+            SourceApplicationLinkId = "",
+            SourceRevisionId = "candidate-doc-revision",
+            PassageId = "candidate-host-passage",
+            Relationship = "supporting",
+            Availability = "available",
+            ContentSha256 = candidateRequestSha256,
+            RootKind = "frozen-host-evidence",
+            EvidenceRootId = "candidate-host-evidence-root",
+            ApplicabilityRecordId = "candidate-host-applicability-record",
+        };
+        CandidateInvestigationContextInput frozenContext = fixtureInput.Contexts[1] with
+        {
+            ContextId = "candidate-frozen-context",
+            CandidateId = frozenHostCandidate.CandidateId.Value,
+            HypothesisId = frozenHostHypothesis.HypothesisId.Value,
+            Hypothesis = frozenHostHypothesis.ProposedExplanation,
+            ParticipantIds = frozenHostDecision.Participants.Select(item => item.ParticipantId.Value).ToArray(),
+            ParticipantRoles = frozenHostDecision.Participants.Select(item => item.Role).ToArray(),
+            CausalPathIds = frozenHostDecision.Path.Select(item => item.Value).ToArray(),
+            DependencyClosureId = frozenHostDecision.DependencyClosureId.Value,
+            Evidence = [frozenEvidence],
+        };
+        CandidateInvestigationExecutionInput frozenInput = input with
+        {
+            Contexts = [durableContext, frozenContext],
+        };
+        CandidateInvestigationRetainedTranscript frozenTranscript = transcript with
+        {
+            TranscriptId = "candidate-frozen-transcript",
+            ContextId = frozenContext.ContextId,
+            Proposals = [transcript.Proposals[0] with
+            {
+                ProposalId = "candidate-frozen-proposal",
+                CandidateId = frozenContext.CandidateId,
+                HypothesisId = frozenContext.HypothesisId,
+                Hypothesis = frozenContext.Hypothesis,
+                SupportingEvidenceIds = [frozenEvidence.EvidenceId],
             }],
         };
         DurableCandidateInvestigationCoordinator coordinator = new(context.Store);
@@ -1118,13 +1403,6 @@ public sealed class ProviderBudgetIntegrationTests
                              Proposals = [transcript.Proposals[0] with { Hypothesis = transcript.Proposals[0].Hypothesis + " poisoned" }],
                          }, SourceClaimContextMinimizer.JsonOptions),
                      },
-                     CandidatePersistenceRequest(directScenario, input, transcript, [directBinding], "outcome-direct-transcript-state") with
-                     {
-                         TranscriptPayload = JsonSerializer.SerializeToUtf8Bytes(transcript with
-                         {
-                             Proposals = [transcript.Proposals[0] with { State = "unsupported" }],
-                         }, SourceClaimContextMinimizer.JsonOptions),
-                     },
                      CandidatePersistenceRequest(directScenario, input, transcript, [directBinding], "outcome-direct-transcript-gap") with
                      {
                          TranscriptPayload = JsonSerializer.SerializeToUtf8Bytes(
@@ -1176,6 +1454,100 @@ public sealed class ProviderBudgetIntegrationTests
                 invalid, transcript, "candidate-authorization", "candidate-attempt", "candidate-request",
                 "candidate-fence", candidateAnalysisNow.AddSeconds(1)));
         }
+        string candidateFactObjectPath;
+        string candidateFactBundleObjectPath;
+        string candidateEvidenceObjectPath;
+        using (SqliteConnection integrityDatabase = new(
+                   $"Data Source={context.Store.Paths.Database};Mode=ReadOnly;Pooling=False"))
+        {
+            integrityDatabase.Open();
+            using SqliteCommand paths = integrityDatabase.CreateCommand();
+            paths.CommandText =
+                "SELECT payload.object_relative_path FROM source_claim_application_facts fact "
+                + "JOIN payloads payload ON payload.payload_id=fact.statement_payload_id "
+                + "WHERE fact.applicability_fact_id='candidate-context-installation';";
+            candidateFactObjectPath = Path.Combine(context.Root,
+                ((string)paths.ExecuteScalar()!).Replace('/', Path.DirectorySeparatorChar));
+            paths.CommandText =
+                "SELECT payload.object_relative_path FROM source_claim_application_decisions decision "
+                + "JOIN payloads payload ON payload.payload_id=decision.applicability_fact_bundle_payload_id "
+                + "WHERE decision.application_decision_id=$decision;";
+            paths.Parameters.AddWithValue("$decision", durableEvidence.SourceApplicationDecisionId);
+            candidateFactBundleObjectPath = Path.Combine(context.Root,
+                ((string)paths.ExecuteScalar()!).Replace('/', Path.DirectorySeparatorChar));
+            paths.CommandText =
+                "SELECT object_relative_path FROM payloads WHERE payload_id='candidate-request-payload';";
+            candidateEvidenceObjectPath = Path.Combine(context.Root,
+                ((string)paths.ExecuteScalar()!).Replace('/', Path.DirectorySeparatorChar));
+        }
+        foreach (string objectPath in new[]
+                 { candidateFactObjectPath, candidateFactBundleObjectPath, candidateEvidenceObjectPath })
+        {
+            byte[] retainedBytes = File.ReadAllBytes(objectPath);
+            try
+            {
+                File.WriteAllBytes(objectPath, "corrupted candidate authority"u8.ToArray());
+                Assert.ThrowsExactly<InvalidDataException>(() => coordinator.AdmitRetainedTranscript(
+                    input, transcript, "candidate-authorization", "candidate-attempt", "candidate-request",
+                    "candidate-fence", candidateAnalysisNow.AddSeconds(1)));
+                Assert.AreEqual(0L, CandidatePipelineIntegrationTests.Count(
+                    context.Store.Paths.Database, "candidate_investigation_outcomes"),
+                    "Candidate publication must be atomic when retained source or applicability bytes are corrupt.");
+            }
+            finally
+            {
+                File.WriteAllBytes(objectPath, retainedBytes);
+            }
+        }
+        byte[] frozenHostBytes = File.ReadAllBytes(candidateEvidenceObjectPath);
+        try
+        {
+            File.WriteAllBytes(candidateEvidenceObjectPath, "corrupted frozen-host authority"u8.ToArray());
+            Assert.ThrowsExactly<InvalidDataException>(() => coordinator.AdmitRetainedTranscript(
+                frozenInput, frozenTranscript, "candidate-authorization", "candidate-attempt", "candidate-request",
+                "candidate-fence", candidateAnalysisNow.AddSeconds(1)));
+            Assert.AreEqual(0L, CandidatePipelineIntegrationTests.Count(
+                context.Store.Paths.Database, "candidate_investigation_outcomes"),
+                "Frozen-host candidate publication must reject corrupt retained evidence atomically.");
+        }
+        finally
+        {
+            File.WriteAllBytes(candidateEvidenceObjectPath, frozenHostBytes);
+        }
+        using (SqliteConnection metadataCorruption = new(
+                   $"Data Source={context.Store.Paths.Database};Pooling=False"))
+        {
+            metadataCorruption.Open();
+            using SqliteCommand mutation = metadataCorruption.CreateCommand();
+            mutation.Parameters.AddWithValue("$artifact", sourceApplication.AdmittedArtifactId);
+            mutation.CommandText = "SELECT sql FROM sqlite_master WHERE type='trigger' "
+                + "AND name='source_claim_admitted_artifacts_append_only_update';";
+            string appendOnlyTriggerSql = (string)mutation.ExecuteScalar()!;
+            try
+            {
+                mutation.CommandText =
+                    "DROP TRIGGER source_claim_admitted_artifacts_append_only_update; "
+                    + "UPDATE source_claim_admitted_artifacts SET byte_length=byte_length+1 "
+                    + "WHERE admitted_artifact_id=$artifact;";
+                mutation.ExecuteNonQuery();
+                Assert.ThrowsExactly<InvalidDataException>(() => coordinator.AdmitRetainedTranscript(
+                    input, transcript, "candidate-authorization", "candidate-attempt", "candidate-request",
+                    "candidate-fence", candidateAnalysisNow.AddSeconds(1)));
+                Assert.AreEqual(0L, CandidatePipelineIntegrationTests.Count(
+                    context.Store.Paths.Database, "candidate_investigation_outcomes"),
+                    "Candidate publication must reject admitted-artifact byte-length metadata drift atomically.");
+            }
+            finally
+            {
+                mutation.CommandText =
+                    "UPDATE source_claim_admitted_artifacts SET byte_length=byte_length-1 "
+                    + "WHERE admitted_artifact_id=$artifact;";
+                mutation.ExecuteNonQuery();
+                mutation.Parameters.Clear();
+                mutation.CommandText = appendOnlyTriggerSql;
+                mutation.ExecuteNonQuery();
+            }
+        }
         CandidateInvestigationAdmissionPublication publication = coordinator.AdmitRetainedTranscript(
             input, transcript, "candidate-authorization", "candidate-attempt", "candidate-request",
             "candidate-fence", candidateAnalysisNow.AddSeconds(1));
@@ -1186,16 +1558,15 @@ public sealed class ProviderBudgetIntegrationTests
         Assert.AreEqual("supported", candidateAdmission.SupportState);
         Assert.AreEqual("applicable", candidateAdmission.ApplicabilityState);
         Assert.AreEqual("admitted", candidateAdmission.DecisionState);
-        Assert.AreEqual("proposal-d01", context.Store.ReadCandidateInvestigation(
-            "run-restore", hostCandidateId, "admission-proposal-d01").HypothesisProposals.Single().ProposalId.Value);
+        Assert.AreEqual("proposal-positive", context.Store.ReadCandidateInvestigation(
+            "run-restore", hostCandidateId, "admission-proposal-positive").HypothesisProposals.Single().ProposalId.Value);
         CandidateInvestigationOutcomeReadModel retained = context.Store.ReadCandidateInvestigationOutcome(
             "run-restore", "candidate-operation", fixtureContext.ContextId);
-        Assert.AreEqual("outcome-transcript-d01", retained.OutcomeId);
+        Assert.AreEqual("outcome-transcript-positive", retained.OutcomeId);
         Assert.AreEqual(hostHypothesisId, retained.HypothesisId);
         Assert.AreEqual(publication.Scenario.CanonicalInvestigationSha256,
             new DurableCandidateInvestigationCoordinator(context.Store).ReplayRetained(
                 "run-restore", "candidate-operation", fixtureContext.ContextId).CanonicalInvestigationSha256);
-
         CandidateInvestigationContextInput explicitAbstentionContext = durableContext with
         {
             ContextId = "context-explicit-abstention",
@@ -1217,15 +1588,21 @@ public sealed class ProviderBudgetIntegrationTests
         CandidateInvestigationAdmissionPublication explicitAbstention = coordinator.AdmitRetainedTranscript(
             explicitAbstentionInput, explicitAbstentionTranscript, "candidate-authorization", "candidate-attempt",
             "candidate-request", "candidate-fence", candidateAnalysisNow.AddSeconds(1));
-        Assert.AreEqual("abstained-explicit", explicitAbstention.Scenario.Disposition);
-        Assert.AreEqual("abstained-explicit", coordinator.ReplayRetained(
+        Assert.AreEqual("accepted", explicitAbstention.Scenario.Disposition);
+        Assert.AreEqual("accepted", coordinator.ReplayRetained(
             "run-restore", "candidate-operation", explicitAbstentionContext.ContextId).Disposition);
         ProviderSemanticAdmissionReadModel explicitAbstentionAdmission = context.Store
             .ReadCandidateInvestigationAdmissionsForOperation("run-restore", "candidate-operation")
             .Single(x => x.ProposalId == "proposal-explicit-abstention");
-        Assert.AreEqual("not-evaluated", explicitAbstentionAdmission.SupportState);
+        Assert.AreEqual("supported", explicitAbstentionAdmission.SupportState);
         Assert.AreEqual("applicable", explicitAbstentionAdmission.ApplicabilityState);
-        Assert.AreEqual("abstained", explicitAbstentionAdmission.DecisionState);
+        Assert.AreEqual("admitted", explicitAbstentionAdmission.DecisionState);
+        string legacyCandidateAdmissionId = explicitAbstention.Scenario.Investigation.AdmissionLinks
+            .Single(link => link.ProposalId.Value == "proposal-explicit-abstention").AdmissionId.Value;
+        byte[] legacySchema8CandidatePayload = SerializeSchema8CandidatePayload(
+            explicitAbstention.Scenario.Investigation);
+        string legacySchema8CandidatePayloadSha256 = Convert.ToHexStringLower(
+            SHA256.HashData(legacySchema8CandidatePayload));
 
         foreach ((string Availability, string EvidenceId, string EvidenceApplicationId, string PassageId,
                      string ContextId, string TranscriptId, string ProposalId, string ExpectedDisposition,
@@ -1384,7 +1761,7 @@ public sealed class ProviderBudgetIntegrationTests
                 terminalPublication.Scenario.Disposition);
         }
         (CandidateInvestigationExecutionInput validationFixture, CandidateInvestigationRetainedTranscript[] validationTranscripts) =
-            CandidateAdmissionProviderReplayIntegrationTests.Load("S6-CANDIDATE-VAL-v3");
+            CandidateAdmissionProviderReplayIntegrationTests.CurrentExample();
         CandidateInvestigationRetainedTranscript driftTranscript = validationTranscripts.Single(item => item.ResponseState == "drift") with
         {
             OperationId = "candidate-operation",
@@ -1456,10 +1833,50 @@ public sealed class ProviderBudgetIntegrationTests
             "candidate-local-cli-v1"u8.ToArray(), new("candidate-operation"), candidateAnalysisNow.AddSeconds(4));
         Assert.AreEqual(ProviderOperationKind.CandidateInvestigation,
             terminal.RunOutputV2.ProviderOperations.Single().OperationKind);
-        Assert.AreEqual("admission-proposal-d01",
+        Assert.AreEqual("admission-proposal-explicit-abstention",
             terminal.RunOutputV2.ProviderOperations.Single().AdmissionId?.Value);
 
         BackupArtifact backup = context.Store.CreateBackup("Wp7CandidateInvestigation", candidateAnalysisNow.AddSeconds(5));
+        string corruptedFactRoot = Path.Combine(
+            Path.GetTempPath(), "Infinium-Wp7-Corrupt-Fact-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using (StoragePaths target = new(corruptedFactRoot))
+            {
+                AuthoritativeStore.RestoreBackup(backup, target);
+            }
+            string relativeFactPath;
+            using (StoragePaths corruptedPaths = new(corruptedFactRoot))
+            using (SqliteConnection corruptedDatabase = new(
+                       $"Data Source={corruptedPaths.Database};Pooling=False"))
+            {
+                corruptedDatabase.Open();
+                using SqliteCommand factPath = corruptedDatabase.CreateCommand();
+                factPath.CommandText =
+                    "SELECT payload.object_relative_path FROM source_claim_application_facts fact "
+                    + "JOIN payloads payload ON payload.payload_id=fact.statement_payload_id "
+                    + "WHERE fact.applicability_fact_id='candidate-context-installation';";
+                relativeFactPath = (string)factPath.ExecuteScalar()!;
+            }
+            string corruptedFactPath = Path.Combine(corruptedFactRoot,
+                relativeFactPath.Replace('/', Path.DirectorySeparatorChar));
+            File.WriteAllBytes(corruptedFactPath, "corrupted fact"u8.ToArray());
+            CollectionAssert.AreEqual("corrupted fact"u8.ToArray(), File.ReadAllBytes(corruptedFactPath),
+                "The restored applicability-fact object must be corrupted before replay.");
+            using StoragePaths reopenedCorruptedPaths = new(corruptedFactRoot);
+            using AuthoritativeStore corrupted = new(reopenedCorruptedPaths);
+            DurableCandidateInvestigationCoordinator corruptedCoordinator = new(corrupted);
+            Assert.ThrowsExactly<InvalidDataException>(() => corruptedCoordinator.ReplayRetained(
+                "run-restore", "candidate-operation", durableContext.ContextId),
+                "Candidate replay must reopen and hash every local applicability-fact payload.");
+        }
+        finally
+        {
+            if (Directory.Exists(corruptedFactRoot))
+            {
+                DeleteDirectoryWithRetry(corruptedFactRoot);
+            }
+        }
         string restoredRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp7-Restore-" + Guid.NewGuid().ToString("N"));
         try
         {
@@ -1467,30 +1884,70 @@ public sealed class ProviderBudgetIntegrationTests
             {
                 AuthoritativeStore.RestoreBackup(backup, target);
             }
-            using StoragePaths restoredPaths = new(restoredRoot);
-            using AuthoritativeStore restored = new(restoredPaths);
-            Assert.AreEqual(2, restored.ReadCandidateInvestigationAdmissions("run-restore", hostCandidateId).Count);
-            Assert.AreEqual("proposal-d01", restored.ReadCandidateInvestigation(
-                "run-restore", hostCandidateId, "admission-proposal-d01").HypothesisProposals.Single().ProposalId.Value);
-            Assert.AreEqual("accepted", restored.ReadCandidateInvestigationOutcome(
-                "run-restore", "candidate-operation", fixtureContext.ContextId).Disposition);
-            Assert.AreEqual("not-used", restored.ReadCandidateInvestigationOutcome(
-                "run-restore", "candidate-terminal-d07", "context-d07").Disposition);
-            Assert.AreEqual("unavailable-provider", restored.ReadCandidateInvestigationOutcome(
-                "run-restore", "candidate-terminal-d08", "context-d08").Disposition);
-            Assert.AreEqual("rejected-identity-drift", restored.ReadCandidateInvestigationOutcome(
-                "run-restore", "candidate-operation", driftContext.ContextId).Disposition);
-            Assert.AreEqual("rejected-deleted-audit-only", restored.ReadCandidateInvestigationOutcome(
-                "run-restore", "candidate-operation", "context-durable-deleted").Disposition);
-            Assert.AreEqual("abstained-unavailable", restored.ReadCandidateInvestigationOutcome(
-                "run-restore", "candidate-operation", "context-durable-unavailable").Disposition);
-            Assert.AreEqual("rejected-deleted-audit-only", new DurableCandidateInvestigationCoordinator(restored)
-                .ReplayRetained("run-restore", "candidate-operation", "context-durable-deleted").Disposition);
-            Assert.AreEqual("abstained-unavailable", new DurableCandidateInvestigationCoordinator(restored)
-                .ReplayRetained("run-restore", "candidate-operation", "context-durable-unavailable").Disposition);
-            Assert.AreEqual("not-used", new DurableCandidateInvestigationCoordinator(restored).ReplayRetained(
-                "run-restore", "candidate-terminal-d07", "context-d07").Disposition);
-            _ = restored.RebuildProviderBudgetProjections(candidateAnalysisNow.AddSeconds(6));
+            using (StoragePaths restoredPaths = new(restoredRoot))
+            using (AuthoritativeStore restored = new(restoredPaths))
+            {
+                Assert.AreEqual(2, restored.ReadCandidateInvestigationAdmissions("run-restore", hostCandidateId).Count);
+                Assert.AreEqual("proposal-positive", restored.ReadCandidateInvestigation(
+                    "run-restore", hostCandidateId, "admission-proposal-positive").HypothesisProposals.Single().ProposalId.Value);
+                Assert.AreEqual("accepted", restored.ReadCandidateInvestigationOutcome(
+                    "run-restore", "candidate-operation", fixtureContext.ContextId).Disposition);
+                Assert.AreEqual("not-used", restored.ReadCandidateInvestigationOutcome(
+                    "run-restore", "candidate-terminal-d07", "context-host").Disposition);
+                Assert.AreEqual("unavailable-provider", restored.ReadCandidateInvestigationOutcome(
+                    "run-restore", "candidate-terminal-d08", "context-host").Disposition);
+                Assert.AreEqual("rejected-identity-drift", restored.ReadCandidateInvestigationOutcome(
+                    "run-restore", "candidate-operation", driftContext.ContextId).Disposition);
+                Assert.AreEqual("rejected-deleted-audit-only", restored.ReadCandidateInvestigationOutcome(
+                    "run-restore", "candidate-operation", "context-durable-deleted").Disposition);
+                Assert.AreEqual("abstained-unavailable", restored.ReadCandidateInvestigationOutcome(
+                    "run-restore", "candidate-operation", "context-durable-unavailable").Disposition);
+                Assert.AreEqual("rejected-deleted-audit-only", new DurableCandidateInvestigationCoordinator(restored)
+                    .ReplayRetained("run-restore", "candidate-operation", "context-durable-deleted").Disposition);
+                Assert.AreEqual("abstained-unavailable", new DurableCandidateInvestigationCoordinator(restored)
+                    .ReplayRetained("run-restore", "candidate-operation", "context-durable-unavailable").Disposition);
+                Assert.AreEqual("not-used", new DurableCandidateInvestigationCoordinator(restored).ReplayRetained(
+                    "run-restore", "candidate-terminal-d07", "context-host").Disposition);
+                _ = restored.RebuildProviderBudgetProjections(candidateAnalysisNow.AddSeconds(6));
+            }
+
+            DowngradePopulatedSemanticStoreToSchema8(
+                restoredRoot, legacyCandidateAdmissionId, legacySchema8CandidatePayload);
+            string schema8HistoricalSnapshot;
+            using (StoragePaths schema8Paths = new(restoredRoot))
+            {
+                schema8HistoricalSnapshot = HistoricalSemanticSnapshot(schema8Paths.Database);
+            }
+            using StoragePaths migratedPaths = new(restoredRoot);
+            using AuthoritativeStore migrated = new(migratedPaths);
+            Assert.AreEqual(9, migrated.GetSchemaVersion());
+            CollectionAssert.AreEqual(
+                schema8HistoricalSnapshot.Split('\n'),
+                HistoricalSemanticSnapshot(migrated.Paths.Database).Split('\n'),
+                "Schema 8 migration must not rewrite retained candidate proposal or payload evidence.");
+            ProviderSemanticAdmissionReadModel historicalCandidateAdmission = migrated
+                .ReadCandidateInvestigationAdmissionsForOperation("run-restore", "candidate-operation")
+                .Single(item => item.AdmissionId == legacyCandidateAdmissionId);
+            Assert.AreEqual("admitted", historicalCandidateAdmission.State);
+            Assert.AreEqual("supported", historicalCandidateAdmission.SupportState);
+            Assert.AreEqual("not-evaluated", historicalCandidateAdmission.ApplicabilityState);
+            Assert.AreEqual("abstained", historicalCandidateAdmission.DecisionState);
+            Assert.IsFalse(ProviderAccountingCoordinator.IsCurrentSemanticAdmission(historicalCandidateAdmission),
+                "Migration must retain historical bytes without silently granting current semantic authority.");
+            HistoricalProviderSemanticPayloadReadModel historicalCandidatePayload = migrated
+                .ReadHistoricalCandidateInvestigationPayload(
+                    "run-restore", hostCandidateId, legacyCandidateAdmissionId);
+            Assert.AreEqual(legacySchema8CandidatePayloadSha256, historicalCandidatePayload.ContentSha256);
+            Assert.AreEqual(legacySchema8CandidatePayload.LongLength, historicalCandidatePayload.ByteLength);
+            Assert.AreEqual("retained", historicalCandidatePayload.RetentionState);
+            CollectionAssert.AreEqual(legacySchema8CandidatePayload, historicalCandidatePayload.Payload,
+                "The exact legacy-invalid schema-8 candidate payload must remain immutable and audit-visible.");
+            Assert.ThrowsExactly<InvalidOperationException>(() => migrated.ReadCandidateInvestigation(
+                "run-restore", hostCandidateId, legacyCandidateAdmissionId),
+                "Historical candidate audit visibility must not make the payload valid current input.");
+            Assert.ThrowsExactly<InvalidDataException>(() => new DurableCandidateInvestigationCoordinator(migrated)
+                .ReplayRetained("run-restore", "candidate-operation", explicitAbstentionContext.ContextId),
+                "Current candidate replay must reject the retained legacy-invalid result bytes.");
         }
         finally
         {
@@ -1499,11 +1956,31 @@ public sealed class ProviderBudgetIntegrationTests
                 DeleteDirectoryWithRetry(restoredRoot);
             }
         }
+        CandidateInvestigationAdmissionPublication frozenPublication = coordinator.AdmitRetainedTranscript(
+            frozenInput, frozenTranscript, "candidate-authorization", "candidate-attempt", "candidate-request",
+            "candidate-fence", candidateAnalysisNow.AddSeconds(7));
+        Assert.AreEqual("frozen-host-evidence",
+            frozenPublication.Scenario.EvidenceProvenanceLinks.Single().RootKind);
+        frozenHostBytes = File.ReadAllBytes(candidateEvidenceObjectPath);
+        try
+        {
+            File.WriteAllBytes(candidateEvidenceObjectPath, "corrupted frozen-host replay"u8.ToArray());
+            Assert.ThrowsExactly<InvalidDataException>(() => coordinator.ReplayRetained(
+                "run-restore", "candidate-operation", frozenContext.ContextId));
+        }
+        finally
+        {
+            File.WriteAllBytes(candidateEvidenceObjectPath, frozenHostBytes);
+        }
+        Assert.AreEqual(frozenPublication.Scenario.CanonicalInvestigationSha256,
+            coordinator.ReplayRetained("run-restore", "candidate-operation", frozenContext.ContextId)
+                .CanonicalInvestigationSha256);
     }
 
     private static CandidateEvidenceProvenanceBinding CandidateBinding(CandidateEvidenceInput evidence) => new(
         evidence.EvidenceId, evidence.EvidenceApplicationLinkId, evidence.SourceAcquisitionId,
-        evidence.SourceAdmissionId, evidence.SourceApplicationLinkId, evidence.SourceRevisionId,
+        evidence.SourceAdmissionId, evidence.SourceApplicationDecisionId, evidence.SourceApplicationLinkId,
+        evidence.SourceRevisionId,
         evidence.PassageId, evidence.Relationship, evidence.Availability, evidence.ContentSha256);
 
     private static CandidateInvestigationPersistenceRequest CandidatePersistenceRequest(
@@ -2017,6 +2494,279 @@ public sealed class ProviderBudgetIntegrationTests
         SqliteConnection connection, string table, string where, IReadOnlyDictionary<string, object?> replacements)
     {
         Assert.AreEqual(1, CloneRows(connection, table, where, replacements));
+    }
+
+    private static byte[] SerializeSchema8SourceClaimPayload(SourceClaimExtractionDocument document)
+    {
+        Dictionary<OpaqueId, SourceClaimAdmissionCorrelationContract> correlations = document.AdmissionCorrelations
+            .ToDictionary(correlation => correlation.ProposalId);
+        return JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            document.SchemaId,
+            document.SchemaVersion,
+            document.AcquisitionRunId,
+            document.OperationId,
+            document.OwnerKind,
+            document.OwnerId,
+            document.ParentAnalysisRunId,
+            document.ApplicationScopeId,
+            document.CostAttributionScopeId,
+            document.SourceRevisionId,
+            document.PassageIds,
+            document.DeclaredPurpose,
+            ClaimProposals = document.ClaimProposals.Select(proposal => new
+            {
+                proposal.ProposalId,
+                proposal.PassageId,
+                proposal.Claim,
+                proposal.ConditionIds,
+                State = LegacySchema8State(correlations[proposal.ProposalId]),
+                proposal.Reason,
+            }).ToArray(),
+            document.ContradictionEvidenceIds,
+            document.Abstentions,
+            document.Gaps,
+            document.ValidationIds,
+            document.AdmissionCorrelationIds,
+            AdmissionCorrelations = document.AdmissionCorrelations.Select(correlation => new
+            {
+                correlation.AdmissionId,
+                correlation.ProposalId,
+                correlation.AuthorizationId,
+                correlation.OperationId,
+                correlation.ResponseRecordId,
+                correlation.OwnerKind,
+                correlation.OwnerId,
+                correlation.RootSubjectId,
+                correlation.ValidationId,
+                correlation.AdmissionCorrelationId,
+                State = LegacySchema8State(correlation),
+            }).ToArray(),
+        }, ContractJsonSerializer.Options);
+    }
+
+    private static byte[] SerializeSchema8CandidatePayload(CandidateInvestigationDocument document)
+    {
+        Dictionary<OpaqueId, ProviderSemanticAdmissionLinkContract> links = document.AdmissionLinks
+            .ToDictionary(link => link.ProposalId);
+        return JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            document.SchemaId,
+            document.SchemaVersion,
+            document.OperationId,
+            document.OwnerKind,
+            document.OwnerId,
+            document.AnalysisRunId,
+            document.CandidateId,
+            document.ParticipantIds,
+            document.ParticipantRoles,
+            document.CausalPathIds,
+            document.DependencyClosureId,
+            document.EvidenceIds,
+            HypothesisProposals = document.HypothesisProposals.Select(proposal => new
+            {
+                proposal.ProposalId,
+                proposal.CandidateId,
+                proposal.Hypothesis,
+                proposal.SupportingEvidenceIds,
+                proposal.ContradictingEvidenceIds,
+                proposal.MissingInformation,
+                State = LegacySchema8State(links[proposal.ProposalId]),
+                proposal.Reason,
+            }).ToArray(),
+            document.Abstentions,
+            document.Gaps,
+            document.ValidationIds,
+            document.AdmissionLinkIds,
+            AdmissionLinks = document.AdmissionLinks.Select(link => new
+            {
+                link.AdmissionId,
+                link.ProposalId,
+                link.AuthorizationId,
+                link.OperationId,
+                link.ResponseRecordId,
+                link.OwnerKind,
+                link.OwnerId,
+                link.RootSubjectId,
+                link.ValidationId,
+                link.ApplicationLinkId,
+                State = LegacySchema8State(link),
+            }).ToArray(),
+        }, ContractJsonSerializer.Options);
+    }
+
+    private static ProposalAdmissionState LegacySchema8State(SourceClaimAdmissionCorrelationContract correlation) =>
+        LegacySchema8State(correlation.SupportState, correlation.DecisionState);
+
+    private static ProposalAdmissionState LegacySchema8State(ProviderSemanticAdmissionLinkContract link) =>
+        LegacySchema8State(link.SupportState, link.DecisionState);
+
+    private static ProposalAdmissionState LegacySchema8State(
+        SemanticSupportState support,
+        SemanticDecisionState decision) => decision switch
+        {
+            SemanticDecisionState.Admitted => ProposalAdmissionState.Admitted,
+            SemanticDecisionState.Rejected => ProposalAdmissionState.Rejected,
+            SemanticDecisionState.AuditOnly => ProposalAdmissionState.Deleted,
+            _ when support == SemanticSupportState.Unsupported => ProposalAdmissionState.Unsupported,
+            _ when support == SemanticSupportState.Unavailable => ProposalAdmissionState.Unavailable,
+            _ => ProposalAdmissionState.Abstained,
+        };
+
+    private static void DowngradePopulatedSemanticStoreToSchema8(
+        string root,
+        string admissionId,
+        byte[] legacyPayload)
+    {
+        using StoragePaths paths = new(root);
+        using SqliteConnection connection = new($"Data Source={paths.Database};Pooling=False");
+        connection.Open();
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "PRAGMA foreign_keys=OFF;";
+        command.ExecuteNonQuery();
+        command.CommandText =
+            """
+            DROP TRIGGER provider_semantic_validations_semantic_axes_guard;
+            DROP TRIGGER provider_semantic_admissions_semantic_axes_guard;
+            DROP TRIGGER evidence_acquisition_application_semantic_axes_guard;
+            DROP TRIGGER candidate_evidence_authority_application_decision_guard;
+            ALTER TABLE candidate_evidence_authority DROP COLUMN source_application_decision_id;
+            DROP TABLE source_claim_application_decision_facts;
+            DROP TABLE source_claim_application_decisions;
+            DROP TABLE source_claim_application_facts;
+            DROP TRIGGER provider_semantic_validations_append_only_update;
+            DROP TRIGGER provider_semantic_admissions_append_only_update;
+            ALTER TABLE provider_semantic_validations DROP COLUMN decision_state;
+            ALTER TABLE provider_semantic_validations DROP COLUMN applicability_state;
+            ALTER TABLE provider_semantic_validations DROP COLUMN support_state;
+            ALTER TABLE provider_semantic_admissions DROP COLUMN decision_state;
+            ALTER TABLE provider_semantic_admissions DROP COLUMN applicability_state;
+            ALTER TABLE provider_semantic_admissions DROP COLUMN support_state;
+            UPDATE provider_semantic_validations SET state='admitted'
+              WHERE proposal_id=(SELECT proposal_id FROM provider_semantic_admissions
+                WHERE admission_id=$admission AND owner_kind='evidence-acquisition-run');
+            UPDATE provider_semantic_admissions SET state='admitted', admitted_artifact_id=CASE
+              WHEN owner_kind='evidence-acquisition-run' THEN (
+                SELECT admitted_artifact_id FROM source_claim_admitted_artifacts WHERE admission_id=$admission)
+              ELSE admitted_artifact_id END
+              WHERE admission_id=$admission AND owner_kind='evidence-acquisition-run';
+            INSERT INTO evidence_acquisition_application_links(
+              application_link_id,acquisition_run_id,admission_id,analysis_run_id,application_scope_id,
+              cost_attribution_scope_id,admitted_artifact_id,created_at)
+            SELECT 'legacy-schema8-application-link',owner_id,admission_id,'run-restore',
+              'application-restore','cost-restore',admitted_artifact_id,'2026-08-10T00:00:10.0000000+00:00'
+            FROM provider_semantic_admissions
+            WHERE admission_id=$admission AND owner_kind='evidence-acquisition-run';
+            CREATE TRIGGER provider_semantic_validations_append_only_update
+            BEFORE UPDATE ON provider_semantic_validations
+            BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+            CREATE TRIGGER provider_semantic_admissions_append_only_update
+            BEFORE UPDATE ON provider_semantic_admissions
+            BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+            DELETE FROM store_metadata WHERE key='semantic_admission_separation_id';
+            DELETE FROM migration_history WHERE migration_id='M1-S6-C2-SEMANTIC-0009';
+            UPDATE store_metadata SET value='8' WHERE key='schema_version';
+            UPDATE store_metadata SET value='1.7.0' WHERE key='storage_contract_version';
+            UPDATE store_metadata
+              SET value='67dab8043a37d7095720016c75ab0199116e0a4f14029234a17fa6ced3c36b2a'
+              WHERE key='schema_fingerprint';
+            PRAGMA user_version=8;
+            """;
+        command.Parameters.AddWithValue("$admission", admissionId);
+        command.ExecuteNonQuery();
+        command.CommandText = "PRAGMA foreign_keys=ON;";
+        command.Parameters.Clear();
+        command.ExecuteNonQuery();
+
+        command.CommandText =
+            """
+            SELECT payload.payload_id,payload.object_relative_path
+            FROM provider_semantic_admissions admission
+            JOIN provider_semantic_proposals proposal ON proposal.proposal_id=admission.proposal_id
+            JOIN payloads payload ON payload.payload_id=proposal.payload_id
+            WHERE admission.admission_id=$admission;
+            """;
+        command.Parameters.Clear();
+        command.Parameters.AddWithValue("$admission", admissionId);
+        string payloadId;
+        string oldRelativePath;
+        using (SqliteDataReader reader = command.ExecuteReader())
+        {
+            Assert.IsTrue(reader.Read());
+            payloadId = reader.GetString(0);
+            oldRelativePath = reader.GetString(1);
+            Assert.IsFalse(reader.Read());
+        }
+        string sha256 = Convert.ToHexStringLower(SHA256.HashData(legacyPayload));
+        string classRelativePath = Path.Combine(sha256[..2], sha256[2..4], sha256);
+        string newRelativePath = "payloads/" + classRelativePath.Replace('\\', '/');
+        string oldPath = Path.Combine(paths.Payloads,
+            oldRelativePath["payloads/".Length..].Replace('/', Path.DirectorySeparatorChar));
+        string newPath = Path.Combine(paths.Payloads, classRelativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(newPath)!);
+        Assert.IsFalse(File.Exists(newPath));
+        File.WriteAllBytes(newPath, legacyPayload);
+        command.CommandText =
+            "UPDATE payloads SET content_sha256=$sha,byte_length=$length,object_relative_path=$path "
+            + "WHERE payload_id=$payload;";
+        command.Parameters.Clear();
+        command.Parameters.AddWithValue("$sha", sha256);
+        command.Parameters.AddWithValue("$length", legacyPayload.Length);
+        command.Parameters.AddWithValue("$path", newRelativePath);
+        command.Parameters.AddWithValue("$payload", payloadId);
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        File.Delete(oldPath);
+    }
+
+    private static string HistoricalSemanticSnapshot(string databasePath)
+    {
+        using SqliteConnection connection = new($"Data Source={databasePath};Mode=ReadOnly;Pooling=False");
+        connection.Open();
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT group_concat(value, char(10)) FROM (
+              SELECT 'proposal|' || proposal_id || '|' || payload_id || '|' || semantic_link_id AS value
+              FROM provider_semantic_proposals ORDER BY proposal_id
+            )
+            UNION ALL
+            SELECT group_concat(value, char(10)) FROM (
+              SELECT DISTINCT 'payload|' || payload.payload_id || '|' || payload.content_sha256 || '|'
+                || CAST(payload.byte_length AS TEXT) || '|' || payload.object_relative_path AS value
+              FROM payloads payload
+              JOIN provider_semantic_proposals proposal ON proposal.payload_id=payload.payload_id
+              ORDER BY value
+            )
+            UNION ALL
+            SELECT group_concat(value, char(10)) FROM (
+              SELECT 'validation|' || validation_id || '|' || proposal_id || '|' || state || '|' || reason AS value
+              FROM provider_semantic_validations ORDER BY validation_id
+            )
+            UNION ALL
+            SELECT group_concat(value, char(10)) FROM (
+              SELECT 'admission|' || admission_id || '|' || proposal_id || '|' || state || '|' || reason || '|'
+                || COALESCE(admitted_artifact_id,'null') AS value
+              FROM provider_semantic_admissions ORDER BY admission_id
+            )
+            UNION ALL
+            SELECT group_concat(value, char(10)) FROM (
+              SELECT 'artifact|' || admitted_artifact_id || '|' || payload_id || '|' || content_sha256 AS value
+              FROM source_claim_admitted_artifacts ORDER BY admitted_artifact_id
+            )
+            UNION ALL
+            SELECT group_concat(value, char(10)) FROM (
+              SELECT 'application|' || application_link_id || '|' || acquisition_run_id || '|' || admission_id || '|'
+                || admitted_artifact_id AS value
+              FROM evidence_acquisition_application_links ORDER BY application_link_id
+            );
+            """;
+        using SqliteDataReader reader = command.ExecuteReader();
+        List<string> groups = [];
+        while (reader.Read())
+        {
+            groups.Add(reader.IsDBNull(0) ? string.Empty : reader.GetString(0));
+        }
+        return string.Join('\n', groups.Where(x => x.Length > 0));
     }
 
     private static int CloneRows(

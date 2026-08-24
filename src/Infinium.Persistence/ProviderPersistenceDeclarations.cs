@@ -32,7 +32,7 @@ public static class ProviderPersistenceDeclarations
     public const string SuccessorV6PersistenceSchemaFingerprint = "67dab8043a37d7095720016c75ab0199116e0a4f14029234a17fa6ced3c36b2a";
     public const string SuccessorV6SemanticTriggerCorrectionId = "M1-S6-SUCCESSOR-V6-0008A";
     public const string SemanticAdmissionSeparationMigrationId = "M1-S6-C2-SEMANTIC-0009";
-    public const string SemanticAdmissionSeparationSchemaFingerprint = "c40cfd33517c3578f5247d7bf4196fd02016b9160c6fb1a743ca58d17c1673f0";
+    public const string SemanticAdmissionSeparationSchemaFingerprint = "334d4fca290d79ffee49a89a2f875a569e051b367c84d5e980efe278e85132b8";
     public const int SourceSchemaVersion = 5;
     public const string SourceStorageContractVersion = "1.4.0";
     public const string SourceSchemaFingerprint = "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d";
@@ -116,5 +116,8 @@ public static class ProviderPersistenceDeclarations
         "provider_transport_events",
         "provider_semantic_admissions",
         "evidence_acquisition_application_links",
+        "source_claim_application_facts",
+        "source_claim_application_decisions",
+        "source_claim_application_decision_facts",
     ];
 }

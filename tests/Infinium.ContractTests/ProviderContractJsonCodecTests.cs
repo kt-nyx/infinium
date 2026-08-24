@@ -1455,12 +1455,51 @@ public sealed class ProviderContractJsonCodecTests
                     ValidationId = "validation-1",
                     AdmissionCorrelationId = "correlation-1",
                     SupportState = "supported",
-                    ApplicabilityState = "applicable",
-                    DecisionState = "admitted",
+                    ApplicabilityState = "not-evaluated",
+                    DecisionState = "abstained",
                 },
             },
         };
         ApplicationProviderContractValidator.Validate(sourceClaim);
+        sourceClaim.ApplicationDecisions.Add(new SourceClaimApplicationDecision
+        {
+            DecisionLink = new ProviderSemanticAdmissionLink
+            {
+                AdmissionId = "application-decision-1",
+                ProposalId = "proposal-1",
+                AuthorizationId = "authorization-1",
+                OperationId = new OperationId { Value = "operation-1" },
+                ResponseRecordId = "response-1",
+                OwnerKind = "analysis-run",
+                OwnerId = "run-1",
+                RootSubjectId = "application-1",
+                ValidationId = "application-validation-1",
+                ApplicationLinkId = "application-link-1",
+                SupportState = "supported",
+                ApplicabilityState = "applicable",
+                DecisionState = "admitted",
+            },
+            SourceAdmissionId = "admission-1",
+            ApplicabilityFactIds = { "application-fact-1" },
+            Reason = "analysis-owned-application-decision",
+        });
+        ApplicationProviderContractValidator.Validate(sourceClaim);
+        sourceClaim.ApplicationDecisions[0].ApplicabilityFactIds[0] = "invalid fact";
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim));
+        sourceClaim.ApplicationDecisions[0].ApplicabilityFactIds[0] = "application-fact-1";
+        sourceClaim.ApplicationDecisions[0].DecisionLink.AdmissionId = "invalid decision";
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim));
+        sourceClaim.ApplicationDecisions[0].DecisionLink.AdmissionId = "application-decision-1";
+        sourceClaim.ApplicationDecisions[0].SourceAdmissionId = "wrong-source-admission";
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim));
+        sourceClaim.ApplicationDecisions[0].SourceAdmissionId = "admission-1";
+        foreach (string malformedState in new[] { "SUPPORTED", "not--evaluated", "s-u-p-p-o-r-t-e-d", "2" })
+        {
+            sourceClaim.AdmissionCorrelations[0].SupportState = malformedState;
+            Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim),
+                "source:" + malformedState);
+        }
+        sourceClaim.AdmissionCorrelations[0].SupportState = "supported";
         sourceClaim.OwnerId = "acquisition-other";
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim));
         sourceClaim.OwnerId = "acquisition-1";
@@ -1469,6 +1508,27 @@ public sealed class ProviderContractJsonCodecTests
         sourceClaim.AdmissionCorrelationIds.Add("correlation-1");
         sourceClaim.AdmissionCorrelations[0].AdmissionCorrelationId = "application-link-1";
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim));
+        sourceClaim.AdmissionCorrelations[0].AdmissionCorrelationId = "correlation-1";
+        SourceClaimAdmissionCorrelation duplicateSourceProposal = sourceClaim.AdmissionCorrelations[0].Clone();
+        duplicateSourceProposal.AdmissionId = "admission-2";
+        duplicateSourceProposal.ValidationId = "validation-2";
+        duplicateSourceProposal.AdmissionCorrelationId = "correlation-2";
+        sourceClaim.ValidationIds.Add("validation-2");
+        sourceClaim.AdmissionCorrelationIds.Add("correlation-2");
+        sourceClaim.AdmissionCorrelations.Add(duplicateSourceProposal);
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim),
+            "A source proposal must have exactly one host decision link.");
+        sourceClaim.ValidationIds.RemoveAt(1);
+        sourceClaim.AdmissionCorrelationIds.RemoveAt(1);
+        sourceClaim.AdmissionCorrelations.RemoveAt(1);
+        sourceClaim.ValidationIds.Add("phantom-validation");
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim),
+            "Declared source validation IDs must exactly equal linked validation IDs.");
+        sourceClaim.ValidationIds.RemoveAt(1);
+        sourceClaim.AdmissionCorrelationIds.Add("phantom-correlation");
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim),
+            "Declared source correlation IDs must exactly equal linked correlation IDs.");
+        sourceClaim.AdmissionCorrelationIds.RemoveAt(1);
 
         CandidateInvestigationPayload candidate = new()
         {
@@ -1500,11 +1560,46 @@ public sealed class ProviderContractJsonCodecTests
             },
         };
         ApplicationProviderContractValidator.Validate(candidate);
+        candidate.AdmissionLinks[0].ApplicationLinkId = "invalid link";
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(candidate));
+        candidate.AdmissionLinks[0].ApplicationLinkId = "application-link-2";
+        foreach (string malformedState in new[] { "SUPPORTED", "not--evaluated", "s-u-p-p-o-r-t-e-d", "2" })
+        {
+            candidate.AdmissionLinks[0].SupportState = malformedState;
+            Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(candidate),
+                "candidate:" + malformedState);
+        }
+        candidate.AdmissionLinks[0].SupportState = "supported";
         candidate.AnalysisRunId = " ";
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(candidate));
         candidate.AnalysisRunId = "run-1";
         candidate.AdmissionLinkIds.Clear();
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(candidate));
+        candidate.AdmissionLinkIds.Add("admission-1");
+        ProviderSemanticAdmissionLink duplicateCandidateProposal = candidate.AdmissionLinks[0].Clone();
+        duplicateCandidateProposal.AdmissionId = "admission-2";
+        duplicateCandidateProposal.ValidationId = "validation-2";
+        duplicateCandidateProposal.ApplicationLinkId = "application-link-3";
+        candidate.ValidationIds.Add("validation-2");
+        candidate.AdmissionLinkIds.Add("admission-2");
+        candidate.AdmissionLinks.Add(duplicateCandidateProposal);
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(candidate),
+            "A candidate proposal must have exactly one host decision link.");
+        candidate.ValidationIds.RemoveAt(1);
+        candidate.AdmissionLinkIds.RemoveAt(1);
+        candidate.AdmissionLinks[0].ApplicationLinkId = "";
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(candidate),
+            "Candidate admission links require an exact evidence application edge.");
+        candidate.AdmissionLinks[0].ApplicationLinkId = "application-link-2";
+        candidate.AdmissionLinks.RemoveAt(1);
+        candidate.ValidationIds.Add("phantom-validation");
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(candidate),
+            "Declared candidate validation IDs must exactly equal linked validation IDs.");
+        candidate.ValidationIds.RemoveAt(1);
+        candidate.AdmissionLinkIds.Add("phantom-admission");
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(candidate),
+            "Declared candidate admission IDs must exactly equal linked admission IDs.");
+        candidate.AdmissionLinkIds.RemoveAt(1);
 
         ProviderResponsePayload unavailableResponse = new()
         {

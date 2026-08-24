@@ -5,7 +5,7 @@ Date: 2026-08-22
 Accepted: 2026-08-22
 Last reviewed: 2026-08-22
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0035 only for independent semantic-oracle validation timing; all product semantics and four axes remain accepted
 
 ## Context
 

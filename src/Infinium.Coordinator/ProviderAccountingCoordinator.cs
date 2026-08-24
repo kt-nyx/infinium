@@ -124,8 +124,11 @@ public sealed class ProviderAccountingCoordinator
             }
             acquisitionRunId = new(operation.OwnerId);
             acquisitionRunIds = [acquisitionRunId];
-            admissionId = new(admissions.OrderByDescending(x => x.DecisionState == "admitted")
-                .ThenBy(x => x.AdmissionId, StringComparer.Ordinal).First().AdmissionId);
+            SourceClaimApplicationReadModel? activeApplication = store
+                .ReadSourceClaimApplicationLinks(operation.OwnerId)
+                .OrderBy(x => x.ApplicationDecisionId, StringComparer.Ordinal)
+                .FirstOrDefault();
+            admissionId = activeApplication is null ? null : new(activeApplication.ApplicationDecisionId);
         }
         else if (operationKind == ProviderOperationKind.CandidateInvestigation)
         {
@@ -142,11 +145,11 @@ public sealed class ProviderAccountingCoordinator
             {
                 throw new InvalidDataException("Candidate publication requires exact retained terminal outcomes and any semantic admissions.");
             }
-            if (admissions.Count > 0)
-            {
-                admissionId = new(admissions.OrderByDescending(x => x.DecisionState == "admitted")
-                    .ThenBy(x => x.AdmissionId, StringComparer.Ordinal).First().AdmissionId);
-            }
+            ProviderSemanticAdmissionReadModel? activeAdmission = admissions
+                .Where(IsCurrentSemanticAdmission)
+                .OrderBy(x => x.AdmissionId, StringComparer.Ordinal)
+                .FirstOrDefault();
+            admissionId = activeAdmission is null ? null : new(activeAdmission.AdmissionId);
         }
         ProviderRunOutputV2BindingReceipt binding = store.BindProviderRunOutputV2(
             runId.Value, operation.EffectiveConfigurationId, canonicalLocalRunOutputV1, createdAt);
@@ -166,6 +169,12 @@ public sealed class ProviderAccountingCoordinator
             runId, canonicalLocalCliSummaryV1, projection, replay.Usage, new(operation.AuthorizationId), []);
         return new(binding, runOutput, cli);
     }
+
+    internal static bool IsCurrentSemanticAdmission(ProviderSemanticAdmissionReadModel admission) =>
+        admission.State == "admitted"
+        && admission.SupportState == "supported"
+        && admission.ApplicabilityState == "applicable"
+        && admission.DecisionState == "admitted";
 
     public ProviderTerminalPublicationArtifacts PublishCandidateNoResponseV2(
         OpaqueId runId,

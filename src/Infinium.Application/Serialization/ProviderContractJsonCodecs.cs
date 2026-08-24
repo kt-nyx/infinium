@@ -24,6 +24,11 @@ public static class ProviderContractJsonCodecs
     public static SourceClaimExtractionDocument DeserializeSourceClaimExtraction(ReadOnlySpan<byte> bytes) =>
         SchemaValidatedJsonCodec.Deserialize<SourceClaimExtractionDocument>(bytes, "source-claim-extraction.v1.schema.json", ProviderOperationContractInvariants.Validate);
 
+    public static byte[] Serialize(SourceClaimApplicationDecisionContract value) =>
+        SchemaValidatedJsonCodec.Serialize(value, "source-claim-application-decision.v1.schema.json", ProviderOperationContractInvariants.Validate);
+    public static SourceClaimApplicationDecisionContract DeserializeSourceClaimApplicationDecision(ReadOnlySpan<byte> bytes) =>
+        SchemaValidatedJsonCodec.Deserialize<SourceClaimApplicationDecisionContract>(bytes, "source-claim-application-decision.v1.schema.json", ProviderOperationContractInvariants.Validate);
+
     public static byte[] Serialize(CandidateInvestigationDocument value) =>
         SchemaValidatedJsonCodec.Serialize(value, "candidate-investigation.v1.schema.json", ProviderOperationContractInvariants.Validate);
     public static CandidateInvestigationDocument DeserializeCandidateInvestigation(ReadOnlySpan<byte> bytes) =>

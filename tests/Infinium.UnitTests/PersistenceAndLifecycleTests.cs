@@ -1325,22 +1325,18 @@ public sealed class PersistenceAndLifecycleTests
               validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
               state,host_policy_id,reason,created_at,support_state,applicability_state,decision_state) VALUES(
               'validation-valid-source','proposal-valid-source-roots','operation-source','response-source',
-              'evidence-acquisition-run','acquisition-restore','source-valid','admitted','policy-1','synthetic',
-              '2026-08-10T00:01:15.0000000+00:00','supported','applicable','admitted');
+              'evidence-acquisition-run','acquisition-restore','source-valid','abstained','policy-1','synthetic',
+              '2026-08-10T00:01:15.0000000+00:00','supported','not-evaluated','abstained');
             INSERT INTO provider_semantic_admissions(
               admission_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
               validation_id,semantic_link_id,state,host_policy_id,reason,admitted_artifact_id,created_at,
               support_state,applicability_state,decision_state) VALUES(
               'admission-valid-source','proposal-valid-source-roots','operation-source','response-source',
               'evidence-acquisition-run','acquisition-restore','source-valid','validation-valid-source',
-              'provider-returned-application','admitted','policy-1','synthetic','payload-1',
-              '2026-08-10T00:01:16.0000000+00:00','supported','applicable','admitted');
-            INSERT INTO evidence_acquisition_application_links VALUES(
-              'consumer-application-valid','acquisition-restore','admission-valid-source','run-restore',
-              'application-restore','cost-restore','payload-1',
-              '2026-08-10T00:01:17.0000000+00:00');
+              'provider-returned-application','abstained','policy-1','synthetic',NULL,
+              '2026-08-10T00:01:16.0000000+00:00','supported','not-evaluated','abstained');
             """;
-        Assert.AreEqual(3, command.ExecuteNonQuery());
+        Assert.AreEqual(2, command.ExecuteNonQuery());
         command.CommandText =
             """
             DROP TRIGGER provider_semantic_proposal_root_guard;
@@ -1367,10 +1363,10 @@ public sealed class PersistenceAndLifecycleTests
             """
             INSERT INTO provider_semantic_validations(
               validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
-              state,host_policy_id,reason,created_at)
+              state,host_policy_id,reason,created_at,support_state,applicability_state,decision_state)
             VALUES('validation-chronology','proposal-chronology','operation-completed','response-completed',
               'analysis-run','run-1','candidate-1','admitted','policy-1','synthetic',
-              '2026-08-10T00:01:04.0000000+00:00');
+              '2026-08-10T00:01:04.0000000+00:00','supported','applicable','admitted');
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
         command.CommandText = command.CommandText.Replace("00:01:04", "00:01:06", StringComparison.Ordinal);
@@ -1379,10 +1375,12 @@ public sealed class PersistenceAndLifecycleTests
             """
             INSERT INTO provider_semantic_admissions(
               admission_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
-              validation_id,semantic_link_id,state,host_policy_id,reason,admitted_artifact_id,created_at)
+              validation_id,semantic_link_id,state,host_policy_id,reason,admitted_artifact_id,created_at,
+              support_state,applicability_state,decision_state)
             VALUES('admission-chronology','proposal-chronology','operation-completed','response-completed',
               'analysis-run','run-1','candidate-1','validation-chronology','application-1','admitted',
-              'policy-1','synthetic',NULL,'2026-08-10T00:01:05.0000000+00:00');
+              'policy-1','synthetic','payload-1','2026-08-10T00:01:05.0000000+00:00',
+              'supported','applicable','admitted');
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
         command.CommandText = command.CommandText.Replace("00:01:05", "00:01:07", StringComparison.Ordinal);

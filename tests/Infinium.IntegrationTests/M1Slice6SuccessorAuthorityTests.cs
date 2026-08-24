@@ -30,6 +30,12 @@ public sealed class M1Slice6SuccessorAuthorityTests
                 .GetProperty("items").GetProperty("properties");
             Assert.AreEqual("string", transcriptProperties.GetProperty("prompt_id").GetProperty("type").GetString());
             Assert.AreEqual("string", transcriptProperties.GetProperty("response_state").GetProperty("type").GetString());
+            Assert.AreEqual("^[0-9a-f]{64}$", transcriptProperties.GetProperty("response_fingerprint")
+                .GetProperty("pattern").GetString());
+            JsonElement proposalId = transcriptProperties.GetProperty("proposals").GetProperty("items")
+                .GetProperty("properties").GetProperty("proposal_id");
+            Assert.AreEqual(128, proposalId.GetProperty("maxLength").GetInt32());
+            Assert.AreEqual("^[A-Za-z0-9][A-Za-z0-9._:/-]*$", proposalId.GetProperty("pattern").GetString());
         }
     }
 

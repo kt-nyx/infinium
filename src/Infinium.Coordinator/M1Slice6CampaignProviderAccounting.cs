@@ -931,6 +931,18 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         string settlementId, string replayEdgeId, string rawResponseSha256,
         M1Slice6CampaignSemanticProvenance provenance)
     {
+        string sourceAdmissionId = provenance.SourceAdmissionId;
+        string sourceApplicationDecisionId = provenance.SourceApplicationDecisionId;
+        SourceClaimApplicationReadModel? boundApplication = null;
+        if (stage is M1Slice6CampaignStage.SourceClaimExtraction or M1Slice6CampaignStage.CandidateInvestigation)
+        {
+            boundApplication = store.ReadSourceClaimApplicationLinks(provenance.SourceAcquisitionId)
+                .Single(link => link.ApplicationLinkId == provenance.SourceApplicationLinkId);
+            sourceAdmissionId = sourceAdmissionId.Length == 0
+                ? boundApplication.SourceAdmissionId : sourceAdmissionId;
+            sourceApplicationDecisionId = sourceApplicationDecisionId.Length == 0
+                ? boundApplication.ApplicationDecisionId : sourceApplicationDecisionId;
+        }
         ProviderOperationReadModel operation = store.ReadProviderOperation(operationId);
         if (operation.State != ProviderOperationState.Settled || operation.UnresolvedHold
             || operation.AuthorizationId != authorizationId || operation.ResponseId != responseId
@@ -948,10 +960,9 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
         { throw new InvalidDataException("C3 effect-free retained response replay changed bytes."); }
         if (stage == M1Slice6CampaignStage.SourceClaimExtraction)
         {
-            SourceClaimApplicationReadModel application = store
-                .ReadSourceClaimApplicationLinks(provenance.SourceAcquisitionId)
-                .Single(link => link.ApplicationLinkId == provenance.SourceApplicationLinkId);
-            if (application.AdmissionId != provenance.SourceAdmissionId
+            SourceClaimApplicationReadModel application = boundApplication!;
+            if (application.SourceAdmissionId != sourceAdmissionId
+                || application.ApplicationDecisionId != sourceApplicationDecisionId
                 || application.AdmittedArtifactId != provenance.AdmittedArtifactId)
             { throw new InvalidDataException("C3 WP10 application-chain provenance changed."); }
             using SqliteConnection connection = new($"Data Source={store.Paths.Database};Mode=ReadOnly;Pooling=False");
@@ -961,14 +972,15 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
                 "SELECT COUNT(*) FROM m1_slice6_successor_all_semantic_response_bindings b "
                 + "JOIN provider_semantic_admissions a ON a.operation_id=b.semantic_operation_id "
                 + "AND a.response_record_id=b.semantic_response_record_id "
-                + "JOIN evidence_acquisition_application_links l ON l.admission_id=a.admission_id "
-                + "AND l.acquisition_run_id=a.owner_id AND l.admitted_artifact_id=a.admitted_artifact_id "
+                + "JOIN source_claim_application_decisions d ON d.source_admission_id=a.admission_id "
+                + "AND d.acquisition_run_id=a.owner_id "
                 + "WHERE b.transport_operation_id=$operation AND b.transport_response_record_id=$response "
-                + "AND a.state='admitted' AND a.admission_id=$admission AND a.admitted_artifact_id=$artifact "
-                + "AND l.application_link_id=$application;";
+                + "AND d.support_state='supported' AND d.applicability_state='applicable' "
+                + "AND d.decision_state='admitted' AND d.application_decision_id=$admission "
+                + "AND d.admitted_artifact_id=$artifact AND d.application_link_id=$application;";
             command.Parameters.AddWithValue("$operation", operationId);
             command.Parameters.AddWithValue("$response", responseId);
-            command.Parameters.AddWithValue("$admission", provenance.SourceAdmissionId);
+            command.Parameters.AddWithValue("$admission", sourceApplicationDecisionId);
             command.Parameters.AddWithValue("$artifact", provenance.AdmittedArtifactId);
             command.Parameters.AddWithValue("$application", provenance.SourceApplicationLinkId);
             if (Convert.ToInt64(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
@@ -1005,13 +1017,15 @@ public sealed class M1Slice6CampaignSqliteProviderAccounting : IM1Slice6Campaign
                 + "AND o.hypothesis_id=$hypothesis AND o.disposition IN ('accepted','accepted-conditional') "
                 + "AND e.root_kind='persisted-source-claim-application' "
                 + "AND e.source_acquisition_id=$acquisition AND e.source_admission_id=$admission "
+                + "AND e.source_application_decision_id=$applicationDecision "
                 + "AND e.admitted_artifact_id=$artifact AND e.source_application_link_id=$application;";
             command.Parameters.AddWithValue("$owner", ownerId);
             command.Parameters.AddWithValue("$semantic", semanticOperation);
             command.Parameters.AddWithValue("$candidate", provenance.CandidateId);
             command.Parameters.AddWithValue("$hypothesis", provenance.HypothesisId);
             command.Parameters.AddWithValue("$acquisition", provenance.SourceAcquisitionId);
-            command.Parameters.AddWithValue("$admission", provenance.SourceAdmissionId);
+            command.Parameters.AddWithValue("$admission", sourceAdmissionId);
+            command.Parameters.AddWithValue("$applicationDecision", sourceApplicationDecisionId);
             command.Parameters.AddWithValue("$artifact", provenance.AdmittedArtifactId);
             command.Parameters.AddWithValue("$application", provenance.SourceApplicationLinkId);
             if (Convert.ToInt64(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)

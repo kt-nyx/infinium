@@ -1,6 +1,3 @@
-using System.Text.Json;
-using Infinium.Application.Provider;
-using Infinium.Domain.Contracts;
 using Infinium.PublicFixtures;
 
 namespace Infinium.Tests;
@@ -10,32 +7,37 @@ public sealed class SourceClaimTransparencyEvaluationTests
 {
     [TestMethod]
     [TestCategory("Evaluation")]
-    public void LlmClaimTransparencyMatchesIndependentlyFrozenPublicOracles()
+    public void HistoricalSourceClaimPackagesRemainByteBoundAuditVisibleAndNonAuthorizing()
     {
         foreach (string packageId in new[] { "S6-CLAIM-DEV-v1", "S6-CLAIM-VAL-v1" })
         {
-            SourceClaimFixturePackage package = SourceClaimFixtureReader.Read(Path.Combine(
-                RepositoryRoot(), "fixtures", "public", "provider", "source-claims", packageId));
-            SourceClaimAcquisitionResult actual = SourceClaimAcquisitionEngine.Execute(package.ExecutionInput, package.Transcripts);
-            SourceClaimOracleVerifier.Verify(package, actual);
-            string human = SourceClaimTransparencyRenderer.RenderHuman(actual);
-            StringAssert.Contains(human, "network not used");
-            StringAssert.Contains(human, "private verdict not performed");
+            string root = Path.Combine(RepositoryRoot(), "fixtures", "public", "provider", "source-claims", packageId);
+            SourceClaimHistoricalAuditReceipt receipt = SourceClaimHistoricalAudit.Verify(root);
+            Assert.AreEqual(packageId, receipt.PackageId);
+            Assert.IsTrue(receipt.HistoricalFileCount > 0);
+            Assert.AreEqual(64, receipt.ManifestSha256.Length);
+            Assert.AreEqual(64, receipt.OracleSha256.Length);
+            Assert.AreEqual(64, receipt.RetainedTranscriptsSha256.Length);
+            Assert.IsFalse(receipt.CurrentSemanticAuthority);
         }
     }
 
     [TestMethod]
     [TestCategory("Evaluation")]
-    public void Slice5ProviderAdmissionRemainsHostOwnedAndModelClaimsRemainUntrusted()
+    public void HistoricalValidationClaimAuthorityIsExplicitlyReclassifiedWithoutChangingRetainedManifest()
     {
-        SourceClaimFixturePackage package = SourceClaimFixtureReader.Read(Path.Combine(
-            RepositoryRoot(), "fixtures", "public", "provider", "source-claims", "S6-CLAIM-VAL-v1"));
-        SourceClaimAcquisitionResult actual = SourceClaimAcquisitionEngine.Execute(package.ExecutionInput, package.Transcripts);
-        Assert.AreEqual(0, actual.Scenarios.Sum(x => x.Extraction.AdmissionCorrelations.Count(
-            p => p.DecisionState == SemanticDecisionState.Admitted)));
-        Assert.IsTrue(actual.Scenarios.SelectMany(x => x.Extraction.ClaimProposals)
-            .All(x => x.Reason != "Requires host validation"));
-        Assert.IsFalse(File.ReadAllText(Path.Combine(RepositoryRoot(), "contracts", "json-schema", "source-claim-extraction.v1.schema.json"))
+        string root = Path.Combine(RepositoryRoot(), "fixtures", "public", "provider", "source-claims",
+            "S6-CLAIM-VAL-v1");
+        SourceClaimHistoricalAuditReceipt receipt = SourceClaimHistoricalAudit.Verify(root);
+        Assert.AreEqual("0f95265340873dc4abb083c6f857db9e8786c6e1ba36da385f07c876afe1c13f",
+            receipt.ManifestSha256);
+        Assert.IsFalse(receipt.CurrentSemanticAuthority);
+
+        string reclassification = File.ReadAllText(Path.Combine(root, "reclassification.v1.json"));
+        StringAssert.Contains(reclassification,
+            "historical-development-evidence-clean-break-semantic-contract");
+        Assert.IsFalse(File.ReadAllText(Path.Combine(RepositoryRoot(), "contracts", "json-schema",
+                "source-claim-extraction.v1.schema.json"))
             .Contains("finding", StringComparison.OrdinalIgnoreCase));
     }
 

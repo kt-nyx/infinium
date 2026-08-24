@@ -379,6 +379,12 @@ public sealed record SourceClaimAdmissionCorrelationContract(
     SemanticApplicabilityState ApplicabilityState,
     SemanticDecisionState DecisionState);
 
+public sealed record SourceClaimApplicationDecisionContract(
+    ProviderSemanticAdmissionLinkContract DecisionLink,
+    OpaqueId SourceAdmissionId,
+    IReadOnlyList<OpaqueId> ApplicabilityFactIds,
+    string Reason);
+
 public sealed record CitationProposalContract(
     OpaqueId ProposalId,
     OpaqueId PassageId,

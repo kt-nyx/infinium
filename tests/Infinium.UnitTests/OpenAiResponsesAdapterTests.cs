@@ -218,6 +218,41 @@ public sealed class OpenAiResponsesAdapterTests
     }
 
     [TestMethod]
+    public void StrictOutputAdmissionEnforcesSupportedStringPatternsBeforeStructuralAdmission()
+    {
+        byte[] schema = Encoding.UTF8.GetBytes("""
+            {"type":"object","additionalProperties":false,"required":["id","sha"],"properties":{"id":{"type":"string","minLength":1,"maxLength":128,"pattern":"^[A-Za-z0-9][A-Za-z0-9._:/-]*$"},"sha":{"type":"string","minLength":64,"maxLength":64,"pattern":"^[0-9a-f]{64}$"}}}
+            """);
+        byte[] Valid(string id, string sha) => WithOutput(
+            "[{\"type\":\"message\",\"content\":[{\"type\":\"output_text\",\"text\":"
+            + JsonSerializer.Serialize(JsonSerializer.Serialize(new { id, sha })) + "}]}]");
+
+        OpenAiResponsesResult accepted = OpenAiResponsesResponseCodec.Replay(
+            Valid("valid-id", new string('a', 64)), 200, "c", "r", requestedOutputSchema: schema);
+        OpenAiResponsesResult invalidId = OpenAiResponsesResponseCodec.Replay(
+            Valid("invalid id", new string('a', 64)), 200, "c", "r", requestedOutputSchema: schema);
+        OpenAiResponsesResult invalidSha = OpenAiResponsesResponseCodec.Replay(
+            Valid("valid-id", new string('A', 64)), 200, "c", "r", requestedOutputSchema: schema);
+
+        Assert.IsTrue(accepted.Admitted);
+        Assert.AreEqual(ProviderResponseState.Malformed, invalidId.State);
+        Assert.AreEqual(ProviderResponseState.Malformed, invalidSha.State);
+
+        foreach (string unsupportedPattern in new[] { "^x+$", "[" })
+        {
+            byte[] unsupportedSchema = Encoding.UTF8.GetBytes(
+                "{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"id\"],\"properties\":{\"id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128,\"pattern\":"
+                + JsonSerializer.Serialize(unsupportedPattern) + "}}}");
+            OpenAiResponsesResult unsupported = OpenAiResponsesResponseCodec.Replay(
+                WithOutput("[{\"type\":\"message\",\"content\":[{\"type\":\"output_text\",\"text\":\"{\\\"id\\\":\\\"xxx\\\"}\"}]}]"),
+                200, "c", "r", requestedOutputSchema: unsupportedSchema);
+
+            Assert.AreEqual(ProviderResponseState.Malformed, unsupported.State, unsupportedPattern);
+            Assert.IsFalse(unsupported.Admitted, unsupportedPattern);
+        }
+    }
+
+    [TestMethod]
     public void SerializerRejectsUnsupportedOrNonClosedSchemaBeforeCanonicalRequestExists()
     {
         using JsonDocument unsupported = JsonDocument.Parse("""
