@@ -62,7 +62,7 @@ operation that explicitly requires them.
   [accepted semantic-oracle deferral amendment](plans/milestones/m1/amendments/semantic-oracle-deferral.md),
   [accepted Slice 6 closeout](plans/milestones/m1/slices/s6/README.md),
   [accepted Slice 7 closeout](plans/milestones/m1/slices/s7/README.md),
-  and [proposed Slice 8 owner-decision plan](plans/milestones/m1/slices/s8/README.md)
+  and [accepted Slice 8 plan](plans/milestones/m1/slices/s8/README.md)
 - Product: [product definition](product/product-definition.md),
   [requirements](product/requirements.md),
   [mod-impact taxonomy](product/mod-impact-taxonomy.md),
@@ -124,7 +124,7 @@ code and its last regression closure are in the separate sibling Git repository
 owner explicitly requests the corresponding archaeological review.
 
 M0 research, Waves A through F, completed M1 slices, the accepted Slice 6 and
-Slice 7 closeouts, and the proposed Slice 8 owner-decision plan live under the
+Slice 7 closeouts, and the accepted Slice 8 plan live under the
 milestone hierarchy.
 Superseded evaluator-attempt prose
 and proof fixtures are summarized in

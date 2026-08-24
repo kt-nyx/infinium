@@ -1,9 +1,9 @@
 # M1 Slice 8: Controlled-real generalization
 
-Status: Proposed
+Status: Accepted
 
-Disposition: Review-ready owner-decision candidate. This document does not
-activate implementation or grant access to controlled-real inputs.
+Disposition: Owner-accepted planning authority. Live implementation and local
+input authorization are stated only in `docs/current-state.md`.
 
 Last reviewed: 2026-08-24
 
@@ -16,7 +16,8 @@ ADR-0009, ADR-0010, ADR-0015, ADR-0022, ADR-0028, ADR-0029, ADR-0034, and
 ADR-0035; the M1/M2 product-conformance verification profile; and the
 owner-accepted Slice 7 closeout and implementation record.
 
-Owner plan acceptance: Pending.
+Owner plan acceptance: Accepted by the project owner on 2026-08-24 for exact
+plan candidate `ab3f7ed2cf0d44067c96a7d88a44be4074486412`.
 
 ## 0. Plain-language outcome and authority
 
@@ -47,12 +48,17 @@ Plan acceptance approves this written scope only. Implementation may start
 only after `docs/current-state.md` separately records:
 
 - the owner's acceptance of this exact plan candidate;
-- an exact implementation base descending from the planning base;
-- one answer-free local input manifest and root for the exact public
-  `RESEARCH-0035` identities; and
-- confirmation that the root contains only the authorized controlled-real
-  dependencies, not evaluator-private material, expected answers, credentials,
-  or an archive/repository being opened for archaeology.
+- an exact implementation base descending from the planning base; and
+- the work-package range and ordinary correction authority.
+
+WP1 and WP2 may start under that implementation activation. Before WP3 reads a
+controlled-real payload, an answer-free local input manifest and root for the
+exact public `RESEARCH-0035` identities must validate and confirm that the root
+contains only the authorized controlled-real dependencies, not evaluator-
+private material, expected answers, credentials, or an archive/repository
+being opened for archaeology. The owner may pre-approve that exact class of
+read-only handoff in current project state; once a conforming handoff exists,
+its operational validation does not require another owner decision.
 
 That activation authorizes only local, read-only input consumption and
 effect-free WP1-through-WP7 work below. It never authorizes network access,
@@ -264,9 +270,10 @@ The following tracked public files are the only case-identity authority:
 They identify files and bounded observations. They do not supply a semantic
 verdict and must not be extended by path discovery or historical names.
 
-### 5.2 Activation-time local handoff
+### 5.2 Pre-WP3 local handoff
 
-Separate owner activation must provide one untracked answer-free manifest with:
+Before WP3 consumes controlled-real bytes, implementation must receive one
+untracked answer-free manifest with:
 
 - a manifest schema/version and stable handoff ID;
 - one explicitly resolved local root;
@@ -295,9 +302,11 @@ persisted project-authored structural artifacts. If the root later disappears,
 the run remains auditable but clean replay is `Unavailable`; it must never be
 reported as reproduced.
 
-If the exact handoff is unavailable at activation, no substitute is allowed.
-Only the affected controlled-real path stops for the owner-controlled
-dependency; independent planning or hermetic product work may continue.
+If the exact handoff is unavailable, no substitute is allowed. Only the
+affected WP3-and-later controlled-real path stops for the owner-controlled
+dependency; WP1, WP2, and independent hermetic product work may continue. When
+current project state pre-approves the conforming handoff class, successful
+validation is an operational gate rather than another owner-acceptance gate.
 
 ## 6. Purpose, applicability, and host-admission evidence
 
@@ -850,16 +859,19 @@ This document does not define Slice 9 work packages, requirements, tests, or
 acceptance criteria. Slice 9 remains a separately planned M1 end-to-end
 closeout.
 
-## 16. Owner decision requested
+## 16. Accepted activation
 
-The owner should choose one of:
+The owner accepted exact plan candidate
+`ab3f7ed2cf0d44067c96a7d88a44be4074486412` and activated WP1 through WP7 on
+that same exact implementation base. The active work package and detailed
+authorization remain stated only in `docs/current-state.md`.
 
-1. **Accept the plan:** make this exact document planning authority while
-   leaving implementation and input access inactive until a separate activation
-   names the base and answer-free local handoff.
-2. **Amend:** identify the exact scope, authority, contract, input, or
-   acceptance change required.
-3. **Reject:** leave Slice 8 unplanned and inactive.
+Ordinary in-scope implementation, testing, review, correction, re-review, and
+final-floor work may continue without another owner decision. Read-only use of
+a conforming answer-free controlled-real handoff is pre-approved, but no
+payload may be read before the exact pre-WP3 manifest/root gate passes. Final
+product acceptance remains a later owner decision.
 
-Acceptance grants no private-material, semantic-oracle, network, provider,
-credential, archive, external-effect, publication, push, or Slice 9 authority.
+This activation grants no private-material, evaluator-repository, semantic-
+oracle, network, provider, credential, archive, external-effect, publication,
+push, or Slice 9 authority.

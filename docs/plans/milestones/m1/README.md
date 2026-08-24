@@ -26,7 +26,7 @@ Live status is stated only in [current project state](../../../current-state.md)
 - `S5`: [current summary, plan, normalization amendment, and record](slices/s5/README.md)
 - `S6`: [accepted plan, R2 handoff, and accepted lean continuation](slices/s6/README.md)
 - `S7`: [accepted synthetic generic reversion plan](slices/s7/README.md)
-- `S8`: [proposed controlled-real generalization plan](slices/s8/README.md)
+- `S8`: [accepted controlled-real generalization plan](slices/s8/README.md)
 
 Historical evaluator attempts formerly stored as parallel Slice 4.5 plans are
 summarized in [Evaluator history](../../../evaluation/evaluator-history.md) and
