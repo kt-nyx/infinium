@@ -571,6 +571,12 @@
           "SQLitePCLRaw.bundle_e_sqlite3": "[3.0.5, )"
         }
       },
+      "infinium.publicfixtures": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Application": "[1.0.0, )"
+        }
+      },
       "infinium.unittests": {
         "type": "Project",
         "dependencies": {
@@ -582,6 +588,7 @@
           "Infinium.Mo2": "[1.0.0, )",
           "Infinium.OpenAI": "[1.0.0, )",
           "Infinium.Persistence": "[1.0.0, )",
+          "Infinium.PublicFixtures": "[1.0.0, )",
           "MSTest.TestAdapter": "[4.3.2, )",
           "MSTest.TestFramework": "[4.3.2, )",
           "Microsoft.NET.Test.Sdk": "[18.8.1, )"

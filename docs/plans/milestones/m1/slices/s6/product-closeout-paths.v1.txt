@@ -168,6 +168,8 @@ tests/Infinium.EvaluationTests/CandidateLlmTransparencyProviderProvenanceEvaluat
 tests/Infinium.EvaluationTests/SemanticAdmissionAuthorityEvaluationTests.cs
 tests/Infinium.EvaluationTests/SemanticOracleDeferralBoundaryTests.cs
 tests/Infinium.EvaluationTests/SourceClaimTransparencyEvaluationTests.cs
+tests/Infinium.EvaluationTests/packages.lock.json
+tests/Infinium.FaultTests/packages.lock.json
 tests/Infinium.IntegrationTests/CandidateAdmissionProviderReplayIntegrationTests.cs
 tests/Infinium.IntegrationTests/M1Slice6CampaignRehearsalTests.cs
 tests/Infinium.IntegrationTests/M1Slice6CampaignV2InputAdapterTests.cs
@@ -176,6 +178,8 @@ tests/Infinium.IntegrationTests/M1Slice6SuccessorAccountingTests.cs
 tests/Infinium.IntegrationTests/M1Slice6SuccessorAuthorityTests.cs
 tests/Infinium.IntegrationTests/ProviderBudgetIntegrationTests.cs
 tests/Infinium.IntegrationTests/SourceClaimAdmissionIntegrationTests.cs
+tests/Infinium.IntegrationTests/packages.lock.json
+tests/Infinium.SecurityTests/packages.lock.json
 tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs
 tests/Infinium.UnitTests/CandidateInvestigationProviderContextTests.cs
 tests/Infinium.UnitTests/Infinium.UnitTests.csproj
@@ -183,3 +187,4 @@ tests/Infinium.UnitTests/OpenAiResponsesAdapterTests.cs
 tests/Infinium.UnitTests/PersistenceAndLifecycleTests.cs
 tests/Infinium.UnitTests/ProviderContractTests.cs
 tests/Infinium.UnitTests/SourceClaimExtractionTests.cs
+tests/Infinium.UnitTests/packages.lock.json

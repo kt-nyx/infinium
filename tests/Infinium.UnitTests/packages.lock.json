@@ -431,6 +431,12 @@
           "SQLitePCLRaw.bundle_e_sqlite3": "[3.0.5, )"
         }
       },
+      "infinium.publicfixtures": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Application": "[1.0.0, )"
+        }
+      },
       "Google.Protobuf": {
         "type": "CentralTransitive",
         "requested": "[3.31.1, )",

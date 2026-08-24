@@ -10083,3 +10083,24 @@ only at the M3 Evaluation Readiness Gate after M2 acceptance.
 The exact clean committed candidate and its complete-floor commands, results,
 expected skips, receipts, and final disposition are recorded in the next
 append-only closeout entry after the floor runs.
+
+### First committed-floor diagnostic
+
+Closeout commit `05d1fd517b923b29fbd75f540da577218c99f2a6` was clean and
+matched its 185-path authority exactly, but the first command of the accepted
+floor, `dotnet restore Infinium.sln --locked-mode --nologo`, failed closed with
+`NU1004`. The Unit project had gained the intentional
+`Infinium.PublicFixtures` project reference, while its NuGet lock file and the
+four transitive test-project locks did not yet declare that dependency. No
+build or test ran after the restore failure, and no candidate-bound receipt was
+created. This was diagnostic evidence that `05d1fd5` was not the final
+candidate.
+
+`dotnet restore Infinium.sln --force-evaluate --nologo` regenerated the locks.
+Only five files had logical changes: Unit added the direct project dependency,
+Evaluation and Integration carried the updated Unit dependency, and Security
+and Fault carried both the Unit dependency and its PublicFixtures project
+closure. The five deterministic lock paths were added to the exact product
+closeout path authority. The correction grants no runtime or external-effect
+authority. Locked restore, focused verification, changed-surface re-review,
+and a new exact clean candidate are required before restarting the floor.
