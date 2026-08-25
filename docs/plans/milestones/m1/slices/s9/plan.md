@@ -1,10 +1,11 @@
 # M1 Slice 9: End-to-end output, replay equivalence, and M1 closeout
 
-Status: Proposed
-Disposition: Complete planning candidate pending project-owner acceptance;
-planning only, with no Slice 9 implementation or activation authority
+Status: Accepted
+Disposition: Complete plan accepted by the project owner on exact planning
+candidate `1dd5419ebb3dea8893f7e45adbe16191cf0e823c`; no Slice 9 implementation or
+activation authority is open
 
-Last reviewed: 2026-08-24
+Last reviewed: 2026-08-25
 Owner: Project owner
 Work ID: `M1/S9`
 Parent: `M1`
@@ -36,12 +37,12 @@ Slice 9 is an integration-and-evidence slice, not a new analyzer. It must:
   candidate; and
 - create the Slice 9 implementation record as the M1 completion record.
 
-This document proposes that work. It does not authorize implementation,
+This document defines the accepted work. It does not activate implementation,
 controlled-real payload access, credential access, provider or network use,
 external effects, private/evaluator work, semantic-oracle work, merge, or push.
-After owner acceptance, live authority must still be activated in
-[current project state](../../../../../current-state.md) on an exact
-implementation base.
+Owner acceptance is recorded in
+[current project state](../../../../../current-state.md). Live authority must
+still be activated there on an exact implementation base.
 
 ## 1. Exact accepted predecessor handoff
 
@@ -421,7 +422,7 @@ consumer, orchestration adapter, or repository verifier, but it must emit and
 consume the exact existing schemas.
 
 The only planned new versioned document is repository-governance evidence for
-the required-case index. Proposed implementation paths are:
+the required-case index. Accepted implementation paths are:
 
 - `contracts/repository/m1-required-case-result-index.v1.schema.json`; and
 - `docs/plans/milestones/m1/slices/s9/evidence/required-case-results.v1.json`.
@@ -655,7 +656,7 @@ review-ready candidate.
   fresh review;
 - bounded elapsed-time, input/output-size, storage, and process observations
   for the two complete runs, without claiming M3 scale or performance;
-- complete `Gate All`, Slice 8 regression, and proposed Slice 9 `All` receipts;
+- complete `Gate All`, Slice 8 regression, and Slice 9 `All` receipts;
   and
 - a claim inventory listing every supported statement, exclusion, retained
   gap, evidence class, and prohibited overclaim.
@@ -960,7 +961,7 @@ merge/push unless those actions are separately and explicitly granted.
 
 ## 15. Planning review and re-review
 
-The proposed package received a consolidated planning review over plan
+The planning package received a consolidated planning review over plan
 fidelity and traceability; frozen-contract preservation; semantic and claim
 boundaries; provenance, persistence, replay, and lifecycle coverage; test and
 verification completeness; security/isolation; navigation and links; status
@@ -989,14 +990,15 @@ Documentation links and metadata, whitespace, status/disposition language,
 boundary keywords, work-package ordering, case count, and exact predecessor
 identities are revalidated before the planning commit.
 
-## 16. Owner decision requested
+## 16. Owner acceptance and next gate
 
-No missing product-meaning decision was found during planning. The proposed
-path can use existing accepted contracts and bounded semantics. The one
-required owner decision is whether to accept, reject, or amend this complete
-Slice 9 plan.
+No missing product-meaning decision was found during planning. The accepted
+path can use existing accepted contracts and bounded semantics. The project
+owner accepts exact planning candidate
+`1dd5419ebb3dea8893f7e45adbe16191cf0e823c` as the complete Slice 9 plan.
+Acceptance does not activate implementation.
 
-If accepted, activation must separately record:
+Activation must separately record:
 
 - the exact implementation base;
 - authority to implement WP1 through WP7 on one candidate under the accepted
