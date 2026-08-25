@@ -134,6 +134,10 @@ resealed or promoted through an ordinary tooling command.
 ## Milestone sequencing
 
 - M1 and its post-M1 cleanup are complete under this profile.
+- The accepted M1-to-M2 Foundation — Frontend Application Foundation is the current
+  pre-M2 planning package. It has not started implementation and must exercise
+  EVAL-0090 through EVAL-0094 plus every applicable existing case through the
+  same six layers.
 - M2 remains separately planned and authorized work; it must satisfy the
   applicable six layers and its eventual accepted plan.
 - M2 acceptance exercises its stable product interfaces end to end and records

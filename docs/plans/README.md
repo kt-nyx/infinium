@@ -15,12 +15,15 @@ product meaning or current status.
 ## Current navigation
 
 - [Milestone planning boundary](milestones/README.md)
+- [Accepted M1-to-M2 Foundation — Frontend Application Foundation](transitions/m1-to-m2/frontend-application-foundation/README.md)
 - [Completed post-M1 cleanup transition](transitions/post-m1-cleanup/README.md)
 - [Work-breakdown notation](work-breakdown-notation.md)
 - [Research investigation handoff template](research-investigation-agent-handoff-template.md)
 
-No milestone plan is currently active. M2 begins only when its prerequisites
-and a separately accepted plan exist.
+No milestone plan is currently active. The accepted M1-to-M2 Foundation —
+Frontend Application Foundation has not started implementation. It prepares
+the application/desktop boundary required for M2 planning but does not activate
+M2. M2 begins only when its prerequisites and a separately accepted plan exist.
 
 ## Completed milestone history
 

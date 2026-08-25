@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active navigation
 
-Last reviewed: 2026-08-16
+Last reviewed: 2026-08-25
 Place one bounded, dated investigation per file:
 
 ```text
@@ -97,6 +97,7 @@ proposed disposition enabled by the report.
 | [RESEARCH-0054](RESEARCH-0054-slice6-openai-profile-and-implementation-readiness-refresh.md) | Completed; recommendation accepted | Slice 6 remains viable; the owner accepted explicit stateless reasoning and cache-off fields as ADR-0025 conformance closure with no separate ADR, plus provider-capable configuration v2, evidence-acquisition ownership, closed provider contracts, deterministic gates, and three separately authorized requests |
 | [RESEARCH-0055](RESEARCH-0055-slice6-local-input-bound-policy.md) | Completed; owner policy accepted | WP1 pins offline Microsoft o200k packages and the conservative `openai-responses-o200k-byte-envelope/v1` byte-plus-structural-margin proof; provider token-count, credentials, and network remain unauthorized |
 | [RESEARCH-0056](RESEARCH-0056-slice6-live-semantic-authority-conflict.md) | Completed; recommendation proposed | Current frozen WP10 truth admits zero proposals and cannot supply WP11's required durable predecessor; recommends a five-identity public v2 family and successor finite campaign without a new ADR |
+| [RESEARCH-0057](RESEARCH-0057-frontend-application-foundation-gap.md) | Completed; recommendation accepted | RQ-041 is resolved by ADR-0037 and the accepted M1-to-M2 Foundation — Frontend Application Foundation: build the application-facing contract, durable user workflows, generated clients, and diagnostic desktop consumer before M2 |
 
 Supporting artifact:
 
@@ -145,9 +146,7 @@ Wave F's research, evaluation specifications, deferred-question ledger, M1
 plan, and independent integration review are complete through RESEARCH-0049.
 The project owner accepted the Wave F recommendations, baseline, case
 specifications/manifests, ADR-0025, residual-risk register, and M1 plan on
-2026-07-28. Gate F is met and M0 is complete. That Wave F acceptance did not
-itself imply evaluation execution or an M1 implementation result. Subsequent
-M1 Slices 0-5 are complete for their exact recorded scopes. Slice 6 has an
-accepted plan and is active at its exact package stated in
-[current project state](../../current-state.md) under the continuation
-verification profile. M1 remains active.
+2026-07-28. Gate F is met and M0 is complete. M1 and the post-M1 cleanup are
+also complete. RESEARCH-0057 now supplies the accepted architecture/planning
+input for the M1-to-M2 Foundation — Frontend Application Foundation. Current execution
+status lives only in [current project state](../../current-state.md).

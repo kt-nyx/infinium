@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/planning/frontend-capability-matrix.v1.schema.json",
+  "title": "Infinium frontend capability planning matrix",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_identity",
+    "status",
+    "last_reviewed",
+    "plan_id",
+    "planning_base",
+    "claim_boundary",
+    "state_vocabulary",
+    "phase_checkpoints",
+    "capabilities"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "frontend-capability-matrix.v1.schema.json"
+    },
+    "schema_identity": {
+      "const": "infinium.planning.frontend-capability-matrix/1.0.0"
+    },
+    "status": {
+      "enum": [
+        "accepted-planning-baseline",
+        "implementation-active",
+        "accepted-transition-closeout"
+      ]
+    },
+    "last_reviewed": {
+      "type": "string",
+      "format": "date"
+    },
+    "plan_id": {
+      "const": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION"
+    },
+    "planning_base": {
+      "$ref": "#/$defs/git_commit"
+    },
+    "claim_boundary": {
+      "$ref": "#/$defs/text"
+    },
+    "state_vocabulary": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "available-and-reusable",
+          "partial-or-developer-oriented",
+          "projection-exists-not-queryable",
+          "missing-application-vertical",
+          "missing-desktop-consumer"
+        ]
+      }
+    },
+    "phase_checkpoints": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "$ref": "#/$defs/phase"
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/capability"
+      }
+    }
+  },
+  "$defs": {
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "short_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "git_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "phase_id": {
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    "work_package": {
+      "type": "string",
+      "pattern": "^WP[1-9]$"
+    },
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "name",
+        "work_packages"
+      ],
+      "properties": {
+        "phase": {
+          "$ref": "#/$defs/phase_id"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{2,79}$"
+        },
+        "work_packages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/work_package"
+          }
+        }
+      }
+    },
+    "identifier_list": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]+-[0-9]{3,4}$"
+      }
+    },
+    "text_list": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/short_text"
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_id",
+        "plain_language_need",
+        "requirement_ids",
+        "evaluation_ids",
+        "current_state",
+        "current_evidence",
+        "gap",
+        "owning_phase",
+        "owning_work_package",
+        "transition_exit_evidence"
+      ],
+      "properties": {
+        "capability_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{2,99}$"
+        },
+        "plain_language_need": {
+          "$ref": "#/$defs/text"
+        },
+        "requirement_ids": {
+          "$ref": "#/$defs/identifier_list"
+        },
+        "evaluation_ids": {
+          "$ref": "#/$defs/identifier_list"
+        },
+        "current_state": {
+          "enum": [
+            "available-and-reusable",
+            "partial-or-developer-oriented",
+            "projection-exists-not-queryable",
+            "missing-application-vertical",
+            "missing-desktop-consumer"
+          ]
+        },
+        "current_evidence": {
+          "$ref": "#/$defs/text_list"
+        },
+        "gap": {
+          "$ref": "#/$defs/text"
+        },
+        "owning_phase": {
+          "$ref": "#/$defs/phase_id"
+        },
+        "owning_work_package": {
+          "$ref": "#/$defs/work_package"
+        },
+        "transition_exit_evidence": {
+          "$ref": "#/$defs/text"
+        }
+      }
+    }
+  }
+}

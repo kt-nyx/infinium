@@ -57,7 +57,8 @@ operation that explicitly requires them.
   and [investigation procedure](research/investigations/README.md)
 - Planning: [plan policy](plans/README.md),
   [work-breakdown notation](plans/work-breakdown-notation.md),
-  [milestone planning boundary](plans/milestones/README.md), and the
+  [milestone planning boundary](plans/milestones/README.md), the
+  [accepted M1-to-M2 Foundation — Frontend Application Foundation](plans/transitions/m1-to-m2/frontend-application-foundation/README.md), and the
   [completed post-M1 cleanup transition](plans/transitions/post-m1-cleanup/README.md)
 - Governance: [functional implementation naming](governance/functional-implementation-naming.md)
 - Product: [product definition](product/product-definition.md),

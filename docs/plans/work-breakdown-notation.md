@@ -1,7 +1,7 @@
 # Work-breakdown notation
 
 Status: Accepted
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-25
 ## Purpose
 
 Infinium work sometimes needs a finer boundary than a milestone or slice, but
@@ -32,11 +32,28 @@ A bounded transition between milestones uses:
 TRANSITION/{functional-transition-name}/{work-package}
 ```
 
+When the transition's exact place between two named milestones is part of its
+product-planning meaning, use the located form:
+
+```text
+TRANSITION/{from-milestone}-TO-{to-milestone}/{functional-transition-name}/{work-package}
+```
+
+For example,
+`TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP1` is the first
+package of the application foundation that follows M1 and must finish before
+M2 can begin. `M1-TO-M2` records planning position; it does not create a
+fractional milestone, make the work part of either milestone, or activate M2.
+The position component is allowed in plan IDs and planning paths only. Source
+projects, namespaces, types, methods, configuration keys, protocol names, and
+runtime data continue to use functional or architectural names.
+
 For example, `TRANSITION/POST-M1-CLEANUP/WP1` is the first package of the
 owner-accepted repository cleanup. `TRANSITION` identifies the work class;
 `POST-M1-CLEANUP` names the bounded transition rather than an implementation
 symbol; and `WP1` is its package. This notation does not create another M1
-slice or activate M2.
+slice or activate M2. The shorter form remains valid where the functional
+transition name already supplies all needed planning context.
 
 The phase component is optional. The current effort is:
 
@@ -106,6 +123,38 @@ in it:
 Record those as metadata. Never renumber an accepted work package merely
 because another package is inserted or abandoned. Mark it superseded and add
 a new ID if its scope materially changes.
+
+## Orchestration phases and checkpoints
+
+A plan may group related work packages into a named **orchestration phase** so
+one orchestrator can retain the shared design context, implement several
+vertical packages, and stop at a meaningful integration boundary instead of
+returning to the owner after every package.
+
+Use a phase when two or more adjacent packages:
+
+- share one contract or authority boundary;
+- benefit materially from one coordinator retaining producer/consumer context;
+- can be reviewed together without hiding individual package evidence; and
+- have a clear consolidated result that another orchestrator can resume from.
+
+Each package still keeps its own Work ID, objective, allowed actions,
+deliverables, focused verification, review result, and implementation receipt.
+A phase does not merge package authority or allow later work to begin before
+its predecessor gate passes. The phase orchestrator records each package exit,
+continues automatically through ordinary accepted predecessors, then performs
+one consolidated phase review and stops at the named checkpoint.
+
+Phase checkpoints are automation/handoff boundaries by default, not owner
+approval gates. A checkpoint requires owner input only when the accepted plan
+names a genuine product, architecture, security, private-answer, destructive,
+or external-effect decision. Otherwise the next accepted phase may start from
+the checkpoint receipt without a new per-package approval.
+
+Phase labels describe the functional boundary, such as “setup and execution
+workflow” or “desktop consumption proof.” They do not become implementation
+symbols, serialized identities, project names, or runtime authority. `Stage`
+remains reserved for the evaluator lifecycle.
 
 ## Required plan metadata
 

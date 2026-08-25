@@ -1,7 +1,7 @@
 # Current project state
 
 Status: Accepted
-Disposition: M1 and the post-M1 cleanup are complete; no M2 implementation is active
+Disposition: M1-to-M2 Foundation plan accepted; implementation has not started and M2 remains inactive
 
 Last reviewed: 2026-08-25
 Owner: Project owner
@@ -21,7 +21,10 @@ internal results into a stable report format for a future interface.
 
 It is not yet a complete end-user application. There is no graphical interface,
 ordinary mod-manager workflow, broad analyzer catalog, or claim that an entire
-modlist is safe. M2 remains separately planned and authorized work.
+modlist is safe. The accepted M1-to-M2 Foundation — Frontend Application Foundation now
+defines the missing backend/application layer and diagnostic desktop proof that
+must be implemented before M2. M2 remains separately planned and authorized
+work.
 
 ## Live handoff
 
@@ -30,8 +33,9 @@ modlist is safe. M2 remains separately planned and authorized work.
 | Completed milestone | M1 - bounded backend semantic proof. |
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
+| Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
 | Active implementation | None. |
-| Next gate | An accepted M2 plan. M1 completion and cleanup approval do not automatically activate M2. |
+| Next gate | Owner direction to start `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP1`. The accepted plan then permits automatic phase-by-phase progression; it does not activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |
 
@@ -114,6 +118,8 @@ asset, script, configuration, dependency, performance, or runtime problem.
 - [Development-provider access ADR](architecture/decisions/ADR-0036-development-provider-access-and-product-credential-separation.md)
 - [Independent semantic-oracle deferral ADR](architecture/decisions/ADR-0035-defer-independent-semantic-oracle-qualification.md)
 - [Functional implementation naming governance](governance/functional-implementation-naming.md)
+- [Frontend application contract and desktop bridge ADR](architecture/decisions/ADR-0037-frontend-application-contract-and-desktop-bridge.md)
+- [M1-to-M2 Foundation — Frontend Application Foundation](plans/transitions/m1-to-m2/frontend-application-foundation/README.md)
 - [Post-M1 cleanup closeout](plans/transitions/post-m1-cleanup/README.md)
 - [Post-M1 cleanup implementation record](plans/transitions/post-m1-cleanup/implementation-record.md)
 

@@ -1,0 +1,517 @@
+{
+  "$schema": "frontend-capability-matrix.v1.schema.json",
+  "schema_identity": "infinium.planning.frontend-capability-matrix/1.0.0",
+  "status": "accepted-planning-baseline",
+  "last_reviewed": "2026-08-25",
+  "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
+  "planning_base": "32dbb2c48754666336d2da571e554ad8897ed71c",
+  "claim_boundary": "This matrix maps M2-foundation needs to current implementation evidence and planned owners. It does not claim implementation completion, frontend delivery, broad semantic accuracy, or M2 acceptance.",
+  "state_vocabulary": [
+    "available-and-reusable",
+    "partial-or-developer-oriented",
+    "projection-exists-not-queryable",
+    "missing-application-vertical",
+    "missing-desktop-consumer"
+  ],
+  "phase_checkpoints": [
+    {
+      "phase": "A",
+      "name": "authority-and-contract-foundation",
+      "work_packages": [
+        "WP1",
+        "WP2"
+      ]
+    },
+    {
+      "phase": "B",
+      "name": "setup-and-execution-workflow",
+      "work_packages": [
+        "WP3",
+        "WP4"
+      ]
+    },
+    {
+      "phase": "C",
+      "name": "results-and-review-workflow",
+      "work_packages": [
+        "WP5",
+        "WP6"
+      ]
+    },
+    {
+      "phase": "D",
+      "name": "desktop-consumption-proof",
+      "work_packages": [
+        "WP7",
+        "WP8"
+      ]
+    },
+    {
+      "phase": "E",
+      "name": "integrated-acceptance-and-handoff",
+      "work_packages": [
+        "WP9"
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "capability_id": "application-bootstrap",
+      "plain_language_need": "Open the application with one bounded picture of compatibility, health, configuration, capabilities, and resumable work.",
+      "requirement_ids": [
+        "OPS-001",
+        "OPS-005",
+        "SEC-003"
+      ],
+      "evaluation_ids": [
+        "EVAL-0088",
+        "EVAL-0090"
+      ],
+      "current_state": "partial-or-developer-oriented",
+      "current_evidence": [
+        "ApplicationService.Negotiate",
+        "ApplicationService.Health",
+        "ApplicationService.ListRuns"
+      ],
+      "gap": "No user-oriented bootstrap projection joins compatibility, capability, configuration, and resumable operation state.",
+      "owning_phase": "A",
+      "owning_work_package": "WP2",
+      "transition_exit_evidence": "Generated native and TypeScript consumers recover the same bounded bootstrap and typed resync states."
+    },
+    {
+      "capability_id": "tool-detection-status-and-override",
+      "plain_language_need": "Detect MO2 and applicable LOOT state, explain capability gaps, and let the user confirm or correct exact tool locations safely.",
+      "requirement_ids": [
+        "TOOL-001",
+        "TOOL-002",
+        "TOOL-003"
+      ],
+      "evaluation_ids": [
+        "EVAL-0035",
+        "EVAL-0046",
+        "EVAL-0080",
+        "EVAL-0091"
+      ],
+      "current_state": "partial-or-developer-oriented",
+      "current_evidence": [
+        "Exact M1 MO2 configuration/capture contracts",
+        "Human-readable CLI capability reporting"
+      ],
+      "gap": "No coherent application query/typed native override workflow or saved user settings path.",
+      "owning_phase": "B",
+      "owning_work_package": "WP3",
+      "transition_exit_evidence": "Exact tool states and typed overrides persist, revalidate, and expose capability consequences without generic path authority."
+    },
+    {
+      "capability_id": "explicit-profile-selection",
+      "plain_language_need": "Show valid MO2 profiles and bind each run to one profile the user explicitly selected or confirmed.",
+      "requirement_ids": [
+        "SCOPE-003"
+      ],
+      "evaluation_ids": [
+        "EVAL-0026",
+        "EVAL-0045",
+        "EVAL-0091"
+      ],
+      "current_state": "partial-or-developer-oriented",
+      "current_evidence": [
+        "M1 explicit profile binding in snapshot/configuration input",
+        "MO2 saved selection is suggestion-only by ADR-0008"
+      ],
+      "gap": "No application list/suggestion/confirm/revision workflow for ordinary users.",
+      "owning_phase": "B",
+      "owning_work_package": "WP3",
+      "transition_exit_evidence": "Suggested and confirmed selection remain distinct and an unconfirmed suggestion cannot start a run."
+    },
+    {
+      "capability_id": "saved-scan-configurations",
+      "plain_language_need": "Create, name, clone, inspect, edit, and delete reusable scan configurations while every run keeps its exact effective values.",
+      "requirement_ids": [
+        "SCAN-001",
+        "SCAN-002",
+        "SCAN-009"
+      ],
+      "evaluation_ids": [
+        "EVAL-0023",
+        "EVAL-0026",
+        "EVAL-0082",
+        "EVAL-0091"
+      ],
+      "current_state": "partial-or-developer-oriented",
+      "current_evidence": [
+        "Versioned effective scan-configuration artifacts",
+        "Granular CLI/development controls"
+      ],
+      "gap": "No versioned user-facing saved-configuration CRUD/clone application vertical.",
+      "owning_phase": "B",
+      "owning_work_package": "WP3",
+      "transition_exit_evidence": "Saved configurations round-trip with revision conflicts and active runs retain immutable effective configuration."
+    },
+    {
+      "capability_id": "pre-run-review-and-estimate",
+      "plain_language_need": "Explain planned work, limits, capability gaps, time, usage, and cost authority before long or paid work begins.",
+      "requirement_ids": [
+        "SCAN-003",
+        "AI-005",
+        "TOOL-003"
+      ],
+      "evaluation_ids": [
+        "EVAL-0066",
+        "EVAL-0076",
+        "EVAL-0081",
+        "EVAL-0091"
+      ],
+      "current_state": "partial-or-developer-oriented",
+      "current_evidence": [
+        "Provider capability and budget contracts",
+        "Retained effective configuration and local limit substrate"
+      ],
+      "gap": "No complete user-facing pre-run projection and typed confirmation; unavailable estimate authority is not assembled for a frontend.",
+      "owning_phase": "B",
+      "owning_work_package": "WP3",
+      "transition_exit_evidence": "Pre-run review exposes exact limits, planned work, estimates, and unavailable dimensions without invented billing or completion promises."
+    },
+    {
+      "capability_id": "provider-status-and-enrollment",
+      "plain_language_need": "Show non-secret provider readiness and allow safe add/replace/cancel credential enrollment.",
+      "requirement_ids": [
+        "SEC-002",
+        "SEC-004",
+        "AI-007"
+      ],
+      "evaluation_ids": [
+        "EVAL-0034",
+        "EVAL-0064",
+        "EVAL-0077",
+        "EVAL-0089",
+        "EVAL-0091"
+      ],
+      "current_state": "partial-or-developer-oriented",
+      "current_evidence": [
+        "ApplicationService.GetProviderProfile",
+        "ApplicationService.SubmitProviderEnrollment",
+        "ADR-0020 one-shot credential helper"
+      ],
+      "gap": "No desktop application choreography or renderer-safe status/enrollment consumer; product and development credential paths must remain distinct.",
+      "owning_phase": "B",
+      "owning_work_package": "WP3",
+      "transition_exit_evidence": "React receives only non-secret status/outcomes and the helper owns entry and exact-target secure storage."
+    },
+    {
+      "capability_id": "typed-run-initiation",
+      "plain_language_need": "Start a validated analysis from confirmed user selections without exposing internal orchestration instructions.",
+      "requirement_ids": [
+        "SCOPE-004",
+        "SCAN-005",
+        "SEC-003"
+      ],
+      "evaluation_ids": [
+        "EVAL-0045",
+        "EVAL-0088",
+        "EVAL-0090",
+        "EVAL-0091"
+      ],
+      "current_state": "partial-or-developer-oriented",
+      "current_evidence": [
+        "ApplicationService.SubmitRunCommand",
+        "Durable command receipts and idempotency",
+        "ManualStartCommand.analysis_orchestration_request_json"
+      ],
+      "gap": "Current start substrate includes raw internal orchestration JSON and is not a renderer-safe user operation.",
+      "owning_phase": "B",
+      "owning_work_package": "WP4",
+      "transition_exit_evidence": "Typed user input resolves internally to the durable M1 path and raw orchestration/provider operations are unreachable from the renderer."
+    },
+    {
+      "capability_id": "live-progress-and-reconnect",
+      "plain_language_need": "Show authoritative progress, time, cost, failures, and gaps and recover after renderer, shell, or coordinator interruption.",
+      "requirement_ids": [
+        "SCAN-004",
+        "SCAN-005",
+        "SCAN-006",
+        "OPS-005"
+      ],
+      "evaluation_ids": [
+        "EVAL-0038",
+        "EVAL-0044",
+        "EVAL-0081",
+        "EVAL-0088",
+        "EVAL-0090"
+      ],
+      "current_state": "available-and-reusable",
+      "current_evidence": [
+        "ApplicationService.GetProgress",
+        "ApplicationService.SubscribeEvents",
+        "Projection invalidation and resync",
+        "Durable pause/resume/cancel commands"
+      ],
+      "gap": "Needs user-oriented rollups, renderer/session mapping, and end-to-end desktop reload/reconnect proof.",
+      "owning_phase": "B",
+      "owning_work_package": "WP4",
+      "transition_exit_evidence": "Native and desktop diagnostic consumers recover from loss without owning durable state or duplicating cost."
+    },
+    {
+      "capability_id": "summary-and-readiness",
+      "plain_language_need": "Open a result with readiness or an explicit scope-limited status, a concise summary, counts, coverage, cost, duration, failures, and gaps.",
+      "requirement_ids": [
+        "PROD-004",
+        "UX-001",
+        "COVER-003"
+      ],
+      "evaluation_ids": [
+        "EVAL-0027",
+        "EVAL-0085",
+        "EVAL-0092"
+      ],
+      "current_state": "partial-or-developer-oriented",
+      "current_evidence": [
+        "ApplicationService.GetRun",
+        "ApplicationService.GetAnalysisSummary",
+        "M1 run-output/readiness contracts"
+      ],
+      "gap": "No complete user-oriented summary projection with all M2 distinctions and claim boundaries.",
+      "owning_phase": "C",
+      "owning_work_package": "WP5",
+      "transition_exit_evidence": "All result states produce truthful bounded summaries and no absence-of-findings safety claim."
+    },
+    {
+      "capability_id": "finding-and-investigation-queues",
+      "plain_language_need": "Browse supported cases and lead-only investigations separately with bounded filters, sorting, search, and pagination.",
+      "requirement_ids": [
+        "PROD-003",
+        "FIND-002",
+        "FIND-011",
+        "UX-001"
+      ],
+      "evaluation_ids": [
+        "EVAL-0036",
+        "EVAL-0084",
+        "EVAL-0092"
+      ],
+      "current_state": "partial-or-developer-oriented",
+      "current_evidence": [
+        "ApplicationService.ListFindings",
+        "FindingSupportState",
+        "Existing keyset cursor substrate"
+      ],
+      "gap": "No complete case/investigation queue, user-priority projection, search, or separate detail contract.",
+      "owning_phase": "C",
+      "owning_work_package": "WP5",
+      "transition_exit_evidence": "Supported and lead-only items remain distinct through paginated queue and detail consumers."
+    },
+    {
+      "capability_id": "finding-case-report-detail",
+      "plain_language_need": "Understand what happened, why it matters, affected subjects, uncertainty, recommendation, validation, and exact report provenance.",
+      "requirement_ids": [
+        "FIND-001",
+        "FIND-003",
+        "FIND-004",
+        "UX-002"
+      ],
+      "evaluation_ids": [
+        "EVAL-0049",
+        "EVAL-0083",
+        "EVAL-0092"
+      ],
+      "current_state": "projection-exists-not-queryable",
+      "current_evidence": [
+        "FindingReportProjection",
+        "finding-report.v1.schema.json",
+        "scope-reports CLI command"
+      ],
+      "gap": "FindingReport is derived from a local retained artifact and is not a complete coordinator-owned report/detail query surface.",
+      "owning_phase": "C",
+      "owning_work_package": "WP5",
+      "transition_exit_evidence": "Reports and case/finding details are queryable, bounded, deterministic, inert, and traceable to canonical retained sources."
+    },
+    {
+      "capability_id": "evidence-provenance-expansion",
+      "plain_language_need": "Expand supporting, contradicting, missing, coverage, and source provenance only when needed.",
+      "requirement_ids": [
+        "EVID-002",
+        "EVID-004",
+        "EVID-007",
+        "UX-002"
+      ],
+      "evaluation_ids": [
+        "EVAL-0067",
+        "EVAL-0083",
+        "EVAL-0092"
+      ],
+      "current_state": "partial-or-developer-oriented",
+      "current_evidence": [
+        "ApplicationService.GetAnalysisProvenance",
+        "ApplicationService.ListAnalysisArtifacts",
+        "FindingReport evidence identities"
+      ],
+      "gap": "Current diagnostic/artifact queries are not a complete user-oriented bounded evidence expansion model.",
+      "owning_phase": "C",
+      "owning_work_package": "WP5",
+      "transition_exit_evidence": "Typed inert evidence/provenance chunks expose gaps and never return raw payload paths or privileged content."
+    },
+    {
+      "capability_id": "focused-mod-view",
+      "plain_language_need": "See one mod's findings, cases, evidence, documentation, and coverage without turning Infinium into an MO2 conflict browser.",
+      "requirement_ids": [
+        "UX-003",
+        "UX-004"
+      ],
+      "evaluation_ids": [
+        "EVAL-0084",
+        "EVAL-0085",
+        "EVAL-0092"
+      ],
+      "current_state": "missing-application-vertical",
+      "current_evidence": [
+        "Retained subject/mod identities in M1 outputs"
+      ],
+      "gap": "No focused-mod aggregation query or bounded detail projection exists.",
+      "owning_phase": "C",
+      "owning_work_package": "WP5",
+      "transition_exit_evidence": "One exact mod view aggregates only supported relationships and preserves unrelated causes and coverage gaps."
+    },
+    {
+      "capability_id": "review-dispositions-suppression-annotations",
+      "plain_language_need": "Record what the user decided about a finding without changing the finding or leaking the decision to a different condition.",
+      "requirement_ids": [
+        "FIND-005",
+        "FIND-006",
+        "FIND-007",
+        "FIND-014"
+      ],
+      "evaluation_ids": [
+        "EVAL-0020",
+        "EVAL-0047",
+        "EVAL-0069",
+        "EVAL-0079",
+        "EVAL-0093"
+      ],
+      "current_state": "missing-application-vertical",
+      "current_evidence": [
+        "ADR-0022 identity/reconciliation substrate",
+        "M1 immutable finding/case occurrences"
+      ],
+      "gap": "No complete application command/persistence/readback vertical for user review events and validated carryover.",
+      "owning_phase": "C",
+      "owning_work_package": "WP6",
+      "transition_exit_evidence": "Revision-bound append-only events survive restart and cannot mutate or suppress an unrelated/new analytical revision."
+    },
+    {
+      "capability_id": "assumption-lifecycle",
+      "plain_language_need": "Create, confirm, edit, remove, inspect, and revalidate profile-specific assumptions without rewriting historical contexts.",
+      "requirement_ids": [
+        "INTENT-001",
+        "INTENT-002",
+        "INTENT-004",
+        "INTENT-005"
+      ],
+      "evaluation_ids": [
+        "EVAL-0019",
+        "EVAL-0026",
+        "EVAL-0043",
+        "EVAL-0093"
+      ],
+      "current_state": "missing-application-vertical",
+      "current_evidence": [
+        "Versioned analysis-context substrate",
+        "FindingReport assumptions field"
+      ],
+      "gap": "No durable assumption event/confirmation/revalidation application contract or persistence path.",
+      "owning_phase": "C",
+      "owning_work_package": "WP6",
+      "transition_exit_evidence": "Origin and confirmation remain distinct and every edit creates successor effective context state with history intact."
+    },
+    {
+      "capability_id": "targeted-verification",
+      "plain_language_need": "After the user changes the external setup, rerun only affected checks and link the new outcome to the earlier issue.",
+      "requirement_ids": [
+        "UX-005",
+        "SCOPE-004",
+        "SNAP-003"
+      ],
+      "evaluation_ids": [
+        "EVAL-0027",
+        "EVAL-0029",
+        "EVAL-0078",
+        "EVAL-0093"
+      ],
+      "current_state": "missing-application-vertical",
+      "current_evidence": [
+        "M1 manual run and dependency/replay substrate",
+        "FindingReport validation steps"
+      ],
+      "gap": "No user-facing targeted-scope plan/start/lineage contract; targeted results must not borrow unrelated readiness coverage.",
+      "owning_phase": "C",
+      "owning_work_package": "WP6",
+      "transition_exit_evidence": "A new manually initiated operation retains exact source scope and lineage and reports scope-limited readiness honestly."
+    },
+    {
+      "capability_id": "structured-user-export",
+      "plain_language_need": "Create a separate local-private structured JSON export from an exact result selection without changing source records.",
+      "requirement_ids": [
+        "OPS-003",
+        "SEC-004"
+      ],
+      "evaluation_ids": [
+        "EVAL-0040",
+        "EVAL-0080",
+        "EVAL-0093"
+      ],
+      "current_state": "missing-application-vertical",
+      "current_evidence": [
+        "M1 run-owned JSON output",
+        "ADR-0021 sharing classes and typed write authority"
+      ],
+      "gap": "Run-owned output is not a user-created export and no application export selection/manifest/status path exists.",
+      "owning_phase": "C",
+      "owning_work_package": "WP6",
+      "transition_exit_evidence": "Export records exact source revisions, filters, sharing class, omissions, privacy/source-policy choices, and does not mutate source truth."
+    },
+    {
+      "capability_id": "generated-renderer-client",
+      "plain_language_need": "Give frontend code strongly typed operations and deterministic development states that cannot drift silently from the backend.",
+      "requirement_ids": [
+        "SEC-003",
+        "OPS-005"
+      ],
+      "evaluation_ids": [
+        "EVAL-0090",
+        "EVAL-0094"
+      ],
+      "current_state": "missing-desktop-consumer",
+      "current_evidence": [
+        "Generated C# protobuf application client"
+      ],
+      "gap": "No TypeScript renderer contract/client, operation registry, story states, or generation-drift check exists.",
+      "owning_phase": "D",
+      "owning_work_package": "WP7",
+      "transition_exit_evidence": "Generated native and TypeScript consumers cover every renderer operation and strict story states without hidden handwritten authority."
+    },
+    {
+      "capability_id": "desktop-host-and-secure-bridge",
+      "plain_language_need": "Run packaged React in a minimal Windows host and safely map user gestures to the application client.",
+      "requirement_ids": [
+        "SCOPE-006",
+        "SEC-001",
+        "SEC-003",
+        "UX-006",
+        "OPS-005"
+      ],
+      "evaluation_ids": [
+        "EVAL-0033",
+        "EVAL-0035",
+        "EVAL-0088",
+        "EVAL-0094"
+      ],
+      "current_state": "missing-desktop-consumer",
+      "current_evidence": [
+        "ADR-0017 selected WPF/WebView2/React stack",
+        "ADR-0021 accepted renderer security boundary"
+      ],
+      "gap": "No WPF host, packaged React diagnostic surface, closed bridge, renderer recovery, accessibility evidence, or resource measurements exist.",
+      "owning_phase": "D",
+      "owning_work_package": "WP8",
+      "transition_exit_evidence": "Executable diagnostic consumer passes controlled-origin, hostile-operation, reconnect, large-list, accessibility-mechanics, and measurement obligations."
+    }
+  ]
+}

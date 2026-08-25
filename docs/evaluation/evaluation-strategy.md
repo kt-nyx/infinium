@@ -2,7 +2,7 @@
 
 Status: Accepted
 Disposition: actively maintained
-Last reviewed: 2026-08-23
+Last reviewed: 2026-08-25
 Current timing authority: ADR-0035 defers independent semantic-oracle
 qualification through M1 and M2. Those milestones still require the six-layer
 [product-conformance profile](product-conformance-verification-profile.md), but no
@@ -399,15 +399,16 @@ work, adaptation, comparison, and scoring are unauthorized. Evaluator-deferral
 closeout is accepted: Slice 4.5 is closed by owner disposition. The live
 product handoff is stated only in [current project state](../current-state.md).
 
-Slices 5-9 use the accepted
+M1 Slices 5-9 used the accepted
 [product-conformance verification profile](product-conformance-verification-profile.md):
 contract/schema conformance, developer-owned bounded examples and deterministic references,
 model-derived mutation/metamorphic checks, determinism/replay/safety,
 generalization plus controlled-real evidence, and fresh review/claim control.
-Slice 7 must prove two materially different generic domains, and Slice 8 must
-run EVAL-0016 and EVAL-0017. These are public development/validation evidence,
-not held-out results. M1 remains active and cannot claim M3 reliability or
-readiness.
+Slice 7 proved two materially different generic domains, and Slice 8 ran
+EVAL-0016 and EVAL-0017. These are public development/validation evidence, not
+held-out results. M1 is complete without claiming M3 reliability or readiness.
+The accepted M1-to-M2 Foundation — Frontend Application Foundation now plans EVAL-0090
+through EVAL-0094 under the same profile; implementation has not started.
 
 Slice 5 applies those layers incrementally. WP1 is limited to product
 contracts, codecs, invariants, migration/storage declarations, answer-free
