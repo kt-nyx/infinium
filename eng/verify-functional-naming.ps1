@@ -36,15 +36,16 @@ $repositoryRootPath = (Resolve-Path -LiteralPath $RepositoryRoot).Path.TrimEnd('
 $allowlistPath = Join-Path $repositoryRootPath 'eng/functional-naming-allowlist.json'
 
 $tokenPattern = [regex]::new(
-    '(?i)(?:M[0-9]+|Slice[._ -]?[0-9]+|(?<![A-Za-z0-9])S[0-9]+(?:\.[0-9]+)?|WP[._ -]?[0-9]+|Wave[._ -]?[A-Z]|PRE[._ -]?B[0-9]+|Campaign|Successor|Continuation|Pre[._ -]?Live|Post[._ -]?Success|Replacement[._ -]?Candidate|Approach)',
+    '(?i)(?:(?<![A-Za-z0-9])M[0-9]+|Slice[._ -]?[0-9]+|(?<![A-Za-z0-9])S[0-9]+(?:\.[0-9]+)?|WP[._ -]?[0-9]+|Wave[._ -]?[A-Z]|PRE[._ -]?B[0-9]+|Campaign|Successor|Continuation|Pre[._ -]?Live|Post[._ -]?Success|Replacement[._ -]?Candidate|Approach)',
     [System.Text.RegularExpressions.RegexOptions]::CultureInvariant)
-$nameBearingPattern = [regex]::new(
+$structuredNameBearingPattern = [regex]::new(
     '(?i)\b(class|record|struct|interface|enum|namespace|const|static|public|internal|private|protected|function|param)\b|--[a-z]|INFINIUM_[A-Z]|schema_id|"\$id"',
     [System.Text.RegularExpressions.RegexOptions]::CultureInvariant)
-$contentExtensions = @('.cs', '.ps1', '.psm1', '.mjs', '.js', '.ts', '.tsx', '.csproj', '.props', '.targets', '.json')
+$contentExtensions = @('.cs', '.ps1', '.psm1', '.mjs', '.js', '.ts', '.tsx', '.proto', '.csproj', '.props', '.targets', '.json')
+$structuredContentExtensions = @('.json')
 
 function Get-TokenMatches {
-    param([Parameter(Mandatory)][string]$Text)
+    param([Parameter(Mandatory)][AllowEmptyString()][string]$Text)
     @($tokenPattern.Matches($Text) | ForEach-Object { $_.Value })
 }
 
@@ -118,7 +119,8 @@ foreach ($relativePath in $relativePaths) {
     $lineNumber = 0
     foreach ($line in [System.IO.File]::ReadLines($absolutePath)) {
         $lineNumber++
-        if (-not $nameBearingPattern.IsMatch($line)) { continue }
+        if ($structuredContentExtensions -contains $extension -and
+            -not $structuredNameBearingPattern.IsMatch($line)) { continue }
         foreach ($token in Get-TokenMatches $line) {
             $rawFindings.Add([pscustomobject]@{
                 path = $relativePath
@@ -152,10 +154,10 @@ if ($WriteBaseline) {
             scope = $_.scope
             token = $_.token
             symbol_or_context = ($_.contexts -join ', ')
-            classification = 'cleanup-debt'
-            reason = 'Existing planning-language debt recorded at cleanup activation.'
-            retained_consumer = 'Post-M1 cleanup WP3 or WP7 disposition.'
-            review_condition = 'Remove this entry when the path is archived, deleted, or functionally renamed.'
+            classification = 'unreviewed'
+            reason = 'New exact finding generated for explicit compatibility or functional-domain review.'
+            retained_consumer = 'Unknown until a reviewer identifies the current consumer.'
+            review_condition = 'Classify the exception precisely or remove the planning-language token before acceptance.'
         }
     })
     $document = [ordered]@{
@@ -203,6 +205,9 @@ foreach ($entry in $entries) {
             $failures.Add("Incomplete allowlist entry field '$required': $($entry.path) [$($entry.scope)] '$($entry.token)'")
         }
     }
+    if ($entry.classification -ceq 'unreviewed') {
+        $failures.Add("Unreviewed naming allowlist entry: $($entry.path) [$($entry.scope)] '$($entry.token)'")
+    }
 }
 foreach ($finding in $findings) {
     $key = "$($finding.path)`u{001f}$($finding.scope)`u{001f}$($finding.token)"
@@ -218,8 +223,8 @@ foreach ($entry in $entries) {
 }
 
 if ($failures.Count -gt 0) {
-    $failures | ForEach-Object { Write-Error $_ }
+    $failures | ForEach-Object { [Console]::Error.WriteLine($_) }
     throw "Functional naming verification failed with $($failures.Count) finding(s)."
 }
 
-Write-Host "Functional naming verification passed: $($findings.Count) exact temporary/compatibility entries, zero unexplained findings."
+Write-Host "Functional naming verification passed: $($findings.Count) exact reviewed exceptions, zero unexplained findings."

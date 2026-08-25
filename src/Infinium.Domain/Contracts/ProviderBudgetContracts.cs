@@ -206,7 +206,7 @@ public static class ProviderBudgetContractInvariants
                 .Distinct().Count() != value.Scopes.Count
             || value.ExpiresAt.Value <= value.CreatedAt.Value)
         {
-            throw new InvalidOperationException("The M1 reservation must be cache-off, tool-free, finite, exact, and multi-scope.");
+            throw new InvalidOperationException("The provider reservation must be cache-off, tool-free, finite, exact, and multi-scope.");
         }
         foreach (ProviderBudgetScopeContract scope in value.Scopes)
         {

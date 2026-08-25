@@ -3,7 +3,7 @@
 Status: Accepted
 Date: 2026-08-23
 Accepted: 2026-08-23
-Last reviewed: 2026-08-23
+Last reviewed: 2026-08-25
 Supersedes: ADR-0034 only where it required independent semantic-oracle validation during M1
 Superseded by: None
 
@@ -96,5 +96,8 @@ preflight." M4 remains the public-facing MVP milestone.
   never executes current product semantics or reports semantic success.
 - The absence of an independent semantic verdict is an explicit deferred risk,
   not evidence that semantic reliability has been established.
-- Slice 6 remains implementation-active. A separate fresh closeout pass must
-  finish its product conformance; this ADR neither fixes nor accepts it.
+- At this ADR's acceptance, the provider-analysis package then called Slice 6
+  remained implementation-active and still required a separate product-
+  conformance closeout. That closeout and the rest of M1 were subsequently
+  accepted. This dated implementation update does not change the ADR's
+  continuing deferral of independent semantic-oracle work through M2.

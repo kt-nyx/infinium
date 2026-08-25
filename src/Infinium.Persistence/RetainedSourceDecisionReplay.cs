@@ -117,7 +117,7 @@ public sealed partial class AuthoritativeStore
             using SqliteDataReader reader = command.ExecuteReader();
             if (!reader.Read())
             {
-                throw new InvalidDataException("The exact retained historical WP10-to-WP11 source-decision chain is unavailable.");
+                throw new InvalidDataException("The exact retained historical source-acquisition-to-application chain is unavailable.");
             }
             string proposalId = reader.GetString(0);
             string sourceAdmissionId = reader.GetString(1);
@@ -138,7 +138,7 @@ public sealed partial class AuthoritativeStore
             string candidateOperationId = reader.GetString(16);
             string candidateTranscriptId = reader.GetString(17);
             string candidateResponseRecordId = reader.IsDBNull(18)
-                ? throw new InvalidDataException("The retained WP11 outcome has no semantic response identity.")
+                ? throw new InvalidDataException("The retained source-application outcome has no semantic response identity.")
                 : reader.GetString(18);
             string candidateResponseFingerprint = reader.GetString(19);
             string candidateTranscriptPayloadId = reader.GetString(20);
@@ -148,7 +148,7 @@ public sealed partial class AuthoritativeStore
             string analysisContextId = reader.GetString(24);
             if (reader.Read())
             {
-                throw new InvalidDataException("The exact retained historical WP10-to-WP11 source-decision chain is ambiguous.");
+                throw new InvalidDataException("The exact retained historical source-acquisition-to-application chain is ambiguous.");
             }
             reader.Close();
 
@@ -183,11 +183,11 @@ public sealed partial class AuthoritativeStore
 
             ValidateAdmittedSourceArtifactPayload(artifactId);
             byte[] inputBytes = ReadRetainedPayloadBytes(inputPayloadId)
-                ?? throw new InvalidDataException("The retained WP11 input payload bytes are unavailable.");
+                ?? throw new InvalidDataException("The retained source-application input payload bytes are unavailable.");
             if (inputBytes.LongLength != inputLength
                 || Convert.ToHexStringLower(SHA256.HashData(inputBytes)) != inputSha)
             {
-                throw new InvalidDataException("The retained WP11 input payload identity drifted.");
+                throw new InvalidDataException("The retained source-application input payload identity drifted.");
             }
             RetainedProviderReplayProvenance sourceProvider = ReadRetainedProviderReplayProvenance(sourceOperationId);
             RetainedProviderReplayProvenance candidateProvider = ReadRetainedProviderReplayProvenance(candidateOperationId);
@@ -199,7 +199,7 @@ public sealed partial class AuthoritativeStore
             }
             if (applicability != "not-evaluated" || hostDecision != "abstained")
             {
-                throw new InvalidDataException("Migrated historical Slice 6 evidence unexpectedly acquired current applicability authority.");
+                throw new InvalidDataException("Migrated historical provider evidence unexpectedly acquired current applicability authority.");
             }
             bool applies = slice7SubjectIds.Contains(rootSubject, StringComparer.Ordinal);
             return new RetainedSourceDecisionReplayResult(
@@ -234,8 +234,8 @@ public sealed partial class AuthoritativeStore
                 false,
                 applies,
                 applies
-                    ? "The retained historical source identity exactly matches a Slice 7 subject, but remains non-authorizing audit provenance."
-                    : "The retained historical source identity belongs to a different root and remains non-authorizing audit provenance; it is not applicable to the Slice 7 synthetic subjects.");
+                    ? "The retained historical source identity exactly matches a scope-reversion subject, but remains non-authorizing audit provenance."
+                    : "The retained historical source identity belongs to a different root and remains non-authorizing audit provenance; it is not applicable to the synthetic scope-reversion subjects.");
         }
     }
 

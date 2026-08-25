@@ -240,7 +240,7 @@ public sealed partial class AuthoritativeStore
                 if (!ProviderAttemptBridgeApplied())
                 {
                     throw new InvalidOperationException(
-                        "Schema 7 lacks the exact Slice 6 successor attempt-identity migration.");
+                        "Schema 7 lacks the exact provider attempt-identity migration.");
                 }
                 ApplyExtendedProviderOperationPersistence();
             }
@@ -248,7 +248,7 @@ public sealed partial class AuthoritativeStore
             if (current == 8 && !ExtendedProviderOperationPersistenceApplied())
             {
                 throw new InvalidOperationException(
-                    "Schema 8 lacks the exact Slice 6 successor-v6 persistence migration.");
+                    "Schema 8 lacks the exact extended provider-operation persistence migration.");
             }
             if (current == 8)
             {
@@ -633,21 +633,21 @@ public sealed partial class AuthoritativeStore
             + "('m1_slice6_successor_v6_operations','m1_slice6_successor_v6_budget_events',"
             + "'m1_slice6_successor_v6_responses','m1_slice6_successor_v6_semantic_response_bindings');";
         if (Convert.ToInt64(objects.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 4)
-        { throw new InvalidOperationException("The Slice 6 successor-v6 persistence objects are incomplete."); }
+        { throw new InvalidOperationException("The extended provider-operation persistence objects are incomplete."); }
         string actual = ComputeSchemaFingerprint(connection);
         using SqliteCommand declared = connection.CreateCommand();
         declared.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
         if (actual is not (ProviderPersistenceDeclarations.ExtendedProviderOperationPersistenceOriginalSchemaFingerprint
                 or ProviderPersistenceDeclarations.ExtendedProviderOperationPersistenceSchemaFingerprint)
             || declared.ExecuteScalar() is not string stored || stored != actual)
-        { throw new InvalidOperationException("The Slice 6 successor-v6 persistence fingerprint is stale (" + actual + ")."); }
+        { throw new InvalidOperationException("The extended provider-operation persistence fingerprint is stale (" + actual + ")."); }
         using SqliteCommand migration = connection.CreateCommand();
         migration.CommandText = "SELECT COUNT(*) FROM migration_history WHERE migration_id=$id "
             + "AND from_version=7 AND to_version=8 AND sqlite_source_id=$source;";
         migration.Parameters.AddWithValue("$id", ProviderPersistenceDeclarations.ExtendedProviderOperationPersistenceMigrationId);
         migration.Parameters.AddWithValue("$source", BindingIdentity.SourceId);
         if (Convert.ToInt64(migration.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
-        { throw new InvalidOperationException("The Slice 6 successor-v6 migration history is stale."); }
+        { throw new InvalidOperationException("The extended provider-operation migration history is stale."); }
         return true;
     }
 
@@ -1022,31 +1022,31 @@ public sealed partial class AuthoritativeStore
         if (command.ExecuteScalar() is not string value)
         { return false; }
         if (value != "M1-S6-SUCCESSOR-0007")
-        { throw new InvalidOperationException("The Slice 6 successor storage extension identity is stale."); }
+        { throw new InvalidOperationException("The provider attempt storage extension identity is stale."); }
         using SqliteCommand index = connection.CreateCommand();
         index.CommandText =
             "SELECT COUNT(*) FROM sqlite_schema WHERE type='index' AND name='idx_provider_request_fingerprint' "
             + "AND sql LIKE '%WHERE operation_id NOT GLOB ''m1s6-successor-*''%';";
         if (Convert.ToInt64(index.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
-        { throw new InvalidOperationException("The Slice 6 successor request identity extension is incomplete."); }
+        { throw new InvalidOperationException("The provider request-identity extension is incomplete."); }
         using SqliteCommand bridge = connection.CreateCommand();
         bridge.CommandText = "SELECT COUNT(*) FROM sqlite_schema WHERE type='table' "
             + "AND name='m1_slice6_successor_semantic_response_bindings';";
         if (Convert.ToInt64(bridge.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
-        { throw new InvalidOperationException("The Slice 6 successor semantic response bridge is absent."); }
+        { throw new InvalidOperationException("The provider semantic-response bridge is absent."); }
         string actual = ComputeSchemaFingerprint(connection);
         using SqliteCommand metadata = connection.CreateCommand();
         metadata.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
         if (actual != ProviderPersistenceDeclarations.ProviderAttemptBridgeSchemaFingerprint
             || metadata.ExecuteScalar() is not string declared || declared != actual)
-        { throw new InvalidOperationException("The Slice 6 successor storage fingerprint is stale (" + actual + ")."); }
+        { throw new InvalidOperationException("The provider attempt storage fingerprint is stale (" + actual + ")."); }
         using SqliteCommand migration = connection.CreateCommand();
         migration.CommandText = "SELECT COUNT(*) FROM migration_history "
             + "WHERE migration_id='M1-S6-SUCCESSOR-0007' AND from_version=6 AND to_version=7 "
             + "AND sqlite_source_id=$source;";
         migration.Parameters.AddWithValue("$source", BindingIdentity.SourceId);
         if (Convert.ToInt64(migration.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
-        { throw new InvalidOperationException("The Slice 6 successor storage migration history is stale."); }
+        { throw new InvalidOperationException("The provider attempt storage migration history is stale."); }
         return true;
     }
 

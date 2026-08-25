@@ -114,16 +114,15 @@ Every material document should include a status and last-reviewed date.
 The old implementation is outside the active repository. A maintainer-local
 archive exists at sibling path `../infinium-legacy-archive/`, and the tracked
 implementation remains recoverable through Git commit `7dd3da6`. Superseded
-evaluator-development staging is consolidated separately at
-`../infinium-evaluator-development-archive/`. Retired public protocol `/4`
-code and its last regression closure are in the separate sibling Git repository
+evaluator-development staging is consolidated with completed M0/M1 development
+history in `../infinium-development-history-archive/` commit
+`6f8976db6c560456201a9166caf4f36506be5477`. Retired public protocol `/4` code
+and its last regression closure are in the separate sibling Git repository
 `../infinium-evaluator-archive/`. Do not inspect any archive unless the project
 owner explicitly requests the corresponding archaeological review.
 
 M0 research, Waves A through F, and the accepted completed M1 hierarchy through
-its final backend closeout were moved to
-`../infinium-development-history-archive/` commit
-`6f8976db6c560456201a9166caf4f36506be5477` during the post-M1 cleanup. Their
+its final backend closeout were moved there during the post-M1 cleanup. Their
 exact transfer evidence is in the cleanup implementation record.
 Superseded evaluator-attempt prose
 and proof fixtures are summarized in

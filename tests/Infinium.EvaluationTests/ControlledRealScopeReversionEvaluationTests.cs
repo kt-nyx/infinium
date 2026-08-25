@@ -196,7 +196,7 @@ public sealed class ControlledRealScopeReversionEvaluationTests
             order = [.. order, "CotP - AIO Patch.esp"];
         }
         BethesdaSemanticSnapshot snapshot = Extract(root, "REAL-NPC-0001", order);
-        OpaqueId runId = new(control ? "slice8-real-npc-control" : "slice8-real-npc-positive");
+        OpaqueId runId = new(control ? "controlled-real-npc-control" : "controlled-real-npc-positive");
         OpaqueId subjectId = new("real-npc-subject");
         OpaqueId causeId = new("real-npc-shared-package-cause");
         string winner = control ? "CotP - AIO Patch.esp" : "Children of the Pariah.esp";
@@ -246,7 +246,7 @@ public sealed class ControlledRealScopeReversionEvaluationTests
             order = [.. order, "Nightgate Inn Revived - Candlehearth.esp"];
         }
         BethesdaSemanticSnapshot snapshot = Extract(root, "REAL-REFR-0001", order);
-        OpaqueId runId = new(control ? "slice8-real-refr-control" : "slice8-real-refr-positive");
+        OpaqueId runId = new(control ? "controlled-real-refr-control" : "controlled-real-refr-positive");
         OpaqueId subjectId = new("real-refr-subject");
         OpaqueId causeId = new("real-refr-linked-reference-cause");
         BethesdaPlacedReferenceFact prior = FindReference(snapshot, "00017061:Skyrim.esm", "Candlehearth.esp");

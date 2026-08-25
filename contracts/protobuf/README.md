@@ -17,7 +17,7 @@ credential access, provider dispatch, persistence, or runtime behavior.
 | `infinium.application.v1` | `infinium/application/v1/application.proto` | Allowlisted application queries, keyset cursors, durable run and snapshot-capture commands, progress snapshots, and bounded events |
 | `infinium.worker.v1` | `infinium/worker/v1/worker.proto` | One immutable general-worker assignment, progress/control, staged output, and terminal receipt |
 | `infinium.helper.v1` | `infinium/helper/v1/helper.proto` | Private-handle-only one-shot credential/provider-helper assignment, final dispatch revalidation, non-secret status/usage, and staging |
-| `infinium.helper.v2` | `infinium/helper/v2/helper.proto` | Slice 6 private-handle-only closed assignment, final revalidation, cache-separated usage, bounded response receipt, and protocol fingerprint; v1 remains separately decodable |
+| `infinium.helper.v2` | `infinium/helper/v2/helper.proto` | Private-handle-only provider assignment, final revalidation, cache-separated usage, bounded response receipt, and protocol fingerprint; v1 remains separately decodable |
 
 Imports are rooted at `contracts/protobuf`. Generated C# namespaces are
 `Infinium.Contracts.Protobuf.<Area>.V1`.

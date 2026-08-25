@@ -73,7 +73,7 @@ public static class ProviderContractExampleReader
         HashSet<string> actualSchemas = examples.EnumerateObject().Select(x => x.Name).ToHashSet(StringComparer.Ordinal);
         if (!actualSchemas.SetEquals(SchemaNames))
         {
-            throw new InvalidDataException("Provider examples must cover exactly the nine WP1 schemas.");
+            throw new InvalidDataException("Provider examples must cover exactly the nine registered provider schemas.");
         }
 
         foreach (string schema in SchemaNames)
@@ -101,7 +101,7 @@ public static class ProviderContractExampleReader
             return example;
         }
 
-        // The WP1 answer-free package is immutable prior evidence. Validate its historical
+        // The answer-free provider package is immutable prior evidence. Validate its historical
         // single-axis `state` spelling against the clean-break contract by projecting only
         // that field name in memory; product codecs do not accept the historical shape.
         JsonObject projected = JsonNode.Parse(example.GetRawText())!.AsObject();

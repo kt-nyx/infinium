@@ -708,7 +708,7 @@ public sealed class ProviderContractJsonCodecTests
         Assert.AreEqual(
             "77e5b0717140551a4c64c5d87a486930581a9df23484f65a419f0a224b170acf",
             Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(v1))),
-            "helper v1 bytes are frozen at the accepted pre-S6 authority");
+            "helper v1 bytes are frozen at the accepted pre-v2 authority");
         Assert.AreEqual(HelperProtocolV2Constants.SchemaFingerprintSha256, HelperV2TransitiveFingerprint());
         Assert.AreEqual(
             ProtobufContractSetFingerprint(),
@@ -722,7 +722,7 @@ public sealed class ProviderContractJsonCodecTests
         CollectionAssert.AreEqual(
             FrozenHelperV1UsageDescriptor,
             v1Usage.Fields.InDeclarationOrder().Select(field => $"{field.Name}={field.FieldNumber}").ToArray(),
-            "helper v1 usage descriptor must not acquire Slice 6 receipt fields");
+            "helper v1 usage descriptor must not acquire provider receipt fields");
         Google.Protobuf.Reflection.EnumDescriptor v1ReceiptState = v1Descriptor.EnumTypes.Single(x => x.Name == "UsageReceiptState");
         CollectionAssert.AreEqual(
             FrozenHelperV1ReceiptStates,

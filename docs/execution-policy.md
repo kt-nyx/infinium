@@ -2,7 +2,7 @@
 
 Status: Accepted
 
-Last reviewed: 2026-08-23
+Last reviewed: 2026-08-25
 Owner: Project owner
 
 ## Purpose and scope
@@ -123,12 +123,20 @@ repairable defects and authorizes another correction/re-review cycle.
 
 ## Test-process cleanup and verification
 
-After a local verification run completes, is cancelled, or times out, wait for
-its ordinary shutdown and then prove that it did not leave a repository-owned
-`dotnet` or `testhost` process behind. Run test commands with absolute project
-paths so process ownership remains attributable to this exact working tree.
-Before cleanup, confirm that no other active verification or interactive
-repository process in the same working tree owns a matched process.
+After every local verification run completes, is cancelled, is interrupted, or
+times out, wait for its ordinary shutdown and then prove that it did not leave
+a repository-owned `dotnet` or `testhost` process behind. This includes
+coordinator, worker, credential-helper, CLI, test-host, and other .NET child
+processes launched from repository build output. Run test commands with
+absolute project paths so process ownership remains attributable to this exact
+working tree. Before cleanup, confirm that no other active verification or
+interactive repository process in the same working tree owns a matched
+process.
+
+A verification floor is not complete, and its candidate must not be bound,
+until this check reports zero repository-owned survivors. An interrupted test
+run is diagnostic evidence and must be rerun; killing its processes does not
+turn the interrupted run into a pass.
 
 On Windows, the following procedure targets only processes whose command line
 contains the resolved repository root. It snapshots exact process IDs,
@@ -183,6 +191,15 @@ root match is ambiguous, report cleanup as unverified; do not broaden the
 predicate. Retain the resolved root, matched process IDs and names, and the
 zero-survivor result with the verification receipt. Do not retain full command
 lines when they could contain credentials or other sensitive arguments.
+
+The .NET SDK may also retain reusable MSBuild or compiler-server processes whose
+generic command lines cannot be attributed safely by repository path. Do not
+force-kill those processes. After all local .NET work is finished, if generated
+data cleanup proves that one of those servers still holds this repository's
+package/build output open, confirm that no other local build is active and run
+the SDK's graceful `dotnet build-server shutdown` command. Then repeat the
+repository hygiene audit. This explicit shutdown is part of verification
+closeout when needed; a broad `Stop-Process -Name dotnet` is never permitted.
 
 ## Escalation conditions
 

@@ -60,7 +60,7 @@ public sealed class CredentialHelperFaultTests
     [TestMethod]
     public async Task CredentialReplacementDeleteFaultRetainsExactCleanupAcrossRestartAndBackupUntilConfirmed()
     {
-        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-ReplacementCleanup-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Credential-ReplacementCleanup-" + Guid.NewGuid().ToString("N"));
         string productRoot = Path.Combine(root, "product");
         string fakeStoreRoot = Path.Combine(root, "fake-secure-store");
         string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
@@ -177,7 +177,7 @@ public sealed class CredentialHelperFaultTests
     private static OneShotCredentialHelperLauncher Launcher(string helper) => new(
         helper,
         Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(helper))),
-        Path.Combine(Path.GetTempPath(), "Infinium-Wp3-FakeStore-" + Guid.NewGuid().ToString("N")));
+        Path.Combine(Path.GetTempPath(), "Infinium-Credential-FakeStore-" + Guid.NewGuid().ToString("N")));
 
     private sealed class FrozenTimeProvider(DateTimeOffset now) : TimeProvider
     {

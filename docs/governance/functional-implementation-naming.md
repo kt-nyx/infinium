@@ -55,7 +55,11 @@ The rule covers active:
 - comments or documentation that advertise a historical identifier as a
   current entry point.
 
-The automated checker scans filenames and code-like declaration/command lines.
+The automated checker scans filenames and every line of ordinary source,
+script, project, and protobuf files. Structured JSON is limited to
+name-bearing properties so fixture payload values do not create meaningless
+false positives. Public fixture-package bytes are governed separately by the
+closed repository evaluation-authority manifest and their immutable hashes.
 The final manual audit covers meaning that cannot be recognized reliably from
 tokens alone.
 

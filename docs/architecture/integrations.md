@@ -2,7 +2,7 @@
 
 Status: Accepted
 Disposition: synthesis; actively maintained
-Last reviewed: 2026-08-08
+Last reviewed: 2026-08-25
 
 ADR-0006 accepts the high-level external-application and bundled-dependency
 posture. ADR-0007 excludes xEdit from every Infinium boundary. ADR-0008 through
@@ -175,8 +175,11 @@ Batch/cache objects remain invocation provenance rather than findings or
 source authority. Wave E accepts Credential Manager plus a one-shot
 credential/provider helper, SQLite plus coordinator-owned payload storage, and
 an atomic multi-scope cost ledger. ADR-0015, ADR-0020, ADR-0021, and ADR-0023
-accept those mechanisms; exact models and production conformance
-remain pending.
+accept those mechanisms. M1 implements and tests the bounded synchronous
+OpenAI adapter, one-shot helper, credential lifecycle, local budget ledger,
+provenance, and replay path. Ordinary shipped-product enrollment, broader
+provider modes/models, concurrent billable dispatch, and production
+qualification remain later work.
 
 Initial OpenAI execution remains the single surface accepted by ADR-0013:
 schema-constrained direct Responses API calls using a user-supplied,

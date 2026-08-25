@@ -15,8 +15,8 @@ public sealed class ScopeReversionV2PersistenceIntegrationTests
     [TestProperty("Category", "ScopeReversionV2")]
     public void Schema11PublishesReopensReplaysInvalidatesAndDisclosesUnavailableRoot()
     {
-        string root = Path.Combine(Path.GetTempPath(), "infinium-s8-v2-store-" + Guid.NewGuid().ToString("N"));
-        string restoredRoot = Path.Combine(Path.GetTempPath(), "infinium-s8-v2-restored-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "infinium-scope-reversion-v2-store-" + Guid.NewGuid().ToString("N"));
+        string restoredRoot = Path.Combine(Path.GetTempPath(), "infinium-scope-reversion-v2-restored-" + Guid.NewGuid().ToString("N"));
         ScopeReversionV2ProjectionRequest request = ScopeReversionV2TestSupport.Request();
         Dictionary<string, ReadOnlyMemory<byte>> artifacts = new(StringComparer.Ordinal)
         {
@@ -98,7 +98,7 @@ public sealed class ScopeReversionV2PersistenceIntegrationTests
     [TestProperty("Category", "ScopeReversionV2")]
     public void V1PublicationAndReadRemainExactUnderSchema11()
     {
-        string root = Path.Combine(Path.GetTempPath(), "infinium-s8-v1-preservation-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "infinium-scope-reversion-v1-preservation-" + Guid.NewGuid().ToString("N"));
         try
         {
             ScopeReversionFixturePackage fixture = ScopeReversionTestSupport.Fixture();
@@ -126,7 +126,7 @@ public sealed class ScopeReversionV2PersistenceIntegrationTests
     [TestProperty("Category", "ScopeReversionV2")]
     public void CorruptBytesAndInvalidArtifactsPublishNothingWhileConcurrentDuplicatePublishIsStable()
     {
-        string root = Path.Combine(Path.GetTempPath(), "infinium-s8-v2-atomic-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "infinium-scope-reversion-v2-atomic-" + Guid.NewGuid().ToString("N"));
         try
         {
             ScopeReversionV2PipelineResult prepared = ControlledRealScopeReversionProjector.Execute(
@@ -176,7 +176,7 @@ public sealed class ScopeReversionV2PersistenceIntegrationTests
     {
         ScopeReversionV2PipelineResult prepared = ControlledRealScopeReversionProjector.Execute(
             ScopeReversionV2TestSupport.Request());
-        string directory = Path.Combine(Path.GetTempPath(), "infinium-s8-v2-cli-" + Guid.NewGuid().ToString("N"));
+        string directory = Path.Combine(Path.GetTempPath(), "infinium-scope-reversion-v2-cli-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         string path = Path.Combine(directory, "scope-reversion-analysis.v2.json");
         try

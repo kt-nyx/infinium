@@ -33,11 +33,11 @@ The generator emits two distinct answer-free execution controls. The effective
 scan configuration is valid under `infinium.scan.effective-configuration/v1`
 and intentionally has no `cases` property. The separate
 `infinium.evaluation.bethesda-case-matrix/v1` artifact is sourced only from the
-accepted Slice 3.5 scenario inventory and retained project-authored execution
+accepted Bethesda scenario inventory and retained project-authored execution
 inputs. It declares scenario identity, operation, and exact input membership;
 oracle expectations and denominator classifications are not generator inputs.
 
-After promoting a reviewed input freeze, refresh the non-answer-bearing Slice 3
+After promoting a reviewed input freeze, refresh the non-answer-bearing
 capture-binding receipts:
 
 ```powershell

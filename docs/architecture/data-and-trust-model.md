@@ -2,7 +2,7 @@
 
 Status: Accepted
 Disposition: synthesis; actively maintained
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-25
 ## Principle
 
 Infinium must be able to explain where every conclusion came from and which
@@ -11,15 +11,14 @@ system had authority to assert it.
 Wave E accepts this durable model: SQLite plus coordinator-owned
 content-addressed payload storage (ADR-0015), append-only finding/case
 reconciliation and review-state carryover decisions (ADR-0022), and a
-single-owned atomic cost ledger (ADR-0023). M1 Slice 2 implements and publicly
-exercises the bounded authoritative-store, lifecycle, identity/lineage
-substrate, and write-authority portions. The Slice 5 plan owns clean-break
-contracts, migration, typed
-evidence/provenance, candidate, finding, case, reconciliation, replay, and
-corpus behavior; current delivery status lives in
-[current project state](../current-state.md). Slice 6 owns the provider
-cost-ledger boundary. Unimplemented portions and full evaluation conformance
-remain pending rather than being inferred from the delivered substrate.
+single-owned atomic cost ledger (ADR-0023). The accepted M1 backend implements
+and publicly exercises the bounded authoritative store, lifecycle,
+identity/lineage, typed evidence and provenance, candidates, findings/cases,
+reconciliation, replay, provider accounting, and write-authority boundaries.
+Current delivery status lives in [current project state](../current-state.md).
+Broader analyzer families, high-end scale, interactive user decisions, frontend
+consumers, and production-readiness evidence remain later work rather than
+being inferred from the bounded M1 proof.
 
 ## Evidence classes and authority
 

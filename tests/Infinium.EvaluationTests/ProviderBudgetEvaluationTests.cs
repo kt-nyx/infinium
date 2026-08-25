@@ -298,7 +298,7 @@ public sealed class ProviderBudgetEvaluationTests
 
         public static EvaluationBudgetContext Create()
         {
-            string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp2-Eval-" + Guid.NewGuid().ToString("N"));
+            string root = Path.Combine(Path.GetTempPath(), "Infinium-ProviderBudget-Evaluation-" + Guid.NewGuid().ToString("N"));
             AuthoritativeStore store = new(new StoragePaths(root));
             try
             {
@@ -309,7 +309,7 @@ public sealed class ProviderBudgetEvaluationTests
                 command.CommandText = AuthorizationSql;
                 Assert.AreEqual(3, command.ExecuteNonQuery());
                 CoordinatorAuthority authority = store.AcquireCoordinatorAuthority(
-                    "wp2-evaluation", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(10));
+                    "provider-budget-evaluation", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(10));
                 Assert.AreEqual(1L, authority.FencingEpoch);
                 ProviderBudgetVectorContract vector = new(1, 20, 10, 30, 10, 0, 0, 0, 400_000);
                 string[] kinds = ["request", "operation", "evidence-acquisition-run", "analysis-run",

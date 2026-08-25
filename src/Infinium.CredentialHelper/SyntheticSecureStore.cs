@@ -10,7 +10,7 @@ public readonly record struct SyntheticCredentialSlot(string ProfileId, string G
 }
 
 /// <summary>
-/// The WP3 production seam. It intentionally exposes no target string,
+/// The synthetic secure-store seam. It intentionally exposes no target string,
 /// enumeration, reveal, arbitrary lookup, or native credential operation.
 /// </summary>
 public interface ISyntheticSecureStore

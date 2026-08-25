@@ -14,7 +14,7 @@ namespace Infinium.Persistence;
 
 public sealed partial class AuthoritativeStore
 {
-    // Durable analysis requests may carry the bounded Slice 9 composition
+    // Durable analysis requests may carry the bounded semantic-analysis composition
     // envelope. Checkpoint documents retain their smaller independent bound.
     private const int MaximumRunOperationJsonBytes = 896 * 1024;
 

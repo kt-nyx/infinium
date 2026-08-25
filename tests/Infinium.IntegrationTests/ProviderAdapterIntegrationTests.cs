@@ -309,7 +309,7 @@ public sealed class ProviderAdapterIntegrationTests
         });
         using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
         byte[] request = ProviderAdapterTestData.CanonicalRequest();
-        byte[] secret = Encoding.ASCII.GetBytes("sk-wp5-retained-evidence-canary");
+        byte[] secret = Encoding.ASCII.GetBytes("sk-provider-retained-evidence-canary");
         OpenAiResponsesResult result;
         try
         {
@@ -343,7 +343,7 @@ public sealed class ProviderAdapterIntegrationTests
         int providerOperations = IPAddress.IsLoopback(IPAddress.Parse(server.Endpoint.Host)) ? 0 : server.RequestCount;
         object networkSpy = new
         {
-            schema = "infinium.m1-s6.wp5.network-spy/v1",
+            schema = "infinium.provider.network-spy/v1",
             literal_loopback_requests = server.RequestCount + redirectServer.RequestCount,
             provider_operations = providerOperations,
             public_dns_operations = 0,
@@ -356,7 +356,7 @@ public sealed class ProviderAdapterIntegrationTests
         File.WriteAllBytes(Path.Combine(evidenceRoot, "network-spy.json"), JsonSerializer.SerializeToUtf8Bytes(networkSpy));
         File.WriteAllBytes(Path.Combine(evidenceRoot, "response-state-matrix.json"), JsonSerializer.SerializeToUtf8Bytes(new
         {
-            schema = "infinium.m1-s6.wp5.response-state-matrix/v1",
+            schema = "infinium.provider.response-state-matrix/v1",
             terminal_admitted = AdmittedStates,
             terminal_rejected = RejectedStates,
             nonterminal_rejected = NonterminalStates,

@@ -188,7 +188,7 @@ public static class OpenAiResponsesInputBoundPolicy
             JsonElement tools = root.GetProperty("tools");
             if (tools.ValueKind != JsonValueKind.Array || tools.GetArrayLength() != 0)
             {
-                throw new InvalidDataException("The M1 byte-envelope policy rejects provider tools.");
+                throw new InvalidDataException("The closed provider byte-envelope policy rejects provider tools.");
             }
             RequireString(root, "truncation", "disabled");
             if (!root.GetProperty("max_output_tokens").TryGetInt64(out long outputTokens)
@@ -286,7 +286,7 @@ public static class OpenAiResponsesInputBoundPolicy
         }
         if (!actual.SetEquals(expected))
         {
-            throw new InvalidDataException($"{label} is not the closed M1 provider request shape.");
+            throw new InvalidDataException($"{label} is not the closed synchronous provider request shape.");
         }
     }
 

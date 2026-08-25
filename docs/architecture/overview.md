@@ -2,16 +2,19 @@
 
 Status: Accepted
 Disposition: synthesis; actively maintained
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-25
 ADR-0015 through ADR-0023 accept the complete Wave E persistence, lifecycle,
 application-stack, process, IPC, credential, security, continuity, and budget
 architecture. Exact implementation status and evidence live in
 [current project state](../current-state.md) and the owning slice records;
-this synthesis does not duplicate that moving handoff. Provider dispatch,
-generic reversion proof, controlled-real execution, and the frontend remain
-later slices or milestones. Dapr and ADR-0024's Codex proposal are rejected.
-This document maps the selected decomposition without treating partial M1
-delivery as complete architecture conformance.
+this synthesis does not duplicate that moving handoff. M1 now implements the
+bounded provider-dispatch path, generic scope-reversion proof, controlled-real
+execution, persistence/replay, and stable report projection described by the
+accepted M1 scope. The graphical frontend, ordinary end-user workflow, broader
+analyzer coverage, and production hardening remain later work. Dapr and
+ADR-0024's Codex proposal are rejected. This document maps the selected
+decomposition without treating the bounded M1 proof as complete product-wide
+architecture conformance.
 
 ## Required responsibilities and selected separation
 

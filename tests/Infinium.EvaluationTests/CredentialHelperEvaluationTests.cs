@@ -36,7 +36,7 @@ public sealed class CredentialHelperEvaluationTests
         Assert.AreEqual("deterministic-fake", input.GetProperty("secure_store").GetString());
 
         Assert.AreEqual("deterministic-nonnetwork-simulator", input.GetProperty("provider").GetString());
-        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-Eval-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Credential-Evaluation-" + Guid.NewGuid().ToString("N"));
         using AuthoritativeStore state = new(new StoragePaths(root));
         DateTimeOffset now = new(2026, 8, 11, 12, 0, 0, TimeSpan.Zero);
         state.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, now);
@@ -137,7 +137,7 @@ public sealed class CredentialHelperEvaluationTests
             new("profile-oversize", "generation-oversize"),
             new byte[DeterministicFakeSecureStore.MaximumSecretBytes + 1]));
 
-        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-EvalFault-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Credential-EvaluationFault-" + Guid.NewGuid().ToString("N"));
         string helperPath = Directory.GetFiles(AppContext.BaseDirectory, "Infinium.CredentialHelper.exe", SearchOption.AllDirectories).Single();
         OneShotCredentialHelperLauncher launcher = new(helperPath, Hash(helperPath), Path.Combine(root, "fake-secure-store"));
         List<HelperProcessReceipt> receipts = [];

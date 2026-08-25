@@ -233,18 +233,18 @@ public sealed class CredentialHelperIntegrationTests
         store.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, BaseTime);
         _ = store.BeginCredentialEnrollment(
             "profile-verified", "generation-verified", "verified enrollment", BaseTime.AddSeconds(1),
-            "account-wp9", "billing-wp9");
+            "account-enrollment", "billing-enrollment");
         string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
         OneShotCredentialHelperLauncher launcher = Launcher(helper);
         CredentialHelperCoordinator coordinator = new(store, launcher);
 
         (CoordinatedHelperReceipt receipt, CredentialProfileProjection projection) =
             await coordinator.ExecuteVerifiedEnrollmentAsync(
-                "wp9-verified-enrollment-attempt",
+                "verified-enrollment-attempt",
                 CredentialBootstrap("profile-verified", "generation-verified", 121),
                 CredentialAssignment(
                     "profile-verified", "generation-verified", HelperAssignmentKindV2.Enroll,
-                    "wp9-production-profile/enroll-and-verify"),
+                    "provider-profile/enroll-and-verify"),
                 BaseTime.AddSeconds(2));
 
         Assert.AreEqual(HelperOutcomeV2.Completed, receipt.Process.Receipt.Outcome);

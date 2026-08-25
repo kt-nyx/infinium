@@ -2,18 +2,18 @@
 
 Status: Accepted
 Disposition: synthesis; actively maintained
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-25
 This document records required behavior. RESEARCH-0036, RESEARCH-0037,
 RESEARCH-0039, RESEARCH-0043, and RESEARCH-0046 define the storage, lifecycle,
 coordinator, and cost-control requirements and dispositions. ADR-0015,
 ADR-0016, ADR-0018, and ADR-0023 accept the persistence, lifecycle,
-coordinator/process, and cost-control architecture. M1 Slices 2-4 implement the
-bounded authoritative-store, coordinator/worker/CLI, snapshot, and semantic
-publication substrate. The Slice 5 plan owns downstream evidence, candidates,
-findings/cases, publication, replay, platform cases, and comprehensive public
-evidence; consult [current project state](../current-state.md) for delivery status.
-Slice 6 must add the accepted provider cost-control surface. Later tuning,
-scale, and milestone-specific details remain pending.
+coordinator/process, and cost-control architecture. The accepted M1 backend
+implements the bounded authoritative store, coordinator/worker/CLI, snapshots,
+semantic publication, downstream evidence, candidates, findings/cases,
+provider cost control, persistence, and replay needed by its scope; consult
+[current project state](../current-state.md) for the exact delivery boundary.
+Later tuning, high-end scale, frontend-driven lifecycle behavior, and
+milestone-specific extensions remain pending.
 
 ## Immutable installation snapshots
 
@@ -258,8 +258,10 @@ Checkpoint boundaries should favor:
 - preserving valid work at cost-limit exhaustion for a later run.
 
 ADR-0016 accepts durable application-owned SQLite lifecycle behavior, and
-ADR-0018 accepts the exact coordinator/process realization. Implementation and
-fault conformance remain pending.
+ADR-0018 accepts the exact coordinator/process realization. The bounded M1
+implementation and fault-conformance floor passed. Extended deletion UX,
+long-duration/high-end behavior, and future concurrent modes remain later
+qualification work.
 
 Pause and resume continue the same non-terminal run and retain its immutable
 bindings. Cancellation makes the execution terminal. Valid outputs/checkpoints

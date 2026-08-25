@@ -4,8 +4,8 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-08-23
-Applies to: completed M0 Wave F and accepted M1 backend semantic proof
+Last reviewed: 2026-08-25
+Applies to: completed M0/M1 work and the M2 planning boundary
 
 ## Purpose
 
@@ -13,8 +13,9 @@ This register distinguishes:
 
 - questions deliberately deferred because their evidence does not exist yet;
 - unsupported capabilities outside M1;
-- accepted design risks awaiting implementation qualification; and
-- true blockers that prevent M1 planning or completion.
+- accepted design risks, including those now qualified only for bounded M1
+  scope; and
+- historical blockers that governed M1 planning and completion.
 
 A recorded deferral is not implicit coverage, permission to guess, or a waiver
 of the requirement before its stated delivery milestone.
@@ -26,7 +27,7 @@ of the requirement before its stated delivery milestone.
 | RQ-028 | Deferred independent semantic evidence under ADR-0035 | Fresh independently authored and qualified development/validation/held-out evidence, false-positive/false-negative and abstention distributions, taxonomy-stratified coverage, carryover/reconciliation errors, stale/readiness presentation results, and user review evidence | Reconsider only after M2 acceptance at the M3 Evaluation Readiness Gate under a new accepted plan satisfying ADR-0035 | M1 and M2 make no numerical semantic-reliability or readiness claim. Public product checks prove contracts, provenance, isolation, and bounded behavior only |
 | RQ-029 | Later evidence | Exact log producer/version inventory, stable fingerprints, capture-session boundaries, clock/fingerprint failure cases, privacy/retention behavior, and controlled exact/matched/likely/unknown/historical fixtures | Before any automatic log application; schedule in the M3 plan or earlier if M2/M1 scope changes | Runtime-log ingestion/application is excluded from M1 |
 | RQ-030 | Later evidence | Final application artifacts, signing identity/business decision, installer/update alternatives, WebView2/runtime delivery behavior, rollback/recovery threat model, SBOM and GPL distribution closure | M4 packaging/update planning after M2 architecture qualification and before public packaging | No installer, updater, signing, or public distribution claim in M1 |
-| RQ-038 | Resolved for M1 by accepted ADR-0025 | Implementation and evaluation evidence for the exact `gpt-5.6-sol` synchronous Responses profile and its non-date-pinned drift/requalification policy | Reopen only if the selected model/profile or material provider capability changes | Live M1 work may proceed only through the accepted profile and its credential, budget, provenance, and evaluation gates |
+| RQ-038 | Resolved for M1 by accepted ADR-0025 | The bounded synchronous adapter, credential/budget boundary, retained replay, and product-conformance evidence were accepted in M1; future work must requalify material drift | Reopen only if the selected model/profile or material provider capability changes | M1's accepted evidence applies only to the exact bounded profile and does not grant future model or production-wide authority |
 
 ## Conditional research retained outside M1
 
@@ -46,11 +47,11 @@ of the requirement before its stated delivery milestone.
 
 | Risk | Current evidence | M1 control/gate | Residual after M1 |
 |---|---|---|---|
-| SQLite/CAS crash consistency and native-version drift | Slice 2 implements the exact loaded SQLite identity, guarded VFS, authoritative schema, CAS, backup/restore, and bounded fault tests | EVAL-0087 remains the milestone-wide retained execution gate | Longer-duration corruption/scale evidence remains M3 |
-| Custom lifecycle correctness | Slice 2 implements the accepted state machine, fencing, recovery, coordinator/worker boundary, and fault tests; the pre-Slice-4 audit added finite worker RPC deadlines after reproducing an orphaned crash-recovery worker | State-machine/property tests, crash/fence tests, EVAL-0038/EVAL-0088 where exercised | Tuning and multi-hour behavior remain M3 |
+| SQLite/CAS crash consistency and native-version drift | M1 implements the exact loaded SQLite identity, guarded VFS, authoritative schema, CAS, backup/restore, migrations, replay, and bounded fault tests | The accepted M1 floor exercises its bounded EVAL-0087 obligations | Longer-duration corruption/scale evidence remains M3 |
+| Custom lifecycle correctness | M1 implements the accepted state machine, fencing, recovery, coordinator/worker boundary, and fault tests; an earlier audit added finite worker RPC deadlines after reproducing an orphaned crash-recovery worker | The accepted M1 floor exercises the bounded lifecycle and EVAL-0088 obligations | Tuning, frontend lifecycle UX, and multi-hour behavior remain later work |
 | Same-user worker compromise | Per-worker Job Objects contain lifetime/resources and finite RPC deadlines bound coordinator-loss recovery, but neither mechanism is a sandbox | Keep M1 parsers managed and positively allowlisted; exclude any operation needing compromise containment | Stronger isolation requires new research/ADR |
-| Named-pipe caller/role confusion | ADR-0019 specifies restricted role-separated contracts | EVAL-0088 malformed/race/reconnect/nonce/limit suite | Public hostile-local-user hardening remains bounded by Windows same-user model |
-| Credential half-commit or revocation race | ADR-0020 defines generation/intents/helper | EVAL-0089 and secret-canary review before live call | Same-user malware/admin/debugger protection is not claimed |
+| Named-pipe caller/role confusion | ADR-0019 specifies restricted role-separated contracts; the bounded M1 malformed/race/reconnect/nonce/limit suite passed | Requalify each materially expanded IPC role or operation | Public hostile-local-user hardening remains bounded by Windows same-user model |
+| Credential half-commit or revocation race | ADR-0020's generation/intents/helper design and the bounded M1 EVAL-0089/secret-canary surface passed | Requalify shipped-product enrollment and every materially expanded credential operation | Same-user malware/admin/debugger protection is not claimed |
 | Provider cost/billing ambiguity | ADR-0023 defines conservative reservation/holds | EVAL-0081 synchronous path; the qualification and each semantic call are separately authorized/reserved/settled; unresolved usage retains its hold | Background/Batch/cache/concurrent modes remain disabled |
 | LLM semantic variability | Accepted schema-bound OpenAI path is not deterministic | Exact retained request/response, typed semantic assertions, matched negatives, held-out replacement discipline | No general model reliability claim beyond evaluated prompts/model |
 | Non-date-pinned OpenAI model drift | OpenAI currently lists only the moving `gpt-5.6-sol` snapshot identity | Accepted ADR-0025 requires retained-result replay, returned-model/capability fingerprints, and invalidation/requalification on material drift | Identical live re-execution cannot be promised; only the retained original result is exactly replayable |
@@ -103,7 +104,7 @@ omitting them:
   no credential or unnecessary private profile/path data enters tracked
   fixtures or diagnostics.
 
-## M1 authorization conditions
+## M1 authorization conditions (historical; satisfied)
 
 The owner accepted the M1 plan after the Wave F review established these
 conditions at the documentation/design level:
@@ -139,7 +140,12 @@ proof, while planned EVAL-0006/EVAL-0007 and `QUST` forced-reference alias
 semantics are deferred beyond M1. EVAL-0052 therefore excludes those quest
 shapes, and the accepted plan no longer requires them from Slice 4.
 
-## M1 completion blockers
+## M1 completion blockers (historical; cleared for accepted scope)
+
+The conditions below governed M1 closeout. The accepted M1 implementation and
+post-M1 cleanup records show that none remained open within the delivered
+scope. They remain useful change-control criteria if future work reopens the
+same boundaries.
 
 - any required case lacks an accepted specification or passing retained run;
 - effective-state or record truth depends circularly on the implementation
@@ -157,8 +163,9 @@ The independent semantic verdict is explicitly deferred through M1 and M2
 under ADR-0035. This is not a silent waiver and does not block product
 conformance work in Slices 5-9, but it does block any claim that public
 conformance establishes independent semantic reliability, private reliability,
-or M3 readiness. Slice 6 closeout remains subject to owner acceptance and
-contract freeze; this register does not grant that acceptance.
+or M3 readiness. The formerly active provider-analysis closeout and all of M1
+were subsequently accepted; that completion still does not create an
+independent verdict or grant M3 readiness.
 
 ## Register maintenance
 

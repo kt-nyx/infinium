@@ -1,10 +1,14 @@
 # Product workflows
 
 Status: Accepted  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-25
 
 Accepted amendments:
 
+- 2026-08-25 — The bounded M1 backend now implements taxonomy-backed
+  candidate analysis, scope-reversion findings, evidence/provenance,
+  persistence/replay, provider accounting, and a versioned report projection.
+  The graphical workflow and broader analyzer catalog remain later work.
 - 2026-07-28 — The owner rejected the proposed Codex/ChatGPT-plan adapter.
   Initial LLM operations use schema-constrained direct Responses API calls
   through a user-supplied, usage-priced OpenAI Platform API key. ChatGPT

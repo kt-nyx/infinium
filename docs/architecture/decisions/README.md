@@ -52,8 +52,10 @@ accepted records are superseded rather than rewritten to hide prior decisions.
 ADR-0015 through ADR-0023 are accepted and jointly select the Wave E
 persistence, lifecycle, application-stack, process, IPC, credential, security,
 continuity, and budget architecture. ADR-0024 is rejected. Gate E is met at
-the M0 architecture/design layer; implementation and evaluation conformance
-remain pending. ADR-0025 is accepted as the exact M1 live-model profile.
+the M0 architecture/design layer; the bounded portions selected for M1 are now
+implemented and accepted under the product-conformance profile. Frontend
+consumers, broader operational modes, and production-wide qualification remain
+later work. ADR-0025 is accepted as the exact M1 live-model profile.
 ADR-0026 accepts the cross-repository evaluator-private storage and delegated
 agent-access boundary without claiming hostile-process sandboxing or completed
 private evaluation.

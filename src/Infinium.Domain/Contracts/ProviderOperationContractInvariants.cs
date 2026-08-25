@@ -18,7 +18,7 @@ public static class ProviderOperationContractInvariants
         }
         if (checked(canonicalRequestBytes + 8_192) > MaximumLocallyAdmittedInputTokens)
         {
-            throw new InvalidOperationException("Canonical UTF-8 bytes plus the accepted semantic structural allowance exceed the Slice 6 ceiling.");
+            throw new InvalidOperationException("Canonical UTF-8 bytes plus the accepted semantic structural allowance exceed the provider input ceiling.");
         }
     }
 
@@ -29,7 +29,7 @@ public static class ProviderOperationContractInvariants
             || proof.PolicyVersion != UnresolvedInputBoundPolicyVersion
             || proof.Status != ProviderInputBoundProofState.AuthorityRequired)
         {
-            throw new InvalidOperationException("The unresolved WP1 input-bound proof must remain explicitly authority-required with no fabricated byte or token bound.");
+            throw new InvalidOperationException("The unresolved provider input-bound proof must remain explicitly authority-required with no fabricated byte or token bound.");
         }
     }
 
@@ -103,7 +103,7 @@ public static class ProviderOperationContractInvariants
             || value.PromptCacheMode != "explicit" || value.HasPromptCacheKey
             || value.HasPromptCacheBreakpoint)
         {
-            throw new InvalidOperationException("Provider-active configuration must use the exact stateless, cache-off M1 profile.");
+            throw new InvalidOperationException("Provider-active configuration must use the exact bounded stateless, cache-off profile.");
         }
         string[] expected = ["hosted-search", "nexus", "loot"];
         if (!expected.SequenceEqual(value.NotUsedBoundaries, StringComparer.Ordinal))
@@ -126,7 +126,7 @@ public static class ProviderOperationContractInvariants
             || value.RecoveryDisposition is not ("not-required" or "required" or "unavailable")
             || value.CleanupDisposition is not ("not-requested" or "pending" or "confirmed" or "failed"))
         {
-            throw new InvalidOperationException("Provider access-profile metadata is not a closed non-secret M1 state.");
+            throw new InvalidOperationException("Provider access-profile metadata is not a closed non-secret state.");
         }
         bool idsAbsent = value.AccountIdentityId is null && value.BillingScopeIdentityId is null
             && value.CapabilitySnapshotId is null;
@@ -661,7 +661,7 @@ public static class ProviderOperationContractInvariants
             || value.PromptCacheMode != "explicit" || value.HasPromptCacheKey || value.HasPromptCacheBreakpoint
             || value.MaximumContextTokens <= 0 || string.IsNullOrWhiteSpace(value.Revision))
         {
-            throw new InvalidOperationException("Capability snapshot is not the closed provider-active M1 profile.");
+            throw new InvalidOperationException("Capability snapshot is not the closed provider-active profile.");
         }
     }
 
@@ -673,7 +673,7 @@ public static class ProviderOperationContractInvariants
             || value.Currency != "USD" || string.IsNullOrWhiteSpace(value.Revision)
             || value.Rules.Count is 0 or > 8 || !Unique(value.Rules.Select(x => x.RuleId)))
         {
-            throw new InvalidOperationException("Price snapshot is not a closed finite M1 snapshot.");
+            throw new InvalidOperationException("Price snapshot is not a closed finite provider-price snapshot.");
         }
         foreach (ProviderPriceRuleContract rule in value.Rules)
         {
@@ -954,7 +954,7 @@ public static class ProviderOperationContractInvariants
             || rule.DenominatorTokens is <= 0 or > 1_000_000_000
             || string.IsNullOrWhiteSpace(rule.Revision))
         {
-            throw new InvalidOperationException("Price rules must use the closed M1 provider price dimensions.");
+            throw new InvalidOperationException("Price rules must use the closed provider-price dimensions.");
         }
     }
 

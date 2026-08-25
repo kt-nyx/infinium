@@ -512,7 +512,7 @@ public partial class AuthoritativeStore
             command.Parameters.AddWithValue("$sha", contentSha256);
             using SqliteDataReader reader = command.ExecuteReader();
             if (!reader.Read())
-            { throw new InvalidDataException("No admitted source application matches the exact WP11 evidence bytes."); }
+            { throw new InvalidDataException("No admitted source application matches the exact retained evidence bytes."); }
             SourceClaimResolvedApplicationReadModel result = new(reader.GetString(0), reader.GetString(1),
                 reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetString(5),
                 reader.GetString(6), reader.GetString(7), reader.GetString(8));
@@ -522,7 +522,7 @@ public partial class AuthoritativeStore
             string bundlePayloadId = reader.GetString(12);
             string bundleSha256 = reader.GetString(13);
             if (reader.Read())
-            { throw new InvalidDataException("The exact WP11 source application binding is ambiguous."); }
+            { throw new InvalidDataException("The exact source-application binding is ambiguous."); }
             reader.Close();
             ValidateRetainedPayload(artifactPayloadId, artifactByteLength, result.ContentSha256,
                 "Resolved source application artifact");
@@ -1371,7 +1371,7 @@ public partial class AuthoritativeStore
                 || Text(sourceRoot, "passage_id") != binding.PassageId
                 || Text(sourceRoot, "persisted_payload_sha256") != binding.ContentSha256)
             {
-                throw new InvalidDataException("Candidate-investigation v2 source root differs from its exact persisted WP10 chain.");
+                throw new InvalidDataException("Candidate-investigation v2 source root differs from its exact persisted source-acquisition chain.");
             }
         }
         else if (binding.RootKind != "frozen-host-evidence"
@@ -1683,7 +1683,7 @@ public partial class AuthoritativeStore
                 || reader.GetString(0) != reader.GetString(4)
                 || reader.GetString(3) != context.DependencyClosureId)
             {
-                throw new InvalidDataException("Candidate investigation does not bind one exact durable Slice 5 candidate and hypothesis.");
+                throw new InvalidDataException("Candidate investigation does not bind one exact durable candidate and hypothesis.");
             }
             payloadId = reader.GetString(0);
             decisionId = reader.GetString(2);
@@ -1693,7 +1693,7 @@ public partial class AuthoritativeStore
             }
         }
         byte[] bytes = ReadRetainedPayloadBytes(payloadId)
-            ?? throw new InvalidDataException("Candidate investigation durable Slice 5 payload is unavailable.");
+            ?? throw new InvalidDataException("Candidate investigation durable candidate payload is unavailable.");
         using JsonDocument payload = JsonDocument.Parse(bytes, new JsonDocumentOptions
         {
             AllowTrailingCommas = false,
@@ -1729,7 +1729,7 @@ public partial class AuthoritativeStore
             || !Strings(hypothesis, "contradicting_evidence_ids").ToHashSet(StringComparer.Ordinal).SetEquals(contradicting)
             || !dependencyIds.ToHashSet(StringComparer.Ordinal).SetEquals(retainedClosure))
         {
-            throw new InvalidDataException("Candidate investigation context drifts from durable Slice 5 candidate semantics.");
+            throw new InvalidDataException("Candidate investigation context drifts from durable candidate semantics.");
         }
     }
 
@@ -1872,7 +1872,7 @@ public partial class AuthoritativeStore
             source.Parameters.AddWithValue("$sha", binding.ContentSha256);
             using SqliteDataReader sourceReader = source.ExecuteReader();
             if (!sourceReader.Read())
-            { throw new InvalidDataException("Candidate evidence does not bind one exact admitted WP10 source-acquisition chain."); }
+            { throw new InvalidDataException("Candidate evidence does not bind one exact admitted source-acquisition chain."); }
             if (sourceReader.IsDBNull(0) || sourceReader.IsDBNull(1) || sourceReader.IsDBNull(2)
                 || sourceReader.IsDBNull(4) || sourceReader.IsDBNull(5))
             {
@@ -1890,10 +1890,10 @@ public partial class AuthoritativeStore
             sourceReader.Close();
             if (sourceSha256 != binding.ContentSha256)
             {
-                throw new InvalidDataException("Candidate evidence digest differs from its admitted WP10 artifact.");
+                throw new InvalidDataException("Candidate evidence digest differs from its admitted source-acquisition artifact.");
             }
             ValidateRetainedPayload(sourcePayloadId, sourceByteLength, sourceSha256,
-                "Candidate pre-publication admitted WP10 artifact");
+                "Candidate pre-publication admitted source-acquisition artifact");
             ValidateSourceClaimApplicationFactPayloads(binding.SourceApplicationDecisionId,
                 factCount, bundlePayloadId, bundleSha256, transaction);
         }
@@ -1951,7 +1951,7 @@ public partial class AuthoritativeStore
         using SqliteDataReader evidenceReader = evidence.ExecuteReader();
         if (!evidenceReader.Read())
         {
-            throw new InvalidDataException("Candidate evidence does not bind its exact Slice 5 application and retained evidence payload.");
+            throw new InvalidDataException("Candidate evidence does not bind its exact source application and retained evidence payload.");
         }
         string evidenceState = evidenceReader.GetString(0);
         string deletionReplayEffect = evidenceReader.GetString(2);

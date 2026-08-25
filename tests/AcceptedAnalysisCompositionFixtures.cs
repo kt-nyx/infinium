@@ -96,7 +96,7 @@ public static class AcceptedAnalysisCompositionFixtures
         ArgumentNullException.ThrowIfNull(identityReceipts);
         if (exactRetainedPayloads.Count != 4)
         {
-            throw new InvalidDataException("Controlled Slice 9 composition requires exactly four retained Slice 8 results.");
+            throw new InvalidDataException("Controlled semantic composition requires exactly four retained analysis results.");
         }
         ScopeReversionV2AnalysisContract[] results = exactRetainedPayloads
             .Select(bytes => ScopeReversionV2JsonCodec.Deserialize(bytes)).ToArray();
@@ -114,7 +114,7 @@ public static class AcceptedAnalysisCompositionFixtures
             || results.SelectMany(result => result.ControlledInputs)
                 .Select(item => (item.RelativePath, item.ByteLength, item.Sha256.Value)).Distinct().Count() != 26)
         {
-            throw new InvalidDataException("The retained controlled Slice 8 result family drifted from the activated identity, partition, or counts.");
+            throw new InvalidDataException("The retained controlled analysis-result family drifted from the activated identity, partition, or counts.");
         }
 
         List<AnalysisComposedArtifact> artifacts = [];

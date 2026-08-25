@@ -16,7 +16,7 @@ public sealed class CredentialSecurityTests
     [TestMethod]
     public async Task SecretCanaryNeverCrossesHelperPrivateProtocolReceiptOrDiagnostics()
     {
-        byte[] canary = Encoding.UTF8.GetBytes("WP3-SECRET-CANARY-DO-NOT-RETAIN");
+        byte[] canary = Encoding.UTF8.GetBytes("CREDENTIAL-SECRET-CANARY-DO-NOT-RETAIN");
         using DeterministicFakeSecureStore store = new();
         store.WriteExact(new("profile-1", "generation-1"), canary);
         OneShotHelperEngine engine = new(store, new FrozenTimeProvider(
@@ -70,7 +70,7 @@ public sealed class CredentialSecurityTests
             "src", "Infinium.CredentialHelper", "bin", "Release", "net10.0", "Infinium.CredentialHelper.exe");
         string expected = Convert.ToHexStringLower(
             System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(helper)));
-        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-Substitute-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Credential-Substitute-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         string substitute = Path.Combine(root, "Infinium.CredentialHelper.exe");
         File.Copy(helper, substitute);

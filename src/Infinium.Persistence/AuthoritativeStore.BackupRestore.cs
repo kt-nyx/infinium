@@ -511,7 +511,7 @@ public sealed partial class AuthoritativeStore
                     System.Globalization.CultureInfo.InvariantCulture) != 1)
             {
                 throw new InvalidOperationException(
-                    "The Slice 6 successor attempt-identity storage migration is invalid.");
+                    "The provider attempt-identity storage migration is invalid.");
             }
         }
 
@@ -526,7 +526,7 @@ public sealed partial class AuthoritativeStore
                     System.Globalization.CultureInfo.InvariantCulture) != 1)
             {
                 throw new InvalidOperationException(
-                    "The Slice 7 scope-reversion persistence migration is invalid.");
+                    "The scope-reversion persistence migration is invalid.");
             }
         }
 
@@ -541,7 +541,7 @@ public sealed partial class AuthoritativeStore
                     System.Globalization.CultureInfo.InvariantCulture) != 1)
             {
                 throw new InvalidOperationException(
-                    "The Slice 6 successor-v6 persistence migration is invalid.");
+                    "The extended provider-operation persistence migration is invalid.");
             }
         }
 
@@ -625,7 +625,7 @@ public sealed partial class AuthoritativeStore
                     System.Globalization.CultureInfo.InvariantCulture) != 1)
             {
                 throw new InvalidOperationException(
-                    "The Slice 5 finding/case completion migration identity is invalid.");
+                    "The finding/case completion migration identity is invalid.");
             }
         }
 

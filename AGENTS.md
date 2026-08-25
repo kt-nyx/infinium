@@ -7,11 +7,11 @@ repository at sibling path `../infinium-legacy-archive/`; the tracked portion
 also remains recoverable from Git history through commit `7dd3da6`. Do not
 inspect, restore, or use that archive unless the user explicitly requests it.
 
-Superseded evaluator-development staging directories are consolidated at
-`../infinium-evaluator-development-archive/`. That archive is also out of
-scope unless the user explicitly authorizes archaeological evaluator review.
-Its presence does not grant private-fixture access or current evaluator
-authority.
+Superseded evaluator-development staging and the completed M0/M1 development
+history are consolidated at `../infinium-development-history-archive/` commit
+`6f8976db6c560456201a9166caf4f36506be5477`. That archive is also out of scope
+unless the user explicitly authorizes archaeological review. Its presence does
+not grant private-fixture access or current evaluator authority.
 
 Retired public protocol `/4` code and its final regression closure are in the
 separate sibling Git repository `../infinium-evaluator-archive/`. That archive

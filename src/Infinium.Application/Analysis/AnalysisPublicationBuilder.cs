@@ -312,7 +312,7 @@ public static partial class AnalysisPublicationBuilder
         {
             byte[] compositionBytes = JsonSerializer.SerializeToUtf8Bytes(
                 assignment.AnalysisComposition, ContractJsonSerializer.Options);
-            // Retained serialized identity from the accepted M1 run-output v1 contract.
+            // Retained serialized identity from the accepted run-output v1 contract.
             artifacts.Add(new AnalysisPublishedArtifact(
                 assignment.AnalysisComposition.EnvelopeId, "m1-slice9-composition",
                 "infinium.internal.m1-slice9-composition/v1", "1", 1, "present",

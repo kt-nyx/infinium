@@ -296,7 +296,7 @@ public sealed partial class AuthoritativeStore
         string sourceFingerprint = ComputeSchemaFingerprint(connection);
         if (sourceFingerprint != ScopeReversionV2PersistenceDeclarations.SourceSchemaFingerprint)
         {
-            throw new InvalidOperationException("The Slice 8 persistence migration source is not the exact accepted schema-10 state.");
+            throw new InvalidOperationException("The cohort scope-reversion persistence migration source is not the exact accepted schema-10 state.");
         }
         using SqliteTransaction transaction = BeginTransaction();
         Execute(
@@ -355,7 +355,7 @@ public sealed partial class AuthoritativeStore
         string schemaFingerprint = ComputeSchemaFingerprint(connection, transaction);
         if (schemaFingerprint != ScopeReversionV2PersistenceDeclarations.SchemaFingerprint)
         {
-            throw new InvalidOperationException($"The Slice 8 persistence migration produced unexpected schema fingerprint '{schemaFingerprint}'.");
+            throw new InvalidOperationException($"The cohort scope-reversion persistence migration produced unexpected schema fingerprint '{schemaFingerprint}'.");
         }
         Execute(
             """
@@ -379,7 +379,7 @@ public sealed partial class AuthoritativeStore
         if (Convert.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 6
             || actual != ScopeReversionV2PersistenceDeclarations.SchemaFingerprint)
         {
-            throw new InvalidOperationException($"Schema 11 lacks the exact Slice 8 scope-reversion v2 migration: {actual}");
+            throw new InvalidOperationException($"Schema 11 lacks the exact cohort scope-reversion migration: {actual}");
         }
     }
 

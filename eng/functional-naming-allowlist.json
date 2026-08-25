@@ -1,8 +1,8 @@
 {
   "schema_identity": "infinium.repository.functional-naming-allowlist/1.0.0",
   "status": "accepted",
-  "generated_from_commit": "6a9c57815716c0fac35381b71e5766b1d7d2f0d0",
-  "generated_at_utc": "2026-08-25T15:48:19.2311389-04:00",
+  "generated_from_commit": "865d687842cae469ab28ea1dfc5cf8a7125905d0",
+  "generated_at_utc": "2026-08-25T21:33:59.5306071+00:00",
   "policy": "docs/governance/functional-implementation-naming.md",
   "entries": [
     {
@@ -126,6 +126,26 @@
       "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
     },
     {
+      "path": "contracts/protobuf/infinium/domain/v1/analysis.proto",
+      "scope": "content",
+      "token": "CONTINUATION",
+      "symbol_or_context": "line 104",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "contracts/protobuf/infinium/helper/v2/helper.proto",
+      "scope": "content",
+      "token": "Slice 6",
+      "symbol_or_context": "line 61",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token remains only in the byte-frozen accepted helper-v2 protobuf source; changing its comment would change the transitive protocol fingerprint.",
+      "retained_consumer": "Helper-v2 protocol fingerprint, coordinator/helper handshake, and compatibility tests.",
+      "review_condition": "Remove only through an accepted clean-break helper protocol version that updates every producer, consumer, and fingerprint."
+    },
+    {
       "path": "contracts/repository/repository-evaluation-authority.v1.schema.json",
       "scope": "content",
       "token": "m1",
@@ -156,6 +176,86 @@
       "review_condition": "Review when the repository evaluation-authority schema is versioned or retired."
     },
     {
+      "path": "eng/verify-analysis-pipeline.ps1",
+      "scope": "content",
+      "token": "continuation",
+      "symbol_or_context": "line 480",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "eng/verify-functional-naming.ps1",
+      "scope": "content",
+      "token": "Approach",
+      "symbol_or_context": "line 39",
+      "classification": "repository-governance-definition",
+      "reason": "The checker must spell representative forbidden tokens in its detection pattern and self-test; these are examples, not implementation names.",
+      "retained_consumer": "Functional naming policy enforcement and checker self-test.",
+      "review_condition": "Review when the forbidden-token vocabulary or self-test changes."
+    },
+    {
+      "path": "eng/verify-functional-naming.ps1",
+      "scope": "content",
+      "token": "Campaign",
+      "symbol_or_context": "line 39, line 66, line 69, line 70",
+      "classification": "repository-governance-definition",
+      "reason": "The checker must spell representative forbidden tokens in its detection pattern and self-test; these are examples, not implementation names.",
+      "retained_consumer": "Functional naming policy enforcement and checker self-test.",
+      "review_condition": "Review when the forbidden-token vocabulary or self-test changes."
+    },
+    {
+      "path": "eng/verify-functional-naming.ps1",
+      "scope": "content",
+      "token": "Continuation",
+      "symbol_or_context": "line 39",
+      "classification": "repository-governance-definition",
+      "reason": "The checker must spell representative forbidden tokens in its detection pattern and self-test; these are examples, not implementation names.",
+      "retained_consumer": "Functional naming policy enforcement and checker self-test.",
+      "review_condition": "Review when the forbidden-token vocabulary or self-test changes."
+    },
+    {
+      "path": "eng/verify-functional-naming.ps1",
+      "scope": "content",
+      "token": "M1",
+      "symbol_or_context": "line 66",
+      "classification": "repository-governance-definition",
+      "reason": "The checker must spell representative forbidden tokens in its detection pattern and self-test; these are examples, not implementation names.",
+      "retained_consumer": "Functional naming policy enforcement and checker self-test.",
+      "review_condition": "Review when the forbidden-token vocabulary or self-test changes."
+    },
+    {
+      "path": "eng/verify-functional-naming.ps1",
+      "scope": "content",
+      "token": "Slice6",
+      "symbol_or_context": "line 66",
+      "classification": "repository-governance-definition",
+      "reason": "The checker must spell representative forbidden tokens in its detection pattern and self-test; these are examples, not implementation names.",
+      "retained_consumer": "Functional naming policy enforcement and checker self-test.",
+      "review_condition": "Review when the forbidden-token vocabulary or self-test changes."
+    },
+    {
+      "path": "eng/verify-functional-naming.ps1",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "line 39",
+      "classification": "repository-governance-definition",
+      "reason": "The checker must spell representative forbidden tokens in its detection pattern and self-test; these are examples, not implementation names.",
+      "retained_consumer": "Functional naming policy enforcement and checker self-test.",
+      "review_condition": "Review when the forbidden-token vocabulary or self-test changes."
+    },
+    {
+      "path": "src/Infinium.Analysis/FindingCases/FindingCasePipeline.cs",
+      "scope": "content",
+      "token": "continuation",
+      "symbol_or_context": "line 224, line 226, line 234, line 236, line 238, line 239, line 240, line 241, line 242, line 244, line 474, line 587",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
       "path": "src/Infinium.Application/Analysis/AnalysisComposition.cs",
       "scope": "content",
       "token": "m1",
@@ -176,10 +276,30 @@
       "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
     },
     {
+      "path": "src/Infinium.Application/Analysis/AnalysisExecutionContracts.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 121, line 51",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Analysis/AnalysisExecutionContracts.cs",
+      "scope": "content",
+      "token": "slice9",
+      "symbol_or_context": "line 121, line 51",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
       "path": "src/Infinium.Application/Analysis/AnalysisPublicationBuilder.cs",
       "scope": "content",
       "token": "m1",
-      "symbol_or_context": "line 318",
+      "symbol_or_context": "line 317, line 318",
       "classification": "serialized-contract-compatibility",
       "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
       "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
@@ -189,11 +309,31 @@
       "path": "src/Infinium.Application/Analysis/AnalysisPublicationBuilder.cs",
       "scope": "content",
       "token": "slice9",
-      "symbol_or_context": "line 318",
+      "symbol_or_context": "line 317, line 318",
       "classification": "serialized-contract-compatibility",
       "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
       "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
       "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Analysis/AnalysisPublicationProjection.cs",
+      "scope": "content",
+      "token": "Continuation",
+      "symbol_or_context": "line 246, line 248, line 256, line 557",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "src/Infinium.Application/Analysis/AnalysisPublicationProjection.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "line 574, line 575, line 580",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
     },
     {
       "path": "src/Infinium.Application/Provider/CandidateInvestigation.cs",
@@ -234,6 +374,196 @@
       "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
       "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
       "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Runtime/HelperExecutionSemanticsV2.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 142",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Runtime/HelperExecutionSemanticsV2.cs",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 142",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Runtime/HelperExecutionSemanticsV2.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 142",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Runtime/HelperPrivateProtocolV2.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 158",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Runtime/HelperPrivateProtocolV2.cs",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 158",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Runtime/HelperPrivateProtocolV2.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 158",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Runtime/HelperProtocolV2Codec.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 309, line 453, line 49, line 635",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Runtime/HelperProtocolV2Codec.cs",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 309, line 453, line 49, line 635",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Runtime/HelperProtocolV2Codec.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 309, line 453, line 49, line 635",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.CredentialHelper/OneShotHelperEngine.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 194",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.CredentialHelper/OneShotHelperEngine.cs",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 194",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.CredentialHelper/OneShotHelperEngine.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 132, line 135, line 136, line 139, line 141, line 194, line 196, line 197",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.CredentialHelper/ProviderCredentialEnrollment.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 56, line 57, line 59, line 60, line 63, line 68, line 73, line 77",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "src/Infinium.Domain/Contracts/AnalysisResultState.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "line 218, line 219, line 220",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "src/Infinium.Domain/Contracts/DomainContracts.cs",
+      "scope": "content",
+      "token": "Continuation",
+      "symbol_or_context": "line 118",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "src/Infinium.Domain/Contracts/DomainContracts.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "line 570",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "src/Infinium.Domain/Contracts/FindingCaseContractInvariants.cs",
+      "scope": "content",
+      "token": "Continuation",
+      "symbol_or_context": "line 197, line 227",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "src/Infinium.Domain/Contracts/FindingCaseContractInvariants.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 249, line 254, line 255, line 260, line 263, line 266, line 269",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "src/Infinium.Domain/Contracts/FindingCaseContracts.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "line 303",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
     },
     {
       "path": "src/Infinium.OpenAI/OpenAiResponsesAdapter.cs",
@@ -246,10 +576,130 @@
       "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
     },
     {
-      "path": "src/Infinium.Persistence/AuthoritativeStore.FindingCases.cs",
+      "path": "src/Infinium.Persistence/AuthoritativeStore.BackupRestore.cs",
+      "scope": "content",
+      "token": "M1",
+      "symbol_or_context": "line 488, line 507, line 522, line 537, line 554, line 575, line 596, line 617, line 638",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.BackupRestore.cs",
+      "scope": "content",
+      "token": "S2",
+      "symbol_or_context": "line 488",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.BackupRestore.cs",
+      "scope": "content",
+      "token": "S3",
+      "symbol_or_context": "line 554",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.BackupRestore.cs",
+      "scope": "content",
+      "token": "S4",
+      "symbol_or_context": "line 575",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.BackupRestore.cs",
+      "scope": "content",
+      "token": "S5",
+      "symbol_or_context": "line 596, line 617",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.BackupRestore.cs",
+      "scope": "content",
+      "token": "S6",
+      "symbol_or_context": "line 507, line 537, line 638",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.BackupRestore.cs",
+      "scope": "content",
+      "token": "S7",
+      "symbol_or_context": "line 522",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.BackupRestore.cs",
+      "scope": "content",
+      "token": "SUCCESSOR",
+      "symbol_or_context": "line 507, line 537",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.BackupRestore.cs",
+      "scope": "content",
+      "token": "WP4",
+      "symbol_or_context": "line 617",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.BackupRestore.cs",
+      "scope": "content",
+      "token": "WP5",
+      "symbol_or_context": "line 522",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Credentials.cs",
       "scope": "content",
       "token": "Successor",
-      "symbol_or_context": "line 875",
+      "symbol_or_context": "line 116, line 123, line 125, line 141, line 300, line 301, line 307, line 308, line 309, line 312, line 319, line 325, line 326, line 447, line 451, line 462, line 463, line 464, line 465, line 483, line 7, line 74, line 79",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.FindingCases.cs",
+      "scope": "content",
+      "token": "continuation",
+      "symbol_or_context": "line 888",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.FindingCases.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 547, line 562, line 659, line 660, line 661, line 665, line 666, line 672, line 673, line 678, line 679, line 697, line 875, line 877, line 878, line 883, line 892, line 893, line 894",
       "classification": "functional-domain-term",
       "reason": "Continuation and successor describe persisted finding/case lineage relationships, not development chronology.",
       "retained_consumer": "Finding/case reconciliation schema, persistence, and integration behavior.",
@@ -258,8 +708,28 @@
     {
       "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
       "scope": "content",
-      "token": "m1",
-      "symbol_or_context": "line 692",
+      "token": "campaign",
+      "symbol_or_context": "line 1118, line 1132, line 1831, line 1906, line 200, line 788, line 967, line 981, line 990, line 995",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "continuation",
+      "symbol_or_context": "line 3708, line 3718",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "M1",
+      "symbol_or_context": "line 1012, line 1013, line 1024, line 1029, line 1034, line 1045, line 1115, line 1116, line 1123, line 1167, line 1173, line 1175, line 119, line 1205, line 1226, line 1240, line 1264, line 1294, line 1314, line 1334, line 1345, line 1388, line 1416, line 1417, line 1440, line 1441, line 145, line 1507, line 1509, line 1535, line 1562, line 1582, line 1620, line 1644, line 1676, line 1694, line 177, line 1771, line 1788, line 179, line 1815, line 182, line 1831, line 185, line 188, line 1906, line 191, line 194, line 1969, line 197, line 1976, line 200, line 2020, line 203, line 2065, line 207, line 2378, line 2379, line 2380, line 2381, line 2382, line 2447, line 2448, line 2449, line 2450, line 2451, line 2452, line 2453, line 2454, line 2455, line 2456, line 2457, line 2458, line 2459, line 2460, line 2461, line 2462, line 44, line 633, line 634, line 686, line 687, line 69, line 692, line 702, line 703, line 705, line 723, line 724, line 725, line 726, line 745, line 750, line 751, line 755, line 756, line 757, line 760, line 761, line 762, line 785, line 787, line 814, line 816, line 826, line 833, line 834, line 843, line 844, line 850, line 851, line 855, line 865, line 866, line 869, line 873, line 876, line 879, line 882, line 885, line 889, line 894, line 93, line 933, line 935, line 942, line 943, line 946, line 965, line 985, line 987, line 989, line 993, line 998, line 999",
       "classification": "migration-compatibility",
       "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
       "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
@@ -268,8 +738,68 @@
     {
       "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
       "scope": "content",
+      "token": "S2",
+      "symbol_or_context": "line 44",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "S3",
+      "symbol_or_context": "line 69",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "S4",
+      "symbol_or_context": "line 2065, line 93",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "S5",
+      "symbol_or_context": "line 119, line 145, line 1976, line 2020",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "S6",
+      "symbol_or_context": "line 1024, line 1045, line 1173, line 1175, line 1334, line 1345, line 1388, line 1416, line 1417, line 1440, line 1441, line 1507, line 1509, line 1535, line 1562, line 1582, line 1620, line 1644, line 1676, line 1694, line 177, line 1771, line 1788, line 179, line 1815, line 182, line 1831, line 185, line 188, line 1906, line 191, line 194, line 1969, line 197, line 200, line 203, line 207",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "Slice 5",
+      "symbol_or_context": "line 1969",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
       "token": "slice6",
-      "symbol_or_context": "line 692",
+      "symbol_or_context": "line 1012, line 1013, line 1021, line 1034, line 1116, line 1167, line 1173, line 1205, line 1226, line 1240, line 1264, line 1294, line 1314, line 2378, line 2379, line 2380, line 2381, line 2382, line 2447, line 2448, line 2449, line 2450, line 2451, line 2452, line 2453, line 2454, line 2455, line 2456, line 2457, line 2458, line 2459, line 2460, line 2461, line 2462, line 627, line 633, line 634, line 657, line 674, line 686, line 687, line 692, line 702, line 703, line 705, line 723, line 724, line 725, line 726, line 745, line 750, line 751, line 755, line 756, line 757, line 760, line 761, line 762, line 774, line 785, line 814, line 816, line 826, line 833, line 834, line 843, line 844, line 850, line 851, line 855, line 865, line 866, line 869, line 873, line 876, line 879, line 882, line 885, line 889, line 894, line 933, line 935, line 942, line 943, line 946, line 965, line 985, line 987, line 989, line 993, line 998, line 999",
       "classification": "migration-compatibility",
       "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
       "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
@@ -279,17 +809,157 @@
       "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
       "scope": "content",
       "token": "successor",
-      "symbol_or_context": "line 692",
+      "symbol_or_context": "line 1012, line 1013, line 1021, line 1024, line 1029, line 1034, line 1045, line 1071, line 1087, line 1115, line 1116, line 1123, line 1167, line 1173, line 1175, line 1205, line 1226, line 1240, line 1264, line 1294, line 1314, line 2313, line 2315, line 2378, line 2379, line 2380, line 2381, line 2382, line 2447, line 2448, line 2449, line 2450, line 2451, line 2452, line 2453, line 2454, line 2455, line 2456, line 2457, line 2458, line 2459, line 2460, line 2461, line 2462, line 2799, line 2984, line 3395, line 3702, line 3721, line 3786, line 3787, line 3788, line 5667, line 5831, line 5832, line 5841, line 5943, line 5944, line 5947, line 5948, line 5953, line 5955, line 5956, line 5962, line 5964, line 5965, line 5970, line 5973, line 5980, line 6045, line 6071, line 6072, line 6079, line 6093, line 6094, line 6098, line 627, line 633, line 634, line 657, line 661, line 674, line 679, line 686, line 687, line 692, line 698, line 702, line 703, line 705, line 706, line 718, line 723, line 724, line 725, line 726, line 745, line 750, line 751, line 755, line 756, line 757, line 760, line 761, line 762, line 774, line 785, line 787, line 814, line 816, line 826, line 833, line 834, line 843, line 844, line 848, line 850, line 851, line 855, line 863, line 865, line 866, line 869, line 872, line 873, line 875, line 876, line 878, line 879, line 881, line 882, line 884, line 885, line 887, line 889, line 891, line 894, line 933, line 935, line 942, line 943, line 946, line 963, line 965, line 985, line 987, line 989, line 993, line 998, line 999",
       "classification": "migration-compatibility",
       "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
       "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
       "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
     },
     {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "wp2",
+      "symbol_or_context": "line 1388, line 1440, line 1472, line 1477, line 1478, line 177",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "wp3",
+      "symbol_or_context": "line 1416, line 1417, line 1441, line 1507, line 1509, line 179, line 182",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "WP4",
+      "symbol_or_context": "line 145, line 1976",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "wp5",
+      "symbol_or_context": "line 1535, line 1562, line 1582, line 1605, line 1607, line 1620, line 185, line 188",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "wp6",
+      "symbol_or_context": "line 1644, line 1676, line 1694, line 1771, line 191, line 194",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "wp7",
+      "symbol_or_context": "line 1788, line 1815, line 197",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "wp9",
+      "symbol_or_context": "line 1831, line 1881, line 1882, line 1889, line 1906, line 200",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ProviderBudget.cs",
+      "scope": "content",
+      "token": "campaign",
+      "symbol_or_context": "line 1507, line 1508",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ProviderBudget.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 1500, line 1501, line 1507, line 1508, line 1509, line 1510, line 1511, line 1512, line 1513, line 1514, line 1515, line 1516, line 969",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ProviderBudget.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 1500, line 1501, line 1508, line 1510, line 1512, line 1514, line 1516, line 969",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ProviderOperationAccounting.cs",
+      "scope": "content",
+      "token": "campaign",
+      "symbol_or_context": "line 100, line 84, line 90",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ProviderOperationAccounting.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 127, line 137, line 153, line 158, line 174, line 179, line 187, line 196, line 204, line 229, line 230, line 239, line 281, line 293, line 332, line 362, line 363, line 365, line 60, line 74, line 75, line 83, line 94",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ProviderOperationAccounting.cs",
+      "scope": "content",
+      "token": "slice6",
+      "symbol_or_context": "line 127, line 137, line 153, line 158, line 174, line 179, line 187, line 196, line 204, line 229, line 230, line 239, line 281, line 293, line 332, line 362, line 363, line 365, line 74, line 75, line 83, line 94",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ProviderOperationAccounting.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 127, line 137, line 153, line 158, line 174, line 179, line 187, line 196, line 204, line 229, line 230, line 239, line 241, line 252, line 281, line 293, line 332, line 362, line 363, line 365, line 60, line 74, line 75, line 83, line 94",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
       "path": "src/Infinium.Persistence/AuthoritativeStore.ScopeReversion.cs",
       "scope": "content",
       "token": "M1",
-      "symbol_or_context": "line 12",
+      "symbol_or_context": "line 12, line 367",
       "classification": "migration-compatibility",
       "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
       "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
@@ -299,7 +969,7 @@
       "path": "src/Infinium.Persistence/AuthoritativeStore.ScopeReversion.cs",
       "scope": "content",
       "token": "S7",
-      "symbol_or_context": "line 12",
+      "symbol_or_context": "line 12, line 367",
       "classification": "migration-compatibility",
       "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
       "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
@@ -308,8 +978,18 @@
     {
       "path": "src/Infinium.Persistence/AuthoritativeStore.ScopeReversion.cs",
       "scope": "content",
+      "token": "Slice 7",
+      "symbol_or_context": "line 303, line 359, line 385",
+      "classification": "migration-compatibility",
+      "reason": "The token remains in the byte-frozen scope-reversion v1 storage implementation and exact migration identity.",
+      "retained_consumer": "Scope-reversion v1 SQLite migration, backup/restore, and frozen storage compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support and source-byte freeze are intentionally retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ScopeReversion.cs",
+      "scope": "content",
       "token": "WP5",
-      "symbol_or_context": "line 12",
+      "symbol_or_context": "line 12, line 367",
       "classification": "migration-compatibility",
       "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
       "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
@@ -319,7 +999,7 @@
       "path": "src/Infinium.Persistence/AuthoritativeStore.ScopeReversionV2.cs",
       "scope": "content",
       "token": "M1",
-      "symbol_or_context": "line 12",
+      "symbol_or_context": "line 12, line 366",
       "classification": "migration-compatibility",
       "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
       "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
@@ -329,7 +1009,7 @@
       "path": "src/Infinium.Persistence/AuthoritativeStore.ScopeReversionV2.cs",
       "scope": "content",
       "token": "S8",
-      "symbol_or_context": "line 12",
+      "symbol_or_context": "line 12, line 366",
       "classification": "migration-compatibility",
       "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
       "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
@@ -339,17 +1019,57 @@
       "path": "src/Infinium.Persistence/AuthoritativeStore.ScopeReversionV2.cs",
       "scope": "content",
       "token": "WP4",
-      "symbol_or_context": "line 12",
+      "symbol_or_context": "line 12, line 366",
       "classification": "migration-compatibility",
       "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
       "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
       "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
     },
     {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.SourceClaims.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 1269, line 1506, line 594, line 595, line 962, line 982, line 983, line 990",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.SourceClaims.cs",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 1269, line 1506",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.SourceClaims.cs",
+      "scope": "content",
+      "token": "slice6",
+      "symbol_or_context": "line 594, line 595, line 962, line 982, line 983, line 990",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.SourceClaims.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 594, line 595, line 962, line 982, line 983, line 990",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
       "path": "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
       "scope": "content",
       "token": "M1",
-      "symbol_or_context": "line 10, line 12, line 14, line 16, line 18, line 20, line 22, line 24, line 28, line 30, line 33, line 34, line 7, line 8",
+      "symbol_or_context": "line 10, line 12, line 14, line 16, line 18, line 20, line 22, line 24, line 28, line 30, line 33, line 34, line 7, line 8, line 85, line 86, line 87, line 88, line 89",
       "classification": "migration-compatibility",
       "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
       "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
@@ -368,8 +1088,18 @@
     {
       "path": "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
       "scope": "content",
+      "token": "slice6",
+      "symbol_or_context": "line 85, line 86, line 87, line 88, line 89",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
+      "scope": "content",
       "token": "SUCCESSOR",
-      "symbol_or_context": "line 28, line 30, line 33",
+      "symbol_or_context": "line 28, line 30, line 33, line 85, line 86, line 87, line 88, line 89",
       "classification": "migration-compatibility",
       "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
       "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
@@ -436,14 +1166,74 @@
       "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
     },
     {
+      "path": "src/Infinium.Persistence/RetainedSourceDecisionReplay.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 253, line 254, line 259",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Persistence/RetainedSourceDecisionReplay.cs",
+      "scope": "content",
+      "token": "slice6",
+      "symbol_or_context": "line 253, line 254, line 259",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Persistence/RetainedSourceDecisionReplay.cs",
+      "scope": "content",
+      "token": "Slice7",
+      "symbol_or_context": "line 204, line 63, line 64, line 71, line 75",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Persistence/RetainedSourceDecisionReplay.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 198, line 253, line 254, line 259, line 269, line 289, line 293, line 297",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
       "path": "tests/AcceptedAnalysisCompositionFixtures.cs",
       "scope": "content",
       "token": "m1",
-      "symbol_or_context": "line 14",
+      "symbol_or_context": "line 14, line 203, line 206, line 209, line 210, line 214, line 215, line 216, line 219, line 221, line 223, line 225, line 230, line 33, line 36, line 56, line 59, line 72, line 74, line 76, line 78",
       "classification": "retained-evidence-compatibility",
       "reason": "The exact controlled handoff ID identifies immutable retained acceptance evidence; current test and type names are functional.",
       "retained_consumer": "Controlled retained-result replay and byte-identity checks.",
       "review_condition": "Remove when the retained controlled evidence compatibility test is retired or replaced by a current self-contained fixture."
+    },
+    {
+      "path": "tests/AcceptedAnalysisCompositionFixtures.cs",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 203, line 206, line 210, line 215, line 219, line 221, line 223, line 225, line 33, line 36, line 56, line 59, line 72, line 74, line 76, line 78",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
+    },
+    {
+      "path": "tests/AcceptedAnalysisCompositionFixtures.cs",
+      "scope": "content",
+      "token": "s9",
+      "symbol_or_context": "line 209, line 214, line 216, line 230",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
     },
     {
       "path": "tests/AcceptedAnalysisCompositionFixtures.cs",
@@ -456,14 +1246,514 @@
       "review_condition": "Remove when the retained controlled evidence compatibility test is retired or replaced by a current self-contained fixture."
     },
     {
+      "path": "tests/AcceptedAnalysisCompositionFixtures.cs",
+      "scope": "content",
+      "token": "wp10",
+      "symbol_or_context": "line 206, line 210, line 212, line 215, line 217, line 223, line 36, line 56, line 57, line 59, line 60, line 76",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
+    },
+    {
+      "path": "tests/AcceptedAnalysisCompositionFixtures.cs",
+      "scope": "content",
+      "token": "wp11",
+      "symbol_or_context": "line 225, line 78",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
+    },
+    {
+      "path": "tests/AcceptedAnalysisCompositionFixtures.cs",
+      "scope": "content",
+      "token": "wp9",
+      "symbol_or_context": "line 221, line 74",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
+    },
+    {
+      "path": "tests/Infinium.ContractTests/AssertionResultReaderTests.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 241, line 34",
+      "classification": "repository-governance-contract",
+      "reason": "The token names an explicit milestone scope or specification revision in repository-only evaluation governance, not a product/runtime implementation.",
+      "retained_consumer": "Repository evaluation-boundary and assertion-contract validation only.",
+      "review_condition": "Review when the repository governance contract or specification revision is versioned or retired."
+    },
+    {
+      "path": "tests/Infinium.ContractTests/CandidateDeliveredInputContractTests.cs",
+      "scope": "content",
+      "token": "s000",
+      "symbol_or_context": "line 30, line 31, line 32, line 33",
+      "classification": "functional-fixture-identity",
+      "reason": "The short token is a stable synthetic subject identifier inside a contract fixture, not a development-stage label.",
+      "retained_consumer": "Candidate delivered-input contract test data.",
+      "review_condition": "Review if the fixture identity scheme changes."
+    },
+    {
+      "path": "tests/Infinium.ContractTests/EvaluationBoundaryContractTests.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 31",
+      "classification": "repository-governance-contract",
+      "reason": "The token names an explicit milestone scope or specification revision in repository-only evaluation governance, not a product/runtime implementation.",
+      "retained_consumer": "Repository evaluation-boundary and assertion-contract validation only.",
+      "review_condition": "Review when the repository governance contract or specification revision is versioned or retired."
+    },
+    {
+      "path": "tests/Infinium.ContractTests/EvaluationBoundaryContractTests.cs",
+      "scope": "content",
+      "token": "m2",
+      "symbol_or_context": "line 32",
+      "classification": "repository-governance-contract",
+      "reason": "The token names an explicit milestone scope or specification revision in repository-only evaluation governance, not a product/runtime implementation.",
+      "retained_consumer": "Repository evaluation-boundary and assertion-contract validation only.",
+      "review_condition": "Review when the repository governance contract or specification revision is versioned or retired."
+    },
+    {
+      "path": "tests/Infinium.EvaluationTests/ControlledRealScopeReversionEvaluationTests.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 63",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
+    },
+    {
+      "path": "tests/Infinium.EvaluationTests/ControlledRealScopeReversionEvaluationTests.cs",
+      "scope": "content",
+      "token": "slice8",
+      "symbol_or_context": "line 63",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
+    },
+    {
+      "path": "tests/Infinium.EvaluationTests/FindingCaseEvaluationTests.cs",
+      "scope": "content",
+      "token": "continuation",
+      "symbol_or_context": "line 18",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "tests/Infinium.EvaluationTests/FindingCaseLineageEvaluationTests.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "line 128, line 130, line 135, line 136, line 137, line 138, line 140, line 142, line 93, line 94, line 95, line 97",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "tests/Infinium.EvaluationTests/FindingCaseReconciliationEvaluationTests.cs",
+      "scope": "content",
+      "token": "continuation",
+      "symbol_or_context": "line 31",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "tests/Infinium.EvaluationTests/SemanticOracleDeferralBoundaryTests.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 18",
+      "classification": "repository-governance-contract",
+      "reason": "The token names an explicit milestone scope or specification revision in repository-only evaluation governance, not a product/runtime implementation.",
+      "retained_consumer": "Repository evaluation-boundary and assertion-contract validation only.",
+      "review_condition": "Review when the repository governance contract or specification revision is versioned or retired."
+    },
+    {
+      "path": "tests/Infinium.EvaluationTests/SemanticOracleDeferralBoundaryTests.cs",
+      "scope": "content",
+      "token": "m2",
+      "symbol_or_context": "line 19",
+      "classification": "repository-governance-contract",
+      "reason": "The token names an explicit milestone scope or specification revision in repository-only evaluation governance, not a product/runtime implementation.",
+      "retained_consumer": "Repository evaluation-boundary and assertion-contract validation only.",
+      "review_condition": "Review when the repository governance contract or specification revision is versioned or retired."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ControlledAnalysisCompositionIntegrationTests.cs",
+      "scope": "content",
+      "token": "s8",
+      "symbol_or_context": "line 11",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ControlledAnalysisCompositionIntegrationTests.cs",
+      "scope": "content",
+      "token": "s9",
+      "symbol_or_context": "line 49",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ControlledAnalysisCompositionIntegrationTests.cs",
+      "scope": "content",
+      "token": "slice8",
+      "symbol_or_context": "line 60, line 62",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ControlledAnalysisHandoff.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 73, line 75",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ControlledAnalysisHandoff.cs",
+      "scope": "content",
+      "token": "s8",
+      "symbol_or_context": "line 12, line 73, line 75",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ControlledAnalysisHandoff.cs",
+      "scope": "content",
+      "token": "s9",
+      "symbol_or_context": "line 60",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ControlledAnalysisHandoff.cs",
+      "scope": "content",
+      "token": "slice8",
+      "symbol_or_context": "line 27",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The token is part of an immutable controlled handoff, retained receipt, or accepted evidence identity; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result admission, replay, composition, and byte-identity checks.",
+      "review_condition": "Remove when the exact retained evidence compatibility boundary is intentionally retired or replaced."
+    },
+    {
       "path": "tests/Infinium.IntegrationTests/FindingCaseIntegrationTests.cs",
       "scope": "content",
       "token": "Successor",
-      "symbol_or_context": "line 122, line 130",
+      "symbol_or_context": "line 122, line 130, line 131, line 132, line 133, line 134, line 135, line 139, line 140, line 142, line 144, line 146, line 148, line 151",
       "classification": "functional-domain-term",
       "reason": "Continuation and successor describe persisted finding/case lineage relationships, not development chronology.",
       "retained_consumer": "Finding/case reconciliation schema, persistence, and integration behavior.",
       "review_condition": "Review if the finding/case lineage vocabulary or serialized contract changes."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ProviderBudgetIntegrationTests.cs",
+      "scope": "content",
+      "token": "M1",
+      "symbol_or_context": "line 2679, line 2680, line 2681",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ProviderBudgetIntegrationTests.cs",
+      "scope": "content",
+      "token": "S6",
+      "symbol_or_context": "line 2679",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ProviderBudgetIntegrationTests.cs",
+      "scope": "content",
+      "token": "S7",
+      "symbol_or_context": "line 2680",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ProviderBudgetIntegrationTests.cs",
+      "scope": "content",
+      "token": "S8",
+      "symbol_or_context": "line 2681",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ProviderBudgetIntegrationTests.cs",
+      "scope": "content",
+      "token": "WP4",
+      "symbol_or_context": "line 2681",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ProviderBudgetIntegrationTests.cs",
+      "scope": "content",
+      "token": "WP5",
+      "symbol_or_context": "line 2680",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 175, line 184, line 193, line 199, line 204, line 209, line 214, line 461, line 462, line 463, line 464, line 465, line 466, line 487, line 488, line 489, line 490, line 491, line 492, line 50, line 520",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
+      "scope": "content",
+      "token": "S5",
+      "symbol_or_context": "line 175",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
+      "scope": "content",
+      "token": "S6",
+      "symbol_or_context": "line 184, line 193, line 199, line 204, line 487, line 488, line 489, line 490, line 520",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
+      "scope": "content",
+      "token": "S7",
+      "symbol_or_context": "line 209, line 491",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
+      "scope": "content",
+      "token": "S8",
+      "symbol_or_context": "line 214, line 492",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
+      "scope": "content",
+      "token": "slice6",
+      "symbol_or_context": "line 461, line 462, line 463, line 464, line 465, line 466, line 493, line 494, line 495, line 50",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 193, line 199, line 461, line 462, line 463, line 464, line 465, line 466, line 488, line 489, line 493, line 494, line 495, line 50",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
+      "scope": "content",
+      "token": "wp2",
+      "symbol_or_context": "line 497",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
+      "scope": "content",
+      "token": "WP4",
+      "symbol_or_context": "line 175, line 214, line 492",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
+      "scope": "content",
+      "token": "wp5",
+      "symbol_or_context": "line 152, line 209, line 491",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
+      "scope": "content",
+      "token": "wp6",
+      "symbol_or_context": "line 157, line 162",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/AnalysisStatePersistenceTests.cs",
+      "scope": "content",
+      "token": "wp7",
+      "symbol_or_context": "line 167",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/CredentialHelperProtocolTests.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 65",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/CredentialHelperProtocolTests.cs",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 65",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/CredentialHelperProtocolTests.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 64, line 65, line 66, line 67, line 70, line 72",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/FindingCasePipelineTests.cs",
+      "scope": "content",
+      "token": "Continuation",
+      "symbol_or_context": "line 144, line 99",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/OpenAiResponsesAdapterTests.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 106, line 117, line 73",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/OpenAiResponsesAdapterTests.cs",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 106, line 117, line 73",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/OpenAiResponsesAdapterTests.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 105, line 106, line 112, line 113, line 117, line 72, line 73, line 75, line 76, line 77",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token occurs in an exact retained serialized, protocol, replay, or test-evidence identity; the active code-facing name remains functional.",
+      "retained_consumer": "Current contract, codec, replay, protocol, or compatibility test.",
+      "review_condition": "Remove only through an accepted clean-break change that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/PersistenceAndLifecycleTests.cs",
+      "scope": "content",
+      "token": "M1",
+      "symbol_or_context": "line 46, line 48, line 50, line 52, line 72",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/PersistenceAndLifecycleTests.cs",
+      "scope": "content",
+      "token": "S6",
+      "symbol_or_context": "line 46, line 48, line 50, line 52",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/PersistenceAndLifecycleTests.cs",
+      "scope": "content",
+      "token": "SUCCESSOR",
+      "symbol_or_context": "line 48, line 50, line 72",
+      "classification": "migration-compatibility",
+      "reason": "The token is bound to retained SQLite objects, migration identities, legacy column names, or exact existing-store compatibility assertions.",
+      "retained_consumer": "SQLite migration, backup/restore, accounting, and existing-store compatibility.",
+      "review_condition": "Remove only when the corresponding stored-schema support is retired by accepted migration policy."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/ProductUserSafetyIdentifierTests.cs",
+      "scope": "content",
+      "token": "Continuation",
+      "symbol_or_context": "line 142",
+      "classification": "functional-domain-term",
+      "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
+      "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
+      "review_condition": "Review if the owning domain vocabulary or serialized contract changes."
     },
     {
       "path": "tests/TestData/Provider/SourceClaims/edge-transcripts.v1.json",

@@ -679,7 +679,7 @@ public sealed class CredentialHelperCoordinator
             adapterResult = new(
                 ProviderResponseState.Completed, false, false, 200, rawResponse, null, request.RequestId, null,
                 "gpt-5.6-sol", "default", null, null, null, CreateUsage(helper.Process.Receipt), [], true,
-                "wp3-wp4-deterministic-fake", false, 0);
+                "credential-dispatch-deterministic-fake", false, 0);
         }
         ProviderSimulationPersistenceReceipt persisted = store.PersistProviderSimulation(new(
             work.AssignmentId + ":response",

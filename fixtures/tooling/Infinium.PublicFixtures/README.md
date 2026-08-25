@@ -19,8 +19,8 @@ output. Public product-fixture tests reference this project directly.
 historical registry/reclassification bindings, and immutable file bytes and
 hashes. It does not interpret expected semantic labels, execute a current
 producer or consumer, synthesize product output, or report semantic success.
-The `HistoricalSemanticPackageIntegrity` Slice 6 gate runs this read-only
-boundary check.
+The `HistoricalSemanticPackageIntegrity` check runs this read-only historical
+boundary validation.
 
 `reseal-live-semantic-v2.mjs` is retained as a check-only historical-integrity
 command. It accepts only `--check`; `--write` fails. There is no supported path

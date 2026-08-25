@@ -819,19 +819,19 @@ public sealed class ProviderBudgetIntegrationTests
         DateTimeOffset candidateAnalysisNow = DateTimeOffset.UtcNow;
         AttemptRecord candidateAnalysisAttempt = context.Store.CreateAttempt(
             "run-restore", context.Authority.FencingEpoch, TimeSpan.FromMinutes(5), candidateAnalysisNow);
-        CausalJoinPopulationMember candidateMember = CandidatePipelineIntegrationTests.Member("wp7") with
+        CausalJoinPopulationMember candidateMember = CandidatePipelineIntegrationTests.Member("candidate-current") with
         {
             SupportingEvidenceIds = [new OpaqueId("candidate-evidence")],
         };
-        CausalJoinPopulationMember deletedCandidateMember = CandidatePipelineIntegrationTests.Member("wp7-deleted") with
+        CausalJoinPopulationMember deletedCandidateMember = CandidatePipelineIntegrationTests.Member("candidate-deleted") with
         {
             SupportingEvidenceIds = [new OpaqueId("candidate-evidence-deleted")],
         };
-        CausalJoinPopulationMember unavailableCandidateMember = CandidatePipelineIntegrationTests.Member("wp7-unavailable") with
+        CausalJoinPopulationMember unavailableCandidateMember = CandidatePipelineIntegrationTests.Member("candidate-unavailable") with
         {
             SupportingEvidenceIds = [new OpaqueId("candidate-evidence-unavailable")],
         };
-        CausalJoinPopulationMember frozenCandidateMember = CandidatePipelineIntegrationTests.Member("wp7-frozen") with
+        CausalJoinPopulationMember frozenCandidateMember = CandidatePipelineIntegrationTests.Member("candidate-frozen") with
         {
             SupportingEvidenceIds = [new OpaqueId("candidate-evidence-frozen")],
         };
@@ -2206,7 +2206,7 @@ public sealed class ProviderBudgetIntegrationTests
         using (BudgetContext context = BudgetContext.Create())
         {
             _ = context.Store.AcquireCoordinatorAuthorityAfterProcessExclusion(
-                "wp2-fault-new-owner", DateTimeOffset.UtcNow.AddSeconds(1), TimeSpan.FromMinutes(10));
+                "budget-fault-new-owner", DateTimeOffset.UtcNow.AddSeconds(1), TimeSpan.FromMinutes(10));
             staleEpoch = Assert.ThrowsExactly<InvalidOperationException>(() =>
                 context.Store.ReserveProviderBudget(1, context.Request)).Message.Contains("fencing epoch", StringComparison.Ordinal);
         }
@@ -2243,7 +2243,7 @@ public sealed class ProviderBudgetIntegrationTests
             Directory.CreateDirectory(Path.GetDirectoryName(evidencePath)!);
             File.WriteAllText(evidencePath, JsonSerializer.Serialize(new
             {
-                schema = "infinium.wp2.budget-fault-evidence/v1",
+                schema = "infinium.provider-budget.fault-evidence/v1",
                 rollback_after_reservation_root = rollback,
                 competing_commit_winners = competingWinners,
                 stale_epoch_rejected = staleEpoch,
@@ -2350,7 +2350,7 @@ public sealed class ProviderBudgetIntegrationTests
                 Assert.AreEqual(3, command.ExecuteNonQuery());
 
                 CoordinatorAuthority authority = store.AcquireCoordinatorAuthority(
-                    "wp2-integration", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(10));
+                    "provider-budget-integration", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(10));
                 Assert.AreEqual(1L, authority.FencingEpoch);
                 ProviderBudgetVectorContract vector = new(1, 20, 10, 30, 10, 0, 0, 0, 400_000);
                 string[] kinds = ["request", "operation", "evidence-acquisition-run", "analysis-run",

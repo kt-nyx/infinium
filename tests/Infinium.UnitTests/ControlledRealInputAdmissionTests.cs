@@ -16,7 +16,7 @@ public sealed class ControlledRealInputAdmissionTests
     [TestProperty("Category", "ScopeReversionV2")]
     public void ExactAnswerFreeAllowlistIsAdmittedAndDriftIsRejected()
     {
-        string testRoot = Path.Combine(Path.GetTempPath(), "infinium-s8-admission-" + Guid.NewGuid().ToString("N"));
+        string testRoot = Path.Combine(Path.GetTempPath(), "infinium-controlled-input-admission-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(testRoot, "case"));
         string inputPath = Path.Combine(testRoot, "case", "input.esp");
         byte[] bytes = Encoding.UTF8.GetBytes("synthetic controlled input");
@@ -46,7 +46,7 @@ public sealed class ControlledRealInputAdmissionTests
     [TestProperty("Category", "ScopeReversionV2")]
     public void AnswerBearingAndEscapingManifestsFailBeforePayloadRead()
     {
-        string testRoot = Path.Combine(Path.GetTempPath(), "infinium-s8-boundary-" + Guid.NewGuid().ToString("N"));
+        string testRoot = Path.Combine(Path.GetTempPath(), "infinium-controlled-input-boundary-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(testRoot);
         string manifestPath = Path.Combine(testRoot, "handoff.json");
         try
@@ -68,7 +68,7 @@ public sealed class ControlledRealInputAdmissionTests
     [TestProperty("Category", "ScopeReversionV2")]
     public void ReparseRootIsRejectedBeforeAnAllowlistedPayloadIsOpened()
     {
-        string testRoot = Path.Combine(Path.GetTempPath(), "infinium-s8-reparse-" + Guid.NewGuid().ToString("N"));
+        string testRoot = Path.Combine(Path.GetTempPath(), "infinium-controlled-input-reparse-" + Guid.NewGuid().ToString("N"));
         string target = Path.Combine(testRoot, "target");
         string junction = Path.Combine(testRoot, "junction");
         Directory.CreateDirectory(Path.Combine(target, "case"));
