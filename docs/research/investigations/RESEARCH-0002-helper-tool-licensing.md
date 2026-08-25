@@ -72,7 +72,7 @@ Accepted requirements and decisions:
   constrain evidence authority, provenance, and the initial Skyrim/MO2/Windows
   scope.
 - The accepted
-  [M0 research-foundation plan](../../plans/milestones/m0/plan.md)
+  [archived M0 research-foundation plan](../../plans/milestones/README.md)
   originally made RQ-026 exit-blocking and requires every M1 helper or
   architectural distribution candidate to have a known posture or be excluded.
 

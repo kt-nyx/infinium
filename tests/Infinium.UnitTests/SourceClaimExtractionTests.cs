@@ -13,9 +13,9 @@ public sealed class SourceClaimExtractionTests
     [TestCategory("Unit")]
     public void SourceClaimExtractionAdmitsOnlyHostValidatedExactCitations()
     {
-        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] historical) =
-            LoadHistoricalPackage("S6-CLAIM-DEV-v1");
-        SourceClaimRetainedTranscript[] transcripts = CreateCurrentContractTranscripts(input, historical);
+        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] retained) =
+            LoadTestCase("core");
+        SourceClaimRetainedTranscript[] transcripts = NormalizeGroundedClaims(input, retained);
         SourceClaimAcquisitionResult result = SourceClaimAcquisitionEngine.Execute(input, transcripts);
 
         Assert.IsFalse(result.NetworkUsed);
@@ -24,25 +24,25 @@ public sealed class SourceClaimExtractionTests
         Assert.AreEqual(SourceClaimPromptV1.Fingerprint, result.PromptFingerprint);
         Assert.AreEqual(6, result.Scenarios.Count);
         Assert.AreEqual(SemanticProposalState.Extracted,
-            result.Scenarios.Single(x => x.TranscriptId == "dev-01").Extraction.ClaimProposals.Single().ExtractionState);
+            result.Scenarios.Single(x => x.TranscriptId == "core-01").Extraction.ClaimProposals.Single().ExtractionState);
         Assert.AreEqual(SemanticSupportState.Supported,
-            result.Scenarios.Single(x => x.TranscriptId == "dev-01").Extraction.AdmissionCorrelations.Single().SupportState);
+            result.Scenarios.Single(x => x.TranscriptId == "core-01").Extraction.AdmissionCorrelations.Single().SupportState);
         Assert.AreEqual(SemanticApplicabilityState.NotEvaluated,
-            result.Scenarios.Single(x => x.TranscriptId == "dev-01").Extraction.AdmissionCorrelations.Single()
+            result.Scenarios.Single(x => x.TranscriptId == "core-01").Extraction.AdmissionCorrelations.Single()
                 .ApplicabilityState);
         Assert.AreEqual(SemanticSupportState.Supported,
-            result.Scenarios.Single(x => x.TranscriptId == "dev-02").Extraction.AdmissionCorrelations.Single().SupportState);
+            result.Scenarios.Single(x => x.TranscriptId == "core-02").Extraction.AdmissionCorrelations.Single().SupportState);
         Assert.AreEqual(SemanticApplicabilityState.NotEvaluated,
-            result.Scenarios.Single(x => x.TranscriptId == "dev-02").Extraction.AdmissionCorrelations.Single()
+            result.Scenarios.Single(x => x.TranscriptId == "core-02").Extraction.AdmissionCorrelations.Single()
                 .ApplicabilityState);
         Assert.AreEqual(SemanticProposalState.Extracted,
-            result.Scenarios.Single(x => x.TranscriptId == "dev-02").Extraction.ClaimProposals.Single().ExtractionState);
+            result.Scenarios.Single(x => x.TranscriptId == "core-02").Extraction.ClaimProposals.Single().ExtractionState);
         Assert.AreEqual(SemanticProposalState.Extracted,
-            result.Scenarios.Single(x => x.TranscriptId == "dev-03").Extraction.ClaimProposals.Single().ExtractionState);
-        Assert.AreEqual("not-applicable", result.Scenarios.Single(x => x.TranscriptId == "dev-04").ReplayState);
-        Assert.AreEqual(0, result.Scenarios.Single(x => x.TranscriptId == "dev-05").Extraction.ClaimProposals.Count);
-        Assert.AreEqual(1, result.Scenarios.Single(x => x.TranscriptId == "dev-05").Extraction.Abstentions.Count);
-        SourceClaimScenarioResult conditional = result.Scenarios.Single(x => x.TranscriptId == "dev-06");
+            result.Scenarios.Single(x => x.TranscriptId == "core-03").Extraction.ClaimProposals.Single().ExtractionState);
+        Assert.AreEqual("not-applicable", result.Scenarios.Single(x => x.TranscriptId == "core-04").ReplayState);
+        Assert.AreEqual(0, result.Scenarios.Single(x => x.TranscriptId == "core-05").Extraction.ClaimProposals.Count);
+        Assert.AreEqual(1, result.Scenarios.Single(x => x.TranscriptId == "core-05").Extraction.Abstentions.Count);
+        SourceClaimScenarioResult conditional = result.Scenarios.Single(x => x.TranscriptId == "core-06");
         Assert.AreEqual("accepted-source-extraction", conditional.Disposition);
         Assert.AreEqual(SemanticApplicabilityState.NotEvaluated,
             conditional.Extraction.AdmissionCorrelations.Single().ApplicabilityState);
@@ -54,26 +54,26 @@ public sealed class SourceClaimExtractionTests
     [TestCategory("Unit")]
     public void SourceClaimExtractionRetainsContradictionHostileDeletedAndFailureStates()
     {
-        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] historical) =
-            LoadHistoricalPackage("S6-CLAIM-VAL-v1");
-        SourceClaimRetainedTranscript[] transcripts = CreateCurrentContractTranscripts(input, historical);
+        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] retained) =
+            LoadTestCase("edge");
+        SourceClaimRetainedTranscript[] transcripts = NormalizeGroundedClaims(input, retained);
         SourceClaimAcquisitionResult result = SourceClaimAcquisitionEngine.Execute(input, transcripts);
 
-        Assert.AreEqual(SemanticDecisionState.Rejected, Scenario("val-01").AdmissionCorrelations.Single().DecisionState);
-        Assert.AreEqual(1, Scenario("val-01").ContradictionEvidenceIds.Count);
-        Assert.AreEqual(SemanticProposalState.Extracted, Scenario("val-02").ClaimProposals.Single().ExtractionState);
-        Assert.AreEqual(SemanticDecisionState.Rejected, Scenario("val-02").AdmissionCorrelations.Single().DecisionState);
-        Assert.AreEqual("model-proposed-forbidden-authority", Scenario("val-02").ClaimProposals.Single().Reason);
-        Assert.AreEqual(SemanticProposalState.Deleted, Scenario("val-03").ClaimProposals.Single().ExtractionState);
-        Assert.AreEqual("retained-response", result.Scenarios.Single(x => x.TranscriptId == "val-04").ReplayState);
-        Assert.AreEqual("retained-response", result.Scenarios.Single(x => x.TranscriptId == "val-05").ReplayState);
-        Assert.AreEqual("retained-response", result.Scenarios.Single(x => x.TranscriptId == "val-06").ReplayState);
-        Assert.AreEqual("failed-identity-drift", result.Scenarios.Single(x => x.TranscriptId == "val-07").ReplayState);
-        Assert.AreEqual("rejected", result.Scenarios.Single(x => x.TranscriptId == "val-08").Disposition);
+        Assert.AreEqual(SemanticDecisionState.Rejected, Scenario("edge-01").AdmissionCorrelations.Single().DecisionState);
+        Assert.AreEqual(1, Scenario("edge-01").ContradictionEvidenceIds.Count);
+        Assert.AreEqual(SemanticProposalState.Extracted, Scenario("edge-02").ClaimProposals.Single().ExtractionState);
+        Assert.AreEqual(SemanticDecisionState.Rejected, Scenario("edge-02").AdmissionCorrelations.Single().DecisionState);
+        Assert.AreEqual("model-proposed-forbidden-authority", Scenario("edge-02").ClaimProposals.Single().Reason);
+        Assert.AreEqual(SemanticProposalState.Deleted, Scenario("edge-03").ClaimProposals.Single().ExtractionState);
+        Assert.AreEqual("retained-response", result.Scenarios.Single(x => x.TranscriptId == "edge-04").ReplayState);
+        Assert.AreEqual("retained-response", result.Scenarios.Single(x => x.TranscriptId == "edge-05").ReplayState);
+        Assert.AreEqual("retained-response", result.Scenarios.Single(x => x.TranscriptId == "edge-06").ReplayState);
+        Assert.AreEqual("failed-identity-drift", result.Scenarios.Single(x => x.TranscriptId == "edge-07").ReplayState);
+        Assert.AreEqual("rejected", result.Scenarios.Single(x => x.TranscriptId == "edge-08").Disposition);
         Assert.AreEqual(SemanticSupportState.NotEvaluated,
-            Scenario("val-08").AdmissionCorrelations.Single().SupportState);
+            Scenario("edge-08").AdmissionCorrelations.Single().SupportState);
         Assert.AreEqual(SemanticApplicabilityState.NotEvaluated,
-            Scenario("val-08").AdmissionCorrelations.Single().ApplicabilityState);
+            Scenario("edge-08").AdmissionCorrelations.Single().ApplicabilityState);
 
         SourceClaimExtractionDocument Scenario(string id) =>
             result.Scenarios.Single(x => x.TranscriptId == id).Extraction;
@@ -83,9 +83,9 @@ public sealed class SourceClaimExtractionTests
     [TestCategory("Unit")]
     public void ProviderContextRejectsExpectedAnswersAndDrift()
     {
-        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] historical) =
-            LoadHistoricalPackage("S6-CLAIM-DEV-v1");
-        SourceClaimRetainedTranscript[] transcripts = CreateCurrentContractTranscripts(input, historical);
+        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] retained) =
+            LoadTestCase("core");
+        SourceClaimRetainedTranscript[] transcripts = NormalizeGroundedClaims(input, retained);
         Assert.ThrowsExactly<InvalidDataException>(() => SourceClaimAcquisitionEngine.Execute(
             input with { HostAuthorizationId = "" }, transcripts));
         Assert.ThrowsExactly<InvalidDataException>(() => SourceClaimAcquisitionEngine.Execute(
@@ -100,9 +100,9 @@ public sealed class SourceClaimExtractionTests
     [TestCategory("Unit")]
     public void ProviderStateReasonAndContradictionLabelsCannotChangeHostSourceSupport()
     {
-        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] historical) =
-            LoadHistoricalPackage("S6-CLAIM-DEV-v1");
-        SourceClaimRetainedTranscript transcript = CreateCurrentContractTranscripts(input, historical)[0];
+        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] retained) =
+            LoadTestCase("core");
+        SourceClaimRetainedTranscript transcript = NormalizeGroundedClaims(input, retained)[0];
         SourceClaimTranscriptProposal proposal = transcript.Proposals.Single();
         SourceClaimAdmissionCorrelationContract baseline = SourceClaimAcquisitionEngine.Execute(input, [transcript])
             .Scenarios.Single().Extraction.AdmissionCorrelations.Single();
@@ -123,9 +123,9 @@ public sealed class SourceClaimExtractionTests
     [TestCategory("Unit")]
     public void ProviderContextUsesStructuralAuthorityAndReplayEnvelopes()
     {
-        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] historical) =
-            LoadHistoricalPackage("S6-CLAIM-DEV-v1");
-        SourceClaimRetainedTranscript[] transcripts = CreateCurrentContractTranscripts(input, historical);
+        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] retained) =
+            LoadTestCase("core");
+        SourceClaimRetainedTranscript[] transcripts = NormalizeGroundedClaims(input, retained);
         SourceClaimRetainedTranscript baseline = transcripts[0];
         SourceClaimTranscriptProposal proposal = baseline.Proposals.Single();
         SourceClaimScenarioResult hostile = SourceClaimAcquisitionEngine.Execute(input,
@@ -260,31 +260,31 @@ public sealed class SourceClaimExtractionTests
         Assert.ThrowsExactly<InvalidDataException>(() => SourceClaimAcquisitionEngine.Execute(input,
             [baseline with { ModelUsed = false }]));
         Assert.ThrowsExactly<InvalidDataException>(() => SourceClaimAcquisitionEngine.Execute(input,
-            [transcripts.Single(x => x.TranscriptId == "dev-04") with
+            [transcripts.Single(x => x.TranscriptId == "core-04") with
             {
                 Proposals = [proposal],
             }]));
 
-        (SourceClaimExecutionInput valInput, SourceClaimRetainedTranscript[] valHistorical) =
-            LoadHistoricalPackage("S6-CLAIM-VAL-v1");
-        SourceClaimRetainedTranscript[] valTranscripts = CreateCurrentContractTranscripts(valInput, valHistorical);
-        Assert.AreEqual("audit-only", SourceClaimAcquisitionEngine.Replay(valInput,
-            valTranscripts.Single(x => x.TranscriptId == "val-03"), new string('c', 64)).ReplayState);
-        Assert.AreEqual("failed-identity-drift", SourceClaimAcquisitionEngine.Replay(valInput,
-            valTranscripts.Single(x => x.TranscriptId == "val-07"),
-            valTranscripts.Single(x => x.TranscriptId == "val-07").ResponseFingerprint).ReplayState);
+        (SourceClaimExecutionInput edgeInput, SourceClaimRetainedTranscript[] edgeRetained) =
+            LoadTestCase("edge");
+        SourceClaimRetainedTranscript[] edgeTranscripts = NormalizeGroundedClaims(edgeInput, edgeRetained);
+        Assert.AreEqual("audit-only", SourceClaimAcquisitionEngine.Replay(edgeInput,
+            edgeTranscripts.Single(x => x.TranscriptId == "edge-03"), new string('c', 64)).ReplayState);
+        Assert.AreEqual("failed-identity-drift", SourceClaimAcquisitionEngine.Replay(edgeInput,
+            edgeTranscripts.Single(x => x.TranscriptId == "edge-07"),
+            edgeTranscripts.Single(x => x.TranscriptId == "edge-07").ResponseFingerprint).ReplayState);
         Assert.AreEqual("not-applicable", SourceClaimAcquisitionEngine.Replay(input,
-            transcripts.Single(x => x.TranscriptId == "dev-04"), new string('4', 64)).ReplayState);
+            transcripts.Single(x => x.TranscriptId == "core-04"), new string('4', 64)).ReplayState);
     }
 
     [TestMethod]
     [TestCategory("Unit")]
     public void ConditionlessSourceClaimsRequireAnExplicitAnalysisOwnedApplicationFact()
     {
-        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] historical) =
-            LoadHistoricalPackage("S6-CLAIM-DEV-v1");
-        SourceClaimRetainedTranscript transcript = CreateCurrentContractTranscripts(input, historical)
-            .Single(item => item.TranscriptId == "dev-01");
+        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] retained) =
+            LoadTestCase("core");
+        SourceClaimRetainedTranscript transcript = NormalizeGroundedClaims(input, retained)
+            .Single(item => item.TranscriptId == "core-01");
         SourceClaimScenarioResult source = SourceClaimAcquisitionEngine.Execute(input, [transcript])
             .Scenarios.Single();
 
@@ -363,26 +363,31 @@ public sealed class SourceClaimExtractionTests
     }
 
     private static (SourceClaimExecutionInput Input, SourceClaimRetainedTranscript[] Transcripts)
-        LoadHistoricalPackage(string package)
+        LoadTestCase(string caseSet)
     {
+        if (caseSet is not ("core" or "edge"))
+        {
+            throw new ArgumentOutOfRangeException(nameof(caseSet));
+        }
         string root = RepositoryRoot();
-        string directory = Path.Combine(root, "fixtures", "public", "provider", "source-claims", package);
+        string directory = Path.Combine(root, "tests", "TestData", "Provider", "SourceClaims");
         JsonSerializerOptions options = SourceClaimContextMinimizer.JsonOptions;
         SourceClaimExecutionInput input = JsonSerializer.Deserialize<SourceClaimExecutionInput>(
-            File.ReadAllBytes(Path.Combine(directory, "execution-input.v1.json")), options)!;
-        using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(directory, "retained-transcripts.v1.json")));
+            File.ReadAllBytes(Path.Combine(directory, caseSet + "-input.v1.json")), options)!;
+        using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(
+            Path.Combine(directory, caseSet + "-transcripts.v1.json")));
         SourceClaimRetainedTranscript[] transcripts = JsonSerializer.Deserialize<SourceClaimRetainedTranscript[]>(
             document.RootElement.GetProperty("transcripts"), options)!;
         return (input, transcripts);
     }
 
-    private static SourceClaimRetainedTranscript[] CreateCurrentContractTranscripts(
+    private static SourceClaimRetainedTranscript[] NormalizeGroundedClaims(
         SourceClaimExecutionInput input,
-        IReadOnlyList<SourceClaimRetainedTranscript> historicalTranscripts)
+        IReadOnlyList<SourceClaimRetainedTranscript> retainedTranscripts)
     {
         Dictionary<string, SourceClaimPassageInput> passages = input.Passages.ToDictionary(
             passage => passage.PassageId, StringComparer.Ordinal);
-        return historicalTranscripts.Select(transcript => transcript with
+        return retainedTranscripts.Select(transcript => transcript with
         {
             Proposals = transcript.Proposals.Select(proposal => proposal.State is "proposed" or "unsupported"
                     && passages.TryGetValue(proposal.PassageId, out SourceClaimPassageInput? passage)

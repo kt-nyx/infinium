@@ -1,0 +1,38 @@
+{
+  "schema_id": "infinium.evaluation.developer-conformance-manifest/v1",
+  "schema_version": "1.0.0",
+  "package_identity": "scope-reversion-synthetic-bounded-cases-v1",
+  "package_version": "1.0.0",
+  "partition": "development",
+  "evidence_class": "developer-owned-product-conformance",
+  "semantic_oracle": false,
+  "verdict_authority": false,
+  "evaluation_ids": [
+    "EVAL-0001",
+    "EVAL-0002",
+    "EVAL-0032",
+    "EVAL-0065",
+    "EVAL-0067",
+    "EVAL-0083",
+    "EVAL-0084",
+    "EVAL-0085",
+    "EVAL-0086"
+  ],
+  "input": {
+    "path": "input.v1.json",
+    "bytes": 4633,
+    "sha256": "ecb743a8966fdcb706fea263e17f7bbe1e1a2aba31dc9e1831c31e3830e8c3eb",
+    "answer_free": true
+  },
+  "expectations": {
+    "path": "expectations.v1.json",
+    "bytes": 1089,
+    "sha256": "38f3d8d73ab8bc0f9e30f501daaeaba8f9a868004f49721248a23bc440473302",
+    "kind": "developer-owned-expected-outcomes-not-semantic-oracle"
+  },
+  "domains": [
+    "actor-ai-facegen",
+    "refr-link-placement"
+  ],
+  "created_at": "2026-08-24T00:00:00.0000000+00:00"
+}

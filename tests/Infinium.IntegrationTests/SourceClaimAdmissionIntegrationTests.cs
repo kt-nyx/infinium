@@ -11,7 +11,7 @@ public sealed class SourceClaimAdmissionIntegrationTests
     [TestCategory("Integration")]
     public void SourceClaimAdmissionExecutesRegisteredPackagesWithoutTransport()
     {
-        foreach (string package in new[] { "S6-CLAIM-DEV-v1", "S6-CLAIM-VAL-v1" })
+        foreach (string package in new[] { "core", "edge" })
         {
             (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] transcripts) =
                 LoadCurrentContractPackage(package);
@@ -31,7 +31,7 @@ public sealed class SourceClaimAdmissionIntegrationTests
     public void SourceClaimReplayIsByteStableOrDegradesAuditOnlyOnDrift()
     {
         (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] transcripts) =
-            LoadCurrentContractPackage("S6-CLAIM-DEV-v1");
+            LoadCurrentContractPackage("core");
         SourceClaimScenarioResult first = SourceClaimAcquisitionEngine.Replay(input, transcripts[0], transcripts[0].ResponseFingerprint);
         SourceClaimScenarioResult second = SourceClaimAcquisitionEngine.Replay(input, transcripts[0], transcripts[0].ResponseFingerprint);
         Assert.AreEqual(first.CanonicalExtractionSha256, second.CanonicalExtractionSha256);
@@ -44,9 +44,9 @@ public sealed class SourceClaimAdmissionIntegrationTests
     public void SourceClaimAdmissionNoModelCoordinatorPathCannotFabricateProviderUse()
     {
         (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] transcripts) =
-            LoadCurrentContractPackage("S6-CLAIM-DEV-v1");
+            LoadCurrentContractPackage("core");
         SourceClaimAcquisitionResult result = SourceClaimAcquisitionCoordinator.NoModel(
-            input, transcripts.Single(x => x.TranscriptId == "dev-04"));
+            input, transcripts.Single(x => x.TranscriptId == "core-04"));
         Assert.AreEqual("not-applicable", result.Scenarios.Single().ReplayState);
         Assert.AreEqual(0, result.Scenarios.Single().Extraction.ClaimProposals.Count);
         Assert.IsFalse(result.NetworkUsed);
@@ -56,10 +56,10 @@ public sealed class SourceClaimAdmissionIntegrationTests
     internal static (SourceClaimExecutionInput Input, SourceClaimRetainedTranscript[] Transcripts)
         LoadCurrentContractPackage(string package)
     {
-        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] historical) = LoadHistoricalPackage(package);
+        (SourceClaimExecutionInput input, SourceClaimRetainedTranscript[] retained) = LoadTestCase(package);
         Dictionary<string, SourceClaimPassageInput> passages = input.Passages.ToDictionary(
             passage => passage.PassageId, StringComparer.Ordinal);
-        SourceClaimRetainedTranscript[] current = historical.Select(transcript => transcript with
+        SourceClaimRetainedTranscript[] current = retained.Select(transcript => transcript with
         {
             Proposals = transcript.Proposals.Select(proposal => proposal.State is "proposed" or "unsupported"
                     && passages.TryGetValue(proposal.PassageId, out SourceClaimPassageInput? passage)
@@ -71,12 +71,17 @@ public sealed class SourceClaimAdmissionIntegrationTests
     }
 
     internal static (SourceClaimExecutionInput Input, SourceClaimRetainedTranscript[] Transcripts)
-        LoadHistoricalPackage(string package)
+        LoadTestCase(string package)
     {
-        string directory = Path.Combine(RepositoryRoot(), "fixtures", "public", "provider", "source-claims", package);
+        if (package is not ("core" or "edge"))
+        {
+            throw new ArgumentOutOfRangeException(nameof(package));
+        }
+        string directory = Path.Combine(
+            RepositoryRoot(), "tests", "TestData", "Provider", "SourceClaims");
         SourceClaimExecutionInput input = JsonSerializer.Deserialize<SourceClaimExecutionInput>(
-            File.ReadAllBytes(Path.Combine(directory, "execution-input.v1.json")), SourceClaimContextMinimizer.JsonOptions)!;
-        using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(directory, "retained-transcripts.v1.json")));
+            File.ReadAllBytes(Path.Combine(directory, package + "-input.v1.json")), SourceClaimContextMinimizer.JsonOptions)!;
+        using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(directory, package + "-transcripts.v1.json")));
         return (input, JsonSerializer.Deserialize<SourceClaimRetainedTranscript[]>(
             document.RootElement.GetProperty("transcripts"), SourceClaimContextMinimizer.JsonOptions)!);
     }

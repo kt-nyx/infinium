@@ -234,7 +234,7 @@
   "expected_replay_manifest": {
     "artifact_id": "oracle/replay-manifest.json",
     "artifact_version": "1.1.0",
-    "fingerprint": "b61321e40a2167603c4f3e3c835b2aab78d94c109f581367f7ef01e77af8f9c3",
+    "fingerprint": "c6f9a6e96f4b2e24d0315021e6fd176000093a711bee0e7e1ee3290782bad37c",
     "availability": "retained",
     "byte_length": 1718
   },

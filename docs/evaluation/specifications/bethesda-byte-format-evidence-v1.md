@@ -11,7 +11,7 @@ This profile pins only the byte rules needed to construct and independently
 audit the project-authored M1 Slice 3.5 inputs. It is not production parser
 code, a general TES4 specification, or authority for fields outside the
 positive allowlist in
-[the M1 semantic specification](../specifications/m1-semantic-and-ground-truth.md).
+[the archived M1 semantic specification](../evaluator-history.md).
 The independent oracle must report any byte that cannot be reconciled with
 both a manual hex worksheet and a separately implemented bounded raw reader.
 
@@ -29,7 +29,7 @@ The accepted evidence set is:
   [RESEARCH-0035](../../research/investigations/RESEARCH-0035-gate-c-real-mod-qualification.md);
   and
 - the stricter Slice 3.5 bounds and role separation in
-  [the accepted slice plan](../../plans/milestones/m1/slices/s3.5/plan.md).
+  [the archived milestone-plan boundary](../../plans/milestones/README.md).
 
 The earlier RESEARCH-0035 reader is evidence of method shape only. It is not
 an oracle implementation: decompressed logical offsets must not be reported as

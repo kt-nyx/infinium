@@ -130,7 +130,7 @@ This investigation is governed by:
   candidate recall, volume, provenance, latency, IO, memory, disk, and model
   escalation; and
 - the accepted
-  [M0 Wave C plan](../../plans/milestones/m0/plan.md#wave-c--analysis-surfaces-taxonomy-corpus-and-candidate-scale).
+  [archived M0 Wave C plan](../../plans/milestones/README.md).
 
 The private `Brain Blast Destruction 2024` profile occupies only rung 5 of the
 [evaluation profile ladder](../../evaluation/evaluation-strategy.md#profile-ladder).

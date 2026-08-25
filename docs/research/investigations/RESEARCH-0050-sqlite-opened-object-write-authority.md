@@ -69,14 +69,14 @@ authorize-then-pathname behavior.
 
 ## Authoritative constraints
 
-- [M1 Slice 2](../../plans/milestones/m1/plan.md) makes
+- [Archived M1 plan boundary](../../plans/milestones/README.md) makes
   EVAL-0080 a gate.
 - [ADR-0015](../../architecture/decisions/ADR-0015-authoritative-evidence-persistence-and-payload-storage.md)
   requires the exact patched SQLite line and coordinated WAL behavior.
 - [ADR-0021](../../architecture/decisions/ADR-0021-desktop-and-local-operation-security-boundary.md)
   requires opened-handle identity and handle-relative operations, permitting a
   separately qualified equivalent.
-- [EVAL-0080](../../evaluation/specifications/m1-platform-and-operational.md)
+- [Archived EVAL-0080 specification](../../evaluation/evaluator-history.md)
   fails path-string-only authorization and unexpected hard-link, replacement,
   stale-capability, or protected-root effects.
 

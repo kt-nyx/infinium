@@ -30,7 +30,8 @@
     },
     "surfaces": {
       "type": "array",
-      "minItems": 6,
+      "minItems": 4,
+      "maxItems": 4,
       "uniqueItems": true,
       "items": { "$ref": "#/$defs/surface" }
     }

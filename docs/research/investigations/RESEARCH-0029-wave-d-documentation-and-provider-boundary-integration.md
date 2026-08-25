@@ -87,7 +87,7 @@ This review used:
 - accepted ADR-0001 through ADR-0011, with particular reliance on ADR-0001,
   ADR-0002, ADR-0003, ADR-0005, ADR-0006, and ADR-0011;
 - the accepted
-  [M0 research-foundation plan](../../plans/milestones/m0/plan.md);
+  [archived M0 research-foundation plan](../../plans/milestones/README.md);
 - the research handoff and wave-integration procedure;
 - the source registry, open-question registry, and investigation index;
 - the evaluation strategy, case catalog, fixture guidelines, and

@@ -20,24 +20,7 @@ internal sealed class DeterministicHelperSecretSource : IHelperSecretSource
 
     public byte[] Capture(HelperAssignmentV2 assignment)
     {
-        if (assignment.AssignmentId.StartsWith("wp4-v2/", StringComparison.Ordinal))
-        {
-            CredentialNativeQualificationPhaseV2 phase = CredentialNativeQualificationPhasesV2.Parse(
-                assignment.AssignmentId, assignment.AssignmentKind);
-            if (phase.ScenarioId == "interactive-entry-cancel")
-            {
-                throw new OperationCanceledException("Injected qualification cancel before secret creation.");
-            }
-            return phase.SecretMode switch
-            {
-                CredentialNativeQualificationSecretModeV2.GeneratedMaximum =>
-                    new byte[DeterministicFakeSecureStore.MaximumSecretBytes],
-                CredentialNativeQualificationSecretModeV2.GeneratedOversize =>
-                    new byte[DeterministicFakeSecureStore.MaximumSecretBytes + 1],
-                _ => Encoding.UTF8.GetBytes("WP3-REAL-CHILD-SECRET-CANARY/" + assignment.AssignmentId),
-            };
-        }
-        return Encoding.UTF8.GetBytes("WP3-REAL-CHILD-SECRET-CANARY/" + assignment.AssignmentId);
+        return Encoding.UTF8.GetBytes("INFINIUM-HELPER-TEST-SECRET/" + assignment.AssignmentId);
     }
 }
 
@@ -135,20 +118,6 @@ public sealed class OneShotHelperEngine
         OpenAiResponsesResult? adapterResult = null;
         try
         {
-            CredentialNativeQualificationPhaseV2? qualificationPhase =
-                assignment.AssignmentId.StartsWith("wp4-v2/", StringComparison.Ordinal)
-                    ? CredentialNativeQualificationPhasesV2.Parse(
-                        assignment.AssignmentId,
-                        assignment.AssignmentKind)
-                    : null;
-            if (store is WindowsCredentialManagerStore { IsProductionEnrollment: false } nativeQualificationStore)
-            {
-                nativeQualificationStore.ConfigureQualificationPhase(assignment);
-            }
-            if (qualificationPhase?.UnavailableBeforeNativeCall == true)
-            {
-                throw new IOException("Injected qualification store unavailability before any store operation.");
-            }
             switch (assignment.AssignmentKind)
             {
                 case HelperAssignmentKindV2.Enroll:
@@ -165,8 +134,7 @@ public sealed class OneShotHelperEngine
                     secret = secretSource.Capture(assignment);
                     bool successorVerified = WriteAndVerify(slot, secret);
                     if (successorVerified
-                        && assignment.AssignmentId.Contains("replacement-interrupted", StringComparison.Ordinal)
-                        && store is not WindowsCredentialManagerStore)
+                        && assignment.AssignmentId.Contains("replacement-interrupted", StringComparison.Ordinal))
                     {
                         throw new IOException("Injected qualification predecessor cleanup interruption after successor half-commit.");
                     }
@@ -222,16 +190,16 @@ public sealed class OneShotHelperEngine
                     }
                     else
                     {
-                        bool successorV6 = assignment.ProviderRequest.RequestId
+                        bool extendedProfile = assignment.ProviderRequest.RequestId
                             .StartsWith("m1-s6-successor-v6-", StringComparison.Ordinal);
-                        adapterResult = successorV6
-                            ? providerTransport is IOpenAiResponsesSuccessorV6Transport successorTransport
-                                ? await successorTransport.SendSuccessorV6OnceAsync(
+                        adapterResult = extendedProfile
+                            ? providerTransport is IOpenAiResponsesExtendedProfileTransport successorTransport
+                                ? await successorTransport.SendExtendedProfileOnceAsync(
                                     assignment.ProviderRequest.CanonicalRequestBytes.Memory, secret,
                                     Limits(assignment.Limits), assignment.ProviderRequest.RequestId,
                                     cancellationToken).ConfigureAwait(false)
                                 : throw new InvalidOperationException(
-                                    "Successor v6 dispatch requires the dedicated v6 transport profile.")
+                                    "Extended profile dispatch requires the dedicated v6 transport profile.")
                             : await providerTransport.SendOnceAsync(
                                 assignment.ProviderRequest.CanonicalRequestBytes.Memory, secret,
                                 Limits(assignment.Limits), assignment.ProviderRequest.RequestId,
@@ -258,21 +226,6 @@ public sealed class OneShotHelperEngine
         catch (IOException)
         {
             outcome = HelperOutcomeV2.Unavailable;
-        }
-        catch (System.ComponentModel.Win32Exception) when (
-            store is WindowsCredentialManagerStore { NamespaceReuseBlocked: true })
-        {
-            outcome = HelperOutcomeV2.Unavailable;
-        }
-        catch (InvalidOperationException exception) when (
-            store is WindowsCredentialManagerStore productionStore
-            && Wp9ProductionCollisionClassifier.IsKnownCollision(
-                exception, productionStore.IsProductionEnrollment, productionStore.NamespaceReuseBlocked))
-        {
-            // A production new-only collision is a typed, bounded stop after
-            // the exact preflight read/allocation release. It must still emit
-            // a terminal receipt so the coordinator can retain the R/F trace.
-            outcome = HelperOutcomeV2.FailedKnown;
         }
         catch (InvalidDataException)
         {
@@ -477,15 +430,6 @@ public sealed class OneShotHelperEngine
         UsageReceiptState.Ambiguous => UsageReceiptStateV2.Ambiguous,
         _ => UsageReceiptStateV2.Unavailable,
     };
-}
-
-internal static class Wp9ProductionCollisionClassifier
-{
-    internal static bool IsKnownCollision(
-        Exception exception,
-        bool productionEnrollment,
-        bool namespaceReuseBlocked) => exception is InvalidOperationException
-            && productionEnrollment && namespaceReuseBlocked;
 }
 
 public static class HelperFrameFactory

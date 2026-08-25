@@ -34,15 +34,15 @@
         "fingerprint": "75f06caab220c2500cf6fd8f35671ba5baaefe99c0962e7d7c825efee4fca4f2",
         "availability": "evaluator-private"
       },
-      "authorized_by": "project-owner/user-directed-slice4-fixture-conformance-correction-20260801"
+      "authorized_by": "project-owner/bethesda-fixture-conformance-correction-20260801"
     }
   ],
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
-  "input_package_fingerprint": "2bda7a2ad9684c591abbb0d6f47c7e069a012d4b50f2d55c9b019993da6abcbb",
-  "oracle_fingerprint": "7f22c9605075e8a1dc15e170b5a4bfc1298413d6538fa1300e63a3f435f9058e",
+  "input_package_fingerprint": "d854fad1d7c06d0311555ee3c11e7c7eef0c0ce097f7ebe99ca66c184c9cf479",
+  "oracle_fingerprint": "dd9687d40a1644d2bb2a32ec82890ffa3ada1047bbf563893aa9078d1c1bddd5",
   "provenance_fingerprint": "6e31707c20fc28419b71336b47126b6cbb6c7a9248d2d3a94031e2d9a8c8b5b4",
-  "replay_dependency_fingerprint": "c9b88a996647d4c40421154b18a3af95503cd0542d24f34170df37f4921454b6",
+  "replay_dependency_fingerprint": "927d63498ebbd956e85595cc67c84b1ef105e8110ab1c16f3cfb7489541a43d3",
   "redistribution_class": "project-authored-redistributable",
   "owner": "infinium-evaluation",
   "review_state": "accepted",

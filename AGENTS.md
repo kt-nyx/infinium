@@ -48,7 +48,7 @@ Then read the task-specific material:
 - ordinary public evaluation or analyzer work: `docs/evaluation/evaluation-strategy.md`,
   `docs/evaluation/case-catalog.md`, `docs/evaluation/fixture-guidelines.md`,
   `docs/evaluation/anti-overfitting-rules.md`,
-  `docs/evaluation/m1-continuation-verification-profile.md`, and the active
+  `docs/evaluation/product-conformance-verification-profile.md`, and the active
   slice plan. Do not read private-fixture files or historical evaluator plans
   for ordinary product work;
 - separately authorized private evaluator work:
@@ -66,6 +66,25 @@ plan identifies one as a direct task input. Historical execution constraints
 do not become current defaults merely because an old record is linked.
 
 ## Working rules
+
+### Functional implementation naming
+
+- Active implementation names describe domain meaning, behavior,
+  responsibility, or architecture. Do not name source files, namespaces,
+  types, members, commands, configuration, fixtures, tests, or new serialized
+  identities after milestones, slices, work packages, waves, evaluator stages,
+  campaign attempts, or temporary development chronology.
+- Terms such as `stage`, `development`, `candidate`, `recovery`, `generation`,
+  and numeric versions are permitted only when they name a genuine product or
+  compatibility concept. Planning prose and archived history may retain
+  planning IDs.
+- Preserve frozen wire/schema/database/evidence bytes where required, but use a
+  functional code-facing alias and an exact reviewed compatibility allowlist.
+- Run `eng/verify-functional-naming.ps1` for affected implementation work. New
+  allowlist entries require explicit review and must name the exact path,
+  token/context, retained consumer, reason, and removal/review condition.
+- See `docs/governance/functional-implementation-naming.md` for the complete
+  policy.
 
 - Treat accepted product documents and ADRs as authoritative.
 - Treat the external abandoned-implementation archive as out of scope unless

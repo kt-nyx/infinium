@@ -10,7 +10,7 @@ Last reviewed: 2026-08-10
 ## Purpose
 
 This document defines the pre-registered fixture families for
-[the M1 platform and operational case specifications](../specifications/m1-platform-and-operational.md).
+[the archived M1 platform and operational case specifications](../evaluator-history.md).
 It creates no executable fixture, contains no production implementation, and
 does not mark any EVAL execution passed or any described fixture
 execution-ready.

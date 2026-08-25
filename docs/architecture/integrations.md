@@ -147,6 +147,9 @@ limit useful initial capabilities.
 Through M4, authenticated or billable calls use authorization supplied by the
 user for the explicitly enabled provider/account. Adapters expose no
 project-funded or shared-project credential fallback.
+ADR-0036 separately permits a project-funded credential for an explicitly
+invoked, budget-admitted development or conformance operation. It remains
+outside shipped-product credential selection and cannot be used as fallback.
 Each provider advertises:
 
 - supported models/features;

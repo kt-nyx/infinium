@@ -97,14 +97,14 @@ public sealed class DeterministicFakeSecureStore : ISyntheticSecureStore, IDispo
 
 
 /// <summary>
-/// Persistent WP3 fake-store implementation rooted only by an inherited
+/// Persistent capability-bound fake-store implementation rooted only by an inherited
 /// directory capability. The helper can access one fixed file and exact
 /// profile/generation slots; it receives neither a path nor an enumeration API.
 /// </summary>
 public sealed class CapabilityBoundFakeSecureStore : ISyntheticSecureStore, IDisposable
 {
     private const string StoreLeaf = "synthetic-secure-store.v1.json";
-    internal const string TargetCanaryPrefix = "WP3-REAL-CHILD-TARGET-CANARY";
+    internal const string TargetCanaryPrefix = "CAPABILITY-BOUND-STORE-TARGET-CANARY";
     private readonly nint directoryHandle;
 
     public CapabilityBoundFakeSecureStore(nint directoryHandle) =>

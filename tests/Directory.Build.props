@@ -24,5 +24,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)TestProcessRunner.cs"
              Link="TestProcessRunner.cs"
              Condition="'$(MSBuildProjectName)' == 'Infinium.IntegrationTests'" />
+    <Compile Include="$(MSBuildThisFileDirectory)AcceptedAnalysisCompositionFixtures.cs"
+             Link="AcceptedAnalysisCompositionFixtures.cs"
+             Condition="'$(MSBuildProjectName)' == 'Infinium.ContractTests' Or '$(MSBuildProjectName)' == 'Infinium.IntegrationTests'" />
   </ItemGroup>
 </Project>

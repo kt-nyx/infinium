@@ -48,7 +48,7 @@ operation that explicitly requires them.
   [case catalog](evaluation/case-catalog.md),
   [product/evaluator authority boundary](evaluation/product-evaluator-boundary.md),
   [evaluator history](evaluation/evaluator-history.md),
-  [M1/M2 product-conformance verification profile](evaluation/m1-continuation-verification-profile.md),
+  [product-conformance verification profile](evaluation/product-conformance-verification-profile.md),
   [fixture guidelines](evaluation/fixture-guidelines.md), and
   [anti-overfitting rules](evaluation/anti-overfitting-rules.md)
 - Research: [open questions](research/open-questions.md),
@@ -57,13 +57,9 @@ operation that explicitly requires them.
   and [investigation procedure](research/investigations/README.md)
 - Planning: [plan policy](plans/README.md),
   [work-breakdown notation](plans/work-breakdown-notation.md),
-  [accepted completed M1 plan](plans/milestones/m1/plan.md),
-  [accepted M1 process amendment](plans/milestones/m1/amendments/process-continuation.md),
-  [accepted semantic-oracle deferral amendment](plans/milestones/m1/amendments/semantic-oracle-deferral.md),
-  [accepted Slice 6 closeout](plans/milestones/m1/slices/s6/README.md),
-  [accepted Slice 7 closeout](plans/milestones/m1/slices/s7/README.md),
-  [accepted Slice 8 closeout](plans/milestones/m1/slices/s8/README.md),
-  and [accepted Slice 9 and M1 closeout](plans/milestones/m1/slices/s9/README.md)
+  [milestone planning boundary](plans/milestones/README.md), and the
+  [completed post-M1 cleanup transition](plans/transitions/post-m1-cleanup/README.md)
+- Governance: [functional implementation naming](governance/functional-implementation-naming.md)
 - Product: [product definition](product/product-definition.md),
   [requirements](product/requirements.md),
   [mod-impact taxonomy](product/mod-impact-taxonomy.md),
@@ -125,7 +121,10 @@ code and its last regression closure are in the separate sibling Git repository
 owner explicitly requests the corresponding archaeological review.
 
 M0 research, Waves A through F, and the accepted completed M1 hierarchy through
-Slice 9 live under the milestone hierarchy.
+its final backend closeout were moved to
+`../infinium-development-history-archive/` commit
+`6f8976db6c560456201a9166caf4f36506be5477` during the post-M1 cleanup. Their
+exact transfer evidence is in the cleanup implementation record.
 Superseded evaluator-attempt prose
 and proof fixtures are summarized in
 [Evaluator history](evaluation/evaluator-history.md) and retained by exact Git

@@ -6,7 +6,7 @@
       "from": null,
       "to": "development",
       "at": "2026-08-01T22:00:00.0000000+00:00",
-      "reason": "Corrected successor to fixture version 1.0.0 after the Slice 4 Mutagen conformance probe exposed a fixture-structure error.",
+      "reason": "Corrected fixture version 1.0.1 after the Mutagen conformance probe exposed a fixture-structure error.",
       "change_influenced_implementation": true
     }
   ]

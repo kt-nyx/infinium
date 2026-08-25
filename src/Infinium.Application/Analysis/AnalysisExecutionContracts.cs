@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Infinium.Analysis.Candidates;
 using Infinium.Analysis.Conclusions;
 using Infinium.Application.FindingCases;
@@ -47,7 +48,8 @@ public sealed record AnalysisV1WorkAssignment(
     public IReadOnlyList<AnalysisPhaseExecution> PhaseExecutions { get; init; } = [];
     public IReadOnlyList<OpaqueId> DocumentationDependencyIds { get; init; } = [];
     public DateTimeOffset? ExecutionDeadline { get; init; }
-    public M1Slice9CompositionEnvelope? M1Slice9Composition { get; init; }
+    [JsonPropertyName("m1_slice9_composition")]
+    public AnalysisCompositionEnvelope? AnalysisComposition { get; init; }
 }
 
 public sealed record CandidatePhaseParameters(
@@ -116,7 +118,8 @@ public sealed record ManagedAnalysisOrchestrationRequest(
 {
     public const int CurrentSchemaVersion = 1;
     public const long MaximumRequestBytes = 896L * 1024;
-    public M1Slice9CompositionEnvelope? M1Slice9Composition { get; init; }
+    [JsonPropertyName("m1_slice9_composition")]
+    public AnalysisCompositionEnvelope? AnalysisComposition { get; init; }
 }
 
 public sealed record AnalysisPhaseExecution(

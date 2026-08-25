@@ -466,11 +466,13 @@ public static class ScopeReversionAnalyzer
             "scope-logical-case", member.CausalClosure.DependencyClosureId.Value);
         OpaqueId caseId = ScopeReversionIdentity.StableId(
             "scope-case", runId.Value, logicalCaseId.Value, findingId.Value);
+        ScopeReversionAssessment assessment = ScopeReversionAssessmentPolicy.Assess(
+            ScopeReversionAnalyzerDeclaration.AnalyzerId);
         findings.Add(new ScopeReversionFindingContract(
             findingId, candidateId, hypothesisId, member.MemberId,
             member.DomainInterpretation.Explanation,
-            FindingSeverity.Moderate,
-            AnalysisConfidence.StronglySupported,
+            assessment.Severity,
+            assessment.Confidence,
             member.DomainInterpretation.Symptom,
             member.DomainInterpretation.BoundedExtent,
             evidence,

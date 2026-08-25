@@ -20,7 +20,7 @@ public sealed class ScopeReversionSecurityTests
         string source = File.ReadAllText(path);
         string[] prohibited =
         [
-            "actor", "facegen", "pkid", "refr", "xlkr", "reference", "m1-s7-synthetic",
+            "actor", "facegen", "pkid", "refr", "xlkr", "reference", "scope-reversion-synthetic",
             "plugin-name", "fixture-id", "mod-name",
         ];
         foreach (string token in prohibited)
@@ -42,7 +42,7 @@ public sealed class ScopeReversionSecurityTests
         Assert.IsTrue(result.Assignment.Analyzer.CanonicalDeclarationJson.Contains(
             "\"mode\":\"local-only\"", StringComparison.Ordinal));
         Assert.IsFalse(result.Assignment.Analyzer.CanonicalDeclarationJson.Contains(
-            "M1-S7-SYNTHETIC", StringComparison.Ordinal));
+            "scope-reversion-synthetic-bounded-cases", StringComparison.Ordinal));
     }
 
     [TestMethod]

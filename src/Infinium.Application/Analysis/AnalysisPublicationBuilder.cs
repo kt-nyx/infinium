@@ -77,11 +77,11 @@ public static partial class AnalysisPublicationBuilder
         string documentationSha = Hash(documentationBytes);
         string candidateSha = Hash(candidateBytes);
         string findingSha = Hash(findingCaseBytes);
-        string compositionFingerprint = assignment.M1Slice9Composition is null
+        string compositionFingerprint = assignment.AnalysisComposition is null
             ? "none"
-            : M1Slice9Composition.Fingerprint(assignment.M1Slice9Composition);
+            : AnalysisComposition.Fingerprint(assignment.AnalysisComposition);
         string baseSemanticFingerprint = SemanticFingerprint(documentation, candidates, findingCases, cancellationToken);
-        string semanticFingerprint = assignment.M1Slice9Composition is null
+        string semanticFingerprint = assignment.AnalysisComposition is null
             ? baseSemanticFingerprint
             : Hash(Encoding.UTF8.GetBytes(baseSemanticFingerprint + "|" + compositionFingerprint));
         cancellationToken.ThrowIfCancellationRequested();
@@ -177,9 +177,9 @@ public static partial class AnalysisPublicationBuilder
             dependencyEdges.Add(new ReplayDependencyEdgeContract(findingCases.PayloadId, findingCases.PromotionPolicyId));
             dependencyEdges.Add(new ReplayDependencyEdgeContract(findingCases.PayloadId, findingCases.ReconciliationPolicyId));
         }
-        if (assignment.M1Slice9Composition is not null)
+        if (assignment.AnalysisComposition is not null)
         {
-            foreach (M1Slice9RetainedDependency dependency in assignment.M1Slice9Composition.Dependencies)
+            foreach (AnalysisRetainedDependency dependency in assignment.AnalysisComposition.Dependencies)
             {
                 dependencyEdges.Add(new ReplayDependencyEdgeContract(
                     assignment.ExecutionInput.ExecutionInputId, new OpaqueId(dependency.DependencyId)));
@@ -217,9 +217,9 @@ public static partial class AnalysisPublicationBuilder
         dependencyEdges.Add(new ReplayDependencyEdgeContract(replayNode, documentation.PayloadId));
         dependencyEdges.Add(new ReplayDependencyEdgeContract(replayNode, candidates.PayloadId));
         dependencyEdges.Add(new ReplayDependencyEdgeContract(replayNode, findingCases.PayloadId));
-        if (assignment.M1Slice9Composition is not null)
+        if (assignment.AnalysisComposition is not null)
         {
-            foreach (M1Slice9RetainedDependency dependency in assignment.M1Slice9Composition.Dependencies)
+            foreach (AnalysisRetainedDependency dependency in assignment.AnalysisComposition.Dependencies)
             {
                 dependencyEdges.Add(new ReplayDependencyEdgeContract(replayNode, new OpaqueId(dependency.DependencyId)));
             }
@@ -308,15 +308,16 @@ public static partial class AnalysisPublicationBuilder
                 AnalysisExecutionInputJsonCodec.Serialize(assignment.ExecutionInput).LongLength,
                 StableId("provenance", assignment.ExecutionInput.ExecutionInputId.Value), dependencyClosureId),
         ];
-        if (assignment.M1Slice9Composition is not null)
+        if (assignment.AnalysisComposition is not null)
         {
             byte[] compositionBytes = JsonSerializer.SerializeToUtf8Bytes(
-                assignment.M1Slice9Composition, ContractJsonSerializer.Options);
+                assignment.AnalysisComposition, ContractJsonSerializer.Options);
+            // Retained serialized identity from the accepted M1 run-output v1 contract.
             artifacts.Add(new AnalysisPublishedArtifact(
-                assignment.M1Slice9Composition.EnvelopeId, "m1-slice9-composition",
+                assignment.AnalysisComposition.EnvelopeId, "m1-slice9-composition",
                 "infinium.internal.m1-slice9-composition/v1", "1", 1, "present",
                 Hash(compositionBytes), compositionBytes.LongLength,
-                StableId("provenance", assignment.M1Slice9Composition.EnvelopeId), dependencyClosureId));
+                StableId("provenance", assignment.AnalysisComposition.EnvelopeId), dependencyClosureId));
         }
         return new AnalysisPublicationBundle(
             replay, output, cli, boundaryReceipt, dependencyClosureId, semanticFingerprint, artifacts);
@@ -350,9 +351,9 @@ public static partial class AnalysisPublicationBuilder
             throw new InvalidDataException("The analysis-v1 assignment is unbounded, malformed, or enables an external boundary.");
         }
         SemanticAnalysisContextIdentity.Validate(assignment.AnalysisContext);
-        if (assignment.M1Slice9Composition is not null)
+        if (assignment.AnalysisComposition is not null)
         {
-            M1Slice9Composition.Validate(assignment.M1Slice9Composition);
+            AnalysisComposition.Validate(assignment.AnalysisComposition);
         }
         if (assignment.ExecutionInput.AnalysisContext.ArtifactId != assignment.AnalysisContext.ContextId
             || assignment.ExecutionInput.AnalysisContext.ArtifactVersion != assignment.AnalysisContext.SchemaVersion
@@ -526,10 +527,10 @@ public static partial class AnalysisPublicationBuilder
         };
         List<CoverageDocumentContract> composedCoverage = [];
         List<TaxonomyAssignmentDocumentContract> composedTaxonomy = [];
-        if (assignment.M1Slice9Composition is not null)
+        if (assignment.AnalysisComposition is not null)
         {
-            M1Slice9Composition.Apply(
-                assignment.M1Slice9Composition, runId, collections, composedTaxonomy, composedCoverage);
+            AnalysisComposition.Apply(
+                assignment.AnalysisComposition, runId, collections, composedTaxonomy, composedCoverage);
         }
         Dictionary<string, RunOutputCollectionStateContract> states = CollectionNames.ToDictionary(
             name => name,

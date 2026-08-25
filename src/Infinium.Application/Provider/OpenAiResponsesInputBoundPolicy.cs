@@ -18,7 +18,7 @@ public sealed record ProviderInputBoundEvidence(
     long ConservativeInputTokenUpperBound);
 
 /// <summary>
-/// Offline, versioned proof for the closed M1 OpenAI Responses request profile.
+/// Offline, versioned proof for the closed OpenAI Responses request profile.
 /// The tokenizer count is retained evidence. Admission uses the stricter byte
 /// envelope B + A: every ordinary o200k token consumes at least one canonical
 /// UTF-8 byte, while A conservatively covers provider-only structural framing.
@@ -46,22 +46,22 @@ public static class OpenAiResponsesInputBoundPolicy
         ProviderOperationKind operationKind,
         ReadOnlyMemory<byte> canonicalRequest,
         ProviderFiniteLimitsContract limits)
-        => ProveCore(operationKind, canonicalRequest, limits, successorV6: false);
+        => ProveCore(operationKind, canonicalRequest, limits, extendedProfile: false);
 
-    public static ProviderInputBoundEvidence ProveSuccessorV6(
+    public static ProviderInputBoundEvidence ProveExtendedProfile(
         ProviderOperationKind operationKind,
         ReadOnlyMemory<byte> canonicalRequest,
         ProviderFiniteLimitsContract limits)
-        => ProveCore(operationKind, canonicalRequest, limits, successorV6: true);
+        => ProveCore(operationKind, canonicalRequest, limits, extendedProfile: true);
 
     private static ProviderInputBoundEvidence ProveCore(
         ProviderOperationKind operationKind,
         ReadOnlyMemory<byte> canonicalRequest,
         ProviderFiniteLimitsContract limits,
-        bool successorV6)
+        bool extendedProfile)
     {
         ArgumentNullException.ThrowIfNull(limits);
-        if (successorV6)
+        if (extendedProfile)
         {
             if (operationKind is not (ProviderOperationKind.TransportQualification
                     or ProviderOperationKind.SourceClaimExtraction
@@ -74,7 +74,7 @@ public static class OpenAiResponsesInputBoundPolicy
                 || limits.MaximumCalculatedNanoUsd is < 1 or > 9_749_920_000
                 || limits.DeadlineMilliseconds is < 1 or > 900_000)
             {
-                throw new InvalidOperationException("Successor v6 limits exceed provider, aggregate-budget, or helper feasibility.");
+                throw new InvalidOperationException("Extended profile limits exceed provider, aggregate-budget, or helper feasibility.");
             }
         }
         else
@@ -97,7 +97,7 @@ public static class OpenAiResponsesInputBoundPolicy
         }
 
         ValidateClosedRequestShape(canonicalRequest, operationKind, limits.MaximumOutputTokens,
-            successorV6 ? 900_000 : 48_000);
+            extendedProfile ? 900_000 : 48_000);
         IReadOnlyList<int> tokenIds = Tokenizer.Value.EncodeToIds(requestText, false, false);
         long byteCount = canonicalRequest.Length;
         long tokenCount = tokenIds.Count;

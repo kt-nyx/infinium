@@ -22,7 +22,7 @@ controlled-real candidates; they do not create executable fixtures or passing
 cases.
 
 Wave F produced the accepted
-[common M1 baseline](m1-evaluation-baseline.md), accepted
+[archived M1 evaluation baseline](evaluator-history.md), accepted
 [semantic fixture manifests](specifications/semantic-fixture-catalog.md), and
 accepted
 [platform fixture manifests](specifications/platform-fixture-catalog.md).

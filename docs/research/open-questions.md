@@ -5,7 +5,7 @@ Disposition: Active register
 
 Last reviewed: 2026-08-10
 The product baseline was accepted on 2026-07-25. The
-[M0 research-foundation plan](../plans/milestones/m0/plan.md) is
+[archived M0 research-foundation plan](../plans/milestones/README.md) is
 Accepted and sequences these investigations. Status is updated only from a
 bounded investigation and the applicable reviewed or accepted disposition; no
 item is answered merely because the legacy code chose an approach.

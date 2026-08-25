@@ -59,7 +59,7 @@ It is governed by:
   [taxonomy dependency map](../taxonomy-dependency-map.md), which inventories
   every product consumer but is explicitly not the answer; and
 - the accepted
-  [M0 Wave C plan](../../plans/milestones/m0/plan.md#wave-c--analysis-surfaces-taxonomy-corpus-and-candidate-scale),
+  [archived M0 Wave C plan](../../plans/milestones/README.md),
   which requires a distinct, versioned, corpus-tested product taxonomy.
 
 This report proposes

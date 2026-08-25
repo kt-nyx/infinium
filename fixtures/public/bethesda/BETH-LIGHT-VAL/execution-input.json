@@ -7,7 +7,7 @@
   },
   "accepted_order_construction_input": {
     "state": "provided",
-    "reason": "Retained Slice 3.5 receipt authoritatively binds construction of the accepted provider/plugin-order projection.",
+    "reason": "The retained accepted-order receipt authoritatively binds construction of the provider/plugin-order projection.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
       "artifact_version": "1.4.0",
@@ -94,7 +94,7 @@
     {
       "component_id": "current-public-fixture-resealer",
       "version": "1.0.0",
-      "fingerprint": "cdc69ef26072ef7fc02d69a9292814fef4ec2824b880380de00befa714098700"
+      "fingerprint": "fc4466b63d5613dd30fbcacf850a7fa270398e0cd822089562875a28bc776f78"
     }
   ],
   "declared_archive_state": {
@@ -103,12 +103,12 @@
   },
   "declared_supported_capabilities": [
     "bethesda-project-authored-fixture-input-v1",
-    "slice3.5-accepted-order-construction-input-v1"
+    "bethesda-accepted-order-construction-input-v1"
   ],
   "declared_unsupported_capabilities": [
     {
       "capability_id": "production-bethesda-semantic-analysis",
-      "reason": "Slice 3.5 prepares inputs and independent truth only; production analysis remains pending Slice 4."
+      "reason": "The accepted-order construction package supplies bounded inputs and independently authored truth for Bethesda analysis."
     },
     {
       "capability_id": "complete-eval-0052-or-eval-0086-pass",

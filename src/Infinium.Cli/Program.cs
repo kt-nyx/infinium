@@ -14,9 +14,9 @@ using CliSummaryDocumentContract = Infinium.Domain.Contracts.CliSummaryDocumentC
 string? root = FirstOption(args, "--root");
 string? command = args.FirstOrDefault(argument => !argument.StartsWith("--", StringComparison.Ordinal)
     && !string.Equals(argument, root, StringComparison.Ordinal));
-bool localScopeResults = command == "scope-results";
+bool localScopeResults = command is "scope-results" or "scope-reports";
 if ((!localScopeResults && (string.IsNullOrWhiteSpace(root) || !Path.IsPathFullyQualified(root)))
-    || command is not ("start" or "status" or "wait" or "cancel" or "inspect" or "results" or "scope-results"))
+    || command is not ("start" or "status" or "wait" or "cancel" or "inspect" or "results" or "scope-results" or "scope-reports"))
 {
     Usage();
     return 2;
@@ -28,7 +28,9 @@ try
     ValidateCommandArguments(args, command);
     if (localScopeResults)
     {
-        return await ScopeResultsAsync(args, json).ConfigureAwait(false);
+        return command == "scope-reports"
+            ? await ScopeReportsAsync(args, json).ConfigureAwait(false)
+            : await ScopeResultsAsync(args, json).ConfigureAwait(false);
     }
     await EnsureCoordinatorAsync(root!).ConfigureAwait(false);
     using CancellationTokenSource connectTimeout = new(TimeSpan.FromSeconds(15));
@@ -91,6 +93,41 @@ static async Task<int> ScopeResultsAsync(string[] arguments, bool json)
     else
     {
         Console.Write(ScopeReversionOutputRenderer.RenderHuman(analysis));
+    }
+    return 0;
+}
+
+static async Task<int> ScopeReportsAsync(string[] arguments, bool json)
+{
+    string path = Path.GetFullPath(PositionalAfter(arguments, "scope-reports"));
+    using FileStream input = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+    if (input.Length is < 1 or > 64L * 1024 * 1024)
+    {
+        throw new InvalidOperationException("The scope-reversion result exceeds its report input bound.");
+    }
+    byte[] bytes = new byte[checked((int)input.Length)];
+    input.ReadExactly(bytes);
+    using JsonDocument header = JsonDocument.Parse(bytes);
+    string schemaId = header.RootElement.GetProperty("schema_id").GetString()
+        ?? throw new InvalidDataException("The scope-reversion result omits its schema identity.");
+    IReadOnlyList<Infinium.Domain.Contracts.FindingReportDocument> reports =
+        schemaId == Infinium.Domain.Contracts.ScopeReversionV2Contract.SchemaId
+            ? FindingReportProjection.Project(ScopeReversionV2JsonCodec.Deserialize(bytes))
+            : FindingReportProjection.Project(ScopeReversionJsonCodec.Deserialize(bytes));
+    if (json)
+    {
+        await Console.OpenStandardOutput().WriteAsync(JsonSerializer.SerializeToUtf8Bytes(
+            reports,
+            Infinium.Domain.Contracts.ContractJsonSerializer.Options)).ConfigureAwait(false);
+        Console.WriteLine();
+        return 0;
+    }
+    foreach (Infinium.Domain.Contracts.FindingReportDocument report in reports)
+    {
+        Console.WriteLine($"{report.State}: {report.Title}");
+        Console.WriteLine($"  {report.Conclusion}");
+        Console.WriteLine($"  Action: {report.RecommendedAction}");
+        Console.WriteLine();
     }
     return 0;
 }
@@ -695,6 +732,7 @@ static void ValidateCommandArguments(string[] arguments, string command)
             expectedPositionals = 1;
             break;
         case "scope-results":
+        case "scope-reports":
             valueOptions.Remove("--root");
             expectedPositionals = 1;
             break;
@@ -766,4 +804,5 @@ static void Usage() =>
           Infinium.Cli --root <absolute-product-root> inspect <run-id> [--json]
           Infinium.Cli --root <absolute-product-root> results <run-id> [--json]
           Infinium.Cli scope-results <scope-reversion-analysis-json-path> [--json]
+          Infinium.Cli scope-reports <scope-reversion-analysis-json-path> [--json]
         """);

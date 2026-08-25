@@ -48,7 +48,7 @@ This investigation is governed by:
 - [ADR-0010](../../architecture/decisions/ADR-0010-snapshot-fingerprint-and-dependency-invalidation.md),
   which requires structural manifests, scoped hashes, and typed dependency
   closures; and
-- [the accepted M0 plan](../../plans/milestones/m0/plan.md#wave-c--analysis-surfaces-taxonomy-corpus-and-candidate-scale),
+- [the archived M0 plan](../../plans/milestones/README.md),
   which permits this bounded survey to inform RQ-036 without pretending the
   full named-analyzer roadmap is complete.
 

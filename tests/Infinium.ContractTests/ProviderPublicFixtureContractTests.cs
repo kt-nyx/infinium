@@ -14,7 +14,7 @@ public sealed class ProviderPublicFixtureContractTests
     {
         Assert.AreEqual(9, ProviderContractExampleReader.Validate(TestRepository.Root));
         JsonObject authority = JsonNode.Parse(File.ReadAllText(TestRepository.PathFromRoot(
-            "fixtures", "public", "contracts", "provider-wp1", "contract-examples.v1.json")))!.AsObject();
+            "fixtures", "public", "contracts", "provider-contract-examples", "contract-examples.v1.json")))!.AsObject();
         JsonArray examples = authority["post_fact_usage_examples"]!.AsArray();
         Assert.HasCount(3, examples);
         Assert.AreEqual("below:settled", $"{examples[0]!["case"]}:{examples[0]!["settlement_state"]}");
@@ -37,7 +37,7 @@ public sealed class ProviderPublicFixtureContractTests
         {
             Directory.CreateDirectory(Path.GetDirectoryName(authorityPath)!);
             JsonObject authority = JsonNode.Parse(File.ReadAllText(TestRepository.PathFromRoot(
-                "fixtures", "public", "contracts", "provider-wp1", "contract-examples.v1.json")))!.AsObject();
+                "fixtures", "public", "contracts", "provider-contract-examples", "contract-examples.v1.json")))!.AsObject();
             authority["expected_answer"] = "forbidden";
             File.WriteAllText(authorityPath, authority.ToJsonString());
             Assert.ThrowsExactly<InvalidDataException>(() => ProviderContractExampleReader.Validate(temporaryRoot));

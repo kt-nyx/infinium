@@ -1,6 +1,6 @@
 {
   "schema_id": "infinium.evaluation.provider-budget-public-manifest/v1",
-  "fixture_id": "M1-PLAT-PROVIDER-AUTHORITY-VAL-v1",
+  "fixture_id": "PROVIDER-AUTHORIZATION-VAL-v1",
   "fixture_version": "1.0.0",
   "partition": "validation",
   "evaluation_ids": [

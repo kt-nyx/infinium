@@ -11,7 +11,7 @@ public sealed record SourceClaimAdmissionPublication(
     byte[] JsonTransparency,
     string HumanTransparency);
 
-internal sealed record SourceClaimCampaignIdentity(
+internal sealed record SourceClaimProposalApplicationIdentity(
     string ApplicationDecisionId,
     string ValidationId,
     string AdmittedArtifactId,
@@ -42,12 +42,12 @@ public sealed class SourceClaimAcquisitionCoordinator
         string requestId,
         string dispatchFenceId,
         DateTimeOffset occurredAt,
-        IReadOnlyDictionary<string, SourceClaimCampaignIdentity> campaignIdentities,
+        IReadOnlyDictionary<string, SourceClaimProposalApplicationIdentity> applicationIdentities,
         IReadOnlyDictionary<string, SourceClaimArtifactAuthority> artifactAuthority,
         IReadOnlyDictionary<string, SourceClaimApplicabilityFactAuthority> applicabilityFacts,
         IReadOnlyDictionary<string, SourceClaimApplicationAuthority> applicationAuthority) =>
         AdmitRetainedTranscriptCore(input, transcript, authorizationId, providerAttemptId,
-            requestId, dispatchFenceId, occurredAt, campaignIdentities,
+            requestId, dispatchFenceId, occurredAt, applicationIdentities,
             artifactAuthority, applicabilityFacts, applicationAuthority);
 
     private SourceClaimAdmissionPublication AdmitRetainedTranscriptCore(
@@ -58,7 +58,7 @@ public sealed class SourceClaimAcquisitionCoordinator
         string requestId,
         string dispatchFenceId,
         DateTimeOffset occurredAt,
-        IReadOnlyDictionary<string, SourceClaimCampaignIdentity>? campaignIdentities,
+        IReadOnlyDictionary<string, SourceClaimProposalApplicationIdentity>? applicationIdentities,
         IReadOnlyDictionary<string, SourceClaimArtifactAuthority>? artifactAuthority = null,
         IReadOnlyDictionary<string, SourceClaimApplicabilityFactAuthority>? applicabilityFacts = null,
         IReadOnlyDictionary<string, SourceClaimApplicationAuthority>? applicationAuthority = null)
@@ -71,20 +71,20 @@ public sealed class SourceClaimAcquisitionCoordinator
         SourceClaimScenarioResult scenario = result.Scenarios.Single();
         SourceClaimApplicationResult applications = new([]);
         Dictionary<string, string> artifactIds = new(StringComparer.Ordinal);
-        if (campaignIdentities is not null)
+        if (applicationIdentities is not null)
         {
             if (applicationAuthority is null
-                || campaignIdentities.Keys.ToHashSet(StringComparer.Ordinal)
+                || applicationIdentities.Keys.ToHashSet(StringComparer.Ordinal)
                     .SetEquals(transcript.Proposals.Select(item => item.ProposalId)) is false
                 || applicationAuthority.Keys.ToHashSet(StringComparer.Ordinal)
-                    .SetEquals(campaignIdentities.Keys) is false)
+                    .SetEquals(applicationIdentities.Keys) is false)
             {
                 throw new InvalidDataException(
                     "Source-claim application requires one analysis-owned context for every retained proposal.");
             }
             SourceClaimApplicationContext[] contexts = transcript.Proposals.Select(proposal =>
             {
-                SourceClaimCampaignIdentity identity = campaignIdentities[proposal.ProposalId];
+                SourceClaimProposalApplicationIdentity identity = applicationIdentities[proposal.ProposalId];
                 SourceClaimApplicationAuthority authority = applicationAuthority[proposal.ProposalId];
                 if (identity.ApplicationLinkId != authority.ApplicationLinkId)
                 {
@@ -99,7 +99,7 @@ public sealed class SourceClaimAcquisitionCoordinator
             foreach (SourceClaimApplicationDecisionContract decision in applications.Decisions.Where(
                          item => item.DecisionLink.DecisionState == SemanticDecisionState.Admitted))
             {
-                SourceClaimCampaignIdentity identity = campaignIdentities[decision.DecisionLink.ProposalId.Value];
+                SourceClaimProposalApplicationIdentity identity = applicationIdentities[decision.DecisionLink.ProposalId.Value];
                 artifactIds.Add(decision.DecisionLink.ProposalId.Value, identity.AdmittedArtifactId);
             }
         }

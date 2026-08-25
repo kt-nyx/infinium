@@ -26,6 +26,18 @@ Use:
 {milestone}/{slice}/[{phase}/]{work-package}
 ```
 
+A bounded transition between milestones uses:
+
+```text
+TRANSITION/{functional-transition-name}/{work-package}
+```
+
+For example, `TRANSITION/POST-M1-CLEANUP/WP1` is the first package of the
+owner-accepted repository cleanup. `TRANSITION` identifies the work class;
+`POST-M1-CLEANUP` names the bounded transition rather than an implementation
+symbol; and `WP1` is its package. This notation does not create another M1
+slice or activate M2.
+
 The phase component is optional. The current effort is:
 
 ```text
@@ -111,6 +123,11 @@ allowed paths/actions, vertical deliverables, contract maturity, verification,
 recoverable failures, genuine escalation conditions, and the next package it
 unblocks. Implementation and review records use the same ID so later status
 reports can be traced without relying on chat history.
+
+Transition plans record the same metadata and package rules. Their IDs may use
+milestone references for planning navigation, but active implementation names
+created by the package still follow functional naming governance and do not
+inherit the transition ID.
 
 Ordinary packages do not define a fixed review or correction budget. Reviews
 classify findings as must-fix, follow-up, non-blocking, owner/authority

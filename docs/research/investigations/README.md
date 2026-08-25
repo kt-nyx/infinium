@@ -25,7 +25,7 @@ Use this outline:
 10. ADR or follow-up enabled
 
 The product-documentation baseline and current
-[M0 research-foundation plan](../../plans/milestones/m0/plan.md)
+[archived M0 research-foundation plan](../../plans/milestones/README.md)
 are accepted. Investigations may begin only within that plan's sequence,
 preflight, authority, source, artifact, and review constraints. Use the
 [research-agent handoff template](../../plans/research-investigation-agent-handoff-template.md)

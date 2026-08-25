@@ -117,7 +117,7 @@ This proposal is governed by:
 - [EVAL-0032](../../evaluation/case-catalog.md);
 - the evaluation strategy, fixture guidelines, and anti-overfitting rules;
   and
-- the accepted [M0 Wave C plan](../../plans/milestones/m0/plan.md#wave-c--analysis-surfaces-taxonomy-corpus-and-candidate-scale).
+- the accepted [archived M0 Wave C plan](../../plans/milestones/README.md).
 
 The logical design consumes the proposed surface contracts in:
 

@@ -47,7 +47,7 @@ public static class HelperProtocolV2Codec
     {
         ulong authorityMaximumFrameBytes = expectedRequestId?.StartsWith(
             "m1-s6-successor-v6-", StringComparison.Ordinal) == true
-            ? HelperProtocolV2Constants.SuccessorV6MaximumFrameBytes
+            ? HelperProtocolV2Constants.ExtendedProfileMaximumFrameBytes
             : HelperProtocolV2Constants.MaximumFrameBytes;
         if (expectedMaximumFrameBytes is 0 || expectedMaximumFrameBytes > authorityMaximumFrameBytes
             || bytes.IsEmpty || (ulong)bytes.Length > expectedMaximumFrameBytes)
@@ -351,14 +351,14 @@ public static class HelperProtocolV2Codec
     }
 
     private static void ValidateLimits(ProviderOperationKindV2 kind, HelperLimitsV2 value,
-        bool successorV6)
+        bool extendedProfile)
     {
-        (uint request, uint input, uint output, uint response, long cost, ulong duration) = successorV6
+        (uint request, uint input, uint output, uint response, long cost, ulong duration) = extendedProfile
             ? kind is ProviderOperationKindV2.TransportQualification
                 or ProviderOperationKindV2.SourceClaimExtraction
                 or ProviderOperationKindV2.CandidateInvestigation
                 ? (1_000_000U, 922_000U, 128_000U, 1_048_576U, 9_749_920_000L, 900_000UL)
-                : throw new InvalidDataException("Successor v6 helper operation kind is unknown.")
+                : throw new InvalidDataException("Extended profile helper operation kind is unknown.")
             : kind switch
             {
                 ProviderOperationKindV2.TransportQualification => (16_384U, 20_480U, 256U, 262_144U, 140_000_000, 60_000UL),
@@ -366,9 +366,9 @@ public static class HelperProtocolV2Codec
                     (65_536U, 73_728U, 4_096U, 1_048_576U, 600_000_000, 120_000UL),
                 _ => throw new InvalidDataException("Helper v2 operation kind is unknown."),
             };
-        ulong maximumFrame = successorV6 ? HelperProtocolV2Constants.SuccessorV6MaximumFrameBytes
+        ulong maximumFrame = extendedProfile ? HelperProtocolV2Constants.ExtendedProfileMaximumFrameBytes
             : HelperProtocolV2Constants.MaximumFrameBytes;
-        ulong maximumStaged = successorV6 ? HelperProtocolV2Constants.SuccessorV6MaximumStagedOutputBytes
+        ulong maximumStaged = extendedProfile ? HelperProtocolV2Constants.ExtendedProfileMaximumStagedOutputBytes
             : response;
         if (value.MaximumFrameBytes is 0 || value.MaximumFrameBytes > maximumFrame
             || value.MaximumRequestBytes is 0 || value.MaximumRequestBytes > request
@@ -637,7 +637,7 @@ public static class HelperProtocolV2Codec
     }
 
     private static void ValidateReceiptUsage(HelperReceiptV2 value, HelperLimitsV2 limits,
-        bool successorV6)
+        bool extendedProfile)
     {
         bool hasUsage = value.InputTokens is not null || value.OutputTokens is not null
             || value.TotalTokens is not null || value.ReasoningTokens is not null
@@ -662,10 +662,10 @@ public static class HelperProtocolV2Codec
         }
         // Assignment limits are pre-dispatch authority. Receipts are post-fact
         // evidence and must retain bounded overruns instead of erasing them.
-        ulong maximumInput = successorV6 ? 922_000UL : 147_456UL;
-        ulong maximumOutput = successorV6 ? 128_000UL : 8_192UL;
-        ulong maximumTotal = successorV6 ? 1_050_000UL : 155_648UL;
-        ulong maximumCost = successorV6 ? 14_980_000_000UL : 1_200_000_000UL;
+        ulong maximumInput = extendedProfile ? 922_000UL : 147_456UL;
+        ulong maximumOutput = extendedProfile ? 128_000UL : 8_192UL;
+        ulong maximumTotal = extendedProfile ? 1_050_000UL : 155_648UL;
+        ulong maximumCost = extendedProfile ? 14_980_000_000UL : 1_200_000_000UL;
         if (value.RawResponse is not null && (!ValidDigest(value.RawResponse)
                 || value.RawResponse.SizeBytes > limits.MaximumResponseBytes
                 || value.RawResponse.SizeBytes > limits.MaximumStagedOutputBytes)

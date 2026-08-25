@@ -9,10 +9,10 @@ public sealed class ProviderCapabilityTests
 {
     [TestMethod]
     [TestCategory("Unit")]
-    public void ProviderCapabilityCatalogIsExactImmutableAndAdministrativeFactsStayUnavailable()
+    public void OpenAiProviderProfileCatalogIsExactImmutableAndAdministrativeFactsStayUnavailable()
     {
         UtcTimestamp observed = new(DateTimeOffset.Parse("2026-08-11T00:00:00+00:00", System.Globalization.CultureInfo.InvariantCulture));
-        M1ProviderCatalogProjection projection = M1ProviderCatalog.CreateNonLiveProjection(observed);
+        ProviderCatalogProjection projection = OpenAiProviderProfileCatalog.CreateNonLiveProjection(observed);
         Assert.AreEqual("gpt-5.6-sol", projection.Capability.Model);
         Assert.AreEqual("default", projection.Capability.ServiceTier);
         Assert.AreEqual("medium", projection.Capability.ReasoningEffort);
@@ -41,8 +41,8 @@ public sealed class PriceCatalogTests
     {
         CollectionAssert.AreEquivalent(
             ExpectedClasses,
-            M1ProviderCatalog.Price.Rules.Select(rule => rule.CacheClass + "/" + rule.TokenClass).ToArray());
-        ProviderPriceRuleContract fractional = M1ProviderCatalog.Price.Rules[0] with
+            OpenAiProviderProfileCatalog.Price.Rules.Select(rule => rule.CacheClass + "/" + rule.TokenClass).ToArray());
+        ProviderPriceRuleContract fractional = OpenAiProviderProfileCatalog.Price.Rules[0] with
         {
             NumeratorNanoUsd = 5,
             DenominatorTokens = 2,
@@ -52,11 +52,11 @@ public sealed class PriceCatalogTests
 
         ProviderFiniteLimitsContract qualification = new(16_384, 20_480, 256, 262_144, 1, 140_000_000, 60_000);
         Assert.AreEqual(110_080_000,
-            M1ProviderCatalog.CalculateWorstCaseNanoUsd(ProviderOperationKind.TransportQualification, qualification));
+            OpenAiProviderProfileCatalog.CalculateWorstCaseNanoUsd(ProviderOperationKind.TransportQualification, qualification));
         Assert.ThrowsExactly<OverflowException>(() =>
             ProviderOperationContractInvariants.CalculateComponentNanoUsd(
                 long.MaxValue,
-                M1ProviderCatalog.Price.Rules[0]));
+                OpenAiProviderProfileCatalog.Price.Rules[0]));
     }
 }
 

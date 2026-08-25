@@ -1,7 +1,0 @@
-{
-  "schema": "infinium.m1-s6.successor-evidence-preflight/v1",
-  "attempt_id": "m1-s6-successor-v6-wp9-attempt-9/3637b14e-0d22-4a0c-88b2-c86bc57d871b",
-  "stage_manifest_sha256": "4845234d7be89df4960f40e71c332d29e27a2611a7d2f77af68870b6d4b43c60",
-  "runtime_authority_sha256": "d68f03064cc78018d6cfc117a43441a763af12dafb8b5e19df81264415cd6c44",
-  "disposition": "fresh-paths-created-before-possible-start"
-}

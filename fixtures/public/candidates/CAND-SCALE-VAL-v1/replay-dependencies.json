@@ -23,8 +23,8 @@
       "dependency_id": "dependency.field-guide",
       "kind": "accepted-public-authority",
       "identity_or_version": "docs/product/candidate-input-and-expansion.md",
-      "sha256": "859ca5b53ace50828e0e89fa7c394d3d5f52756e85845145c05430ec3f5258c7",
-      "byte_length": 8401,
+      "sha256": "fe098453fb75775375272a30a3a2f3e5a314d26e93b8c897b0347450d43bd2b8",
+      "byte_length": 8488,
       "retention_location_class": "tracked-repository",
       "availability": "retained",
       "required_for": [
@@ -34,11 +34,11 @@
       "deletion_effect": "Independent semantic audit loses its field-guide authority binding."
     },
     {
-      "dependency_id": "dependency.slice-plan",
+      "dependency_id": "dependency.verification-profile",
       "kind": "accepted-public-authority",
-      "identity_or_version": "docs/plans/milestones/m1/slices/s5/plan.md",
-      "sha256": "70224dc41d737e9bfbd9e7145f4a352e21e723a564d5ea923f678e9fbbd4dc25",
-      "byte_length": 69427,
+      "identity_or_version": "docs/evaluation/product-conformance-verification-profile.md",
+      "sha256": "71469788bc0a7f73a2d5645c0a717b604b1a6bd4fbb584ee0cd8dbde40ada5f8",
+      "byte_length": 7912,
       "retention_location_class": "tracked-repository",
       "availability": "retained",
       "required_for": [
@@ -48,14 +48,14 @@
       "deletion_effect": "Package-scope and claim-boundary audit loses its plan binding."
     }
   ],
-  "dependency_graph_fingerprint": "4b77b1f41e51a0c8321c8165a3646a58a27106b7070f361b669d40ffd0b9ab18",
+  "dependency_graph_fingerprint": "b524947e29318aacf26be88452e8c34438b780fc4e08d6b0b3a07ff614553d96",
   "expected_output_references": [
     {
       "artifact_id": "oracle/semantic-population-projection.json",
       "artifact_version": "1.0.0",
-      "fingerprint": "6cccf544cd0af9910ed2a40a9b17910cfc17eeaa2eff4e8d0e649d2647cbe5d3",
+      "fingerprint": "15929897bde05d395c4c05c06ddd9d721c50d1a94059046d9bd202e883bc9a7c",
       "availability": "retained",
-      "byte_length": 2459858
+      "byte_length": 2459875
     }
   ]
 }

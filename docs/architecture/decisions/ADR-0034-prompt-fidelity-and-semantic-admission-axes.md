@@ -156,4 +156,4 @@ Infinium selects separate axes and exact prompt-byte provenance.
 - [ADR-0025](ADR-0025-m1-openai-model-and-synchronous-responses-profile.md)
 - [Domain model](../../product/domain-model.md)
 - [Data and trust model](../data-and-trust-model.md)
-- [Slice 6 plan](../../plans/milestones/m1/slices/s6/plan.md)
+- [Archived milestone-plan boundary](../../plans/milestones/README.md)

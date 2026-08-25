@@ -7,9 +7,9 @@ namespace Infinium.PublicFixtures;
 public static class ProviderContractExampleReader
 {
     public const string AuthorityRelativePath =
-        "fixtures/public/contracts/provider-wp1/contract-examples.v1.json";
+        "fixtures/public/contracts/provider-contract-examples/contract-examples.v1.json";
     public const string PackageIdentity =
-        "infinium.public-fixtures.provider-contracts.wp1.answer-free";
+        "infinium.public-fixtures.provider-contracts.answer-free-examples";
 
     private const int MaximumAuthorityBytes = 1_048_576;
     private static readonly string[] SchemaNames =

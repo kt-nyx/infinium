@@ -1,6 +1,6 @@
 {
   "schema_id": "infinium.evaluation.credential-helper-public-manifest/v1",
-  "fixture_id": "M1-PLAT-CREDENTIAL-HELPER-VAL-v1",
+  "fixture_id": "CREDENTIAL-FAULTS-VAL-v1",
   "fixture_version": "1.0.0",
   "partition": "validation",
   "evaluation_ids": ["EVAL-0035", "EVAL-0080", "EVAL-0088", "EVAL-0089"],

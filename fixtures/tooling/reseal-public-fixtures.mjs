@@ -10,13 +10,16 @@ import process from "node:process";
 const repositoryRoot = process.cwd();
 const providerBudgetOnly = process.argv.includes("--provider-budget-only");
 const providerOfflineOnly = process.argv.includes("--provider-offline-only");
+const cleanupRenamesOnly = process.argv.includes("--cleanup-renames-only");
+const currentRegistryOnly = process.argv.includes("--current-registry-only");
+const candidateFixturesOnly = process.argv.includes("--candidate-fixtures-only");
 const providerBudgetFixtures = [
-  ["capability-dev", "M1-PLAT-PROVIDER-CAPABILITY-DEV-v1", "development"],
-  ["capability-val", "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1", "validation"],
-  ["authority-dev", "M1-PLAT-PROVIDER-AUTHORITY-DEV-v1", "development"],
-  ["authority-val", "M1-PLAT-PROVIDER-AUTHORITY-VAL-v1", "validation"],
-  ["budget-dev", "M1-PLAT-BUDGET-DEV-v1", "development"],
-  ["budget-val", "M1-PLAT-BUDGET-VAL-v1", "validation"],
+  ["capability-dev", "PROVIDER-CAPABILITY-DEV-v1", "development"],
+  ["capability-val", "PROVIDER-CAPABILITY-VAL-v1", "validation"],
+  ["authority-dev", "PROVIDER-AUTHORIZATION-DEV-v1", "development"],
+  ["authority-val", "PROVIDER-AUTHORIZATION-VAL-v1", "validation"],
+  ["budget-dev", "PROVIDER-BUDGET-DEV-v1", "development"],
+  ["budget-val", "PROVIDER-BUDGET-VAL-v1", "validation"],
 ];
 const fixtures = [
   {
@@ -31,35 +34,35 @@ const fixtures = [
     relativeRoot: "fixtures/public/bethesda/BETH-NPC-DEV",
     fixtureId: "BETH-NPC-DEV",
     version: "1.4.0",
-    semanticTruthSha256: "45a24e0d75b1cfb27649a20edec7a55d46427face6ed2ce4086e6cae0ee42877",
+    semanticTruthSha256: "cc1d1d487e00916e1d5ce983a789018d6fa78dbfbadff6f845ae642a2f168f7a",
     evaluationIds: ["EVAL-0052", "EVAL-0086"],
   },
   {
     relativeRoot: "fixtures/public/bethesda/BETH-REFR-DEV",
     fixtureId: "BETH-REFR-DEV",
     version: "1.4.0",
-    semanticTruthSha256: "e03072791faffc3587f7b6d195fffa61bcd3148bd45fc55cf251933bda3de0bb",
+    semanticTruthSha256: "2cd9e8850be6164e835739341e69b6d8f3e9bb58f47048bf36198037be154cca",
     evaluationIds: ["EVAL-0052", "EVAL-0086"],
   },
   {
     relativeRoot: "fixtures/public/bethesda/BETH-LIGHT-VAL",
     fixtureId: "BETH-LIGHT-VAL",
     version: "1.4.0",
-    semanticTruthSha256: "1cf45844be54d0f1950ae0e8da026c54e6361facf7f51445274af67854020702",
+    semanticTruthSha256: "7bf973b1c07a1f4d532b5a7a8c567f36f6c2e8aa3d604d88b645150327599477",
     evaluationIds: ["EVAL-0052"],
   },
   {
     relativeRoot: "fixtures/public/bethesda/BETH-MALFORMED-VAL",
     fixtureId: "BETH-MALFORMED-VAL",
     version: "1.4.0",
-    semanticTruthSha256: "e28dcab378157d99a8aa040506c13200b9c8217162b103c9ea08d39a3e1e9ff9",
+    semanticTruthSha256: "c56b28662a78c345dbbc8023b21e34da5758c2281d671b92343313aa408f5678",
     evaluationIds: ["EVAL-0052"],
   },
   {
     relativeRoot: "fixtures/public/bethesda/BETH-UNSUPPORTED-VAL",
     fixtureId: "BETH-UNSUPPORTED-VAL",
     version: "1.4.0",
-    semanticTruthSha256: "06f40703185ff5121fcea940e7ed06787b734ea8f21d3ec446ff51b6ef7e11ea",
+    semanticTruthSha256: "2d3153a1b8b74e03d41b3f9e47cfa4d69723298cccf5c0304a0aead5f3512386",
     evaluationIds: ["EVAL-0052", "EVAL-0086"],
   },
 ];
@@ -107,6 +110,24 @@ if (providerOfflineOnly) {
 
 if (providerBudgetOnly) {
   await resealProviderBudgetFixtures();
+  process.exit(0);
+}
+
+if (cleanupRenamesOnly) {
+  await resealAnalysisPipelineFixture();
+  await resealProviderContractExamples();
+  await refreshCurrentRegistryAuthorities();
+  process.exit(0);
+}
+
+if (currentRegistryOnly) {
+  await refreshCurrentRegistryAuthorities();
+  process.exit(0);
+}
+
+if (candidateFixturesOnly) {
+  for (const fixture of candidateFixtures) await resealCandidateFixture(fixture);
+  await refreshCurrentRegistryAuthorities();
   process.exit(0);
 }
 
@@ -202,15 +223,15 @@ for (const fixture of candidateFixtures) {
   await resealCandidateFixture(fixture);
 }
 
-await resealCrossStageFixture();
+await resealAnalysisPipelineFixture();
 await resealProviderContractExamples();
 
 async function resealProviderBudgetFixtures() {
-  const registryPath = path.join(repositoryRoot, "fixtures/public/public-fixture-registry.v1.json");
+  const registryPath = path.join(repositoryRoot, "fixtures/public/current-fixture-registry.v1.json");
   const registry = await readJson(registryPath);
-  if (registry.registry_version !== "1.2.0" || registry.package_count !== 29
-      || registry.packages.length !== 29) {
-    throw new Error("Provider-budget reseal requires the exact closed registry 1.2.0/29 authority.");
+  if (registry.registry_version !== "1.0.0" || registry.status !== "current"
+      || registry.package_count !== 30 || registry.packages.length !== 30) {
+    throw new Error("Provider-budget reseal requires the exact current 1.0.0/30 registry authority.");
   }
   for (const [directory, fixtureId, partition] of providerBudgetFixtures) {
     const fixtureRoot = path.join(repositoryRoot, "fixtures/public/platform/provider-budget", directory);
@@ -242,15 +263,15 @@ async function resealProviderBudgetFixtures() {
 }
 
 async function resealProviderOfflineFixtures() {
-  const registryPath = path.join(repositoryRoot, "fixtures/public/public-fixture-registry.v1.json");
+  const registryPath = path.join(repositoryRoot, "fixtures/public/current-fixture-registry.v1.json");
   const registry = await readJson(registryPath);
-  if (registry.registry_version !== "1.2.0" || registry.package_count !== 29
-      || registry.packages.length !== 29) {
-    throw new Error("Provider-offline reseal requires the exact closed registry 1.2.0/29 authority.");
+  if (registry.registry_version !== "1.0.0" || registry.status !== "current"
+      || registry.package_count !== 30 || registry.packages.length !== 30) {
+    throw new Error("Provider-offline reseal requires the exact current 1.0.0/30 registry authority.");
   }
   for (const [directory, fixtureId, partition] of [
-    ["offline-dev", "M1-PLAT-OFFLINE-DEV-v1", "development"],
-    ["offline-val", "M1-PLAT-OFFLINE-VAL-v1", "validation"],
+    ["offline-dev", "PROVIDER-OFFLINE-DEV-v1", "development"],
+    ["offline-val", "PROVIDER-OFFLINE-VAL-v1", "validation"],
   ]) {
     const fixtureRoot = path.join(repositoryRoot, "fixtures/public/platform/provider-offline", directory);
     const manifestPath = path.join(fixtureRoot, "public-manifest.json");
@@ -289,7 +310,7 @@ async function resealProviderOfflineFixtures() {
 }
 
 async function resealProviderContractExamples() {
-  const authorityRelative = "fixtures/public/contracts/provider-wp1/contract-examples.v1.json";
+  const authorityRelative = "fixtures/public/contracts/provider-contract-examples/contract-examples.v1.json";
   const authorityPath = path.join(repositoryRoot, ...authorityRelative.split("/"));
   const authorityBytes = await readFile(authorityPath);
   const authority = JSON.parse(authorityBytes.toString("utf8"));
@@ -300,43 +321,35 @@ async function resealProviderContractExamples() {
     "effective-scan-configuration.v2.schema.json", "run-output.v2.schema.json",
     "cli-summary.v2.schema.json",
   ];
-  if (authority.package_identity !== "infinium.public-fixtures.provider-contracts.wp1.answer-free"
+  if (authority.package_identity !== "infinium.public-fixtures.provider-contracts.answer-free-examples"
       || authority.package_version !== "1.0.0" || authority.partition !== "development"
       || authority.status !== "Proposed" || authority.answer_free !== true
       || JSON.stringify(Object.keys(authority.examples).sort()) !== JSON.stringify(schemaNames.sort())) {
-    throw new Error("Provider WP1 contract-example authority is incomplete or not answer-free.");
+    throw new Error("Provider contract-example authority is incomplete or not answer-free.");
   }
   const serialized = JSON.stringify(authority);
   for (const forbidden of ["expected_answer", "expected_label", "oracle", "provider_secret", "credential_target", "authorization_header"]) {
     if (serialized.includes(`\"${forbidden}\"`)) {
-      throw new Error(`Provider WP1 contract examples contain forbidden field ${forbidden}.`);
+      throw new Error(`Provider contract examples contain forbidden field ${forbidden}.`);
     }
   }
 
-  const registryPath = path.join(repositoryRoot, "fixtures/public/public-fixture-registry.v1.json");
+}
+
+async function refreshCurrentRegistryAuthorities() {
+  const registryPath = path.join(repositoryRoot, "fixtures/public/current-fixture-registry.v1.json");
   const registry = await readJson(registryPath);
-  const retained = registry.packages.filter(
-    (item) => item.package_identity !== authority.package_identity,
-  );
-  retained.push({
-    package_identity: authority.package_identity,
-    package_version: authority.package_version,
-    partition: authority.partition,
-    package_path: "fixtures/public/contracts/provider-wp1",
-    authority_file: authorityRelative,
-    authority_bytes: authorityBytes.length,
-    authority_sha256: sha256(authorityBytes),
-    authority_status: authority.status,
-  });
-  registry.schema_identity = "infinium.repository.public-fixture-registry/1.1.0";
-  registry.registry_version = "1.1.0";
-  registry.package_count = retained.length;
-  registry.packages = retained;
+  for (const item of registry.packages) {
+    const authorityPath = path.join(repositoryRoot, ...item.authority_file.split("/"));
+    const authorityBytes = await readFile(authorityPath);
+    item.authority_bytes = authorityBytes.length;
+    item.authority_sha256 = sha256(authorityBytes);
+  }
   await writeJson(registryPath, registry);
 }
 
-async function resealCrossStageFixture() {
-  const fixtureRoot = path.join(repositoryRoot, "fixtures/public/cross-stage/analysis-pipeline");
+async function resealAnalysisPipelineFixture() {
+  const fixtureRoot = path.join(repositoryRoot, "fixtures/public/analysis-pipeline/end-to-end-corpus");
   const manifestPath = path.join(fixtureRoot, "fixture-manifest.v1.json");
   const originalExpected = await readJson(path.join(fixtureRoot, "expected-results.v1.json"));
   const packagePaths = [
@@ -349,10 +362,10 @@ async function resealCrossStageFixture() {
   for (const relative of packagePaths.filter((item) => item !== "fixture-manifest.v1.json")) {
     const filePath = path.join(fixtureRoot, relative);
     if (relative.endsWith(".json")) {
-      await writeJson(filePath, rewriteCrossStageGovernance(await readJson(filePath)));
+      await writeJson(filePath, rewriteAnalysisPipelineGovernance(await readJson(filePath)));
     } else {
       const text = await readFile(filePath, "utf8");
-      await writeFile(filePath, rewriteCrossStageText(text));
+      await writeFile(filePath, rewriteAnalysisPipelineText(text));
     }
   }
 
@@ -361,7 +374,7 @@ async function resealCrossStageFixture() {
   const retainedResultClosure = history.history.find(
     (entry) => entry.event.startsWith("Closed the exact retained result.001 producer-consumer flow"));
   if (!retainedResultClosure) {
-    throw new Error("Cross-stage partition history lost the accepted 1.0.7 retained-result closure.");
+    throw new Error("End-to-end partition history lost the accepted 1.0.7 retained-result closure.");
   }
   retainedResultClosure.version = "1.0.7";
   if (!history.history.some((entry) => entry.version === "1.0.8")) {
@@ -387,11 +400,11 @@ async function resealCrossStageFixture() {
   await writeFile(readmePath, readme);
 
   const expectedAfter = await readJson(path.join(fixtureRoot, "expected-results.v1.json"));
-  if (canonicalJson(rewriteCrossStageGovernance(originalExpected)) !== canonicalJson(expectedAfter)) {
-    throw new Error("Cross-stage normalization changed expected truth beyond functional wording/version identity.");
+  if (canonicalJson(rewriteAnalysisPipelineGovernance(originalExpected)) !== canonicalJson(expectedAfter)) {
+    throw new Error("End-to-end normalization changed expected truth beyond functional wording/version identity.");
   }
 
-  const manifest = rewriteCrossStageGovernance(await readJson(manifestPath));
+  const manifest = rewriteAnalysisPipelineGovernance(await readJson(manifestPath));
   manifest.status = "normalization-reseal-pending-independent-review";
   manifest.package_file_paths = packagePaths;
   for (const registration of manifest.accumulated_package_registrations) {
@@ -434,7 +447,7 @@ async function resealCrossStageFixture() {
   await writeFile(reviewPath, review);
 
   process.stdout.write(
-    `cross-stage/1.0.8 manifest=${sha256(manifestBytes)} aggregate=${manifest.content_aggregate.sha256}\n`,
+    `end-to-end/1.0.8 manifest=${sha256(manifestBytes)} aggregate=${manifest.content_aggregate.sha256}\n`,
   );
 }
 
@@ -442,18 +455,18 @@ async function readJsonIfJsonManifest(filePath) {
   return readJson(filePath);
 }
 
-function rewriteCrossStageGovernance(value) {
-  if (Array.isArray(value)) return value.map(rewriteCrossStageGovernance);
+function rewriteAnalysisPipelineGovernance(value) {
+  if (Array.isArray(value)) return value.map(rewriteAnalysisPipelineGovernance);
   if (value !== null && typeof value === "object") {
     return Object.fromEntries(Object.entries(value).map(
-      ([key, item]) => [key, rewriteCrossStageGovernance(item)]));
+      ([key, item]) => [key, rewriteAnalysisPipelineGovernance(item)]));
   }
-  return typeof value === "string" ? rewriteCrossStageText(value) : value;
+  return typeof value === "string" ? rewriteAnalysisPipelineText(value) : value;
 }
 
-function rewriteCrossStageText(value) {
+function rewriteAnalysisPipelineText(value) {
   return value
-    .replaceAll("Analysis pipeline cross-stage corpus independent cross-stage corpus v1", "Analysis pipeline cross-stage fixture corpus v1")
+    .replaceAll("Analysis pipeline end-to-end corpus independent analysis pipeline corpus v1", "Analysis pipeline end-to-end fixture corpus v1")
     .replaceAll("Version `1.0.8` makes the prior-result chain executable", "Version `1.0.7` makes the prior-result chain executable")
     .replaceAll("documentation stage-finding/case stage", "documentation and finding/case analysis")
     .replaceAll("documentation stage/operations stage", "documentation and analysis-operations")
@@ -507,9 +520,9 @@ async function resealCandidateFixture(fixture) {
 
   const authorityPath = path.join(repositoryRoot, ...candidateAuthorityPath.split("/"));
   const authorityBytes = await readFile(authorityPath);
-  const planIdentity = "docs/plans/milestones/m1/slices/s5/plan.md";
-  const planPath = path.join(repositoryRoot, ...planIdentity.split("/"));
-  const planBytes = await readFile(planPath);
+  const verificationProfileIdentity = "docs/evaluation/product-conformance-verification-profile.md";
+  const verificationProfilePath = path.join(repositoryRoot, ...verificationProfileIdentity.split("/"));
+  const verificationProfileBytes = await readFile(verificationProfilePath);
   const replayPath = path.join(fixtureRoot, "replay-dependencies.json");
   const replay = rewriteCandidateGovernance(await readJson(replayPath));
   replay.fixture_version = fixture.version;
@@ -517,9 +530,9 @@ async function resealCandidateFixture(fixture) {
     (dependency) => dependency.dependency_id === "dependency.input");
   const authorityDependency = replay.dependencies.find(
     (dependency) => dependency.dependency_id === "dependency.field-guide");
-  const planDependency = replay.dependencies.find(
-    (dependency) => dependency.dependency_id === "dependency.slice-plan");
-  if (!inputDependency || !authorityDependency || !planDependency) {
+  const verificationProfileDependency = replay.dependencies.find(
+    (dependency) => dependency.dependency_id === "dependency.verification-profile");
+  if (!inputDependency || !authorityDependency || !verificationProfileDependency) {
     throw new Error(`${fixture.fixtureId} candidate replay dependency closure is incomplete.`);
   }
   Object.assign(inputDependency, {
@@ -532,10 +545,10 @@ async function resealCandidateFixture(fixture) {
     sha256: sha256(authorityBytes),
     byte_length: authorityBytes.length,
   });
-  Object.assign(planDependency, {
-    identity_or_version: planIdentity,
-    sha256: sha256(planBytes),
-    byte_length: planBytes.length,
+  Object.assign(verificationProfileDependency, {
+    identity_or_version: verificationProfileIdentity,
+    sha256: sha256(verificationProfileBytes),
+    byte_length: verificationProfileBytes.length,
   });
   const oracleArtifactBytes = await readFile(oracleArtifactPath);
   replay.expected_output_references = [{

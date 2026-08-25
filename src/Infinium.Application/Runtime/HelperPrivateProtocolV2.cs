@@ -24,7 +24,7 @@ public static class HelperPrivateProtocolV2
         ArgumentNullException.ThrowIfNull(message);
         ValidateEnvelope(message);
         byte[] payload = message.ToByteArray();
-        int maximum = IsSuccessorV6(message) ? MaximumMessageBytes : HistoricalMaximumMessageBytes;
+        int maximum = IsExtendedProfile(message) ? MaximumMessageBytes : HistoricalMaximumMessageBytes;
         if (payload.Length is 0 || payload.Length > maximum)
         {
             throw new InvalidDataException("The helper message exceeds its closed byte bound.");
@@ -62,7 +62,7 @@ public static class HelperPrivateProtocolV2
         }
 
         ValidateEnvelope(result);
-        int semanticMaximum = IsSuccessorV6(result) ? MaximumMessageBytes : HistoricalMaximumMessageBytes;
+        int semanticMaximum = IsExtendedProfile(result) ? MaximumMessageBytes : HistoricalMaximumMessageBytes;
         if (payload.Length > semanticMaximum)
         { throw new InvalidDataException("The helper message exceeds its authority-version byte bound."); }
         if (result.Sequence != expectedSequence)
@@ -146,7 +146,7 @@ public static class HelperPrivateProtocolV2
         }
     }
 
-    private static bool IsSuccessorV6(HelperPrivateFrameV2 message)
+    private static bool IsExtendedProfile(HelperPrivateFrameV2 message)
     {
         string? requestId = message.PayloadCase switch
         {

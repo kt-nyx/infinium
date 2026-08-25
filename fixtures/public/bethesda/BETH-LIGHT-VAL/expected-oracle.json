@@ -1366,55 +1366,55 @@
     },
     "deterministic_results": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "external_claims": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "application_links": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "discovery_leads": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "model_proposals": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "proposal_admissions": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "candidates": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "hypotheses": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "findings": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "recommendations": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "supported_cases": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "lead_only_cases": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "abstentions": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "invalid_inputs": {
       "state": "populated",
@@ -1422,11 +1422,11 @@
     },
     "coverage_gaps": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "failures": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     }
   },
   "expected_taxonomy_assignments": [],
@@ -1554,7 +1554,7 @@
   "expected_replay_manifest": {
     "artifact_id": "oracle/replay-manifest.json",
     "artifact_version": "1.4.0",
-    "fingerprint": "aa603186147a3aa05ef91463347eea9999d8cc33d24e58927181dcb3b8f90fb1",
+    "fingerprint": "2aa3c2863c566d282b1b46e24de7dff99067054f1040f66ab15fe4bdb62d3957",
     "availability": "retained",
     "byte_length": 4305
   },

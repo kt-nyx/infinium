@@ -6,7 +6,7 @@
   "evaluation_ids": [
     "EVAL-0052"
   ],
-  "purpose": "Qualify project-authored malformed Bethesda byte boundaries and bounded failure expectations for later Slice 4 evaluation.",
+  "purpose": "Qualify project-authored malformed Bethesda byte boundaries and bounded failure expectations for bounded Bethesda analyzer evaluation.",
   "classification": "malformed",
   "partition": "development",
   "partition_history": [
@@ -33,15 +33,15 @@
         "fingerprint": "934b542e6072951453cd732e5ad8a99ef7dc654d3cde479bba01504591dd0fb6",
         "availability": "evaluator-private"
       },
-      "authorized_by": "project-owner/user-directed-slice4-fixture-conformance-correction-20260801"
+      "authorized_by": "project-owner/bethesda-fixture-conformance-correction-20260801"
     }
   ],
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
-  "input_package_fingerprint": "c86740369251e6d783e24db7b382da73b69939e962fd8b7d2b1e35e0f148a42d",
-  "oracle_fingerprint": "61c6b61312793d43b9b85e440993bd456d943bb953600f4c391e8605188faef9",
+  "input_package_fingerprint": "1e61a121ad93d0ea6297a723b4bce7dc84735c39e6154787a505422f095439d5",
+  "oracle_fingerprint": "095a4b86b59b2347f759214353f7d7360e1d0662d1504e27f53dc405928269c8",
   "provenance_fingerprint": "dd31506e9bb463e836d56ed365c7956944be5ab99a28aa06d56e4cbd72f2133c",
-  "replay_dependency_fingerprint": "296afb6711f16d3d12cbb6bf6bb6437c21f2f219d3558243f70d6ef3ae64d175",
+  "replay_dependency_fingerprint": "5cd4265206054b620939d4de9f99425e62e79484bde525e0fe7104db70134175",
   "redistribution_class": "project-authored-redistributable",
   "owner": "infinium-evaluation",
   "review_state": "accepted",

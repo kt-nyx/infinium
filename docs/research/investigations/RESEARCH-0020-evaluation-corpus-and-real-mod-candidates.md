@@ -840,7 +840,7 @@ placement lead is not sufficient for EVAL-0017.
 
 Repository authority and research:
 
-- [M0 research foundation plan](../../plans/milestones/m0/plan.md)
+- [Archived M0 research foundation plan](../../plans/milestones/README.md)
 - [Evaluation strategy](../../evaluation/evaluation-strategy.md)
 - [Evaluation case catalog](../../evaluation/case-catalog.md)
 - [Fixture guidelines](../../evaluation/fixture-guidelines.md)

@@ -1,0 +1,281 @@
+{
+  "schema_identity": "infinium.repository.current-fixture-registry/1.0.0",
+  "registry_version": "1.0.0",
+  "status": "current",
+  "package_count": 30,
+  "packages": [
+    {
+      "package_identity": "PROVIDER-CAPABILITY-DEV-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/platform/provider-budget/capability-dev",
+      "authority_file": "fixtures/public/platform/provider-budget/capability-dev/public-manifest.json",
+      "authority_bytes": 519,
+      "authority_sha256": "4221857c484c011cf77c727ffa785bf8e4749aaf126a08ad41463ff58759f48a"
+    },
+    {
+      "package_identity": "PROVIDER-CAPABILITY-VAL-v1",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/platform/provider-budget/capability-val",
+      "authority_file": "fixtures/public/platform/provider-budget/capability-val/public-manifest.json",
+      "authority_bytes": 518,
+      "authority_sha256": "4b8bb63020625025569bbf6e8441651f9fc63951875948e47f68a588b5f3d803"
+    },
+    {
+      "package_identity": "PROVIDER-AUTHORIZATION-DEV-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/platform/provider-budget/authority-dev",
+      "authority_file": "fixtures/public/platform/provider-budget/authority-dev/public-manifest.json",
+      "authority_bytes": 522,
+      "authority_sha256": "78d1999eac484d1ba79d4a00898ccb648ad433e72496699573e47fc9e707c1b8"
+    },
+    {
+      "package_identity": "PROVIDER-AUTHORIZATION-VAL-v1",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/platform/provider-budget/authority-val",
+      "authority_file": "fixtures/public/platform/provider-budget/authority-val/public-manifest.json",
+      "authority_bytes": 521,
+      "authority_sha256": "dff3aabe7513172de2103f749cec71a856281edcd74c6e2cbfd332c46f7dbd99"
+    },
+    {
+      "package_identity": "PROVIDER-BUDGET-DEV-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/platform/provider-budget/budget-dev",
+      "authority_file": "fixtures/public/platform/provider-budget/budget-dev/public-manifest.json",
+      "authority_bytes": 515,
+      "authority_sha256": "a4b828d2848ede2941e8c9c215c28b87cf51e4a0c4ed8ced200001f2677cbb11"
+    },
+    {
+      "package_identity": "PROVIDER-BUDGET-VAL-v1",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/platform/provider-budget/budget-val",
+      "authority_file": "fixtures/public/platform/provider-budget/budget-val/public-manifest.json",
+      "authority_bytes": 514,
+      "authority_sha256": "e4612ba518c14e4526543d766b35f315ecc236462df2af3b25aded95cc052e36"
+    },
+    {
+      "package_identity": "PROVIDER-OFFLINE-DEV-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/platform/provider-offline/offline-dev",
+      "authority_file": "fixtures/public/platform/provider-offline/offline-dev/public-manifest.json",
+      "authority_bytes": 1840,
+      "authority_sha256": "0c0c2f6ff1d5e6dbaa39278040dcd642396ff05d5d8bcfd223edbdb387a30e74"
+    },
+    {
+      "package_identity": "PROVIDER-OFFLINE-VAL-v1",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/platform/provider-offline/offline-val",
+      "authority_file": "fixtures/public/platform/provider-offline/offline-val/public-manifest.json",
+      "authority_bytes": 1841,
+      "authority_sha256": "21ca6c476ad0e8ecab876a28650388178cf3bd7f2a82ef8a455cef1c3848cf2b"
+    },
+    {
+      "package_identity": "CREDENTIAL-LIFECYCLE-DEV-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/platform/credential-helper/lifecycle-dev",
+      "authority_file": "fixtures/public/platform/credential-helper/lifecycle-dev/public-manifest.json",
+      "authority_bytes": 553,
+      "authority_sha256": "d549843d373431cb3ca6f846f092ad4ff76aa97a46919fc690fb1eb3451e0d77"
+    },
+    {
+      "package_identity": "CREDENTIAL-FAULTS-VAL-v1",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/platform/credential-helper/faults-val",
+      "authority_file": "fixtures/public/platform/credential-helper/faults-val/public-manifest.json",
+      "authority_bytes": 549,
+      "authority_sha256": "e26aec26e9ca289601078cf9c249a0366d529bef62e5434273b73d6b5851f118"
+    },
+    {
+      "package_identity": "PLATFORM-ANALYSIS-RUNTIME-DEV-v1",
+      "package_version": "1.1.0",
+      "partition": "development",
+      "package_path": "fixtures/public/platform/analysis-runtime-substrate",
+      "authority_file": "fixtures/public/platform/analysis-runtime-substrate/public-manifest.json",
+      "authority_bytes": 1464,
+      "authority_sha256": "d4794f195ed1b165b041afd80d47039139eb33394e5e8b51fe9891449c1683f3"
+    },
+    {
+      "package_identity": "BETH-NPC-DEV",
+      "package_version": "1.4.0",
+      "partition": "development",
+      "package_path": "fixtures/public/bethesda/BETH-NPC-DEV",
+      "authority_file": "fixtures/public/bethesda/BETH-NPC-DEV/public-manifest.json",
+      "authority_bytes": 1407,
+      "authority_sha256": "86dbb4bf2dc54b64bfc93e55832d316a7ce75bf9a2ab2bd46954f941822ce592"
+    },
+    {
+      "package_identity": "BETH-REFR-DEV",
+      "package_version": "1.4.0",
+      "partition": "development",
+      "package_path": "fixtures/public/bethesda/BETH-REFR-DEV",
+      "authority_file": "fixtures/public/bethesda/BETH-REFR-DEV/public-manifest.json",
+      "authority_bytes": 1433,
+      "authority_sha256": "1f552ad4fc567429023f8a6897cebe2a04f35d196c451895eb2a27dc37bef389"
+    },
+    {
+      "package_identity": "BETH-LIGHT-VAL",
+      "package_version": "1.4.0",
+      "partition": "development",
+      "package_path": "fixtures/public/bethesda/BETH-LIGHT-VAL",
+      "authority_file": "fixtures/public/bethesda/BETH-LIGHT-VAL/public-manifest.json",
+      "authority_bytes": 2366,
+      "authority_sha256": "f04f7aa3112a19c0f4d1cddc0895750fdaea7e5dede5a53665a266024b490d05"
+    },
+    {
+      "package_identity": "BETH-MALFORMED-VAL",
+      "package_version": "1.4.0",
+      "partition": "development",
+      "package_path": "fixtures/public/bethesda/BETH-MALFORMED-VAL",
+      "authority_file": "fixtures/public/bethesda/BETH-MALFORMED-VAL/public-manifest.json",
+      "authority_bytes": 2422,
+      "authority_sha256": "b8910ce70bb2e03308a243af49e15b5910cd076836a82e0efcf3c685daccac9f"
+    },
+    {
+      "package_identity": "BETH-UNSUPPORTED-VAL",
+      "package_version": "1.4.0",
+      "partition": "development",
+      "package_path": "fixtures/public/bethesda/BETH-UNSUPPORTED-VAL",
+      "authority_file": "fixtures/public/bethesda/BETH-UNSUPPORTED-VAL/public-manifest.json",
+      "authority_bytes": 2396,
+      "authority_sha256": "cb184f2f7267bed870527e319d58246cc2574a2e87b18e6f4f52d728413e92c9"
+    },
+    {
+      "package_identity": "DOC-CLAIM-CORE-DEV",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/documentation/DOC-CLAIM-CORE-DEV",
+      "authority_file": "fixtures/public/documentation/DOC-CLAIM-CORE-DEV/public-manifest.json",
+      "authority_bytes": 1513,
+      "authority_sha256": "1e2b623cb27eea6ee4e96fe105043723c98aaca9a89b597badc0006d40d7f1f1"
+    },
+    {
+      "package_identity": "DOC-CLAIM-ADVERSARIAL-VAL",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/documentation/DOC-CLAIM-ADVERSARIAL-VAL",
+      "authority_file": "fixtures/public/documentation/DOC-CLAIM-ADVERSARIAL-VAL/public-manifest.json",
+      "authority_bytes": 1573,
+      "authority_sha256": "a2db9998c47ad1441e3d402f12a7c1a7d9c51d79bcefe0bb0d7a2c268e500c3e"
+    },
+    {
+      "package_identity": "CAND-SEMANTIC-DEV-v1",
+      "package_version": "1.0.1",
+      "partition": "development",
+      "package_path": "fixtures/public/candidates/CAND-SEMANTIC-DEV-v1",
+      "authority_file": "fixtures/public/candidates/CAND-SEMANTIC-DEV-v1/public-manifest.json",
+      "authority_bytes": 1482,
+      "authority_sha256": "9891090f450f1b8e233ad976c331a33a149f3e96930a5bf26121b61c4361aaa9"
+    },
+    {
+      "package_identity": "CAND-SCALE-VAL-v1",
+      "package_version": "1.0.1",
+      "partition": "validation",
+      "package_path": "fixtures/public/candidates/CAND-SCALE-VAL-v1",
+      "authority_file": "fixtures/public/candidates/CAND-SCALE-VAL-v1/public-manifest.json",
+      "authority_bytes": 1444,
+      "authority_sha256": "21d917d9885ec0f22b2594b9fcf978f652d50393b68ac5987e9556e2184d6757"
+    },
+    {
+      "package_identity": "CAND-STRESS-DEV-v1",
+      "package_version": "1.0.1",
+      "partition": "development",
+      "package_path": "fixtures/public/candidates/CAND-STRESS-DEV-v1",
+      "authority_file": "fixtures/public/candidates/CAND-STRESS-DEV-v1/public-manifest.json",
+      "authority_bytes": 1496,
+      "authority_sha256": "6331c7a6864860c4326a9d39af16a3059cb3c839f18166c4994dc2be20cbabac"
+    },
+    {
+      "package_identity": "infinium.public-fixtures.finding-cases.causal-conclusions.generic-a",
+      "package_version": "1.0.3",
+      "partition": "finding-case-causal-conclusions",
+      "package_path": "fixtures/public/findings-cases",
+      "authority_file": "fixtures/public/findings-cases/finding-case-independent-truth.v1.0.3.json",
+      "authority_bytes": 255197,
+      "authority_sha256": "6f395a3de625c8d72ea8bd73b70aedede213e9533b9299ebed931f7b4eb5b3d2"
+    },
+    {
+      "package_identity": "infinium.public-fixtures.finding-cases.reconciliation-lineage.generic-b",
+      "package_version": "1.0.3",
+      "partition": "finding-case-reconciliation-lineage",
+      "package_path": "fixtures/public/findings-cases",
+      "authority_file": "fixtures/public/findings-cases/finding-case-independent-truth.v1.0.3.json",
+      "authority_bytes": 255197,
+      "authority_sha256": "6f395a3de625c8d72ea8bd73b70aedede213e9533b9299ebed931f7b4eb5b3d2"
+    },
+    {
+      "package_identity": "infinium.public-fixtures.finding-cases.taxonomy-history.generic-c",
+      "package_version": "1.0.3",
+      "partition": "finding-case-taxonomy-history",
+      "package_path": "fixtures/public/findings-cases",
+      "authority_file": "fixtures/public/findings-cases/finding-case-independent-truth.v1.0.3.json",
+      "authority_bytes": 255197,
+      "authority_sha256": "6f395a3de625c8d72ea8bd73b70aedede213e9533b9299ebed931f7b4eb5b3d2"
+    },
+    {
+      "package_identity": "infinium.public-fixtures.finding-cases.coverage-boundaries.generic-d",
+      "package_version": "1.0.3",
+      "partition": "finding-case-coverage-boundaries",
+      "package_path": "fixtures/public/findings-cases",
+      "authority_file": "fixtures/public/findings-cases/finding-case-independent-truth.v1.0.3.json",
+      "authority_bytes": 255197,
+      "authority_sha256": "6f395a3de625c8d72ea8bd73b70aedede213e9533b9299ebed931f7b4eb5b3d2"
+    },
+    {
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "package_version": "1.0.2",
+      "partition": "development",
+      "package_path": "fixtures/public/operations/analysis-lifecycle",
+      "authority_file": "fixtures/public/operations/analysis-lifecycle/fixture-manifest.v1.json",
+      "authority_bytes": 16139,
+      "authority_sha256": "599061f818b83f8c7d13590c8237222dc0c01636b882717bfcf2ba3b67e170e9"
+    },
+    {
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "package_version": "1.0.2",
+      "partition": "validation",
+      "package_path": "fixtures/public/operations/analysis-lifecycle",
+      "authority_file": "fixtures/public/operations/analysis-lifecycle/fixture-manifest.v1.json",
+      "authority_bytes": 16139,
+      "authority_sha256": "599061f818b83f8c7d13590c8237222dc0c01636b882717bfcf2ba3b67e170e9"
+    },
+    {
+      "package_identity": "infinium.public-fixtures.analysis-pipeline.end-to-end.clean-incremental-replay.generic-a",
+      "package_version": "1.0.8",
+      "partition": "development",
+      "package_path": "fixtures/public/analysis-pipeline/end-to-end-corpus",
+      "authority_file": "fixtures/public/analysis-pipeline/end-to-end-corpus/fixture-manifest.v1.json",
+      "authority_bytes": 14109,
+      "authority_sha256": "ec3a1581bbbad2ea2541067833dcec0eb18aa324c2ca6f65cf23ae68541b02ed",
+      "authority_status": "independently-reviewed-accepted-normalization-revalidation"
+    },
+    {
+      "package_identity": "infinium.public-fixtures.provider-contracts.answer-free-examples",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/contracts/provider-contract-examples",
+      "authority_file": "fixtures/public/contracts/provider-contract-examples/contract-examples.v1.json",
+      "authority_bytes": 15809,
+      "authority_sha256": "0bc95f7386b68fd457e9ecbb702ba8f2c9b0982c27245cc9c3d5934ece70529b",
+      "authority_status": "Proposed"
+    },
+    {
+      "package_identity": "scope-reversion-synthetic-bounded-cases-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/analysis/scope-reversion/synthetic-bounded-cases-v1",
+      "authority_file": "fixtures/public/analysis/scope-reversion/synthetic-bounded-cases-v1/conformance-manifest.v1.json",
+      "authority_bytes": 1053,
+      "authority_sha256": "08e88a7257e4305e44e164db79e8997ac1fc1909e21f7dfa7601a7200b1a2462",
+      "authority_status": "developer-owned-product-conformance-not-semantic-oracle"
+    }
+  ]
+}

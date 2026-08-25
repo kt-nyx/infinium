@@ -55,7 +55,7 @@ public sealed class ProviderBudgetIntegrationTests
         OneShotCredentialHelperLauncher launcher = new(
             helper,
             Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(helper))),
-            Path.Combine(Path.GetTempPath(), "Infinium-Wp4-DeleteFenceStore-" + Guid.NewGuid().ToString("N")));
+            Path.Combine(Path.GetTempPath(), "Infinium-CredentialDeleteFenceStore-" + Guid.NewGuid().ToString("N")));
         CredentialHelperCoordinator coordinator = new(context.Store, launcher);
         HelperPrivateFrameV2 bootstrap = HelperTestFrames.Bootstrap(nonceSeed: 70);
         bootstrap.Bootstrap.Credential.AccessProfileId.Value = "profile-restore";
@@ -85,7 +85,7 @@ public sealed class ProviderBudgetIntegrationTests
 
     [TestMethod]
     [TestCategory("Integration")]
-    public async Task CredentialDispatchCoordinatorDerivesFinalGateAndAdoptsHelperResponseThroughWp2Path()
+    public async Task CredentialDispatchCoordinatorDerivesFinalGateAndAdoptsHelperResponse()
     {
         using BudgetContext context = BudgetContext.Create();
         _ = context.Store.ReserveProviderBudget(1, context.Request);
@@ -93,7 +93,7 @@ public sealed class ProviderBudgetIntegrationTests
         OneShotCredentialHelperLauncher launcher = new(
             helper,
             Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(helper))),
-            Path.Combine(Path.GetTempPath(), "Infinium-Wp3-DispatchStore-" + Guid.NewGuid().ToString("N")));
+            Path.Combine(Path.GetTempPath(), "Infinium-CredentialDispatchStore-" + Guid.NewGuid().ToString("N")));
 
         HelperPrivateFrameV2 enrollmentBootstrap = HelperTestFrames.Bootstrap(nonceSeed: 71);
         enrollmentBootstrap.Bootstrap.Credential.AccessProfileId.Value = "profile-restore";
@@ -180,16 +180,18 @@ public sealed class ProviderBudgetIntegrationTests
         Assert.IsNotNull(helperResult.Staging.ResponseRelativePath);
         Assert.AreEqual("assignment-1:response", persisted.ResponseId);
         Assert.AreEqual(ProviderBudgetEventKind.SettledComplete, settlement.Kind);
-        byte[] secretCanary = "WP3-REAL-CHILD-SECRET-CANARY"u8.ToArray();
-        byte[] targetCanary = "WP3-REAL-CHILD-TARGET-CANARY"u8.ToArray();
+        byte[] secretCanary = "INFINIUM-HELPER-TEST-SECRET"u8.ToArray();
+        byte[] targetCanary = "CAPABILITY-BOUND-STORE-TARGET-CANARY"u8.ToArray();
         context.Store.Dispose();
         Assert.IsFalse(Directory.EnumerateFiles(context.Root, "*", SearchOption.AllDirectories)
             .Select(File.ReadAllBytes)
             .Any(bytes => bytes.AsSpan().IndexOf(secretCanary) >= 0
                 || bytes.AsSpan().IndexOf(targetCanary) >= 0),
             "Real-child canaries must not enter the authoritative database, staging, output, or replay roots.");
-        Assert.IsFalse(helperResult.Process.Receipt.ToString().Contains(
-            "WP3-REAL-CHILD", StringComparison.Ordinal),
+        string receiptText = helperResult.Process.Receipt.ToString();
+        Assert.IsFalse(receiptText.Contains(
+            "INFINIUM-HELPER-TEST-SECRET", StringComparison.Ordinal)
+            || receiptText.Contains("CAPABILITY-BOUND-STORE-TARGET-CANARY", StringComparison.Ordinal),
             "Real-child canaries must not enter helper diagnostics.");
 
         static void SetCredential(HelperAssignmentV2 value, string profile, string generation)
@@ -378,7 +380,7 @@ public sealed class ProviderBudgetIntegrationTests
         using BudgetContext context = BudgetContext.Create();
         _ = context.Store.ReserveProviderBudget(1, context.Request);
         ProviderDispatchGateReceipt gate = context.Store.AuthorizeProviderDispatch(context.GateRequest);
-        ProviderAccountingCoordinator coordinator = new(context.Store);
+        ProviderUsageAccounting coordinator = new(context.Store);
         ProviderBudgetSettlementReceipt settlement = coordinator.SimulatePersistAndSettle(
             gate, "authorization-settlement", "operation-restore", "reservation-settlement",
             "attempt-settlement", "request-settlement", "production-simulator",
@@ -443,7 +445,7 @@ public sealed class ProviderBudgetIntegrationTests
         using BudgetContext context = BudgetContext.Create();
         _ = context.Store.ReserveProviderBudget(1, context.Request);
         ProviderDispatchGateReceipt gate = context.Store.AuthorizeProviderDispatch(context.GateRequest);
-        ProviderAccountingCoordinator accounting = new(context.Store);
+        ProviderUsageAccounting accounting = new(context.Store);
         _ = accounting.SimulatePersistAndSettle(
             gate, "authorization-settlement", "operation-restore", "reservation-settlement",
             "attempt-settlement", "request-settlement", "source-claim-persist",
@@ -470,7 +472,7 @@ public sealed class ProviderBudgetIntegrationTests
         Assert.IsEmpty(context.Store.ReadSourceClaimApplicationLinks("acquisition-restore"),
             "Acquisition registration must not pre-author provider proposal or application identities.");
         (SourceClaimExecutionInput fixtureInput, SourceClaimRetainedTranscript[] fixtureTranscripts) =
-            SourceClaimAdmissionIntegrationTests.LoadCurrentContractPackage("S6-CLAIM-DEV-v1");
+            SourceClaimAdmissionIntegrationTests.LoadCurrentContractPackage("core");
         const string deletedText = "This retained passage has been deleted and is audit-only.";
         SourceClaimExecutionInput input = fixtureInput with
         {
@@ -533,12 +535,12 @@ public sealed class ProviderBudgetIntegrationTests
         byte[] appliedBytes = System.Text.Encoding.UTF8.GetBytes(appliedPassage.Text);
         const string appliedArtifactId = "artifact-provider-returned-arbitrary-omega";
         const string appliedFact = "Mode Copper is selected for the consuming analysis context.";
-        Dictionary<string, SourceClaimCampaignIdentity> applicationIdentities = transcript.Proposals
+        Dictionary<string, SourceClaimProposalApplicationIdentity> applicationIdentities = transcript.Proposals
             .ToDictionary(item => item.ProposalId, item => item.ProposalId == appliedProposal.ProposalId
-                ? new SourceClaimCampaignIdentity("application-decision-provider-returned-arbitrary-omega",
+                ? new SourceClaimProposalApplicationIdentity("application-decision-provider-returned-arbitrary-omega",
                     "application-validation-provider-returned-arbitrary-omega", appliedArtifactId,
                     "consumer-analysis-source-claim-link")
-                : new SourceClaimCampaignIdentity("application-decision-" + item.ProposalId,
+                : new SourceClaimProposalApplicationIdentity("application-decision-" + item.ProposalId,
                     "application-validation-" + item.ProposalId, "unused-artifact-" + item.ProposalId,
                     "application-link-" + item.ProposalId), StringComparer.Ordinal);
         Dictionary<string, SourceClaimApplicationAuthority> applicationAuthorities = transcript.Proposals
@@ -700,8 +702,8 @@ public sealed class ProviderBudgetIntegrationTests
         byte[] legacySchema8Payload = SerializeSchema8SourceClaimPayload(document);
         string legacySchema8PayloadSha256 = Convert.ToHexStringLower(SHA256.HashData(legacySchema8Payload));
 
-        BackupArtifact backup = context.Store.CreateBackup("Wp6SourceClaim", BaseTime.AddSeconds(12));
-        string restoredRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp6-Restore-" + Guid.NewGuid().ToString("N"));
+        BackupArtifact backup = context.Store.CreateBackup("SourceClaimPersistence", BaseTime.AddSeconds(12));
+        string restoredRoot = Path.Combine(Path.GetTempPath(), "Infinium-SourceClaimRestore-" + Guid.NewGuid().ToString("N"));
         try
         {
             using (StoragePaths targetPaths = new(restoredRoot))
@@ -736,23 +738,23 @@ public sealed class ProviderBudgetIntegrationTests
                 schema8HistoricalSnapshot.Split('\n'),
                 HistoricalSemanticSnapshot(migrated.Paths.Database).Split('\n'),
                 "Schema 8 migration must not rewrite retained proposal, validation, admission, artifact, or application evidence.");
-            ProviderSemanticAdmissionReadModel historicalAdmission = migrated
+            ProviderSemanticAdmissionReadModel retainedAdmission = migrated
                 .ReadSourceClaimAdmissions("acquisition-restore")
                 .Single(x => x.AdmissionId == "admission-provider-returned-arbitrary-omega");
-            Assert.AreEqual("admitted", historicalAdmission.State,
+            Assert.AreEqual("admitted", retainedAdmission.State,
                 "The legacy state remains audit-visible history.");
-            Assert.AreEqual("supported", historicalAdmission.SupportState);
-            Assert.AreEqual("not-evaluated", historicalAdmission.ApplicabilityState);
-            Assert.AreEqual("abstained", historicalAdmission.DecisionState,
+            Assert.AreEqual("supported", retainedAdmission.SupportState);
+            Assert.AreEqual("not-evaluated", retainedAdmission.ApplicabilityState);
+            Assert.AreEqual("abstained", retainedAdmission.DecisionState,
                 "Historical admission cannot acquire current authority without migrated applicability evidence.");
-            Assert.IsFalse(ProviderAccountingCoordinator.IsCurrentSemanticAdmission(historicalAdmission),
+            Assert.IsFalse(ProviderUsageAccounting.IsCurrentSemanticAdmission(retainedAdmission),
                 "Terminal publication must not select a migrated legacy admission as current authority.");
-            HistoricalProviderSemanticPayloadReadModel historicalPayload = migrated.ReadHistoricalSourceClaimPayload(
+            HistoricalProviderSemanticPayloadReadModel retainedPayload = migrated.ReadHistoricalSourceClaimPayload(
                 "acquisition-restore", "admission-provider-returned-arbitrary-omega");
-            Assert.AreEqual(legacySchema8PayloadSha256, historicalPayload.ContentSha256);
-            Assert.AreEqual(legacySchema8Payload.LongLength, historicalPayload.ByteLength);
-            Assert.AreEqual("retained", historicalPayload.RetentionState);
-            CollectionAssert.AreEqual(legacySchema8Payload, historicalPayload.Payload,
+            Assert.AreEqual(legacySchema8PayloadSha256, retainedPayload.ContentSha256);
+            Assert.AreEqual(legacySchema8Payload.LongLength, retainedPayload.ByteLength);
+            Assert.AreEqual("retained", retainedPayload.RetentionState);
+            CollectionAssert.AreEqual(legacySchema8Payload, retainedPayload.Payload,
                 "The exact legacy-invalid schema-8 payload must remain immutable and audit-visible.");
             Assert.ThrowsExactly<InvalidOperationException>(() => migrated.ReadSourceClaimExtraction(
                 "acquisition-restore", "admission-provider-returned-arbitrary-omega"),
@@ -774,7 +776,7 @@ public sealed class ProviderBudgetIntegrationTests
                 "Current exact-byte resolution must not revive a migrated legacy application.");
             Assert.ThrowsExactly<InvalidDataException>(() => migrated.ConsumeAdmittedSourceClaim(new(
                 "consumer-link-after-schema8-migration", "acquisition-restore",
-                historicalAdmission.AdmissionId, "run-restore", "application-restore", "cost-restore",
+                retainedAdmission.AdmissionId, "run-restore", "application-restore", "cost-restore",
                 BaseTime.AddSeconds(14))));
         }
         finally
@@ -793,7 +795,7 @@ public sealed class ProviderBudgetIntegrationTests
         using BudgetContext context = BudgetContext.Create();
         _ = context.Store.ReserveProviderBudget(1, context.Request);
         ProviderDispatchGateReceipt gate = context.Store.AuthorizeProviderDispatch(context.GateRequest);
-        ProviderAccountingCoordinator accounting = new(context.Store);
+        ProviderUsageAccounting accounting = new(context.Store);
         _ = accounting.SimulatePersistAndSettle(
             gate, "authorization-settlement", "operation-restore", "reservation-settlement",
             "attempt-settlement", "request-settlement", "candidate-seed",
@@ -863,7 +865,7 @@ public sealed class ProviderBudgetIntegrationTests
             item.DecisionId == frozenHostCandidate.DecisionId);
 
         (SourceClaimExecutionInput sourceFixture, SourceClaimRetainedTranscript[] sourceTranscripts) =
-            SourceClaimAdmissionIntegrationTests.LoadCurrentContractPackage("S6-CLAIM-DEV-v1");
+            SourceClaimAdmissionIntegrationTests.LoadCurrentContractPackage("core");
         SourceClaimPassageInput sourcePassage = sourceFixture.Passages[0] with
         {
             PassageId = "candidate-passage",
@@ -984,7 +986,7 @@ public sealed class ProviderBudgetIntegrationTests
             SourceClaimAdmissionPublication sourceAdmission = new SourceClaimAcquisitionCoordinator(context.Store)
                 .AdmitRetainedTranscript(sourceInput, sourceTranscript, "authorization-settlement", "attempt-settlement",
                     "request-settlement", gate.DispatchFenceId, BaseTime.AddSeconds(8),
-                    new Dictionary<string, SourceClaimCampaignIdentity>(StringComparer.Ordinal)
+                    new Dictionary<string, SourceClaimProposalApplicationIdentity>(StringComparer.Ordinal)
                     {
                         ["candidate-source-proposal"] = new("application-decision-candidate-source-proposal",
                             "application-validation-candidate-source-proposal", "candidate-source-artifact",
@@ -1800,8 +1802,8 @@ public sealed class ProviderBudgetIntegrationTests
         StringAssert.Contains(publication.HumanTransparency, "no finding, case, taxonomy");
 
         BackupArtifact noResponseBackup = context.Store.CreateBackup(
-            "Wp7CandidateNoResponsePublication", candidateAnalysisNow.AddSeconds(2));
-        string noResponseRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp7-NoResponse-" + Guid.NewGuid().ToString("N"));
+            "CandidateNoResponsePublication", candidateAnalysisNow.AddSeconds(2));
+        string noResponseRoot = Path.Combine(Path.GetTempPath(), "Infinium-CandidateNoResponse-" + Guid.NewGuid().ToString("N"));
         try
         {
             using (StoragePaths target = new(noResponseRoot))
@@ -1810,7 +1812,7 @@ public sealed class ProviderBudgetIntegrationTests
             }
             using StoragePaths noResponsePaths = new(noResponseRoot);
             using AuthoritativeStore noResponseStore = new(noResponsePaths);
-            ProviderTerminalPublicationArtifacts noResponseTerminal = new ProviderAccountingCoordinator(noResponseStore)
+            ProviderTerminalPublicationArtifacts noResponseTerminal = new ProviderUsageAccounting(noResponseStore)
                 .PublishCandidateNoResponseV2(
                     new("run-restore"), new("local-run-output-v1"), "candidate-local-output-v1"u8.ToArray(),
                     "candidate-local-cli-v1"u8.ToArray(), new("candidate-terminal-d07"), candidateAnalysisNow.AddSeconds(3));
@@ -1836,9 +1838,9 @@ public sealed class ProviderBudgetIntegrationTests
         Assert.AreEqual("admission-proposal-explicit-abstention",
             terminal.RunOutputV2.ProviderOperations.Single().AdmissionId?.Value);
 
-        BackupArtifact backup = context.Store.CreateBackup("Wp7CandidateInvestigation", candidateAnalysisNow.AddSeconds(5));
+        BackupArtifact backup = context.Store.CreateBackup("CandidateInvestigation", candidateAnalysisNow.AddSeconds(5));
         string corruptedFactRoot = Path.Combine(
-            Path.GetTempPath(), "Infinium-Wp7-Corrupt-Fact-" + Guid.NewGuid().ToString("N"));
+            Path.GetTempPath(), "Infinium-CandidateCorruptFact-" + Guid.NewGuid().ToString("N"));
         try
         {
             using (StoragePaths target = new(corruptedFactRoot))
@@ -1877,7 +1879,7 @@ public sealed class ProviderBudgetIntegrationTests
                 DeleteDirectoryWithRetry(corruptedFactRoot);
             }
         }
-        string restoredRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp7-Restore-" + Guid.NewGuid().ToString("N"));
+        string restoredRoot = Path.Combine(Path.GetTempPath(), "Infinium-CandidateRestore-" + Guid.NewGuid().ToString("N"));
         try
         {
             using (StoragePaths target = new(restoredRoot))
@@ -1925,22 +1927,22 @@ public sealed class ProviderBudgetIntegrationTests
                 schema8HistoricalSnapshot.Split('\n'),
                 HistoricalSemanticSnapshot(migrated.Paths.Database).Split('\n'),
                 "Schema 8 migration must not rewrite retained candidate proposal or payload evidence.");
-            ProviderSemanticAdmissionReadModel historicalCandidateAdmission = migrated
+            ProviderSemanticAdmissionReadModel retainedCandidateAdmission = migrated
                 .ReadCandidateInvestigationAdmissionsForOperation("run-restore", "candidate-operation")
                 .Single(item => item.AdmissionId == legacyCandidateAdmissionId);
-            Assert.AreEqual("admitted", historicalCandidateAdmission.State);
-            Assert.AreEqual("supported", historicalCandidateAdmission.SupportState);
-            Assert.AreEqual("not-evaluated", historicalCandidateAdmission.ApplicabilityState);
-            Assert.AreEqual("abstained", historicalCandidateAdmission.DecisionState);
-            Assert.IsFalse(ProviderAccountingCoordinator.IsCurrentSemanticAdmission(historicalCandidateAdmission),
-                "Migration must retain historical bytes without silently granting current semantic authority.");
-            HistoricalProviderSemanticPayloadReadModel historicalCandidatePayload = migrated
+            Assert.AreEqual("admitted", retainedCandidateAdmission.State);
+            Assert.AreEqual("supported", retainedCandidateAdmission.SupportState);
+            Assert.AreEqual("not-evaluated", retainedCandidateAdmission.ApplicabilityState);
+            Assert.AreEqual("abstained", retainedCandidateAdmission.DecisionState);
+            Assert.IsFalse(ProviderUsageAccounting.IsCurrentSemanticAdmission(retainedCandidateAdmission),
+                "Migration must retain retained bytes without silently granting current semantic authority.");
+            HistoricalProviderSemanticPayloadReadModel retainedCandidatePayload = migrated
                 .ReadHistoricalCandidateInvestigationPayload(
                     "run-restore", hostCandidateId, legacyCandidateAdmissionId);
-            Assert.AreEqual(legacySchema8CandidatePayloadSha256, historicalCandidatePayload.ContentSha256);
-            Assert.AreEqual(legacySchema8CandidatePayload.LongLength, historicalCandidatePayload.ByteLength);
-            Assert.AreEqual("retained", historicalCandidatePayload.RetentionState);
-            CollectionAssert.AreEqual(legacySchema8CandidatePayload, historicalCandidatePayload.Payload,
+            Assert.AreEqual(legacySchema8CandidatePayloadSha256, retainedCandidatePayload.ContentSha256);
+            Assert.AreEqual(legacySchema8CandidatePayload.LongLength, retainedCandidatePayload.ByteLength);
+            Assert.AreEqual("retained", retainedCandidatePayload.RetentionState);
+            CollectionAssert.AreEqual(legacySchema8CandidatePayload, retainedCandidatePayload.Payload,
                 "The exact legacy-invalid schema-8 candidate payload must remain immutable and audit-visible.");
             Assert.ThrowsExactly<InvalidOperationException>(() => migrated.ReadCandidateInvestigation(
                 "run-restore", hostCandidateId, legacyCandidateAdmissionId),
@@ -2028,7 +2030,7 @@ public sealed class ProviderBudgetIntegrationTests
             ProviderRequestId: "provider-request", Admitted: false));
         _ = context.Store.SettleProviderBudget(new("oversized:settlement", "reservation-settlement",
             persisted.SettlementKind, null, null, BaseTime.AddSeconds(8)));
-        ProviderAccountingCoordinator coordinator = new(context.Store);
+        ProviderUsageAccounting coordinator = new(context.Store);
         ProviderOperationSummaryProjection projection = coordinator.QueryOperation(new(
             new("operation-restore"), true, true, true));
         Assert.AreEqual("retained-response", projection.ReplayState);
@@ -2060,7 +2062,7 @@ public sealed class ProviderBudgetIntegrationTests
             ProviderRequestId: parsed.ProviderRequestId, Admitted: false));
         _ = context.Store.SettleProviderBudget(new("cancelled:settlement", "reservation-settlement",
             persisted.SettlementKind, null, null, BaseTime.AddSeconds(8)));
-        ProviderAccountingCoordinator coordinator = new(context.Store);
+        ProviderUsageAccounting coordinator = new(context.Store);
         OpenAiResponsesResult replay = coordinator.Replay(new(new("operation-restore"), new("cancelled:response"), false));
         Assert.AreEqual(ProviderResponseState.Cancelled, replay.State);
         CollectionAssert.AreEqual(raw, replay.RawResponseBytes!);
@@ -2120,22 +2122,22 @@ public sealed class ProviderBudgetIntegrationTests
     [TestCategory("Integration")]
     public void ProviderReservationCatalogPublicationIsImmutableAndIdempotent()
     {
-        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp2-Catalog-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-ProviderCatalog-" + Guid.NewGuid().ToString("N"));
         try
         {
             using AuthoritativeStore store = new(new StoragePaths(root));
-            store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
-            store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime.AddSeconds(1));
+            store.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, BaseTime);
+            store.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, BaseTime.AddSeconds(1));
             Assert.ThrowsExactly<InvalidOperationException>(() => store.PublishProviderCatalog(
-                M1ProviderCatalog.Capability with { Revision = "altered-same-identity-and-fingerprint" },
-                M1ProviderCatalog.Price,
+                OpenAiProviderProfileCatalog.Capability with { Revision = "altered-same-identity-and-fingerprint" },
+                OpenAiProviderProfileCatalog.Price,
                 BaseTime.AddSeconds(2)));
-            ProviderPriceRuleContract[] alteredRules = M1ProviderCatalog.Price.Rules
+            ProviderPriceRuleContract[] alteredRules = OpenAiProviderProfileCatalog.Price.Rules
                 .Select((rule, index) => index == 0 ? rule with { NumeratorNanoUsd = rule.NumeratorNanoUsd + 1 } : rule)
                 .ToArray();
             Assert.ThrowsExactly<InvalidOperationException>(() => store.PublishProviderCatalog(
-                M1ProviderCatalog.Capability,
-                M1ProviderCatalog.Price with { Rules = alteredRules },
+                OpenAiProviderProfileCatalog.Capability,
+                OpenAiProviderProfileCatalog.Price with { Rules = alteredRules },
                 BaseTime.AddSeconds(3)));
         }
         finally
@@ -2235,7 +2237,7 @@ public sealed class ProviderBudgetIntegrationTests
         Assert.IsTrue(staleEpoch);
         Assert.IsTrue(deadline);
         Assert.IsTrue(reconstruction);
-        string? evidencePath = Environment.GetEnvironmentVariable("INFINIUM_WP2_FAULT_EVIDENCE_PATH");
+        string? evidencePath = Environment.GetEnvironmentVariable("INFINIUM_PROVIDER_FAULT_EVIDENCE_PATH");
         if (!string.IsNullOrWhiteSpace(evidencePath))
         {
             Directory.CreateDirectory(Path.GetDirectoryName(evidencePath)!);
@@ -2263,8 +2265,8 @@ public sealed class ProviderBudgetIntegrationTests
         _ = context.Store.SettleProviderBudget(new(
             "settlement-backup", "reservation-settlement", ProviderBudgetEventKind.ReleasedUndispatched,
             null, null, BaseTime.AddSeconds(6)));
-        BackupArtifact backup = context.Store.CreateBackup("Wp2Budget", BaseTime.AddSeconds(7));
-        string restoredRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp2-Restore-" + Guid.NewGuid().ToString("N"));
+        BackupArtifact backup = context.Store.CreateBackup("ProviderBudget", BaseTime.AddSeconds(7));
+        string restoredRoot = Path.Combine(Path.GetTempPath(), "Infinium-ProviderBudget-Restore-" + Guid.NewGuid().ToString("N"));
         try
         {
             using (StoragePaths targetPaths = new(restoredRoot))
@@ -2336,7 +2338,7 @@ public sealed class ProviderBudgetIntegrationTests
 
         public static BudgetContext Create(string lifecycleState = "running")
         {
-            string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp2-" + Guid.NewGuid().ToString("N"));
+            string root = Path.Combine(Path.GetTempPath(), "Infinium-ProviderBudget-" + Guid.NewGuid().ToString("N"));
             AuthoritativeStore store = new(new StoragePaths(root));
             try
             {

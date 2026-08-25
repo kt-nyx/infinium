@@ -27,15 +27,14 @@ metamorphic coverage, persistence/replay, integration/safety evidence, and
 fresh review. Historical semantic-package integrity is read-only and grants no
 product verdict.
 
-For the remaining M1 Slice 6 development, the owner-authorized
-[practical continuation](plans/milestones/m1/slices/s6/development-continuation.md)
-is the controlling execution exception. It removes ceremony-version,
-per-correction independent-review, and fresh-authority rebinding requirements
-that do not directly protect the credential, aggregate cost limit, or semantic
-answer isolation. Credential non-exposure, Windows Credential Manager-only
-storage, sequential provider effects, conservative USD 10.00 aggregate
-accounting, historical-evidence immutability, private-answer isolation, and the
-Slice 7 prohibition remain mandatory.
+The Slice 6 practical-continuation exception is consumed and historical. It
+does not govern current work. Explicit development-provider operations now
+follow
+[ADR-0036](architecture/decisions/ADR-0036-development-provider-access-and-product-credential-separation.md):
+ordinary builds/tests remain offline, while a later accepted task may authorize
+one typed, explicitly live, finite, locally budgeted operation through the
+development-provider boundary. Credential presence, environment state, branch
+state, filenames, or past live work never grant that authority.
 
 ## Default development loop
 

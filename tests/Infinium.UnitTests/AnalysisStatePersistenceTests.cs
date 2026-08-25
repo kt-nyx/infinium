@@ -146,22 +146,22 @@ public sealed class AnalysisStatePersistenceTests
             ScopeReversionV2PersistenceDeclarations.SchemaFingerprint,
             ScalarText(connection, "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
         Assert.AreEqual(
-            ProviderPersistenceDeclarations.Wp5ExtensionMigrationId,
+            ProviderPersistenceDeclarations.ProviderUsageTotalityExtensionMigrationId,
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'wp5_schema_extension_id';"));
         Assert.AreEqual(
-            ProviderPersistenceDeclarations.Wp6CorrectionMigrationId,
+            ProviderPersistenceDeclarations.SemanticAdmissionRootCorrectionMigrationId,
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'wp6_schema_correction_id';"));
         Assert.AreEqual(
-            ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionMigrationId,
+            ProviderPersistenceDeclarations.SourceClaimApplicationContractCorrectionMigrationId,
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'wp6_active_contract_correction_id';"));
         Assert.AreEqual(
-            ProviderPersistenceDeclarations.Wp7ExtensionMigrationId,
+            ProviderPersistenceDeclarations.CandidateInvestigationOutcomeExtensionMigrationId,
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'wp7_schema_extension_id';"));

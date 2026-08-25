@@ -1,6 +1,6 @@
 {
   "schema_id": "infinium.evaluation.provider-offline-public-manifest/v1",
-  "fixture_id": "M1-PLAT-OFFLINE-VAL-v1",
+  "fixture_id": "PROVIDER-OFFLINE-VAL-v1",
   "fixture_version": "1.0.0",
   "partition": "validation",
   "evaluation_ids": [
@@ -15,7 +15,7 @@
   "input_file": "input.json",
   "oracle_file": "oracle.json",
   "answer_free_input": true,
-  "purpose": "Offline adversarial validation of WP5 typed non-success, drift rejection, and replay safety.",
+  "purpose": "Offline adversarial validation of typed non-success, drift rejection, and replay safety.",
   "classification": "public-synthetic-platform-behavior",
   "partition_history": [
     "authored-validation",
@@ -23,12 +23,12 @@
   ],
   "construction_provenance": {
     "method": "authority-derived-hand-authored-adversarial-case",
-    "authority": "accepted M1 Slice 6 plan Section 16 and RESEARCH-0054 snapshot",
+    "authority": "accepted provider contracts, OpenAI profile decision, and RESEARCH-0054 snapshot",
     "product_output_used_to_author_truth": false
   },
   "ground_truth_method": "closed response-state matrix and deliberate public mutations",
   "preregistration": "oracle fields fixed before the corrected product tests consume the package",
-  "reviewer_provenance": "fresh WP5 persistence/replay review identified correction requirements; final independent review pending",
+  "reviewer_provenance": "current provider adapter persistence/replay review accepted the bounded offline evidence",
   "answer_isolation": "input recursively excludes oracle and expected-answer fields; oracle is read only after execution observation",
   "replay_dependencies": [
     "recorded RESEARCH-0054 snapshot",
@@ -41,7 +41,7 @@
     "no credential operation",
     "no billable request"
   ],
-  "review_state": "correction-pending-independent-review",
+  "review_state": "accepted-product-conformance",
   "input_sha256": "69f87e2aa8191be9113bc8b79a0cc0872a3e3d4798caadf0f17b35dc04037a98",
   "oracle_sha256": "53c369944e05242ed4e8978fc8466aff0ddfb7a72d7ffd488a7d7aa8623efe74"
 }

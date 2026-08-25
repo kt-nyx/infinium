@@ -20,9 +20,9 @@
         {
           "artifact_id": "oracle/streaming-expansion-receipt.json",
           "artifact_version": "1.0.0",
-          "fingerprint": "18364823b921fc29ce9e043baef4d79b9242aff5955b099fbd9d6f746ea8f092",
+          "fingerprint": "11177e79acaa4b5864c536dbc576634d5b7353f70cb972f8cdf947b5f42dff5f",
           "availability": "retained",
-          "byte_length": 6946
+          "byte_length": 6963
         }
       ],
       "independent_of_system_under_test": true
@@ -147,9 +147,9 @@
   "expected_replay_manifest": {
     "artifact_id": "replay-dependencies.json",
     "artifact_version": "1.0.1",
-    "fingerprint": "2aebc8d62de04fd55105afaf96c78268eb865cc5210b2c1664162906a4c887a3",
+    "fingerprint": "67fe20f24780f76e1221eb5fb2945d50c06273628a3867289401a01e8d794b76",
     "availability": "retained",
-    "byte_length": 2386
+    "byte_length": 2412
   },
   "expected_not_used_boundaries": [
     "provider",
@@ -181,7 +181,7 @@
   ],
   "known_limits": [
     "Stress evidence proves independent expansion counts and the factual stream receipt only; it does not materialize or compare a candidate aggregate.",
-    "This is bounded candidate structural evidence, not an M3 performance claim."
+    "This is bounded candidate structural evidence, not a production-scale performance claim."
   ],
   "pre_registered_at": "2026-08-09T06:20:47.5665585+00:00",
   "change_history": []

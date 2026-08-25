@@ -1,1 +1,1 @@
-{"schema":"infinium.public.provider-capability-input/v1","case":"exact-m1-catalog","provider":"openai","model":"gpt-5.6-sol","service_tier":"default","reasoning_effort":"medium","cache_mode":"off"}
+{"schema":"infinium.public.provider-capability-input/v1","case":"exact-provider-profile-catalog","provider":"openai","model":"gpt-5.6-sol","service_tier":"default","reasoning_effort":"medium","cache_mode":"off"}

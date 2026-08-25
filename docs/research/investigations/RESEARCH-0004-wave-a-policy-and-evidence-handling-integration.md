@@ -43,7 +43,7 @@ researched and later rejected.
 This review checks whether the three Wave A reports answer RQ-009, RQ-026, and
 RQ-031 against current primary evidence; remain consistent with the accepted
 product baseline, ADR-0001 through ADR-0007, and the accepted
-[M0 plan](../../plans/milestones/m0/plan.md); and jointly satisfy
+[archived M0 plan](../../plans/milestones/README.md); and jointly satisfy
 the exact three-part Gate A.
 
 It does not:

@@ -7,7 +7,7 @@
     "EVAL-0052",
     "EVAL-0086"
   ],
-  "purpose": "Qualify project-authored NPC, race, override, winner, FormKey, field, link, and bounded taxonomy evidence for later Slice 4 evaluation.",
+  "purpose": "Qualify project-authored NPC, race, override, winner, FormKey, field, link, and bounded taxonomy evidence for bounded Bethesda analyzer evaluation.",
   "classification": "boundary",
   "partition": "development",
   "partition_history": [
@@ -15,16 +15,16 @@
       "from": null,
       "to": "development",
       "at": "2026-08-01T22:00:00.0000000+00:00",
-      "reason": "Corrected successor to fixture version 1.0.0 after the Slice 4 Mutagen conformance probe exposed a fixture-structure error.",
+      "reason": "Corrected fixture version 1.0.1 after the Mutagen conformance probe exposed a fixture-structure error.",
       "change_influenced_implementation": true
     }
   ],
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
-  "input_package_fingerprint": "44491feb7781844ec51afa96bafb6a4572cd8b86287ab02c6515f9f8b5bb94f8",
-  "oracle_fingerprint": "85ec243509d90dc9eaeb9625a5270613fc8318eafda5cc1275b1719730c40559",
+  "input_package_fingerprint": "e54702cf4df6e1cb83b4ba24df2d9448228096745090789a1ea228f22bb680f7",
+  "oracle_fingerprint": "28ad21786ea55888e6a61f74b6d64fcdccc8d91adeaecc78745c10c6cac91407",
   "provenance_fingerprint": "586e9edb95ef643602872f471c253038cae20b6f727bc965033bb1034e4c4a03",
-  "replay_dependency_fingerprint": "e40d600d02297604191686ec8efe8873787c1d9ab14cd3addbee19a654cdb129",
+  "replay_dependency_fingerprint": "d6eb097ad7f743d34efda2dc2fbc315f17084e4a8c1ac5320d99638e4af0e6cb",
   "redistribution_class": "project-authored-redistributable",
   "owner": "infinium-evaluation",
   "review_state": "accepted",

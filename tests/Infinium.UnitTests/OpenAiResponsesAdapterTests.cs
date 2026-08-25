@@ -59,7 +59,7 @@ public sealed class OpenAiResponsesAdapterTests
     }
 
     [TestMethod]
-    public void SuccessorV6ResponseCodecRetainsLongContextUsageAndExactPricingWithoutBroadeningV5()
+    public void ExtendedProfileResponseCodecRetainsLongContextUsageAndExactPricingWithoutBroadeningV5()
     {
         JsonObject response = JsonNode.Parse(ProviderAdapterTestData.CompletedResponse())!.AsObject();
         JsonObject usage = response["usage"]!.AsObject();
@@ -69,7 +69,7 @@ public sealed class OpenAiResponsesAdapterTests
         usage["output_tokens_details"]!["reasoning_tokens"] = 5_000;
         byte[] raw = JsonSerializer.SerializeToUtf8Bytes(response);
 
-        OpenAiResponsesResult successor = OpenAiResponsesResponseCodec.ParseSuccessorV6(
+        OpenAiResponsesResult successor = OpenAiResponsesResponseCodec.ParseExtendedProfile(
             raw, 200, "m1-s6-successor-v6-request-test", "provider-test", [],
             ProviderAdapterTestData.OutputSchemaBytes);
         Assert.IsTrue(successor.Admitted);
@@ -84,7 +84,7 @@ public sealed class OpenAiResponsesAdapterTests
     }
 
     [TestMethod]
-    public void SuccessorV6AdmitsProviderReasoningEnvelopeWithoutBroadeningHistoricalCodec()
+    public void ExtendedProfileAdmitsProviderReasoningEnvelopeWithoutBroadeningHistoricalCodec()
     {
         JsonObject response = JsonNode.Parse(ProviderAdapterTestData.CompletedResponse())!.AsObject();
         JsonArray output = response["output"]!.AsArray();
@@ -102,7 +102,7 @@ public sealed class OpenAiResponsesAdapterTests
         });
         byte[] raw = JsonSerializer.SerializeToUtf8Bytes(response);
 
-        OpenAiResponsesResult successor = OpenAiResponsesResponseCodec.ParseSuccessorV6(
+        OpenAiResponsesResult successor = OpenAiResponsesResponseCodec.ParseExtendedProfile(
             raw, 200, "m1-s6-successor-v6-request", "provider-request", [],
             ProviderAdapterTestData.OutputSchemaBytes);
         OpenAiResponsesResult historical = OpenAiResponsesResponseCodec.Parse(
@@ -113,7 +113,7 @@ public sealed class OpenAiResponsesAdapterTests
         Assert.AreEqual(ProviderResponseState.Completed, successor.State);
         Assert.IsFalse(historical.Admitted);
         output[0]!["unexpected"] = true;
-        OpenAiResponsesResult tampered = OpenAiResponsesResponseCodec.ParseSuccessorV6(
+        OpenAiResponsesResult tampered = OpenAiResponsesResponseCodec.ParseExtendedProfile(
             JsonSerializer.SerializeToUtf8Bytes(response), 200, "m1-s6-successor-v6-request-2",
             "provider-request-2", [], ProviderAdapterTestData.OutputSchemaBytes);
         Assert.IsFalse(tampered.Admitted);

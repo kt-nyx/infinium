@@ -33,7 +33,7 @@ the final case specification remains outside the accepted M1 set and no
 implementation has passed it.
 
 Wave F produced the accepted
-[M1 evaluation baseline](m1-evaluation-baseline.md), its two accepted
+[archived M1 evaluation baseline](evaluator-history.md), its two accepted
 [case-specification sets](specifications/), and their
 [closed-world public fixture authority](repository-evaluation-authority.v1.json).
 “Wave F specification accepted; execution
@@ -240,7 +240,7 @@ EVAL-0086 conformance for Slice 4 remains valid for exact candidate `a98d648`
 and scope.
 For later M1 slices, these and all remaining cases are executed as public
 development/validation evidence under the
-[M1 continuation verification profile](m1-continuation-verification-profile.md).
+[product-conformance verification profile](product-conformance-verification-profile.md).
 Slice 7 must prove the generic mechanism across actor/AI/FaceGen and
 REFR/link/placement with matched negatives. Slice 8 must run controlled-real
 EVAL-0016 and EVAL-0017. Neither creates a private held-out verdict or M3

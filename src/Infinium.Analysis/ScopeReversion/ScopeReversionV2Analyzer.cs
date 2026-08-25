@@ -121,9 +121,11 @@ public static class ScopeReversionV2Analyzer
             if (disposition == ScopeReversionDisposition.SupportedFinding)
             {
                 OpaqueId findingId = ScopeReversionV2Contract.StableId("scope-v2-finding", candidateId.Value);
+                ScopeReversionAssessment assessment = ScopeReversionAssessmentPolicy.Assess(
+                    ScopeReversionAnalyzerDeclaration.AnalyzerId);
                 findings.Add(new ScopeReversionV2FindingContract(
-                    findingId, candidateId, subject.SubjectId, FindingSeverity.Moderate,
-                    AnalysisConfidence.StronglySupported,
+                    findingId, candidateId, subject.SubjectId, assessment.Severity,
+                    assessment.Confidence,
                     "A supported winning purpose change restores an older or absent relationship outside that bounded purpose.",
                     subject.PredictedSymptom, evidence));
                 OpaqueId caseId = ScopeReversionV2Contract.StableId("scope-v2-case", subject.SharedDependencyCauseId.Value);

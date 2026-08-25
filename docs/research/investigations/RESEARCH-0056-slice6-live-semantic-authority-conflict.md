@@ -195,11 +195,11 @@ non-executable for the replacement campaign.
 ## 8. Follow-up enabled
 
 The proposed
-[`M1/S6 remainder plan`](../../plans/milestones/m1/slices/s6/remainder-plan.md),
+[`M1/S6 remainder plan`](../../plans/milestones/README.md),
 the proposed
-[`live semantic v2 fixture-authority amendment`](../../evaluation/specifications/m1-slice6-live-semantic-v2-amendment.md),
+[`live semantic v2 fixture-authority amendment`](../../evaluation/evaluator-history.md),
 and the proposed machine-readable
-[`remainder authority amendment`](../../plans/milestones/m1/slices/s6/m1-slice6-remainder-authority-amendment.v1.json)
+[`remainder authority amendment`](../../plans/milestones/README.md)
 form one owner decision. Acceptance authorizes the bounded non-live R1-R3 work
 and the exact gated finite campaign described there; until then, effect
 authority remains none.

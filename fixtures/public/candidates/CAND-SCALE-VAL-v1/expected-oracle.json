@@ -20,9 +20,9 @@
         {
           "artifact_id": "oracle/semantic-population-projection.json",
           "artifact_version": "1.0.0",
-          "fingerprint": "6cccf544cd0af9910ed2a40a9b17910cfc17eeaa2eff4e8d0e649d2647cbe5d3",
+          "fingerprint": "15929897bde05d395c4c05c06ddd9d721c50d1a94059046d9bd202e883bc9a7c",
           "availability": "retained",
-          "byte_length": 2459858
+          "byte_length": 2459875
         }
       ],
       "independent_of_system_under_test": true
@@ -80540,9 +80540,9 @@
   "expected_replay_manifest": {
     "artifact_id": "replay-dependencies.json",
     "artifact_version": "1.0.1",
-    "fingerprint": "599be73567071c8d8358d0a2d19744983aa496d16f809ed40413f1decfea6a40",
+    "fingerprint": "a42adc28e6834cb3126860e3f039e2d91bde68dc45058215cf0257a938d4ab2b",
     "availability": "retained",
-    "byte_length": 2391
+    "byte_length": 2417
   },
   "expected_not_used_boundaries": [
     "provider",
@@ -80573,7 +80573,7 @@
     }
   ],
   "known_limits": [
-    "This fixture proves only the bounded candidate analysis contract and does not establish findings, cases, generic Slice 7 semantics, controlled-real behavior, reliability, readiness, or a private verdict."
+    "This fixture proves only the bounded candidate analysis contract and does not establish findings, cases, scope-reversion behavior, controlled-real behavior, reliability, readiness, or a private verdict."
   ],
   "pre_registered_at": "2026-08-09T06:20:47.5665585+00:00",
   "change_history": []

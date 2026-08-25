@@ -297,7 +297,7 @@ function Invoke-CandidatesGate {
     }
 
     $manifestHash = (Get-FileHash -LiteralPath (Join-Path $semanticRoot 'public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($manifestHash -cne 'd1e9b03d1b8d8235830b9c73cbd2c9cb0b35ac93a132989f7ba04b6b13cdbc3b') {
+    if ($manifestHash -cne '9891090f450f1b8e233ad976c331a33a149f3e96930a5bf26121b61c4361aaa9') {
         throw "Frozen candidate stage semantic manifest hash mismatch: $manifestHash"
     }
 
@@ -355,8 +355,8 @@ function Invoke-CandidateScaleGate {
     $fixtureRoot = Join-Path $repoRoot 'fixtures/public/candidates'
     $scaleManifest = (Get-FileHash -LiteralPath (Join-Path $fixtureRoot 'CAND-SCALE-VAL-v1/public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
     $stressManifest = (Get-FileHash -LiteralPath (Join-Path $fixtureRoot 'CAND-STRESS-DEV-v1/public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($scaleManifest -cne '410be905be0e27a16ce753e607eabed125eb67917b942e69b33858731a808c00' -or
-        $stressManifest -cne '985de373ac9a65263f47a6259548975af648c8cb4eb8716a181a181332990abf') {
+    if ($scaleManifest -cne '21d917d9885ec0f22b2594b9fcf978f652d50393b68ac5987e9556e2184d6757' -or
+        $stressManifest -cne '6331c7a6864860c4326a9d39af16a3059cb3c839f18166c4994dc2be20cbabac') {
         throw 'Frozen candidate stage scale/stress manifest hash mismatch.'
     }
     $testCommands = @(
@@ -609,7 +609,7 @@ function Invoke-OutputGate {
     $scopeReceipt = Read-StrictJson $scopeReceiptPath
     if ([string] $scopeReceipt.schema_id -cne 'infinium.verification.scope-reversion-conformance/v1' -or
         [string] $scopeReceipt.result -cne 'passed' -or
-        [string] $scopeReceipt.package_identity -cne 'M1-S7-SYNTHETIC-v1' -or
+        [string] $scopeReceipt.package_identity -cne 'scope-reversion-synthetic-bounded-cases-v1' -or
         [bool] $scopeReceipt.semantic_oracle -or
         [bool] $scopeReceipt.verdict_authority -or
         @($scopeReceipt.output.external_boundaries | Where-Object { [string] $_.state -cne 'not-used' }).Count -ne 0 -or
@@ -677,31 +677,31 @@ function Invoke-SafetyGate {
 }
 
 function Invoke-ComprehensiveGate {
-    $fixtureRoot = Join-Path $repoRoot 'fixtures/public/cross-stage/analysis-pipeline'
-    $verificationScript = Join-Path $repoRoot 'eng/verify-cross-stage-corpus.ps1'
+    $fixtureRoot = Join-Path $repoRoot 'fixtures/public/analysis-pipeline/end-to-end-corpus'
+    $verificationScript = Join-Path $repoRoot 'eng/verify-analysis-corpus.ps1'
     $verificationOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $verificationScript -FixtureRoot $fixtureRoot 2>&1)
     $verificationOutput | ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -ne 0) {
-        throw 'cross-stage corpus frozen corpus closure, answer-isolation, or accumulated ownership verification failed.'
+        throw 'analysis pipeline corpus frozen corpus closure, answer-isolation, or accumulated ownership verification failed.'
     }
     $comparisonReceiptPath = Join-Path $resolvedOutputRoot 'product-comparison-receipt.json'
     if (Test-Path -LiteralPath $comparisonReceiptPath -PathType Leaf) {
         Remove-Item -LiteralPath $comparisonReceiptPath -Force
     }
-    $priorReceiptRoot = [Environment]::GetEnvironmentVariable('INFINIUM_CROSS_STAGE_RECEIPT_ROOT')
+    $priorReceiptRoot = [Environment]::GetEnvironmentVariable('INFINIUM_ANALYSIS_PIPELINE_RECEIPT_ROOT')
     try {
-        [Environment]::SetEnvironmentVariable('INFINIUM_CROSS_STAGE_RECEIPT_ROOT', $resolvedOutputRoot)
+        [Environment]::SetEnvironmentVariable('INFINIUM_ANALYSIS_PIPELINE_RECEIPT_ROOT', $resolvedOutputRoot)
         $tests = Invoke-FocusedTests @(
-            @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~FrozenCrossStageFourCaseCorpusExecutesManagedCoordinatorAndTypedQueryBeforeOracleComparison|FullyQualifiedName~ManagedRequestRejectsDeliveredInputFingerprintOrSourceReferenceDriftBeforeAdmission|FullyQualifiedName~FrozenCrossStageComprehensiveCorpusExecutesDocumentationThroughOperationalBeforeOracleComparison|FullyQualifiedName~ManagedAnalysisProductPathExecutesDocumentationCandidateFindingCaseRecoversPhaseBoundariesAndPublishes|FullyQualifiedName~AnalysisReplayCleanIncrementalAndReplayPreserveUnchangedSemanticOutput|FullyQualifiedName~AnalysisCliStartsAndReadsManagedDocumentationCandidateFindingCaseProductExecution'),
+            @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~FrozenAnalysisPipelineCorpusExecutesManagedCoordinatorAndTypedQueryBeforeOracleComparison|FullyQualifiedName~ManagedRequestRejectsDeliveredInputFingerprintOrSourceReferenceDriftBeforeAdmission|FullyQualifiedName~FrozenAnalysisPipelineComprehensiveCorpusExecutesDocumentationThroughOperationalBeforeOracleComparison|FullyQualifiedName~ManagedAnalysisProductPathExecutesDocumentationCandidateFindingCaseRecoversPhaseBoundariesAndPublishes|FullyQualifiedName~AnalysisReplayCleanIncrementalAndReplayPreserveUnchangedSemanticOutput|FullyQualifiedName~AnalysisCliStartsAndReadsManagedDocumentationCandidateFindingCaseProductExecution'),
             @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentationTests|FullyQualifiedName~CandidateSelectionEvaluationTests|FullyQualifiedName~FindingCaseEvaluationTests|FullyQualifiedName~AnalysisOperationalEvaluationTests')
-        ) 'cross-stage corpus comprehensive product comparison'
+        ) 'analysis pipeline corpus comprehensive product comparison'
     } finally {
-        [Environment]::SetEnvironmentVariable('INFINIUM_CROSS_STAGE_RECEIPT_ROOT', $priorReceiptRoot)
+        [Environment]::SetEnvironmentVariable('INFINIUM_ANALYSIS_PIPELINE_RECEIPT_ROOT', $priorReceiptRoot)
     }
     $comparisonReceipt = Read-StrictJson $comparisonReceiptPath
-    $expectedCaseIds = @('CROSS-STAGE-CLEAN-D01', 'CROSS-STAGE-UNCHANGED-D02', 'CROSS-STAGE-CHANGED-D03', 'CROSS-STAGE-REPLAY-D04')
+    $expectedCaseIds = @('ANALYSIS-PIPELINE-CLEAN-D01', 'ANALYSIS-PIPELINE-UNCHANGED-D02', 'ANALYSIS-PIPELINE-CHANGED-D03', 'ANALYSIS-PIPELINE-REPLAY-D04')
     $actualCaseIds = @($comparisonReceipt.cases.case_id)
-    $replayCase = @($comparisonReceipt.cases | Where-Object { $_.case_id -ceq 'CROSS-STAGE-REPLAY-D04' })
+    $replayCase = @($comparisonReceipt.cases | Where-Object { $_.case_id -ceq 'ANALYSIS-PIPELINE-REPLAY-D04' })
     if (([string] $comparisonReceipt.result -cne 'passed') -or
         ([string] $comparisonReceipt.oracle_load_order -cne 'after-all-four-observations-sealed') -or
         (($actualCaseIds -join "`n") -cne ($expectedCaseIds -join "`n")) -or
@@ -732,7 +732,7 @@ function Invoke-ComprehensiveGate {
                 ($_.external_effects -ne 0) -or
                 ($_.oracle_comparison -cne 'passed')
             }).Count -ne 0)) {
-        throw 'cross-stage corpus four-case product-comparison receipt is missing or overstates a required observation.'
+        throw 'analysis pipeline corpus four-case product-comparison receipt is missing or overstates a required observation.'
     }
     $manifestPath = Join-Path $fixtureRoot 'fixture-manifest.v1.json'
     $manifest = Read-StrictJson $manifestPath
@@ -765,7 +765,7 @@ function Invoke-ComprehensiveGate {
             adr_count = $inheritedAdrs.Count
             evaluation_ids = $inheritedEvals
             evaluation_count = $inheritedEvals.Count
-            no_exercise_boundary = 'These identifiers are indexed from accepted contract foundation and analysis-operations evidence and are not newly exercised by the four-case cross-stage corpus.'
+            no_exercise_boundary = 'These identifiers are indexed from accepted contract foundation and analysis-operations evidence and are not newly exercised by the four-case analysis pipeline corpus.'
         }
         accumulated_package_registrations = [ordered]@{
             total = @($manifest.accumulated_package_registrations).Count

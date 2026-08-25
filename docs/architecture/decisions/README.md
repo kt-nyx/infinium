@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active navigation
 
-Last reviewed: 2026-08-22
+Last reviewed: 2026-08-25
 
 ADRs preserve technical decisions and their rationale. They are append-only:
 accepted records are superseded rather than rewritten to hide prior decisions.
@@ -47,6 +47,7 @@ accepted records are superseded rather than rewritten to hide prior decisions.
 | [ADR-0033](ADR-0033-retire-and-archive-protocol-4-evaluator.md) | Accepted | Retire `/4` from active code and review, archive its public closure externally, and reserve its identities |
 | [ADR-0034](ADR-0034-prompt-fidelity-and-semantic-admission-axes.md) | Accepted | Bind exact transmitted prompt bytes and separate proposal, support, applicability, and host-decision state |
 | [ADR-0035](ADR-0035-defer-independent-semantic-oracle-qualification.md) | Accepted | Defer independent semantic-oracle qualification through M1 and M2; reconsider it at the M3 Evaluation Readiness Gate while retaining ADR-0034 product semantics |
+| [ADR-0036](ADR-0036-development-provider-access-and-product-credential-separation.md) | Accepted | Permit explicitly bounded project-funded development provider calls while preserving user-owned shipped-product credentials and no fallback |
 
 ADR-0015 through ADR-0023 are accepted and jointly select the Wave E
 persistence, lifecycle, application-stack, process, IPC, credential, security,
@@ -88,6 +89,9 @@ ADR-0035 supersedes only ADR-0034's M1 independent-oracle validation timing.
 The prompt-fidelity and four-axis product semantics remain accepted. M1 and M2
 use ordinary product conformance; independent semantic qualification may be
 reconsidered only after M2 acceptance during M3 planning.
+ADR-0036 narrowly permits a governed, project-funded credential for explicit
+development/conformance operations. It does not change ADR-0020's user-owned
+shipped-product credential or no-fallback rules.
 ADR-0008 through
 ADR-0011 accept the Wave B integration and semantic
 boundaries, and ADR-0012 accepts the revised Nexus interface/risk boundary,

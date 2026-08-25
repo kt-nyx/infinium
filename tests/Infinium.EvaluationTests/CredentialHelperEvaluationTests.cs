@@ -18,12 +18,12 @@ public sealed class CredentialHelperEvaluationTests
     private static readonly string?[] ExpectedLifecycleOperations =
         ["pending-enrollment", "activation", "verification", "replacement", "disable", "delete"];
     private static readonly string[] ExpectedReplacementSlots =
-        ["WP3-REAL-CHILD-TARGET-CANARY/profile-eval/generation-2"];
+        ["CAPABILITY-BOUND-STORE-TARGET-CANARY/profile-eval/generation-2"];
 
     [TestMethod]
     public async Task CredentialSyntheticDevelopmentPackageDrivesOneShotLifecycleOracle()
     {
-        Fixture package = Load("lifecycle-dev", "M1-PLAT-CREDENTIAL-HELPER-DEV-v1");
+        Fixture package = Load("lifecycle-dev", "CREDENTIAL-LIFECYCLE-DEV-v1");
         JsonElement input = package.Input.RootElement;
         JsonElement oracle = package.Oracle.RootElement;
         AssertInputHeaderAndMutations(
@@ -39,7 +39,7 @@ public sealed class CredentialHelperEvaluationTests
         string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-Eval-" + Guid.NewGuid().ToString("N"));
         using AuthoritativeStore state = new(new StoragePaths(root));
         DateTimeOffset now = new(2026, 8, 11, 12, 0, 0, TimeSpan.Zero);
-        state.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, now);
+        state.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, now);
         string helperPath = Directory.GetFiles(AppContext.BaseDirectory, "Infinium.CredentialHelper.exe", SearchOption.AllDirectories).Single();
         OneShotCredentialHelperLauncher launcher = new(
             helperPath, Hash(helperPath), Path.Combine(root, "fake-secure-store"));
@@ -97,7 +97,7 @@ public sealed class CredentialHelperEvaluationTests
     [TestMethod]
     public async Task CredentialSyntheticValidationPackageDrivesStrictFaultOracleAndRejectsMutation()
     {
-        Fixture package = Load("faults-val", "M1-PLAT-CREDENTIAL-HELPER-VAL-v1");
+        Fixture package = Load("faults-val", "CREDENTIAL-FAULTS-VAL-v1");
         JsonElement input = package.Input.RootElement;
         JsonElement oracle = package.Oracle.RootElement;
         AssertInputHeaderAndMutations(
@@ -222,7 +222,7 @@ public sealed class CredentialHelperEvaluationTests
     {
         string relative = Path.Combine("fixtures", "public", "platform", "credential-helper", directory);
         string manifestPath = TestRepository.PathFromRoot(relative, "public-manifest.json");
-        using JsonDocument registry = TestRepository.ReadJson("fixtures", "public", "public-fixture-registry.v1.json");
+        using JsonDocument registry = TestRepository.ReadJson("fixtures", "public", "current-fixture-registry.v1.json");
         JsonElement registryEntry = registry.RootElement.GetProperty("packages").EnumerateArray()
             .Single(item => item.GetProperty("package_identity").GetString() == identity);
         Assert.AreEqual(new FileInfo(manifestPath).Length, registryEntry.GetProperty("authority_bytes").GetInt64());
@@ -337,12 +337,12 @@ public sealed class CredentialHelperEvaluationTests
     {
         string sourceRoot = Path.Combine(root, "restore-source");
         using AuthoritativeStore source = new(new StoragePaths(sourceRoot));
-        source.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, now);
+        source.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, now);
         source.BeginCredentialEnrollment(
             "profile-restore", "generation-restore", "Restore", now.AddSeconds(1), "account-1", "billing-1");
         source.ApplyCredentialTransition(new(
             "restore-activate", "profile-restore", "generation-restore", "enroll", "pending-enrollment",
-            "active-unverified", "active-unverified", M1ProviderCatalog.Capability.Identity.Value,
+            "active-unverified", "active-unverified", OpenAiProviderProfileCatalog.Capability.Identity.Value,
             "account-1", "billing-1", now.AddSeconds(2), now.AddSeconds(3)));
         BackupArtifact backup = source.CreateBackup("CredentialSyntheticValidation", now.AddSeconds(4));
         StoragePaths restoredPaths = new(Path.Combine(root, "restore-target"));
@@ -359,8 +359,8 @@ public sealed class CredentialHelperEvaluationTests
                      .Where(path => !path.Contains("fake-secure-store", StringComparison.OrdinalIgnoreCase)))
         {
             string value = Convert.ToHexString(File.ReadAllBytes(file));
-            secret += Count(value, Convert.ToHexString("WP3-REAL-CHILD-SECRET-CANARY"u8));
-            target += Count(value, Convert.ToHexString("WP3-REAL-CHILD-TARGET-CANARY"u8));
+            secret += Count(value, Convert.ToHexString("INFINIUM-HELPER-TEST-SECRET"u8));
+            target += Count(value, Convert.ToHexString("CAPABILITY-BOUND-STORE-TARGET-CANARY"u8));
         }
         return (secret, target);
 
@@ -457,7 +457,7 @@ public sealed class CredentialHelperEvaluationTests
         bool deleted = to == "deleted";
         return store.ApplyCredentialTransition(new(
             root, "profile-eval", generation, kind, from, to, to,
-            deleted ? null : M1ProviderCatalog.Capability.Identity.Value,
+            deleted ? null : OpenAiProviderProfileCatalog.Capability.Identity.Value,
             deleted ? null : "account-1", deleted ? null : "billing-1",
             pendingAt, pendingAt.AddSeconds(1), IncrementRevocationEpoch: incrementRevocation));
     }

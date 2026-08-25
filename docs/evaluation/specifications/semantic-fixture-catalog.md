@@ -5,9 +5,9 @@ Accepted: 2026-07-28
 Accepted by: Project owner
 Last reviewed: 2026-08-23
 Companion specification:
-[M1 semantic and local-ground-truth evaluation specifications](../specifications/m1-semantic-and-ground-truth.md)
+[archived M1 semantic and local-ground-truth specifications](../evaluator-history.md)
 with the accepted
-[revision 2 amendment](../specifications/m1-semantic-and-ground-truth-v2-amendment.md)
+[revision 2 amendment](../evaluator-history.md)
 
 Current supersession notice: ADR-0035 defers independent semantic-oracle
 authoring, review, sealing, registration, and comparison throughout M1 and M2.
@@ -1275,7 +1275,7 @@ cannot serve as `BETH-*` correctness fixtures and must not be relabeled as
 such. Slice 3.5 constructs and independently accepts the required packages
 without deriving expectations from this MO2 fixture or from Mutagen. The
 accepted
-[Slice 3.5 execution plan](../../plans/milestones/m1/slices/s3.5/plan.md)
+[archived milestone-plan boundary](../../plans/milestones/README.md)
 defines the construction, role-isolation, snapshot-integration, verification,
 and acceptance workflow.
 

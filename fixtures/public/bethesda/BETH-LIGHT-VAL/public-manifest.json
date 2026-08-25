@@ -6,7 +6,7 @@
   "evaluation_ids": [
     "EVAL-0052"
   ],
-  "purpose": "Qualify project-authored full, light, ESL-flagged, maximum, and invalid local-identity boundaries for later Slice 4 evaluation.",
+  "purpose": "Qualify project-authored full, light, ESL-flagged, maximum, and invalid local-identity boundaries for bounded Bethesda analyzer evaluation.",
   "classification": "boundary",
   "partition": "development",
   "partition_history": [
@@ -38,10 +38,10 @@
   ],
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
-  "input_package_fingerprint": "887486bed3d86cf2c0aa90027169c407afb41cadc6fcac79328cf62848546b2b",
-  "oracle_fingerprint": "a6a5592f5b4f5f8e0da1ea8e9df777d0d1bdbbd6fc6a10bae5c61b6ea6e58dde",
+  "input_package_fingerprint": "7effa91a266329c19b841bde953e951c18d19e57411609d0c9ecad7ab4625ba5",
+  "oracle_fingerprint": "488e8d35f75c47f048721c4e5060c1dffb0fef8e1af85feb32ee2c80cb1be709",
   "provenance_fingerprint": "0aca33445b5ddf900e2ce6a888f176ce9d79ce0cdba3c679068e26bf8ae1c62c",
-  "replay_dependency_fingerprint": "8e5afb697df21a7d7afa3544ca182f3eb1d33d05479bc2bf5cd157fec5ca60fb",
+  "replay_dependency_fingerprint": "7b3b09469b0b7ad66e8a0e6199c28f22c92141093fa52c496f80d846a64665ce",
   "redistribution_class": "project-authored-redistributable",
   "owner": "infinium-evaluation",
   "review_state": "accepted",

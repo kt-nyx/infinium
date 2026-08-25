@@ -1399,13 +1399,13 @@ public sealed partial class AnalysisReplayIntegrationTests
                     "run-managed-cli", binding, semanticPayloadId, semanticSha);
                 request = request with
                 {
-                    M1Slice9Composition = ManagedCrossStageCorpusIntegrationTests.SyntheticComposition(),
+                    AnalysisComposition = ManagedAnalysisPipelineCorpusIntegrationTests.SyntheticComposition(),
                 };
                 File.WriteAllBytes(requestPath, JsonSerializer.SerializeToUtf8Bytes(request, PrettyContractJson));
                 ManagedAnalysisOrchestrationRequest controlledRequest = ManagedRequest(
                     "run-managed-cli-controlled", binding, semanticPayloadId, semanticSha) with
                 {
-                    M1Slice9Composition = M1Slice9ControlledHandoff.LoadControlledComposition(),
+                    AnalysisComposition = ControlledAnalysisHandoff.LoadControlledComposition(),
                 };
                 File.WriteAllBytes(controlledRequestPath,
                     JsonSerializer.SerializeToUtf8Bytes(controlledRequest, PrettyContractJson));
@@ -1421,7 +1421,7 @@ public sealed partial class AnalysisReplayIntegrationTests
                         Mode = ReplayMode.RetainedDownstreamReplay,
                         PriorRunId = new OpaqueId("run-managed-cli-controlled"),
                     },
-                    M1Slice9Composition = controlledRequest.M1Slice9Composition,
+                    AnalysisComposition = controlledRequest.AnalysisComposition,
                 };
                 File.WriteAllBytes(controlledReplayRequestPath,
                     JsonSerializer.SerializeToUtf8Bytes(controlledReplayRequest, PrettyContractJson));
@@ -1434,7 +1434,7 @@ public sealed partial class AnalysisReplayIntegrationTests
                         Mode = ReplayMode.Incremental,
                         PriorRunId = new OpaqueId("run-managed-cli-controlled"),
                     },
-                    M1Slice9Composition = controlledRequest.M1Slice9Composition,
+                    AnalysisComposition = controlledRequest.AnalysisComposition,
                 };
                 File.WriteAllBytes(controlledIncrementalRequestPath,
                     JsonSerializer.SerializeToUtf8Bytes(controlledIncrementalRequest, PrettyContractJson));
@@ -1531,7 +1531,7 @@ public sealed partial class AnalysisReplayIntegrationTests
             ProcessResult controlledIncrementalResults = RunCli(root,
                 ["results", "run-managed-cli-controlled-incremental", "--json"]);
             Assert.AreEqual(0, controlledIncrementalResults.ExitCode, controlledIncrementalResults.Error);
-            M1Slice9SemanticEquivalence.AssertEquivalent(
+            RunOutputSemanticEquivalence.AssertEquivalent(
                 RunOutputJsonCodec.Deserialize(Encoding.UTF8.GetBytes(controlledResults.Output)),
                 RunOutputJsonCodec.Deserialize(Encoding.UTF8.GetBytes(controlledIncrementalResults.Output)));
 
@@ -1551,7 +1551,7 @@ public sealed partial class AnalysisReplayIntegrationTests
             ProcessResult controlledReplayResults = RunCli(root,
                 ["results", "run-managed-cli-controlled-replay", "--json"]);
             Assert.AreEqual(0, controlledReplayResults.ExitCode, controlledReplayResults.Error);
-            M1Slice9SemanticEquivalence.AssertEquivalent(
+            RunOutputSemanticEquivalence.AssertEquivalent(
                 RunOutputJsonCodec.Deserialize(Encoding.UTF8.GetBytes(controlledResults.Output)),
                 RunOutputJsonCodec.Deserialize(Encoding.UTF8.GetBytes(controlledReplayResults.Output)));
             coordinatorPid = RuntimeDescriptor.Read(root).ProcessId;

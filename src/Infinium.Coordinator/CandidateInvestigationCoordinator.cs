@@ -45,20 +45,6 @@ public sealed class DurableCandidateInvestigationCoordinator(AuthoritativeStore 
         string requestId,
         string dispatchFenceId,
         DateTimeOffset occurredAt)
-        => AdmitRetainedTranscript(input, transcript, authorizationId, providerAttemptId, requestId,
-            dispatchFenceId, occurredAt, null, null);
-
-    internal CandidateInvestigationAdmissionPublication AdmitRetainedTranscript(
-        CandidateInvestigationExecutionInput input,
-        CandidateInvestigationRetainedTranscript transcript,
-        string authorizationId,
-        string providerAttemptId,
-        string requestId,
-        string dispatchFenceId,
-        DateTimeOffset occurredAt,
-        byte[]? exactCampaignV2Input,
-        M1Slice6CampaignEvidenceRoot? campaignRoot,
-        M1Slice6CampaignLocalObservation? localObservation = null)
     {
         if (authorizationId != input.HostAuthorizationId)
         {
@@ -67,23 +53,6 @@ public sealed class DurableCandidateInvestigationCoordinator(AuthoritativeStore 
         CandidateInvestigationScenarioResult scenario = CandidateInvestigationEngine.Execute(input, [transcript]).Scenarios.Single();
         CandidateInvestigationContextInput retainedContext = input.Contexts.Single(context =>
             context.ContextId == scenario.ContextId);
-        if (campaignRoot is not null)
-        {
-            CandidateEvidenceInput campaignEvidence = retainedContext.Evidence.Single();
-            string campaignKind = campaignRoot.Kind == M1Slice6CampaignEvidenceRootKind.FrozenHostEvidence
-                ? "frozen-host-evidence" : "persisted-source-claim-application";
-            if (campaignEvidence.RootKind != campaignKind
-                || campaignEvidence.SourceAcquisitionId != campaignRoot.AcquisitionRunId
-                || campaignEvidence.SourceAdmissionId != campaignRoot.SourceAdmissionId
-                || campaignEvidence.SourceApplicationDecisionId != campaignRoot.ApplicationDecisionId
-                || campaignEvidence.SourceApplicationLinkId != campaignRoot.ApplicationLinkId
-                || campaignEvidence.EvidenceRootId != campaignRoot.EvidenceRootId
-                || campaignEvidence.ApplicabilityRecordId != campaignRoot.ApplicabilityRecordId)
-            {
-                throw new InvalidDataException(
-                    "Candidate campaign metadata differs from its normalized product evidence root.");
-            }
-        }
         CandidateInvestigationPersistenceRequest persistence = new(
             scenario.Investigation, "outcome-" + transcript.TranscriptId, scenario.ContextId, scenario.HypothesisId,
             transcript.TranscriptId,
@@ -97,15 +66,10 @@ public sealed class DurableCandidateInvestigationCoordinator(AuthoritativeStore 
                 evidence.Availability, evidence.ContentSha256)
             {
                 RootKind = evidence.RootKind,
-                ProposalId = campaignRoot?.ProposalId ?? string.Empty,
-                AdmittedArtifactId = campaignRoot?.AdmittedArtifactId ?? string.Empty,
                 EvidenceRootId = evidence.EvidenceRootId,
                 ApplicabilityRecordId = evidence.ApplicabilityRecordId,
-                LocalObservationId = localObservation?.ObservationId ?? string.Empty,
-                LocalObservationSha256 = localObservation?.TextSha256 ?? string.Empty,
             }).ToArray(),
-            exactCampaignV2Input ?? System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
-                input, SourceClaimContextMinimizer.JsonOptions),
+            System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(input, SourceClaimContextMinimizer.JsonOptions),
             System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(transcript, SourceClaimContextMinimizer.JsonOptions),
             System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(scenario.Investigation),
             authorizationId,
@@ -113,11 +77,7 @@ public sealed class DurableCandidateInvestigationCoordinator(AuthoritativeStore 
             transcript.ModelUsed ? providerAttemptId : null,
             transcript.ModelUsed ? requestId : null,
             transcript.ModelUsed ? dispatchFenceId : null,
-            occurredAt)
-        {
-            NormalizedProductInputPayload = exactCampaignV2Input is null ? null
-                : System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(input, SourceClaimContextMinimizer.JsonOptions),
-        };
+            occurredAt);
         CandidateInvestigationPersistenceReceipt receipt = store.PersistCandidateInvestigation(persistence);
         CandidateInvestigationResult result = new(CandidateInvestigationPromptV1.Id, CandidateInvestigationPromptV1.Fingerprint,
             Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(
@@ -134,16 +94,11 @@ public sealed class DurableCandidateInvestigationCoordinator(AuthoritativeStore 
         CandidateInvestigationOutcomeReadModel retained =
             store.ReadCandidateInvestigationOutcome(analysisRunId, operationId, contextId);
         CandidateInvestigationExecutionInput input;
-        bool campaignV2;
         using (System.Text.Json.JsonDocument inputDocument = System.Text.Json.JsonDocument.Parse(retained.InputPayload))
         {
             string? schemaId = inputDocument.RootElement.GetProperty("schema_id").GetString();
-            campaignV2 = schemaId == "infinium.llm.candidate-investigation-execution-input/v2";
             input = schemaId switch
             {
-                "infinium.llm.candidate-investigation-execution-input/v2" =>
-                    M1Slice6CampaignV2InputAdapter.ReadCandidate(
-                        System.Text.Encoding.UTF8.GetString(retained.InputPayload)).ProductInput,
                 "infinium.llm.candidate-investigation-execution-input/v1" =>
                     System.Text.Json.JsonSerializer.Deserialize<CandidateInvestigationExecutionInput>(
                         retained.InputPayload, SourceClaimContextMinimizer.JsonOptions)
@@ -151,26 +106,19 @@ public sealed class DurableCandidateInvestigationCoordinator(AuthoritativeStore 
                 _ => throw new InvalidDataException("The retained candidate-investigation input identity is invalid."),
             };
         }
-        if (campaignV2)
+        foreach (CandidateEvidenceInput evidence in input.Contexts.Single(item => item.ContextId == contextId).Evidence)
         {
-            store.ValidateCandidateEvidenceAuthority(retained.OutcomeId, contextId, retained.InputPayload);
-        }
-        else
-        {
-            foreach (CandidateEvidenceInput evidence in input.Contexts.Single(item => item.ContextId == contextId).Evidence)
+            if (evidence.RootKind == "persisted-source-claim-application")
             {
-                if (evidence.RootKind == "persisted-source-claim-application")
-                {
-                    store.ValidateSourceClaimApplicationPayloads(
-                        evidence.SourceApplicationLinkId, evidence.SourceAcquisitionId,
-                        evidence.SourceApplicationDecisionId);
-                }
-                else
-                {
-                    store.ValidateFrozenHostCandidateEvidencePayloads(
-                        analysisRunId, evidence.EvidenceApplicationLinkId, evidence.EvidenceId,
-                        evidence.SourceRevisionId, evidence.ContentSha256);
-                }
+                store.ValidateSourceClaimApplicationPayloads(
+                    evidence.SourceApplicationLinkId, evidence.SourceAcquisitionId,
+                    evidence.SourceApplicationDecisionId);
+            }
+            else
+            {
+                store.ValidateFrozenHostCandidateEvidencePayloads(
+                    analysisRunId, evidence.EvidenceApplicationLinkId, evidence.EvidenceId,
+                    evidence.SourceRevisionId, evidence.ContentSha256);
             }
         }
         store.ValidateCandidateSourceApplicationPayloads(retained.OutcomeId);

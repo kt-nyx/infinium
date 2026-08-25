@@ -63,13 +63,13 @@ public sealed class ProviderAdapterIntegrationTests
     }
 
     [TestMethod]
-    public async Task SuccessorBearerPreservesALongCanonicalCredentialExactlyAndRejectsInvalidBytesBeforeSend()
+    public async Task ExtendedProfileBearerPreservesALongCanonicalCredentialExactlyAndRejectsInvalidBytesBeforeSend()
     {
         string longCredential = "sk-proj-A_" + new string('B', 154);
         Assert.AreEqual(164, longCredential.Length);
         await using ProviderLoopbackServer server = new(ProviderAdapterTestData.CompletedResponse());
         using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
-        OpenAiResponsesResult result = await adapter.SendSuccessorV6OnceAsync(
+        OpenAiResponsesResult result = await adapter.SendExtendedProfileOnceAsync(
             ProviderAdapterTestData.CanonicalRequest(), Encoding.ASCII.GetBytes(longCredential),
             ProviderAdapterTestData.Limits(), "client-long-bearer", CancellationToken.None);
 
@@ -80,7 +80,7 @@ public sealed class ProviderAdapterIntegrationTests
         await using ProviderLoopbackServer whitespaceServer = new(ProviderAdapterTestData.CompletedResponse());
         using OpenAiResponsesAdapter whitespaceAdapter =
             OpenAiResponsesAdapter.CreateDeterministicLoopback(whitespaceServer.Endpoint);
-        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => whitespaceAdapter.SendSuccessorV6OnceAsync(
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => whitespaceAdapter.SendExtendedProfileOnceAsync(
             ProviderAdapterTestData.CanonicalRequest(), "sk-proj-invalid value"u8.ToArray(),
             ProviderAdapterTestData.Limits(), "client-invalid-whitespace", CancellationToken.None));
         Assert.AreEqual(0, whitespaceServer.RequestCount);
@@ -89,7 +89,7 @@ public sealed class ProviderAdapterIntegrationTests
         using OpenAiResponsesAdapter nonAsciiAdapter =
             OpenAiResponsesAdapter.CreateDeterministicLoopback(nonAsciiServer.Endpoint);
         byte[] nonAscii = [.. "sk-proj-valid"u8.ToArray(), 0xc3, 0xa9];
-        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => nonAsciiAdapter.SendSuccessorV6OnceAsync(
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => nonAsciiAdapter.SendExtendedProfileOnceAsync(
             ProviderAdapterTestData.CanonicalRequest(), nonAscii,
             ProviderAdapterTestData.Limits(), "client-invalid-nonascii", CancellationToken.None));
         Assert.AreEqual(0, nonAsciiServer.RequestCount);
@@ -97,7 +97,7 @@ public sealed class ProviderAdapterIntegrationTests
         await using ProviderLoopbackServer prefixServer = new(ProviderAdapterTestData.CompletedResponse());
         using OpenAiResponsesAdapter prefixAdapter =
             OpenAiResponsesAdapter.CreateDeterministicLoopback(prefixServer.Endpoint);
-        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => prefixAdapter.SendSuccessorV6OnceAsync(
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => prefixAdapter.SendExtendedProfileOnceAsync(
             ProviderAdapterTestData.CanonicalRequest(), "not-a-provider-key"u8.ToArray(),
             ProviderAdapterTestData.Limits(), "client-invalid-prefix", CancellationToken.None));
         Assert.AreEqual(0, prefixServer.RequestCount);
@@ -149,7 +149,7 @@ public sealed class ProviderAdapterIntegrationTests
             StringAssert.Contains(result.ProviderErrorType, ".SocketError.");
             byte[] envelope = OpenAiStagedResponseEnvelope.Create(result);
             Assert.IsTrue(OpenAiStagedResponseEnvelope.TryRead(envelope, out byte[] raw, out byte[] headers));
-            OpenAiResponsesResult replay = OpenAiStagedResponseEnvelope.ReplaySuccessorV6(
+            OpenAiResponsesResult replay = OpenAiStagedResponseEnvelope.ReplayExtendedProfile(
                 raw, headers, "client-offline");
             Assert.AreEqual(result.ProviderErrorType, replay.ProviderErrorType);
         }
@@ -294,7 +294,7 @@ public sealed class ProviderAdapterIntegrationTests
     [TestMethod]
     public async Task ProviderAdapterRetainedEvidenceIsExactAndSecretFreeWhenRequested()
     {
-        string? evidenceRoot = Environment.GetEnvironmentVariable("INFINIUM_WP5_EVIDENCE_ROOT");
+        string? evidenceRoot = Environment.GetEnvironmentVariable("INFINIUM_PROVIDER_ADAPTER_EVIDENCE_ROOT");
         if (string.IsNullOrWhiteSpace(evidenceRoot))
         {
             return;

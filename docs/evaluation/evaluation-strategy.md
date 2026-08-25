@@ -5,7 +5,7 @@ Disposition: actively maintained
 Last reviewed: 2026-08-23
 Current timing authority: ADR-0035 defers independent semantic-oracle
 qualification through M1 and M2. Those milestones still require the six-layer
-[product-conformance profile](m1-continuation-verification-profile.md), but no
+[product-conformance profile](product-conformance-verification-profile.md), but no
 oracle authoring, sealing, comparison, or `PASS`. Historical descriptions of
 independent evaluation below remain design/history, not current execution
 authority.
@@ -32,12 +32,12 @@ under test.
 RESEARCH-0034/0035 complete Gate C at the research/qualification layer.
 EVAL-0016 and EVAL-0017 now have qualified controlled-real candidates, but
 neither case has a passing execution. The accepted
-[M1 evaluation baseline](m1-evaluation-baseline.md), accepted
-[semantic specifications](specifications/m1-semantic-and-ground-truth.md) with
+[archived M1 evaluation baseline](evaluator-history.md), accepted
+[semantic specifications](evaluator-history.md) with
 the accepted
-[revision 2 amendment](specifications/m1-semantic-and-ground-truth-v2-amendment.md),
+[revision 2 amendment](evaluator-history.md),
 and accepted
-[platform/operational specifications](specifications/m1-platform-and-operational.md)
+[platform/operational specifications](evaluator-history.md)
 define the detailed M1 obligations.
 
 Wave E research maps its accepted persistence, lifecycle, stack, process/IPC,
@@ -400,7 +400,7 @@ closeout is accepted: Slice 4.5 is closed by owner disposition. The live
 product handoff is stated only in [current project state](../current-state.md).
 
 Slices 5-9 use the accepted
-[M1/M2 product-conformance verification profile](m1-continuation-verification-profile.md):
+[product-conformance verification profile](product-conformance-verification-profile.md):
 contract/schema conformance, developer-owned bounded examples and deterministic references,
 model-derived mutation/metamorphic checks, determinism/replay/safety,
 generalization plus controlled-real evidence, and fresh review/claim control.

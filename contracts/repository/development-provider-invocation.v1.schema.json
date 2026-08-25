@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/development-provider-invocation.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_identity",
+    "invocation_id",
+    "operation",
+    "credential",
+    "provider_profile",
+    "limits",
+    "request"
+  ],
+  "properties": {
+    "schema_identity": {
+      "const": "infinium.development-provider-invocation/v1"
+    },
+    "invocation_id": {
+      "$ref": "#/$defs/identity"
+    },
+    "operation": {
+      "enum": [
+        "transport-qualification",
+        "source-claim-extraction",
+        "candidate-investigation"
+      ]
+    },
+    "credential": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_id",
+        "generation_id",
+        "account_identity_id",
+        "project_identity_id"
+      ],
+      "properties": {
+        "profile_id": { "$ref": "#/$defs/identity" },
+        "generation_id": { "$ref": "#/$defs/identity" },
+        "account_identity_id": { "$ref": "#/$defs/identity" },
+        "project_identity_id": { "$ref": "#/$defs/identity" }
+      }
+    },
+    "provider_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_snapshot_id",
+        "price_snapshot_id",
+        "model",
+        "service_tier"
+      ],
+      "properties": {
+        "capability_snapshot_id": { "$ref": "#/$defs/identity" },
+        "price_snapshot_id": { "$ref": "#/$defs/identity" },
+        "model": { "const": "gpt-5.6-sol" },
+        "service_tier": { "const": "default" }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximum_input_tokens",
+        "maximum_output_tokens",
+        "deadline_milliseconds",
+        "maximum_local_cost_nano_usd",
+        "project_cost_boundary_nano_usd"
+      ],
+      "properties": {
+        "maximum_input_tokens": { "type": "integer", "minimum": 1, "maximum": 73728 },
+        "maximum_output_tokens": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "deadline_milliseconds": { "type": "integer", "minimum": 1, "maximum": 120000 },
+        "maximum_local_cost_nano_usd": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000000000
+        },
+        "project_cost_boundary_nano_usd": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000000000
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instructions",
+        "untrusted_input",
+        "output_schema",
+        "safety_identifier"
+      ],
+      "properties": {
+        "instructions": { "type": "string", "minLength": 1, "maxLength": 8192 },
+        "untrusted_input": { "type": "string", "minLength": 1, "maxLength": 48000 },
+        "output_schema": { "type": "object" },
+        "safety_identifier": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  },
+  "$defs": {
+    "identity": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{1,120}$"
+    }
+  }
+}

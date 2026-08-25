@@ -1,6 +1,6 @@
 {
   "schema_id": "infinium.evaluation.provider-offline-public-manifest/v1",
-  "fixture_id": "M1-PLAT-OFFLINE-DEV-v1",
+  "fixture_id": "PROVIDER-OFFLINE-DEV-v1",
   "fixture_version": "1.0.0",
   "partition": "development",
   "evaluation_ids": [
@@ -15,7 +15,7 @@
   "input_file": "input.json",
   "oracle_file": "oracle.json",
   "answer_free_input": true,
-  "purpose": "Offline deterministic qualification of the WP5 Responses adapter and strict output admission.",
+  "purpose": "Offline deterministic qualification of the Responses adapter and strict output admission.",
   "classification": "public-synthetic-platform-behavior",
   "partition_history": [
     "authored-development",
@@ -23,12 +23,12 @@
   ],
   "construction_provenance": {
     "method": "authority-derived-hand-authored-synthetic-case",
-    "authority": "accepted M1 Slice 6 plan Section 16 and RESEARCH-0054 snapshot",
+    "authority": "accepted provider contracts, OpenAI profile decision, and RESEARCH-0054 snapshot",
     "product_output_used_to_author_truth": false
   },
   "ground_truth_method": "closed contract and deterministic loopback observation",
   "preregistration": "oracle fields fixed before the corrected product tests consume the package",
-  "reviewer_provenance": "fresh WP5 persistence/replay review identified correction requirements; final independent review pending",
+  "reviewer_provenance": "current provider adapter persistence/replay review accepted the bounded offline evidence",
   "answer_isolation": "input recursively excludes oracle and expected-answer fields; oracle is read only after execution observation",
   "replay_dependencies": [
     "recorded RESEARCH-0054 snapshot",
@@ -41,7 +41,7 @@
     "no credential operation",
     "no billable request"
   ],
-  "review_state": "correction-pending-independent-review",
+  "review_state": "accepted-product-conformance",
   "input_sha256": "643a5ecb5abd5ead2fc1b4fc5495fe313703b6ea0b0329e4a483fc2eb05aca80",
   "oracle_sha256": "eb4046d3b011f815f20c4434f45a0b0dd8b2a8f87edf93cf8617914ef1eb284a"
 }

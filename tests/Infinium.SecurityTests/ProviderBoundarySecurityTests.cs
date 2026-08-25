@@ -28,7 +28,7 @@ public sealed class ProviderBoundarySecurityTests
     [TestMethod]
     public async Task SecretCanaryIsAbsentFromRequestBodyResponseReplayAndDiagnostics()
     {
-        const string canary = "sk-WP5-SECRET-CANARY-92bfa8";
+        const string canary = "sk-PROVIDER-SECRET-CANARY-92bfa8";
         await using ProviderLoopbackServer server = new(ProviderAdapterTestData.CompletedResponse());
         using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(server.Endpoint);
         OpenAiResponsesResult result = await adapter.SendOnceAsync(
@@ -52,7 +52,7 @@ public sealed class ProviderBoundarySecurityTests
     [DataRow("json-escaped-malformed")]
     public async Task CompleteSecretEchoIsClearedBeforeStagingAndBecomesTypedAmbiguousHold(string representation)
     {
-        const string canary = "sk-WP5/echo+92";
+        const string canary = "sk-PROVIDER/echo+92";
         string echoed = representation switch
         {
             "raw" => canary,
@@ -70,9 +70,9 @@ public sealed class ProviderBoundarySecurityTests
         byte[] response = representation switch
         {
             "json-escaped" => Encoding.UTF8.GetBytes(
-                "{\"echo\":\"\\u0073\\u006B\\u002DWP5\\/echo\\u002B92\"}"),
+                "{\"echo\":\"\\u0073\\u006B\\u002DPROVIDER\\/echo\\u002B92\"}"),
             "json-escaped-malformed" => Encoding.UTF8.GetBytes(
-                "{\"echo\":\"\\u0073\\u006B\\u002DWP5\\/echo\\u002B92"),
+                "{\"echo\":\"\\u0073\\u006B\\u002DPROVIDER\\/echo\\u002B92"),
             _ => JsonSerializer.SerializeToUtf8Bytes(new { echo = echoed }),
         };
         await using ProviderLoopbackServer server = new(response);
@@ -147,7 +147,7 @@ public sealed class ProviderBoundarySecurityTests
     [TestMethod]
     public async Task ExactSecretInRequestIdIsUnavailableAndCannotCreateAStagedReceipt()
     {
-        const string canary = "sk-WP5-header-secret-92";
+        const string canary = "sk-PROVIDER-header-secret-92";
         await using ProviderLoopbackServer server = new(
             ProviderAdapterTestData.CompletedResponse(), responseHeaders: new Dictionary<string, string>
             {
@@ -169,7 +169,7 @@ public sealed class ProviderBoundarySecurityTests
     [TestMethod]
     public async Task PartialSecretSubstringIsNotMisclassifiedAsACompleteEcho()
     {
-        const string canary = "sk-WP5-partial-secret-boundary";
+        const string canary = "sk-PROVIDER-partial-secret-boundary";
         string prefixOnly = canary[..12];
         await using ProviderLoopbackServer server = new(
             ProviderAdapterTestData.CompletedResponse(outputText: JsonSerializer.Serialize(new { ok = prefixOnly })));

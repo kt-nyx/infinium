@@ -10,7 +10,7 @@ make implementation, fixture, or product-acceptance claims by themselves.
 
 [ADR-0035](../architecture/decisions/ADR-0035-defer-independent-semantic-oracle-qualification.md)
 defers independent semantic-oracle qualification throughout M1 and M2. The
-[active profile](m1-continuation-verification-profile.md) requires ordinary
+[active profile](product-conformance-verification-profile.md) requires ordinary
 product conformance and reserves independent evaluation for the M3 Evaluation
 Readiness Gate after M2 acceptance.
 
@@ -20,10 +20,10 @@ Readiness Gate after M2 acceptance.
 - [Case catalog](case-catalog.md)
 - [Fixture guidelines](fixture-guidelines.md)
 - [Anti-overfitting rules](anti-overfitting-rules.md)
-- [M1 evaluation baseline](m1-evaluation-baseline.md)
-- [M1/M2 product-conformance verification profile](m1-continuation-verification-profile.md)
-- [Platform and operational specifications](specifications/m1-platform-and-operational.md)
-- [Semantic and ground-truth specifications](specifications/m1-semantic-and-ground-truth.md)
+- [Archived M1 evaluation baseline](evaluator-history.md)
+- [Product-conformance verification profile](product-conformance-verification-profile.md)
+- [Archived platform and operational specifications](evaluator-history.md)
+- [Archived semantic and ground-truth specifications](evaluator-history.md)
 - [Platform fixture catalog](specifications/platform-fixture-catalog.md)
 - [Semantic fixture catalog](specifications/semantic-fixture-catalog.md)
 
@@ -37,7 +37,7 @@ navigation, not executable fixture packages.
 - [Repository authority inventory](repository-evaluation-authority.v1.json)
 - [Evaluator-private governance v2](evaluator-private-fixture-governance-v2.md)
 - [Evaluator history and current disposition](evaluator-history.md)
-- [Historical evaluator documents](history/README.md)
+- [Historical evaluator archive pointer](evaluator-history.md)
 - [Retired asset Git inventory](retired-evaluation-assets.v1.json)
 
 Protocols `/4` and `/5` and all predecessor evaluator attempts are retired

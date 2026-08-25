@@ -49,7 +49,7 @@ This investigation is governed by:
   including pinned Mutagen `0.54.2` and field-qualified Bethesda semantics;
 - [ADR-0010](../../architecture/decisions/ADR-0010-snapshot-fingerprint-and-dependency-invalidation.md),
   which requires hashes, dependency closure, and scoped invalidation; and
-- [the accepted M0 plan](../../plans/milestones/m0/plan.md#wave-c--analysis-surfaces-taxonomy-corpus-and-candidate-scale),
+- [the archived M0 plan](../../plans/milestones/README.md),
   which permits this bounded survey without requiring a complete named-script
   analyzer roadmap.
 

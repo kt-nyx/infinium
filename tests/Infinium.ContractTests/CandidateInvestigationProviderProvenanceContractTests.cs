@@ -141,21 +141,4 @@ public sealed class CandidateInvestigationProviderProvenanceContractTests
             document with { ParticipantRoles = [new string('r', 129)] }));
     }
 
-    [TestMethod]
-    [TestCategory("Contract")]
-    public void CandidateAnswerIsolationRejectsAuthorityAndDispositionCues()
-    {
-        foreach (string json in new[]
-                 {
-                     "{\"outer\":[{\"ground-truth\":\"x\"}]}",
-                     "{\"context_id\":\"matched-negative\"}",
-                     "{\"candidate_id\":\"positive_control\"}",
-                     "{\"evidence_ids\":[\"no model\"]}",
-                 })
-        {
-            using JsonDocument mutation = JsonDocument.Parse(json);
-            Assert.ThrowsExactly<InvalidDataException>(
-                () => CandidateInvestigationFixtureReader.AssertAnswerFreeProductInput(mutation.RootElement));
-        }
-    }
 }

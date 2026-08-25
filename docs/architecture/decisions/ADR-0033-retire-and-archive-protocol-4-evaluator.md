@@ -84,4 +84,4 @@ and `EVAL-0086`.
 - [ADR-0027](ADR-0027-public-evaluation-protocol-private-held-out-corpus.md)
 - [ADR-0032](ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md)
 - [Evaluator history](../../evaluation/evaluator-history.md)
-- [M1 continuation verification profile](../../evaluation/m1-continuation-verification-profile.md)
+- [Product-conformance verification profile](../../evaluation/product-conformance-verification-profile.md)

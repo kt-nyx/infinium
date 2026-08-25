@@ -1,0 +1,489 @@
+{
+  "schema_identity": "infinium.repository.functional-naming-allowlist/1.0.0",
+  "status": "accepted",
+  "generated_from_commit": "6a9c57815716c0fac35381b71e5766b1d7d2f0d0",
+  "generated_at_utc": "2026-08-25T15:48:19.2311389-04:00",
+  "policy": "docs/governance/functional-implementation-naming.md",
+  "entries": [
+    {
+      "path": "contracts/json-schema/candidate-investigation-execution-input.v1.schema.json",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 19",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "contracts/json-schema/candidate-investigation-execution-input.v1.schema.json",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 19",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "contracts/json-schema/candidate-investigation-oracle.v1.schema.json",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 30",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "contracts/json-schema/candidate-investigation-oracle.v1.schema.json",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 30",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "contracts/json-schema/candidate-investigation-retained-transcripts.v1.schema.json",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 42",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "contracts/json-schema/candidate-investigation-retained-transcripts.v1.schema.json",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 42",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "contracts/json-schema/finding-case.v1.schema.json",
+      "scope": "content",
+      "token": "continuation",
+      "symbol_or_context": "line 151",
+      "classification": "functional-domain-term",
+      "reason": "Continuation and successor describe persisted finding/case lineage relationships, not development chronology.",
+      "retained_consumer": "Finding/case reconciliation schema, persistence, and integration behavior.",
+      "review_condition": "Review if the finding/case lineage vocabulary or serialized contract changes."
+    },
+    {
+      "path": "contracts/json-schema/finding-case.v1.schema.json",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 158",
+      "classification": "functional-domain-term",
+      "reason": "Continuation and successor describe persisted finding/case lineage relationships, not development chronology.",
+      "retained_consumer": "Finding/case reconciliation schema, persistence, and integration behavior.",
+      "review_condition": "Review if the finding/case lineage vocabulary or serialized contract changes."
+    },
+    {
+      "path": "contracts/json-schema/source-claim-execution-input.v1.schema.json",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 4",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "contracts/json-schema/source-claim-execution-input.v1.schema.json",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 4",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "contracts/json-schema/source-claim-retained-transcripts.v1.schema.json",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 4",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "contracts/json-schema/source-claim-retained-transcripts.v1.schema.json",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 4",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "contracts/repository/repository-evaluation-authority.v1.schema.json",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 19",
+      "classification": "repository-governance-contract",
+      "reason": "The repository-only authority schema deliberately names milestone scopes; it is not a product/runtime implementation name.",
+      "retained_consumer": "Repository evaluation-boundary validation only.",
+      "review_condition": "Review when the repository evaluation-authority schema is versioned or retired."
+    },
+    {
+      "path": "contracts/repository/repository-evaluation-authority.v1.schema.json",
+      "scope": "content",
+      "token": "m2",
+      "symbol_or_context": "line 20, line 21",
+      "classification": "repository-governance-contract",
+      "reason": "The repository-only authority schema deliberately names milestone scopes; it is not a product/runtime implementation name.",
+      "retained_consumer": "Repository evaluation-boundary validation only.",
+      "review_condition": "Review when the repository evaluation-authority schema is versioned or retired."
+    },
+    {
+      "path": "contracts/repository/repository-evaluation-authority.v1.schema.json",
+      "scope": "content",
+      "token": "m3",
+      "symbol_or_context": "line 21",
+      "classification": "repository-governance-contract",
+      "reason": "The repository-only authority schema deliberately names milestone scopes; it is not a product/runtime implementation name.",
+      "retained_consumer": "Repository evaluation-boundary validation only.",
+      "review_condition": "Review when the repository evaluation-authority schema is versioned or retired."
+    },
+    {
+      "path": "src/Infinium.Application/Analysis/AnalysisComposition.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 338",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Analysis/AnalysisComposition.cs",
+      "scope": "content",
+      "token": "slice9",
+      "symbol_or_context": "line 338",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Analysis/AnalysisPublicationBuilder.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 318",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Analysis/AnalysisPublicationBuilder.cs",
+      "scope": "content",
+      "token": "slice9",
+      "symbol_or_context": "line 318",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Provider/CandidateInvestigation.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 11",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Provider/CandidateInvestigation.cs",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 11",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Provider/SourceClaimAcquisition.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 13",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Application/Provider/SourceClaimAcquisition.cs",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 13",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.OpenAI/OpenAiResponsesAdapter.cs",
+      "scope": "content",
+      "token": "WP5",
+      "symbol_or_context": "line 26",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.FindingCases.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "line 875",
+      "classification": "functional-domain-term",
+      "reason": "Continuation and successor describe persisted finding/case lineage relationships, not development chronology.",
+      "retained_consumer": "Finding/case reconciliation schema, persistence, and integration behavior.",
+      "review_condition": "Review if the finding/case lineage vocabulary or serialized contract changes."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 692",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "slice6",
+      "symbol_or_context": "line 692",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "line 692",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ScopeReversion.cs",
+      "scope": "content",
+      "token": "M1",
+      "symbol_or_context": "line 12",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ScopeReversion.cs",
+      "scope": "content",
+      "token": "S7",
+      "symbol_or_context": "line 12",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ScopeReversion.cs",
+      "scope": "content",
+      "token": "WP5",
+      "symbol_or_context": "line 12",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ScopeReversionV2.cs",
+      "scope": "content",
+      "token": "M1",
+      "symbol_or_context": "line 12",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ScopeReversionV2.cs",
+      "scope": "content",
+      "token": "S8",
+      "symbol_or_context": "line 12",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ScopeReversionV2.cs",
+      "scope": "content",
+      "token": "WP4",
+      "symbol_or_context": "line 12",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
+      "scope": "content",
+      "token": "M1",
+      "symbol_or_context": "line 10, line 12, line 14, line 16, line 18, line 20, line 22, line 24, line 28, line 30, line 33, line 34, line 7, line 8",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
+      "scope": "content",
+      "token": "S6",
+      "symbol_or_context": "line 10, line 12, line 14, line 16, line 18, line 20, line 22, line 24, line 28, line 30, line 33, line 34, line 7, line 8",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
+      "scope": "content",
+      "token": "SUCCESSOR",
+      "symbol_or_context": "line 28, line 30, line 33",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
+      "scope": "content",
+      "token": "WP2",
+      "symbol_or_context": "line 8",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
+      "scope": "content",
+      "token": "WP3",
+      "symbol_or_context": "line 10, line 12",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
+      "scope": "content",
+      "token": "WP5",
+      "symbol_or_context": "line 14, line 16",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
+      "scope": "content",
+      "token": "WP6",
+      "symbol_or_context": "line 18, line 20",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
+      "scope": "content",
+      "token": "WP7",
+      "symbol_or_context": "line 22",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "src/Infinium.Persistence/ProviderPersistenceDeclarations.cs",
+      "scope": "content",
+      "token": "WP9",
+      "symbol_or_context": "line 24",
+      "classification": "migration-compatibility",
+      "reason": "The token occurs only in an exact historical migration ID, database object marker, or source fingerprint; functional code-facing symbols have been renamed.",
+      "retained_consumer": "SQLite migration, backup/restore, and existing-store compatibility.",
+      "review_condition": "Remove only when support for the corresponding stored schema is intentionally retired through an accepted migration policy."
+    },
+    {
+      "path": "tests/AcceptedAnalysisCompositionFixtures.cs",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 14",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The exact controlled handoff ID identifies immutable retained acceptance evidence; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result replay and byte-identity checks.",
+      "review_condition": "Remove when the retained controlled evidence compatibility test is retired or replaced by a current self-contained fixture."
+    },
+    {
+      "path": "tests/AcceptedAnalysisCompositionFixtures.cs",
+      "scope": "content",
+      "token": "slice8",
+      "symbol_or_context": "line 14",
+      "classification": "retained-evidence-compatibility",
+      "reason": "The exact controlled handoff ID identifies immutable retained acceptance evidence; current test and type names are functional.",
+      "retained_consumer": "Controlled retained-result replay and byte-identity checks.",
+      "review_condition": "Remove when the retained controlled evidence compatibility test is retired or replaced by a current self-contained fixture."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/FindingCaseIntegrationTests.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "line 122, line 130",
+      "classification": "functional-domain-term",
+      "reason": "Continuation and successor describe persisted finding/case lineage relationships, not development chronology.",
+      "retained_consumer": "Finding/case reconciliation schema, persistence, and integration behavior.",
+      "review_condition": "Review if the finding/case lineage vocabulary or serialized contract changes."
+    },
+    {
+      "path": "tests/TestData/Provider/SourceClaims/edge-transcripts.v1.json",
+      "scope": "content",
+      "token": "m1",
+      "symbol_or_context": "line 6",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "tests/TestData/Provider/SourceClaims/edge-transcripts.v1.json",
+      "scope": "content",
+      "token": "s6",
+      "symbol_or_context": "line 6",
+      "classification": "serialized-contract-compatibility",
+      "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
+      "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
+      "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    }
+  ]
+}

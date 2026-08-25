@@ -150,14 +150,14 @@ public static class HelperExecutionSemanticsV2
     };
 
     private static void ValidateLimits(ProviderOperationKindV2 kind, HelperLimitsV2 value,
-        bool successorV6)
+        bool extendedProfile)
     {
-        (ulong request, ulong input, ulong output, ulong response, long cost, ulong duration) = successorV6
+        (ulong request, ulong input, ulong output, ulong response, long cost, ulong duration) = extendedProfile
             ? kind is ProviderOperationKindV2.TransportQualification
                 or ProviderOperationKindV2.SourceClaimExtraction
                 or ProviderOperationKindV2.CandidateInvestigation
                 ? (1_000_000UL, 922_000UL, 128_000UL, 1_048_576UL, 9_749_920_000L, 900_000UL)
-                : throw new InvalidDataException("The successor v6 helper operation kind is unknown.")
+                : throw new InvalidDataException("The extended profile helper operation kind is unknown.")
             : kind switch
             {
                 ProviderOperationKindV2.TransportQualification => (16_384UL, 20_480UL, 256UL, 262_144UL, 140_000_000L, 60_000UL),
@@ -165,9 +165,9 @@ public static class HelperExecutionSemanticsV2
                     (65_536UL, 73_728UL, 4_096UL, 1_048_576UL, 600_000_000L, 120_000UL),
                 _ => throw new InvalidDataException("The helper provider operation kind is unknown."),
             };
-        ulong maximumFrame = successorV6 ? HelperProtocolV2Constants.SuccessorV6MaximumFrameBytes
+        ulong maximumFrame = extendedProfile ? HelperProtocolV2Constants.ExtendedProfileMaximumFrameBytes
             : HelperProtocolV2Constants.MaximumFrameBytes;
-        ulong maximumStaged = successorV6 ? HelperProtocolV2Constants.SuccessorV6MaximumStagedOutputBytes
+        ulong maximumStaged = extendedProfile ? HelperProtocolV2Constants.ExtendedProfileMaximumStagedOutputBytes
             : response;
         if (value.MaximumFrameBytes is 0 || value.MaximumFrameBytes > maximumFrame
             || value.MaximumRequestBytes is 0 || value.MaximumRequestBytes > request

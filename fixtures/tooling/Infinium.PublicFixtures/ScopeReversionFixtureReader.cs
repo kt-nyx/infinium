@@ -48,7 +48,7 @@ public static class ScopeReversionFixtureReader
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
         string directory = Path.Combine(
-            Path.GetFullPath(repositoryRoot), "fixtures", "public", "analysis", "scope-reversion", "M1-S7-SYNTHETIC-v1");
+            Path.GetFullPath(repositoryRoot), "fixtures", "public", "analysis", "scope-reversion", "synthetic-bounded-cases-v1");
         string inputPath = Path.Combine(directory, "input.v1.json");
         string expectationsPath = Path.Combine(directory, "expectations.v1.json");
         string manifestPath = Path.Combine(directory, "conformance-manifest.v1.json");
@@ -66,7 +66,7 @@ public static class ScopeReversionFixtureReader
         ];
         if (manifest.SchemaId != "infinium.evaluation.developer-conformance-manifest/v1"
             || manifest.SchemaVersion != "1.0.0"
-            || manifest.PackageIdentity != "M1-S7-SYNTHETIC-v1"
+            || manifest.PackageIdentity != "scope-reversion-synthetic-bounded-cases-v1"
             || manifest.PackageVersion != "1.0.0"
             || manifest.Partition != "development"
             || manifest.SemanticOracle || manifest.VerdictAuthority
@@ -135,7 +135,7 @@ public static class ScopeReversionFixtureReader
 
         string inputSha = Hash(inputBytes);
         ScopeReversionSourceBindingContract source = new(
-            new OpaqueId("m1-s7-synthetic-input"),
+            new OpaqueId("scope-reversion-synthetic-input"),
             "infinium.evaluation.scope-reversion-input/v1",
             new ContractVersion(1, 0, 0),
             new Sha256Fingerprint(inputSha),
@@ -153,7 +153,7 @@ public static class ScopeReversionFixtureReader
             PlacedReferenceScopeReversionAdapter.StableAdapterId,
         ];
         ScopeReversionConfigurationContract configurationWithoutFingerprint = new(
-            new OpaqueId("m1-s7-synthetic-configuration"),
+            new OpaqueId("scope-reversion-synthetic-configuration"),
             new Sha256Fingerprint(new string('0', 64)),
             enabledAdapters,
             enabledAdapters,
@@ -165,15 +165,15 @@ public static class ScopeReversionFixtureReader
         AnalysisExecutionInputContract executionInput = new(
             ContractConstants.AnalysisExecutionInputSchemaId,
             new ContractVersion(1, 0, 0),
-            new OpaqueId("m1-s7-synthetic-execution"),
-            new OpaqueId("m1-s7-synthetic-run"),
-            Reference("m1-s7-synthetic-snapshot", syntheticHash),
-            Reference("m1-s7-synthetic-bethesda-substrate", syntheticHash),
+            new OpaqueId("scope-reversion-synthetic-execution"),
+            new OpaqueId("scope-reversion-synthetic-run"),
+            Reference("scope-reversion-synthetic-snapshot", syntheticHash),
+            Reference("scope-reversion-synthetic-bethesda-substrate", syntheticHash),
             [new ArtifactReferenceContract(source.ArtifactId, source.SchemaVersion, source.Fingerprint, source.Availability)],
             [new ArtifactReferenceContract(new OpaqueId(declaration.AnalyzerId), declaration.AnalyzerVersion,
                 declarationFingerprint, "retained")],
-            Reference("m1-s7-synthetic-configuration", configurationFingerprint.Value),
-            Reference("m1-s7-synthetic-manifest", syntheticHash),
+            Reference("scope-reversion-synthetic-configuration", configurationFingerprint.Value),
+            Reference("scope-reversion-synthetic-manifest", syntheticHash),
             ReplayMode.Clean,
             null,
             7,
@@ -185,11 +185,11 @@ public static class ScopeReversionFixtureReader
                 new("loot", BoundaryUseState.NotUsed, "deterministic local analyzer"),
             ])
         {
-            AnalysisContext = Reference("m1-s7-synthetic-context", syntheticHash),
+            AnalysisContext = Reference("scope-reversion-synthetic-context", syntheticHash),
         };
         ScopeReversionCompositionRequest request = new(
-            new OpaqueId("m1-s7-synthetic-run"),
-            new OpaqueId("m1-s7-synthetic-configuration"),
+            new OpaqueId("scope-reversion-synthetic-run"),
+            new OpaqueId("scope-reversion-synthetic-configuration"),
             enabledAdapters,
             [source],
             actors,

@@ -36,27 +36,10 @@
       "id": "current-public-fixtures",
       "paths": [
         "fixtures/tooling/",
-        "fixtures/public/public-fixture-registry.v3.json"
+        "fixtures/public/current-fixture-registry.v1.json"
       ],
       "validator": "Infinium.Application.Evaluation.ActiveJsonSchemaValidator",
       "claim": "functionally organized, independently authored public fixture contract evidence; never product-derived oracle authority"
-    },
-    {
-      "id": "retained-historical-authorability-evidence",
-      "paths": [
-        "docs/evaluation/evaluator-history.md",
-        "docs/evaluation/retired-evaluation-assets.v1.json"
-      ],
-      "default_solution_member": false,
-      "claim": "Git-identified historical evaluator evidence and external protocol-4 archive navigation; not current fixture input, executable workflow, review gate, or product authority"
-    },
-    {
-      "id": "historical-semantic-packages",
-      "paths": [
-        "fixtures/public/provider/semantic-admission/"
-      ],
-      "default_solution_member": false,
-      "claim": "immutable historical development evidence only; no current semantic validation authority, product verdict, or M1/M2 acceptance gate"
     },
     {
       "id": "fixture-governance-vocabulary",

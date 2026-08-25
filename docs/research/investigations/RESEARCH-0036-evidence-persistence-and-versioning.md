@@ -122,7 +122,7 @@ The recommendation was checked against:
 - [case catalog](../../evaluation/case-catalog.md);
 - [fixture guidelines](../../evaluation/fixture-guidelines.md);
 - [anti-overfitting rules](../../evaluation/anti-overfitting-rules.md);
-- [M0 research plan](../../plans/milestones/m0/plan.md).
+- [Archived M0 research plan](../../plans/milestones/README.md).
 
 The following are therefore requirements, not new decisions made here:
 

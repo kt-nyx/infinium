@@ -118,8 +118,8 @@ public sealed class SourceClaimExtractionContractTests
     public void SourceContradictionEvidenceRequiresAnUnambiguousSingleProposalTranscript()
     {
         JsonObject retained = JsonNode.Parse(File.ReadAllText(TestRepository.PathFromRoot(
-            "fixtures", "public", "provider", "source-claims", "S6-CLAIM-VAL-v1",
-            "retained-transcripts.v1.json")))!.AsObject();
+            "tests", "TestData", "Provider", "SourceClaims",
+            "edge-transcripts.v1.json")))!.AsObject();
         JsonObject transcript = retained["transcripts"]!.AsArray()[0]!.AsObject();
         JsonObject proposal = transcript["proposals"]!.AsArray()[0]!.AsObject();
         transcript["contradiction_evidence_ids"] = new JsonArray("opposing-evidence-external");
@@ -135,8 +135,8 @@ public sealed class SourceClaimExtractionContractTests
     public void NoModelTranscriptsCannotInventProviderProposals()
     {
         JsonObject source = JsonNode.Parse(File.ReadAllText(TestRepository.PathFromRoot(
-            "fixtures", "public", "provider", "source-claims", "S6-CLAIM-VAL-v1",
-            "retained-transcripts.v1.json")))!.AsObject();
+            "tests", "TestData", "Provider", "SourceClaims",
+            "edge-transcripts.v1.json")))!.AsObject();
         JsonObject sourceTranscript = source["transcripts"]!.AsArray()[0]!.AsObject();
         sourceTranscript["model_used"] = false;
         sourceTranscript["response_state"] = "not-used";
@@ -192,7 +192,7 @@ public sealed class SourceClaimExtractionContractTests
 
     [TestMethod]
     [TestCategory("Contract")]
-    public void Slice6SemanticAdmissionRevisionHasExactCandidateSchemaAndWireSemantics()
+    public void SemanticAdmissionRevisionHasExactCandidateSchemaAndWireSemantics()
     {
         byte[] schema = File.ReadAllBytes(TestRepository.PathFromRoot(
             "contracts", "json-schema", "candidate-investigation.v1.schema.json"));

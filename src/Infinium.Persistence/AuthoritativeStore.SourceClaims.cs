@@ -130,7 +130,7 @@ public sealed record SourceClaimResolvedApplicationReadModel(
 
 public partial class AuthoritativeStore
 {
-    public void EnsureSourceClaimCampaignParentRun(string runId, string installationSnapshotId,
+    public void EnsureSourceClaimParentRun(string runId, string installationSnapshotId,
         string analysisContextId, string effectiveConfigurationId, string resolvedInputManifestId,
         DateTimeOffset occurredAt)
     {
@@ -149,7 +149,7 @@ public partial class AuthoritativeStore
                 return;
             }
             if (existing != 0)
-            { throw new InvalidDataException("The source-claim campaign parent run identity is ambiguous."); }
+            { throw new InvalidDataException("The source-claim parent run identity is ambiguous."); }
             Execute(
                 """
                 INSERT INTO runs VALUES($run,$snapshot,$context,$configuration,$manifest,
@@ -169,7 +169,7 @@ public partial class AuthoritativeStore
             command.Parameters.AddWithValue("$configuration", effectiveConfigurationId);
             command.Parameters.AddWithValue("$manifest", resolvedInputManifestId);
             if (Convert.ToInt64(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
-            { throw new InvalidDataException("The source-claim campaign parent run binding is stale."); }
+            { throw new InvalidDataException("The source-claim parent run binding is stale."); }
             transaction.Commit();
         }
     }
@@ -184,7 +184,7 @@ public partial class AuthoritativeStore
             || requests.Select(item => item.OutcomeId).Distinct(StringComparer.Ordinal).Count() != requests.Count
             || requests.Select(item => item.ContextId).Distinct(StringComparer.Ordinal).Count() != requests.Count)
         {
-            throw new InvalidDataException("A candidate campaign batch requires distinct outcomes and contexts.");
+            throw new InvalidDataException("A candidate-investigation batch requires distinct outcomes and contexts.");
         }
         return ExecuteCandidateInvestigationBatch(() => requests.Select(PersistCandidateInvestigation).ToArray());
     }
@@ -196,7 +196,7 @@ public partial class AuthoritativeStore
         {
             if (candidateInvestigationBatchTransaction is not null)
             {
-                throw new InvalidOperationException("Nested candidate campaign persistence batches are prohibited.");
+                throw new InvalidOperationException("Nested candidate-investigation persistence batches are prohibited.");
             }
             using SqliteTransaction transaction = BeginImmediateTransaction();
             candidateInvestigationBatchTransaction = transaction;
@@ -280,7 +280,7 @@ public partial class AuthoritativeStore
         }
     }
 
-    public void EnsureSourceClaimCampaignAcquisition(SourceClaimAcquisitionRegistration request)
+    public void EnsureSourceClaimAcquisition(SourceClaimAcquisitionRegistration request)
     {
         ArgumentNullException.ThrowIfNull(request);
         lock (gate)
@@ -299,7 +299,7 @@ public partial class AuthoritativeStore
                     || reader.Read())
                 {
                     throw new InvalidDataException(
-                        "The source-claim campaign acquisition lineage is stale or ambiguous.");
+                        "The source-claim acquisition lineage is stale or ambiguous.");
                 }
                 return;
             }
@@ -568,7 +568,7 @@ public partial class AuthoritativeStore
                 || request.ApplicabilityFactsById.Count != 0)
         {
             throw new InvalidDataException(
-                "Campaign source persistence requires exact artifact, application, and applicability authority closure.");
+                "Source-claim persistence requires exact artifact, application, and applicability authority closure.");
         }
         lock (gate)
         {
@@ -1057,7 +1057,7 @@ public partial class AuthoritativeStore
                             || !IsSha256(binding.LocalObservationSha256))
                         {
                             throw new InvalidDataException(
-                                "Campaign candidate persistence requires one exact local-observation identity and digest.");
+                                "Candidate-investigation persistence requires one exact local-observation identity and digest.");
                         }
                         bool sourceRoot = binding.RootKind == "persisted-source-claim-application";
                         Execute(
@@ -1247,7 +1247,7 @@ public partial class AuthoritativeStore
         }
         if (request.NormalizedProductInputPayload is not null)
         {
-            ValidateCandidateCampaignV2Input(request);
+            ValidateCandidateInvestigationV2Input(request);
         }
         ValidateCandidateTranscriptPayload(request, root, context);
         return new(request.HypothesisId, Text(context, "hypothesis"), participantIds, participantRoles,
@@ -1321,7 +1321,7 @@ public partial class AuthoritativeStore
         }
     }
 
-    private static void ValidateCandidateCampaignV2Input(CandidateInvestigationPersistenceRequest request)
+    private static void ValidateCandidateInvestigationV2Input(CandidateInvestigationPersistenceRequest request)
     {
         using JsonDocument document = JsonDocument.Parse(request.InputPayload, new JsonDocumentOptions
         {
@@ -1337,12 +1337,12 @@ public partial class AuthoritativeStore
             || !Nonempty(packageIdentity) || packageIdentity.Length > 256 || packageIdentity.Any(char.IsControl)
             || contexts.Length != 2)
         {
-            throw new InvalidDataException("Candidate persistence did not retain the exact campaign v2 authority envelope.");
+            throw new InvalidDataException("Candidate persistence did not retain the exact v2 authority envelope.");
         }
         JsonElement context = contexts.SingleOrDefault(item => Text(item, "context_id") == request.ContextId);
         if (context.ValueKind == JsonValueKind.Undefined || context.GetProperty("evidence").GetArrayLength() != 1)
         {
-            throw new InvalidDataException("Candidate campaign v2 input does not bind one exact context root.");
+            throw new InvalidDataException("Candidate-investigation v2 input does not bind one exact context root.");
         }
         JsonElement evidence = context.GetProperty("evidence")[0];
         CandidateEvidenceProvenanceBinding binding = request.EvidenceBindings.Single();
@@ -1350,13 +1350,13 @@ public partial class AuthoritativeStore
             || Text(evidence, "evidence_application_link_id") != binding.EvidenceApplicationLinkId
             || Text(evidence, "content_sha256") != binding.ContentSha256)
         {
-            throw new InvalidDataException("Candidate campaign v2 evidence identity or digest drifted.");
+            throw new InvalidDataException("Candidate-investigation v2 evidence identity or digest drifted.");
         }
         bool source = evidence.TryGetProperty("host_bindings", out JsonElement sourceRoot);
         bool host = evidence.TryGetProperty("host_evidence", out JsonElement hostRoot);
         if (source == host)
         {
-            throw new InvalidDataException("Candidate campaign v2 evidence root discriminator is invalid.");
+            throw new InvalidDataException("Candidate-investigation v2 evidence root discriminator is invalid.");
         }
         if (source)
         {
@@ -1371,7 +1371,7 @@ public partial class AuthoritativeStore
                 || Text(sourceRoot, "passage_id") != binding.PassageId
                 || Text(sourceRoot, "persisted_payload_sha256") != binding.ContentSha256)
             {
-                throw new InvalidDataException("Candidate campaign v2 source root differs from its exact persisted WP10 chain.");
+                throw new InvalidDataException("Candidate-investigation v2 source root differs from its exact persisted WP10 chain.");
             }
         }
         else if (binding.RootKind != "frozen-host-evidence"
@@ -1384,7 +1384,7 @@ public partial class AuthoritativeStore
             || binding.ProposalId.Length != 0
             || binding.AdmittedArtifactId.Length != 0)
         {
-            throw new InvalidDataException("Candidate campaign v2 frozen-host root gained a parallel source claim or drifted.");
+            throw new InvalidDataException("Candidate-investigation v2 frozen-host root gained a parallel source claim or drifted.");
         }
     }
 
@@ -1849,11 +1849,11 @@ public partial class AuthoritativeStore
               AND application.applicability_fact_count=(SELECT COUNT(*)
                 FROM source_claim_application_decision_facts decision_fact
                 WHERE decision_fact.application_decision_id=application.application_decision_id)
-              AND ($campaign=1 OR application.analysis_run_id=$run)
+              AND ($normalized=1 OR application.analysis_run_id=$run)
               AND application.application_scope_id=$scope
-              AND ($campaign=1 OR application.cost_attribution_scope_id=$cost)
+              AND ($normalized=1 OR application.cost_attribution_scope_id=$cost)
               AND acquisition.parent_analysis_run_id=application.analysis_run_id
-              AND ($campaign=0 OR artifact.admitted_artifact_id IS NOT NULL
+              AND ($normalized=0 OR artifact.admitted_artifact_id IS NOT NULL
                 AND payload.content_sha256=artifact.content_sha256
                 AND payload.byte_length=artifact.byte_length);
             """;
@@ -1863,7 +1863,7 @@ public partial class AuthoritativeStore
             source.Parameters.AddWithValue("$application_decision", binding.SourceApplicationDecisionId);
             source.Parameters.AddWithValue("$proposal", binding.ProposalId);
             source.Parameters.AddWithValue("$artifact", binding.AdmittedArtifactId);
-            source.Parameters.AddWithValue("$campaign", request.NormalizedProductInputPayload is null ? 0 : 1);
+            source.Parameters.AddWithValue("$normalized", request.NormalizedProductInputPayload is null ? 0 : 1);
             source.Parameters.AddWithValue("$run", request.Document.AnalysisRunId.Value);
             source.Parameters.AddWithValue("$scope", request.ApplicationScopeId);
             source.Parameters.AddWithValue("$cost", request.CostAttributionScopeId);

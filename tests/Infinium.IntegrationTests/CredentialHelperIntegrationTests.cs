@@ -11,7 +11,6 @@ namespace Infinium.Tests;
 public sealed class CredentialHelperIntegrationTests
 {
     private static readonly DateTimeOffset BaseTime = new(2026, 8, 11, 12, 0, 0, TimeSpan.Zero);
-    private static readonly System.Text.Json.JsonSerializerOptions EvidenceJsonOptions = new() { WriteIndented = true };
 
     [TestMethod]
     public void PrivateHelperEnvironmentRetainsOnlyRequiredWindowsAndDiagnosticsBindings()
@@ -37,7 +36,7 @@ public sealed class CredentialHelperIntegrationTests
     {
         string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
         Assert.IsTrue(File.Exists(helper), helper);
-        string secureStoreRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-RealChildStore-" + Guid.NewGuid().ToString("N"));
+        string secureStoreRoot = Path.Combine(Path.GetTempPath(), "Infinium-CapabilityBoundChildStore-" + Guid.NewGuid().ToString("N"));
         OneShotCredentialHelperLauncher launcher = new(
             helper,
             Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(helper))),
@@ -54,7 +53,7 @@ public sealed class CredentialHelperIntegrationTests
         Assert.IsTrue(result.ProcessTreeTerminated);
         Assert.IsFalse(result.RetryAttempted);
         Assert.AreEqual(64, result.BinarySha256.Length);
-        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-Staging-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-CredentialStaging-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
         CredentialHelperCoordinator coordinator = new(store, launcher);
@@ -63,8 +62,8 @@ public sealed class CredentialHelperIntegrationTests
         Assert.IsTrue(coordinated.Staging.StagedBeforeAdmission);
         Assert.IsTrue(coordinated.Staging.CoordinatorOnlyAdmission);
         Assert.IsTrue(File.Exists(Path.Combine(store.Paths.Staging, coordinated.Staging.RelativePath)));
-        byte[] secretCanary = "WP3-REAL-CHILD-SECRET-CANARY"u8.ToArray();
-        byte[] targetCanary = "WP3-REAL-CHILD-TARGET-CANARY"u8.ToArray();
+        byte[] secretCanary = "INFINIUM-HELPER-TEST-SECRET"u8.ToArray();
+        byte[] targetCanary = "CAPABILITY-BOUND-STORE-TARGET-CANARY"u8.ToArray();
         byte[] secureStoreBytes = File.ReadAllBytes(Path.Combine(secureStoreRoot, "synthetic-secure-store.v1.json"));
         Assert.IsGreaterThanOrEqualTo(0, secureStoreBytes.AsSpan().IndexOf(targetCanary));
         using (System.Text.Json.JsonDocument secureStoreDocument = System.Text.Json.JsonDocument.Parse(secureStoreBytes))
@@ -88,22 +87,6 @@ public sealed class CredentialHelperIntegrationTests
         Assert.AreEqual(0, secretCanaryMatches);
         Assert.AreEqual(0, targetCanaryMatches);
         Assert.IsTrue(canaryMutationRejected);
-        WriteDynamicEvidence(new
-        {
-            helper_binary_sha256 = coordinated.Process.BinarySha256,
-            inherited_private_handle_count = coordinated.Process.InheritedPrivateHandleCount,
-            standard_protocol_handle_count = coordinated.Process.StandardProtocolHandleCount,
-            listener_count = coordinated.Process.ListenerCount,
-            retry_count = coordinated.Process.RetryAttempted ? 1 : 0,
-            native_credential_operations = coordinated.Process.NativeCredentialOperationCount,
-            network_operations = coordinated.Process.NetworkOperationCount,
-            process_tree_survivors = coordinated.Process.ProcessTreeSurvivorCount,
-            stage_before_admit = coordinated.Staging.StagedBeforeAdmission,
-            coordinator_only_admission = coordinated.Staging.CoordinatorOnlyAdmission,
-            secret_canary_matches = secretCanaryMatches,
-            target_canary_matches = targetCanaryMatches,
-            canary_mutation_rejected = canaryMutationRejected,
-        });
     }
 
     [TestMethod]
@@ -242,14 +225,14 @@ public sealed class CredentialHelperIntegrationTests
     }
 
     [TestMethod]
-    public async Task Wp9VerifiedEnrollmentPublishesExactActiveVerifiedGenerationWithoutDispatch()
+    public async Task VerifiedEnrollmentPublishesExactActiveVerifiedGenerationWithoutDispatch()
     {
-        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp9-VerifiedEnrollment-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-VerifiedEnrollment-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
-        store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
+        store.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, BaseTime);
         _ = store.BeginCredentialEnrollment(
-            "profile-wp9", "generation-wp9", "WP9 verified enrollment", BaseTime.AddSeconds(1),
+            "profile-verified", "generation-verified", "verified enrollment", BaseTime.AddSeconds(1),
             "account-wp9", "billing-wp9");
         string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
         OneShotCredentialHelperLauncher launcher = Launcher(helper);
@@ -258,16 +241,16 @@ public sealed class CredentialHelperIntegrationTests
         (CoordinatedHelperReceipt receipt, CredentialProfileProjection projection) =
             await coordinator.ExecuteVerifiedEnrollmentAsync(
                 "wp9-verified-enrollment-attempt",
-                CredentialBootstrap("profile-wp9", "generation-wp9", 121),
+                CredentialBootstrap("profile-verified", "generation-verified", 121),
                 CredentialAssignment(
-                    "profile-wp9", "generation-wp9", HelperAssignmentKindV2.Enroll,
+                    "profile-verified", "generation-verified", HelperAssignmentKindV2.Enroll,
                     "wp9-production-profile/enroll-and-verify"),
                 BaseTime.AddSeconds(2));
 
         Assert.AreEqual(HelperOutcomeV2.Completed, receipt.Process.Receipt.Outcome);
         Assert.AreEqual("active-verified", projection.LifecycleState);
         Assert.AreEqual("available", projection.VerificationState);
-        Assert.AreEqual("generation-wp9", projection.GenerationId);
+        Assert.AreEqual("generation-verified", projection.GenerationId);
         Assert.AreEqual(0, receipt.Process.NetworkOperationCount);
         Assert.AreEqual(0, receipt.Process.NativeCredentialOperationCount);
         Assert.AreEqual(0, receipt.Process.StagedResponseBytes.Length);
@@ -291,10 +274,10 @@ public sealed class CredentialHelperIntegrationTests
     [TestMethod]
     public async Task CredentialIntentRecoversWhenHelperStoreCommitPrecedesMetadataCommit()
     {
-        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-HalfCommit-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-CredentialHalfCommit-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
-        store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
+        store.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, BaseTime);
         _ = store.BeginCredentialEnrollment(
             "profile-half", "generation-half", "Half commit", BaseTime.AddSeconds(1), "account-1", "billing-1");
         string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
@@ -320,7 +303,7 @@ public sealed class CredentialHelperIntegrationTests
     [TestCategory("Integration")]
     public async Task CredentialDeletePersistsRevocationBeforeHelperAndCompletesAfterRestart()
     {
-        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-DeleteRestart-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-CredentialDeleteRestart-" + Guid.NewGuid().ToString("N"));
         string productRoot = Path.Combine(root, "product");
         string fakeStoreRoot = Path.Combine(root, "fake-secure-store");
         string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
@@ -331,7 +314,7 @@ public sealed class CredentialHelperIntegrationTests
 
         using (AuthoritativeStore store = new(new StoragePaths(productRoot)))
         {
-            store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
+            store.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, BaseTime);
             _ = store.BeginCredentialEnrollment(
                 "profile-delete", "generation-delete", "Delete restart", BaseTime.AddSeconds(1),
                 "account-1", "billing-1");
@@ -417,10 +400,10 @@ public sealed class CredentialHelperIntegrationTests
     [TestCategory("Integration")]
     public async Task CredentialDeleteCommitsDeletedOnlyAfterConfirmedAbsenceInSameCall()
     {
-        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-DeleteComplete-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-CredentialDeleteComplete-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
-        store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
+        store.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, BaseTime);
         _ = store.BeginCredentialEnrollment(
             "profile-delete-complete", "generation-delete-complete", "Delete complete", BaseTime.AddSeconds(1),
             "account-1", "billing-1");
@@ -469,7 +452,7 @@ public sealed class CredentialHelperIntegrationTests
             BackupArtifact backup;
             using (AuthoritativeStore store = new(new StoragePaths(product)))
             {
-                store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
+                store.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, BaseTime);
                 _ = store.BeginCredentialEnrollment("profile-atomic", "generation-1", "Atomic", BaseTime.AddSeconds(1),
                     "account-1", "billing-1");
                 _ = Transition(store, "atomic-enroll", "profile-atomic", "generation-1", "enroll",
@@ -512,10 +495,10 @@ public sealed class CredentialHelperIntegrationTests
     [TestMethod]
     public void CredentialIntentLifecyclePersistsReplacementRevocationRecoveryAndBackupReauthentication()
     {
-        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-Credential-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-CredentialLifecycle-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "credential-state")));
-        store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
+        store.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, BaseTime);
         CredentialProfileProjection pending = store.BeginCredentialEnrollment(
             "profile-life", "generation-1", "Synthetic", BaseTime.AddSeconds(1), "account-1", "billing-1");
         Assert.AreEqual("pending-enrollment", pending.LifecycleState);
@@ -552,7 +535,7 @@ public sealed class CredentialHelperIntegrationTests
             "profile-recover", "generation-r1", "Recovery", BaseTime.AddSeconds(20), "account-1", "billing-1");
         CredentialProfileProjection unavailable = store.ApplyCredentialTransition(new(
             "unavailable-1", "profile-recover", "generation-r1", "enroll", "pending-enrollment",
-            "secure-store-unavailable", "secure-store-unavailable", M1ProviderCatalog.Capability.Identity.Value,
+            "secure-store-unavailable", "secure-store-unavailable", OpenAiProviderProfileCatalog.Capability.Identity.Value,
             "account-1", "billing-1", BaseTime.AddSeconds(21), BaseTime.AddSeconds(22), SecureStoreUnavailable: true));
         Assert.AreEqual("secure-store-unavailable", unavailable.LifecycleState);
         CredentialProfileProjection recovered = Transition(store, "recover-1", "profile-recover", "generation-r1",
@@ -593,14 +576,14 @@ public sealed class CredentialHelperIntegrationTests
     [TestMethod]
     public void RestoreAdvancesRecoveryTransitionBeyondFutureCredentialAuthorityTime()
     {
-        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-RestoreClock-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-CredentialRestoreClock-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         DateTimeOffset futureAuthority = DateTimeOffset.UtcNow.AddHours(1);
         BackupArtifact backup;
         CredentialProfileProjection active;
         using (AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "credential-state"))))
         {
-            store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, futureAuthority);
+            store.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, futureAuthority);
             _ = store.BeginCredentialEnrollment(
                 "profile-future", "generation-future-1", "Future authority",
                 futureAuthority.AddSeconds(1), "account-future", "billing-future");
@@ -608,7 +591,7 @@ public sealed class CredentialHelperIntegrationTests
             active = store.ApplyCredentialTransition(new(
                 "activate-future", "profile-future", "generation-future-1",
                 "enroll", "pending-enrollment", "active-unverified", "active-unverified",
-                M1ProviderCatalog.Capability.Identity.Value, "account-future", "billing-future",
+                OpenAiProviderProfileCatalog.Capability.Identity.Value, "account-future", "billing-future",
                 activationAt, activationAt.AddTicks(1)));
 
             DateTimeOffset regressedWallClock = DateTimeOffset.UtcNow;
@@ -616,7 +599,7 @@ public sealed class CredentialHelperIntegrationTests
                 Assert.ThrowsExactly<Microsoft.Data.Sqlite.SqliteException>(() => store.ApplyCredentialTransition(new(
                     "restore-clock-regression", "profile-future", "generation-future-1",
                     "recover", "active-unverified", "recovery-required", "recovery-required",
-                    M1ProviderCatalog.Capability.Identity.Value, "account-future", "billing-future",
+                    OpenAiProviderProfileCatalog.Capability.Identity.Value, "account-future", "billing-future",
                     regressedWallClock, regressedWallClock.AddTicks(1), IncrementRevocationEpoch: true)));
             Assert.AreEqual(19, reproduced.SqliteErrorCode);
             Assert.AreEqual(1811, reproduced.SqliteExtendedErrorCode);
@@ -642,7 +625,7 @@ public sealed class CredentialHelperIntegrationTests
         CredentialProfileProjection reauthenticated = restored.ApplyCredentialTransition(new(
             "restore-future-fresh-reentry", "profile-future", "generation-future-2",
             "recover", "recovery-required", "active-unverified", "active-unverified",
-            M1ProviderCatalog.Capability.Identity.Value, "account-future", "billing-future",
+            OpenAiProviderProfileCatalog.Capability.Identity.Value, "account-future", "billing-future",
             reauthenticationAt, reauthenticationAt.AddTicks(1)));
         Assert.AreEqual("generation-future-2", reauthenticated.GenerationId);
         Assert.AreEqual("active-unverified", reauthenticated.LifecycleState);
@@ -655,7 +638,7 @@ public sealed class CredentialHelperIntegrationTests
         bool noMetadata = to == "deleted";
         return store.ApplyCredentialTransition(new(
             root, profile, generation, kind, from, to, to,
-            noMetadata ? null : M1ProviderCatalog.Capability.Identity.Value,
+            noMetadata ? null : OpenAiProviderProfileCatalog.Capability.Identity.Value,
             noMetadata ? null : "account-1", noMetadata ? null : "billing-1",
             pendingAt, pendingAt.AddSeconds(1), IncrementRevocationEpoch: incrementRevocation));
     }
@@ -663,14 +646,7 @@ public sealed class CredentialHelperIntegrationTests
     private static OneShotCredentialHelperLauncher Launcher(string helper) => new(
         helper,
         Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(helper))),
-        Path.Combine(Path.GetTempPath(), "Infinium-Wp3-FakeStore-" + Guid.NewGuid().ToString("N")));
-
-    private static void WriteDynamicEvidence(object value)
-    {
-        string path = Path.Combine(TestRepository.Root, "artifacts", "m1-slice6", "wp3", "credential-synthetic-dynamic.json");
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(value, EvidenceJsonOptions));
-    }
+        Path.Combine(Path.GetTempPath(), "Infinium-CredentialFakeStore-" + Guid.NewGuid().ToString("N")));
 
     private static (int Secret, int Target) ScanCanaries(
         string root,

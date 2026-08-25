@@ -1,6 +1,6 @@
 {
   "schema_id": "infinium.evaluation.provider-budget-public-manifest/v1",
-  "fixture_id": "M1-PLAT-BUDGET-DEV-v1",
+  "fixture_id": "PROVIDER-BUDGET-DEV-v1",
   "fixture_version": "1.0.0",
   "partition": "development",
   "evaluation_ids": [

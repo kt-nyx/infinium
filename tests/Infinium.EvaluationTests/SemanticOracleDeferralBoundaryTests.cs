@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace Infinium.Tests;
@@ -8,7 +7,7 @@ public sealed class SemanticOracleDeferralBoundaryTests
 {
     [TestMethod]
     [TestCategory("Evaluation")]
-    public void SemanticAdmissionFamilyIsDynamicallyHistoricalAndHasNoAuthority()
+    public void SemanticOracleAuthorityIsDeferredAndHistoricalProviderFixturesAreAbsent()
     {
         string root = RepositoryRoot();
         using JsonDocument authority = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(
@@ -20,27 +19,11 @@ public sealed class SemanticOracleDeferralBoundaryTests
         Assert.IsFalse(policy.GetProperty("gates_m2_acceptance").GetBoolean());
 
         using JsonDocument registry = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(
-            root, "fixtures", "public", "public-fixture-registry.v3.json")));
-        JsonElement family = registry.RootElement.GetProperty("family_classifications")
-            .EnumerateArray().Single(value => value.GetProperty("family_id").GetString() == "semantic-admission");
-        Assert.AreEqual("historical-non-authorizing", family.GetProperty("disposition").GetString());
-        Assert.AreEqual(JsonValueKind.Null, family.GetProperty("current_validation_authority_package").ValueKind);
-
-        JsonElement[] rows = registry.RootElement.GetProperty("packages").EnumerateArray()
-            .Where(value => value.GetProperty("package_path").GetString()!
-                .StartsWith("fixtures/public/provider/semantic-admission/", StringComparison.Ordinal))
-            .ToArray();
-        Assert.IsGreaterThan(0, rows.Length);
-        foreach (JsonElement row in rows)
-        {
-            Assert.AreEqual("development", row.GetProperty("partition").GetString());
-            StringAssert.StartsWith(row.GetProperty("authority_status").GetString()!, "historical-");
-            string relative = row.GetProperty("authority_file").GetString()!;
-            byte[] bytes = File.ReadAllBytes(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));
-            Assert.AreEqual(bytes.LongLength, row.GetProperty("authority_bytes").GetInt64());
-            Assert.AreEqual(Convert.ToHexStringLower(SHA256.HashData(bytes)), row.GetProperty("authority_sha256").GetString());
-        }
-        Assert.IsFalse(Directory.Exists(Path.Combine(root, "fixtures", "public", "provider", "semantic-admission", "S6-SEMANTIC-ADMISSION-VAL-v14")));
+            root, "fixtures", "public", "current-fixture-registry.v1.json")));
+        Assert.IsFalse(registry.RootElement.GetProperty("packages").EnumerateArray().Any(
+            item => item.GetProperty("package_path").GetString()!
+                .StartsWith("fixtures/public/provider/", StringComparison.Ordinal)));
+        Assert.IsFalse(Directory.Exists(Path.Combine(root, "fixtures", "public", "provider")));
     }
 
     private static string RepositoryRoot()

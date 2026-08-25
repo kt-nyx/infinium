@@ -1,3 +1,4 @@
+using Infinium.Application.Analysis;
 using Infinium.Application.ScopeReversion;
 using Infinium.Application.Serialization;
 using Infinium.Bethesda;
@@ -13,6 +14,26 @@ public sealed class ScopeReversionV2AnalyzerTests
     [
         "actor-positive", "analyzer", "persistence", "projection", "purpose", "replay", "taxonomy",
     ];
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "ScopeReversionV2")]
+    public void FindingReportsKeepGapSubjectsAndReportIdentitiesDistinct()
+    {
+        ScopeReversionV2AnalysisContract analysis = ControlledRealScopeReversionProjector.Execute(
+            ScopeReversionV2TestSupport.Request(ScopeReversionV2SubjectKind.PlacedReference)).Analysis;
+
+        IReadOnlyList<FindingReportDocument> reports = FindingReportProjection.Project(analysis);
+        FindingReportDocument[] gapReports = reports
+            .Where(item => item.State == FindingReportState.CoverageGap)
+            .ToArray();
+
+        Assert.HasCount(analysis.Gaps.Count, gapReports);
+        CollectionAssert.AreEquivalent(
+            analysis.Gaps.Select(item => item.MemberId.Value).ToArray(),
+            gapReports.Select(item => item.SubjectId.Value).ToArray());
+        Assert.AreEqual(reports.Count, reports.Select(item => item.ReportId).Distinct().Count());
+    }
 
     [TestMethod]
     [TestCategory("Contract")]

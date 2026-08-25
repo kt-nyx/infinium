@@ -4217,67 +4217,67 @@
     },
     "deterministic_results": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "external_claims": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "application_links": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "discovery_leads": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "model_proposals": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "proposal_admissions": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "candidates": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "hypotheses": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "findings": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "recommendations": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "supported_cases": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "lead_only_cases": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "abstentions": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "invalid_inputs": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "coverage_gaps": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     },
     "failures": {
       "state": "empty",
-      "reason": "No Slice 3.5 expectation is assigned to this collection."
+      "reason": "No accepted-order construction expectation is assigned to this collection."
     }
   },
   "expected_taxonomy_assignments": [],
@@ -4405,7 +4405,7 @@
   "expected_replay_manifest": {
     "artifact_id": "oracle/replay-manifest.json",
     "artifact_version": "1.4.0",
-    "fingerprint": "723498568f2646742a0a9ec205b8a2d83fe0fc2bae0ac4c9afd8a91a69ea6cd2",
+    "fingerprint": "d812a75bd0076d992bb52e404aba436cb9cc137bcf67c82b581caf05e3de9e8f",
     "availability": "retained",
     "byte_length": 5267
   },

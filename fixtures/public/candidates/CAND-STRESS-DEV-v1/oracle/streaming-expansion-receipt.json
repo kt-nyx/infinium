@@ -14,7 +14,7 @@
   },
   "authority_basis": [
     "docs/product/candidate-input-and-expansion.md",
-    "docs/plans/milestones/m1/slices/s5/plan.md",
+    "docs/evaluation/product-conformance-verification-profile.md",
     "docs/architecture/decisions/ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md"
   ],
   "independent_derivation": {

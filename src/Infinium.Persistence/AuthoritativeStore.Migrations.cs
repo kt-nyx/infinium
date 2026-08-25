@@ -159,10 +159,10 @@ public sealed partial class AuthoritativeStore
                 Execute(SchemaV6, transaction);
                 CreateAppendOnlyTriggers(SchemaV6AppendOnlyTables, transaction);
                 CreateSchemaV6CanonicalTimestampTriggers(transaction);
-                Execute(Wp2AuthorizationModeExtension, transaction);
-                Execute(Wp2Schema6Extension, transaction);
-                CreateAppendOnlyTriggers(Wp2Schema6ExtensionAppendOnlyTables, transaction);
-                CreateCanonicalTimestampTriggers(Wp2Schema6ExtensionCanonicalTimestampColumns, transaction, replaceExisting: true);
+                Execute(ProviderAuthorizationModeExtension, transaction);
+                Execute(ProviderAuthorizationExtension, transaction);
+                CreateAppendOnlyTriggers(ProviderAuthorizationExtensionAppendOnlyTables, transaction);
+                CreateCanonicalTimestampTriggers(ProviderAuthorizationExtensionCanonicalTimestampColumns, transaction, replaceExisting: true);
                 Execute(R2LiveSemanticSchema6Extension, transaction);
                 CreateAppendOnlyTriggers(R2LiveSemanticSchema6ExtensionAppendOnlyTables, transaction);
                 string schemaFingerprint = ComputeSchemaFingerprint(connection, transaction);
@@ -216,43 +216,43 @@ public sealed partial class AuthoritativeStore
 
             if (current <= 5)
             {
-                ApplySuccessorAttemptSchema6Extension();
-                ApplySuccessorV6PersistenceExtension();
+                ApplyProviderAttemptBridgeExtension();
+                ApplyExtendedProviderOperationPersistence();
             }
 
             if (current == 6)
             {
-                ApplyWp2Schema6ExtensionIfRequired();
-                ApplyWp3Schema6ExtensionIfRequired();
-                ApplyWp5Schema6ExtensionIfRequired();
-                ApplyWp5Schema6CorrectionIfRequired();
-                ApplyWp6Schema6CorrectionIfRequired();
-                ApplyWp6ActiveContractCorrectionIfRequired();
-                ApplyWp7Schema6ExtensionIfRequired();
-                ApplyWp9CampaignInputBoundCorrectionIfRequired();
+                ApplyProviderAuthorizationExtensionIfRequired();
+                ApplyCredentialIntentExtensionIfRequired();
+                ApplyProviderUsageTotalityExtensionIfRequired();
+                ApplyProviderResponseInvariantCorrectionIfRequired();
+                ApplySemanticAdmissionRootCorrectionIfRequired();
+                ApplySourceClaimApplicationContractCorrectionIfRequired();
+                ApplyCandidateInvestigationOutcomeExtensionIfRequired();
+                ApplyProviderInputBoundPolicyCorrectionIfRequired();
                 ApplyR2LiveSemanticSchema6ExtensionIfRequired();
-                ApplySuccessorAttemptSchema6Extension();
-                ApplySuccessorV6PersistenceExtension();
+                ApplyProviderAttemptBridgeExtension();
+                ApplyExtendedProviderOperationPersistence();
             }
 
             if (current == 7)
             {
-                if (!SuccessorAttemptExtensionApplied())
+                if (!ProviderAttemptBridgeApplied())
                 {
                     throw new InvalidOperationException(
                         "Schema 7 lacks the exact Slice 6 successor attempt-identity migration.");
                 }
-                ApplySuccessorV6PersistenceExtension();
+                ApplyExtendedProviderOperationPersistence();
             }
 
-            if (current == 8 && !SuccessorV6PersistenceExtensionApplied())
+            if (current == 8 && !ExtendedProviderOperationPersistenceApplied())
             {
                 throw new InvalidOperationException(
                     "Schema 8 lacks the exact Slice 6 successor-v6 persistence migration.");
             }
             if (current == 8)
             {
-                ApplySuccessorV6SemanticTriggerCorrectionIfRequired();
+                ApplyExtendedProviderSemanticTriggerCorrectionIfRequired();
             }
             using SqliteCommand finalVersionCommand = connection.CreateCommand();
             finalVersionCommand.CommandText = "PRAGMA user_version;";
@@ -621,12 +621,12 @@ public sealed partial class AuthoritativeStore
         { throw new InvalidOperationException("Schema 9 lacks the exact semantic-admission separation migration."); }
     }
 
-    private bool SuccessorV6PersistenceExtensionApplied()
+    private bool ExtendedProviderOperationPersistenceApplied()
     {
         using SqliteCommand metadata = connection.CreateCommand();
         metadata.CommandText = "SELECT value FROM store_metadata WHERE key='slice6_successor_v6_persistence_id';";
         if (metadata.ExecuteScalar() is not string identity
-            || identity != ProviderPersistenceDeclarations.SuccessorV6PersistenceMigrationId)
+            || identity != ProviderPersistenceDeclarations.ExtendedProviderOperationPersistenceMigrationId)
         { return false; }
         using SqliteCommand objects = connection.CreateCommand();
         objects.CommandText = "SELECT COUNT(*) FROM sqlite_schema WHERE type='table' AND name IN "
@@ -637,33 +637,33 @@ public sealed partial class AuthoritativeStore
         string actual = ComputeSchemaFingerprint(connection);
         using SqliteCommand declared = connection.CreateCommand();
         declared.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
-        if (actual is not (ProviderPersistenceDeclarations.SuccessorV6PersistenceOriginalSchemaFingerprint
-                or ProviderPersistenceDeclarations.SuccessorV6PersistenceSchemaFingerprint)
+        if (actual is not (ProviderPersistenceDeclarations.ExtendedProviderOperationPersistenceOriginalSchemaFingerprint
+                or ProviderPersistenceDeclarations.ExtendedProviderOperationPersistenceSchemaFingerprint)
             || declared.ExecuteScalar() is not string stored || stored != actual)
         { throw new InvalidOperationException("The Slice 6 successor-v6 persistence fingerprint is stale (" + actual + ")."); }
         using SqliteCommand migration = connection.CreateCommand();
         migration.CommandText = "SELECT COUNT(*) FROM migration_history WHERE migration_id=$id "
             + "AND from_version=7 AND to_version=8 AND sqlite_source_id=$source;";
-        migration.Parameters.AddWithValue("$id", ProviderPersistenceDeclarations.SuccessorV6PersistenceMigrationId);
+        migration.Parameters.AddWithValue("$id", ProviderPersistenceDeclarations.ExtendedProviderOperationPersistenceMigrationId);
         migration.Parameters.AddWithValue("$source", BindingIdentity.SourceId);
         if (Convert.ToInt64(migration.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
         { throw new InvalidOperationException("The Slice 6 successor-v6 migration history is stale."); }
         return true;
     }
 
-    private void ApplySuccessorV6SemanticTriggerCorrectionIfRequired()
+    private void ApplyExtendedProviderSemanticTriggerCorrectionIfRequired()
     {
         using SqliteCommand existing = connection.CreateCommand();
         existing.CommandText = "SELECT value FROM store_metadata WHERE key='slice6_successor_v6_semantic_trigger_correction_id';";
         if (existing.ExecuteScalar() is string identity)
         {
-            if (identity != ProviderPersistenceDeclarations.SuccessorV6SemanticTriggerCorrectionId)
+            if (identity != ProviderPersistenceDeclarations.ExtendedProviderSemanticTriggerCorrectionId)
             { throw new InvalidOperationException("The successor-v6 semantic trigger correction identity is stale."); }
             return;
         }
         using SqliteTransaction transaction = BeginTransaction();
         Execute("DROP TRIGGER provider_semantic_proposal_root_guard;", transaction);
-        Execute(SuccessorSemanticProposalRootGuardV8(), transaction);
+        Execute(ExtendedProviderSemanticProposalRootGuardV8(), transaction);
         CreateCanonicalTimestampTriggers([
             ("provider_semantic_proposals", "created_at", false),
         ], transaction, replaceExisting: true);
@@ -673,13 +673,13 @@ public sealed partial class AuthoritativeStore
             + "ON CONFLICT(key) DO UPDATE SET value=excluded.value; "
             + "INSERT INTO store_metadata(key,value) VALUES('slice6_successor_v6_semantic_trigger_correction_id',$id);",
             transaction, ("$fingerprint", fingerprint),
-            ("$id", ProviderPersistenceDeclarations.SuccessorV6SemanticTriggerCorrectionId));
+            ("$id", ProviderPersistenceDeclarations.ExtendedProviderSemanticTriggerCorrectionId));
         transaction.Commit();
-        if (fingerprint != ProviderPersistenceDeclarations.SuccessorV6PersistenceSchemaFingerprint)
+        if (fingerprint != ProviderPersistenceDeclarations.ExtendedProviderOperationPersistenceSchemaFingerprint)
         { throw new InvalidOperationException("The corrected successor-v6 persistence fingerprint is stale (" + fingerprint + ")."); }
     }
 
-    private static string SuccessorSemanticProposalRootGuardV8()
+    private static string ExtendedProviderSemanticProposalRootGuardV8()
     {
         const string activeBridge =
             """
@@ -691,34 +691,34 @@ public sealed partial class AuthoritativeStore
             """;
         const string startMarker = "SELECT 1 FROM m1_slice6_successor_semantic_response_bindings b";
         const string endMarker = "AND f.admission_state='admitted' AND f.finalized_at <= NEW.created_at";
-        int start = SuccessorSemanticProposalRootGuard.IndexOf(startMarker, StringComparison.Ordinal);
-        int end = start < 0 ? -1 : SuccessorSemanticProposalRootGuard.IndexOf(
+        int start = ProviderAttemptSemanticProposalRootGuard.IndexOf(startMarker, StringComparison.Ordinal);
+        int end = start < 0 ? -1 : ProviderAttemptSemanticProposalRootGuard.IndexOf(
             endMarker, start, StringComparison.Ordinal);
         if (start < 0 || end < 0)
         { throw new InvalidOperationException("The historical successor semantic bridge is absent."); }
         end += endMarker.Length;
-        string corrected = (SuccessorSemanticProposalRootGuard[..start]
-            + activeBridge.TrimStart() + SuccessorSemanticProposalRootGuard[end..])
+        string corrected = (ProviderAttemptSemanticProposalRootGuard[..start]
+            + activeBridge.TrimStart() + ProviderAttemptSemanticProposalRootGuard[end..])
             .Replace("m1_slice6_successor_semantic_response_bindings",
                 "m1_slice6_successor_all_semantic_response_bindings", StringComparison.Ordinal);
-        if (corrected == SuccessorSemanticProposalRootGuard
+        if (corrected == ProviderAttemptSemanticProposalRootGuard
             || !corrected.Contains("m1_slice6_successor_all_transport_responses", StringComparison.Ordinal))
         { throw new InvalidOperationException("The successor-v6 semantic root trigger correction did not close."); }
         return corrected;
     }
 
-    private void ApplySuccessorV6PersistenceExtension()
+    private void ApplyExtendedProviderOperationPersistence()
     {
         string sourceFingerprint = ComputeSchemaFingerprint(connection);
         using (SqliteCommand metadata = connection.CreateCommand())
         {
             metadata.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
-            if (sourceFingerprint != ProviderPersistenceDeclarations.SuccessorAttemptSchemaFingerprint
+            if (sourceFingerprint != ProviderPersistenceDeclarations.ProviderAttemptBridgeSchemaFingerprint
                 || metadata.ExecuteScalar() is not string declared || declared != sourceFingerprint)
             { throw new InvalidOperationException("Schema 8 requires the exact accepted successor schema-7 source."); }
         }
         using SqliteTransaction transaction = BeginTransaction();
-        Execute(SuccessorV6PersistenceSchema, transaction);
+        Execute(ExtendedProviderOperationPersistenceSchema, transaction);
         CreateAppendOnlyTriggers([
             "m1_slice6_successor_v6_operations",
             "m1_slice6_successor_v6_budget_events",
@@ -729,7 +729,7 @@ public sealed partial class AuthoritativeStore
             + "DROP TRIGGER provider_semantic_proposal_chronology_guard; "
             + "DROP TRIGGER candidate_investigation_outcome_candidate_guard; "
             + "DROP TRIGGER candidate_investigation_outcome_response_guard;", transaction);
-        string rootGuardV8 = SuccessorSemanticProposalRootGuard.Replace(
+        string rootGuardV8 = ProviderAttemptSemanticProposalRootGuard.Replace(
             """
               JOIN provider_operation_authorizations a
                 ON a.authorization_id=b.transport_authorization_id AND a.operation_id=b.transport_operation_id
@@ -750,12 +750,12 @@ public sealed partial class AuthoritativeStore
             .Replace("m1_slice6_successor_semantic_response_bindings",
                 "m1_slice6_successor_all_semantic_response_bindings", StringComparison.Ordinal);
         Execute(rootGuardV8, transaction);
-        Execute(SuccessorSemanticProposalChronologyGuard
+        Execute(ProviderAttemptSemanticProposalChronologyGuard
             .Replace("JOIN provider_response_finalizations finalization",
                 "JOIN m1_slice6_successor_all_transport_responses finalization", StringComparison.Ordinal)
             .Replace("m1_slice6_successor_semantic_response_bindings",
                 "m1_slice6_successor_all_semantic_response_bindings", StringComparison.Ordinal), transaction);
-        Execute(SuccessorCandidateOutcomeGuards
+        Execute(ProviderAttemptCandidateOutcomeGuards
             .Replace("JOIN provider_responses response",
                 "JOIN m1_slice6_successor_all_transport_responses response", StringComparison.Ordinal)
             .Replace("m1_slice6_successor_semantic_response_bindings",
@@ -774,13 +774,13 @@ public sealed partial class AuthoritativeStore
             + "INSERT INTO store_metadata(key,value) VALUES('slice6_successor_v6_persistence_id',$id); "
             + "INSERT INTO migration_history(migration_id,from_version,to_version,applied_at,sqlite_source_id) "
             + "VALUES($id,7,8,$now,$source); PRAGMA user_version=8;", transaction,
-            ("$fingerprint", fingerprint), ("$id", ProviderPersistenceDeclarations.SuccessorV6PersistenceMigrationId),
+            ("$fingerprint", fingerprint), ("$id", ProviderPersistenceDeclarations.ExtendedProviderOperationPersistenceMigrationId),
             ("$now", ToText(DateTimeOffset.UtcNow)), ("$source", BindingIdentity.SourceId));
         transaction.Commit();
-        ApplySuccessorV6SemanticTriggerCorrectionIfRequired();
+        ApplyExtendedProviderSemanticTriggerCorrectionIfRequired();
     }
 
-    private const string SuccessorV6PersistenceSchema =
+    private const string ExtendedProviderOperationPersistenceSchema =
         """
         CREATE TABLE m1_slice6_successor_v6_operations(
           authorization_id TEXT PRIMARY KEY,
@@ -1014,7 +1014,7 @@ public sealed partial class AuthoritativeStore
             AND operation.authorization_id=response.authorization_id;
         """;
 
-    private bool SuccessorAttemptExtensionApplied()
+    private bool ProviderAttemptBridgeApplied()
     {
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText =
@@ -1037,7 +1037,7 @@ public sealed partial class AuthoritativeStore
         string actual = ComputeSchemaFingerprint(connection);
         using SqliteCommand metadata = connection.CreateCommand();
         metadata.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
-        if (actual != ProviderPersistenceDeclarations.SuccessorAttemptSchemaFingerprint
+        if (actual != ProviderPersistenceDeclarations.ProviderAttemptBridgeSchemaFingerprint
             || metadata.ExecuteScalar() is not string declared || declared != actual)
         { throw new InvalidOperationException("The Slice 6 successor storage fingerprint is stale (" + actual + ")."); }
         using SqliteCommand migration = connection.CreateCommand();
@@ -1050,7 +1050,7 @@ public sealed partial class AuthoritativeStore
         return true;
     }
 
-    private void ApplySuccessorAttemptSchema6Extension()
+    private void ApplyProviderAttemptBridgeExtension()
     {
         string sourceFingerprint = ComputeSchemaFingerprint(connection);
         using (SqliteCommand metadata = connection.CreateCommand())
@@ -1146,8 +1146,8 @@ public sealed partial class AuthoritativeStore
                 + "INSERT INTO candidate_investigation_outcomes SELECT * FROM candidate_investigation_outcomes_v6; "
                 + "DROP TABLE provider_semantic_proposals_v6; DROP TABLE candidate_investigation_outcomes_v6;",
                 transaction);
-            Execute(SuccessorSemanticProposalRootGuard, transaction);
-            Execute(SuccessorSemanticProposalChronologyGuard, transaction);
+            Execute(ProviderAttemptSemanticProposalRootGuard, transaction);
+            Execute(ProviderAttemptSemanticProposalChronologyGuard, transaction);
             // Preserve the schema-6 trigger precedence: canonical timestamp validation was
             // installed after semantic chronology and must reject malformed authority time
             // before any dependent-row diagnostic can mask it.
@@ -1163,7 +1163,7 @@ public sealed partial class AuthoritativeStore
             {
                 Execute(triggerSql, transaction);
             }
-            Execute(SuccessorCandidateOutcomeGuards, transaction);
+            Execute(ProviderAttemptCandidateOutcomeGuards, transaction);
             CreateAppendOnlyTriggers(["m1_slice6_successor_semantic_response_bindings"], transaction);
             string fingerprint = ComputeSchemaFingerprint(connection, transaction);
             Execute(
@@ -1184,7 +1184,7 @@ public sealed partial class AuthoritativeStore
         }
     }
 
-    private const string SuccessorSemanticProposalRootGuard =
+    private const string ProviderAttemptSemanticProposalRootGuard =
         """
         CREATE TRIGGER provider_semantic_proposal_root_guard
         BEFORE INSERT ON provider_semantic_proposals
@@ -1251,7 +1251,7 @@ public sealed partial class AuthoritativeStore
         END;
         """;
 
-    private const string SuccessorSemanticProposalChronologyGuard =
+    private const string ProviderAttemptSemanticProposalChronologyGuard =
         """
         CREATE TRIGGER provider_semantic_proposal_chronology_guard
         BEFORE INSERT ON provider_semantic_proposals
@@ -1272,7 +1272,7 @@ public sealed partial class AuthoritativeStore
         END;
         """;
 
-    private const string SuccessorCandidateOutcomeGuards =
+    private const string ProviderAttemptCandidateOutcomeGuards =
         """
         CREATE TRIGGER candidate_investigation_outcome_candidate_guard
         BEFORE INSERT ON candidate_investigation_outcomes
@@ -1348,12 +1348,12 @@ public sealed partial class AuthoritativeStore
         transaction.Commit();
     }
 
-    private void ApplyWp2Schema6ExtensionIfRequired()
+    private void ApplyProviderAuthorizationExtensionIfRequired()
     {
-        const string acceptedWp1Fingerprint =
+        const string acceptedProviderBaseFingerprint =
             "56dc6efd92fff75fe21f344abafa3b88b99a8e92d2d1b2517f706d63af4599a3";
         string actualFingerprint = ComputeSchemaFingerprint(connection);
-        if (actualFingerprint != acceptedWp1Fingerprint)
+        if (actualFingerprint != acceptedProviderBaseFingerprint)
         {
             return;
         }
@@ -1370,15 +1370,15 @@ public sealed partial class AuthoritativeStore
             if (Convert.ToInt64(state.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 0)
             {
                 throw new InvalidOperationException(
-                    "The accepted WP1 schema-6 store contains provider execution state and cannot receive the bounded WP2 same-version extension automatically.");
+                    "The accepted provider-base schema-6 store contains provider execution state and cannot receive the bounded provider-authorization extension automatically.");
             }
         }
 
         using SqliteTransaction transaction = BeginTransaction();
-        Execute(Wp2AuthorizationModeExtension, transaction);
-        Execute(Wp2Schema6Extension, transaction);
-        CreateAppendOnlyTriggers(Wp2Schema6ExtensionAppendOnlyTables, transaction);
-        CreateCanonicalTimestampTriggers(Wp2Schema6ExtensionCanonicalTimestampColumns, transaction, replaceExisting: true);
+        Execute(ProviderAuthorizationModeExtension, transaction);
+        Execute(ProviderAuthorizationExtension, transaction);
+        CreateAppendOnlyTriggers(ProviderAuthorizationExtensionAppendOnlyTables, transaction);
+        CreateCanonicalTimestampTriggers(ProviderAuthorizationExtensionCanonicalTimestampColumns, transaction, replaceExisting: true);
         string schemaFingerprint = ComputeSchemaFingerprint(connection, transaction);
         Execute(
             """
@@ -1394,20 +1394,20 @@ public sealed partial class AuthoritativeStore
         transaction.Commit();
     }
 
-    private void ApplyWp3Schema6ExtensionIfRequired()
+    private void ApplyCredentialIntentExtensionIfRequired()
     {
-        const string acceptedWp2Fingerprint =
+        const string acceptedProviderAuthorizationFingerprint =
             "240a06fe2a9fa3d79db63985fbda329c8e83822534b93cbfb539062a109cad9e";
-        const string rejectedWp3Fingerprint =
+        const string credentialIntentCorrectionFingerprint =
             "554129523ac64ce52ee4d24e90644dbaa167c0d98602f1c2d0f25ad271ec0581";
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+            or ProviderPersistenceDeclarations.ProviderInputBoundPolicyCorrectionSchemaFingerprint
             or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp5ExtensionSourceSchemaFingerprint)
+            or ProviderPersistenceDeclarations.CandidateInvestigationOutcomeExtensionSourceSchemaFingerprint
+            or ProviderPersistenceDeclarations.SourceClaimApplicationContractCorrectionSourceSchemaFingerprint
+            or ProviderPersistenceDeclarations.SemanticAdmissionRootCorrectionSourceSchemaFingerprint
+            or ProviderPersistenceDeclarations.ProviderUsageTotalityExtensionSourceSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
             declared.CommandText =
@@ -1419,14 +1419,14 @@ public sealed partial class AuthoritativeStore
             if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 2)
             {
                 throw new InvalidOperationException(
-                    "The current WP3 schema fingerprint is missing its exact same-version extension declaration.");
+                    "The current credential-intent schema fingerprint is missing its exact same-version extension declaration.");
             }
             return;
         }
-        if (actualFingerprint is not (acceptedWp2Fingerprint or rejectedWp3Fingerprint))
+        if (actualFingerprint is not (acceptedProviderAuthorizationFingerprint or credentialIntentCorrectionFingerprint))
         {
             throw new InvalidOperationException(
-                $"Schema 6 does not match the exact accepted WP2 storage contract or current WP3 same-version extension ({actualFingerprint}).");
+                $"Schema 6 does not match the exact accepted provider-authorization storage contract or credential-intent extension ({actualFingerprint}).");
         }
 
         using (SqliteCommand metadata = connection.CreateCommand())
@@ -1441,11 +1441,11 @@ public sealed partial class AuthoritativeStore
                    OR (key='wp3_schema_extension_id' AND value='M1-S6-WP3-0006B');
                 """;
             metadata.Parameters.AddWithValue("$fingerprint", actualFingerprint);
-            long expectedMetadataCount = actualFingerprint == acceptedWp2Fingerprint ? 4 : 5;
+            long expectedMetadataCount = actualFingerprint == acceptedProviderAuthorizationFingerprint ? 4 : 5;
             if (Convert.ToInt64(metadata.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != expectedMetadataCount)
             {
                 throw new InvalidOperationException(
-                    "The accepted WP2 schema lacks its exact schema-6/storage-1.5.0 extension provenance.");
+                    "The accepted provider-authorization schema lacks its exact schema-6/storage-1.5.0 extension provenance.");
             }
         }
 
@@ -1462,7 +1462,7 @@ public sealed partial class AuthoritativeStore
         }
         if (intentTriggers.Count == 0)
         {
-            throw new InvalidOperationException("The accepted WP2 credential-intent trigger set is absent.");
+            throw new InvalidOperationException("The accepted credential-intent trigger set is absent.");
         }
 
         Execute("PRAGMA foreign_keys=OFF; PRAGMA legacy_alter_table=ON;", null);
@@ -1496,10 +1496,10 @@ public sealed partial class AuthoritativeStore
                 Execute(ExtractSchemaStatement(SchemaV6, $"CREATE TRIGGER {triggerName}"), transaction);
             }
             string upgradedFingerprint = ComputeSchemaFingerprint(connection, transaction);
-            if (upgradedFingerprint != ProviderPersistenceDeclarations.Wp5ExtensionSourceSchemaFingerprint)
+            if (upgradedFingerprint != ProviderPersistenceDeclarations.ProviderUsageTotalityExtensionSourceSchemaFingerprint)
             {
                 throw new InvalidOperationException(
-                    $"The bounded WP3 same-version extension did not converge on the declared fingerprint ({upgradedFingerprint}).");
+                    $"The bounded credential-intent extension did not converge on the declared fingerprint ({upgradedFingerprint}).");
             }
             Execute(
                 """
@@ -1519,16 +1519,16 @@ public sealed partial class AuthoritativeStore
         }
     }
 
-    private void ApplyWp5Schema6ExtensionIfRequired()
+    private void ApplyProviderUsageTotalityExtensionIfRequired()
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+            or ProviderPersistenceDeclarations.ProviderInputBoundPolicyCorrectionSchemaFingerprint
             or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp5CorrectionSourceSchemaFingerprint)
+            or ProviderPersistenceDeclarations.CandidateInvestigationOutcomeExtensionSourceSchemaFingerprint
+            or ProviderPersistenceDeclarations.SourceClaimApplicationContractCorrectionSourceSchemaFingerprint
+            or ProviderPersistenceDeclarations.SemanticAdmissionRootCorrectionSourceSchemaFingerprint
+            or ProviderPersistenceDeclarations.ProviderResponseInvariantCorrectionSourceSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
             declared.CommandText =
@@ -1536,25 +1536,25 @@ public sealed partial class AuthoritativeStore
             if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
             {
                 throw new InvalidOperationException(
-                    "The current WP5 schema fingerprint is missing its exact same-version extension declaration.");
+                    "The current provider-usage totality schema fingerprint is missing its exact same-version extension declaration.");
             }
             return;
         }
 
-        if (actualFingerprint != ProviderPersistenceDeclarations.Wp5ExtensionSourceSchemaFingerprint)
+        if (actualFingerprint != ProviderPersistenceDeclarations.ProviderUsageTotalityExtensionSourceSchemaFingerprint)
         {
             throw new InvalidOperationException(
-                "Schema 6 does not match the exact accepted WP3 storage contract or current WP5 same-version extension.");
+                "Schema 6 does not match the exact accepted credential-intent storage contract or provider-usage totality extension.");
         }
 
         using SqliteTransaction transaction = BeginTransaction();
         Execute("DROP TRIGGER provider_usage_response_totality_guard;", transaction);
         Execute(ExtractSchemaStatement(SchemaV6, "CREATE TRIGGER provider_usage_response_totality_guard"), transaction);
         string upgradedFingerprint = ComputeSchemaFingerprint(connection, transaction);
-        if (upgradedFingerprint != ProviderPersistenceDeclarations.Wp5CorrectionSourceSchemaFingerprint)
+        if (upgradedFingerprint != ProviderPersistenceDeclarations.ProviderResponseInvariantCorrectionSourceSchemaFingerprint)
         {
             throw new InvalidOperationException(
-                $"The bounded WP5 same-version extension did not converge on the declared fingerprint ({upgradedFingerprint}).");
+                $"The bounded provider-usage totality extension did not converge on the declared fingerprint ({upgradedFingerprint}).");
         }
         Execute(
             """
@@ -1567,28 +1567,28 @@ public sealed partial class AuthoritativeStore
         transaction.Commit();
     }
 
-    private void ApplyWp5Schema6CorrectionIfRequired()
+    private void ApplyProviderResponseInvariantCorrectionIfRequired()
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+            or ProviderPersistenceDeclarations.ProviderInputBoundPolicyCorrectionSchemaFingerprint
             or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint)
+            or ProviderPersistenceDeclarations.CandidateInvestigationOutcomeExtensionSourceSchemaFingerprint
+            or ProviderPersistenceDeclarations.SourceClaimApplicationContractCorrectionSourceSchemaFingerprint
+            or ProviderPersistenceDeclarations.SemanticAdmissionRootCorrectionSourceSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
             declared.CommandText =
                 "SELECT COUNT(*) FROM store_metadata WHERE key='wp5_schema_correction_id' AND value='M1-S6-WP5-0006E';";
             if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
             {
-                throw new InvalidOperationException("The current WP5 correction fingerprint lacks its exact provenance.");
+                throw new InvalidOperationException("The current provider-response invariant correction fingerprint lacks its exact provenance.");
             }
             return;
         }
-        if (actualFingerprint != ProviderPersistenceDeclarations.Wp5CorrectionSourceSchemaFingerprint)
+        if (actualFingerprint != ProviderPersistenceDeclarations.ProviderResponseInvariantCorrectionSourceSchemaFingerprint)
         {
-            throw new InvalidOperationException("Schema 6 does not match the exact WP5 correction source.");
+            throw new InvalidOperationException("Schema 6 does not match the exact provider-response invariant correction source.");
         }
 
         List<string> triggerNames = [];
@@ -1612,7 +1612,7 @@ public sealed partial class AuthoritativeStore
             string upgradedFingerprint = ComputeSchemaFingerprint(connection, transaction);
             if (upgradedFingerprint != ProviderPersistenceDeclarations.SchemaFingerprint)
             {
-                throw new InvalidOperationException($"The bounded WP5 correction did not converge on its declared fingerprint ({upgradedFingerprint}).");
+                throw new InvalidOperationException($"The bounded provider-response invariant correction did not converge on its declared fingerprint ({upgradedFingerprint}).");
             }
             Execute(
                 """
@@ -1630,27 +1630,27 @@ public sealed partial class AuthoritativeStore
         }
     }
 
-    private void ApplyWp6Schema6CorrectionIfRequired()
+    private void ApplySemanticAdmissionRootCorrectionIfRequired()
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+            or ProviderPersistenceDeclarations.ProviderInputBoundPolicyCorrectionSchemaFingerprint
             or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint)
+            or ProviderPersistenceDeclarations.CandidateInvestigationOutcomeExtensionSourceSchemaFingerprint
+            or ProviderPersistenceDeclarations.SourceClaimApplicationContractCorrectionSourceSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
             declared.CommandText =
                 "SELECT COUNT(*) FROM store_metadata WHERE key='wp6_schema_correction_id' AND value='M1-S6-WP6-0006F';";
             if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
             {
-                throw new InvalidOperationException("The current WP6 correction fingerprint lacks its exact provenance.");
+                throw new InvalidOperationException("The current semantic-admission root correction fingerprint lacks its exact provenance.");
             }
             return;
         }
-        if (actualFingerprint != ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint)
+        if (actualFingerprint != ProviderPersistenceDeclarations.SemanticAdmissionRootCorrectionSourceSchemaFingerprint)
         {
-            throw new InvalidOperationException("Schema 6 does not match the exact WP6 correction source.");
+            throw new InvalidOperationException("Schema 6 does not match the exact semantic-admission root correction source.");
         }
 
         using SqliteTransaction transaction = BeginTransaction();
@@ -1668,7 +1668,7 @@ public sealed partial class AuthoritativeStore
         if (upgradedFingerprint != ProviderPersistenceDeclarations.SchemaFingerprint)
         {
             throw new InvalidOperationException(
-                $"The bounded WP6 correction did not converge on its declared fingerprint ({upgradedFingerprint}).");
+                $"The bounded semantic-admission root correction did not converge on its declared fingerprint ({upgradedFingerprint}).");
         }
         Execute(
             """
@@ -1681,26 +1681,26 @@ public sealed partial class AuthoritativeStore
         transaction.Commit();
     }
 
-    private void ApplyWp6ActiveContractCorrectionIfRequired()
+    private void ApplySourceClaimApplicationContractCorrectionIfRequired()
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+            or ProviderPersistenceDeclarations.ProviderInputBoundPolicyCorrectionSchemaFingerprint
             or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint)
+            or ProviderPersistenceDeclarations.CandidateInvestigationOutcomeExtensionSourceSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
             declared.CommandText =
                 "SELECT COUNT(*) FROM store_metadata WHERE key='wp6_active_contract_correction_id' AND value='M1-S6-WP6-0006G';";
             if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
             {
-                throw new InvalidOperationException("The current WP6 active contract fingerprint lacks its exact provenance.");
+                throw new InvalidOperationException("The current source-claim application contract fingerprint lacks its exact provenance.");
             }
             return;
         }
-        if (actualFingerprint != ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint)
+        if (actualFingerprint != ProviderPersistenceDeclarations.SourceClaimApplicationContractCorrectionSourceSchemaFingerprint)
         {
-            throw new InvalidOperationException("Schema 6 does not match the exact WP6 active contract correction source.");
+            throw new InvalidOperationException("Schema 6 does not match the exact source-claim application contract correction source.");
         }
 
         using SqliteCommand ambiguity = connection.CreateCommand();
@@ -1763,7 +1763,7 @@ public sealed partial class AuthoritativeStore
         if (upgradedFingerprint != ProviderPersistenceDeclarations.SchemaFingerprint)
         {
             throw new InvalidOperationException(
-                $"The bounded WP6 active contract correction did not converge on its declared fingerprint ({upgradedFingerprint}).");
+                $"The bounded source-claim application contract correction did not converge on its declared fingerprint ({upgradedFingerprint}).");
         }
         Execute(
             """
@@ -1776,11 +1776,11 @@ public sealed partial class AuthoritativeStore
         transaction.Commit();
     }
 
-    private void ApplyWp7Schema6ExtensionIfRequired()
+    private void ApplyCandidateInvestigationOutcomeExtensionIfRequired()
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
-            or ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+            or ProviderPersistenceDeclarations.ProviderInputBoundPolicyCorrectionSchemaFingerprint
             or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
@@ -1788,13 +1788,13 @@ public sealed partial class AuthoritativeStore
                 "SELECT COUNT(*) FROM store_metadata WHERE key='wp7_schema_extension_id' AND value='M1-S6-WP7-0006H';";
             if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
             {
-                throw new InvalidOperationException("The current WP7 schema fingerprint lacks its exact provenance.");
+                throw new InvalidOperationException("The current candidate-investigation outcome schema fingerprint lacks its exact provenance.");
             }
             return;
         }
-        if (actualFingerprint != ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint)
+        if (actualFingerprint != ProviderPersistenceDeclarations.CandidateInvestigationOutcomeExtensionSourceSchemaFingerprint)
         {
-            throw new InvalidOperationException("Schema 6 does not match the exact WP7 extension source.");
+            throw new InvalidOperationException("Schema 6 does not match the exact candidate-investigation outcome extension source.");
         }
 
         using SqliteTransaction transaction = BeginTransaction();
@@ -1807,7 +1807,7 @@ public sealed partial class AuthoritativeStore
         if (upgradedFingerprint != ProviderPersistenceDeclarations.SchemaFingerprint)
         {
             throw new InvalidOperationException(
-                $"The bounded WP7 same-version extension did not converge on its declared fingerprint ({upgradedFingerprint}).");
+                $"The bounded candidate-investigation outcome extension did not converge on its declared fingerprint ({upgradedFingerprint}).");
         }
         Execute(
             """
@@ -1820,10 +1820,10 @@ public sealed partial class AuthoritativeStore
         transaction.Commit();
     }
 
-    private void ApplyWp9CampaignInputBoundCorrectionIfRequired()
+    private void ApplyProviderInputBoundPolicyCorrectionIfRequired()
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
-        if (actualFingerprint is ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint
+        if (actualFingerprint is ProviderPersistenceDeclarations.ProviderInputBoundPolicyCorrectionSchemaFingerprint
             or ProviderPersistenceDeclarations.R2LiveSemanticSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
@@ -1832,14 +1832,14 @@ public sealed partial class AuthoritativeStore
             if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
             {
                 throw new InvalidOperationException(
-                    "The current WP9 campaign input-bound correction fingerprint lacks its exact provenance.");
+                    "The current provider input-bound policy correction fingerprint lacks its exact provenance.");
             }
             return;
         }
-        if (actualFingerprint != ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSourceSchemaFingerprint)
+        if (actualFingerprint != ProviderPersistenceDeclarations.ProviderInputBoundPolicyCorrectionSourceSchemaFingerprint)
         {
             throw new InvalidOperationException(
-                $"Schema 6 does not match the exact WP9 campaign input-bound correction source ({actualFingerprint}).");
+                $"Schema 6 does not match the exact provider input-bound policy correction source ({actualFingerprint}).");
         }
 
         using (SqliteCommand state = connection.CreateCommand())
@@ -1849,7 +1849,7 @@ public sealed partial class AuthoritativeStore
             if (Convert.ToInt64(state.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 0)
             {
                 throw new InvalidOperationException(
-                    "The accepted schema-6 store contains provider execution state and cannot receive the clean-break WP9 input-bound correction automatically.");
+                    "The accepted schema-6 store contains provider execution state and cannot receive the clean-break provider input-bound correction automatically.");
             }
         }
 
@@ -1895,10 +1895,10 @@ public sealed partial class AuthoritativeStore
             }
 
             string upgradedFingerprint = ComputeSchemaFingerprint(connection, transaction);
-            if (upgradedFingerprint != ProviderPersistenceDeclarations.Wp9CampaignInputBoundCorrectionSchemaFingerprint)
+            if (upgradedFingerprint != ProviderPersistenceDeclarations.ProviderInputBoundPolicyCorrectionSchemaFingerprint)
             {
                 throw new InvalidOperationException(
-                    $"The bounded WP9 campaign input-bound correction did not converge on its declared fingerprint ({upgradedFingerprint}).");
+                    $"The bounded provider input-bound policy correction did not converge on its declared fingerprint ({upgradedFingerprint}).");
             }
             Execute(
                 """
@@ -2216,7 +2216,7 @@ public sealed partial class AuthoritativeStore
         ("provider_budget_projection", "updated_at", false),
     ];
 
-    private static readonly string[] Wp2Schema6ExtensionAppendOnlyTables =
+    private static readonly string[] ProviderAuthorizationExtensionAppendOnlyTables =
     [
         "provider_reservation_scope_items",
         "provider_budget_limits",
@@ -2232,7 +2232,7 @@ public sealed partial class AuthoritativeStore
         "candidate_evidence_authority",
     ];
 
-    private static readonly (string Table, string Column, bool Optional)[] Wp2Schema6ExtensionCanonicalTimestampColumns =
+    private static readonly (string Table, string Column, bool Optional)[] ProviderAuthorizationExtensionCanonicalTimestampColumns =
     [
         ("provider_budget_limits", "created_at", false),
         ("provider_budget_events", "occurred_at", false),
@@ -2282,7 +2282,7 @@ public sealed partial class AuthoritativeStore
         }),
         .. SchemaV6CanonicalTimestampColumns.Select(item =>
             $"trigger:{item.Table}_{item.Column}_canonical_utc_insert"),
-        .. Wp2Schema6ExtensionCanonicalTimestampColumns.Select(item =>
+        .. ProviderAuthorizationExtensionCanonicalTimestampColumns.Select(item =>
             $"trigger:{item.Table}_{item.Column}_canonical_utc_insert"),
         .. SchemaV6CanonicalTimestampColumns
             .Where(item => SchemaV6MutableProjectionTables.Contains(item.Table))
@@ -3788,7 +3788,7 @@ public sealed partial class AuthoritativeStore
         CREATE INDEX idx_lineage_successor ON lineage_events(subject_kind, successor_logical_id);
         """;
 
-    private const string Wp2AuthorizationModeExtension =
+    private const string ProviderAuthorizationModeExtension =
         """
         ALTER TABLE provider_operation_authorizations ADD COLUMN execution_mode TEXT NOT NULL
           DEFAULT 'simulated-nonnetwork' CHECK(execution_mode IN ('simulated-nonnetwork','provider-live'));
@@ -3856,7 +3856,7 @@ public sealed partial class AuthoritativeStore
         ) STRICT;
         """;
 
-    private const string Wp2Schema6Extension =
+    private const string ProviderAuthorizationExtension =
         """
         DROP TRIGGER provider_authority_release_required;
         CREATE TRIGGER provider_authority_release_required

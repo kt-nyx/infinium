@@ -55,10 +55,10 @@ public sealed class ProviderInputBoundPolicyTests
         byte[] request = Request(ProviderOperationKind.TransportQualification, 256, "hello");
         ProviderInputBoundEvidence evidence = OpenAiResponsesInputBoundPolicy.Prove(
             ProviderOperationKind.TransportQualification, request, QualificationLimits);
-        Assert.AreEqual(802, request.Length);
-        Assert.AreEqual(225, evidence.O200kTokenCount);
-        Assert.AreEqual("fca9da0a42a8eeafe1495b2d99c37f06b5e872e322898ab0265449771ecbc792", evidence.CanonicalRequestFingerprint.Value);
-        Assert.AreEqual("2e58d6aa9f58450ec1a85c446528241406371a2b242c37aec484122a6b3ce20c", evidence.TokenIdsFingerprint.Value);
+        Assert.AreEqual(808, request.Length);
+        Assert.AreEqual(224, evidence.O200kTokenCount);
+        Assert.AreEqual("089219973bbfc48c3edbeceb3b007e9908132ce175bea0c2eeda1ef08218af9d", evidence.CanonicalRequestFingerprint.Value);
+        Assert.AreEqual("30d27453cc37145f69f00d32f43139e3b14895b56c560bd296f1d43cb400be1c", evidence.TokenIdsFingerprint.Value);
     }
 
     [TestMethod]
@@ -101,19 +101,19 @@ public sealed class ProviderInputBoundPolicyTests
 
     [TestMethod]
     [TestCategory("Unit")]
-    public void SuccessorV6ProofUsesDedicatedAdjustableLimitsWithoutBroadeningHistoricalProfile()
+    public void ExtendedProfileProofUsesDedicatedAdjustableLimitsWithoutBroadeningHistoricalProfile()
     {
         using JsonDocument schema = JsonDocument.Parse(ProviderAdapterTestData.OutputSchemaBytes);
-        byte[] request = OpenAiResponsesCanonicalSerializer.SerializeSuccessorV6(new(
-            ProviderOperationKind.SourceClaimExtraction, "Infinium closed M1 instruction", "bounded",
+        byte[] request = OpenAiResponsesCanonicalSerializer.SerializeExtendedProfile(new(
+            ProviderOperationKind.SourceClaimExtraction, "Infinium closed provider instruction", "bounded",
             schema.RootElement.Clone(), 8_192, ProviderAdapterTestData.SafetyIdentifier));
         ProviderFiniteLimitsContract limits = new(1_000_000, 100_000, 8_192,
             1_048_576, 1, 1_000_000_000, 300_000);
 
-        ProviderInputBoundEvidence evidence = OpenAiResponsesInputBoundPolicy.ProveSuccessorV6(
+        ProviderInputBoundEvidence evidence = OpenAiResponsesInputBoundPolicy.ProveExtendedProfile(
             ProviderOperationKind.SourceClaimExtraction, request, limits);
         Assert.AreEqual(request.Length + 8_192, evidence.ConservativeInputTokenUpperBound);
-        OpenAiResponsesCanonicalSerializer.ValidateSuccessorV6Profile(request, 8_192);
+        OpenAiResponsesCanonicalSerializer.ValidateExtendedProfileProfile(request, 8_192);
         Assert.ThrowsExactly<InvalidOperationException>(() => OpenAiResponsesInputBoundPolicy.Prove(
             ProviderOperationKind.SourceClaimExtraction, request, limits));
         Assert.ThrowsExactly<InvalidDataException>(() =>
@@ -243,7 +243,7 @@ public sealed class ProviderInputBoundPolicyTests
         using JsonDocument schema = JsonDocument.Parse(ProviderAdapterTestData.OutputSchemaBytes);
         return OpenAiResponsesCanonicalSerializer.Serialize(new(
             kind,
-            "Infinium closed M1 instruction",
+            "Infinium closed provider instruction",
             input,
             schema.RootElement.Clone(),
             maximumOutputTokens,

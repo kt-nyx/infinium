@@ -108,9 +108,9 @@ public sealed class CandidateDeliveredInputContractTests
     {
         Dictionary<string, string> expectedManifests = new(StringComparer.Ordinal)
         {
-            ["CAND-SEMANTIC-DEV-v1"] = "d1e9b03d1b8d8235830b9c73cbd2c9cb0b35ac93a132989f7ba04b6b13cdbc3b",
-            ["CAND-SCALE-VAL-v1"] = "410be905be0e27a16ce753e607eabed125eb67917b942e69b33858731a808c00",
-            ["CAND-STRESS-DEV-v1"] = "985de373ac9a65263f47a6259548975af648c8cb4eb8716a181a181332990abf",
+            ["CAND-SEMANTIC-DEV-v1"] = "9891090f450f1b8e233ad976c331a33a149f3e96930a5bf26121b61c4361aaa9",
+            ["CAND-SCALE-VAL-v1"] = "21d917d9885ec0f22b2594b9fcf978f652d50393b68ac5987e9556e2184d6757",
+            ["CAND-STRESS-DEV-v1"] = "6331c7a6864860c4326a9d39af16a3059cb3c839f18166c4994dc2be20cbabac",
         };
         string root = Path.Combine(TestRepository.Root,
             "fixtures", "public", "candidates");

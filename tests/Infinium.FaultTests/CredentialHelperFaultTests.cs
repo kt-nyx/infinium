@@ -13,7 +13,7 @@ public sealed class CredentialHelperFaultTests
 {
     private static readonly DateTimeOffset BaseTime = new(2026, 8, 11, 12, 0, 0, TimeSpan.Zero);
     private static readonly string[] ExpectedRecoveredReplacementSlots =
-        ["WP3-REAL-CHILD-TARGET-CANARY/profile-replace-fault/generation-2"];
+        ["CAPABILITY-BOUND-STORE-TARGET-CANARY/profile-replace-fault/generation-2"];
     [TestMethod]
     public async Task HelperUnavailableStoreReturnsTypedTerminalWithoutNativeFallback()
     {
@@ -71,7 +71,7 @@ public sealed class CredentialHelperFaultTests
         BackupArtifact backup;
         using (AuthoritativeStore state = new(new StoragePaths(productRoot)))
         {
-            state.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
+            state.PublishProviderCatalog(OpenAiProviderProfileCatalog.Capability, OpenAiProviderProfileCatalog.Price, BaseTime);
             _ = state.BeginCredentialEnrollment(
                 "profile-replace-fault", "generation-1", "Replacement fault", BaseTime.AddSeconds(1),
                 "account-1", "billing-1");

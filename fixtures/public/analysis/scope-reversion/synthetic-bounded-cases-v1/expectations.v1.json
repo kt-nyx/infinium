@@ -1,0 +1,25 @@
+{
+  "package_identity": "scope-reversion-synthetic-bounded-cases-v1",
+  "evidence_class": "developer-owned-product-conformance",
+  "semantic_oracle": false,
+  "expected": [
+    { "member_id": "actor-ambiguity", "disposition": "abstained", "findings": 0, "cases": 0 },
+    { "member_id": "actor-negative", "disposition": "resolved-negative", "findings": 0, "cases": 0 },
+    { "member_id": "actor-positive", "disposition": "supported-finding", "findings": 1, "cases": 1 },
+    { "member_id": "reference-ambiguity", "disposition": "abstained", "findings": 0, "cases": 0 },
+    { "member_id": "reference-negative", "disposition": "resolved-negative", "findings": 0, "cases": 0 },
+    { "member_id": "reference-positive", "disposition": "supported-finding", "findings": 1, "cases": 1 }
+  ],
+  "aggregate": {
+    "population": 6,
+    "supported_findings": 2,
+    "resolved_negative": 2,
+    "abstentions": 2,
+    "findings": 2,
+    "cases": 2,
+    "recommendations": 2,
+    "external_boundaries_used": 0
+  },
+  "claim_kind": "bounded-developer-conformance-only",
+  "verdict_authority": false
+}

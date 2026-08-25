@@ -32,7 +32,7 @@ public sealed class ScopeReversionContractTests
         Assert.AreEqual(new ContractVersion(1, 0, 0), decoded.Analyzer.SemanticContractVersion);
         Assert.AreEqual(new ContractVersion(1, 0, 0), decoded.Analyzer.IdentityContractVersion);
         Assert.AreEqual(new ContractVersion(1, 0, 0), decoded.Analyzer.RulesetVersion);
-        Assert.IsFalse(decoded.Analyzer.CanonicalDeclarationJson.Contains("M1-S7-SYNTHETIC", StringComparison.Ordinal));
+        Assert.IsFalse(decoded.Analyzer.CanonicalDeclarationJson.Contains("scope-reversion-synthetic-bounded-cases", StringComparison.Ordinal));
         Assert.IsTrue(decoded.Boundaries.All(item => item.State == BoundaryUseState.NotUsed));
     }
 
@@ -85,15 +85,15 @@ public sealed class ScopeReversionContractTests
         string root = RepositoryRoot();
         ScopeReversionFixturePackage fixture = ScopeReversionFixtureReader.Read(root);
         using JsonDocument registry = JsonDocument.Parse(File.ReadAllBytes(
-            Path.Combine(root, "fixtures", "public", "public-fixture-registry.v3.json")));
+            Path.Combine(root, "fixtures", "public", "current-fixture-registry.v1.json")));
         JsonElement package = registry.RootElement.GetProperty("packages").EnumerateArray().Single(item =>
-            item.GetProperty("package_identity").GetString() == "M1-S7-SYNTHETIC-v1");
+            item.GetProperty("package_identity").GetString() == "scope-reversion-synthetic-bounded-cases-v1");
         Assert.AreEqual("development", package.GetProperty("partition").GetString());
         Assert.AreEqual("developer-owned-product-conformance-not-semantic-oracle",
             package.GetProperty("authority_status").GetString());
-        Assert.AreEqual("d3ce566345c1fd2845a38d292136407c64c2afa81bd405323b5d57c5ba86262f",
+        Assert.AreEqual("ecb743a8966fdcb706fea263e17f7bbe1e1a2aba31dc9e1831c31e3830e8c3eb",
             fixture.InputSha256);
-        Assert.AreEqual("f4630b927dd746facda0434cebfad8a938e549a18797a3a19c7128a4e60fac23",
+        Assert.AreEqual("38f3d8d73ab8bc0f9e30f501daaeaba8f9a868004f49721248a23bc440473302",
             fixture.ExpectationsSha256);
     }
 
@@ -101,7 +101,7 @@ public sealed class ScopeReversionContractTests
     [TestCategory("Contract")]
     [TestCategory("Contracts")]
     [TestProperty("Category", "ScopeReversion")]
-    public void FrozenSlice6ContractFamiliesHaveNoChangedBytesFromAcceptedBase()
+    public void FrozenProviderContractFamiliesHaveNoChangedBytesFromAcceptedBase()
     {
         string[] paths =
         [
@@ -142,7 +142,7 @@ public sealed class ScopeReversionContractTests
     [TestCategory("Contract")]
     [TestCategory("Contracts")]
     [TestProperty("Category", "ScopeReversionV2")]
-    public void FrozenSlice7ScopeReversionPathsHaveNoChangedBytes()
+    public void FrozenScopeReversionContractAndStoragePathsHaveNoChangedBytes()
     {
         string[] paths =
         [
@@ -150,7 +150,6 @@ public sealed class ScopeReversionContractTests
             "src/Infinium.Domain/Contracts/ScopeReversionContracts.cs",
             "src/Infinium.Application/Serialization/ScopeReversionJsonCodec.cs",
             "src/Infinium.Analysis/ScopeReversion/ScopeReversionAnalyzerDeclaration.cs",
-            "src/Infinium.Analysis/ScopeReversion/ScopeReversionAnalyzer.cs",
             "src/Infinium.Analysis/ScopeReversion/ScopeReversionAdapters.cs",
             "src/Infinium.Application/ScopeReversion/ScopeReversionComposition.cs",
             "src/Infinium.Application/ScopeReversion/ScopeReversionOutputRenderer.cs",

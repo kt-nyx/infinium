@@ -23,11 +23,11 @@ public sealed class ProviderBudgetEvaluationTests
     [TestCategory("Evaluation")]
     public void ProviderCapabilityDevelopmentPackageDrivesExactProductionCatalog()
     {
-        using Package package = Package.Read("M1-PLAT-PROVIDER-CAPABILITY-DEV-v1");
+        using Package package = Package.Read("PROVIDER-CAPABILITY-DEV-v1");
         JsonElement input = package.Input.RootElement;
         AssertInputProperties(input, ["schema", "case", "provider", "model", "service_tier", "reasoning_effort", "cache_mode"]);
-        Assert.AreEqual("exact-m1-catalog", input.GetProperty("case").GetString());
-        ProviderCapabilitySnapshotContract capability = M1ProviderCatalog.Capability;
+        Assert.AreEqual("exact-provider-profile-catalog", input.GetProperty("case").GetString());
+        ProviderCapabilitySnapshotContract capability = OpenAiProviderProfileCatalog.Capability;
         Assert.AreEqual(input.GetProperty("provider").GetString(), capability.Provider);
         Assert.AreEqual(input.GetProperty("model").GetString(), capability.Model);
         Assert.AreEqual(input.GetProperty("service_tier").GetString(), capability.ServiceTier);
@@ -50,7 +50,7 @@ public sealed class ProviderBudgetEvaluationTests
     [TestCategory("Evaluation")]
     public void ProviderCapabilityValidationPackageDrivesUnavailableAuthorityProjection()
     {
-        using Package package = Package.Read("M1-PLAT-PROVIDER-CAPABILITY-VAL-v1");
+        using Package package = Package.Read("PROVIDER-CAPABILITY-VAL-v1");
         JsonElement input = package.Input.RootElement;
         AssertInputProperties(input, ["schema", "case", "provider", "model", "requested_facts"]);
         Assert.AreEqual("explicit-unavailable-facts", input.GetProperty("case").GetString());
@@ -58,7 +58,7 @@ public sealed class ProviderBudgetEvaluationTests
         Assert.AreEqual("gpt-5.6-sol", input.GetProperty("model").GetString());
         string[] requested = input.GetProperty("requested_facts").EnumerateArray().Select(item => item.GetString()!).ToArray();
         CollectionAssert.AreEqual(RequestedAuthorityFacts, requested);
-        M1ProviderCatalogProjection projection = M1ProviderCatalog.CreateNonLiveProjection(new UtcTimestamp(BaseTime));
+        ProviderCatalogProjection projection = OpenAiProviderProfileCatalog.CreateNonLiveProjection(new UtcTimestamp(BaseTime));
         Assert.IsTrue(new[] { projection.ProviderSpendLimit, projection.ProviderHistoricalCost,
             projection.ProviderCredit, projection.ProviderRateHeadroom }
             .All(fact => fact.Availability == ProviderAvailabilityState.Unavailable && fact.Value is null));
@@ -77,7 +77,7 @@ public sealed class ProviderBudgetEvaluationTests
     [TestCategory("Evaluation")]
     public void ProviderAuthorityDevelopmentPackageDrivesRealSqliteFinalGate()
     {
-        using Package package = Package.Read("M1-PLAT-PROVIDER-AUTHORITY-DEV-v1");
+        using Package package = Package.Read("PROVIDER-AUTHORIZATION-DEV-v1");
         JsonElement input = package.Input.RootElement;
         AssertInputProperties(input, ["schema", "case", "execution_mode", "profile_state", "transport_state"]);
         Assert.AreEqual("eligible-simulated-dispatch", input.GetProperty("case").GetString());
@@ -102,7 +102,7 @@ public sealed class ProviderBudgetEvaluationTests
     [TestCategory("Evaluation")]
     public void ProviderAuthorityValidationPackageDrivesAmbiguousFullHold()
     {
-        using Package package = Package.Read("M1-PLAT-PROVIDER-AUTHORITY-VAL-v1");
+        using Package package = Package.Read("PROVIDER-AUTHORIZATION-VAL-v1");
         JsonElement input = package.Input.RootElement;
         AssertInputProperties(input, ["schema", "case", "execution_mode", "transport_state", "usage_state"]);
         Assert.AreEqual("ambiguous-transport", input.GetProperty("case").GetString());
@@ -136,7 +136,7 @@ public sealed class ProviderBudgetEvaluationTests
     [TestCategory("Evaluation")]
     public void AtomicBudgetDevelopmentPackageDrivesEightScopeCommitAndRebuild()
     {
-        using Package package = Package.Read("M1-PLAT-BUDGET-DEV-v1");
+        using Package package = Package.Read("PROVIDER-BUDGET-DEV-v1");
         JsonElement input = package.Input.RootElement;
         AssertInputProperties(input, ["schema", "case", "dimensions"]);
         Assert.AreEqual("eight-scope-reservation", input.GetProperty("case").GetString());
@@ -161,7 +161,7 @@ public sealed class ProviderBudgetEvaluationTests
     [TestCategory("Evaluation")]
     public void AtomicBudgetValidationPackageDrivesContentionAndOverflowFailure()
     {
-        using Package package = Package.Read("M1-PLAT-BUDGET-VAL-v1");
+        using Package package = Package.Read("PROVIDER-BUDGET-VAL-v1");
         JsonElement input = package.Input.RootElement;
         AssertInputProperties(input, ["schema", "case", "dimensions"]);
         Assert.AreEqual("overflow-and-contention", input.GetProperty("case").GetString());
@@ -247,7 +247,7 @@ public sealed class ProviderBudgetEvaluationTests
         {
             string root = FindRepositoryRoot();
             using JsonDocument registry = JsonDocument.Parse(File.ReadAllBytes(
-                Path.Combine(root, "fixtures", "public", "public-fixture-registry.v1.json")));
+                Path.Combine(root, "fixtures", "public", "current-fixture-registry.v1.json")));
             JsonElement entry = registry.RootElement.GetProperty("packages").EnumerateArray()
                 .Single(item => item.GetProperty("package_identity").GetString() == fixtureId
                     && item.GetProperty("package_version").GetString() == "1.0.0");

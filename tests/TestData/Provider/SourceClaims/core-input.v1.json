@@ -1,0 +1,24 @@
+{
+  "schema_id": "infinium.llm.source-claim-execution-input/v1",
+  "schema_version": "1",
+  "package_id": "source-claim-core-cases",
+  "acquisition_run_id": "acquisition-claim-core-1",
+  "operation_id": "operation-claim-core-1",
+  "host_authorization_id": "authorization-claim-core-1",
+  "owner_kind": "evidence-acquisition-run",
+  "owner_id": "acquisition-claim-core-1",
+  "parent_analysis_run_id": "analysis-claim-core-1",
+  "application_scope_id": "application-scope-claim-core-1",
+  "cost_attribution_scope_id": "cost-scope-claim-core-1",
+  "source_revision_id": "guide-revision-r7",
+  "declared_purpose": "Extract exact conditional and version-scoped claims from the supplied guide revision.",
+  "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+  "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+  "passages": [
+    { "passage_id": "passage-alder", "source_revision_id": "guide-revision-r7", "text": "Guide revision r7 states that feature Alder is enabled only when mode Copper is selected.", "text_sha256": "4a5d453a3806f8454dc8ee771f99735466145fdd72ff16b4dd398701cdd3ed9d", "deleted": false },
+    { "passage_id": "passage-birch", "source_revision_id": "guide-revision-r7", "text": "Guide revision r7 does not document feature Birch for platform Quartz.", "text_sha256": "00de2ee54679c131f57cb868a6725b106efb42c00533c096ea4703701e944554", "deleted": false },
+    { "passage_id": "passage-cedar", "source_revision_id": "guide-revision-r7", "text": "Guide revision r7 states that feature Cedar is disabled before version 3 and enabled starting with version 3.", "text_sha256": "b67631ccc1d57be79a464c6582c4387c332694690511a934a2b5ce177c7bea27", "deleted": false }
+  ]
+}
+
+

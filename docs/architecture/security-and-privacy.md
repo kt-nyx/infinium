@@ -96,6 +96,10 @@ material policy change triggers ADR-0012 review and may stop the affected path.
   supplied by the user for that account; a credential-free local provider may
   operate under its declared contract, but no project-funded or shared project
   credential is a fallback.
+- ADR-0036 separately permits an explicitly selected, bounded project-funded
+  credential for development and conformance work. That development authority
+  is never available to the shipped product and does not weaken the preceding
+  no-fallback rule.
 - Managed-plan and usage-priced API access are separate profiles. Neither may
   silently fall back to the other, and plan usage is not described as free or
   converted into an invented dollar cost.

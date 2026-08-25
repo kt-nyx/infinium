@@ -349,9 +349,9 @@ price classes. Implementation must not infer that alternative.
 ## 12. References
 
 - [Current project state](../../current-state.md)
-- [Accepted M1 plan](../../plans/milestones/m1/plan.md)
-- [M1 continuation verification profile](../../evaluation/m1-continuation-verification-profile.md)
-- [Slice 5 handoff](../../plans/milestones/m1/slices/s5/current.md)
+- [Archived M1 plan](../../plans/milestones/README.md)
+- [Product-conformance verification profile](../../evaluation/product-conformance-verification-profile.md)
+- [Archived Slice 5 handoff](../../plans/milestones/README.md)
 - [RESEARCH-0040](RESEARCH-0040-credential-entry-and-storage.md)
 - [RESEARCH-0043](RESEARCH-0043-cost-ledger-and-budget-enforcement.md)
 - [RESEARCH-0048](RESEARCH-0048-openai-m1-model-qualification.md)

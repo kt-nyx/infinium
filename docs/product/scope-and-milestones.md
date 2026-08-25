@@ -4,12 +4,12 @@ Status: Accepted
 Last reviewed: 2026-08-23
 Accepted evaluation-timing amendment, 2026-08-23: ADR-0035 defers independent
 semantic-oracle qualification throughout M1 and M2. The active
-[product-conformance profile](../evaluation/m1-continuation-verification-profile.md)
+[product-conformance profile](../evaluation/product-conformance-verification-profile.md)
 retains ordinary verification. Reconsideration occurs only after M2 acceptance
 during M3 planning at the M3 Evaluation Readiness Gate.
 Accepted M1 verification amendment, 2026-08-07: ADR-0032 defers the current
 private held-out evaluator with no product verdict and makes the accepted
-[M1 continuation verification profile](../evaluation/m1-continuation-verification-profile.md)
+[product-conformance verification profile](../evaluation/product-conformance-verification-profile.md)
 the public gate for Slices 5-9. Slice 4.5 closeout is accepted. This changes
 sequencing and evidence labeling, not the M1 product goal or required cases.
 Slice 5 uses staged work-package-owned fixtures, with comprehensive
@@ -34,6 +34,9 @@ The initial supported target is:
   the user's own provider/account when authentication or billing is required;
   later providers are permitted but no second-provider or feature-parity gate
   applies through M1;
+- separately governed, explicitly invoked project-funded provider access for
+  development and conformance only under ADR-0036; it is not a shipped-product
+  credential or fallback;
 - read-only authority.
 
 The exact instance's MO2 saved selection may be offered as a validated

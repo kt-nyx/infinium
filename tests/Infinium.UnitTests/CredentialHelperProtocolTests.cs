@@ -59,7 +59,7 @@ public sealed class CredentialHelperProtocolTests
     }
 
     [TestMethod]
-    public void SuccessorV6PrivateFrameHasExactMetadataHeadroomWithoutBroadeningHistoricalFrames()
+    public void ExtendedProfilePrivateFrameHasExactMetadataHeadroomWithoutBroadeningHistoricalFrames()
     {
         HelperPrivateFrameV2 successor = HelperTestFrames.DispatchAssignment();
         successor.Assignment.ProviderRequest.RequestId = "m1-s6-successor-v6-near-boundary-request";

@@ -18,7 +18,7 @@ public sealed partial class AuthoritativeStore
             || capability.PromptCacheMode != "explicit" || capability.HasPromptCacheKey
             || capability.HasPromptCacheBreakpoint || capability.ToolCount != 0)
         {
-            throw new InvalidOperationException("Only the exact immutable cache-off M1 provider catalog may be published.");
+            throw new InvalidOperationException("Only the exact immutable cache-off provider catalog may be published.");
         }
         foreach (ProviderPriceRuleContract rule in price.Rules)
         {
@@ -967,7 +967,7 @@ public sealed partial class AuthoritativeStore
         lock (gate)
         {
             if (operationId.StartsWith("m1s6-successor-v6-", StringComparison.Ordinal))
-            { return ReadM1Slice6SuccessorV6Operation(operationId); }
+            { return ReadPersistedProviderOperation(operationId); }
             using SqliteCommand command = connection.CreateCommand();
             command.CommandText =
                 """
@@ -1390,7 +1390,7 @@ public sealed partial class AuthoritativeStore
             || hasPromptCacheKey || hasPromptCacheBreakpoint
             || checked(input + output) > maximumContext)
         {
-            throw new InvalidOperationException("The retained operation cannot produce a qualified finite M1 reservation vector.");
+            throw new InvalidOperationException("The retained operation cannot produce a qualified finite provider reservation vector.");
         }
 
         ProviderPriceRuleContract inputRule = ReadRetainedPriceRule(priceId, "ordinary-input", "input", transaction);
@@ -1428,14 +1428,14 @@ public sealed partial class AuthoritativeStore
         using SqliteDataReader reader = command.ExecuteReader();
         if (!reader.Read())
         {
-            throw new InvalidOperationException("The retained price catalog lacks one exact required M1 price rule.");
+            throw new InvalidOperationException("The retained price catalog lacks one exact required provider price rule.");
         }
         ProviderPriceRuleContract result = new(new OpaqueId(reader.GetString(0)), reader.GetString(1), reader.GetString(2),
             reader.GetString(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7),
             reader.GetString(8), reader.GetString(9), reader.GetInt64(10), reader.GetInt64(11), reader.GetString(12));
         if (reader.Read())
         {
-            throw new InvalidOperationException("The retained price catalog has an ambiguous M1 price class.");
+            throw new InvalidOperationException("The retained price catalog has an ambiguous provider price class.");
         }
         return result;
     }

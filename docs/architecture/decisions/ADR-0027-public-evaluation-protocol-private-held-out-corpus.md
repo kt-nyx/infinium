@@ -206,5 +206,5 @@ raw and sanitized run records.
 
 - [ADR-0026](ADR-0026-evaluator-private-fixture-repository-and-delegated-access.md)
 - [Evaluator-private fixture governance v2](../../evaluation/evaluator-private-fixture-governance-v2.md)
-- [Historical M1 evaluator-v2 baseline amendment](../../evaluation/history/m1-evaluator-v2-baseline-amendment.md)
+- [Historical evaluator archive pointer](../../evaluation/evaluator-history.md)
 - [M1 Slice 4.5 execution plan](../../evaluation/evaluator-history.md)

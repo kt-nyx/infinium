@@ -12,8 +12,8 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class ControlledRealScopeReversionEvaluationTests
 {
-    private const string ManifestVariable = "INFINIUM_SLICE8_INPUT_MANIFEST";
-    private const string OutputVariable = "INFINIUM_SLICE8_OUTPUT_ROOT";
+    private const string ManifestVariable = "INFINIUM_CONTROLLED_SCOPE_INPUT_MANIFEST";
+    private const string OutputVariable = "INFINIUM_CONTROLLED_SCOPE_OUTPUT_ROOT";
     private static readonly string[] FixedCoverageIds =
     [
         "analyzer", "persistence", "projection", "purpose", "replay", "taxonomy",

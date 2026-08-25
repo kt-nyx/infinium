@@ -45,10 +45,10 @@ not mark any fixture executed, evaluation passed, or implementation conformant.
 
 ### Evaluation
 
-- [M1 evaluation baseline](../../evaluation/m1-evaluation-baseline.md)
-- [M1 semantic and local-ground-truth specifications](../../evaluation/specifications/m1-semantic-and-ground-truth.md)
+- [Archived M1 evaluation baseline](../../evaluation/evaluator-history.md)
+- [Archived M1 semantic and local-ground-truth specifications](../../evaluation/evaluator-history.md)
 - [M1 semantic fixture manifests](../../evaluation/specifications/semantic-fixture-catalog.md)
-- [M1 platform and operational specifications](../../evaluation/specifications/m1-platform-and-operational.md)
+- [Archived M1 platform and operational specifications](../../evaluation/evaluator-history.md)
 - [M1 platform fixture manifests](../../evaluation/specifications/platform-fixture-catalog.md)
 - updated [case catalog](../../evaluation/case-catalog.md),
   [evaluation strategy](../../evaluation/evaluation-strategy.md), and
@@ -86,7 +86,7 @@ ADR-0025 is accepted.
 
 ### Implementation plan
 
-- [M1 backend semantic proof plan](../../plans/milestones/m1/plan.md)
+- [Archived M1 backend semantic proof plan](../../plans/milestones/README.md)
 
 The plan creates a clean source tree without restoring or consulting the
 external abandoned-implementation archive, remains

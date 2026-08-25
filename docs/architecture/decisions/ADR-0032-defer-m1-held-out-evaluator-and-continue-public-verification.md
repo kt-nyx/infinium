@@ -62,7 +62,7 @@ current attempt lacks.
    This decision authorizes no private access, candidate execution, corpus
    work, adaptation, scoring, or replacement evaluator.
 8. Authorize the public closeout and replacement verification work in
-   [the evaluator-deferral plan](../../plans/milestones/m1/slices/s4.5/plan.md).
+   [the archived milestone-plan boundary](../../plans/milestones/README.md).
    Slice 5 becomes eligible only when that plan's closeout is accepted.
 
 ## Future evaluator re-entry
