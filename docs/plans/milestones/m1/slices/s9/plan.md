@@ -2,8 +2,9 @@
 
 Status: Accepted
 Disposition: Complete plan accepted by the project owner on exact planning
-candidate `1dd5419ebb3dea8893f7e45adbe16191cf0e823c`; no Slice 9 implementation or
-activation authority is open
+candidate `1dd5419ebb3dea8893f7e45adbe16191cf0e823c`; `docs/current-state.md`
+separately activates WP1 through WP7 on exact implementation base
+`ce51f2d7fdd9d74083ca8c83f686b1193e867ff0`
 
 Last reviewed: 2026-08-25
 Owner: Project owner
@@ -41,8 +42,9 @@ This document defines the accepted work. It does not activate implementation,
 controlled-real payload access, credential access, provider or network use,
 external effects, private/evaluator work, semantic-oracle work, merge, or push.
 Owner acceptance is recorded in
-[current project state](../../../../../current-state.md). Live authority must
-still be activated there on an exact implementation base.
+[current project state](../../../../../current-state.md). Live authority is
+separately activated there on exact implementation base
+`ce51f2d7fdd9d74083ca8c83f686b1193e867ff0`.
 
 ## 1. Exact accepted predecessor handoff
 
@@ -901,7 +903,8 @@ hidden to preserve a completion claim.
 
 ## 13. Security, isolation, and effect boundaries
 
-Slice 9 implementation, if activated, remains local, non-elevated, and
+Under the separate activation, Slice 9 implementation remains local,
+non-elevated, and
 read-only toward user setup and controlled inputs. Product writes are limited
 to existing product-owned storage, per-attempt staging, diagnostics, and
 run-owned local output under the accepted write-authority rules.
@@ -998,7 +1001,7 @@ owner accepts exact planning candidate
 `1dd5419ebb3dea8893f7e45adbe16191cf0e823c` as the complete Slice 9 plan.
 Acceptance does not activate implementation.
 
-Activation must separately record:
+The separate activation records:
 
 - the exact implementation base;
 - authority to implement WP1 through WP7 on one candidate under the accepted
@@ -1006,4 +1009,8 @@ Activation must separately record:
 - renewed read-only use of the exact Slice 8 controlled-real handoff after its
   containment/identity preflight.
 
-No other authority follows from plan acceptance.
+`docs/current-state.md` now records that separate activation on exact
+implementation base `ce51f2d7fdd9d74083ca8c83f686b1193e867ff0`. It authorizes
+ordinary implementation through WP7 and renewed read-only handoff use only
+after the required preflight. No provider, credential, network, private,
+archive, semantic-oracle, external-effect, merge, or push authority is open.

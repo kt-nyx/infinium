@@ -3,7 +3,9 @@
 Status: Accepted
 Disposition: Complete M1 end-to-end closeout plan accepted by the project
 owner on exact planning candidate
-`1dd5419ebb3dea8893f7e45adbe16191cf0e823c`; implementation is not activated
+`1dd5419ebb3dea8893f7e45adbe16191cf0e823c`; WP1-through-WP7 implementation
+is separately activated on exact base
+`ce51f2d7fdd9d74083ca8c83f686b1193e867ff0`
 
 Last reviewed: 2026-08-25
 Owner: Project owner
@@ -15,10 +17,11 @@ leave a reviewable case-by-case completion record. It is not a new analyzer or
 permission to broaden product meaning.
 
 Live authorization is stated only in
-[current project state](../../../../../current-state.md). This accepted entry
-does not activate implementation, controlled-real input access, credentials,
-providers, network use, external effects, private material, evaluator work,
-semantic-oracle work, merge, or push.
+[current project state](../../../../../current-state.md). It activates the
+accepted WP1-through-WP7 implementation and renews bounded read-only use of the
+exact accepted controlled-real handoff after its required preflight. It does
+not authorize credentials, providers, network use, external effects, private
+material, evaluator work, semantic-oracle work, merge, or push.
 
 ## Accepted authority package
 
@@ -33,7 +36,7 @@ semantic-oracle work, merge, or push.
 ## Accepted decision
 
 Accept Slice 9 as an integration-and-evidence package over the frozen Slice 5
-through Slice 8 product. Once separately activated, implementation will add a
+through Slice 8 product. Under the separate activation, implementation will add a
 bounded durable composition path for one synthetic and one controlled-real CLI
 run, project the already accepted artifacts into the frozen
 `infinium.run-output/v1` contract, prove persistence and replay, re-run the
@@ -56,7 +59,9 @@ handoff `c5c995de7252ebf0002903c2d908fdb3bca80f40`.
 
 The project owner accepts exact planning candidate
 `1dd5419ebb3dea8893f7e45adbe16191cf0e823c`. This acceptance does not make
-implementation active. `docs/current-state.md` must separately record the
-exact implementation base, WP1-through-WP7 activation, and renewed read-only
-controlled-real handoff authority before any Slice 9 product work or
-controlled-real input read begins.
+implementation active by itself. `docs/current-state.md` separately activates
+WP1 through WP7 on exact implementation base
+`ce51f2d7fdd9d74083ca8c83f686b1193e867ff0` and renews read-only use of the
+exact Slice 8 controlled-real handoff only after its containment and identity
+preflight. Implementation may begin at WP1 and continue through the accepted
+predecessor gates.
