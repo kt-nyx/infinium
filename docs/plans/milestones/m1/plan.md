@@ -1,10 +1,11 @@
 # M1 backend semantic proof plan
 
 Status: Accepted  
+Disposition: Owner-accepted and completed on the exact Slice 9 closeout
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-08-23
+Last reviewed: 2026-08-25
 Target milestone: M1 — Backend semantic proof
 
 > Current evaluation-timing amendment (2026-08-23):
@@ -13,21 +14,21 @@ Target milestone: M1 — Backend semantic proof
 > [focused amendment](amendments/semantic-oracle-deferral.md) defer independent
 > semantic-oracle qualification throughout M1 and M2. Earlier oracle
 > authoring, sealing, comparison, and `PASS` instructions below remain
-> historical plan context and do not gate current M1 acceptance. The active
-> requirement is the six-layer product-conformance profile.
+> historical plan context and did not gate M1 acceptance. The accepted
+> requirement was the six-layer product-conformance profile.
 
 ## Authority and start condition
 
-The project owner accepted this plan on 2026-07-28. It is the active
-implementation authorization for the bounded M1 scope below. It does not
-authorize excluded capabilities or imply that any implementation or evaluation
-already passes.
+The project owner accepted this plan on 2026-07-28 and accepted its completed
+bounded implementation on 2026-08-25. This plan no longer opens an active M1
+implementation package. It does not authorize excluded capabilities, M2 work,
+or independent semantic-oracle activity.
 
 On 2026-08-17, the owner accepted the
 [M1 process-continuation amendment](amendments/process-continuation.md).
-Its revised cadence becomes operative only when the owner accepts the exact
-documentation activation commit named by current state.
-Remaining M1 execution uses one coherent working candidate, focused checks
+Its revised cadence became operative through the exact owner-accepted
+documentation activation commits recorded by current state.
+Remaining M1 execution used one coherent working candidate, focused checks
 during development, consolidated review, corrections on that same candidate,
 and one final complete floor and binding when review-ready. The amendment
 changes cadence, not M1 scope, completion criteria, required cases, evidence
@@ -694,21 +695,60 @@ Every slice must permit:
 
 ## Completion record
 
-To be filled only after M1 completes:
-
-- accepted plan revision:
-- implementation commit:
-- exact SDK/dependency/native versions:
+- accepted plan revision: this plan as amended by the accepted
+  [process-continuation amendment](amendments/process-continuation.md),
+  [semantic-oracle deferral amendment](amendments/semantic-oracle-deferral.md),
+  ADR-0035, and accepted Slice 9 plan candidate
+  `1dd5419ebb3dea8893f7e45adbe16191cf0e823c`;
+- implementation commit: Slice 9 product candidate
+  `926080092e056973d254562424a030672fb4d917`, tree
+  `fb9b9679b458f78dd3ef4d5f31dfdc3c059670f9`, with review-ready handoff
+  `63593a42cdd003cb8bd32005ced9adec801e97b0`;
+- exact SDK/dependency/native versions: .NET SDK `10.0.303`, host runtime
+  `10.0.11`, `win-x64`; 75 resolved locked packages under
+  `dependency-manifest/1`, SHA-256
+  `6daa59553618d51a3aad2d233390ceae046d30ff855e139e5fc9357100dac10f`;
+  no native external operation was used by the Slice 9 closeout;
 - accepted evaluation specification revisions:
+  `docs/evaluation/evaluation-strategy.md` SHA-256
+  `aec0705daf68620784a7a44097b88e21055342212ad610b799d8fd904cebc106`,
+  `docs/evaluation/case-catalog.md` SHA-256
+  `376d8e0d7cfa93feaae974bc2e154b9d74eea95a57b0b23db5db606e5264cb24`,
+  and the M1/M2 profile SHA-256
+  `f4f5493ad5c3ee138a256f53ad12d3efdbb62ead2818efa777fec4b0a22f3d73`;
 - required case result index:
-- verification commands and results:
-- retained run/artifact IDs:
-- controlled-real manifest revisions:
-- security/non-mutation/secret review:
-- known gaps and excluded capabilities:
-- intentional behavior changes:
-- completion date:
-- accepted by:
+  [final 34-row index](slices/s9/evidence/required-case-results.v1.json),
+  40,425 bytes, SHA-256
+  `446225cd79cc85ab58f086dd3e1146c62fe683ffbdb4784623e10ecc3022afc0`;
+- verification commands and results: the complete accepted floor in the
+  [Slice 9 and M1 completion record](slices/s9/record.md#complete-verification-floor),
+  including zero-warning/error Release build, all filtered and unfiltered
+  suites, analysis pipeline `Gate All`, Slice 8 37/37, and Slice 9 12/12;
+- retained run/artifact IDs: synthetic `run-managed-cli`; controlled clean
+  `run-managed-cli-controlled`, incremental
+  `run-managed-cli-controlled-incremental`, and retained-downstream
+  `run-managed-cli-controlled-replay`; exact receipts are listed in the
+  completion record;
+- controlled-real manifest revisions: handoff
+  `m1-slice8-research0035-local-v1`, manifest SHA-256
+  `8972ef0e160b9de04da281d48639b66d8bffcc153504c1d699f654f1eff6ecf5`,
+  26 allowlisted inputs and three public manifests;
+- security/non-mutation/secret review: passed with every forbidden-effect count
+  and repository-owned process survivor equal to zero; controlled/source/
+  retained roots remained unchanged and no secret or controlled payload byte
+  entered Git;
+- known gaps and excluded capabilities: the completion record retains runtime,
+  gameplay, quest/global/save, archive-wide completeness, broad compatibility,
+  reliability/readiness, M3 scale/performance, provider-repeatability, and
+  independent-semantic-verdict gaps; M2 and private/evaluator/oracle work are
+  not activated;
+- intentional behavior changes: exact bounded accumulated composition through
+  frozen run-output v1, typed semantic replay equivalence, exact-envelope
+  admission, and a read-only maintainer-local historical replay test seam; no
+  frozen product contract, migration, analyzer meaning, or effect authority
+  changed;
+- completion date: 2026-08-25;
+- accepted by: Project owner.
 
 ## Deferred follow-up
 

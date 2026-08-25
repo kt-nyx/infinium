@@ -1,6 +1,8 @@
 {
   "schema": "infinium.m1-slice9-claim-inventory/v1",
-  "status": "final-review-ready",
+  "status": "accepted",
+  "accepted_on": "2026-08-25",
+  "accepted_handoff_commit": "63593a42cdd003cb8bd32005ced9adec801e97b0",
   "candidate_commit": "926080092e056973d254562424a030672fb4d917",
   "candidate_tree": "fb9b9679b458f78dd3ef4d5f31dfdc3c059670f9",
   "case_evidence": {

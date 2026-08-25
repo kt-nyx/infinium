@@ -1,10 +1,10 @@
 # M1 Slice 9 implementation and M1 completion record
 
-Status: Completed
+Status: Accepted
 
-Disposition: WP1 through WP7 are implemented and the complete accepted
-verification floor passes on the exact product candidate below. This record
-requests an owner decision; it does not self-accept Slice 9 or M1.
+Disposition: The project owner accepts the exact Slice 9 product candidate and
+documentation-only handoff below. Slice 9 and milestone M1 are complete for
+the bounded public product-conformance claim in this record.
 
 Last reviewed: 2026-08-25
 Owner: Project owner
@@ -44,13 +44,16 @@ or a production-readiness claim.
 - product tree: `fb9b9679b458f78dd3ef4d5f31dfdc3c059670f9`;
 - implementation branch: `codex/m1-s9-implementation`;
 - product-candidate worktree state for the accepted floor: clean;
-- review-ready documentation-only handoff: the commit containing this record,
-  the sanitized receipts, final result index, and compact navigation update;
-  its exact identity is reported to the owner after it is created because a
-  commit cannot contain its own identity.
+- review-ready documentation-only handoff:
+  `63593a42cdd003cb8bd32005ced9adec801e97b0`;
+- owner-acceptance closeout: the commit containing this accepted decision and
+  compact M1 navigation update; its exact identity is bound by Git and merged
+  `main` history because a commit cannot contain its own identity.
 
 The product candidate is the activation handoff's direct child. No merge or
-push occurred. M2 remains inactive.
+push occurred during implementation or final verification. The owner later
+authorized only this acceptance commit, fast-forward merge, and Git push. M2
+remains inactive.
 
 ## Predecessors and frozen-boundary result
 
@@ -311,7 +314,7 @@ human and JSON views agree; clean, incremental, and retained-downstream runs
 are equivalent under the declared typed projection; historical provider
 provenance remains visible; and every current forbidden effect remains unused.
 
-The full review-ready claim inventory is
+The accepted claim inventory is
 [evidence/claim-inventory.v1.json](evidence/claim-inventory.v1.json). The result
 does not establish runtime appearance or gameplay, quest/global/progression or
 save safety, archive-wide completeness, patch-wide correctness, broad
@@ -323,12 +326,22 @@ credential, provider, DNS/network, billable effect, external publication,
 semantic oracle, independent comparison, merge, or push was used. No product
 output authored expected truth.
 
-## Owner decision requested
+## Owner acceptance
 
-The requested decision is to accept, reject, or amend exact product candidate
-`926080092e056973d254562424a030672fb4d917` together with the documentation-only
-handoff containing this record and its sanitized evidence. Acceptance may mark
-Slice 9 and M1 complete only for the bounded public product-conformance claim.
-It does not activate M2, create an independent semantic verdict, reopen any
-external-effect authority, or authorize merge/push unless the owner states
-those permissions separately.
+Decision: Accepted by the project owner on 2026-08-25.
+
+The owner accepts exact product candidate
+`926080092e056973d254562424a030672fb4d917` and review-ready documentation-only
+handoff `63593a42cdd003cb8bd32005ced9adec801e97b0`. The complete verification
+floor, consolidated review and same-candidate correction ledger, final 34-row
+required-case index, bounded claim, retained gaps, and zero-effect declarations
+are accepted as the Slice 9 and M1 closeout.
+
+Slice 9 introduced no new product-contract family to freeze. Every predecessor
+contract remains `Slice-frozen` and unchanged; the accepted Slice 9 repository
+evidence is milestone-completion evidence. This acceptance marks Slice 9 and M1
+complete only for the bounded public product-conformance claim. It does not
+activate M2, create an independent semantic verdict, broaden compatibility or
+safety claims, or reopen any product/runtime external-effect authority. The
+only newly authorized effects are this acceptance commit, its fast-forward
+merge to `main`, and Git push.
