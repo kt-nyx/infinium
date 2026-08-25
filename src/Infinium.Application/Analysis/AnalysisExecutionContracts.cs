@@ -47,6 +47,7 @@ public sealed record AnalysisV1WorkAssignment(
     public IReadOnlyList<AnalysisPhaseExecution> PhaseExecutions { get; init; } = [];
     public IReadOnlyList<OpaqueId> DocumentationDependencyIds { get; init; } = [];
     public DateTimeOffset? ExecutionDeadline { get; init; }
+    public M1Slice9CompositionEnvelope? M1Slice9Composition { get; init; }
 }
 
 public sealed record CandidatePhaseParameters(
@@ -115,6 +116,7 @@ public sealed record ManagedAnalysisOrchestrationRequest(
 {
     public const int CurrentSchemaVersion = 1;
     public const long MaximumRequestBytes = 896L * 1024;
+    public M1Slice9CompositionEnvelope? M1Slice9Composition { get; init; }
 }
 
 public sealed record AnalysisPhaseExecution(

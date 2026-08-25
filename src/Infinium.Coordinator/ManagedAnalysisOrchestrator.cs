@@ -175,6 +175,7 @@ internal static class ManagedAnalysisOrchestrator
             PhaseExecutions = phases,
             DocumentationDependencyIds = DocumentationDependencyIds(request),
             ExecutionDeadline = executionDeadline,
+            M1Slice9Composition = request.M1Slice9Composition,
         };
         AnalysisPublicationBuilder.ValidateAssignment(assignment);
         return assignment;
@@ -226,6 +227,10 @@ internal static class ManagedAnalysisOrchestrator
     public static void Validate(ManagedAnalysisOrchestrationRequest request, string runId, RunBinding binding)
     {
         ArgumentNullException.ThrowIfNull(request);
+        if (request.M1Slice9Composition is not null)
+        {
+            M1Slice9Composition.Validate(request.M1Slice9Composition);
+        }
         _ = WithDocumentationReferences(request, request.ExecutionInput);
         ValidateDeliveredCandidateInput(request, runId, binding);
         SemanticAnalysisContextIdentity.Validate(request.AnalysisContext);

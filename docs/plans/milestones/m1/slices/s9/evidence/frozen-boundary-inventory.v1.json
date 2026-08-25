@@ -1,0 +1,76 @@
+{
+  "schema": "infinium.m1-slice9-frozen-boundary-inventory/v1",
+  "activation_commit": "264c79c37e6c14f24f243749cdea6e9c47bb1ce1",
+  "classification": "all predecessor product contracts retain exact bytes and meaning",
+  "protected_product_roots": [
+    "contracts/json-schema",
+    "contracts/protobuf",
+    "src/Infinium.Persistence/AuthoritativeStore.Migrations.cs"
+  ],
+  "permitted_new_repository_contract": "contracts/repository/m1-required-case-result-index.v1.schema.json",
+  "immediate_predecessor": {
+    "schema_id": "infinium.analysis.scope-reversion/v2",
+    "schema_version": "2.0.0",
+    "analyzer_family": "infinium.scope-reversion",
+    "analyzer_id": "infinium.scope-reversion.local",
+    "analyzer_version": "2.0.0",
+    "semantic_contract_version": "2.0.0",
+    "identity_contract_version": "2.0.0",
+    "ruleset_version": "1.0.0",
+    "declaration_sha256": "48b809d3b662215ddf342b931c543af6396225335a3eb68f6c6c0c8d4c9a58d5",
+    "taxonomy_id": "infinium.mod-impact-taxonomy",
+    "taxonomy_version": "0.1.0",
+    "storage_contract": "1.10.0",
+    "storage_schema": 11,
+    "migration_identity": "M1-S8-WP4-0011",
+    "storage_schema_sha256": "73f58a86ef5ff4b046e7d2b45b4612047eeda17515f31d75524a37d7a48d8bba"
+  },
+  "retained_v1_predecessor": {
+    "schema_id": "infinium.analysis.scope-reversion/v1",
+    "schema_version": "1.0.0",
+    "declaration_sha256": "7b1f9e27205481262a38979dd314965ab35f87caaeeba7387acb9a55c46764d1",
+    "storage_contract": "1.9.0",
+    "storage_schema": 10,
+    "storage_schema_sha256": "d1a3348454d53f3fe4e24c668fbed7fea1443f6ce9947a111c8b29269851efeb"
+  },
+  "compatible_implementation_changes": [
+    {
+      "path": "src/Infinium.Application/Analysis/AnalysisExecutionContracts.cs",
+      "classification": "additive internal orchestration input"
+    },
+    {
+      "path": "src/Infinium.Application/Analysis/AnalysisPublicationBuilder.cs",
+      "classification": "additive producer over frozen v1 output"
+    },
+    {
+      "path": "src/Infinium.Application/Analysis/AnalysisPublicationReplay.cs",
+      "classification": "additive retained dependency closure"
+    },
+    {
+      "path": "src/Infinium.Coordinator/ManagedAnalysisOrchestrator.cs",
+      "classification": "additive coordinator-owned admission"
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Runs.cs",
+      "classification": "bounded durable request capacity within the existing 896 KiB application limit; no schema change"
+    },
+    {
+      "path": "src/Infinium.Application/Evaluation/ActiveJsonSchemaValidator.cs",
+      "classification": "additive JSON Schema 2020-12 prefixItems tuple validation for the new closed repository result index"
+    },
+    {
+      "path": "src/Infinium.Domain/Contracts/ScopeReversionV2Contracts.cs",
+      "classification": "formatter-only line wrapping; declaration identity, compiled meaning, schema, and codec unchanged"
+    },
+    {
+      "path": "src/Infinium.Application/ScopeReversion/ScopeReversionV2OutputRenderer.cs",
+      "classification": "formatter-only import ordering; renderer behavior unchanged"
+    }
+  ],
+  "semantic_regression_guards": [
+    "M1Slice9CompositionContractTests",
+    "ManagedCrossStageCorpusIntegrationTests",
+    "M1Slice9ControlledCompositionIntegrationTests",
+    "AnalysisReplayIntegrationTests"
+  ]
+}

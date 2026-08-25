@@ -22,7 +22,16 @@ public sealed class ScopeReversionPersistenceIntegrationTests
     {
         string repository = TestRepository.Root;
         string campaignRoot = Path.Combine(repository, "artifacts", "m1-slice6", "successor-campaign");
-        string productRoot = Path.Combine(repository, "artifacts", "m1-slice6", "successor-product-state");
+        string productRoot = Path.GetFullPath(
+            Environment.GetEnvironmentVariable("INFINIUM_M1_SLICE6_RETAINED_PRODUCT_ROOT")
+            ?? Path.Combine(repository, "artifacts", "m1-slice6", "successor-product-state"));
+        if (!Directory.Exists(Path.Combine(productRoot, "data"))
+            || new DirectoryInfo(productRoot).Attributes.HasFlag(FileAttributes.ReparsePoint))
+        {
+            throw new InvalidDataException(
+                "The exact retained Slice 6 product state is unavailable or reparsed; set "
+                + "INFINIUM_M1_SLICE6_RETAINED_PRODUCT_ROOT to its maintainer-local read-only root.");
+        }
         string composedPath = Path.Combine(campaignRoot, "composed-evidence.v2.json");
         string ledgerPath = Path.Combine(campaignRoot, "ledger.v4.jsonl");
         Assert.AreEqual("901f278825d3fdbab2971b9f6bb4462f84c12dea96f1c14c8f222d1f29a1df9d",

@@ -28,6 +28,7 @@ internal static class ActiveJsonSchemaValidator
         "const",
         "enum",
         "items",
+        "prefixItems",
         "minItems",
         "maxItems",
         "uniqueItems",
@@ -274,18 +275,46 @@ internal static class ActiveJsonSchemaValidator
             }
         }
 
-        if (schema.TryGetProperty("items", out JsonElement itemSchema))
+        int prefixCount = 0;
+        if (schema.TryGetProperty("prefixItems", out JsonElement prefixItems))
+        {
+            JsonElement[] itemSchemas = prefixItems.EnumerateArray().ToArray();
+            JsonElement[] values = instance.EnumerateArray().ToArray();
+            prefixCount = itemSchemas.Length;
+            for (int index = 0; index < Math.Min(values.Length, itemSchemas.Length); index++)
+            {
+                ValidateNode(
+                    values[index],
+                    itemSchemas[index],
+                    currentSchemaFile,
+                    rootSchemaFile,
+                    $"{instancePath}[{index}]");
+            }
+        }
+
+        if (schema.TryGetProperty("items", out JsonElement itemSchema)
+            && itemSchema.ValueKind == JsonValueKind.False)
+        {
+            if (length > prefixCount)
+            {
+                Fail(instancePath, $"permits only {prefixCount} prefix items");
+            }
+        }
+        else if (schema.TryGetProperty("items", out itemSchema))
         {
             int index = 0;
             foreach (JsonElement item in instance.EnumerateArray())
             {
+                if (index++ < prefixCount)
+                {
+                    continue;
+                }
                 ValidateNode(
                     item,
                     itemSchema,
                     currentSchemaFile,
                     rootSchemaFile,
-                    $"{instancePath}[{index}]");
-                index++;
+                    $"{instancePath}[{index - 1}]");
             }
         }
     }
@@ -471,6 +500,10 @@ internal static class ActiveJsonSchemaValidator
 
     private static void EnsureSupportedSchemaVocabulary(JsonElement schema, string path)
     {
+        if (schema.ValueKind is JsonValueKind.True or JsonValueKind.False)
+        {
+            return;
+        }
         foreach (JsonProperty keyword in schema.EnumerateObject())
         {
             if (!SupportedSchemaKeywords.Contains(keyword.Name))
@@ -486,7 +519,7 @@ internal static class ActiveJsonSchemaValidator
                     EnsureSupportedSchemaVocabulary(child.Value, $"{path}/{keyword.Name}/{child.Name}");
                 }
             }
-            else if (keyword.Name is "allOf" or "anyOf" or "oneOf")
+            else if (keyword.Name is "allOf" or "anyOf" or "oneOf" or "prefixItems")
             {
                 int index = 0;
                 foreach (JsonElement child in keyword.Value.EnumerateArray())

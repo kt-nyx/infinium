@@ -14,6 +14,10 @@ namespace Infinium.Persistence;
 
 public sealed partial class AuthoritativeStore
 {
+    // Durable analysis requests may carry the bounded Slice 9 composition
+    // envelope. Checkpoint documents retain their smaller independent bound.
+    private const int MaximumRunOperationJsonBytes = 896 * 1024;
+
     public RunRecord CreateRun(
         string durableCommandId,
         string runId,
@@ -47,7 +51,7 @@ public sealed partial class AuthoritativeStore
         {
             ValidateAuditToken(operationKind, nameof(operationKind));
             if (string.IsNullOrWhiteSpace(operationRequestJson)
-                || Encoding.UTF8.GetByteCount(operationRequestJson) > MaximumCheckpointJsonBytes)
+                || Encoding.UTF8.GetByteCount(operationRequestJson) > MaximumRunOperationJsonBytes)
             {
                 throw new InvalidOperationException("The durable run operation request exceeds its bound.");
             }
@@ -182,7 +186,7 @@ public sealed partial class AuthoritativeStore
         ArgumentException.ThrowIfNullOrWhiteSpace(runId);
         ValidateAuditToken(operationKind, nameof(operationKind));
         ArgumentException.ThrowIfNullOrWhiteSpace(requestJson);
-        if (Encoding.UTF8.GetByteCount(requestJson) > MaximumCheckpointJsonBytes)
+        if (Encoding.UTF8.GetByteCount(requestJson) > MaximumRunOperationJsonBytes)
         {
             throw new InvalidOperationException("The durable run operation request exceeds its bound.");
         }

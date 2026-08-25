@@ -1,0 +1,34 @@
+{
+  "schema": "infinium.m1-slice9-claim-inventory/v1",
+  "status": "preregistered",
+  "supported_statements": [
+    "The accumulated coordinator path publishes one frozen run-output v1 containing the admitted local, retained-provider, and scope-reversion facts.",
+    "The developer-owned synthetic package exercises supported, resolved-negative, abstained, gap, and unsupported states through the shipped CLI.",
+    "The exact controlled composition preserves four decisions and hypotheses, two findings, two supported cases, two recommendations, fourteen gaps, and both matched controls as resolved negatives.",
+    "Clean, incremental, and retained-downstream executions are compared with the versioned typed semantic projection.",
+    "Historical provider provenance remains visible while current provider, model, credential, DNS, network, billable, live, and source-refresh effects remain unused.",
+    "The controlled source and retained product-state roots are admitted by exact identity and remain unchanged by composition."
+  ],
+  "evidence_classes": [
+    "final-candidate execution",
+    "developer-owned deterministic conformance",
+    "controlled-real integration",
+    "retained historical effect plus final replay validation",
+    "security, provenance, contract, persistence, diff, and claim review"
+  ],
+  "exclusions": [
+    "No private fixture, evaluator repository, archive, credential, provider, DNS, network, billable, publication, merge, or push authority is opened.",
+    "No product output authors expected truth and no independent semantic oracle or product verdict exists.",
+    "No broad compatibility, safety, reliability, readiness, precision, recall, or general Skyrim-understanding claim is made.",
+    "No account-wide billing or provider-repeatability claim is made from retained historical evidence."
+  ],
+  "retained_gaps": [
+    "Runtime appearance and gameplay behavior are not established.",
+    "Quest, global, progression, and save-state safety are not established.",
+    "Archive-wide visual completeness and patch-wide correctness are not established.",
+    "M3 scale, responsiveness, production performance, and independent semantic qualification remain deferred."
+  ],
+  "prohibited_overclaims": [
+    "held-out", "private verdict", "safe", "complete compatibility", "reliable", "ready", "production performance"
+  ]
+}

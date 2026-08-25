@@ -1356,6 +1356,9 @@ public sealed partial class AnalysisReplayIntegrationTests
     {
         string root = Path.Combine(Path.GetTempPath(), "infinium-operations-managed-cli-" + Guid.NewGuid().ToString("N"));
         string requestPath = Path.Combine(root, "managed-analysis-request.json");
+        string controlledRequestPath = Path.Combine(root, "controlled-analysis-request.json");
+        string controlledIncrementalRequestPath = Path.Combine(root, "controlled-incremental-request.json");
+        string controlledReplayRequestPath = Path.Combine(root, "controlled-replay-request.json");
         int coordinatorPid = 0;
         try
         {
@@ -1394,7 +1397,48 @@ public sealed partial class AnalysisReplayIntegrationTests
                     LifecycleState.Failed, authority.FencingEpoch, "seed-only producer closed", DateTimeOffset.UtcNow);
                 ManagedAnalysisOrchestrationRequest request = ManagedRequest(
                     "run-managed-cli", binding, semanticPayloadId, semanticSha);
+                request = request with
+                {
+                    M1Slice9Composition = ManagedCrossStageCorpusIntegrationTests.SyntheticComposition(),
+                };
                 File.WriteAllBytes(requestPath, JsonSerializer.SerializeToUtf8Bytes(request, PrettyContractJson));
+                ManagedAnalysisOrchestrationRequest controlledRequest = ManagedRequest(
+                    "run-managed-cli-controlled", binding, semanticPayloadId, semanticSha) with
+                {
+                    M1Slice9Composition = M1Slice9ControlledHandoff.LoadControlledComposition(),
+                };
+                File.WriteAllBytes(controlledRequestPath,
+                    JsonSerializer.SerializeToUtf8Bytes(controlledRequest, PrettyContractJson));
+                Assert.IsLessThanOrEqualTo(ManagedAnalysisOrchestrationRequest.MaximumRequestBytes,
+                    new FileInfo(controlledRequestPath).Length,
+                    "The controlled orchestration request must fit the accepted bounded-request contract.");
+                ManagedAnalysisOrchestrationRequest controlledReplayRequest = ManagedRequest(
+                    "run-managed-cli-controlled-replay", binding, semanticPayloadId, semanticSha);
+                controlledReplayRequest = controlledReplayRequest with
+                {
+                    ExecutionInput = controlledReplayRequest.ExecutionInput with
+                    {
+                        Mode = ReplayMode.RetainedDownstreamReplay,
+                        PriorRunId = new OpaqueId("run-managed-cli-controlled"),
+                    },
+                    M1Slice9Composition = controlledRequest.M1Slice9Composition,
+                };
+                File.WriteAllBytes(controlledReplayRequestPath,
+                    JsonSerializer.SerializeToUtf8Bytes(controlledReplayRequest, PrettyContractJson));
+                ManagedAnalysisOrchestrationRequest controlledIncrementalRequest = ManagedRequest(
+                    "run-managed-cli-controlled-incremental", binding, semanticPayloadId, semanticSha);
+                controlledIncrementalRequest = controlledIncrementalRequest with
+                {
+                    ExecutionInput = controlledIncrementalRequest.ExecutionInput with
+                    {
+                        Mode = ReplayMode.Incremental,
+                        PriorRunId = new OpaqueId("run-managed-cli-controlled"),
+                    },
+                    M1Slice9Composition = controlledRequest.M1Slice9Composition,
+                };
+                File.WriteAllBytes(controlledIncrementalRequestPath,
+                    JsonSerializer.SerializeToUtf8Bytes(controlledIncrementalRequest, PrettyContractJson));
+
             }
             paths.Dispose();
             Thread.Sleep(1_100);
@@ -1419,8 +1463,97 @@ public sealed partial class AnalysisReplayIntegrationTests
             using JsonDocument output = JsonDocument.Parse(results.Output);
             Assert.AreEqual("run-managed-cli", output.RootElement.GetProperty("run_id").GetString());
             Assert.AreEqual("2.1.0", output.RootElement.GetProperty("analysis_context").GetProperty("artifact_version").GetString());
+            Assert.AreEqual(1, output.RootElement.GetProperty("model_proposals").GetArrayLength());
+            Assert.AreEqual(1, output.RootElement.GetProperty("proposal_admissions").GetArrayLength());
+            Assert.AreEqual("not-used", output.RootElement.GetProperty("not_used_boundaries").EnumerateArray()
+                .Single(item => item.GetProperty("capability_id").GetString() == "provider")
+                .GetProperty("state").GetString());
             StringAssert.Contains(results.Output,
                 output.RootElement.GetProperty("analysis_context").GetProperty("fingerprint").GetString()!);
+            ProcessResult humanResults = RunCli(root, ["results", "run-managed-cli"]);
+            Assert.AreEqual(0, humanResults.ExitCode, humanResults.Error);
+            StringAssert.Contains(humanResults.Output, "model-proposals count=1");
+            StringAssert.Contains(humanResults.Output, "canonical-run-output-json=" + results.Output.Trim());
+
+            ProcessResult controlledStart = RunCli(root,
+            [
+                "start", "--snapshot", binding.InstallationSnapshotId,
+                "--context", binding.AnalysisContextId,
+                "--configuration", binding.EffectiveScanConfigurationId,
+                "--manifest", binding.ResolvedInputManifestId,
+                "--analysis-request", controlledRequestPath, "--json",
+            ]);
+            Assert.AreEqual(0, controlledStart.ExitCode, controlledStart.Error);
+            ProcessResult controlledWait = RunCli(root,
+                ["wait", "run-managed-cli-controlled", "--timeout-seconds", "30", "--json"]);
+            if (controlledWait.ExitCode != 0)
+            {
+                ProcessResult failedResults = RunCli(root,
+                    ["results", "run-managed-cli-controlled", "--json"]);
+                Assert.Fail(controlledWait.Output + Environment.NewLine + controlledWait.Error
+                    + Environment.NewLine + failedResults.Output + Environment.NewLine + failedResults.Error);
+            }
+            ProcessResult controlledResults = RunCli(root,
+                ["results", "run-managed-cli-controlled", "--json"]);
+            Assert.AreEqual(0, controlledResults.ExitCode, controlledResults.Error);
+            using JsonDocument controlledOutput = JsonDocument.Parse(controlledResults.Output);
+            Assert.AreEqual(4, controlledOutput.RootElement.GetProperty("candidate_decisions").GetArrayLength());
+            Assert.AreEqual(4, controlledOutput.RootElement.GetProperty("hypotheses").GetArrayLength());
+            Assert.AreEqual(2, controlledOutput.RootElement.GetProperty("findings").GetArrayLength());
+            Assert.AreEqual(2, controlledOutput.RootElement.GetProperty("supported_cases").GetArrayLength());
+            Assert.AreEqual(2, controlledOutput.RootElement.GetProperty("recommendations").GetArrayLength());
+            Assert.AreEqual(14, controlledOutput.RootElement.GetProperty("coverage_gaps").GetArrayLength());
+            Assert.AreEqual(1, controlledOutput.RootElement.GetProperty("model_proposals").GetArrayLength());
+            Assert.AreEqual(1, controlledOutput.RootElement.GetProperty("proposal_admissions").GetArrayLength());
+            Assert.AreEqual("not-used", controlledOutput.RootElement.GetProperty("not_used_boundaries")
+                .EnumerateArray().Single(item => item.GetProperty("capability_id").GetString() == "provider")
+                .GetProperty("state").GetString());
+            ProcessResult controlledHuman = RunCli(root,
+                ["results", "run-managed-cli-controlled"]);
+            Assert.AreEqual(0, controlledHuman.ExitCode, controlledHuman.Error);
+            StringAssert.Contains(controlledHuman.Output, "supported-cases count=2");
+            StringAssert.Contains(controlledHuman.Output,
+                "canonical-run-output-json=" + controlledResults.Output.Trim());
+
+            ProcessResult controlledIncrementalStart = RunCli(root,
+            [
+                "start", "--snapshot", binding.InstallationSnapshotId,
+                "--context", binding.AnalysisContextId,
+                "--configuration", binding.EffectiveScanConfigurationId,
+                "--manifest", binding.ResolvedInputManifestId,
+                "--analysis-request", controlledIncrementalRequestPath, "--json",
+            ]);
+            Assert.AreEqual(0, controlledIncrementalStart.ExitCode, controlledIncrementalStart.Error);
+            ProcessResult controlledIncrementalWait = RunCli(root,
+                ["wait", "run-managed-cli-controlled-incremental", "--timeout-seconds", "30", "--json"]);
+            Assert.AreEqual(0, controlledIncrementalWait.ExitCode,
+                controlledIncrementalWait.Output + Environment.NewLine + controlledIncrementalWait.Error);
+            ProcessResult controlledIncrementalResults = RunCli(root,
+                ["results", "run-managed-cli-controlled-incremental", "--json"]);
+            Assert.AreEqual(0, controlledIncrementalResults.ExitCode, controlledIncrementalResults.Error);
+            M1Slice9SemanticEquivalence.AssertEquivalent(
+                RunOutputJsonCodec.Deserialize(Encoding.UTF8.GetBytes(controlledResults.Output)),
+                RunOutputJsonCodec.Deserialize(Encoding.UTF8.GetBytes(controlledIncrementalResults.Output)));
+
+            ProcessResult controlledReplayStart = RunCli(root,
+            [
+                "start", "--snapshot", binding.InstallationSnapshotId,
+                "--context", binding.AnalysisContextId,
+                "--configuration", binding.EffectiveScanConfigurationId,
+                "--manifest", binding.ResolvedInputManifestId,
+                "--analysis-request", controlledReplayRequestPath, "--json",
+            ]);
+            Assert.AreEqual(0, controlledReplayStart.ExitCode, controlledReplayStart.Error);
+            ProcessResult controlledReplayWait = RunCli(root,
+                ["wait", "run-managed-cli-controlled-replay", "--timeout-seconds", "30", "--json"]);
+            Assert.AreEqual(0, controlledReplayWait.ExitCode,
+                controlledReplayWait.Output + Environment.NewLine + controlledReplayWait.Error);
+            ProcessResult controlledReplayResults = RunCli(root,
+                ["results", "run-managed-cli-controlled-replay", "--json"]);
+            Assert.AreEqual(0, controlledReplayResults.ExitCode, controlledReplayResults.Error);
+            M1Slice9SemanticEquivalence.AssertEquivalent(
+                RunOutputJsonCodec.Deserialize(Encoding.UTF8.GetBytes(controlledResults.Output)),
+                RunOutputJsonCodec.Deserialize(Encoding.UTF8.GetBytes(controlledReplayResults.Output)));
             coordinatorPid = RuntimeDescriptor.Read(root).ProcessId;
         }
         finally

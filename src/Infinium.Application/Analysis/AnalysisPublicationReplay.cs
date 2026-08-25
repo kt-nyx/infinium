@@ -109,6 +109,10 @@ public static partial class AnalysisPublicationBuilder
             Add("phase-" + Hash(Encoding.UTF8.GetBytes(phase.PhaseId + "|" + phase.InputFingerprint))[..32],
                 "analysis-phase", "1.0.0", phase.InputFingerprint);
         }
+        if (assignment.M1Slice9Composition is not null)
+        {
+            result.AddRange(M1Slice9Composition.Dependencies(assignment.M1Slice9Composition));
+        }
         return result.GroupBy(item => item.DependencyId).Select(group =>
         {
             ReplayDependencyNodeContract first = group.First();

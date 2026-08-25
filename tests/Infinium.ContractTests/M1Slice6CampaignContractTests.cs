@@ -124,7 +124,7 @@ public sealed class M1Slice6CampaignContractTests
         StringAssert.Contains(currentState,
             "WP9 ordinal 11, WP10 ordinal 2, and WP11 ordinal 1 are the permanent first-structurally-valid results.");
         StringAssert.Contains(currentState,
-            "Credential exposure or enumeration, provider/network/billable calls, semantic-oracle work, private fixtures, evaluator-private repositories, archives, destructive work, external publication, and push remain prohibited.");
+            "Private/evaluator material, archives, credentials, providers, DNS/network, billable or other external effects, semantic-oracle work, merge, and push remain unauthorized.");
         Assert.IsFalse(currentState.Replace(stateAuthority, "C2 live execution is authorized", StringComparison.Ordinal)
             .Contains(stateAuthority, StringComparison.Ordinal));
         StringAssert.Contains(verifier, "function Test-M1Slice6RemainderR1NoEffectState");

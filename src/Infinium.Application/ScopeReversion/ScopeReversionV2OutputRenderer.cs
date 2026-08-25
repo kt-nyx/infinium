@@ -1,5 +1,5 @@
-using System.Text;
 using System.Globalization;
+using System.Text;
 using Infinium.Domain.Contracts;
 
 namespace Infinium.Application.ScopeReversion;

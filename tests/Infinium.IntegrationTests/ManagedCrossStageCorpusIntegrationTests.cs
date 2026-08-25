@@ -173,7 +173,16 @@ public sealed class ManagedCrossStageCorpusIntegrationTests
                     await Task.Delay(25, timeout.Token);
                 }
                 LifecycleState terminalState = store.GetRun(runId).State;
-                Assert.AreEqual(LifecycleState.CompletedWithGaps, terminalState, runId);
+                if (terminalState != LifecycleState.CompletedWithGaps)
+                {
+                    GetAnalysisOutputResponse failureOutput = await client.GetAnalysisOutputAsync(
+                        new GetAnalysisOutputRequest
+                        {
+                            RunId = new Infinium.Contracts.Protobuf.Domain.V1.RunId { Value = runId },
+                            ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion { Value = "1" },
+                        }).ResponseAsync;
+                    Assert.Fail($"{runId} terminated as {terminalState}: {failureOutput.Failure?.Detail}");
+                }
 
                 GetAnalysisOutputResponse queried = await client.GetAnalysisOutputAsync(new GetAnalysisOutputRequest
                 {
@@ -205,6 +214,36 @@ public sealed class ManagedCrossStageCorpusIntegrationTests
             Assert.IsNotNull(cleanOutputBefore);
             CollectionAssert.AreEqual(cleanOutputBefore, store.ReadAnalysisRunOutput(cleanRunId));
             Assert.HasCount(4, observations);
+            Assert.IsTrue(observations.Values.All(item => item.Output.ModelProposals.Count == 1));
+            Assert.IsTrue(observations.Values.All(item => item.Output.ProposalAdmissions.Count == 1));
+            Assert.IsTrue(observations.Values.All(item => item.Output.Observations.Any(value =>
+                value.ArtifactId == "m1-s9-observation-supported")));
+            M1Slice9SemanticEquivalence.AssertEquivalent(
+                observations["CROSS-STAGE-CLEAN-D01"].Output,
+                observations["CROSS-STAGE-UNCHANGED-D02"].Output);
+            Assert.ThrowsExactly<InvalidDataException>(() => M1Slice9SemanticEquivalence.AssertEquivalent(
+                observations["CROSS-STAGE-CLEAN-D01"].Output,
+                observations["CROSS-STAGE-CHANGED-D03"].Output));
+            RunOutputContract cleanOutput = observations["CROSS-STAGE-CLEAN-D01"].Output;
+            RunOutputContract substitutedRetainedIdentity = cleanOutput with
+            {
+                ModelProposals = cleanOutput.ModelProposals.Select(item => item with
+                {
+                    ArtifactId = item.ArtifactId + "-substituted",
+                }).ToArray(),
+            };
+            Assert.ThrowsExactly<InvalidDataException>(() => M1Slice9SemanticEquivalence.AssertEquivalent(
+                cleanOutput, substitutedRetainedIdentity));
+            TaxonomyAssignmentDocumentContract firstAssignment = cleanOutput.TaxonomyAssignments[0];
+            TaxonomyAssignmentDocumentContract otherSubject = cleanOutput.TaxonomyAssignments
+                .First(item => item.SubjectId != firstAssignment.SubjectId);
+            RunOutputContract rewiredTaxonomy = cleanOutput with
+            {
+                TaxonomyAssignments = cleanOutput.TaxonomyAssignments.Select(item =>
+                    item == firstAssignment ? item with { SubjectId = otherSubject.SubjectId } : item).ToArray(),
+            };
+            Assert.ThrowsExactly<InvalidDataException>(() => M1Slice9SemanticEquivalence.AssertEquivalent(
+                cleanOutput, rewiredTaxonomy));
             CollectionAssert.AreEqual(
                 harness.RootElement.GetProperty("observation_protocol").GetProperty("case_execution_order")
                     .EnumerateArray().Select(item => item.GetString()!).ToArray(),
@@ -346,8 +385,13 @@ public sealed class ManagedCrossStageCorpusIntegrationTests
             "cross-stage corpus managed corpus completed with the declared visible gap",
             AnalysisV1WorkAssignment.AbsoluteMaximumInputBytes,
             AnalysisV1WorkAssignment.AbsoluteMaximumOutputBytes,
-            AnalysisV1WorkAssignment.AbsoluteMaximumQueryItems);
+            AnalysisV1WorkAssignment.AbsoluteMaximumQueryItems)
+        {
+            M1Slice9Composition = SyntheticComposition(),
+        };
     }
+
+    internal static M1Slice9CompositionEnvelope SyntheticComposition() => M1Slice9SyntheticComposition.Create();
 
     private static DocumentationImportRequestContract DocumentationRequest(
         string runId, RunBinding binding, JsonElement revision, JsonElement shared)

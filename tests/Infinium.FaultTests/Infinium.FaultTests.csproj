@@ -3,6 +3,7 @@
     <ProjectReference Include="..\..\src\Infinium.Application\Infinium.Application.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Coordinator\Infinium.Coordinator.csproj" />
     <ProjectReference Include="..\..\src\Infinium.CredentialHelper\Infinium.CredentialHelper.csproj" />
+    <ProjectReference Include="..\..\fixtures\tooling\Infinium.PublicFixtures\Infinium.PublicFixtures.csproj" />
     <ProjectReference Include="..\Infinium.UnitTests\Infinium.UnitTests.csproj" />
   </ItemGroup>
   <Target Name="CopyCredentialHelperRuntime" AfterTargets="Build">

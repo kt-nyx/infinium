@@ -62,13 +62,12 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                 "m1-slice6-development-campaign-amendment.v7.schema.json")),
             M1Slice6SuccessorCredentialReplacementRunner.ForegroundRecoveryAmendmentSchema);
         using JsonDocument owner = JsonDocument.Parse(ownerBytes);
-        string productRoot = Path.Combine(
-            repository, "artifacts", "m1-slice6", "successor-product-state");
+        string productRoot = ResolveRetainedProductRoot(repository);
         string checkpointBefore =
             M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(productRoot);
         Assert.ThrowsExactly<InvalidDataException>(() =>
             M1Slice6SuccessorCredentialReplacementRunner.ValidateForegroundRecoveryOwner(
-                repository, owner.RootElement, "g-e6b6a3f21ad74108ba65955850349f83"));
+                repository, owner.RootElement, "g-e6b6a3f21ad74108ba65955850349f83", productRoot));
         Assert.AreEqual(checkpointBefore,
             M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(productRoot));
 
@@ -79,7 +78,7 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         Assert.ThrowsExactly<InvalidDataException>(() =>
             M1Slice6SuccessorCredentialReplacementRunner.ValidateForegroundRecoveryOwner(
                 repository, tamperedDocument.RootElement,
-                "g-e6b6a3f21ad74108ba65955850349f83"));
+                "g-e6b6a3f21ad74108ba65955850349f83", productRoot));
     }
 
     [TestMethod]
@@ -94,13 +93,12 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
                 "m1-slice6-development-campaign-amendment.v6.schema.json")),
             M1Slice6SuccessorCredentialReplacementRunner.TypedFailureRecoveryAmendmentSchema);
         using JsonDocument owner = JsonDocument.Parse(ownerBytes);
-        string productRoot = Path.Combine(
-            repository, "artifacts", "m1-slice6", "successor-product-state");
+        string productRoot = ResolveRetainedProductRoot(repository);
         string checkpointBefore =
             M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(productRoot);
         Assert.ThrowsExactly<InvalidDataException>(() =>
             M1Slice6SuccessorCredentialReplacementRunner.ValidateTypedFailureRecoveryOwner(
-                repository, owner.RootElement, "g-e6b6a3f21ad74108ba65955850349f83"));
+                repository, owner.RootElement, "g-e6b6a3f21ad74108ba65955850349f83", productRoot));
         Assert.AreEqual(checkpointBefore,
             M1Slice6SuccessorAuthorityLoader.ComputeProductStateCheckpointSha256(productRoot));
 
@@ -110,7 +108,8 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
             JsonSerializer.SerializeToUtf8Bytes(tampered));
         Assert.ThrowsExactly<InvalidDataException>(() =>
             M1Slice6SuccessorCredentialReplacementRunner.ValidateTypedFailureRecoveryOwner(
-                repository, tamperedDocument.RootElement, "g-e6b6a3f21ad74108ba65955850349f83"));
+                repository, tamperedDocument.RootElement,
+                "g-e6b6a3f21ad74108ba65955850349f83", productRoot));
     }
 
     [TestMethod]
@@ -141,6 +140,13 @@ public sealed class M1Slice6CredentialReplacementRunnerTests
         {
             if (Directory.Exists(testRoot)) { Directory.Delete(testRoot, recursive: true); }
         }
+    }
+
+    private static string ResolveRetainedProductRoot(string repository)
+    {
+        return Path.GetFullPath(
+            Environment.GetEnvironmentVariable("INFINIUM_M1_SLICE6_RETAINED_PRODUCT_ROOT")
+            ?? Path.Combine(repository, "artifacts", "m1-slice6", "successor-product-state"));
     }
 
     [TestMethod]

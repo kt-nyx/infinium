@@ -1750,7 +1750,8 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
     internal static void ValidateTypedFailureRecoveryOwner(
         string repository,
         JsonElement owner,
-        string successorGeneration)
+        string successorGeneration,
+        string? retainedProductRoot = null)
     {
         JsonElement priorOwner = owner.GetProperty("prior_owner_authority");
         JsonElement failure = owner.GetProperty("retained_failure");
@@ -1782,7 +1783,9 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
         JsonElement retainedState = failureDocument.RootElement.GetProperty("product_state");
         const string retainedOperation =
             "m1s6-credential-replacement-5bba03b2f399640c13c0432cab823a05";
-        string productRoot = Path.Combine(repository, "artifacts", "m1-slice6", "successor-product-state");
+        string productRoot = retainedProductRoot is null
+            ? Path.Combine(repository, "artifacts", "m1-slice6", "successor-product-state")
+            : Path.GetFullPath(retainedProductRoot);
         CredentialReplacementRecoveryAudit audit =
             AuthoritativeStore.ReadCredentialReplacementRecoveryAuditReadOnly(
                 productRoot,
@@ -1851,7 +1854,8 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
     internal static void ValidateForegroundRecoveryOwner(
         string repository,
         JsonElement owner,
-        string successorGeneration)
+        string successorGeneration,
+        string? retainedProductRoot = null)
     {
         JsonElement priorOwner = owner.GetProperty("prior_owner_authority");
         JsonElement retainedEvidence = owner.GetProperty("retained_stopped_evidence");
@@ -1935,7 +1939,9 @@ internal static class M1Slice6SuccessorCredentialReplacementRunner
             expectedSequence: 3,
             expectedAssignmentKind: HelperAssignmentKindV2.Replace);
 
-        string productRoot = Path.Combine(repository, "artifacts", "m1-slice6", "successor-product-state");
+        string productRoot = retainedProductRoot is null
+            ? Path.Combine(repository, "artifacts", "m1-slice6", "successor-product-state")
+            : Path.GetFullPath(retainedProductRoot);
         CredentialReplacementRecoveryAudit audit =
             AuthoritativeStore.ReadCredentialReplacementRecoveryAuditReadOnly(
                 productRoot, profileId, successorGeneration, retainedOperation);
