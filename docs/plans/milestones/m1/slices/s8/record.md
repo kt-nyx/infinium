@@ -1,8 +1,9 @@
 # M1 Slice 8 implementation record
 
-Status: Completed
-Disposition: WP1 through WP7 are implementation-complete on the exact clean
-product candidate below. Final owner acceptance is pending.
+Status: Accepted
+Disposition: The project owner accepts the exact Slice 8 product candidate and
+documentation handoff below. Slice 8 is complete and its v2/schema-11
+contracts are slice-frozen.
 
 Last reviewed: 2026-08-24
 Owner: Project owner
@@ -35,11 +36,15 @@ or a production-readiness claim.
 - product tree: `fd706b21b51e4009cf02e338ef52fbc2fe3eb937`;
 - implementation branch: `codex/m1-s8-planning`;
 - product-candidate worktree state at the final floor: clean;
-- documentation-only handoff: the single commit containing this record and
-  compact current-state update; its exact identity accompanies the owner
-  decision package because a commit cannot contain its own Git identity.
+- review-ready documentation-only handoff:
+  `c5c995de7252ebf0002903c2d908fdb3bca80f40`;
+- owner-acceptance closeout: the commit containing this accepted decision and
+  compact current-state update; its exact identity is bound by Git and the
+  merged `main` history because a commit cannot contain its own identity.
 
-No push occurred. Slice 9 was neither planned nor implemented.
+No push occurred during implementation or final verification. The owner later
+authorized only this acceptance commit, fast-forward merge, and Git push.
+Slice 9 was neither planned nor implemented by this package.
 
 ## Controlled-real input admission
 
@@ -307,17 +312,32 @@ credentials, providers, private fixtures, evaluator-private material,
 semantic-oracle work, archives, external publication, push, and external
 effects. No third-party payload bytes were written to Git or shareable
 receipts. No private/evaluator repository or legacy/evaluator archive was
-accessed.
+accessed. Those receipt facts describe the verified product candidate. The
+later owner-authorized closeout performs only the acceptance commit,
+fast-forward merge, and Git push; it opens no continuing product/runtime effect
+authority.
 
-## Contract maturity and owner decision
+## Contract maturity and owner acceptance
 
-| Contract family | Review-ready maturity | Evidence |
+| Contract family | Accepted maturity | Evidence |
 | --- | --- | --- |
 | Frozen Slice 5 through Slice 7 families, including scope-reversion v1 and storage 1.9.0/schema 10 | `Slice-frozen`, unchanged | Exact file-diff preservation, predecessor regression, migration/read/replay, and the complete floor. |
-| `infinium.analysis.scope-reversion/v2` | `Producer-consumer-validated` | Controlled-real producer/projector, generic analyzer, hypothesis/finding/case consumer, schema/codec, persistence, invalid-state, replay, JSON/CLI, mutation/metamorphic, and six-layer evidence. |
-| Storage 1.10.0/schema 11 | `Producer-consumer-validated` | Exact schema-10 predecessor binding, atomic append-only migration, canonical readback, invalidation, reopen, backup/restore, and retained-downstream replay. |
+| `infinium.analysis.scope-reversion/v2` | `Slice-frozen` | Owner-accepted controlled-real producer/projector, generic analyzer, hypothesis/finding/case consumer, schema/codec, persistence, invalid-state, replay, JSON/CLI, mutation/metamorphic, and six-layer evidence. |
+| Storage 1.10.0/schema 11 | `Slice-frozen` | Owner-accepted exact schema-10 predecessor binding, atomic append-only migration, canonical readback, invalidation, reopen, backup/restore, and retained-downstream replay. |
 
-Passing verification does not accept or freeze Slice 8. The requested owner
-decision is one of: accept the exact product candidate and documentation-only
-handoff, reject them, or amend the package. Slice 9 remains unauthorized until
-separately planned and activated.
+Decision: Accepted by the project owner on 2026-08-24.
+
+The owner accepts exact product candidate
+`c79661cd8eb016e483fa8b7396e7d4997b85d590` and review-ready documentation
+handoff `c5c995de7252ebf0002903c2d908fdb3bca80f40` as the completed Slice 8
+implementation. The complete verification floor, consolidated review and
+same-candidate correction ledger, bounded claim, retained gaps, partition
+history, and zero-effect declarations in this record are accepted as the
+slice closeout.
+
+The `infinium.analysis.scope-reversion/v2` family and storage 1.10.0/schema 11
+advance from `Producer-consumer-validated` to `Slice-frozen`. Every predecessor
+contract remains frozen and unchanged. This acceptance does not create an
+independent semantic verdict, authorize private/evaluator or archive access,
+open any external-effect authority, complete M1, or authorize Slice 9
+implementation. Slice 9 planning is the next bounded task.

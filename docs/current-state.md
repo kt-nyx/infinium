@@ -1,7 +1,7 @@
 # Current project state
 
 Status: Accepted
-Disposition: M1 Slice 7 remains owner-accepted and frozen; Slice 8 WP1 through WP7 are implementation-complete on exact clean product candidate `c79661cd8eb016e483fa8b7396e7d4997b85d590`, with one documentation-only handoff pending final owner accept/reject/amend decision
+Disposition: M1 Slice 8 is owner-accepted and complete on exact product commit `c79661cd8eb016e483fa8b7396e7d4997b85d590` and review-ready documentation handoff `c5c995de7252ebf0002903c2d908fdb3bca80f40`; Slice 9 planning is next and no Slice 9 implementation is authorized
 
 Last reviewed: 2026-08-24
 Owner: Project owner
@@ -16,7 +16,7 @@ chronology and evidence.
 | Field | Current value |
 |---|---|
 | Milestone | `M1` - active |
-| Active slice | `M1/S8` is review-ready. WP1 through WP7 are complete; implementation acceptance remains a distinct owner decision. |
+| Active slice | `M1/S8` is owner-accepted and complete. The next bounded task is Slice 9 planning; no Slice 9 implementation authority exists. |
 | Accepted implementation baseline | R1 candidate `fcd17cd6db98019fc9e5253d5167d2487862671c`; R2 implementation `67ca34d6de162ad64f05fbe88972105745d3e831`; R2 handoff `8c25ca7274c394e41953a0b076010c26f6ffa97e` |
 | Accepted R2 evidence | Final `CampaignV2NonLive` receipt SHA-256 `bb9455c293b3049c1561cf9a15322c0b6b79502365097b51e2c92e4014e5019d`; all credential, native, network, provider, and billable counts were zero |
 | Accepted process proposal | Commit `2c82365fd853cb2021f1772d6c572ee9fa006d01`; process-amendment SHA-256 `5d9aff4226f93ff73025573e056080530d23f66e5cb9cc92efddfd78655acc9f`; lean-plan SHA-256 `57d9a3b25201bf55281cad02c9b8a3e458639ec10d1e465cdbad85f532c464af` |
@@ -37,13 +37,13 @@ chronology and evidence.
 | Accepted Slice 7 implementation | The owner accepts product commit `8209e93901cbc7865adad390ca913b62fe7a1650` and documentation-only handoff `88c78c135fc68a4f100b67a881ca631622b7f53b`. The complete floor passed on the exact product bytes. Combined receipt `all.json` is 764 bytes with SHA-256 `6cd835446bd34ec0bd4496a421d351fbba55fe667ea8097cd18b737789771c56`; all provider, network, credential, billable, private-fixture, archive, semantic-oracle, push, and publication effects were zero. Slice 7-owned contracts are now `Slice-frozen`. |
 | Accepted Slice 8 plan | The owner accepts exact plan candidate `ab3f7ed2cf0d44067c96a7d88a44be4074486412`, [M1 Slice 8: Controlled-real generalization](plans/milestones/m1/slices/s8/README.md). It preserves every frozen Slice 7 contract and uses an additive v2 only for the richer cohort/taxonomy/provenance shape. |
 | Slice 8 implementation authority | The owner activates the complete accepted WP1-through-WP7 plan on exact implementation base `ab3f7ed2cf0d44067c96a7d88a44be4074486412`. One orchestrator may implement, test, review, correct, re-review, run the final accepted floor, and prepare the owner-acceptance handoff without further approval for ordinary in-scope corrections. Read-only use of the untracked answer-free local handoff `m1-slice8-research0035-local-v1`, manifest SHA-256 `8972ef0e160b9de04da281d48639b66d8bffcc153504c1d699f654f1eff6ecf5`, is owner-authorized after the plan's containment and identity gate accepted all 26 allowlisted inputs; its absolute root remains untracked. No additional owner decision is needed for this conforming handoff. Private fixtures, evaluator-private repositories, legacy/evaluator archives, semantic oracles, credentials, providers, network, external effects, publication, push, and Slice 9 remain unauthorized. |
-| Review-ready Slice 8 implementation | Product commit `c79661cd8eb016e483fa8b7396e7d4997b85d590`, tree `fd706b21b51e4009cf02e338ef52fbc2fe3eb937`, is clean and complete. The exact Section 12 floor passed: Unit 300/4 skipped, Contract 181/0, Integration 193/1, Evaluation 91/8, Security 180/6, Fault 118/3, plus the mandatory Slice 8 harness 37/37 with zero skips and `Gate All`. Harness receipt SHA-256 is `571507a1622a4bd598573466da79c40782ace16ac0a9b30707f65e841e72700f`; pipeline `all.json` SHA-256 is `fa877dd90dc4aab7ee32aa922a93bb1918c6f9fc9ccbde6f77484d7ba11f0f1b`. The v2 product/storage contracts are `Producer-consumer-validated`, not frozen. No private/independent semantic verdict exists. |
+| Accepted Slice 8 implementation | The owner accepts product commit `c79661cd8eb016e483fa8b7396e7d4997b85d590`, tree `fd706b21b51e4009cf02e338ef52fbc2fe3eb937`, and review-ready documentation handoff `c5c995de7252ebf0002903c2d908fdb3bca80f40`. The exact Section 12 floor passed: Unit 300/4 skipped, Contract 181/0, Integration 193/1, Evaluation 91/8, Security 180/6, Fault 118/3, plus the mandatory Slice 8 harness 37/37 with zero skips and `Gate All`. Harness receipt SHA-256 is `571507a1622a4bd598573466da79c40782ace16ac0a9b30707f65e841e72700f`; pipeline `all.json` SHA-256 is `fa877dd90dc4aab7ee32aa922a93bb1918c6f9fc9ccbde6f77484d7ba11f0f1b`. Slice 8-owned v2 and storage 1.10.0/schema-11 contracts are `Slice-frozen`. No private or independent semantic verdict exists. |
 | Resolved post-closeout finding | The live WP10 and WP11 requests had recorded detailed `PromptV1` identities while transmitting a shorter instruction. The effect-free product candidate now rejects that mismatch and separates source support, local applicability, and host admission. Historical semantic packages remain immutable non-authorizing evidence and were not used to choose or tune the corrected behavior. |
 | Effect-free semantic correction | The working candidate based on `dde21f4f055ec7a950b3fa86676da5ed0680c41a` requires exact declared prompt text/digest and separates proposal or faithful extraction, support, applicability, and host decision through schema 9/storage `1.8.0`. Source acquisition can retain source support but cannot evaluate local applicability or admit; a distinct analysis-run-owned source-application decision binds every evaluated result to exact neutral fact bytes. Applicable-but-abstained decisions retain those facts without an admitted artifact, while only supported plus applicable decisions enter current consumers, and candidate replay reopens every fact and its bundle. Realistic populated schema-8 migration and current-only consumers preserve historical bytes without semantic authority. Public semantic packages v1-v13 and their dependent frozen-v2 live wrappers are development history; their original evidence and accounting bytes remain unchanged and grant no current product verdict. |
 | Final accounting | WP9 starts: 11; WP10 starts: 2; WP11 starts: 1. Successor settled exposure is USD 0.11332, unresolved conservative exposure is USD 1.37216, outstanding reservation is zero, and total committed exposure is USD 1.62548. USD 8.37452 of the aggregate hard limit remains unused. |
 | Independent semantic evaluation | Deferred throughout M1 and M2 by ADR-0035. Packages v1-v13 are historical non-authorizing development evidence; no current package grants a product verdict. V14 was an unaccepted draft, is not a current candidate, and has been removed without review, registration, comparison, or archival. The missing independent semantic verdict is an explicit deferred risk. |
-| Next gate | The owner must accept, reject, or amend the exact Slice 8 product candidate and documentation-only handoff. Passing verification does not accept the slice. Slice 9 remains unplanned and unauthorized; the independent semantic verdict remains explicitly deferred. |
-| External-effect authority | Consumed. Slice 8 is local and effect-free. Read-only controlled-real input use is approved only through the exact pre-WP3 manifest/root gate. Credential exposure or enumeration, provider/network/billable calls, semantic-oracle work, private fixtures, evaluator-private repositories, archives, destructive work, external publication, and push remain prohibited. |
+| Next gate | Prepare a complete Slice 9 M1 end-to-end closeout plan from the accepted Slice 8 predecessor handoff. Planning may proceed, but implementation requires a separately owner-accepted and activated plan. The independent semantic verdict remains explicitly deferred. |
+| External-effect authority | The owner-authorized Slice 8 acceptance commit, fast-forward merge, and Git push are consumed by this closeout. No product/runtime effect authority is open. Credential exposure or enumeration, provider/billable calls, semantic-oracle work, private fixtures, evaluator-private repositories, archives, destructive work, or external publication remains authorized. |
 
 ## Current authority
 
@@ -61,7 +61,7 @@ chronology and evidence.
 - [Slice 6 implementation record](plans/milestones/m1/slices/s6/record.md), only when exact chronology or retained evidence is needed
 - [Accepted and activated Slice 7 plan](plans/milestones/m1/slices/s7/README.md)
 - [Slice 7 implementation record](plans/milestones/m1/slices/s7/record.md)
-- [Accepted and activated Slice 8 plan](plans/milestones/m1/slices/s8/README.md)
+- [Accepted Slice 8 closeout](plans/milestones/m1/slices/s8/README.md)
 - [Slice 8 implementation record](plans/milestones/m1/slices/s8/record.md)
 
 The accepted process amendment governed Slice 7 and continues to govern future
@@ -100,6 +100,18 @@ coverage, persistence, replay, and bounded JSON/CLI output. The owner accepted
 the exact product and handoff commits named above; Slice 7 contracts are
 `Slice-frozen`. This is public synthetic product-conformance evidence, not a
 private held-out semantic verdict or a broad safety/readiness claim.
+
+## Accepted Slice 8 baseline
+
+Slice 8 adds the frozen `infinium.analysis.scope-reversion/v2` family and
+storage 1.10.0/schema 11 without changing any Slice 7 contract. The accepted
+controlled-real package exercises one two-actor cohort and one placed reference
+against matched author-patch controls. Both positives produce the required
+bounded finding/case and both controls remain resolved negatives. The exact
+results retain provenance, taxonomy, coverage, partition history, replay, and
+all declared runtime/archive/visual/quest/completeness gaps. This is developer-
+owned conformance evidence, not an independent semantic verdict or broad
+compatibility, safety, or readiness claim.
 
 ## Process and successor-campaign state
 
