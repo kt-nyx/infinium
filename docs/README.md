@@ -62,7 +62,8 @@ operation that explicitly requires them.
   [accepted semantic-oracle deferral amendment](plans/milestones/m1/amendments/semantic-oracle-deferral.md),
   [accepted Slice 6 closeout](plans/milestones/m1/slices/s6/README.md),
   [accepted Slice 7 closeout](plans/milestones/m1/slices/s7/README.md),
-  and [accepted Slice 8 closeout](plans/milestones/m1/slices/s8/README.md)
+  [accepted Slice 8 closeout](plans/milestones/m1/slices/s8/README.md),
+  and [proposed Slice 9 end-to-end closeout plan](plans/milestones/m1/slices/s9/README.md)
 - Product: [product definition](product/product-definition.md),
   [requirements](product/requirements.md),
   [mod-impact taxonomy](product/mod-impact-taxonomy.md),
