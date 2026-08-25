@@ -1,9 +1,9 @@
 # M1 Slice 8
 
 Status: Accepted
-Disposition: The complete plan is owner-accepted and implementation is
-activated by current project state on exact base
-`ab3f7ed2cf0d44067c96a7d88a44be4074486412`
+Disposition: The complete plan remains owner-accepted. WP1 through WP7 are
+implementation-complete on exact product candidate
+`c79661cd8eb016e483fa8b7396e7d4997b85d590`; final owner acceptance is pending.
 
 Last reviewed: 2026-08-24
 
@@ -14,6 +14,7 @@ navigation page for the accepted Slice 8 plan.
 ## Accepted authority
 
 - [Accepted Slice 8 plan](plan.md)
+- [Slice 8 implementation record](record.md)
 - [Accepted Slice 7 closeout](../s7/README.md)
 - [Accepted Slice 7 implementation record](../s7/record.md)
 - [Accepted M1 milestone plan](../../plan.md)
@@ -37,6 +38,7 @@ decision. Private/evaluator material, network, providers, credentials,
 archives, semantic-oracle work, external effects, publication, and push remain
 prohibited.
 
-Final Slice 8 implementation acceptance will hand only its accepted product
-and conformance evidence to Slice 9. This plan does not plan or activate
-Slice 9.
+The review-ready package contains the clean product candidate, complete
+verification evidence, implementation record, and one documentation-only
+handoff. Passing tests does not accept the slice. The owner must accept,
+reject, or amend the package. This plan does not plan or activate Slice 9.
