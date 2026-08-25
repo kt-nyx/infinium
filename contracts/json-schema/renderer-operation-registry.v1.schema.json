@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/renderer-operation-registry.v1.schema.json",
+  "title": "Infinium renderer operation registry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "renderer_contract_version", "limits", "operations", "denied_authority_fields"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "renderer_contract_version": { "const": "1.0.0" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximum_message_bytes", "maximum_page_items", "maximum_chunk_bytes", "maximum_stream_queue_items", "maximum_filter_terms", "maximum_sort_terms", "maximum_bootstrap_recent_runs"],
+      "properties": {
+        "maximum_message_bytes": { "const": 1048576 },
+        "maximum_page_items": { "const": 100 },
+        "maximum_chunk_bytes": { "const": 262144 },
+        "maximum_stream_queue_items": { "const": 64 },
+        "maximum_filter_terms": { "const": 16 },
+        "maximum_sort_terms": { "const": 4 },
+        "maximum_bootstrap_recent_runs": { "const": 20 }
+      }
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["operation", "message_kinds", "native_target", "gesture", "maturity", "owner"],
+        "properties": {
+          "operation": { "enum": ["application.bootstrap", "application.cancel", "application.resync-required"] },
+          "message_kinds": { "type": "array", "minItems": 1, "maxItems": 2, "uniqueItems": true, "items": { "enum": ["request", "response", "event"] } },
+          "native_target": { "enum": ["ApplicationService.GetApplicationBootstrap", "DesktopHost.TransportCancellation", "DesktopHost.ResyncProjection"] },
+          "gesture": { "enum": ["not-required", "required"] },
+          "maturity": { "const": "producer-consumer-validated" },
+          "owner": { "const": "frontend-application-contract-foundation" }
+        }
+      }
+    },
+    "denied_authority_fields": {
+      "type": "array", "minItems": 8, "uniqueItems": true,
+      "items": { "enum": ["path", "sql", "command", "command_line", "url", "credential", "provider_request", "filesystem", "coordinator_proxy"] }
+    }
+  }
+}

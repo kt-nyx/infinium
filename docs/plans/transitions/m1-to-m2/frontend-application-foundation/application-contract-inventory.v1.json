@@ -1,0 +1,780 @@
+{
+  "$schema": "application-contract-inventory.v1.schema.json",
+  "schema_identity": "infinium.planning.application-contract-inventory/1.0.0",
+  "status": "implementation-active",
+  "last_reviewed": "2026-08-25",
+  "audited_commit": "d363347339c83d76787de71f6ef1cf4d30288040",
+  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy through Phase A. Declared-unimplemented RPCs are not reusable behavior. No renderer receives direct gRPC authority, and later typed renderer operations remain separately owned by their work packages.",
+  "protocol": {
+    "package": "infinium.application.v1",
+    "service": "ApplicationService",
+    "major": 1,
+    "minor": 4,
+    "application_contract_version": "1.4.0",
+    "domain_contract_version": "1.3.0",
+    "storage_contract_version": "1.10.0",
+    "renderer_contract_version": "1.0.0",
+    "schema_fingerprint_sha256": "b438e15250bf23f8b7f290ccf46292b5dcfd249ac15284881f7ef6251844bf48",
+    "declared_rpc_count": 23,
+    "implemented_rpc_count": 17,
+    "bounds": {
+      "maximum_message_bytes": 1048576,
+      "maximum_page_items": 100,
+      "maximum_chunk_bytes": 262144,
+      "maximum_stream_queue_items": 64,
+      "maximum_filter_terms": 16,
+      "maximum_sort_terms": 4,
+      "maximum_bootstrap_recent_runs": 20
+    }
+  },
+  "rpc_inventory": [
+    {
+      "rpc": "Negotiate",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#Negotiate",
+      "current_consumers": [
+        "src/Infinium.Application/Runtime/CoordinatorConnection.cs",
+        "src/Infinium.Cli through CoordinatorConnection",
+        "integration harnesses"
+      ],
+      "persistence_readback": [
+        "CoordinatorRuntime connection admission; no durable product write"
+      ],
+      "bounds_and_versions": [
+        "ProtocolConstants major/minor, compatibility tuple, nonce, capability count, and negotiated limits"
+      ],
+      "requirement_ids": [
+        "SEC-003",
+        "OPS-005"
+      ],
+      "evaluation_ids": [
+        "EVAL-0088",
+        "EVAL-0090"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0021",
+        "ADR-0037"
+      ],
+      "renderer_policy": "native-only-never-map"
+    },
+    {
+      "rpc": "Health",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#Health",
+      "current_consumers": [
+        "integration harnesses; no production UI consumer"
+      ],
+      "persistence_readback": [
+        "CoordinatorRuntime authority; no durable product write"
+      ],
+      "bounds_and_versions": [
+        "Negotiated application session and one bounded unary response"
+      ],
+      "requirement_ids": [
+        "OPS-001",
+        "OPS-005"
+      ],
+      "evaluation_ids": [
+        "EVAL-0088",
+        "EVAL-0090"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0037"
+      ],
+      "renderer_policy": "typed-projection-mapping-only"
+    },
+    {
+      "rpc": "GetApplicationBootstrap",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#GetApplicationBootstrap",
+      "current_consumers": [
+        "generated C# gRPC consumer and WP2 contract tests; desktop host consumer remains WP7"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.ListRuns and CoordinatorRuntime authority; no durable write"
+      ],
+      "bounds_and_versions": [
+        "renderer contract 1.0.0, maximum 20 recent runs, projection version 1, negotiated message limits"
+      ],
+      "requirement_ids": [
+        "OPS-001",
+        "OPS-005",
+        "SEC-003"
+      ],
+      "evaluation_ids": [
+        "EVAL-0088",
+        "EVAL-0090"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0021",
+        "ADR-0037"
+      ],
+      "renderer_policy": "typed-projection-mapping-only"
+    },
+    {
+      "rpc": "ListRuns",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#ListRuns",
+      "current_consumers": [
+        "integration harnesses; no production UI consumer"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.ListRuns"
+      ],
+      "bounds_and_versions": [
+        "MaximumPageItems 100, MaximumFilterTerms 16, MaximumSortTerms 4, authenticated five-minute keyset cursor, projection version 1"
+      ],
+      "requirement_ids": [
+        "OPS-002",
+        "OPS-005"
+      ],
+      "evaluation_ids": [
+        "EVAL-0088",
+        "EVAL-0090"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0037"
+      ],
+      "renderer_policy": "typed-projection-mapping-only"
+    },
+    {
+      "rpc": "GetRun",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#GetRun",
+      "current_consumers": [
+        "src/Infinium.Cli/Program.cs",
+        "integration harnesses"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.GetRun"
+      ],
+      "bounds_and_versions": [
+        "Projection version 1 and one bounded unary detail"
+      ],
+      "requirement_ids": [
+        "OPS-002",
+        "SCAN-004"
+      ],
+      "evaluation_ids": [
+        "EVAL-0087",
+        "EVAL-0088",
+        "EVAL-0090"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0037"
+      ],
+      "renderer_policy": "typed-projection-mapping-only"
+    },
+    {
+      "rpc": "ListFindings",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#ListFindings",
+      "current_consumers": [
+        "no non-test generated-client consumer found at audited commit"
+      ],
+      "persistence_readback": [
+        "No finding producer/readback path; only an empty unfiltered page is implemented"
+      ],
+      "bounds_and_versions": [
+        "MaximumPageItems 100 and projection version 1; cursor, filters, and sort reject as unsupported"
+      ],
+      "requirement_ids": [
+        "PROD-003",
+        "UX-001"
+      ],
+      "evaluation_ids": [
+        "EVAL-0036",
+        "EVAL-0092"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0037"
+      ],
+      "renderer_policy": "typed-projection-mapping-only"
+    },
+    {
+      "rpc": "GetProgress",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#GetProgress",
+      "current_consumers": [
+        "no non-test generated-client consumer found at audited commit"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.GetRun; current progress body is lifecycle-derived and otherwise empty"
+      ],
+      "bounds_and_versions": [
+        "Projection version 1 and one bounded unary snapshot"
+      ],
+      "requirement_ids": [
+        "SCAN-004",
+        "OPS-005"
+      ],
+      "evaluation_ids": [
+        "EVAL-0038",
+        "EVAL-0088",
+        "EVAL-0090"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0037"
+      ],
+      "renderer_policy": "typed-projection-mapping-only"
+    },
+    {
+      "rpc": "SubmitRunCommand",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.Commands.cs#SubmitRunCommand",
+      "current_consumers": [
+        "src/Infinium.Cli/Program.cs",
+        "integration harnesses"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore durable command and lifecycle transition records",
+        "ManagedRunExecutor and ManagedAnalysisOrchestrator"
+      ],
+      "bounds_and_versions": [
+        "Idempotency identity, lifecycle generation, deadline, message bound, and managed orchestration request bound"
+      ],
+      "requirement_ids": [
+        "SCOPE-004",
+        "SCAN-005",
+        "SEC-003"
+      ],
+      "evaluation_ids": [
+        "EVAL-0038",
+        "EVAL-0045",
+        "EVAL-0088",
+        "EVAL-0090"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0021",
+        "ADR-0037"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    },
+    {
+      "rpc": "GetDurableCommand",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.Commands.cs#GetDurableCommand",
+      "current_consumers": [
+        "src/Infinium.Cli/Program.cs",
+        "integration harnesses"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.GetDurableCommand"
+      ],
+      "bounds_and_versions": [
+        "One opaque durable command identity and one bounded reconciliation response"
+      ],
+      "requirement_ids": [
+        "SCAN-005",
+        "OPS-002"
+      ],
+      "evaluation_ids": [
+        "EVAL-0038",
+        "EVAL-0088",
+        "EVAL-0090"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0037"
+      ],
+      "renderer_policy": "typed-projection-mapping-only"
+    },
+    {
+      "rpc": "SubscribeEvents",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.Events.cs#SubscribeEvents",
+      "current_consumers": [
+        "integration harnesses; no production UI consumer"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.GetRun and durable sequence; stream is non-authoritative"
+      ],
+      "bounds_and_versions": [
+        "Exactly one run scope, MaximumStreamQueueItems 64, authenticated expiring event cursor, projection version 1"
+      ],
+      "requirement_ids": [
+        "SCAN-004",
+        "SCAN-005",
+        "OPS-005"
+      ],
+      "evaluation_ids": [
+        "EVAL-0038",
+        "EVAL-0088",
+        "EVAL-0090"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0037"
+      ],
+      "renderer_policy": "typed-projection-mapping-only"
+    },
+    {
+      "rpc": "SubmitSnapshotCapture",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.Commands.cs#SubmitSnapshotCapture",
+      "current_consumers": [
+        "integration harnesses; no production UI consumer"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore snapshot-capture command and operation records",
+        "SnapshotCaptureExecutor"
+      ],
+      "bounds_and_versions": [
+        "Typed MO2 selection, 32 mapping and mapper entries, absolute-path validation, deadline and idempotency bounds"
+      ],
+      "requirement_ids": [
+        "SCOPE-003",
+        "AUTH-003",
+        "SEC-003"
+      ],
+      "evaluation_ids": [
+        "EVAL-0045",
+        "EVAL-0046",
+        "EVAL-0080",
+        "EVAL-0088"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0021",
+        "ADR-0037"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    },
+    {
+      "rpc": "GetSnapshotCapture",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.Commands.cs#GetSnapshotCapture",
+      "current_consumers": [
+        "integration harnesses; no production UI consumer"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.GetSnapshotCaptureOperation or FindSnapshotCaptureByCommand"
+      ],
+      "bounds_and_versions": [
+        "One typed operation or command identity and one bounded status response"
+      ],
+      "requirement_ids": [
+        "SCOPE-003",
+        "OPS-002"
+      ],
+      "evaluation_ids": [
+        "EVAL-0045",
+        "EVAL-0087",
+        "EVAL-0088"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0021"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    },
+    {
+      "rpc": "GetAnalysisSummary",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#GetAnalysisSummary",
+      "current_consumers": [
+        "integration harnesses; no production UI consumer"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.GetAnalysisSummary"
+      ],
+      "bounds_and_versions": [
+        "Projection version 1 and one bounded summary"
+      ],
+      "requirement_ids": [
+        "PROD-004",
+        "COVER-003",
+        "UX-001"
+      ],
+      "evaluation_ids": [
+        "EVAL-0085",
+        "EVAL-0092"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0037"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    },
+    {
+      "rpc": "ListAnalysisArtifacts",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#ListAnalysisArtifacts",
+      "current_consumers": [
+        "integration harnesses; no production UI consumer"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.ListAnalysisArtifacts and GetAnalysisSemanticFingerprint"
+      ],
+      "bounds_and_versions": [
+        "Page 1..100, 7 kind filters, 20 state filters, authenticated five-minute cursor, projection version 1"
+      ],
+      "requirement_ids": [
+        "EVID-004",
+        "EVID-007",
+        "OPS-002"
+      ],
+      "evaluation_ids": [
+        "EVAL-0067",
+        "EVAL-0083",
+        "EVAL-0088"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0021",
+        "ADR-0037"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    },
+    {
+      "rpc": "GetAnalysisProvenance",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#GetAnalysisProvenance",
+      "current_consumers": [
+        "integration harnesses; no production UI consumer"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.GetAnalysisArtifact, ReadAnalysisReplay, and ListAnalysisDependencyIds"
+      ],
+      "bounds_and_versions": [
+        "1..256 dependency edges and projection version 1"
+      ],
+      "requirement_ids": [
+        "EVID-002",
+        "EVID-004"
+      ],
+      "evaluation_ids": [
+        "EVAL-0083",
+        "EVAL-0092"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0021",
+        "ADR-0037"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    },
+    {
+      "rpc": "GetAnalysisReplay",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#GetAnalysisReplay",
+      "current_consumers": [
+        "no non-test generated-client consumer found at audited commit"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.GetAnalysisReplay"
+      ],
+      "bounds_and_versions": [
+        "Projection version 1 and one bounded replay disclosure"
+      ],
+      "requirement_ids": [
+        "SNAP-006",
+        "OPS-002"
+      ],
+      "evaluation_ids": [
+        "EVAL-0087",
+        "EVAL-0088"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0021"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    },
+    {
+      "rpc": "GetAnalysisOutput",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#GetAnalysisOutput",
+      "current_consumers": [
+        "src/Infinium.Cli/Program.cs",
+        "integration harnesses"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.ReadAnalysisRunOutput and ReadAnalysisCliSummary"
+      ],
+      "bounds_and_versions": [
+        "Analysis output absolute bound, 128 KiB CLI summary, application message bound, projection version 1"
+      ],
+      "requirement_ids": [
+        "OPS-003",
+        "SEC-004"
+      ],
+      "evaluation_ids": [
+        "EVAL-0040",
+        "EVAL-0083"
+      ],
+      "security_authorities": [
+        "ADR-0019",
+        "ADR-0021",
+        "ADR-0037"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    },
+    {
+      "rpc": "GetProviderProfile",
+      "implementation_state": "declared-unimplemented",
+      "implementation_owner": "No ApplicationGrpcService override; generated base returns unimplemented",
+      "current_consumers": [
+        "no caller found at audited commit"
+      ],
+      "persistence_readback": [
+        "Provider persistence exists, but this RPC has no coordinator readback implementation"
+      ],
+      "bounds_and_versions": [
+        "Declared in application v1; no callable behavior or verified response bound"
+      ],
+      "requirement_ids": [
+        "SEC-002",
+        "AI-005"
+      ],
+      "evaluation_ids": [
+        "EVAL-0064",
+        "EVAL-0089",
+        "EVAL-0091"
+      ],
+      "security_authorities": [
+        "ADR-0020",
+        "ADR-0021",
+        "ADR-0037"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    },
+    {
+      "rpc": "GetProviderOperation",
+      "implementation_state": "declared-unimplemented",
+      "implementation_owner": "No ApplicationGrpcService override; generated base returns unimplemented",
+      "current_consumers": [
+        "no caller found at audited commit"
+      ],
+      "persistence_readback": [
+        "Provider persistence exists, but this RPC has no coordinator readback implementation"
+      ],
+      "bounds_and_versions": [
+        "Declared in application v1; no callable behavior or verified response bound"
+      ],
+      "requirement_ids": [
+        "AI-004",
+        "OPS-002"
+      ],
+      "evaluation_ids": [
+        "EVAL-0076",
+        "EVAL-0081",
+        "EVAL-0089"
+      ],
+      "security_authorities": [
+        "ADR-0020",
+        "ADR-0023"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    },
+    {
+      "rpc": "ListProviderBudget",
+      "implementation_state": "declared-unimplemented",
+      "implementation_owner": "No ApplicationGrpcService override; generated base returns unimplemented",
+      "current_consumers": [
+        "no caller found at audited commit"
+      ],
+      "persistence_readback": [
+        "Provider budget persistence exists, but this RPC has no coordinator readback implementation"
+      ],
+      "bounds_and_versions": [
+        "Declared in application v1; no callable behavior or verified page/cursor implementation"
+      ],
+      "requirement_ids": [
+        "AI-004",
+        "AI-005"
+      ],
+      "evaluation_ids": [
+        "EVAL-0076",
+        "EVAL-0081"
+      ],
+      "security_authorities": [
+        "ADR-0023",
+        "ADR-0037"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    },
+    {
+      "rpc": "GetProviderReplay",
+      "implementation_state": "declared-unimplemented",
+      "implementation_owner": "No ApplicationGrpcService override; generated base returns unimplemented",
+      "current_consumers": [
+        "no caller found at audited commit"
+      ],
+      "persistence_readback": [
+        "Provider replay persistence exists, but this RPC has no coordinator readback implementation"
+      ],
+      "bounds_and_versions": [
+        "Declared in application v1; no callable behavior or verified response bound"
+      ],
+      "requirement_ids": [
+        "AI-006",
+        "OPS-002"
+      ],
+      "evaluation_ids": [
+        "EVAL-0083",
+        "EVAL-0087"
+      ],
+      "security_authorities": [
+        "ADR-0020",
+        "ADR-0023"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    },
+    {
+      "rpc": "SubmitProviderEnrollment",
+      "implementation_state": "declared-unimplemented",
+      "implementation_owner": "No ApplicationGrpcService override; generated base returns unimplemented",
+      "current_consumers": [
+        "no caller found at audited commit"
+      ],
+      "persistence_readback": [
+        "CredentialHelperCoordinator and provider metadata persistence exist outside this RPC"
+      ],
+      "bounds_and_versions": [
+        "Declared in application v1; no callable enrollment choreography"
+      ],
+      "requirement_ids": [
+        "SEC-002",
+        "AI-007"
+      ],
+      "evaluation_ids": [
+        "EVAL-0034",
+        "EVAL-0089",
+        "EVAL-0091"
+      ],
+      "security_authorities": [
+        "ADR-0020",
+        "ADR-0021",
+        "ADR-0037"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    },
+    {
+      "rpc": "SubmitProviderOperation",
+      "implementation_state": "declared-unimplemented",
+      "implementation_owner": "No ApplicationGrpcService override; generated base returns unimplemented",
+      "current_consumers": [
+        "no caller found at audited commit"
+      ],
+      "persistence_readback": [
+        "Provider coordinators and ledgers exist outside this RPC; no application command implementation"
+      ],
+      "bounds_and_versions": [
+        "Declared in application v1; no callable provider operation or billable authority"
+      ],
+      "requirement_ids": [
+        "AI-004",
+        "AI-007",
+        "SEC-002"
+      ],
+      "evaluation_ids": [
+        "EVAL-0077",
+        "EVAL-0081",
+        "EVAL-0089"
+      ],
+      "security_authorities": [
+        "ADR-0020",
+        "ADR-0021",
+        "ADR-0023"
+      ],
+      "renderer_policy": "developer-internal-never-map"
+    }
+  ],
+  "renderer_denied_operations": [
+    {
+      "operation": "ApplicationService direct gRPC access",
+      "reason": "ADR-0019 and ADR-0037 require React to use a closed host mapping and prohibit a direct coordinator connection.",
+      "retained_consumer": "generated native application clients"
+    },
+    {
+      "operation": "SubmitRunCommand.ManualStartCommand.analysis_orchestration_request_json",
+      "reason": "The field carries internal orchestration instructions; WP4 must replace renderer reachability with a typed user-run request.",
+      "retained_consumer": "CLI and development/conformance harnesses"
+    },
+    {
+      "operation": "SubmitSnapshotCapture and GetSnapshotCapture",
+      "reason": "The current request carries validated absolute setup paths and adapter inputs; later renderer setup uses typed native workflows, never this raw application shape.",
+      "retained_consumer": "native application/setup orchestration and integration harnesses"
+    },
+    {
+      "operation": "GetAnalysisSummary, ListAnalysisArtifacts, GetAnalysisProvenance, GetAnalysisReplay, and GetAnalysisOutput",
+      "reason": "These are backend/CLI diagnostic and retained-artifact surfaces. WP5 must supply bounded user-meaningful projections rather than expose storage-oriented identities or whole output payloads.",
+      "retained_consumer": "CLI, native diagnostics, and integration harnesses"
+    },
+    {
+      "operation": "GetProviderProfile, GetProviderOperation, ListProviderBudget, and GetProviderReplay",
+      "reason": "The declared shapes expose operational/accounting identities and are currently unimplemented. Later UI status requires a non-secret presentation projection with separate authority.",
+      "retained_consumer": "future native application diagnostics only if implemented by an accepted package"
+    },
+    {
+      "operation": "SubmitProviderEnrollment",
+      "reason": "Credential enrollment must remain helper-owned and WPF-parented under ADR-0020; the current declared command is not a renderer-safe choreography and is unimplemented.",
+      "retained_consumer": "future typed native enrollment orchestration"
+    },
+    {
+      "operation": "SubmitProviderOperation",
+      "reason": "A renderer can never submit provider request bytes, operation identities, pricing/budget inputs, or dispatch authority. Provider operations remain coordinator/helper internal.",
+      "retained_consumer": "development provider coordinators under explicit effect authority"
+    },
+    {
+      "operation": "generic path, SQL, command, URL, credential target, provider request, filesystem, and coordinator proxy primitives",
+      "reason": "ADR-0019, ADR-0021, and ADR-0037 prohibit these categories even if a future schema or caller attempts to add them.",
+      "retained_consumer": "none; prohibited contract categories"
+    }
+  ],
+  "contract_families": [
+    {
+      "family": "application-grpc",
+      "source": "contracts/protobuf/infinium/application/v1/application.proto",
+      "owner": "Infinium.Application generation and Infinium.Coordinator handlers",
+      "maturity": "implementation-active"
+    },
+    {
+      "family": "application-bootstrap",
+      "source": "contracts/protobuf/infinium/application/v1/application.proto and ApplicationGrpcService.GetApplicationBootstrap",
+      "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP2",
+      "maturity": "producer-consumer-validated"
+    },
+    {
+      "family": "renderer-envelope-and-registry",
+      "source": "contracts/json-schema/renderer-envelope.v1.schema.json and contracts/renderer/renderer-operation-registry.v1.json",
+      "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP2",
+      "maturity": "producer-consumer-validated"
+    },
+    {
+      "family": "setup-and-run-operations",
+      "source": "Phase B typed application projections and commands",
+      "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3 and WP4",
+      "maturity": "proposed"
+    },
+    {
+      "family": "results-and-review-operations",
+      "source": "Phase C typed application projections and commands",
+      "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5 and WP6",
+      "maturity": "proposed"
+    }
+  ],
+  "generation_ownership": [
+    {
+      "input": "contracts/protobuf/infinium/**/*.proto",
+      "generated_consumer": "C# protobuf and gRPC bindings under obj generated by Grpc.Tools",
+      "owner": "src/Infinium.Application/Infinium.Application.csproj",
+      "drift_check": "contract compilation plus exact protocol fingerprint verification"
+    },
+    {
+      "input": "contracts/json-schema/renderer-envelope.v1.schema.json and contracts/renderer/renderer-operation-registry.v1.json",
+      "generated_consumer": "C# reference validator now; TypeScript renderer bindings and host adapters remain WP7",
+      "owner": "WP2 contract source and reference validator; WP7 generated product consumers",
+      "drift_check": "canonical registry SHA-256 c302d6cc6728cdab1d65a618313b357d828af01a41069156bc1bfca52433d9ac plus schema and generated-binding checks"
+    }
+  ]
+}

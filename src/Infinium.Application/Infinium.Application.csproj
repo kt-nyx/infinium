@@ -24,5 +24,8 @@
     <EmbeddedResource Include="..\..\contracts\json-schema\*.json">
       <LogicalName>Infinium.Contracts.JsonSchema.%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="..\..\contracts\renderer\*.json">
+      <LogicalName>Infinium.Contracts.Renderer.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

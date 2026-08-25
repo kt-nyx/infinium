@@ -530,6 +530,55 @@ public sealed class SolutionIntegrationTests
             HandshakeResponse accepted =
                 await application.NegotiateAsync(ApplicationHandshake(descriptor)).ResponseAsync;
             Assert.AreEqual(HandshakeDisposition.Accepted, accepted.Disposition);
+            GetApplicationBootstrapResponse bootstrap = await application.GetApplicationBootstrapAsync(
+                new GetApplicationBootstrapRequest
+                {
+                    RendererContractVersion = new SemanticVersion
+                    {
+                        Value = ProtocolConstants.RendererContractVersion,
+                    },
+                    MaximumRecentRuns = ProtocolConstants.MaximumBootstrapRecentRuns,
+                    ExpectedProjectionVersion = new ProjectionVersion { Value = "1" },
+                }).ResponseAsync;
+            Assert.AreEqual(
+                GetApplicationBootstrapResponse.ResultOneofCase.Bootstrap,
+                bootstrap.ResultCase);
+            Assert.AreEqual(ProtocolConstants.ContractVersion,
+                bootstrap.Bootstrap.Compatibility.ApplicationContract.Value);
+            Assert.AreEqual(ProtocolConstants.DomainContractVersion,
+                bootstrap.Bootstrap.Compatibility.DomainContract.Value);
+            Assert.AreEqual(ProtocolConstants.StorageContractVersion,
+                bootstrap.Bootstrap.Compatibility.StorageContract.Value);
+            Assert.AreEqual(ProtocolConstants.RendererContractVersion,
+                bootstrap.Bootstrap.RendererContractVersion.Value);
+            Assert.IsTrue(bootstrap.Bootstrap.RecentRuns.Count <= ProtocolConstants.MaximumBootstrapRecentRuns);
+            Assert.IsTrue(bootstrap.Bootstrap.Capabilities.All(item =>
+                item.Capability != ApplicationCapability.Unspecified
+                && item.Availability != Availability.Unspecified));
+
+            GetApplicationBootstrapResponse incompatibleBootstrap =
+                await application.GetApplicationBootstrapAsync(new GetApplicationBootstrapRequest
+                {
+                    RendererContractVersion = new SemanticVersion { Value = "2.0.0" },
+                    MaximumRecentRuns = 1,
+                }).ResponseAsync;
+            Assert.AreEqual(
+                ApplicationErrorCode.IncompatibleVersion,
+                incompatibleBootstrap.Error.Code);
+            GetApplicationBootstrapRequest validBootstrapRequest = new()
+            {
+                RendererContractVersion = new SemanticVersion
+                {
+                    Value = ProtocolConstants.RendererContractVersion,
+                },
+                MaximumRecentRuns = 1,
+            };
+            GetApplicationBootstrapRequest unknownFieldBootstrap =
+                GetApplicationBootstrapRequest.Parser.ParseFrom(
+                    validBootstrapRequest.ToByteArray().Concat(new byte[] { 0x98, 0x06, 0x01 }).ToArray());
+            GetApplicationBootstrapResponse unknownFieldResponse =
+                await application.GetApplicationBootstrapAsync(unknownFieldBootstrap).ResponseAsync;
+            Assert.AreEqual(ApplicationErrorCode.InvalidArgument, unknownFieldResponse.Error.Code);
             ListRunsResponse bounded = await application.ListRunsAsync(new ListRunsRequest
             {
                 RequestedPageSize = ProtocolConstants.MaximumPageItems + 1,

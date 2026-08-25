@@ -1,11 +1,21 @@
 {
   "$schema": "frontend-capability-matrix.v1.schema.json",
   "schema_identity": "infinium.planning.frontend-capability-matrix/1.0.0",
-  "status": "accepted-planning-baseline",
+  "status": "implementation-active",
   "last_reviewed": "2026-08-25",
   "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
   "planning_base": "32dbb2c48754666336d2da571e554ad8897ed71c",
-  "claim_boundary": "This matrix maps M2-foundation needs to current implementation evidence and planned owners. It does not claim implementation completion, frontend delivery, broad semantic accuracy, or M2 acceptance.",
+  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner and to the audited application contract inventory. Phase A implementation does not claim later workflow completion, frontend delivery, broad semantic accuracy, or M2 acceptance.",
+  "application_contract_inventory": "application-contract-inventory.v1.json",
+  "ownership_audit": {
+    "capability_count": 19,
+    "owned_capability_count": 19,
+    "unknown_or_unowned_count": 0,
+    "ownership_fields": [
+      "owning_phase",
+      "owning_work_package"
+    ]
+  },
   "state_vocabulary": [
     "available-and-reusable",
     "partial-or-developer-oriented",
@@ -67,13 +77,13 @@
         "EVAL-0088",
         "EVAL-0090"
       ],
-      "current_state": "partial-or-developer-oriented",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "ApplicationService.Negotiate",
-        "ApplicationService.Health",
-        "ApplicationService.ListRuns"
+        "ApplicationService.GetApplicationBootstrap",
+        "RendererContractValidator",
+        "renderer-operation-registry.v1.json"
       ],
-      "gap": "No user-oriented bootstrap projection joins compatibility, capability, configuration, and resumable operation state.",
+      "gap": "The bounded producer and reference consumer are active; the product desktop host and TypeScript renderer consumer remain WP7 and no Phase B workflow is exposed.",
       "owning_phase": "A",
       "owning_work_package": "WP2",
       "transition_exit_evidence": "Generated native and TypeScript consumers recover the same bounded bootstrap and typed resync states."
@@ -188,11 +198,10 @@
       ],
       "current_state": "partial-or-developer-oriented",
       "current_evidence": [
-        "ApplicationService.GetProviderProfile",
-        "ApplicationService.SubmitProviderEnrollment",
+        "Provider profile and enrollment protobuf shapes are declared but have no ApplicationGrpcService implementation",
         "ADR-0020 one-shot credential helper"
       ],
-      "gap": "No desktop application choreography or renderer-safe status/enrollment consumer; product and development credential paths must remain distinct.",
+      "gap": "No callable application RPC implementation, desktop choreography, or renderer-safe status/enrollment consumer; product and development credential paths must remain distinct.",
       "owning_phase": "B",
       "owning_work_package": "WP3",
       "transition_exit_evidence": "React receives only non-secret status/outcomes and the helper owns entry and exact-target secure storage."

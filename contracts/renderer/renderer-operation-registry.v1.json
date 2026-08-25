@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0.0",
+  "renderer_contract_version": "1.0.0",
+  "limits": {
+    "maximum_message_bytes": 1048576,
+    "maximum_page_items": 100,
+    "maximum_chunk_bytes": 262144,
+    "maximum_stream_queue_items": 64,
+    "maximum_filter_terms": 16,
+    "maximum_sort_terms": 4,
+    "maximum_bootstrap_recent_runs": 20
+  },
+  "operations": [
+    {
+      "operation": "application.bootstrap",
+      "message_kinds": ["request", "response"],
+      "native_target": "ApplicationService.GetApplicationBootstrap",
+      "gesture": "not-required",
+      "maturity": "producer-consumer-validated",
+      "owner": "frontend-application-contract-foundation"
+    },
+    {
+      "operation": "application.cancel",
+      "message_kinds": ["request", "response"],
+      "native_target": "DesktopHost.TransportCancellation",
+      "gesture": "required",
+      "maturity": "producer-consumer-validated",
+      "owner": "frontend-application-contract-foundation"
+    },
+    {
+      "operation": "application.resync-required",
+      "message_kinds": ["event"],
+      "native_target": "DesktopHost.ResyncProjection",
+      "gesture": "not-required",
+      "maturity": "producer-consumer-validated",
+      "owner": "frontend-application-contract-foundation"
+    }
+  ],
+  "denied_authority_fields": ["path", "sql", "command", "command_line", "url", "credential", "provider_request", "filesystem", "coordinator_proxy"]
+}

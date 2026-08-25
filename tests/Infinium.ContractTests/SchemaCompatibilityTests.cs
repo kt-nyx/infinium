@@ -62,6 +62,8 @@ public sealed partial class SchemaCompatibilityTests
         "effective-scan-configuration.v2.schema.json",
         "run-output.v2.schema.json",
         "cli-summary.v2.schema.json",
+        "renderer-envelope.v1.schema.json",
+        "renderer-operation-registry.v1.schema.json",
     ];
 
     private static readonly string[] ProtoFiles =

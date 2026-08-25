@@ -12,6 +12,8 @@
     "plan_id",
     "planning_base",
     "claim_boundary",
+    "application_contract_inventory",
+    "ownership_audit",
     "state_vocabulary",
     "phase_checkpoints",
     "capabilities"
@@ -42,6 +44,44 @@
     },
     "claim_boundary": {
       "$ref": "#/$defs/text"
+    },
+    "application_contract_inventory": {
+      "const": "application-contract-inventory.v1.json"
+    },
+    "ownership_audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_count",
+        "owned_capability_count",
+        "unknown_or_unowned_count",
+        "ownership_fields"
+      ],
+      "properties": {
+        "capability_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "owned_capability_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unknown_or_unowned_count": {
+          "const": 0
+        },
+        "ownership_fields": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "owning_phase",
+              "owning_work_package"
+            ]
+          }
+        }
+      }
     },
     "state_vocabulary": {
       "type": "array",

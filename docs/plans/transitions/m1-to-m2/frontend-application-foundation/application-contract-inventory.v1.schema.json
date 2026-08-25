@@ -1,0 +1,331 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/planning/application-contract-inventory.v1.schema.json",
+  "title": "Infinium application contract inventory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_identity",
+    "status",
+    "last_reviewed",
+    "audited_commit",
+    "claim_boundary",
+    "protocol",
+    "rpc_inventory",
+    "renderer_denied_operations",
+    "contract_families",
+    "generation_ownership"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "application-contract-inventory.v1.schema.json"
+    },
+    "schema_identity": {
+      "const": "infinium.planning.application-contract-inventory/1.0.0"
+    },
+    "status": {
+      "enum": [
+        "implementation-active",
+        "accepted-phase-checkpoint"
+      ]
+    },
+    "last_reviewed": {
+      "type": "string",
+      "format": "date"
+    },
+    "audited_commit": {
+      "$ref": "#/$defs/git_commit"
+    },
+    "claim_boundary": {
+      "$ref": "#/$defs/text"
+    },
+    "protocol": {
+      "$ref": "#/$defs/protocol"
+    },
+    "rpc_inventory": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/rpc"
+      }
+    },
+    "renderer_denied_operations": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/denied_operation"
+      }
+    },
+    "contract_families": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/contract_family"
+      }
+    },
+    "generation_ownership": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/generation_owner"
+      }
+    }
+  },
+  "$defs": {
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "short_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "git_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "identifier_list": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]+-[0-9]{3,4}$"
+      }
+    },
+    "text_list": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/short_text"
+      }
+    },
+    "protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "service",
+        "major",
+        "minor",
+        "application_contract_version",
+        "domain_contract_version",
+        "storage_contract_version",
+        "renderer_contract_version",
+        "schema_fingerprint_sha256",
+        "declared_rpc_count",
+        "implemented_rpc_count",
+        "bounds"
+      ],
+      "properties": {
+        "package": {
+          "const": "infinium.application.v1"
+        },
+        "service": {
+          "const": "ApplicationService"
+        },
+        "major": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "application_contract_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "domain_contract_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "storage_contract_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "renderer_contract_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "schema_fingerprint_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "declared_rpc_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "implemented_rpc_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximum_message_bytes",
+            "maximum_page_items",
+            "maximum_chunk_bytes",
+            "maximum_stream_queue_items",
+            "maximum_filter_terms",
+            "maximum_sort_terms"
+            ,"maximum_bootstrap_recent_runs"
+          ],
+          "properties": {
+            "maximum_message_bytes": { "type": "integer", "minimum": 1 },
+            "maximum_page_items": { "type": "integer", "minimum": 1 },
+            "maximum_chunk_bytes": { "type": "integer", "minimum": 1 },
+            "maximum_stream_queue_items": { "type": "integer", "minimum": 1 },
+            "maximum_filter_terms": { "type": "integer", "minimum": 1 },
+            "maximum_sort_terms": { "type": "integer", "minimum": 1 }
+            ,"maximum_bootstrap_recent_runs": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "rpc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rpc",
+        "implementation_state",
+        "implementation_owner",
+        "current_consumers",
+        "persistence_readback",
+        "bounds_and_versions",
+        "requirement_ids",
+        "evaluation_ids",
+        "security_authorities",
+        "renderer_policy"
+      ],
+      "properties": {
+        "rpc": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]{2,79}$"
+        },
+        "implementation_state": {
+          "enum": [
+            "implemented",
+            "declared-unimplemented"
+          ]
+        },
+        "implementation_owner": {
+          "$ref": "#/$defs/short_text"
+        },
+        "current_consumers": {
+          "$ref": "#/$defs/text_list"
+        },
+        "persistence_readback": {
+          "$ref": "#/$defs/text_list"
+        },
+        "bounds_and_versions": {
+          "$ref": "#/$defs/text_list"
+        },
+        "requirement_ids": {
+          "$ref": "#/$defs/identifier_list"
+        },
+        "evaluation_ids": {
+          "$ref": "#/$defs/identifier_list"
+        },
+        "security_authorities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^ADR-[0-9]{4}$"
+          }
+        },
+        "renderer_policy": {
+          "enum": [
+            "typed-projection-mapping-only",
+            "developer-internal-never-map",
+            "native-only-never-map"
+          ]
+        }
+      }
+    },
+    "denied_operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "reason",
+        "retained_consumer"
+      ],
+      "properties": {
+        "operation": {
+          "$ref": "#/$defs/short_text"
+        },
+        "reason": {
+          "$ref": "#/$defs/text"
+        },
+        "retained_consumer": {
+          "$ref": "#/$defs/short_text"
+        }
+      }
+    },
+    "contract_family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "source",
+        "owner",
+        "maturity"
+      ],
+      "properties": {
+        "family": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{2,99}$"
+        },
+        "source": {
+          "$ref": "#/$defs/short_text"
+        },
+        "owner": {
+          "$ref": "#/$defs/short_text"
+        },
+        "maturity": {
+          "enum": [
+            "proposed",
+            "implementation-active",
+            "producer-consumer-validated"
+          ]
+        }
+      }
+    },
+    "generation_owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "generated_consumer",
+        "owner",
+        "drift_check"
+      ],
+      "properties": {
+        "input": {
+          "$ref": "#/$defs/short_text"
+        },
+        "generated_consumer": {
+          "$ref": "#/$defs/short_text"
+        },
+        "owner": {
+          "$ref": "#/$defs/short_text"
+        },
+        "drift_check": {
+          "$ref": "#/$defs/short_text"
+        }
+      }
+    }
+  }
+}

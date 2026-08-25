@@ -1,7 +1,7 @@
 # Current project state
 
 Status: Accepted
-Disposition: M1-to-M2 Foundation plan accepted; implementation has not started and M2 remains inactive
+Disposition: Frontend Application Foundation Checkpoint A reached; Phase B is unblocked but not started and M2 remains inactive
 
 Last reviewed: 2026-08-25
 Owner: Project owner
@@ -19,6 +19,11 @@ specific family of suspicious conflict outcomes, retain the evidence and
 uncertainty behind each result, reproduce stored results, and project those
 internal results into a stable report format for a future interface.
 
+Phase A of the accepted frontend foundation is complete. The repository now
+has an exact application-authority inventory, a bounded display-safe bootstrap,
+common typed error/revision/receipt/cancellation vocabulary, and a closed
+renderer envelope/operation registry with a fail-closed reference consumer.
+
 It is not yet a complete end-user application. There is no graphical interface,
 ordinary mod-manager workflow, broad analyzer catalog, or claim that an entire
 modlist is safe. The accepted M1-to-M2 Foundation — Frontend Application Foundation now
@@ -34,8 +39,8 @@ work.
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
-| Active implementation | None. |
-| Next gate | Owner direction to start `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP1`. The accepted plan then permits automatic phase-by-phase progression; it does not activate M2. |
+| Active implementation | Frontend Application Foundation Phase A (WP1-WP2) accepted at Checkpoint A. |
+| Next gate | Phase B begins with `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3` under the accepted plan. It is automatically unblocked by Checkpoint A but was not started by the Phase A implementation task. This does not activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |
 

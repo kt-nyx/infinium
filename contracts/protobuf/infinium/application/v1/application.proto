@@ -13,6 +13,8 @@ service ApplicationService {
   rpc Negotiate(infinium.protocol.v1.ApplicationHandshakeRequest)
       returns (infinium.protocol.v1.HandshakeResponse);
   rpc Health(HealthRequest) returns (HealthResponse);
+  rpc GetApplicationBootstrap(GetApplicationBootstrapRequest)
+      returns (GetApplicationBootstrapResponse);
   rpc ListRuns(ListRunsRequest) returns (ListRunsResponse);
   rpc GetRun(GetRunRequest) returns (GetRunResponse);
   rpc ListFindings(ListFindingsRequest) returns (ListFindingsResponse);
@@ -49,6 +51,161 @@ service ApplicationService {
       returns (SubmitProviderCommandResponse);
   rpc SubmitProviderOperation(SubmitProviderOperationRequest)
       returns (SubmitProviderCommandResponse);
+}
+
+// The desktop host requests this bounded projection before exposing any
+// renderer operation. It contains display-safe state only and grants no
+// filesystem, command, provider, credential, or coordinator authority.
+message GetApplicationBootstrapRequest {
+  infinium.common.v1.SemanticVersion renderer_contract_version = 1;
+  uint32 maximum_recent_runs = 2;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 3;
+
+  reserved 90 to 99;
+  reserved "path", "sql", "command", "url", "credential", "provider_request";
+}
+
+message GetApplicationBootstrapResponse {
+  oneof result {
+    ApplicationBootstrap bootstrap = 1;
+    ApplicationContractError error = 2;
+  }
+}
+
+message ApplicationBootstrap {
+  infinium.protocol.v1.ContractCompatibility compatibility = 1;
+  infinium.common.v1.ProtocolLimits limits = 2;
+  infinium.common.v1.SemanticVersion renderer_contract_version = 3;
+  HealthState coordinator_health = 4;
+  repeated ApplicationCapabilityState capabilities = 5;
+  ConfigurationAvailability configuration = 6;
+  repeated RunSummary recent_runs = 7;
+  infinium.domain.v1.ProjectionVersion projection_version = 8;
+  infinium.domain.v1.CoordinatorInstanceId coordinator_instance_id = 9;
+  uint64 coordinator_fencing_epoch = 10;
+  infinium.common.v1.Instant observed_at = 11;
+}
+
+message ApplicationCapabilityState {
+  ApplicationCapability capability = 1;
+  Availability availability = 2;
+  string inert_reason = 3;
+}
+
+enum ApplicationCapability {
+  APPLICATION_CAPABILITY_UNSPECIFIED = 0;
+  APPLICATION_CAPABILITY_BOOTSTRAP = 1;
+  APPLICATION_CAPABILITY_RUN_QUERY = 2;
+  APPLICATION_CAPABILITY_EVENT_RESYNC = 3;
+  APPLICATION_CAPABILITY_CONFIGURATION = 4;
+  APPLICATION_CAPABILITY_PROVIDER_ENROLLMENT = 5;
+  APPLICATION_CAPABILITY_UNKNOWN = 6;
+  APPLICATION_CAPABILITY_UNSUPPORTED = 7;
+}
+
+enum Availability {
+  AVAILABILITY_UNSPECIFIED = 0;
+  AVAILABILITY_AVAILABLE = 1;
+  AVAILABILITY_PARTIAL = 2;
+  AVAILABILITY_UNAVAILABLE = 3;
+  AVAILABILITY_UNKNOWN = 4;
+  AVAILABILITY_UNSUPPORTED = 5;
+}
+
+message ConfigurationAvailability {
+  Availability availability = 1;
+  string inert_reason = 2;
+}
+
+// Common typed failure used by application and renderer adapters. Detail is
+// inert display text and cannot be interpreted as authority.
+message ApplicationContractError {
+  ApplicationErrorCode code = 1;
+  string inert_detail = 2;
+  bool retry_may_be_safe = 3;
+  infinium.domain.v1.ProjectionVersion current_projection_version = 4;
+  RevisionToken current_revision = 5;
+}
+
+enum ApplicationErrorCode {
+  APPLICATION_ERROR_CODE_UNSPECIFIED = 0;
+  APPLICATION_ERROR_CODE_INVALID_ARGUMENT = 1;
+  APPLICATION_ERROR_CODE_UNAUTHENTICATED = 2;
+  APPLICATION_ERROR_CODE_UNAUTHORIZED = 3;
+  APPLICATION_ERROR_CODE_NOT_FOUND = 4;
+  APPLICATION_ERROR_CODE_CONFLICT = 5;
+  APPLICATION_ERROR_CODE_INCOMPATIBLE_VERSION = 6;
+  APPLICATION_ERROR_CODE_UNSUPPORTED = 7;
+  APPLICATION_ERROR_CODE_LIMIT_EXCEEDED = 8;
+  APPLICATION_ERROR_CODE_DEADLINE_EXPIRED = 9;
+  APPLICATION_ERROR_CODE_STALE_FENCE = 10;
+  APPLICATION_ERROR_CODE_RESYNC_REQUIRED = 11;
+  APPLICATION_ERROR_CODE_INDETERMINATE = 12;
+  APPLICATION_ERROR_CODE_INTERNAL = 13;
+  APPLICATION_ERROR_CODE_REPLAYED = 14;
+  APPLICATION_ERROR_CODE_OUT_OF_ORDER = 15;
+  APPLICATION_ERROR_CODE_UNKNOWN = 16;
+}
+
+message RevisionToken { string opaque_value = 1; }
+
+message RevisionConflict {
+  RevisionToken expected = 1;
+  RevisionToken current = 2;
+  ConflictDisposition disposition = 3;
+}
+
+enum ConflictDisposition {
+  CONFLICT_DISPOSITION_UNSPECIFIED = 0;
+  CONFLICT_DISPOSITION_STALE_REVISION = 1;
+  CONFLICT_DISPOSITION_ALREADY_APPLIED = 2;
+  CONFLICT_DISPOSITION_RESYNC_REQUIRED = 3;
+  CONFLICT_DISPOSITION_UNKNOWN = 4;
+  CONFLICT_DISPOSITION_UNSUPPORTED = 5;
+}
+
+message UserOperationReceipt {
+  string request_id = 1;
+  string receipt_id = 2;
+  OperationDisposition disposition = 3;
+  RevisionToken accepted_revision = 4;
+  RevisionConflict conflict = 5;
+  ApplicationContractError error = 6;
+  infinium.common.v1.Instant observed_at = 7;
+}
+
+enum OperationDisposition {
+  OPERATION_DISPOSITION_UNSPECIFIED = 0;
+  OPERATION_DISPOSITION_ACCEPTED = 1;
+  OPERATION_DISPOSITION_ALREADY_ACCEPTED = 2;
+  OPERATION_DISPOSITION_REJECTED = 3;
+  OPERATION_DISPOSITION_CONFLICT = 4;
+  OPERATION_DISPOSITION_INDETERMINATE = 5;
+  OPERATION_DISPOSITION_CANCELLED = 6;
+  OPERATION_DISPOSITION_UNKNOWN = 7;
+  OPERATION_DISPOSITION_UNSUPPORTED = 8;
+}
+
+message CancellationRequest {
+  string request_id = 1;
+  string target_request_id = 2;
+}
+
+message CancellationReceipt {
+  string request_id = 1;
+  string target_request_id = 2;
+  CancellationDisposition disposition = 3;
+  ApplicationContractError error = 4;
+}
+
+enum CancellationDisposition {
+  CANCELLATION_DISPOSITION_UNSPECIFIED = 0;
+  CANCELLATION_DISPOSITION_TRANSPORT_ONLY = 1;
+  CANCELLATION_DISPOSITION_NOT_FOUND = 2;
+  CANCELLATION_DISPOSITION_ALREADY_COMPLETED = 3;
+  CANCELLATION_DISPOSITION_REJECTED = 4;
+  CANCELLATION_DISPOSITION_UNKNOWN = 5;
+  CANCELLATION_DISPOSITION_UNSUPPORTED = 6;
 }
 
 message GetProviderProfileRequest {

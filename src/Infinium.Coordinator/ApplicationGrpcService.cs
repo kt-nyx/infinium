@@ -74,6 +74,104 @@ public sealed partial class ApplicationGrpcService(
         });
     }
 
+    public override Task<GetApplicationBootstrapResponse> GetApplicationBootstrap(
+        GetApplicationBootstrapRequest request,
+        ServerCallContext context)
+    {
+        RequireNegotiated(context);
+        if (request.RendererContractVersion?.Value != ProtocolConstants.RendererContractVersion)
+        {
+            return Task.FromResult(BootstrapError(
+                ApplicationErrorCode.IncompatibleVersion,
+                "The renderer contract version is incompatible."));
+        }
+
+        if (request.MaximumRecentRuns == 0
+            || request.MaximumRecentRuns > ProtocolConstants.MaximumBootstrapRecentRuns)
+        {
+            return Task.FromResult(BootstrapError(
+                ApplicationErrorCode.LimitExceeded,
+                "The bootstrap recent-run count exceeds its finite bound."));
+        }
+
+        if (!IsCurrentProjection(request.ExpectedProjectionVersion))
+        {
+            GetApplicationBootstrapResponse response = BootstrapError(
+                ApplicationErrorCode.ResyncRequired,
+                "The bootstrap projection is no longer current.");
+            response.Error.CurrentProjectionVersion = new ProjectionVersion { Value = "1" };
+            return Task.FromResult(response);
+        }
+
+        try
+        {
+            ApplicationContractValidator.Validate(request);
+        }
+        catch (InvalidDataException)
+        {
+            return Task.FromResult(BootstrapError(
+                ApplicationErrorCode.InvalidArgument,
+                "The bootstrap request contains unknown or invalid contract data."));
+        }
+
+        IReadOnlyList<RunRecord> runs = runtime.Store.ListRecentRuns(
+            checked((int)request.MaximumRecentRuns));
+        ApplicationBootstrap bootstrap = new()
+        {
+            Compatibility = ProtocolConstants.Compatibility,
+            Limits = ProtocolConstants.Limits,
+            RendererContractVersion = new SemanticVersion
+            {
+                Value = ProtocolConstants.RendererContractVersion,
+            },
+            CoordinatorHealth = HealthState.Healthy,
+            Configuration = new ConfigurationAvailability
+            {
+                Availability = Availability.Unavailable,
+                InertReason = "Saved application configuration is owned by a later work package.",
+            },
+            ProjectionVersion = new ProjectionVersion { Value = "1" },
+            CoordinatorInstanceId = new CoordinatorInstanceId
+            {
+                Value = runtime.Authority.InstanceId,
+            },
+            CoordinatorFencingEpoch = checked((ulong)runtime.Authority.FencingEpoch),
+            ObservedAt = ProtoMapping.ToProto(DateTimeOffset.UtcNow),
+        };
+        bootstrap.RecentRuns.Add(runs.Select(ProtoMapping.ToSummary));
+        bootstrap.Capabilities.Add(
+        [
+            BuildApplicationCapability(ApplicationCapability.Bootstrap, Availability.Available, "Bootstrap projection is active."),
+            BuildApplicationCapability(ApplicationCapability.RunQuery, Availability.Partial, "Bounded run queries are active; later workflow queries remain unavailable."),
+            BuildApplicationCapability(ApplicationCapability.EventResync, Availability.Available, "Bounded event resync is active."),
+            BuildApplicationCapability(ApplicationCapability.Configuration, Availability.Unavailable, "Owned by the setup contract package."),
+            BuildApplicationCapability(ApplicationCapability.ProviderEnrollment, Availability.Unavailable, "Owned by the setup contract package."),
+        ]);
+        return Task.FromResult(new GetApplicationBootstrapResponse { Bootstrap = bootstrap });
+    }
+
+    private static ApplicationCapabilityState BuildApplicationCapability(
+        ApplicationCapability capability,
+        Availability availability,
+        string reason) => new()
+        {
+            Capability = capability,
+            Availability = availability,
+            InertReason = reason,
+        };
+
+    private static GetApplicationBootstrapResponse BootstrapError(
+        ApplicationErrorCode code,
+        string detail) => new()
+        {
+            Error = new ApplicationContractError
+            {
+                Code = code,
+                InertDetail = detail,
+                RetryMayBeSafe = false,
+            },
+        };
+
     public override Task<ListRunsResponse> ListRuns(
         ListRunsRequest request,
         ServerCallContext context)

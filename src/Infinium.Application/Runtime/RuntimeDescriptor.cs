@@ -40,8 +40,8 @@ public sealed record RuntimeDescriptor(
             $"infinium-{instanceId}-{suffix}-worker",
             Convert.ToBase64String(nonce),
             $"{ProtocolConstants.Major}.{ProtocolConstants.Minor}",
-            ProtocolConstants.ContractVersion,
-            ProtocolConstants.ContractVersion,
+            ProtocolConstants.DomainContractVersion,
+            ProtocolConstants.StorageContractVersion,
             elevated ? "elevated" : "standard-user",
             now);
     }

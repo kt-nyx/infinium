@@ -441,8 +441,8 @@ public sealed partial class ApplicationGrpcService
         }
 
         if (request.Compatibility?.ApplicationContract?.Value != ProtocolConstants.ContractVersion
-            || request.Compatibility.DomainContract?.Value != ProtocolConstants.ContractVersion
-            || request.Compatibility.StorageContract?.Value != ProtocolConstants.ContractVersion)
+            || request.Compatibility.DomainContract?.Value != ProtocolConstants.DomainContractVersion
+            || request.Compatibility.StorageContract?.Value != ProtocolConstants.StorageContractVersion)
         {
             response.Disposition = HandshakeDisposition.IncompatibleApplicationContract;
             response.Failure = Failure(FailureCode.IncompatibleVersion, "Contract compatibility is invalid.");

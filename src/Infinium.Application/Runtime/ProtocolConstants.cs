@@ -1,14 +1,20 @@
 using Google.Protobuf;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Protocol.V1;
+using Infinium.Persistence;
 
 namespace Infinium.Application.Runtime;
 
 public static class ProtocolConstants
 {
     public const uint Major = 1;
-    public const uint Minor = 3;
-    public const string ContractVersion = "1.3.0";
+    public const uint Minor = 4;
+    public const string ContractVersion = "1.4.0";
+    public const string DomainContractVersion = "1.3.0";
+    public static readonly string StorageContractVersion =
+        AuthoritativeStore.CurrentStorageContractVersion;
+    public const string RendererContractVersion = "1.0.0";
+    public const uint MaximumBootstrapRecentRuns = 20;
     public const uint MaximumMessageBytes = 1_048_576;
     public const uint MaximumPageItems = 100;
     public const uint MaximumChunkBytes = 262_144;
@@ -37,8 +43,8 @@ public static class ProtocolConstants
     public static ContractCompatibility Compatibility { get; } = new()
     {
         ApplicationContract = new SemanticVersion { Value = ContractVersion },
-        DomainContract = new SemanticVersion { Value = ContractVersion },
-        StorageContract = new SemanticVersion { Value = ContractVersion },
+        DomainContract = new SemanticVersion { Value = DomainContractVersion },
+        StorageContract = new SemanticVersion { Value = StorageContractVersion },
     };
 
     public static ProtocolVersion Version { get; } = new()
@@ -46,6 +52,6 @@ public static class ProtocolConstants
         Major = Major,
         Minor = Minor,
         SchemaFingerprintSha256 = ByteString.CopyFrom(
-            Convert.FromHexString("b69bcaa6d4534ddf7652a70ecbcbc6048af6048864bfca87eb5dc6fe507ed16e")),
+            Convert.FromHexString("b438e15250bf23f8b7f290ccf46292b5dcfd249ac15284881f7ef6251844bf48")),
     };
 }

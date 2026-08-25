@@ -88,12 +88,12 @@ The current contract ceilings are:
 | Private helper frame | 2,097,152 bytes |
 | Page items | 100 |
 | Inert body chunk | 262,144 bytes |
-| Pending stream queue | 256 events |
-| Filter terms | 8 |
+| Pending stream queue | 64 events |
+| Filter terms | 16 |
 | Sort terms | 4 |
-| Capability flags | 32 |
+| Capability flags | 16 |
 | Application event run scope | 32 run IDs |
-| Staged outputs per assignment | 16 |
+| Staged outputs per assignment | 32 protocol ceiling; current worker assignments narrow this to 1 |
 | Worker inputs per assignment | 128 |
 | Finding support-state filters | 8 |
 | Inert status/detail/summary UTF-8 text | 4,096 bytes |
@@ -104,7 +104,7 @@ The current contract ceilings are:
 | Instance/bootstrap nonce | exactly 32 bytes |
 | SHA-256 digest | exactly 32 bytes |
 | Diagnostic text per IPC message | 65,536 bytes |
-| Default unary deadline | 10,000 ms |
+| Default unary deadline | 15,000 ms |
 | Maximum unary deadline | 60,000 ms |
 
 `ProtocolLimits` carries the negotiated subset relevant to ordinary gRPC.
@@ -144,9 +144,9 @@ The package suffix is the protocol major. Within `v1`:
 The schema fingerprint in `ProtocolVersion` identifies the exact generated
 contract set. It supplements, but does not replace, major/minor and
 application/domain/storage compatibility checks.
-It is the SHA-256 of the UTF-8 concatenation of each repository-relative
-`.proto` path, one LF, and that file's exact text, with files ordered by
-ordinal repository-relative path.
+It is the SHA-256 of the UTF-8 concatenation of each path relative to
+`contracts/protobuf`, one LF, and that file's exact bytes, with files ordered
+by ordinal protobuf-root-relative path.
 
 ## Security invariants
 
@@ -183,10 +183,12 @@ buffers/rate limits, process supervision, private-handle inheritance, staging
 authorization, and coordinator-side admission remain runtime obligations for
 later slices.
 
-The additive application v1 surface is at protocol 1.2.0 and exposes bounded,
+The additive application v1 surface is at protocol 1.4.0. It separates the
+application 1.4.0, domain 1.3.0, storage 1.10.0, and renderer 1.0.0 version
+axes and exposes a bounded display-safe bootstrap alongside the existing
 non-secret provider profile, operation, budget, replay, and command shapes. Its
 full contract-set fingerprint is
-`676a0c655ca5f7a7ec70de386892b4142e11b73825b5289fdc465ecd0853f937`.
+`b438e15250bf23f8b7f290ccf46292b5dcfd249ac15284881f7ef6251844bf48`.
 Helper v2 has a separate fingerprint over only its helper/common/identity
 transitive closure; its fail-closed decoder rejects unknown nested fields,
 unknown enum numerics, and contradictory assignment, revalidation, or receipt

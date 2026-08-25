@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/renderer-envelope.v1.schema.json",
+  "title": "Infinium closed renderer envelope v1",
+  "$defs": {
+    "bootstrap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["application_contract_version", "domain_contract_version", "storage_contract_version", "renderer_contract_version", "coordinator_health", "configuration_availability", "capabilities", "recent_runs", "projection_version", "coordinator_instance_id", "coordinator_fencing_epoch"],
+      "properties": {
+        "application_contract_version": { "const": "1.4.0" },
+        "domain_contract_version": { "const": "1.3.0" },
+        "storage_contract_version": { "const": "1.10.0" },
+        "renderer_contract_version": { "const": "1.0.0" },
+        "coordinator_health": { "enum": ["healthy", "degraded", "unavailable", "unknown", "unsupported"] },
+        "configuration_availability": { "enum": ["available", "partial", "unavailable", "unknown", "unsupported"] },
+        "capabilities": {
+          "type": "array", "maxItems": 16, "uniqueItems": true,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["capability", "availability", "inert_reason"],
+            "properties": {
+              "capability": { "enum": ["bootstrap", "run-query", "event-resync", "configuration", "provider-enrollment"] },
+              "availability": { "enum": ["available", "partial", "unavailable", "unknown", "unsupported"] },
+              "inert_reason": { "type": "string", "minLength": 1, "maxLength": 512 }
+            }
+          }
+        },
+        "recent_runs": {
+          "type": "array", "maxItems": 20,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["run_id", "lifecycle_state", "lifecycle_generation"],
+            "properties": {
+              "run_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "lifecycle_state": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "lifecycle_generation": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "projection_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "coordinator_instance_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "coordinator_fencing_epoch": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "message_kind", "session_id", "sequence", "operation", "payload"],
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "message_kind": { "enum": ["request", "response", "event"] },
+    "session_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "request_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" },
+    "subscription_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" },
+    "revision": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,256}$" },
+    "operation": { "enum": ["application.bootstrap", "application.cancel", "application.resync-required"] },
+    "gesture_proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gesture_id"],
+      "properties": {
+        "gesture_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maximum_recent_runs": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "expected_projection_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "target_request_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" },
+        "outcome": { "enum": ["accepted", "rejected", "conflict", "indeterminate", "cancelled", "resync-required"] },
+        "error_code": { "enum": ["invalid-argument", "unauthenticated", "unauthorized", "not-found", "conflict", "incompatible-version", "unsupported", "limit-exceeded", "deadline-expired", "stale-fence", "resync-required", "indeterminate", "internal", "replayed", "out-of-order", "unknown"] },
+        "inert_detail": { "type": "string", "maxLength": 4096 },
+        "current_projection_version": { "type": "string", "minLength": 1, "maxLength": 64 }
+        ,"bootstrap": { "$ref": "#/$defs/bootstrap" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "message_kind": { "const": "request" } } },
+      "then": { "required": ["request_id"] }
+    },
+    {
+      "if": { "properties": { "message_kind": { "const": "response" } } },
+      "then": { "required": ["request_id"], "properties": { "payload": { "required": ["outcome"] } } }
+    },
+    {
+      "if": { "properties": { "message_kind": { "const": "event" } } },
+      "then": { "required": ["subscription_id"] }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "application.bootstrap" }, "message_kind": { "const": "request" } } },
+      "then": { "properties": { "payload": { "required": ["maximum_recent_runs"] } } }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "application.bootstrap" }, "message_kind": { "const": "response" } } },
+      "then": { "properties": { "payload": { "required": ["bootstrap"] } } }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "application.cancel" } } },
+      "then": { "required": ["gesture_proof"], "properties": { "payload": { "required": ["target_request_id"] } } }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "application.resync-required" } } },
+      "then": { "properties": { "message_kind": { "const": "event" }, "payload": { "required": ["current_projection_version"] } } }
+    }
+  ]
+}

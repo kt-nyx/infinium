@@ -1,13 +1,13 @@
 # M1-to-M2 Foundation — Frontend Application Foundation
 
 Status: Accepted
-Disposition: Approved planning baseline; implementation has not started
+Disposition: Checkpoint A reached; Phase A contract foundation accepted and Phase B not started
 
 Last reviewed: 2026-08-25
 Owner: Project owner
 Accepted: 2026-08-25
 Plan ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`
-Next work package: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP1`
+Next work package: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3`
 
 ## Plain-language purpose
 
@@ -30,6 +30,8 @@ implemented against a producer-consumer-validated application boundary.
 - [Full implementation plan](plan.md)
 - [Frontend capability matrix](frontend-capability-matrix.v1.json)
 - [Capability-matrix schema](frontend-capability-matrix.v1.schema.json)
+- [Application contract inventory](application-contract-inventory.v1.json)
+- [Application contract inventory schema](application-contract-inventory.v1.schema.json)
 - [Implementation record](implementation-record.md)
 - [Gap investigation](../../../../research/investigations/RESEARCH-0057-frontend-application-foundation-gap.md)
 - [ADR-0037](../../../../architecture/decisions/ADR-0037-frontend-application-contract-and-desktop-bridge.md)
@@ -53,10 +55,11 @@ escalation defined by the plan.
 
 ## Current authority
 
-The owner has accepted the planning package. This documentation-only task does
-not itself start implementation. When the owner directs implementation to
-begin, WP1 is the entry package; successful phase checkpoints automatically
-authorize the next phase under the full plan without per-package approval.
+The owner accepted the planning package and Phase A implementation. WP1 and
+WP2 now provide the exact authority inventory, bounded application bootstrap,
+common contract vocabulary, and closed renderer contract source. Checkpoint A
+automatically unblocks Phase B under the accepted plan, but this Phase A task
+did not start WP3 or WP4.
 
 M2 remains inactive until a separate accepted M2 plan exists. The transition's
 diagnostic React surface is development evidence, not the M2 interface.

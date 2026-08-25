@@ -60,9 +60,9 @@ public sealed class WorkerBootstrapRegistry
                 && request.Compatibility?.ApplicationContract?.Value
                     == ProtocolConstants.ContractVersion
                 && request.Compatibility.DomainContract?.Value
-                    == ProtocolConstants.ContractVersion
+                    == ProtocolConstants.DomainContractVersion
                 && request.Compatibility.StorageContract?.Value
-                    == ProtocolConstants.ContractVersion
+                    == ProtocolConstants.StorageContractVersion
                 && request.OneUseNonce.Span.SequenceEqual(
                     Convert.FromBase64String(expected.OneUseNonceBase64));
             if (!valid || registration.ConnectionId is not null)

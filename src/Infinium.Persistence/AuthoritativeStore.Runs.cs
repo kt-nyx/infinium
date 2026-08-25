@@ -327,6 +327,38 @@ public sealed partial class AuthoritativeStore
         }
     }
 
+    public IReadOnlyList<RunRecord> ListRecentRuns(int maximumCount)
+    {
+        if (maximumCount is <= 0 or > 20)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maximumCount));
+        }
+
+        lock (gate)
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                SELECT run_id, installation_snapshot_id, analysis_context_id,
+                       effective_scan_configuration_id, resolved_input_manifest_id,
+                       lifecycle_state, lifecycle_generation, coordinator_fencing_epoch,
+                       durable_sequence, created_at, updated_at
+                FROM runs
+                ORDER BY created_at DESC, run_id DESC
+                LIMIT $limit;
+                """;
+            command.Parameters.AddWithValue("$limit", maximumCount);
+            using var reader = command.ExecuteReader();
+            var result = new List<RunRecord>();
+            while (reader.Read())
+            {
+                result.Add(ReadRun(reader));
+            }
+
+            result.Reverse();
+            return result;
+        }
+    }
+
     public IReadOnlyList<RunRecord> ListNonTerminalRuns(
         int maximumCount = 100,
         DateTimeOffset? afterCreatedAt = null,
