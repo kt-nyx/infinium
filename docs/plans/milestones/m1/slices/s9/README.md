@@ -1,11 +1,13 @@
 # M1 Slice 9
 
 Status: Accepted
-Disposition: Complete M1 end-to-end closeout plan accepted by the project
-owner on exact planning candidate
-`1dd5419ebb3dea8893f7e45adbe16191cf0e823c`; WP1-through-WP7 implementation
-is separately activated on exact base
-`ce51f2d7fdd9d74083ca8c83f686b1193e867ff0`
+Disposition: The complete M1 end-to-end closeout plan remains accepted on
+exact planning candidate `1dd5419ebb3dea8893f7e45adbe16191cf0e823c`.
+WP1 through WP7 are implemented from exact activation handoff
+`264c79c37e6c14f24f243749cdea6e9c47bb1ce1`; the complete accepted floor
+passes on product candidate `926080092e056973d254562424a030672fb4d917`,
+tree `fb9b9679b458f78dd3ef4d5f31dfdc3c059670f9`. The implementation does not
+self-accept Slice 9 or M1.
 
 Last reviewed: 2026-08-25
 Owner: Project owner
@@ -15,6 +17,13 @@ to prove that the already accepted M1 parts work together through the real CLI,
 produce one truthful stable result, replay from retained dependencies, and
 leave a reviewable case-by-case completion record. It is not a new analyzer or
 permission to broaden product meaning.
+
+Implementation and the M1 completion evidence are recorded in the
+[Slice 9 implementation record](record.md). The exact 34-row final result
+index and sanitized candidate-bound receipts are linked from the
+[implementation record](record.md#final-receipts).
+The next gate is the project owner's accept, reject, or amend decision on the
+exact product candidate and its documentation-only handoff. M2 is not active.
 
 Live authorization is stated only in
 [current project state](../../../../../current-state.md). It activates the

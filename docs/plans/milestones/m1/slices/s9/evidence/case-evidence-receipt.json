@@ -1,0 +1,97 @@
+{
+  "schema": "infinium-m1-slice9-case-evidence/1",
+  "status": "passed",
+  "candidate_commit": "926080092e056973d254562424a030672fb4d917",
+  "candidate_tree": "fb9b9679b458f78dd3ef4d5f31dfdc3c059670f9",
+  "gate": "All",
+  "commands": [
+    {
+      "gate": "Contracts",
+      "command": "dotnet test tests/Infinium.ContractTests/Infinium.ContractTests.csproj -c Release --no-build --filter \"FullyQualifiedName~M1Slice9CompositionContractTests\"",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "total": 3,
+      "duration_ms": 975
+    },
+    {
+      "gate": "CompositionSynthetic",
+      "command": "dotnet test tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj -c Release --no-build --filter \"FullyQualifiedName~ManagedCrossStageCorpusIntegrationTests\"",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "total": 2,
+      "duration_ms": 7157
+    },
+    {
+      "gate": "CompositionControlledReal",
+      "command": "dotnet test tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj -c Release --no-build --filter \"FullyQualifiedName~M1Slice9ControlledCompositionIntegrationTests\"",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "total": 2,
+      "duration_ms": 1331
+    },
+    {
+      "gate": "ReplayEquivalence",
+      "command": "dotnet test tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj -c Release --no-build --filter \"FullyQualifiedName~FrozenCrossStageFourCaseCorpusExecutesManagedCoordinatorAndTypedQueryBeforeOracleComparison\"",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "total": 1,
+      "duration_ms": 7077
+    },
+    {
+      "gate": "Output",
+      "command": "dotnet test tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj -c Release --no-build --filter \"FullyQualifiedName~AnalysisCliStartsAndReadsManagedDocumentationCandidateFindingCaseProductExecution\"",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "total": 1,
+      "duration_ms": 15499
+    },
+    {
+      "gate": "Safety",
+      "command": "dotnet test tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj -c Release --no-build --filter \"FullyQualifiedName~ExactSlice8RetainedHandoffPreflightsAndProjectsFourControlledResultsWithoutSourceMutation\"",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "total": 1,
+      "duration_ms": 1320
+    },
+    {
+      "gate": "RequiredCases",
+      "command": "dotnet test tests/Infinium.ContractTests/Infinium.ContractTests.csproj -c Release --no-build --filter \"FullyQualifiedName~PreregisteredRequiredCaseIndexIsClosedAndContainsTheExactOrderedBaseline\"",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "total": 1,
+      "duration_ms": 942
+    },
+    {
+      "gate": "ClaimReview",
+      "command": "bounded claim and exact no-effect manifest review",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "total": 1,
+      "duration_ms": 0
+    }
+  ],
+  "controlled_handoff_id": "m1-slice8-research0035-local-v1",
+  "controlled_manifest_sha256": "8972ef0e160b9de04da281d48639b66d8bffcc153504c1d699f654f1eff6ecf5",
+  "controlled_input_count": 26,
+  "controlled_public_manifest_count": 3,
+  "forbidden_effect_counts": {
+    "provider": 0,
+    "model": 0,
+    "credential": 0,
+    "dns": 0,
+    "network": 0,
+    "billable": 0,
+    "live": 0,
+    "source_refresh": 0,
+    "publication": 0
+  },
+  "process_survivor_count": 0
+}

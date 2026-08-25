@@ -1,6 +1,13 @@
 {
   "schema": "infinium.m1-slice9-claim-inventory/v1",
-  "status": "preregistered",
+  "status": "final-review-ready",
+  "candidate_commit": "926080092e056973d254562424a030672fb4d917",
+  "candidate_tree": "fb9b9679b458f78dd3ef4d5f31dfdc3c059670f9",
+  "case_evidence": {
+    "path": "case-evidence-receipt.json",
+    "byte_length": 3450,
+    "sha256": "c98aafcc18b546ec5d94d24afe4dce7147bca4139092a2b3871b9b0a93da9966"
+  },
   "supported_statements": [
     "The accumulated coordinator path publishes one frozen run-output v1 containing the admitted local, retained-provider, and scope-reversion facts.",
     "The developer-owned synthetic package exercises supported, resolved-negative, abstained, gap, and unsupported states through the shipped CLI.",
