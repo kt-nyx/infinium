@@ -63,9 +63,10 @@ provider database.
 - The active public-fixture registry contains 30 current conformance packages.
   Historical and rejected package discovery is archive-only.
 - Functional naming governance and its automated checker cover code, tests,
-  tools, fixtures, schemas, commands, options, and active documentation. The
-  final inventory has 48 exact compatibility/history allowlist entries and zero
-  unexplained findings.
+  tools, fixtures, schemas, protobuf, commands, options, and active
+  documentation. The final correction inventory has 177 exact reviewed
+  compatibility, governance, retained-evidence, or genuine domain-term
+  exceptions, zero cleanup-debt entries, and zero unexplained findings.
 
 ## Consolidated review findings and corrections
 
@@ -92,6 +93,19 @@ diff review returned `ACCEPT` after correcting these must-fix findings:
 9. Integration tests searched for an obsolete secret canary rather than the
    deterministic secret actually used by the helper. They now check the exact
    functional marker.
+10. A final repository-wide pass found planning-stage wording in ordinary
+    errors, comments, test identifiers, and generated evidence labels that the
+    first declaration-focused naming checker could not see. Those ordinary
+    names are now functional, the checker scans every line of ordinary source
+    and protobuf files, and new generated allowlist entries fail until they are
+    explicitly reviewed.
+11. Active architecture, research, workflow, evaluation, archive, and risk
+    documents still described completed M1 backend work as pending. They now
+    agree with the live handoff while preserving dated ADR/history meaning.
+12. Verification process cleanup is now mandatory governance. Repository-owned
+    .NET/test-host survivors must reach zero, and SDK build servers may be shut
+    down only through the graceful SDK command when they demonstrably hold
+    generated repository data open after all builds finish.
 
 No unresolved must-fix finding remains.
 
@@ -111,7 +125,7 @@ private-evaluator operation was performed.
 | Security category | 135 passed, 3 expected skips. |
 | Fault category | 117 passed, 3 expected skips. |
 | Unfiltered solution tests | 674 passed, 10 expected skips, 0 failed. |
-| Functional naming | Passed; zero unexplained findings. |
+| Functional naming | Passed; 177 exact reviewed exceptions, zero cleanup-debt entries, and zero unexplained findings. |
 | Analysis corpus | Independently revalidated and accepted. |
 | Documentation, formatting, dependency manifest, diff whitespace, archive state, process survival, and final local hygiene | Passed in the final closeout run recorded below. |
 
@@ -119,6 +133,17 @@ The functionally renamed analysis corpus is sealed by manifest SHA-256
 `ec3a1581bbbad2ea2541067833dcec0eb18aa324c2ca6f65cf23ae68541b02ed`
 and aggregate SHA-256
 `cb63c2707e9bd22aea7667149736637ab68e26fe88385e85f0cbeff3e76a34b1`.
+
+The post-acceptance cleanup correction was verified against commit
+`c7b365eefb30aa6c066a7ab8e5d537c983415ca9`. One unfiltered test invocation was
+externally interrupted when its .NET processes were stopped; it was discarded
+and rerun rather than counted. The clean rerun reported 674 passed, 10 expected
+skips, and 0 failures. Repository-owned `.NET`/test-host survivors were then
+zero. A graceful SDK build-server shutdown released the final package-cache
+lock, and the final generated-data dry run reported 0 directories, 0 ignored
+artifact files, and 0 bytes. Both OpenAI environment keys remained removed;
+no provider, network, credential, billable, archive, or private-evaluator
+operation occurred.
 
 ## Remaining limitations
 
@@ -139,3 +164,7 @@ committed as `58e0401b9510ab287ee44a83a547eefee82c79ae`, based on
 `6a9c57815716c0fac35381b71e5766b1d7d2f0d0`. This documentation-only handoff
 records that immutable implementation identity without changing product
 behavior. Repository-owned process survivors were zero before binding.
+
+The final naming, documentation, and process-governance correction is bound as
+`c7b365eefb30aa6c066a7ab8e5d537c983415ca9`. It changes no M1 product scope and
+does not activate M2.

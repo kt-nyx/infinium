@@ -29,7 +29,7 @@ modlist is safe. M2 remains separately planned and authorized work.
 |---|---|
 | Completed milestone | M1 - bounded backend semantic proof. |
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
-| Accepted cleanup implementation | Commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
+| Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Active implementation | None. |
 | Next gate | An accepted M2 plan. M1 completion and cleanup approval do not automatically activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
@@ -79,9 +79,15 @@ asset, script, configuration, dependency, performance, or runtime problem.
   ordinary product run.
 - Provider credentials, explicit development invocation, usage accounting,
   semantic admission, persistence, and replay are separated by responsibility.
-- Functional naming is enforced automatically. Planning terms may remain only
-  in plans, historical records, migration identities, or exact compatibility
-  allowlist entries.
+- Functional naming is enforced automatically across ordinary source,
+  scripts, projects, protobuf, structured contract names, and repository
+  paths. The reviewed allowlist contains 177 exact compatibility,
+  governance, retained-evidence, or genuine domain-term exceptions, with zero
+  cleanup-debt and zero unexplained findings.
+- Verification closeout now requires zero repository-owned .NET/test-host
+  survivors. If an SDK build server demonstrably holds generated repository
+  data open after all builds finish, the policy requires graceful
+  `dotnet build-server shutdown`, never a broad process-name kill.
 - The report projection is implementation-active so M2 can consume it, but its
   presentation and user workflow remain M2 work.
 
