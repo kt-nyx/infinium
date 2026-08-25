@@ -134,7 +134,8 @@ and aggregate SHA-256
 
 ## Candidate binding
 
-The coherent cleanup candidate is based on
-`6a9c57815716c0fac35381b71e5766b1d7d2f0d0`. Its exact cleanup implementation
-commit is bound after the passing final floor; the documentation-only handoff
-records that commit without changing product behavior.
+The complete final verification floor passed on the coherent cleanup candidate
+committed as `58e0401b9510ab287ee44a83a547eefee82c79ae`, based on
+`6a9c57815716c0fac35381b71e5766b1d7d2f0d0`. This documentation-only handoff
+records that immutable implementation identity without changing product
+behavior. Repository-owned process survivors were zero before binding.

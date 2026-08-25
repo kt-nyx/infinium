@@ -29,6 +29,7 @@ modlist is safe. M2 remains separately planned and authorized work.
 |---|---|
 | Completed milestone | M1 - bounded backend semantic proof. |
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
+| Accepted cleanup implementation | Commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Active implementation | None. |
 | Next gate | An accepted M2 plan. M1 completion and cleanup approval do not automatically activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
