@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/scope-reversion-analysis.v2.schema.json",
+  "title": "Infinium scope-reversion analysis v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id", "schema_version", "payload_id", "originating_run_id", "assignment_id",
+    "snapshot_id", "context_id", "configuration_id", "execution_input_id", "input_handoff_id",
+    "input_manifest_fingerprint", "public_manifests", "controlled_inputs", "analyzer", "partition_role", "subjects", "members",
+    "source_decisions", "taxonomy", "decisions", "candidates", "hypotheses", "findings", "cases",
+    "recommendations", "gaps", "coverage", "partition_transitions", "boundaries",
+    "publication_claim_boundary"
+  ],
+  "properties": {
+    "schema_id": { "const": "infinium.analysis.scope-reversion/v2" },
+    "schema_version": { "const": "2.0.0" },
+    "payload_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "assignment_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "snapshot_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "context_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "configuration_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "execution_input_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "input_handoff_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "input_manifest_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
+    "public_manifests": { "type": "array", "minItems": 1, "maxItems": 16, "items": { "$ref": "#/$defs/public_manifest" } },
+    "controlled_inputs": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/controlled_input" } },
+    "analyzer": { "$ref": "#/$defs/analyzer" },
+    "partition_role": { "enum": ["controlled-real-validation", "controlled-real-development"] },
+    "subjects": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/subject" } },
+    "members": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "$ref": "#/$defs/member" } },
+    "source_decisions": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/source_decision" } },
+    "taxonomy": { "type": "array", "minItems": 1, "maxItems": 1024, "items": { "$ref": "#/$defs/taxonomy" } },
+    "decisions": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/decision" } },
+    "candidates": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "scope-reversion-analysis.v1.schema.json#/$defs/candidate" } },
+    "hypotheses": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "scope-reversion-analysis.v1.schema.json#/$defs/hypothesis" } },
+    "findings": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/finding" } },
+    "cases": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/case" } },
+    "recommendations": { "type": "array", "maxItems": 64, "items": { "$ref": "scope-reversion-analysis.v1.schema.json#/$defs/recommendation" } },
+    "gaps": { "type": "array", "maxItems": 1024, "items": { "$ref": "scope-reversion-analysis.v1.schema.json#/$defs/gap" } },
+    "coverage": { "type": "array", "minItems": 1, "maxItems": 16, "items": { "$ref": "#/$defs/coverage" } },
+    "partition_transitions": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/partition_transition" } },
+    "boundaries": { "type": "array", "minItems": 11, "maxItems": 11, "items": { "$ref": "scope-reversion-analysis.v1.schema.json#/$defs/boundary" } },
+    "publication_claim_boundary": { "const": "For the exact admitted controlled-real members and reported populations, the category-neutral deterministic local analyzer distinguishes one shared actor-cohort cause and one placed-reference cause from their matched restored-relation controls. It preserves residual facts and gaps and makes no claim of broad compatibility, patch safety, runtime correctness, completeness, precision, recall, or production readiness." }
+  },
+  "$defs": {
+    "id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "ids": { "type": "array", "maxItems": 512, "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+    "texts": { "type": "array", "maxItems": 256, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 4096 } },
+    "text": { "type": "string", "minLength": 1, "maxLength": 8192 },
+    "public_manifest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository_path", "byte_length", "sha256"],
+      "properties": {
+        "repository_path": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "byte_length": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "common.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "controlled_input": {
+      "type": "object", "additionalProperties": false,
+      "required": ["relative_path", "role", "byte_length", "sha256"],
+      "properties": {
+        "relative_path": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "role": { "enum": ["official-master", "positive-plugin-or-asset", "matched-patch-control", "required-extraction-dependency"] },
+        "byte_length": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "common.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "analyzer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["analyzer_family", "analyzer_id", "analyzer_version", "semantic_contract_version", "identity_contract_version", "ruleset_version", "declaration_fingerprint", "canonical_declaration_json", "maturity"],
+      "properties": {
+        "analyzer_family": { "const": "infinium.scope-reversion" },
+        "analyzer_id": { "const": "infinium.scope-reversion.local" },
+        "analyzer_version": { "const": "2.0.0" },
+        "semantic_contract_version": { "const": "2.0.0" },
+        "identity_contract_version": { "const": "2.0.0" },
+        "ruleset_version": { "const": "1.0.0" },
+        "declaration_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
+        "canonical_declaration_json": { "type": "string", "minLength": 2, "maxLength": 65536 },
+        "maturity": { "const": "experimental" }
+      }
+    },
+    "contribution_state": {
+      "type": "object", "additionalProperties": false,
+      "required": ["state", "contribution_id", "evidence_ids"],
+      "properties": {
+        "state": { "enum": ["present", "absent", "unresolved", "unsupported", "invalid"] },
+        "comparable_value": { "type": ["string", "null"], "maxLength": 8192 },
+        "contribution_id": { "$ref": "#/$defs/id" },
+        "evidence_ids": { "$ref": "#/$defs/ids" }
+      }
+    },
+    "subject": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subject_id", "kind", "ordered_member_ids", "shared_dependency_cause_id", "affected_locus", "predicted_symptom", "recommendation", "validation", "claim_gaps"],
+      "properties": {
+        "subject_id": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["actor-cohort", "placed-reference"] },
+        "ordered_member_ids": { "$ref": "#/$defs/ids" },
+        "shared_dependency_cause_id": { "$ref": "#/$defs/id" },
+        "affected_locus": { "$ref": "#/$defs/text" },
+        "predicted_symptom": { "$ref": "#/$defs/text" },
+        "recommendation": { "$ref": "#/$defs/text" },
+        "validation": { "$ref": "#/$defs/text" },
+        "claim_gaps": { "$ref": "#/$defs/texts" }
+      }
+    },
+    "member": {
+      "type": "object", "additionalProperties": false,
+      "required": ["member_id", "subject_id", "adapter_id", "feature_dimension", "prior_effective_state", "winning_state", "winning_purpose_change_observed", "source_decision_ids", "dependency_cause_id", "dependency_ids", "evidence_ids", "residual_facts", "gaps"],
+      "properties": {
+        "member_id": { "$ref": "#/$defs/id" },
+        "subject_id": { "$ref": "#/$defs/id" },
+        "adapter_id": { "enum": ["infinium.scope-reversion.adapter.actor-cohort", "infinium.scope-reversion.adapter.placed-reference"] },
+        "feature_dimension": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "prior_effective_state": { "$ref": "#/$defs/contribution_state" },
+        "winning_state": { "$ref": "#/$defs/contribution_state" },
+        "winning_purpose_change_observed": { "type": "boolean" },
+        "source_decision_ids": { "$ref": "#/$defs/ids" },
+        "dependency_cause_id": { "$ref": "#/$defs/id" },
+        "dependency_ids": { "$ref": "#/$defs/ids" },
+        "evidence_ids": { "$ref": "#/$defs/ids" },
+        "residual_facts": { "$ref": "#/$defs/texts" },
+        "gaps": { "$ref": "#/$defs/texts" }
+      }
+    },
+    "source_decision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["decision_id", "originating_run_id", "source_registry_id", "source_revision", "passage_id", "passage_fingerprint", "public_manifest_path", "retrieval_time", "proposal_state", "support_state", "applicability_state", "decision_state", "local_fact_fingerprint", "subject_ids", "fields", "evidence_ids", "reason"],
+      "properties": {
+        "decision_id": { "$ref": "#/$defs/id" }, "originating_run_id": { "$ref": "#/$defs/id" },
+        "source_registry_id": { "$ref": "#/$defs/text" }, "source_revision": { "$ref": "#/$defs/text" },
+        "passage_id": { "$ref": "#/$defs/text" }, "passage_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
+        "public_manifest_path": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "retrieval_time": { "type": "string", "format": "date-time" },
+        "proposal_state": { "enum": ["proposed", "extracted", "rejected", "abstained", "unavailable", "deleted"] },
+        "support_state": { "enum": ["not-evaluated", "supported", "unsupported", "contradicted", "unavailable"] },
+        "applicability_state": { "enum": ["not-evaluated", "applicable", "conditional-unestablished", "not-applicable", "unknown"] },
+        "decision_state": { "enum": ["admitted", "rejected", "abstained", "audit-only"] },
+        "local_fact_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
+        "subject_ids": { "$ref": "#/$defs/ids" }, "fields": { "$ref": "#/$defs/texts" },
+        "evidence_ids": { "$ref": "#/$defs/ids" }, "reason": { "$ref": "#/$defs/text" }
+      }
+    },
+    "taxonomy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["assignment_id", "originating_run_id", "taxonomy_id", "taxonomy_version", "subject_id", "axis", "facet", "code", "applicability", "role", "evidence_ids", "reason"],
+      "properties": {
+        "assignment_id": { "$ref": "#/$defs/id" }, "originating_run_id": { "$ref": "#/$defs/id" },
+        "taxonomy_id": { "const": "infinium.skyrim-se.mod-impact-taxonomy" }, "taxonomy_version": { "const": "0.1.0" },
+        "subject_id": { "$ref": "#/$defs/id" }, "axis": { "$ref": "#/$defs/text" }, "facet": { "$ref": "#/$defs/text" },
+        "code": { "type": ["string", "null"], "maxLength": 256 },
+        "applicability": { "enum": ["assigned", "unknown", "unsupported", "unmapped", "not-applicable"] },
+        "role": { "enum": ["declared", "observed", "predicted", "established"] },
+        "evidence_ids": { "$ref": "#/$defs/ids" }, "reason": { "$ref": "#/$defs/text" }
+      }
+    },
+    "decision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["decision_id", "subject_id", "transition", "purpose_coverage", "disposition", "rationale", "member_ids", "evidence_ids"],
+      "properties": {
+        "decision_id": { "$ref": "#/$defs/id" }, "subject_id": { "$ref": "#/$defs/id" },
+        "transition": { "enum": ["unchanged", "changed", "created", "absent", "unresolved", "unsupported", "invalid"] },
+        "purpose_coverage": { "enum": ["covers-transition", "does-not-cover-transition", "conflicts", "undecidable"] },
+        "disposition": { "enum": ["supported-finding", "resolved-negative", "abstained", "unsupported", "invalid-input", "failed", "limited", "unpublishable"] },
+        "rationale": { "$ref": "#/$defs/text" }, "member_ids": { "$ref": "#/$defs/ids" }, "evidence_ids": { "$ref": "#/$defs/ids" }
+      }
+    },
+    "finding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["finding_id", "candidate_id", "subject_id", "severity", "confidence", "conclusion", "predicted_symptom", "evidence_ids"],
+      "properties": {
+        "finding_id": { "$ref": "#/$defs/id" }, "candidate_id": { "$ref": "#/$defs/id" }, "subject_id": { "$ref": "#/$defs/id" },
+        "severity": { "const": "moderate" }, "confidence": { "const": "strongly-supported" },
+        "conclusion": { "$ref": "#/$defs/text" }, "predicted_symptom": { "$ref": "#/$defs/text" }, "evidence_ids": { "$ref": "#/$defs/ids" }
+      }
+    },
+    "case": {
+      "type": "object", "additionalProperties": false,
+      "required": ["case_id", "logical_case_id", "candidate_id", "finding_id", "subject_id", "shared_dependency_cause_id", "state", "member_ids", "evidence_ids"],
+      "properties": {
+        "case_id": { "$ref": "#/$defs/id" }, "logical_case_id": { "$ref": "#/$defs/id" }, "candidate_id": { "$ref": "#/$defs/id" },
+        "finding_id": { "oneOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] }, "subject_id": { "$ref": "#/$defs/id" },
+        "shared_dependency_cause_id": { "$ref": "#/$defs/id" }, "state": { "enum": ["supported"] },
+        "member_ids": { "$ref": "#/$defs/ids" }, "evidence_ids": { "$ref": "#/$defs/ids" }
+      }
+    },
+    "coverage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["population_id", "denominator", "completed", "completed_with_gaps", "unsupported", "failed", "member_ids"],
+      "properties": {
+        "population_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "denominator": { "type": "integer", "minimum": 0 }, "completed": { "type": "integer", "minimum": 0 },
+        "completed_with_gaps": { "type": "integer", "minimum": 0 }, "unsupported": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 }, "member_ids": { "$ref": "#/$defs/ids" }
+      }
+    },
+    "partition_transition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["transition_id", "case_id", "input_manifest_fingerprint", "candidate_identity", "from_role", "to_role", "reason", "recorded_at"],
+      "properties": {
+        "transition_id": { "$ref": "#/$defs/id" }, "case_id": { "$ref": "#/$defs/text" },
+        "input_manifest_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" }, "candidate_identity": { "$ref": "#/$defs/text" },
+        "from_role": { "enum": ["controlled-real-validation", "controlled-real-development"] },
+        "to_role": { "enum": ["controlled-real-validation", "controlled-real-development"] },
+        "reason": { "$ref": "#/$defs/text" }, "recorded_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

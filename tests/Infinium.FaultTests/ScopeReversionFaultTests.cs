@@ -1,5 +1,6 @@
 using Infinium.Analysis.ScopeReversion;
 using Infinium.Application.ScopeReversion;
+using Infinium.Bethesda;
 using Infinium.Domain.Contracts;
 using Infinium.PublicFixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -114,5 +115,24 @@ public sealed class ScopeReversionFaultTests
             },
         };
         Assert.ThrowsExactly<InvalidDataException>(() => ScopeReversionComposition.Compose(configurationDrift));
+    }
+
+    [TestMethod]
+    [TestCategory("Fault")]
+    [TestCategory("Cancellation")]
+    [TestProperty("Category", "ScopeReversionV2")]
+    public void SelectedControlledExtractionHonorsCancellationAndFiniteLimits()
+    {
+        BethesdaSemanticRequest request = BethesdaSemanticTestSnapshot.Create("BETH-NPC-DEV");
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+        BethesdaSemanticExtractor extractor = new(
+            64L * 1024 * 1024,
+            64L * 1024 * 1024,
+            ["00000001:DevMaster.esm"]);
+        Assert.ThrowsExactly<OperationCanceledException>(() => extractor.Extract(request, cancellation.Token));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new BethesdaSemanticExtractor(0, 1));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new BethesdaSemanticExtractor(1, 0));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new BethesdaSemanticExtractor(1, 1, []));
     }
 }

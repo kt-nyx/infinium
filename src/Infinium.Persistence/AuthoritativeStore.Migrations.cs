@@ -278,6 +278,18 @@ public sealed partial class AuthoritativeStore
             {
                 ValidateScopeReversionMigration();
             }
+            using SqliteCommand scopeV2VersionCommand = connection.CreateCommand();
+            scopeV2VersionCommand.CommandText = "PRAGMA user_version;";
+            int scopeV2Version = Convert.ToInt32(scopeV2VersionCommand.ExecuteScalar(),
+                System.Globalization.CultureInfo.InvariantCulture);
+            if (scopeV2Version == 10)
+            {
+                ApplyScopeReversionV2Migration();
+            }
+            else if (scopeV2Version == 11)
+            {
+                ValidateScopeReversionV2Migration();
+            }
         }
     }
 
@@ -2231,6 +2243,23 @@ public sealed partial class AuthoritativeStore
 
     private static readonly HashSet<string> RequiredSchemaObjects =
     [
+        "table:scope_reversion_v2_analyses",
+        "table:scope_reversion_v2_items",
+        "table:scope_reversion_v2_artifacts",
+        "table:scope_reversion_v2_dependencies",
+        "table:scope_reversion_v2_invalidations",
+        "table:scope_reversion_v2_publications",
+        "index:scope_reversion_v2_artifacts_identity_idx",
+        "index:scope_reversion_v2_dependencies_identity_idx",
+        .. new[]
+        {
+            "scope_reversion_v2_analyses", "scope_reversion_v2_items", "scope_reversion_v2_artifacts",
+            "scope_reversion_v2_dependencies", "scope_reversion_v2_invalidations", "scope_reversion_v2_publications",
+        }.SelectMany(table => new[]
+        {
+            $"trigger:{table}_append_only_update",
+            $"trigger:{table}_append_only_delete",
+        }),
         "table:scope_reversion_analyses",
         "table:scope_reversion_artifacts",
         "table:scope_reversion_dependencies",

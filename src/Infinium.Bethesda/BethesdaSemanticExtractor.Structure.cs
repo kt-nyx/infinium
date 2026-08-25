@@ -81,20 +81,31 @@ public sealed partial class BethesdaSemanticExtractor
                 continue;
             }
 
+            MajorRecordFrame record = new(GameConstants.SkyrimSE, child.HeaderAndContentData);
+            string signature = record.RecordType.Type;
+            FormKey recordKey;
+            try
+            {
+                recordKey = ResolveFileFormId(
+                    record.FormID,
+                    plugin,
+                    masterStyles,
+                    "record-master-index-invalid");
+            }
+            catch (BethesdaInputException) when (selectedFormKeys is not null)
+            {
+                continue;
+            }
+            string canonicalRecordKey = CanonicalFormKey(recordKey);
+            if (selectedFormKeys is not null && !selectedFormKeys.Contains(canonicalRecordKey))
+            {
+                continue;
+            }
             recordCount++;
             if (recordCount > 4096)
             {
                 throw Input("record-count-over-limit", plugin.Receipt.PluginName, "The plugin exceeds the bounded Mutagen record population.");
             }
-
-            MajorRecordFrame record = new(GameConstants.SkyrimSE, child.HeaderAndContentData);
-            string signature = record.RecordType.Type;
-            FormKey recordKey = ResolveFileFormId(
-                record.FormID,
-                plugin,
-                masterStyles,
-                "record-master-index-invalid");
-            string canonicalRecordKey = CanonicalFormKey(recordKey);
             Dictionary<string, int> recordFields = fields.GetValueOrDefault(canonicalRecordKey)
                 ?? [];
             fields[canonicalRecordKey] = recordFields;

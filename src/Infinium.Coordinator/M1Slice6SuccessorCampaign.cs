@@ -1203,15 +1203,16 @@ internal static class M1Slice6SuccessorAuthorityLoader
         connection.Open();
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText = "SELECT value FROM store_metadata WHERE key='schema_version';";
-        if (command.ExecuteScalar() is not string version || version is not ("7" or "8" or "9" or "10"))
-        { throw new InvalidDataException("The successor product state is not an exact supported schema-7 through schema-10 state."); }
+        if (command.ExecuteScalar() is not string version || version is not ("7" or "8" or "9" or "10" or "11"))
+        { throw new InvalidDataException("The successor product state is not an exact supported schema-7 through schema-11 state."); }
         command.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
         string expectedFingerprint = version switch
         {
             "7" => ProviderPersistenceDeclarations.SuccessorAttemptSchemaFingerprint,
             "8" => ProviderPersistenceDeclarations.SuccessorV6PersistenceSchemaFingerprint,
             "9" => ProviderPersistenceDeclarations.SemanticAdmissionSeparationSchemaFingerprint,
-            _ => ScopeReversionPersistenceDeclarations.SchemaFingerprint,
+            "10" => ScopeReversionPersistenceDeclarations.SchemaFingerprint,
+            _ => ScopeReversionV2PersistenceDeclarations.SchemaFingerprint,
         };
         if (command.ExecuteScalar() is not string fingerprint || fingerprint != expectedFingerprint)
         { throw new InvalidDataException("The evolved successor product-state fingerprint changed."); }

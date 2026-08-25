@@ -129,7 +129,7 @@ public sealed class ScopeReversionPersistenceIntegrationTests
         byte[] canonical;
         using (AuthoritativeStore store = temporary.Open())
         {
-            Assert.AreEqual(10, store.GetSchemaVersion());
+            Assert.AreEqual(AuthoritativeStore.CurrentSchemaVersion, store.GetSchemaVersion());
             ScopeReversionPersistencePhaseResult clean = ScopeReversionPersistencePhase.ExecuteAndPublish(
                 store, fixture.Request, artifacts, DateTimeOffset.UtcNow, ScopeReversionReplayMode.Clean);
             payloadId = clean.Analysis.PayloadId.Value;

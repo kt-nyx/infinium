@@ -404,7 +404,7 @@ public sealed class M1Slice6SuccessorAccountingTests
             command.CommandText = "SELECT COUNT(*) FROM provider_operation_attempts WHERE provider_attempt_id LIKE 'successor-attempt-%';";
             Assert.AreEqual(2L, (long)command.ExecuteScalar()!);
             command.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
-            Assert.AreEqual(ScopeReversionPersistenceDeclarations.SchemaFingerprint,
+            Assert.AreEqual(ScopeReversionV2PersistenceDeclarations.SchemaFingerprint,
                 (string)command.ExecuteScalar()!);
             command.CommandText = "SELECT COUNT(*) FROM migration_history WHERE migration_id='M1-S6-SUCCESSOR-0007';";
             Assert.AreEqual(1L, (long)command.ExecuteScalar()!);

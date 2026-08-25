@@ -41,6 +41,7 @@ public sealed partial class SchemaCompatibilityTests
         "finding-case-input.v1.schema.json",
         "finding-case.v1.schema.json",
         "scope-reversion-analysis.v1.schema.json",
+        "scope-reversion-analysis.v2.schema.json",
         "analysis-replay.v1.schema.json",
         "analysis-execution-input.v1.schema.json",
         "provider-access-profile.v1.schema.json",

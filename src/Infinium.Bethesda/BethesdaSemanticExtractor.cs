@@ -61,22 +61,49 @@ public sealed partial class BethesdaSemanticExtractor
             [("REFR", "DATA")] = 24,
         };
     private readonly Action<string, int>? afterPluginRead;
+    private readonly long maximumInputBytes;
     private readonly long maximumDecompressedBytes;
+    private readonly IReadOnlySet<string>? selectedFormKeys;
 
     public BethesdaSemanticExtractor()
     {
+        maximumInputBytes = MaximumInputBytes;
         maximumDecompressedBytes = MaximumInputBytes;
+    }
+
+    public BethesdaSemanticExtractor(long maximumInputBytes, long maximumDecompressedBytes)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(maximumInputBytes, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maximumDecompressedBytes, 1);
+        this.maximumInputBytes = maximumInputBytes;
+        this.maximumDecompressedBytes = maximumDecompressedBytes;
+    }
+
+    public BethesdaSemanticExtractor(
+        long maximumInputBytes,
+        long maximumDecompressedBytes,
+        IReadOnlyCollection<string> selectedFormKeys)
+        : this(maximumInputBytes, maximumDecompressedBytes)
+    {
+        ArgumentNullException.ThrowIfNull(selectedFormKeys);
+        if (selectedFormKeys.Count is < 1 or > 256)
+        {
+            throw new ArgumentOutOfRangeException(nameof(selectedFormKeys));
+        }
+        this.selectedFormKeys = selectedFormKeys.ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
     internal BethesdaSemanticExtractor(Action<string, int> afterPluginRead)
     {
         this.afterPluginRead = afterPluginRead;
+        maximumInputBytes = MaximumInputBytes;
         maximumDecompressedBytes = MaximumInputBytes;
     }
 
     internal BethesdaSemanticExtractor(long maximumDecompressedBytes)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(maximumDecompressedBytes, 1);
+        maximumInputBytes = MaximumInputBytes;
         this.maximumDecompressedBytes = maximumDecompressedBytes;
     }
 
@@ -165,8 +192,9 @@ public sealed partial class BethesdaSemanticExtractor
                 .Where(record =>
                 {
                     string family = SemanticSignature(record);
-                    return SemanticRecordFamilies.Contains(family)
-                        || IdentityOnlyRecordFamilies.Contains(family);
+                    return (SemanticRecordFamilies.Contains(family)
+                            || IdentityOnlyRecordFamilies.Contains(family))
+                        && IsSelected(record.FormKey);
                 })
                 .Select(record => record.FormKey)
                 .ToHashSet();
@@ -198,6 +226,10 @@ public sealed partial class BethesdaSemanticExtractor
                     .ToHashSet();
                 foreach (IMajorRecordGetter record in allModRecords)
                 {
+                    if (!IsSelected(record.FormKey))
+                    {
+                        continue;
+                    }
                     string recordSignature = SemanticSignature(record);
                     if (!allowedOrigins.Contains(record.FormKey.ModKey))
                     {
@@ -245,7 +277,7 @@ public sealed partial class BethesdaSemanticExtractor
                             item.Value)));
                 }
 
-                INpcGetter[] modNpcs = mod.EnumerateMajorRecords<INpcGetter>().ToArray();
+                INpcGetter[] modNpcs = mod.EnumerateMajorRecords<INpcGetter>().Where(item => IsSelected(item.FormKey)).ToArray();
                 for (int npcIndex = 0; npcIndex < modNpcs.Length; npcIndex++)
                 {
                     INpcGetter npc = modNpcs[npcIndex];
@@ -334,7 +366,7 @@ public sealed partial class BethesdaSemanticExtractor
                     }
                 }
 
-                foreach (IRaceGetter race in mod.EnumerateMajorRecords<IRaceGetter>())
+                foreach (IRaceGetter race in mod.EnumerateMajorRecords<IRaceGetter>().Where(item => IsSelected(item.FormKey)))
                 {
                     BethesdaRecordContribution contribution = Contribution(race, "RACE", plugins[index]);
                     BethesdaRaceFaceGenHeadDecision faceGenHead = !structural.HasSupportedField(contribution.Identity.FormKey, "DATA")
@@ -348,7 +380,8 @@ public sealed partial class BethesdaSemanticExtractor
                         faceGenHead == BethesdaRaceFaceGenHeadDecision.KnownPresent));
                 }
 
-                IPlacedObjectGetter[] modReferences = mod.EnumerateMajorRecords<IPlacedObjectGetter>().ToArray();
+                IPlacedObjectGetter[] modReferences = mod.EnumerateMajorRecords<IPlacedObjectGetter>()
+                    .Where(item => IsSelected(item.FormKey)).ToArray();
                 for (int referenceIndex = 0; referenceIndex < modReferences.Length; referenceIndex++)
                 {
                     IPlacedObjectGetter placed = modReferences[referenceIndex];
@@ -502,5 +535,8 @@ public sealed partial class BethesdaSemanticExtractor
             }
         }
     }
+
+    private bool IsSelected(FormKey key) => selectedFormKeys is null
+        || selectedFormKeys.Contains(CanonicalFormKey(key));
 
 }

@@ -63,6 +63,24 @@ static async Task<int> ScopeResultsAsync(string[] arguments, bool json)
     }
     byte[] bytes = new byte[checked((int)input.Length)];
     input.ReadExactly(bytes);
+    using JsonDocument header = JsonDocument.Parse(bytes);
+    string schemaId = header.RootElement.GetProperty("schema_id").GetString()
+        ?? throw new InvalidDataException("The scope-reversion result omits its schema identity.");
+    if (schemaId == Infinium.Domain.Contracts.ScopeReversionV2Contract.SchemaId)
+    {
+        Infinium.Domain.Contracts.ScopeReversionV2AnalysisContract v2 =
+            ScopeReversionV2JsonCodec.Deserialize(bytes);
+        if (json)
+        {
+            await Console.OpenStandardOutput().WriteAsync(ScopeReversionV2JsonCodec.Serialize(v2)).ConfigureAwait(false);
+            Console.WriteLine();
+        }
+        else
+        {
+            Console.Write(ScopeReversionV2OutputRenderer.RenderHuman(v2));
+        }
+        return 0;
+    }
     Infinium.Domain.Contracts.ScopeReversionAnalysisContract analysis =
         ScopeReversionJsonCodec.Deserialize(bytes);
     if (json)

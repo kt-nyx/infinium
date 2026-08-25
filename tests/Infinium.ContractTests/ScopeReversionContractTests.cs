@@ -138,6 +138,48 @@ public sealed class ScopeReversionContractTests
         Assert.AreEqual(string.Empty, output.Trim());
     }
 
+    [TestMethod]
+    [TestCategory("Contract")]
+    [TestCategory("Contracts")]
+    [TestProperty("Category", "ScopeReversionV2")]
+    public void FrozenSlice7ScopeReversionPathsHaveNoChangedBytes()
+    {
+        string[] paths =
+        [
+            "contracts/json-schema/scope-reversion-analysis.v1.schema.json",
+            "src/Infinium.Domain/Contracts/ScopeReversionContracts.cs",
+            "src/Infinium.Application/Serialization/ScopeReversionJsonCodec.cs",
+            "src/Infinium.Analysis/ScopeReversion/ScopeReversionAnalyzerDeclaration.cs",
+            "src/Infinium.Analysis/ScopeReversion/ScopeReversionAnalyzer.cs",
+            "src/Infinium.Analysis/ScopeReversion/ScopeReversionAdapters.cs",
+            "src/Infinium.Application/ScopeReversion/ScopeReversionComposition.cs",
+            "src/Infinium.Application/ScopeReversion/ScopeReversionOutputRenderer.cs",
+            "src/Infinium.Application/ScopeReversion/ScopeReversionPersistencePhase.cs",
+            "src/Infinium.Persistence/AuthoritativeStore.ScopeReversion.cs",
+        ];
+        ProcessStartInfo start = new("git")
+        {
+            WorkingDirectory = RepositoryRoot(),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        start.ArgumentList.Add("diff");
+        start.ArgumentList.Add("--name-only");
+        start.ArgumentList.Add("8209e939");
+        start.ArgumentList.Add("--");
+        foreach (string path in paths)
+        {
+            start.ArgumentList.Add(path);
+        }
+        using Process process = Process.Start(start) ?? throw new InvalidOperationException("Could not start Git.");
+        string output = process.StandardOutput.ReadToEnd();
+        string error = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        Assert.AreEqual(0, process.ExitCode, error);
+        Assert.AreEqual(string.Empty, output.Trim());
+    }
+
     private static string RepositoryRoot()
     {
         DirectoryInfo? current = new(AppContext.BaseDirectory);

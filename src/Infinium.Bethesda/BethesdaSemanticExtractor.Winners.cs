@@ -52,7 +52,7 @@ public sealed partial class BethesdaSemanticExtractor
             }
 
             totalBytes = checked(totalBytes + before.Length);
-            if (before.Length > MaximumInputBytes || totalBytes > MaximumInputBytes)
+            if (before.Length > maximumInputBytes || totalBytes > maximumInputBytes)
             {
                 throw Input("input-byte-limit", source.Path, "The Bethesda input byte limit was exceeded.");
             }
@@ -269,7 +269,7 @@ public sealed partial class BethesdaSemanticExtractor
     private static string ParticipantId(FormKey key) =>
         $"record:{CanonicalFormKey(key).ToLowerInvariant()}";
 
-    private static void ValidateMasterStylesAndReferences(
+    private void ValidateMasterStylesAndReferences(
         List<SealedPlugin> plugins,
         List<ISkyrimModDisposableGetter> mods)
     {
@@ -303,7 +303,7 @@ public sealed partial class BethesdaSemanticExtractor
                 throw Input("master-closure-invalid", plugin.Receipt.PluginName, "Every declared master must be present exactly once earlier in the accepted order.");
             }
             plugins[index] = plugin with { Receipt = plugin.Receipt with { Masters = masters } };
-            foreach (IMajorRecordGetter record in mods[index].EnumerateMajorRecords())
+            foreach (IMajorRecordGetter record in mods[index].EnumerateMajorRecords().Where(record => IsSelected(record.FormKey)))
             {
                 if (styles.TryGetValue(record.FormKey.ModKey, out BethesdaMasterStyle style)
                     && style == BethesdaMasterStyle.Light
