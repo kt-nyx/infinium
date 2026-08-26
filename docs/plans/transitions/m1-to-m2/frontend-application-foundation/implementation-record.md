@@ -1,7 +1,7 @@
 # M1-to-M2 Foundation — Frontend Application Foundation implementation record
 
 Status: Accepted
-Disposition: Checkpoint C reached; WP1-WP6 accepted and Phase D not started
+Disposition: Checkpoint C under correction; WP1-WP4 remain accepted, WP5-WP6 receipts are suspended, and Phase D is blocked
 
 Last reviewed: 2026-08-26
 Owner: Project owner
@@ -10,19 +10,23 @@ Planning base: `32dbb2c48754666336d2da571e554ad8897ed71c`
 
 ## Plain-language state
 
-Phase A verified the application authority surface. The Phase B correction now
+Phase A verified the application authority surface. The Phase B correction
 binds typed prepared runs to the exact retained inputs and supported durable
 analysis operation it claims to execute. WP3 and WP4 passed focused correction,
-consolidated re-review, and the complete accepted verification floor. Phase C
-is unblocked by corrected Checkpoint B but was not started.
+consolidated re-review, and the complete accepted verification floor. The first
+Phase C candidate reached `c551c12e22522e7a2cef8c21a322aa76db8fc23e`, but its
+Checkpoint C receipt is suspended while report publication/readback, recursive
+request validation, targeted-verification execution authority, export deletion,
+provenance, and paging semantics are corrected.
 
-The implementation has assigned every
-foundation capability to an exact owner, and implemented the common and
-setup-to-live-run boundaries future frontend work can build on. WP3 adds typed
+The implementation has assigned every foundation capability to an exact owner,
+and implemented the common and setup-to-live-run boundaries future frontend
+work can build on. WP3 adds typed
 tool/profile/configuration setup, honest estimates, and non-secret provider
 status. WP4 adds prepared manual-run initiation with immutable durable bindings,
-receipts, progress, reconnect, and restart behavior. No product UI, Phase C
-workflow, provider effect, or generic native authority was added.
+receipts, progress, reconnect, and restart behavior. Phase C code exists only as
+an under-correction candidate. No product UI, provider effect, or generic native
+authority was added.
 
 ## Package status
 
@@ -32,8 +36,8 @@ workflow, provider effect, or generic native authority was added.
 | A | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP2` | Accepted after correction | Corrected receipt and complete floor below |
 | B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3` | Accepted after correction | Earlier receipt retained as superseded evidence; corrected receipt below |
 | B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP4` | Accepted after correction | Earlier receipt retained as superseded evidence; corrected receipt below |
-| C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5` | Not started | None |
-| C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6` | Not started | None |
+| C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5` | Under correction | Earlier receipt below is suspended pending corrected producer/consumer evidence |
+| C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6` | Under correction | Earlier receipt below is suspended; targeted verification has an architecture decision gap |
 | D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` | Not started | None |
 | D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP8` | Not started | None |
 | E | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP9` | Not started | None |
@@ -627,7 +631,7 @@ fixtures/fakes and repository state. No private evaluator material, archive,
 external network, provider, credential, live, or billable operation was
 accessed, and no product output authored expected truth.
 
-## WP5 receipt — Bounded result exploration
+## Suspended WP5 receipt — Bounded result exploration candidate
 
 Work ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5`
 
@@ -667,7 +671,9 @@ Focused evidence and measurements:
   expiry/query/sort/scope/projection invalidation, coverage/failure/gap state,
   and the no-safety-guarantee claim all passed.
 
-Review result: `ACCEPT` after focused correction and re-review.
+Review result at the time: `ACCEPT` after focused correction and re-review;
+superseded by the current correction review because the FindingReport and
+application-service contract evidence was incomplete.
 
 - Must fix: schema-14 objects were initially absent from the exact database
   object allowlist; added the seven tables, three indexes, and eight
@@ -689,7 +695,7 @@ Review result: `ACCEPT` after focused correction and re-review.
 - Owner/authority decision: none.
 - Safety/isolation breach: none.
 
-## WP6 receipt — Durable user review
+## Suspended WP6 receipt — Durable user review candidate
 
 Work ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6`
 
@@ -735,7 +741,9 @@ Focused evidence:
   a distinct queued run with `scope-limited` readiness, and no unrelated scope
   identity was accepted.
 
-Review result: `ACCEPT` after focused correction and re-review.
+Review result at the time: `ACCEPT` after focused correction and re-review;
+superseded by the current correction review because targeted verification was
+not executable and export deletion was absent.
 
 - Must fix: targeted verification initially passed a gesture through the
   prepared-run foreign-key path without a preparation. It now uses the typed
@@ -767,11 +775,38 @@ Review result: `ACCEPT` after focused correction and re-review.
 - Owner/authority decision: none.
 - Safety/isolation breach: none.
 
-## Checkpoint C receipt — Phase C accepted
+## Suspended Checkpoint C receipt — Phase C candidate
 
-Disposition: `ACCEPT` for WP5 and WP6. Checkpoint C is reached. Phase D is
-automatically unblocked by the accepted plan but was not started; M2 remains
-inactive.
+Disposition: superseded by correction review. The candidate did not establish
+the complete FindingReport query surface, recursive service-contract defenses,
+an accepted executable targeted-verification mapping, or structured-export
+deletion. Checkpoint C is suspended; Phase D is blocked and M2 remains inactive.
+
+### Correction architecture stop — executable targeted verification
+
+Classification: owner/authority decision for the targeted-verification path.
+Independent Phase C corrections may continue, but Checkpoint C cannot be
+restored until this decision is accepted and implemented.
+
+The accepted product requirement says that, after an external setup change, a
+user can manually rerun affected checks. ADR-0037 requires a new manually
+initiated run linked to exact prior subjects and declared scope. The current
+executable catalog, however, supports only `managed-analysis-v1`, whose request
+is bound to a retained delivered-input package, installation snapshot, semantic
+context, effective configuration, and resolved input manifest. No accepted
+product or architecture contract defines how an exact source finding/case scope
+and the changed external setup produce the successor snapshot/input package or
+how that scope restricts the delivered analyzer without omitting dependencies.
+
+The earlier candidate instead registered operation kind `targeted-verification`,
+which `ManagedRunExecutor` cannot execute, created its successor run before the
+targeted-verification row, and did not schedule authoritative work. Reusing the
+source run's retained input would not verify the external change; filtering its
+facts ad hoc would invent a product-reachable scope-expansion rule. Both are
+rejected. The smallest required authority is a research/ADR/plan correction
+that defines the typed targeted-scope expansion input, changed-snapshot binding,
+dependency closure, mapping into `managed-analysis-v1`, and exact coverage/gap
+semantics. No new operation kind or generic-substrate fallback is authorized.
 
 Contract state:
 
@@ -784,12 +819,11 @@ Contract state:
 - renderer registry fingerprint
   `b5631f491ff2b781dcefe6b36318fbd75831ad8d9f6cedb3b2cde946b7cecada`;
   and
-- result/review operations are `Producer-consumer-validated` through generated
-  protobuf, coordinator handlers, exact durable persistence, migration,
-  conflict/invalid-state/security cases, real named-pipe generated-client
-  calls, restart, replay, backup/restore, and readback. FindingReport remains
-  implementation-active until the real M2 UI validates that presentation
-  seam.
+- result/review operations are under correction and therefore
+  `Implementation-active`. Earlier generated-protobuf, persistence, migration,
+  conflict, named-pipe, restart, replay, and backup/restore evidence remains
+  diagnostic only until the missing verticals and adversarial cases pass.
+  FindingReport is not yet a queryable generated-service surface.
 
 The complete accepted verification floor and exact final counts are recorded
 below after the review-ready candidate's one final floor.
@@ -866,9 +900,11 @@ Every final category and unfiltered test invocation performed exact-root
 repository-owned `dotnet`/`testhost` cleanup and reported 0 survivors. The
 final handoff check also reported 0 survivors.
 
-Consolidated review disposition: `ACCEPT`. No owner decision is required.
-Phase D is automatically unblocked by the accepted plan, but it was not
-started and no Phase D artifact is included in this checkpoint.
+Consolidated review disposition: superseded by the correction request. The
+targeted-verification operation currently requires an owner/architecture
+decision because no accepted contract maps exact finding/case scope into the
+supported analyzer operation. Phase D is blocked and no Phase D artifact is
+included in this candidate.
 
 ## Final closeout fields
 

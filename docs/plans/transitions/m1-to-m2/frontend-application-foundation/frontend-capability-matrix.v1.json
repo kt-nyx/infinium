@@ -5,7 +5,7 @@
   "last_reviewed": "2026-08-26",
   "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
   "planning_base": "32dbb2c48754666336d2da571e554ad8897ed71c",
-  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner through Checkpoint C. Generated-client evidence validates bounded result exploration and append-only review workflows without claiming desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, or M2 acceptance.",
+  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint C and all Phase C availability claims are under correction; the earlier generated-client evidence did not prove the complete FindingReport, recursive request-validation, executable targeted-verification, export-deletion, provenance, and paging surfaces. No desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, or M2 acceptance is claimed.",
   "application_contract_inventory": "application-contract-inventory.v1.json",
   "ownership_audit": {
     "capability_count": 19,
@@ -285,7 +285,7 @@
         "EVAL-0085",
         "EVAL-0092"
       ],
-      "current_state": "available-and-reusable",
+      "current_state": "partial-or-developer-oriented",
       "current_evidence": [
         "ApplicationService.GetResultOverview",
         "Explicit scope-limited, no-readiness, provisional, stale, failure, gap, cost, duration, and no-safety-guarantee fields",
@@ -310,7 +310,7 @@
         "EVAL-0084",
         "EVAL-0092"
       ],
-      "current_state": "available-and-reusable",
+      "current_state": "partial-or-developer-oriented",
       "current_evidence": [
         "ApplicationService.ListResultItems",
         "Separate supported-case and lead-only-case kinds with allowlisted filters, search, and two deterministic sorts",
@@ -335,11 +335,11 @@
         "EVAL-0083",
         "EVAL-0092"
       ],
-      "current_state": "available-and-reusable",
+      "current_state": "projection-exists-not-queryable",
       "current_evidence": [
         "ApplicationService.GetResultDetail",
         "Exact retained finding-case payload decode and source payload fingerprint",
-        "Canonical report round-trip and hostile inert text integration evidence"
+        "Diagnostic finding/case detail and hostile inert-text evidence; no FindingReport service producer/consumer exists yet"
       ],
       "gap": "FindingReport remains implementation-active until the real M2 UI validates its full presentation seam; Phase C does not invent unavailable evidence or recommendation semantics.",
       "owning_phase": "C",
@@ -360,7 +360,7 @@
         "EVAL-0083",
         "EVAL-0092"
       ],
-      "current_state": "available-and-reusable",
+      "current_state": "partial-or-developer-oriented",
       "current_evidence": [
         "ApplicationService.GetEvidenceExpansion",
         "Exact result-owned evidence allowlist with retained-metadata or explicit reference-only availability",
@@ -383,7 +383,7 @@
         "EVAL-0085",
         "EVAL-0092"
       ],
-      "current_state": "available-and-reusable",
+      "current_state": "partial-or-developer-oriented",
       "current_evidence": [
         "ApplicationService.GetFocusedModView",
         "Exact json_each subject identity matching over retained finding/case projection",
@@ -410,7 +410,7 @@
         "EVAL-0079",
         "EVAL-0093"
       ],
-      "current_state": "available-and-reusable",
+      "current_state": "partial-or-developer-oriented",
       "current_evidence": [
         "ApplicationService.GetReviewState and SubmitReviewEvent",
         "Append-only review_events plus rebuildable optimistic review_projection",
@@ -436,7 +436,7 @@
         "EVAL-0043",
         "EVAL-0093"
       ],
-      "current_state": "available-and-reusable",
+      "current_state": "partial-or-developer-oriented",
       "current_evidence": [
         "ApplicationService.ListAssumptions and SubmitAssumptionEvent",
         "Append-only assumption_events plus rebuildable effective successor projection",
@@ -461,13 +461,13 @@
         "EVAL-0078",
         "EVAL-0093"
       ],
-      "current_state": "available-and-reusable",
+      "current_state": "missing-application-vertical",
       "current_evidence": [
         "ApplicationService.StartTargetedVerification",
-        "New typed manually initiated durable run linked to exact terminal source finding/case and retained subject scope",
-        "Generated-client proof that the source terminal run stays terminal and successor readiness is scope-limited"
+        "Under-correction endpoint currently registers an unsupported targeted-verification operation kind",
+        "No accepted contract maps changed external setup plus exact source scope into managed-analysis-v1"
       ],
-      "gap": "The new run still requires ordinary coordinator dispatch/execution and reports only its exact scope; it cannot borrow unrelated coverage or reopen the source run.",
+      "gap": "Architecture must define changed-snapshot capture, typed scope expansion with dependency closure, mapping into managed-analysis-v1, and exact coverage/gap semantics before this operation can create or schedule work.",
       "owning_phase": "C",
       "owning_work_package": "WP6",
       "transition_exit_evidence": "A new manually initiated operation retains exact source scope and lineage and reports scope-limited readiness honestly."
@@ -484,11 +484,11 @@
         "EVAL-0080",
         "EVAL-0093"
       ],
-      "current_state": "available-and-reusable",
+      "current_state": "partial-or-developer-oriented",
       "current_evidence": [
         "ApplicationService.CreateStructuredExport and GetStructuredExport",
         "LocalPrivateExport typed write class and append-only exact manifest",
-        "Exact selected structured records/revisions and run binding plus artifact integrity, restart, backup/restore, deletion preview, provenance, and source-immutability evidence"
+        "Diagnostic create/get, artifact integrity, restart, backup/restore, deletion preview, provenance, and source-immutability evidence; typed deletion is absent"
       ],
       "gap": "Exports are local-private, selection-bounded artifacts and are not whole-run/full-population downloads; no desktop selection workflow exists before WP7.",
       "owning_phase": "C",

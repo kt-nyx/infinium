@@ -1,7 +1,7 @@
 # Current project state
 
 Status: Accepted
-Disposition: Frontend Application Foundation Checkpoint C reached; Phase C results/review backend accepted, Phase D automatically unblocked but not started, and M2 remains inactive
+Disposition: Frontend Application Foundation Checkpoint C under correction; Phase D blocked and not started, and M2 remains inactive
 
 Last reviewed: 2026-08-26
 Owner: Project owner
@@ -19,8 +19,11 @@ specific family of suspicious conflict outcomes, retain the evidence and
 uncertainty behind each result, reproduce stored results, and project those
 internal results into a stable report format for a future interface.
 
-Phases A, B, and C of the accepted frontend foundation are complete. The corrected
-typed prepared-run path now validates its authoritative retained inputs and
+Phases A and B of the accepted frontend foundation are complete. Phase C is
+under correction because its report-query, application-validation, targeted-
+verification execution, export-deletion, provenance, and paging claims did not
+all have the required end-to-end evidence. The corrected typed prepared-run
+path validates its authoritative retained inputs and
 atomically binds the supported durable analysis operation before scheduling. The repository
 now has an exact application-authority inventory, a bounded display-safe
 bootstrap, common typed error/revision/receipt/cancellation vocabulary, and a
@@ -28,11 +31,12 @@ closed renderer envelope/operation registry with a fail-closed reference
 consumer. The application contract also exposes typed tool/profile/setup state,
 versioned saved configurations, honest pre-run estimates, non-secret provider
 status, and prepared manual-run initiation with immutable durable bindings.
-It now also exposes bounded readiness and result queues, exact finding/case
-detail, evidence and provenance expansion, focused-mod views, append-only
-review state and assumptions, new scope-limited targeted verification runs,
-and selection-bounded local-private structured exports. These paths preserve
-canonical analysis truth rather than rewriting it with user review state.
+The Phase C candidate contains bounded result/review primitives, but their
+Checkpoint C claims are suspended during correction. In particular, reports
+are not yet proven queryable through a generated service consumer, targeted
+verification is not an accepted executable operation, export deletion is
+missing, and request/cursor/provenance validation is incomplete. Canonical
+analysis truth remains the authority while these application paths are repaired.
 The renderer boundary still permits exactly five Phase A operation/message combinations,
 keeps gesture proof request-only, represents accepted and explicit non-success
 outcomes separately, and commits replay state only after complete validation.
@@ -52,8 +56,8 @@ work.
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
-| Active implementation | Frontend Application Foundation Phases A-C (WP1-WP6) accepted at Checkpoint C. Phase C began from accepted corrected Checkpoint B commit `8bc653f460cbeab1bda03dcd8a6cdb40e769ad08`; the exact Checkpoint C commit is reported by the implementation orchestrator. |
-| Next gate | Phase D begins with `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` under the accepted plan. It is automatically unblocked by Checkpoint C but was not started by this task. This does not activate M2. |
+| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) remain accepted at corrected Checkpoint B. Phase C (WP5-WP6) is under correction from candidate `c551c12e22522e7a2cef8c21a322aa76db8fc23e`; its earlier Checkpoint C receipt is suspended. |
+| Next gate | Corrected Checkpoint C. Phase D and `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` remain blocked until every required Phase C vertical passes correction and re-review. This does not activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |
 
@@ -128,9 +132,10 @@ asset, script, configuration, dependency, performance, or runtime problem.
   production-readiness claim yet.
 - Native credential entry remains unavailable in Phase B; provider status is
   non-secret and local-only setup/run evidence remains available.
-- Phase C proves the backend finding-to-review path with offline developer
-  fixtures and generated-client calls; it does not build the desktop, expand
-  analyzer scope, qualify an independent semantic oracle, or activate M2.
+- Phase C remains under correction. Its prior offline fixtures and generated-
+  client calls are retained as diagnostic evidence, not as a restored
+  Checkpoint C receipt. It does not build the desktop, expand analyzer scope,
+  qualify an independent semantic oracle, or activate M2.
 
 ## Current authority
 

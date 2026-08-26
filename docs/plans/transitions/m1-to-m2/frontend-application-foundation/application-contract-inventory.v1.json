@@ -1,10 +1,10 @@
 {
   "$schema": "application-contract-inventory.v1.schema.json",
   "schema_identity": "infinium.planning.application-contract-inventory/1.0.0",
-  "status": "accepted-phase-checkpoint",
+  "status": "implementation-active",
   "last_reviewed": "2026-08-26",
   "audited_commit": "8bc653f460cbeab1bda03dcd8a6cdb40e769ad08",
-  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy through Checkpoint C, based on the accepted corrected Checkpoint B entry commit. Generated C# contracts and focused integration consumers validate bounded results and append-only review workflows. No renderer receives direct gRPC authority; desktop delivery, M2 activation, broad analyzer claims, and semantic-oracle qualification remain outside this checkpoint.",
+  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy from the accepted corrected Checkpoint B entry commit through an under-correction Phase C candidate. Checkpoint C is suspended: generated C# contracts and earlier focused consumers did not prove the complete FindingReport, recursive request-validation, executable targeted-verification, export-deletion, provenance, and paging surfaces. No renderer receives direct gRPC authority; desktop delivery, M2 activation, broad analyzer claims, and semantic-oracle qualification remain outside this candidate.",
   "protocol": {
     "package": "infinium.application.v1",
     "service": "ApplicationService",
@@ -630,9 +630,9 @@
       "rpc": "StartTargetedVerification",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#StartTargetedVerification",
-      "current_consumers": ["generated C# contracts and terminal-source/new-run integration consumer; desktop consumer remains WP7"],
-      "persistence_readback": ["New durable run plus typed targeted_verifications record linked to exact source finding/case and scope"],
-      "bounds_and_versions": ["Manual gesture, future dispatch deadline, 1-100 exact scope identities, new queued run, scope-limited readiness; source terminal run remains unchanged"],
+      "current_consumers": ["generated C# diagnostic consumer exposed the terminal-source/new-run defect; no accepted executable consumer exists"],
+      "persistence_readback": ["Under-correction code creates a durable run with unsupported operation kind targeted-verification before separately appending lineage; this is not an accepted executable vertical"],
+      "bounds_and_versions": ["Request shape bounds a manual gesture, deadline, and 1-100 scope identities, but changed-snapshot and managed-analysis-v1 scope-expansion authority is undefined"],
       "requirement_ids": ["UX-005", "SCOPE-004", "SNAP-003"],
       "evaluation_ids": ["EVAL-0027", "EVAL-0029", "EVAL-0078", "EVAL-0093"],
       "security_authorities": ["ADR-0016", "ADR-0021", "ADR-0037"],
@@ -642,7 +642,7 @@
       "rpc": "CreateStructuredExport",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#CreateStructuredExport",
-      "current_consumers": ["generated C# contracts and export/backup/source-immutability integration consumer; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# diagnostic create/get and backup/source-immutability consumer; typed deletion consumer is absent"],
       "persistence_readback": ["AuthoritativeStore.CreateStructuredExport and Export write class with append-only manifest row plus selected inert records, exact revisions, and source-run binding in the retained JSON artifact"],
       "bounds_and_versions": ["LocalPrivateExport only, at most 100 exact selected identities, 1 MiB artifact, exact run/revision/filter/omission/privacy/source-policy/provenance manifest"],
       "requirement_ids": ["OPS-003", "SEC-004"],
@@ -654,7 +654,7 @@
       "rpc": "GetStructuredExport",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#GetStructuredExport",
-      "current_consumers": ["generated C# contracts and restart/backup-integrity integration consumer; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# diagnostic restart/backup-integrity consumer; deleted/tombstoned current-state readback is absent"],
       "persistence_readback": ["AuthoritativeStore.GetStructuredExport validates both exact selection-manifest and retained artifact fingerprints without returning a path"],
       "bounds_and_versions": ["One opaque export identity and bounded manifest metadata only; no whole-run or full-population download"],
       "requirement_ids": ["OPS-003", "SEC-004"],
@@ -1063,7 +1063,7 @@
       "family": "results-and-review-operations",
       "source": "application.proto result/review messages, ApplicationGrpcService.ResultsReview, and AuthoritativeStore results/review persistence",
       "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5 and WP6",
-      "maturity": "producer-consumer-validated"
+      "maturity": "implementation-active"
     }
   ],
   "generation_ownership": [
