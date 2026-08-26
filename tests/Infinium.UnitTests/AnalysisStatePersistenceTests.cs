@@ -124,26 +124,26 @@ public sealed class AnalysisStatePersistenceTests
     [TestCategory("Cases")]
     [TestProperty("Category", "Unit")]
     [TestProperty("Category", "Cases")]
-    public void AnalysisStateModelSchema13PreservesSetupContractAndAddsPreparedAnalysisAdmission()
+    public void AnalysisStateModelSchema14AddsResultsAndReviewWorkflow()
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
         Assert.AreEqual(AuthoritativeStore.CurrentSchemaVersion, store.GetSchemaVersion());
 
         using SqliteConnection connection = temporary.OpenRaw();
-        Assert.AreEqual("13", ScalarText(connection, "PRAGMA user_version;"));
+        Assert.AreEqual("14", ScalarText(connection, "PRAGMA user_version;"));
         Assert.AreEqual(
-            "13",
+            "14",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_version';"));
         Assert.AreEqual(
-            "1.12.0",
+            "1.13.0",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            ApplicationSetupPersistenceDeclarations.SchemaFingerprint,
+            ResultsReviewPersistenceDeclarations.SchemaFingerprint,
             ScalarText(connection, "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
         Assert.AreEqual(
             ProviderPersistenceDeclarations.ProviderUsageTotalityExtensionMigrationId,
@@ -472,6 +472,14 @@ public sealed class AnalysisStatePersistenceTests
                 +
                 """
 
+                DROP TABLE structured_exports;
+                DROP TABLE targeted_verifications;
+                DROP TABLE assumption_projection;
+                DROP TABLE assumption_events;
+                DROP TABLE review_projection;
+                DROP TABLE review_events;
+                DROP TABLE result_projection_items;
+
                 DROP TABLE scope_reversion_v2_publications;
                 DROP TABLE scope_reversion_v2_invalidations;
                 DROP TABLE scope_reversion_v2_dependencies;
@@ -497,6 +505,7 @@ public sealed class AnalysisStatePersistenceTests
                 DELETE FROM migration_history WHERE migration_id = 'M1-S8-WP4-0011';
                 DELETE FROM migration_history WHERE migration_id = 'application-setup-contract-0012';
                 DELETE FROM migration_history WHERE migration_id = 'prepared-analysis-admission-0013';
+                DELETE FROM migration_history WHERE migration_id = 'results-review-workflow-0014';
                 DELETE FROM store_metadata WHERE key = 'slice6_successor_attempt_extension_id';
                 DELETE FROM store_metadata WHERE key = 'slice6_successor_v6_persistence_id';
                 DELETE FROM store_metadata WHERE key = 'slice6_successor_v6_semantic_trigger_correction_id';
@@ -515,7 +524,7 @@ public sealed class AnalysisStatePersistenceTests
 
         using (AuthoritativeStore migrated = migration.Open())
         {
-            Assert.AreEqual(13, migrated.GetSchemaVersion());
+            Assert.AreEqual(14, migrated.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = migration.OpenRaw())
@@ -536,7 +545,7 @@ public sealed class AnalysisStatePersistenceTests
         using (SqliteConnection connection = newer.OpenRaw())
         using (SqliteCommand command = connection.CreateCommand())
         {
-            command.CommandText = "PRAGMA user_version = 14;";
+            command.CommandText = "PRAGMA user_version = 15;";
             command.ExecuteNonQuery();
         }
 
@@ -544,7 +553,7 @@ public sealed class AnalysisStatePersistenceTests
         Assert.IsNotNull(exception.InnerException);
         StringAssert.Contains(
             exception.InnerException.Message,
-            "Database schema 14 is newer than supported schema 13.");
+            "Database schema 15 is newer than supported schema 14.");
     }
 
     [TestMethod]

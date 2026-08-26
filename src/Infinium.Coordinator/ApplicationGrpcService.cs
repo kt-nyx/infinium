@@ -146,6 +146,8 @@ public sealed partial class ApplicationGrpcService(
             BuildApplicationCapability(ApplicationCapability.EventResync, Availability.Available, "Bounded event resync is active."),
             BuildApplicationCapability(ApplicationCapability.Configuration, Availability.Available, "Versioned setup configuration and prepared-run review are active."),
             BuildApplicationCapability(ApplicationCapability.ProviderEnrollment, Availability.Partial, "Non-secret enrollment intent and status are active; native secret entry remains unavailable in this phase."),
+            BuildApplicationCapability(ApplicationCapability.ResultExploration, Availability.Available, "Bounded retained-result exploration is active without raw payload or whole-run download authority."),
+            BuildApplicationCapability(ApplicationCapability.DurableUserReview, Availability.Available, "Append-only revision-bound review, assumptions, targeted verification intent, and local-private structured export are active."),
         ]);
         return Task.FromResult(new GetApplicationBootstrapResponse { Bootstrap = bootstrap });
     }

@@ -183,12 +183,16 @@ buffers/rate limits, process supervision, private-handle inheritance, staging
 authorization, and coordinator-side admission remain runtime obligations for
 later slices.
 
-The additive application v1 surface is at protocol 1.6.0. It separates the
-application 1.6.0, domain 1.3.0, storage 1.12.0, and renderer 1.0.0 version
+The additive application v1 surface is at protocol 1.7.0. It separates the
+application 1.7.0, domain 1.3.0, storage 1.13.0, and renderer 1.1.0 version
 axes and exposes bounded display-safe bootstrap, typed setup/configuration,
-prepared manual-run, non-secret provider status, live progress, and reconnect
-shapes. Its full contract-set fingerprint is
-`a95cf80fa175461c93aa0ad36c8d7dc02bd8dee55b97fd142c4d0d85ddd86353`.
+prepared manual-run, non-secret provider status, live progress, reconnect,
+canonical result exploration, and append-only durable review shapes. The
+renderer registry still contains only its five previously accepted
+operation/message combinations; renderer 1.1.0 updates bootstrap compatibility
+and Phase C capability flags without adding desktop operations. The full
+protobuf contract-set fingerprint is
+`8e6b8b3cdeeb634a744d57be49fcfb6b6d77d3fbbeb9afb020c9e17a6b9336bf`.
 Helper v2 has a separate fingerprint over only its helper/common/identity
 transitive closure; its fail-closed decoder rejects unknown nested fields,
 unknown enum numerics, and contradictory assignment, revalidation, or receipt

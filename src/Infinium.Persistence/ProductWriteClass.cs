@@ -8,4 +8,5 @@ public enum ProductWriteClass
     Backup = 4,
     Runtime = 5,
     RunOutput = 6,
+    Export = 7,
 }

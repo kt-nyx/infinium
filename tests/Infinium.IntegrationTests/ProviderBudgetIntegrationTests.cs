@@ -2628,6 +2628,13 @@ public sealed class ProviderBudgetIntegrationTests
         command.ExecuteNonQuery();
         command.CommandText =
             """
+            DROP TABLE structured_exports;
+            DROP TABLE targeted_verifications;
+            DROP TABLE assumption_projection;
+            DROP TABLE assumption_events;
+            DROP TABLE review_projection;
+            DROP TABLE review_events;
+            DROP TABLE result_projection_items;
             DROP TRIGGER provider_semantic_validations_semantic_axes_guard;
             DROP TABLE prepared_run_submissions;
             DROP TABLE prepared_manual_runs;
@@ -2685,6 +2692,7 @@ public sealed class ProviderBudgetIntegrationTests
             DELETE FROM migration_history WHERE migration_id='M1-S8-WP4-0011';
             DELETE FROM migration_history WHERE migration_id='application-setup-contract-0012';
             DELETE FROM migration_history WHERE migration_id='prepared-analysis-admission-0013';
+            DELETE FROM migration_history WHERE migration_id='results-review-workflow-0014';
             UPDATE store_metadata SET value='8' WHERE key='schema_version';
             UPDATE store_metadata SET value='1.7.0' WHERE key='storage_contract_version';
             UPDATE store_metadata

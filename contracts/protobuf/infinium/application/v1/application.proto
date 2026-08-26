@@ -48,6 +48,30 @@ service ApplicationService {
       returns (GetAnalysisReplayResponse);
   rpc GetAnalysisOutput(GetAnalysisOutputRequest)
       returns (GetAnalysisOutputResponse);
+  rpc GetResultOverview(GetResultOverviewRequest)
+      returns (GetResultOverviewResponse);
+  rpc ListResultItems(ListResultItemsRequest)
+      returns (ListResultItemsResponse);
+  rpc GetResultDetail(GetResultDetailRequest)
+      returns (GetResultDetailResponse);
+  rpc GetEvidenceExpansion(GetEvidenceExpansionRequest)
+      returns (GetEvidenceExpansionResponse);
+  rpc GetFocusedModView(GetFocusedModViewRequest)
+      returns (GetFocusedModViewResponse);
+  rpc GetReviewState(GetReviewStateRequest)
+      returns (GetReviewStateResponse);
+  rpc SubmitReviewEvent(SubmitReviewEventRequest)
+      returns (SubmitReviewEventResponse);
+  rpc ListAssumptions(ListAssumptionsRequest)
+      returns (ListAssumptionsResponse);
+  rpc SubmitAssumptionEvent(SubmitAssumptionEventRequest)
+      returns (SubmitAssumptionEventResponse);
+  rpc StartTargetedVerification(StartTargetedVerificationRequest)
+      returns (StartTargetedVerificationResponse);
+  rpc CreateStructuredExport(CreateStructuredExportRequest)
+      returns (CreateStructuredExportResponse);
+  rpc GetStructuredExport(GetStructuredExportRequest)
+      returns (GetStructuredExportResponse);
   rpc GetProviderProfile(GetProviderProfileRequest)
       returns (GetProviderProfileResponse);
   rpc GetProviderOperation(GetProviderOperationRequest)
@@ -110,6 +134,8 @@ enum ApplicationCapability {
   APPLICATION_CAPABILITY_PROVIDER_ENROLLMENT = 5;
   APPLICATION_CAPABILITY_UNKNOWN = 6;
   APPLICATION_CAPABILITY_UNSUPPORTED = 7;
+  APPLICATION_CAPABILITY_RESULT_EXPLORATION = 8;
+  APPLICATION_CAPABILITY_DURABLE_USER_REVIEW = 9;
 }
 
 enum Availability {
@@ -1002,6 +1028,426 @@ message AnalysisSummary {
   uint64 unsupported_count = 8;
   infinium.domain.v1.ReplaySummary replay = 9;
   infinium.domain.v1.ProjectionVersion projection_version = 20;
+}
+
+// Result exploration is a bounded presentation projection over immutable
+// retained analysis. It grants no raw-payload, path, SQL, or download authority.
+message GetResultOverviewRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 2;
+}
+
+message GetResultOverviewResponse {
+  oneof result {
+    ResultOverview overview = 1;
+    ProjectionInvalidated projection_invalidated = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message ResultOverview {
+  infinium.domain.v1.RunId run_id = 1;
+  ResultReadinessState readiness = 2;
+  string inert_summary = 3;
+  uint64 finding_count = 4;
+  uint64 supported_case_count = 5;
+  uint64 lead_only_case_count = 6;
+  repeated ResultCoverage coverage = 7;
+  repeated string inert_failures = 8;
+  repeated string inert_gaps = 9;
+  string duration_state = 10;
+  uint64 duration_millis = 11;
+  string cost_state = 12;
+  int64 calculated_cost_nano_usd = 13;
+  bool no_safety_guarantee = 14;
+  infinium.domain.v1.ProjectionVersion projection_version = 20;
+}
+
+enum ResultReadinessState {
+  RESULT_READINESS_STATE_UNSPECIFIED = 0;
+  RESULT_READINESS_STATE_SCOPE_LIMITED = 1;
+  RESULT_READINESS_STATE_NO_READINESS = 2;
+  RESULT_READINESS_STATE_PROVISIONAL_INCOMPLETE = 3;
+  RESULT_READINESS_STATE_RESULTS_STALE = 4;
+  RESULT_READINESS_STATE_UNKNOWN = 5;
+  RESULT_READINESS_STATE_UNSUPPORTED = 6;
+}
+
+message ResultCoverage {
+  string population_id = 1;
+  string denominator_label = 2;
+  uint64 denominator = 3;
+  uint64 completed = 4;
+  string state = 5;
+  repeated string inert_gaps = 6;
+}
+
+message ListResultItemsRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  repeated ResultItemKind kinds = 2;
+  string search_text = 3;
+  ResultItemSort sort = 4;
+  uint32 requested_page_size = 5;
+  PageCursor after = 6;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 7;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "object_type", "object_id", "query";
+}
+
+message ListResultItemsResponse {
+  oneof result {
+    ResultItemPage page = 1;
+    CursorRejection cursor_rejection = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message ResultItemPage {
+  repeated ResultItemSummary items = 1;
+  PageCursor next = 2;
+  bool has_more = 3;
+  infinium.domain.v1.ProjectionVersion projection_version = 4;
+}
+
+message ResultItemSummary {
+  string item_id = 1;
+  infinium.domain.v1.RunId run_id = 2;
+  ResultItemKind kind = 3;
+  string logical_id = 4;
+  infinium.domain.v1.CaseOccurrenceId case_occurrence_id = 5;
+  string inert_summary = 6;
+  string severity = 7;
+  string confidence = 8;
+  string analyzer_id = 9;
+  infinium.common.v1.SemanticVersion analyzer_version = 10;
+}
+
+enum ResultItemKind {
+  RESULT_ITEM_KIND_UNSPECIFIED = 0;
+  RESULT_ITEM_KIND_SUPPORTED_CASE = 1;
+  RESULT_ITEM_KIND_LEAD_ONLY_CASE = 2;
+  RESULT_ITEM_KIND_FINDING = 3;
+  RESULT_ITEM_KIND_ABSTENTION = 4;
+  RESULT_ITEM_KIND_FAILURE = 5;
+  RESULT_ITEM_KIND_COVERAGE_GAP = 6;
+  RESULT_ITEM_KIND_UNKNOWN = 7;
+  RESULT_ITEM_KIND_UNSUPPORTED = 8;
+}
+
+enum ResultItemSort {
+  RESULT_ITEM_SORT_UNSPECIFIED = 0;
+  RESULT_ITEM_SORT_IDENTITY_ASCENDING = 1;
+  RESULT_ITEM_SORT_SEVERITY_DESCENDING_IDENTITY_ASCENDING = 2;
+  RESULT_ITEM_SORT_UNKNOWN = 3;
+  RESULT_ITEM_SORT_UNSUPPORTED = 4;
+}
+
+message GetResultDetailRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  ResultItemKind kind = 2;
+  string item_id = 3;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 4;
+}
+
+message GetResultDetailResponse {
+  oneof result {
+    ResultDetail detail = 1;
+    ProjectionInvalidated projection_invalidated = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message ResultDetail {
+  ResultItemSummary summary = 1;
+  string inert_conclusion = 2;
+  string inert_cause = 3;
+  repeated string evidence_ids = 4;
+  repeated string contradicting_evidence_ids = 5;
+  repeated string recommendation_ids = 6;
+  repeated string taxonomy_assignment_ids = 7;
+  repeated string finding_occurrence_ids = 8;
+  repeated string hypothesis_ids = 9;
+  repeated string inert_uncertainty = 10;
+  repeated string inert_gaps = 11;
+  string source_payload_id = 12;
+  string source_payload_sha256 = 13;
+  repeated string subject_ids = 14;
+  infinium.domain.v1.ProjectionVersion projection_version = 20;
+}
+
+message GetEvidenceExpansionRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  string result_item_id = 2;
+  repeated string evidence_ids = 3;
+  uint32 requested_maximum_items = 4;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 5;
+
+  reserved 90 to 99;
+  reserved "payload_path", "path", "html", "url", "query";
+}
+
+message GetEvidenceExpansionResponse {
+  oneof result {
+    EvidenceExpansion expansion = 1;
+    ProjectionInvalidated projection_invalidated = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message EvidenceExpansion {
+  string result_item_id = 1;
+  repeated EvidenceItem items = 2;
+  bool truncated = 3;
+  repeated string inert_gaps = 4;
+  infinium.domain.v1.ProjectionVersion projection_version = 20;
+}
+
+message EvidenceItem {
+  string evidence_id = 1;
+  string evidence_kind = 2;
+  string inert_summary = 3;
+  string producer_id = 4;
+  string producer_version = 5;
+  string originating_run_id = 6;
+  string llm_involvement_state = 7;
+  string availability = 8;
+  string content_sha256 = 9;
+}
+
+message GetFocusedModViewRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  string exact_subject_id = 2;
+  uint32 requested_maximum_items = 3;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 4;
+}
+
+message GetFocusedModViewResponse {
+  oneof result {
+    FocusedModView view = 1;
+    ProjectionInvalidated projection_invalidated = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message FocusedModView {
+  infinium.domain.v1.RunId run_id = 1;
+  string exact_subject_id = 2;
+  repeated ResultItemSummary items = 3;
+  repeated ResultCoverage coverage = 4;
+  repeated string evidence_ids = 5;
+  repeated string inert_gaps = 6;
+  bool truncated = 7;
+  infinium.domain.v1.ProjectionVersion projection_version = 20;
+}
+
+message GetReviewStateRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  string subject_kind = 2;
+  string subject_occurrence_id = 3;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 4;
+}
+
+message GetReviewStateResponse {
+  oneof result {
+    ReviewState state = 1;
+    ProjectionInvalidated projection_invalidated = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message ReviewState {
+  string subject_kind = 1;
+  string subject_occurrence_id = 2;
+  uint64 revision = 3;
+  string disposition = 4;
+  bool suppressed = 5;
+  string inert_annotation = 6;
+  repeated ReviewEvent history = 7;
+  bool history_truncated = 8;
+  infinium.domain.v1.ProjectionVersion projection_version = 20;
+}
+
+message ReviewEvent {
+  string event_id = 1;
+  uint64 revision = 2;
+  string event_kind = 3;
+  string disposition = 4;
+  bool suppressed = 5;
+  string inert_annotation = 6;
+  string source_event_id = 7;
+  string continuity_assessment_id = 8;
+  infinium.common.v1.Instant created_at = 9;
+}
+
+message SubmitReviewEventRequest {
+  string idempotency_key = 1;
+  infinium.domain.v1.RunId run_id = 2;
+  string subject_kind = 3;
+  string subject_occurrence_id = 4;
+  uint64 expected_revision = 5;
+  string event_kind = 6;
+  string disposition = 7;
+  bool suppressed = 8;
+  string inert_annotation = 9;
+  string source_event_id = 10;
+  string continuity_assessment_id = 11;
+}
+
+message SubmitReviewEventResponse {
+  oneof result {
+    ReviewState state = 1;
+    ReviewConflict conflict = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message ReviewConflict {
+  uint64 expected_revision = 1;
+  ReviewState current_safe_state = 2;
+}
+
+message ListAssumptionsRequest {
+  string profile_id = 1;
+  uint32 requested_page_size = 2;
+  PageCursor after = 3;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 4;
+}
+
+message ListAssumptionsResponse {
+  oneof result {
+    AssumptionPage page = 1;
+    CursorRejection cursor_rejection = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message AssumptionPage {
+  repeated AssumptionState items = 1;
+  PageCursor next = 2;
+  bool has_more = 3;
+  infinium.domain.v1.ProjectionVersion projection_version = 4;
+}
+
+message AssumptionState {
+  string assumption_id = 1;
+  string profile_id = 2;
+  uint64 revision = 3;
+  string origin = 4;
+  string confirmation = 5;
+  string subject = 6;
+  string inert_value = 7;
+  string scope = 8;
+  repeated string dependency_ids = 9;
+  bool effective = 10;
+  string analysis_context_id = 11;
+  infinium.common.v1.Instant created_at = 12;
+}
+
+message SubmitAssumptionEventRequest {
+  string idempotency_key = 1;
+  string assumption_id = 2;
+  string profile_id = 3;
+  uint64 expected_revision = 4;
+  string event_kind = 5;
+  string origin = 6;
+  string confirmation = 7;
+  string subject = 8;
+  string inert_value = 9;
+  string scope = 10;
+  repeated string dependency_ids = 11;
+}
+
+message SubmitAssumptionEventResponse {
+  oneof result {
+    AssumptionState state = 1;
+    AssumptionConflict conflict = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message AssumptionConflict {
+  uint64 expected_revision = 1;
+  AssumptionState current_safe_state = 2;
+}
+
+message StartTargetedVerificationRequest {
+  string idempotency_key = 1;
+  string requested_run_id = 2;
+  infinium.domain.v1.RunId source_run_id = 3;
+  string source_finding_occurrence_id = 4;
+  string source_case_occurrence_id = 5;
+  repeated string exact_scope_ids = 6;
+  string user_gesture_id = 7;
+  infinium.common.v1.Instant dispatch_deadline = 8;
+}
+
+message StartTargetedVerificationResponse {
+  oneof result {
+    TargetedVerification verification = 1;
+    infinium.common.v1.Failure failure = 2;
+  }
+}
+
+message TargetedVerification {
+  string verification_id = 1;
+  infinium.domain.v1.RunId source_run_id = 2;
+  infinium.domain.v1.RunId successor_run_id = 3;
+  string source_finding_occurrence_id = 4;
+  string source_case_occurrence_id = 5;
+  repeated string exact_scope_ids = 6;
+  string readiness_boundary = 7;
+  string state = 8;
+  infinium.common.v1.Instant created_at = 9;
+}
+
+message CreateStructuredExportRequest {
+  string idempotency_key = 1;
+  infinium.domain.v1.RunId run_id = 2;
+  repeated string selected_result_item_ids = 3;
+  repeated string selected_review_event_ids = 4;
+  repeated string selected_assumption_ids = 5;
+  repeated string filters = 6;
+  string sharing_class = 7;
+  repeated string declared_omissions = 8;
+  repeated string privacy_decisions = 9;
+  repeated string source_policy_decisions = 10;
+}
+
+message CreateStructuredExportResponse {
+  oneof result {
+    StructuredExport export = 1;
+    infinium.common.v1.Failure failure = 2;
+  }
+}
+
+message GetStructuredExportRequest { string export_id = 1; }
+
+message GetStructuredExportResponse {
+  oneof result {
+    StructuredExport export = 1;
+    infinium.common.v1.Failure failure = 2;
+  }
+}
+
+message StructuredExport {
+  string export_id = 1;
+  infinium.domain.v1.RunId run_id = 2;
+  string sharing_class = 3;
+  string schema_identity = 4;
+  string generator_identity = 5;
+  string selection_manifest_sha256 = 6;
+  string artifact_sha256 = 7;
+  uint64 artifact_bytes = 8;
+  repeated string selected_result_item_ids = 9;
+  repeated string selected_review_event_ids = 10;
+  repeated string selected_assumption_ids = 11;
+  repeated string filters = 12;
+  repeated string declared_omissions = 13;
+  repeated string privacy_decisions = 14;
+  repeated string source_policy_decisions = 15;
+  repeated string provenance_ids = 16;
+  infinium.common.v1.Instant created_at = 17;
 }
 
 message ListAnalysisArtifactsRequest {

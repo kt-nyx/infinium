@@ -60,6 +60,7 @@ public sealed class StoragePaths : IDisposable
         Backups = Path.Combine(ProductRoot, "backups");
         Runtime = Path.Combine(ProductRoot, "runtime");
         RunOutput = Path.Combine(ProductRoot, "run-output");
+        Exports = Path.Combine(ProductRoot, "exports");
         Database = Path.Combine(Data, "infinium.sqlite3");
     }
 
@@ -71,6 +72,7 @@ public sealed class StoragePaths : IDisposable
     public string Backups { get; }
     public string Runtime { get; }
     public string RunOutput { get; }
+    public string Exports { get; }
     public string Database { get; }
     internal bool HasBoundProductRoot => productCapability?.RootIdentity is not null;
 
@@ -467,6 +469,7 @@ public sealed class StoragePaths : IDisposable
         yield return (ProductWriteClass.Backup, Backups);
         yield return (ProductWriteClass.Runtime, Runtime);
         yield return (ProductWriteClass.RunOutput, RunOutput);
+        yield return (ProductWriteClass.Export, Exports);
     }
 
     private string GetClassDirectory(ProductWriteClass writeClass) =>
@@ -478,6 +481,7 @@ public sealed class StoragePaths : IDisposable
             ProductWriteClass.Backup => Backups,
             ProductWriteClass.Runtime => Runtime,
             ProductWriteClass.RunOutput => RunOutput,
+            ProductWriteClass.Export => Exports,
             _ => throw new ArgumentOutOfRangeException(
                 nameof(writeClass),
                 writeClass,

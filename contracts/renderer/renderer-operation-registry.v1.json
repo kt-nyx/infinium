@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "renderer_contract_version": "1.0.0",
+  "renderer_contract_version": "1.1.0",
   "limits": {
     "maximum_message_bytes": 1048576,
     "maximum_page_items": 100,

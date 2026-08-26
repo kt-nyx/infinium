@@ -36,7 +36,7 @@ public sealed class ApplicationContractSubstrateTests
 
         GetApplicationBootstrapRequest request = new()
         {
-            RendererContractVersion = new SemanticVersion { Value = "1.0.0" },
+            RendererContractVersion = new SemanticVersion { Value = ProtocolConstants.RendererContractVersion },
             MaximumRecentRuns = 20,
             ExpectedProjectionVersion = new ProjectionVersion { Value = "1" },
         };
@@ -126,7 +126,7 @@ public sealed class ApplicationContractSubstrateTests
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationContractValidator.Validate(
             new GetApplicationBootstrapRequest
             {
-                RendererContractVersion = new SemanticVersion { Value = "1.0.0" },
+                RendererContractVersion = new SemanticVersion { Value = ProtocolConstants.RendererContractVersion },
                 MaximumRecentRuns = 21,
             }));
         Assert.ThrowsExactly<InvalidDataException>(() =>
@@ -137,7 +137,7 @@ public sealed class ApplicationContractSubstrateTests
 
         GetApplicationBootstrapRequest valid = new()
         {
-            RendererContractVersion = new SemanticVersion { Value = "1.0.0" },
+            RendererContractVersion = new SemanticVersion { Value = ProtocolConstants.RendererContractVersion },
             MaximumRecentRuns = 1,
         };
         byte[] withUnknown = [.. valid.ToByteArray(), 0x98, 0x06, 0x01];
@@ -162,7 +162,7 @@ public sealed class ApplicationContractSubstrateTests
     {
         byte[] registry = RendererOperationRegistry.GetCanonicalInput();
         Assert.AreEqual(
-            "b218f5a18198f9e9a2b1ee4ccc4b2ada88a6f8c3668dfca4d2d956f6fbd75704",
+            "b5631f491ff2b781dcefe6b36318fbd75831ad8d9f6cedb3b2cde946b7cecada",
             RendererOperationRegistry.GetCanonicalSha256());
         byte[] schema = File.ReadAllBytes(TestRepository.PathFromRoot(
             "contracts", "json-schema", "renderer-operation-registry.v1.schema.json"));
@@ -254,7 +254,7 @@ public sealed class ApplicationContractSubstrateTests
         RendererEnvelope cancelled = cancellation.ValidateAndAdvance(JsonSerializer.SerializeToUtf8Bytes(
             new
             {
-                contract_version = "1.0.0",
+                contract_version = ProtocolConstants.RendererContractVersion,
                 message_kind = "request",
                 session_id = Session,
                 sequence = 1,
@@ -269,7 +269,7 @@ public sealed class ApplicationContractSubstrateTests
         RendererEnvelope resync = eventStream.ValidateAndAdvance(JsonSerializer.SerializeToUtf8Bytes(
             new
             {
-                contract_version = "1.0.0",
+                contract_version = ProtocolConstants.RendererContractVersion,
                 message_kind = "event",
                 session_id = Session,
                 sequence = 1,
@@ -300,7 +300,7 @@ public sealed class ApplicationContractSubstrateTests
         JsonObject payloadObject = JsonNode.Parse("{" + payload + "}")!.AsObject();
         return JsonSerializer.SerializeToUtf8Bytes(new JsonObject
         {
-            ["contract_version"] = "1.0.0",
+            ["contract_version"] = ProtocolConstants.RendererContractVersion,
             ["message_kind"] = "request",
             ["session_id"] = session,
             ["sequence"] = sequence,

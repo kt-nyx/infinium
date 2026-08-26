@@ -314,6 +314,18 @@ public sealed partial class AuthoritativeStore
             {
                 ValidatePreparedAnalysisAdmissionMigration();
             }
+            using SqliteCommand resultsVersionCommand = connection.CreateCommand();
+            resultsVersionCommand.CommandText = "PRAGMA user_version;";
+            int resultsVersion = Convert.ToInt32(resultsVersionCommand.ExecuteScalar(),
+                System.Globalization.CultureInfo.InvariantCulture);
+            if (resultsVersion == 13)
+            {
+                ApplyResultsReviewMigration();
+            }
+            else if (resultsVersion == 14)
+            {
+                ValidateResultsReviewMigration();
+            }
         }
     }
 
@@ -2350,9 +2362,19 @@ public sealed partial class AuthoritativeStore
         "index:idx_provider_budget_events_scope",
         "index:idx_provider_semantic_admission_artifact_owner",
         "index:idx_provider_request_fingerprint",
+        "index:idx_result_projection_queue",
+        "index:idx_result_projection_severity",
+        "index:idx_assumption_projection_profile",
         "table:analysis_candidates",
         "table:application_setup_objects",
         "table:application_setup_receipts",
+        "table:result_projection_items",
+        "table:review_events",
+        "table:review_projection",
+        "table:assumption_events",
+        "table:assumption_projection",
+        "table:targeted_verifications",
+        "table:structured_exports",
         "table:analysis_coverage",
         "table:analysis_coverage_failure_links",
         "table:analysis_coverage_gap_links",
@@ -2475,6 +2497,14 @@ public sealed partial class AuthoritativeStore
         "index:prepared_run_submissions_one_shot_gesture",
         "trigger:application_setup_receipts_append_only_delete",
         "trigger:application_setup_receipts_append_only_update",
+        "trigger:review_events_append_only_delete",
+        "trigger:review_events_append_only_update",
+        "trigger:assumption_events_append_only_delete",
+        "trigger:assumption_events_append_only_update",
+        "trigger:targeted_verifications_append_only_delete",
+        "trigger:targeted_verifications_append_only_update",
+        "trigger:structured_exports_append_only_delete",
+        "trigger:structured_exports_append_only_update",
         "trigger:prepared_manual_runs_append_only_delete",
         "trigger:prepared_manual_runs_append_only_update",
         "trigger:prepared_run_submissions_append_only_delete",

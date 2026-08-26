@@ -24,7 +24,7 @@
   "required": ["schema_version", "renderer_contract_version", "limits", "operations", "denied_authority_fields"],
   "properties": {
     "schema_version": { "const": "1.0.0" },
-    "renderer_contract_version": { "const": "1.0.0" },
+    "renderer_contract_version": { "const": "1.1.0" },
     "limits": {
       "type": "object",
       "additionalProperties": false,

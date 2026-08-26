@@ -190,6 +190,27 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                     ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion { Value = "1" },
                 }).ResponseAsync;
                 Assert.AreEqual(GetAnalysisOutputResponse.ResultOneofCase.Output, queried.ResultCase, queried.Failure?.Detail);
+                GetResultOverviewResponse overview = await client.GetResultOverviewAsync(new GetResultOverviewRequest
+                {
+                    RunId = new Infinium.Contracts.Protobuf.Domain.V1.RunId { Value = runId },
+                    ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion { Value = "1" },
+                }).ResponseAsync;
+                Assert.AreEqual(GetResultOverviewResponse.ResultOneofCase.Overview, overview.ResultCase, overview.Failure?.Detail);
+                Assert.IsTrue(overview.Overview.NoSafetyGuarantee);
+                ListResultItemsRequest resultQuery = new()
+                {
+                    RunId = new Infinium.Contracts.Protobuf.Domain.V1.RunId { Value = runId },
+                    RequestedPageSize = 100,
+                    Sort = ResultItemSort.IdentityAscending,
+                    ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion { Value = "1" },
+                };
+                resultQuery.Kinds.Add([
+                    ResultItemKind.SupportedCase, ResultItemKind.LeadOnlyCase, ResultItemKind.Finding,
+                    ResultItemKind.Abstention, ResultItemKind.Failure, ResultItemKind.CoverageGap,
+                ]);
+                ListResultItemsResponse resultItems = await client.ListResultItemsAsync(resultQuery).ResponseAsync;
+                Assert.AreEqual(ListResultItemsResponse.ResultOneofCase.Page, resultItems.ResultCase, resultItems.Failure?.Detail);
+                Assert.IsFalse(resultItems.Page.HasMore);
                 ManagedCaseObservation observation = Observe(caseId, runId, store, queried.Output);
                 if (cleanOutputBefore is not null)
                 {
@@ -256,6 +277,115 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 string caseId = expectedCase.GetProperty("case_id").GetString()!;
                 AssertCase(expectedCase.GetProperty("expected"), observations[caseId], observations["ANALYSIS-PIPELINE-CLEAN-D01"]);
             }
+            ListResultItemsRequest cleanFindingQuery = new()
+            {
+                RunId = new Infinium.Contracts.Protobuf.Domain.V1.RunId { Value = cleanRunId },
+                RequestedPageSize = 10,
+                Sort = ResultItemSort.IdentityAscending,
+                ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion { Value = "1" },
+            };
+            cleanFindingQuery.Kinds.Add(ResultItemKind.Finding);
+            ListResultItemsResponse cleanFindings = await client.ListResultItemsAsync(cleanFindingQuery).ResponseAsync;
+            ResultItemSummary sourceFinding = cleanFindings.Page.Items[0];
+            GetResultDetailResponse sourceDetail = await client.GetResultDetailAsync(new GetResultDetailRequest
+            {
+                RunId = sourceFinding.RunId,
+                Kind = ResultItemKind.Finding,
+                ItemId = sourceFinding.ItemId,
+                ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion { Value = "1" },
+            }).ResponseAsync;
+            Assert.AreEqual(GetResultDetailResponse.ResultOneofCase.Detail, sourceDetail.ResultCase, sourceDetail.Failure?.Detail);
+            Assert.IsNotEmpty(sourceDetail.Detail.SubjectIds);
+            GetFocusedModViewResponse focused = await client.GetFocusedModViewAsync(new GetFocusedModViewRequest
+            {
+                RunId = sourceFinding.RunId,
+                ExactSubjectId = sourceDetail.Detail.SubjectIds[0],
+                RequestedMaximumItems = 100,
+                ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion { Value = "1" },
+            }).ResponseAsync;
+            Assert.AreEqual(GetFocusedModViewResponse.ResultOneofCase.View, focused.ResultCase, focused.Failure?.Detail);
+            Assert.IsNotEmpty(focused.View.Items);
+            Assert.IsTrue(focused.View.InertGaps.All(gap =>
+                gap.Contains("outside this exact subject", StringComparison.Ordinal)
+                || focused.View.Items.Any(item => item.InertSummary == gap)));
+            GetFocusedModViewResponse lookalikeFocus = await client.GetFocusedModViewAsync(new GetFocusedModViewRequest
+            {
+                RunId = sourceFinding.RunId,
+                ExactSubjectId = sourceDetail.Detail.SubjectIds[0] + "-lookalike",
+                RequestedMaximumItems = 100,
+                ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion { Value = "1" },
+            }).ResponseAsync;
+            Assert.AreEqual(GetFocusedModViewResponse.ResultOneofCase.View, lookalikeFocus.ResultCase);
+            Assert.IsEmpty(lookalikeFocus.View.Items);
+            SubmitReviewEventResponse reviewed = await client.SubmitReviewEventAsync(new SubmitReviewEventRequest
+            {
+                IdempotencyKey = "phase-c-native-review",
+                RunId = sourceFinding.RunId,
+                SubjectKind = "finding",
+                SubjectOccurrenceId = sourceFinding.ItemId,
+                ExpectedRevision = 0,
+                EventKind = "disposition",
+                Disposition = "investigating",
+                InertAnnotation = string.Empty,
+            }).ResponseAsync;
+            Assert.AreEqual(SubmitReviewEventResponse.ResultOneofCase.State, reviewed.ResultCase, reviewed.Failure?.Detail);
+            SubmitReviewEventResponse staleReview = await client.SubmitReviewEventAsync(new SubmitReviewEventRequest
+            {
+                IdempotencyKey = "phase-c-native-review-stale",
+                RunId = sourceFinding.RunId,
+                SubjectKind = "finding",
+                SubjectOccurrenceId = sourceFinding.ItemId,
+                ExpectedRevision = 0,
+                EventKind = "disposition",
+                Disposition = "resolved",
+                InertAnnotation = string.Empty,
+            }).ResponseAsync;
+            Assert.AreEqual(SubmitReviewEventResponse.ResultOneofCase.Conflict, staleReview.ResultCase);
+            Assert.AreEqual(1UL, staleReview.Conflict.CurrentSafeState.Revision);
+            SubmitAssumptionEventResponse assumption = await client.SubmitAssumptionEventAsync(new SubmitAssumptionEventRequest
+            {
+                IdempotencyKey = "phase-c-native-assumption",
+                AssumptionId = "phase-c-assumption",
+                ProfileId = "profile.001",
+                ExpectedRevision = 0,
+                EventKind = "create",
+                Origin = "user-provided",
+                Confirmation = "user-confirmed",
+                Subject = "profile-selection",
+                InertValue = "confirmed for this retained context",
+                Scope = cleanRunId,
+                DependencyIds = { sourceDetail.Detail.SourcePayloadId },
+            }).ResponseAsync;
+            Assert.AreEqual(SubmitAssumptionEventResponse.ResultOneofCase.State, assumption.ResultCase, assumption.Failure?.Detail);
+            CreateStructuredExportRequest exportRequest = new()
+            {
+                IdempotencyKey = "phase-c-native-export",
+                RunId = sourceFinding.RunId,
+                SharingClass = "LocalPrivateExport",
+                SelectedResultItemIds = { sourceFinding.ItemId },
+                SelectedReviewEventIds = { reviewed.State.History[0].EventId },
+                SelectedAssumptionIds = { assumption.State.AssumptionId },
+                Filters = { "kind=finding" },
+                DeclaredOmissions = { "evidence-content" },
+                PrivacyDecisions = { "local-private-only" },
+                SourcePolicyDecisions = { "retained-provenance-only" },
+            };
+            CreateStructuredExportResponse export = await client.CreateStructuredExportAsync(exportRequest).ResponseAsync;
+            Assert.AreEqual(CreateStructuredExportResponse.ResultOneofCase.Export, export.ResultCase, export.Failure?.Detail);
+            StartTargetedVerificationResponse targeted = await client.StartTargetedVerificationAsync(
+                new StartTargetedVerificationRequest
+                {
+                    IdempotencyKey = "phase-c-native-targeted",
+                    RequestedRunId = "run-phase-c-native-targeted",
+                    SourceRunId = sourceFinding.RunId,
+                    SourceFindingOccurrenceId = sourceFinding.ItemId,
+                    ExactScopeIds = { sourceDetail.Detail.SubjectIds[0] },
+                    UserGestureId = "phase-c-user-gesture-0001",
+                    DispatchDeadline = ProtoMapping.ToProto(DateTimeOffset.UtcNow.AddMinutes(1)),
+                }).ResponseAsync;
+            Assert.AreEqual(StartTargetedVerificationResponse.ResultOneofCase.Verification, targeted.ResultCase, targeted.Failure?.Detail);
+            Assert.AreEqual("scope-limited", targeted.Verification.ReadinessBoundary);
+            Assert.AreEqual(LifecycleState.CompletedWithGaps, store.GetRun(cleanRunId).State);
             WriteComparisonReceipt(repositoryRoot, executionOrder.Select(caseId => observations[caseId]));
         }
         finally

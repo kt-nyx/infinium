@@ -1,7 +1,7 @@
 # Current project state
 
 Status: Accepted
-Disposition: Frontend Application Foundation Checkpoint B reinstated after Phase B correction; Phase C is unblocked but not started and M2 remains inactive
+Disposition: Frontend Application Foundation Checkpoint C reached; Phase C results/review backend accepted, Phase D automatically unblocked but not started, and M2 remains inactive
 
 Last reviewed: 2026-08-26
 Owner: Project owner
@@ -19,7 +19,7 @@ specific family of suspicious conflict outcomes, retain the evidence and
 uncertainty behind each result, reproduce stored results, and project those
 internal results into a stable report format for a future interface.
 
-Phases A and B of the accepted frontend foundation are complete. The corrected
+Phases A, B, and C of the accepted frontend foundation are complete. The corrected
 typed prepared-run path now validates its authoritative retained inputs and
 atomically binds the supported durable analysis operation before scheduling. The repository
 now has an exact application-authority inventory, a bounded display-safe
@@ -28,6 +28,11 @@ closed renderer envelope/operation registry with a fail-closed reference
 consumer. The application contract also exposes typed tool/profile/setup state,
 versioned saved configurations, honest pre-run estimates, non-secret provider
 status, and prepared manual-run initiation with immutable durable bindings.
+It now also exposes bounded readiness and result queues, exact finding/case
+detail, evidence and provenance expansion, focused-mod views, append-only
+review state and assumptions, new scope-limited targeted verification runs,
+and selection-bounded local-private structured exports. These paths preserve
+canonical analysis truth rather than rewriting it with user review state.
 The renderer boundary still permits exactly five Phase A operation/message combinations,
 keeps gesture proof request-only, represents accepted and explicit non-success
 outcomes separately, and commits replay state only after complete validation.
@@ -47,8 +52,8 @@ work.
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
-| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) accepted at corrected Checkpoint B. The Phase B correction began from candidate `f7b39021097a6954c4d9d1d83ff05a10885c4072`; the exact correction commit is reported by the implementation orchestrator. |
-| Next gate | Phase C begins with `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5` under the accepted plan. It is automatically unblocked by corrected Checkpoint B but was not started by this task. This does not activate M2. |
+| Active implementation | Frontend Application Foundation Phases A-C (WP1-WP6) accepted at Checkpoint C. Phase C began from accepted corrected Checkpoint B commit `8bc653f460cbeab1bda03dcd8a6cdb40e769ad08`; the exact Checkpoint C commit is reported by the implementation orchestrator. |
+| Next gate | Phase D begins with `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` under the accepted plan. It is automatically unblocked by Checkpoint C but was not started by this task. This does not activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |
 
@@ -123,8 +128,9 @@ asset, script, configuration, dependency, performance, or runtime problem.
   production-readiness claim yet.
 - Native credential entry remains unavailable in Phase B; provider status is
   non-secret and local-only setup/run evidence remains available.
-- Phase B proves the setup-to-live-run path with offline developer fixtures;
-  it does not expose Phase C result/review workflows or expand analyzer scope.
+- Phase C proves the backend finding-to-review path with offline developer
+  fixtures and generated-client calls; it does not build the desktop, expand
+  analyzer scope, qualify an independent semantic oracle, or activate M2.
 
 ## Current authority
 

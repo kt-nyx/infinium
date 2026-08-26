@@ -5,7 +5,7 @@
   "last_reviewed": "2026-08-26",
   "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
   "planning_base": "32dbb2c48754666336d2da571e554ad8897ed71c",
-  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner through corrected Checkpoint B. The producer-consumer-validated retained-input setup-to-live-run native path does not claim Phase C result/review completion, desktop delivery, broad semantic accuracy, M2 activation, or M2 acceptance.",
+  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner through Checkpoint C. Generated-client evidence validates bounded result exploration and append-only review workflows without claiming desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, or M2 acceptance.",
   "application_contract_inventory": "application-contract-inventory.v1.json",
   "ownership_audit": {
     "capability_count": 19,
@@ -83,7 +83,7 @@
         "RendererContractValidator",
         "renderer-operation-registry.v1.json"
       ],
-      "gap": "The bounded producer and reference consumer are active; the product desktop host and TypeScript renderer consumer remain WP7 while Phase C result/review workflow is not exposed.",
+      "gap": "The bounded producer and reference consumer include Phase C capability flags; the product desktop host and TypeScript renderer consumer remain WP7.",
       "owning_phase": "A",
       "owning_work_package": "WP2",
       "transition_exit_evidence": "Generated native and TypeScript consumers recover the same bounded bootstrap and typed resync states."
@@ -285,13 +285,13 @@
         "EVAL-0085",
         "EVAL-0092"
       ],
-      "current_state": "partial-or-developer-oriented",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "ApplicationService.GetRun",
-        "ApplicationService.GetAnalysisSummary",
-        "M1 run-output/readiness contracts"
+        "ApplicationService.GetResultOverview",
+        "Explicit scope-limited, no-readiness, provisional, stale, failure, gap, cost, duration, and no-safety-guarantee fields",
+        "ResultReviewWorkflowIntegrationTests deterministic summary and generated-client corpus readback"
       ],
-      "gap": "No complete user-oriented summary projection with all M2 distinctions and claim boundaries.",
+      "gap": "No desktop presentation exists before WP7; readiness remains bounded to retained analyzer coverage and never claims whole-modlist safety.",
       "owning_phase": "C",
       "owning_work_package": "WP5",
       "transition_exit_evidence": "All result states produce truthful bounded summaries and no absence-of-findings safety claim."
@@ -310,13 +310,13 @@
         "EVAL-0084",
         "EVAL-0092"
       ],
-      "current_state": "partial-or-developer-oriented",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "ApplicationService.ListFindings",
-        "FindingSupportState",
-        "Existing keyset cursor substrate"
+        "ApplicationService.ListResultItems",
+        "Separate supported-case and lead-only-case kinds with allowlisted filters, search, and two deterministic sorts",
+        "Authenticated query/projection/sort-bound keyset cursor and 100000-summary bounded-query evidence"
       ],
-      "gap": "No complete case/investigation queue, user-priority projection, search, or separate detail contract.",
+      "gap": "No desktop queue consumer or user-chosen priority overlay exists before WP7; canonical severity is preserved rather than rewritten.",
       "owning_phase": "C",
       "owning_work_package": "WP5",
       "transition_exit_evidence": "Supported and lead-only items remain distinct through paginated queue and detail consumers."
@@ -335,13 +335,13 @@
         "EVAL-0083",
         "EVAL-0092"
       ],
-      "current_state": "projection-exists-not-queryable",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "FindingReportProjection",
-        "finding-report.v1.schema.json",
-        "scope-reports CLI command"
+        "ApplicationService.GetResultDetail",
+        "Exact retained finding-case payload decode and source payload fingerprint",
+        "Canonical report round-trip and hostile inert text integration evidence"
       ],
-      "gap": "FindingReport is derived from a local retained artifact and is not a complete coordinator-owned report/detail query surface.",
+      "gap": "FindingReport remains implementation-active until the real M2 UI validates its full presentation seam; Phase C does not invent unavailable evidence or recommendation semantics.",
       "owning_phase": "C",
       "owning_work_package": "WP5",
       "transition_exit_evidence": "Reports and case/finding details are queryable, bounded, deterministic, inert, and traceable to canonical retained sources."
@@ -360,13 +360,13 @@
         "EVAL-0083",
         "EVAL-0092"
       ],
-      "current_state": "partial-or-developer-oriented",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "ApplicationService.GetAnalysisProvenance",
-        "ApplicationService.ListAnalysisArtifacts",
-        "FindingReport evidence identities"
+        "ApplicationService.GetEvidenceExpansion",
+        "Exact result-owned evidence allowlist with retained-metadata or explicit reference-only availability",
+        "Closed message bounds and no raw payload path, active markup, URL, or generic query fields"
       ],
-      "gap": "Current diagnostic/artifact queries are not a complete user-oriented bounded evidence expansion model.",
+      "gap": "Evidence content without an application-safe retained artifact remains reference-only; unknown LLM involvement is reported as unknown rather than inferred.",
       "owning_phase": "C",
       "owning_work_package": "WP5",
       "transition_exit_evidence": "Typed inert evidence/provenance chunks expose gaps and never return raw payload paths or privileged content."
@@ -383,11 +383,13 @@
         "EVAL-0085",
         "EVAL-0092"
       ],
-      "current_state": "missing-application-vertical",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "Retained subject/mod identities in M1 outputs"
+        "ApplicationService.GetFocusedModView",
+        "Exact json_each subject identity matching over retained finding/case projection",
+        "Lookalike-subject isolation, bounded evidence identities, exact-subject coverage, and a generic notice for unrelated run-level gaps"
       ],
-      "gap": "No focused-mod aggregation query or bounded detail projection exists.",
+      "gap": "Documentation passages are not attached unless canonical retained analysis supplies a supported relationship; Phase C does not become a generic MO2 conflict browser.",
       "owning_phase": "C",
       "owning_work_package": "WP5",
       "transition_exit_evidence": "One exact mod view aggregates only supported relationships and preserves unrelated causes and coverage gaps."
@@ -408,12 +410,13 @@
         "EVAL-0079",
         "EVAL-0093"
       ],
-      "current_state": "missing-application-vertical",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "ADR-0022 identity/reconciliation substrate",
-        "M1 immutable finding/case occurrences"
+        "ApplicationService.GetReviewState and SubmitReviewEvent",
+        "Append-only review_events plus rebuildable optimistic review_projection",
+        "Concurrency conflict, restart, replay, source immutability, and four-gate exact-continuity carryover of the unchanged retained source review state"
       ],
-      "gap": "No complete application command/persistence/readback vertical for user review events and validated carryover.",
+      "gap": "Only exact finding/case occurrences are reviewable and only the newest 100 history events are returned with explicit truncation; desktop controls remain WP7.",
       "owning_phase": "C",
       "owning_work_package": "WP6",
       "transition_exit_evidence": "Revision-bound append-only events survive restart and cannot mutate or suppress an unrelated/new analytical revision."
@@ -433,12 +436,13 @@
         "EVAL-0043",
         "EVAL-0093"
       ],
-      "current_state": "missing-application-vertical",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "Versioned analysis-context substrate",
-        "FindingReport assumptions field"
+        "ApplicationService.ListAssumptions and SubmitAssumptionEvent",
+        "Append-only assumption_events plus rebuildable effective successor projection",
+        "Immutable inferred/user-provided origin, explicit confirmation, successor context, removal, restart, and replay evidence"
       ],
-      "gap": "No durable assumption event/confirmation/revalidation application contract or persistence path.",
+      "gap": "Phase C exposes bounded effective assumption state rather than an unbounded all-profile history download; desktop lifecycle controls remain WP7.",
       "owning_phase": "C",
       "owning_work_package": "WP6",
       "transition_exit_evidence": "Origin and confirmation remain distinct and every edit creates successor effective context state with history intact."
@@ -457,12 +461,13 @@
         "EVAL-0078",
         "EVAL-0093"
       ],
-      "current_state": "missing-application-vertical",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "M1 manual run and dependency/replay substrate",
-        "FindingReport validation steps"
+        "ApplicationService.StartTargetedVerification",
+        "New typed manually initiated durable run linked to exact terminal source finding/case and retained subject scope",
+        "Generated-client proof that the source terminal run stays terminal and successor readiness is scope-limited"
       ],
-      "gap": "No user-facing targeted-scope plan/start/lineage contract; targeted results must not borrow unrelated readiness coverage.",
+      "gap": "The new run still requires ordinary coordinator dispatch/execution and reports only its exact scope; it cannot borrow unrelated coverage or reopen the source run.",
       "owning_phase": "C",
       "owning_work_package": "WP6",
       "transition_exit_evidence": "A new manually initiated operation retains exact source scope and lineage and reports scope-limited readiness honestly."
@@ -479,12 +484,13 @@
         "EVAL-0080",
         "EVAL-0093"
       ],
-      "current_state": "missing-application-vertical",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "M1 run-owned JSON output",
-        "ADR-0021 sharing classes and typed write authority"
+        "ApplicationService.CreateStructuredExport and GetStructuredExport",
+        "LocalPrivateExport typed write class and append-only exact manifest",
+        "Exact selected structured records/revisions and run binding plus artifact integrity, restart, backup/restore, deletion preview, provenance, and source-immutability evidence"
       ],
-      "gap": "Run-owned output is not a user-created export and no application export selection/manifest/status path exists.",
+      "gap": "Exports are local-private, selection-bounded artifacts and are not whole-run/full-population downloads; no desktop selection workflow exists before WP7.",
       "owning_phase": "C",
       "owning_work_package": "WP6",
       "transition_exit_evidence": "Export records exact source revisions, filters, sharing class, omissions, privacy/source-policy choices, and does not mutate source truth."

@@ -13,7 +13,7 @@ public sealed class ScopeReversionV2PersistenceIntegrationTests
     [TestCategory("Integration")]
     [TestCategory("Replay")]
     [TestProperty("Category", "ScopeReversionV2")]
-    public void Schema12PublishesReopensReplaysInvalidatesAndDisclosesUnavailableRoot()
+    public void CurrentSchemaPublishesReopensReplaysInvalidatesAndDisclosesUnavailableRoot()
     {
         string root = Path.Combine(Path.GetTempPath(), "infinium-scope-reversion-v2-store-" + Guid.NewGuid().ToString("N"));
         string restoredRoot = Path.Combine(Path.GetTempPath(), "infinium-scope-reversion-v2-restored-" + Guid.NewGuid().ToString("N"));
@@ -30,8 +30,8 @@ public sealed class ScopeReversionV2PersistenceIntegrationTests
         {
             using (AuthoritativeStore store = new(new StoragePaths(root)))
             {
-                Assert.AreEqual(13, store.GetSchemaVersion());
-                Assert.AreEqual(ApplicationSetupPersistenceDeclarations.SchemaFingerprint,
+                Assert.AreEqual(14, store.GetSchemaVersion());
+                Assert.AreEqual(ResultsReviewPersistenceDeclarations.SchemaFingerprint,
                     store.GetCurrentSchemaFingerprint());
                 ScopeReversionV2PersistencePhaseResult clean = ScopeReversionV2PersistencePhase.ExecuteAndPublish(
                     store, request, artifacts, DateTimeOffset.UtcNow);

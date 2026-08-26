@@ -44,8 +44,8 @@ network.
 | `effective-scan-configuration.v2.schema.json` | `infinium.scan.effective-configuration/v2` |
 | `run-output.v2.schema.json` | `infinium.run-output/v2` |
 | `cli-summary.v2.schema.json` | `infinium.cli-summary/v2` |
-| `renderer-envelope.v1.schema.json` | —; exact renderer contract version `1.0.0` |
-| `renderer-operation-registry.v1.schema.json` | —; exact closed registry source version `1.0.0` |
+| `renderer-envelope.v1.schema.json` | —; exact renderer contract version `1.1.0` |
+| `renderer-operation-registry.v1.schema.json` | —; schema version `1.0.0`, exact renderer contract version `1.1.0` |
 
 `common.v1.schema.json` contains shared closed definitions and is not itself an
 instance contract.

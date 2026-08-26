@@ -717,6 +717,12 @@ public sealed partial class AuthoritativeStore
                         ("$logical", edge.OccurrenceId.Value), ("$payload", payloadId));
                 }
             }
+            IndexResultProjection(
+                value,
+                payloadId,
+                Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(serializedValue.Span)),
+                now,
+                transaction);
             transaction.Commit();
             return new FindingCasePersistenceReceipt(
                 value.PayloadId.Value, payloadId, value.Findings.Count, value.Recommendations.Count,

@@ -88,10 +88,10 @@
       "additionalProperties": false,
       "required": ["application_contract_version", "domain_contract_version", "storage_contract_version", "renderer_contract_version", "coordinator_health", "configuration_availability", "capabilities", "recent_runs", "projection_version", "coordinator_instance_id", "coordinator_fencing_epoch"],
       "properties": {
-        "application_contract_version": { "const": "1.6.0" },
+        "application_contract_version": { "const": "1.7.0" },
         "domain_contract_version": { "const": "1.3.0" },
-        "storage_contract_version": { "const": "1.12.0" },
-        "renderer_contract_version": { "const": "1.0.0" },
+        "storage_contract_version": { "const": "1.13.0" },
+        "renderer_contract_version": { "const": "1.1.0" },
         "coordinator_health": { "enum": ["healthy", "degraded", "unavailable"] },
         "configuration_availability": { "enum": ["available", "partial", "unavailable"] },
         "capabilities": {
@@ -100,7 +100,7 @@
             "type": "object", "additionalProperties": false,
             "required": ["capability", "availability", "inert_reason"],
             "properties": {
-              "capability": { "enum": ["bootstrap", "run-query", "event-resync", "configuration", "provider-enrollment"] },
+              "capability": { "enum": ["bootstrap", "run-query", "event-resync", "configuration", "provider-enrollment", "result-exploration", "durable-user-review"] },
               "availability": { "enum": ["available", "partial", "unavailable"] },
               "inert_reason": { "type": "string", "minLength": 1, "maxLength": 512 }
             }
@@ -172,7 +172,7 @@
   "additionalProperties": false,
   "required": ["contract_version", "message_kind", "session_id", "sequence", "operation", "payload"],
   "properties": {
-    "contract_version": { "const": "1.0.0" },
+    "contract_version": { "const": "1.1.0" },
     "message_kind": { "enum": ["request", "response", "event"] },
     "session_id": { "$ref": "#/$defs/identifier" },
     "sequence": { "type": "integer", "minimum": 1 },

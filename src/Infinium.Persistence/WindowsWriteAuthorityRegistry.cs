@@ -1006,6 +1006,7 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
                 ProductWriteClass.Backup => "backups",
                 ProductWriteClass.Runtime => "runtime",
                 ProductWriteClass.RunOutput => "run-output",
+                ProductWriteClass.Export => "exports",
                 _ => throw new ArgumentOutOfRangeException(
                     nameof(writeClass),
                     writeClass,

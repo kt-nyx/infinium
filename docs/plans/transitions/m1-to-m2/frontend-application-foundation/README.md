@@ -1,13 +1,13 @@
 # M1-to-M2 Foundation — Frontend Application Foundation
 
 Status: Accepted
-Disposition: Corrected Checkpoint B reached; Phase B setup-to-live-run foundation accepted and Phase C not started
+Disposition: Checkpoint C reached; Phase C results and durable review backend accepted, Phase D automatically unblocked but not started
 
 Last reviewed: 2026-08-26
 Owner: Project owner
 Accepted: 2026-08-25
 Plan ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`
-Next work package: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5`
+Next work package: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7`
 
 ## Plain-language purpose
 
@@ -60,9 +60,12 @@ the corrected Phase B implementation. WP3 and WP4 provide typed
 tool/profile/configuration setup, honest local estimates, non-secret provider
 status, prepared manual-run initiation, durable gesture/binding receipts, and
 an offline retained-input native diagnostic proof through the real durable
-analysis operation, including reconnect and restart. Corrected Checkpoint B
-automatically unblocks Phase C under the accepted plan, but Phase C has not
-started.
+analysis operation, including reconnect and restart. WP5 and WP6 now provide
+bounded canonical-result exploration, exact focused views, append-only
+revision-bound review and assumption state, evidence-gated carryover, new
+scope-limited targeted verification work, and exact local-private structured
+export with restart and backup/restore evidence. Checkpoint C automatically
+unblocks Phase D under the accepted plan, but Phase D has not started.
 
 M2 remains inactive until a separate accepted M2 plan exists. The transition's
 diagnostic React surface is development evidence, not the M2 interface.

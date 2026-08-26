@@ -104,6 +104,29 @@ public sealed partial class AuthoritativeStore
                     }
                 }
 
+                List<BackupExportManifest> exports = [];
+                using (SqliteCommand command = connection.CreateCommand())
+                {
+                    command.CommandText =
+                        "SELECT artifact_relative_path,artifact_sha256,artifact_bytes "
+                        + "FROM structured_exports ORDER BY artifact_relative_path;";
+                    using SqliteDataReader reader = command.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        string relativePath = reader.GetString(0);
+                        string sha256 = reader.GetString(1);
+                        long byteLength = reader.GetInt64(2);
+                        Paths.CopyFile(
+                            ProductWriteClass.Export,
+                            relativePath,
+                            ProductWriteClass.Backup,
+                            Path.Combine(backupDatabaseName + ".exports", relativePath),
+                            byteLength,
+                            sha256);
+                        exports.Add(new BackupExportManifest(relativePath, sha256, byteLength));
+                    }
+                }
+
                 string manifestPath = Paths.ResolveProductPath(
                     ProductWriteClass.Backup,
                     backupDatabaseName + ".manifest.json");
@@ -113,6 +136,7 @@ public sealed partial class AuthoritativeStore
                         BindingIdentity,
                         databaseSha,
                         payloads,
+                        exports,
                         now),
                     new JsonSerializerOptions { WriteIndented = true });
                 if (manifest.Length is 0 or > MaximumBackupManifestBytes)
@@ -185,6 +209,10 @@ public sealed partial class AuthoritativeStore
             ProductWriteClass.Backup,
             backupDatabaseName + ".payloads",
             missingIsSuccess: true);
+        Paths.DeleteDirectoryTree(
+            ProductWriteClass.Backup,
+            backupDatabaseName + ".exports",
+            missingIsSuccess: true);
         foreach (string suffix in new[] { "-journal", "-shm", "-wal", string.Empty })
         {
             Paths.DeleteFile(
@@ -237,6 +265,15 @@ public sealed partial class AuthoritativeStore
                     payload.ByteLength,
                     payload.Sha256);
             }
+            foreach (BackupExportManifest export in validated.Manifest.Exports)
+            {
+                staging.CopyExternalFileIntoProduct(
+                    ProductWriteClass.Export,
+                    export.RelativePath,
+                    Path.Combine(backup.DatabasePath + ".exports", export.RelativePath),
+                    export.ByteLength,
+                    export.Sha256);
+            }
 
             using (FileStream stagedDatabase = staging.OpenReadFile(
                        ProductWriteClass.Data,
@@ -270,6 +307,10 @@ public sealed partial class AuthoritativeStore
                 ValidatePayloadFiles(
                     staging.Payloads,
                     validated.Manifest.Payloads);
+                ValidateExportManifestSet(
+                    validated.Manifest.Exports,
+                    ReadDatabaseExports(staging.Database));
+                ValidateExportFiles(staging.Exports, validated.Manifest.Exports);
 
                 expectedFiles =
                 [
@@ -285,6 +326,11 @@ public sealed partial class AuthoritativeStore
                             Path.DirectorySeparatorChar),
                         payload.ByteLength,
                         payload.Sha256)));
+                expectedFiles.AddRange(validated.Manifest.Exports.Select(export =>
+                    new PublicationFileExpectation(
+                        Path.Combine("exports", export.RelativePath),
+                        export.ByteLength,
+                        export.Sha256)));
             }
 
             target.PublishFrom(staging, expectedFiles);
@@ -329,7 +375,8 @@ public sealed partial class AuthoritativeStore
         if (manifest.SchemaVersion != CurrentSchemaVersion
             || manifest.Sqlite is null
             || manifest.Sqlite.CompileOptions is null
-            || manifest.Payloads is null)
+            || manifest.Payloads is null
+            || manifest.Exports is null)
         {
             throw new InvalidOperationException(
                 "The backup manifest schema or SQLite identity is incompatible.");
@@ -368,6 +415,8 @@ public sealed partial class AuthoritativeStore
             ValidateDatabaseFile(backup.DatabasePath, manifest.Sqlite);
         ValidateManifestPayloadSet(manifest.Payloads, databasePayloads);
         ValidatePayloadFiles(backup.DatabasePath + ".payloads", manifest.Payloads);
+        ValidateExportManifestSet(manifest.Exports, ReadDatabaseExports(backup.DatabasePath));
+        ValidateExportFiles(backup.DatabasePath + ".exports", manifest.Exports);
         return new ValidatedBackup(manifest, databaseByteLength);
     }
 
@@ -665,6 +714,21 @@ public sealed partial class AuthoritativeStore
             }
         }
 
+        using (var migration = database.CreateCommand())
+        {
+            migration.CommandText =
+                "SELECT COUNT(*) FROM migration_history "
+                + "WHERE migration_id='results-review-workflow-0014' AND from_version=13 AND to_version=14 "
+                + "AND sqlite_source_id=$source;";
+            migration.Parameters.AddWithValue("$source", binding.SourceId);
+            if (Convert.ToInt32(migration.ExecuteScalar(),
+                    System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The results/review workflow storage migration is invalid.");
+            }
+        }
+
         HashSet<string> actualObjects = new(StringComparer.Ordinal);
         using (var schema = database.CreateCommand())
         {
@@ -742,6 +806,75 @@ public sealed partial class AuthoritativeStore
         }
 
         return payloads;
+    }
+
+    private static List<BackupExportManifest> ReadDatabaseExports(string databasePath)
+    {
+        SqliteRuntimeIdentity.InitializeNativeProvider();
+        using SqliteConnection database = new(new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Mode = SqliteOpenMode.ReadOnly,
+            Pooling = false,
+        }.ToString());
+        database.Open();
+        using SqliteCommand command = database.CreateCommand();
+        command.CommandText =
+            "SELECT artifact_relative_path,artifact_sha256,artifact_bytes "
+            + "FROM structured_exports ORDER BY artifact_relative_path;";
+        using SqliteDataReader reader = command.ExecuteReader();
+        List<BackupExportManifest> exports = [];
+        while (reader.Read())
+        {
+            exports.Add(new(reader.GetString(0), reader.GetString(1), reader.GetInt64(2)));
+        }
+        return exports;
+    }
+
+    private static void ValidateExportManifestSet(
+        IReadOnlyList<BackupExportManifest> manifestExports,
+        IReadOnlyList<BackupExportManifest> databaseExports)
+    {
+        BackupExportManifest[] closed = manifestExports
+            .OrderBy(item => item.RelativePath, StringComparer.Ordinal).ToArray();
+        BackupExportManifest[] expected = databaseExports
+            .OrderBy(item => item.RelativePath, StringComparer.Ordinal).ToArray();
+        if (closed.Length != expected.Length)
+        {
+            throw new InvalidOperationException("The backup export manifest does not match the database export registry.");
+        }
+        for (int index = 0; index < closed.Length; index++)
+        {
+            BackupExportManifest item = closed[index];
+            if (item.RelativePath != Path.GetFileName(item.RelativePath)
+                || !item.RelativePath.EndsWith(".json", StringComparison.Ordinal)
+                || !IsCanonicalSha256(item.Sha256)
+                || item.ByteLength is <= 0 or > MaximumExportBytes
+                || item != expected[index])
+            {
+                throw new InvalidOperationException("The backup export manifest contains invalid or rebound data.");
+            }
+        }
+    }
+
+    private static void ValidateExportFiles(
+        string exportRoot,
+        IReadOnlyList<BackupExportManifest> exports)
+    {
+        foreach (BackupExportManifest export in exports)
+        {
+            string path = Path.Combine(exportRoot, export.RelativePath);
+            if (!File.Exists(path))
+            {
+                throw new InvalidOperationException("A structured export referenced by the backup is missing.");
+            }
+            using FileStream file = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            if (file.Length != export.ByteLength
+                || !StringComparer.Ordinal.Equals(HashStream(file), export.Sha256))
+            {
+                throw new InvalidOperationException("A structured export referenced by the backup is invalid.");
+            }
+        }
     }
 
     private static void ValidateManifestPayloadSet(
@@ -1005,12 +1138,18 @@ public sealed partial class AuthoritativeStore
         [property: JsonPropertyName("sqlite")] SqliteBindingIdentity Sqlite,
         [property: JsonPropertyName("databaseSha256")] string DatabaseSha256,
         [property: JsonPropertyName("payloads")] IReadOnlyList<BackupPayloadManifest> Payloads,
+        [property: JsonPropertyName("exports")] IReadOnlyList<BackupExportManifest> Exports,
         [property: JsonPropertyName("createdAt")] DateTimeOffset CreatedAt);
 
     private sealed record BackupPayloadManifest(
         [property: JsonPropertyName("sha256")] string Sha256,
         [property: JsonPropertyName("byteLength")] long ByteLength,
         [property: JsonPropertyName("relativePath")] string RelativePath);
+
+    private sealed record BackupExportManifest(
+        [property: JsonPropertyName("relativePath")] string RelativePath,
+        [property: JsonPropertyName("sha256")] string Sha256,
+        [property: JsonPropertyName("byteLength")] long ByteLength);
 
     private sealed record ValidatedBackup(
         BackupManifest Manifest,

@@ -1,7 +1,7 @@
 # M1-to-M2 Foundation — Frontend Application Foundation implementation record
 
 Status: Accepted
-Disposition: Corrected Checkpoint B reached; WP1-WP4 accepted and Phase C not started
+Disposition: Checkpoint C reached; WP1-WP6 accepted and Phase D not started
 
 Last reviewed: 2026-08-26
 Owner: Project owner
@@ -626,6 +626,249 @@ Security/provenance: all execution evidence used developer-owned offline
 fixtures/fakes and repository state. No private evaluator material, archive,
 external network, provider, credential, live, or billable operation was
 accessed, and no product output authored expected truth.
+
+## WP5 receipt — Bounded result exploration
+
+Work ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5`
+
+Candidate: one mutable Phase C candidate beginning at accepted corrected
+Checkpoint B commit `8bc653f460cbeab1bda03dcd8a6cdb40e769ad08`. The exact
+Checkpoint C commit is reported by the implementation orchestrator after the
+single Phase C commit is created.
+
+Delivered:
+
+- application protocol `1.7.0` exposes bounded overview/readiness, separate
+  supported-case and lead-only queues, exact finding/case/abstention/failure/
+  gap detail, evidence expansion, and focused-mod views;
+- result projections are run-bound indexes over the exact immutable retained
+  finding/case payload and carry its payload identity and SHA-256. Detail
+  readback decodes that canonical payload and does not author new evidence;
+- queries accept only six item kinds, two sorts, a 160-character inert search,
+  at most 100 items, and authenticated five-minute cursors bound to run,
+  projection identity, filter/search, sort, page size, and the last key;
+- exact subject matching uses the retained subject array, so substring and
+  lookalike identities do not enter a focused view; and
+- no Phase C result RPC contains a payload path, SQL, URL, active markup,
+  arbitrary object lookup, generic query, whole-run download, or
+  full-population export primitive.
+
+Focused evidence and measurements:
+
+- `ResultReviewWorkflowIntegrationTests`: 4 passed, 0 failed, 0 skipped after
+  correction and re-review;
+- real named-pipe generated C# consumer through the managed-analysis corpus:
+  1 passed, 0 failed, 0 skipped;
+- 100,000 retained summaries, 100-item severity/search page: 84 ms measured
+  local query latency and 15,679-byte protobuf message, below the 1,048,576-
+  byte application bound; and
+- deterministic repeat, hostile `<script>` text remaining inert, canonical
+  payload round-trip, supported/lead separation, exact focus isolation, cursor
+  expiry/query/sort/scope/projection invalidation, coverage/failure/gap state,
+  and the no-safety-guarantee claim all passed.
+
+Review result: `ACCEPT` after focused correction and re-review.
+
+- Must fix: schema-14 objects were initially absent from the exact database
+  object allowlist; added the seven tables, three indexes, and eight
+  append-only triggers to the supported schema identity.
+- Must fix: the first severity cursor used only the item ID and could skip or
+  repeat across severity groups; bound the cursor to both severity rank and
+  item ID.
+- Must fix: case proof evidence was initially mislabeled as contradicting
+  evidence and LLM involvement defaulted to false; removed the invented
+  contradiction and changed LLM involvement to explicit
+  `unknown-not-inferred` state.
+- Must fix: completed-with-gaps runs were initially presented as provisional;
+  corrected the readiness mapping to scope-limited while preserving all gaps.
+- Must fix: the first focused view returned detailed run-wide coverage/gap
+  text alongside exact-subject items. It now returns only exact-subject
+  coverage and focused gap/failure/abstention text, plus a generic notice when
+  other run-level gaps exist, so unrelated details are neither merged nor
+  silently hidden.
+- Owner/authority decision: none.
+- Safety/isolation breach: none.
+
+## WP6 receipt — Durable user review
+
+Work ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6`
+
+Candidate: the same mutable Phase C candidate beginning at
+`8bc653f460cbeab1bda03dcd8a6cdb40e769ad08`.
+
+Delivered:
+
+- append-only review events and assumption events with revision-bound current
+  projections, typed stale-revision conflicts that return current safe state,
+  idempotency rebinding rejection, successor edit/removal state, and replay
+  from history without rewriting source findings, cases, contexts, or runs;
+- review carryover only when the retained reconciliation assessment proves
+  exact continuation and causal, applicability, dependency, and producer
+  equivalence. Names, prose, visual similarity, or a fabricated assessment ID
+  cannot authorize carryover;
+- targeted verification creates a new manually initiated durable run, binds
+  the exact source finding/case and only scopes retained by that source, and
+  records scope-limited readiness without reopening a terminal source run or
+  borrowing unrelated coverage;
+- local-private structured JSON export contains exact selected result, review,
+  and assumption records and identities; exact review/assumption revisions;
+  the immutable run binding and lifecycle generation; filters; context,
+  schema, and generator identities; sharing class; omissions;
+  privacy/source-policy decisions; and retained provenance. Selection is
+  limited to 100 identities and artifact size to 1 MiB; and
+- structured export files use a dedicated typed write class, validate their
+  length/SHA on read, participate in exact backup manifests and restore, and
+  are discoverable through deletion preview without exposing their path over
+  the application contract.
+
+Focused evidence:
+
+- append-only trigger rejection, optimistic concurrency, typed conflict,
+  annotation successor/removal history, inferred-assumption origin,
+  successor context identity, effective removal, rebuild/replay, restart,
+  backup/restore, export integrity, deletion preview, and canonical source
+  immutability passed in the 4-test focused Phase C suite;
+- generated-client calls proved review success and stale conflict, assumption
+  creation, structured export, and targeted verification on the real
+  named-pipe coordinator path; and
+- source terminal state stayed `CompletedWithGaps`, the targeted successor was
+  a distinct queued run with `scope-limited` readiness, and no unrelated scope
+  identity was accepted.
+
+Review result: `ACCEPT` after focused correction and re-review.
+
+- Must fix: targeted verification initially passed a gesture through the
+  prepared-run foreign-key path without a preparation. It now uses the typed
+  durable run operation plus its own append-only manual gesture/source/scope
+  record, with a future deadline and a distinct successor run.
+- Must fix: local-private export metadata survived backup while the export file
+  did not. Export artifacts are now exact length/SHA-bound backup-manifest
+  members and restore atomically with database and payload artifacts.
+- Must fix: deletion preview initially used substring search over JSON and
+  could match a lookalike identity. It now uses exact `json_each` selection
+  equality.
+- Must fix: export provenance initially included only result payloads. It now
+  includes selected review event identities and assumption successor context
+  identities, the four run-binding identities, and selected review events must
+  belong to the exact export run.
+- Must fix: a continuity assessment originally authorized a caller to supply
+  substituted disposition/suppression/annotation values. Carryover now
+  requires and reproduces the exact retained source review state as well as
+  the four exact-continuation gates.
+- Must fix: targeted verification originally allowed an active source and did
+  not check that a jointly selected finding actually belonged to the selected
+  case. It now requires a distinct successor from an immutable terminal source
+  and validates the exact finding/case relationship before creating work.
+- Must fix: the first export artifact was only an exact identity manifest. It
+  now contains the selected inert result records, review events with revisions,
+  current assumption successors with revisions/context identities, and exact
+  source-run binding/readiness metadata; readback validates both manifest and
+  artifact fingerprints.
+- Owner/authority decision: none.
+- Safety/isolation breach: none.
+
+## Checkpoint C receipt — Phase C accepted
+
+Disposition: `ACCEPT` for WP5 and WP6. Checkpoint C is reached. Phase D is
+automatically unblocked by the accepted plan but was not started; M2 remains
+inactive.
+
+Contract state:
+
+- application `1.7.0`, domain `1.3.0`, storage `1.13.0`, renderer `1.1.0`,
+  storage schema `14`;
+- protobuf contract-set fingerprint
+  `8e6b8b3cdeeb634a744d57be49fcfb6b6d77d3fbbeb9afb020c9e17a6b9336bf`;
+- storage schema fingerprint
+  `ca3b9b41dde2ed93ea3f86cee9ece3bd4c28705e23da4a76794db6437d8968ba`;
+- renderer registry fingerprint
+  `b5631f491ff2b781dcefe6b36318fbd75831ad8d9f6cedb3b2cde946b7cecada`;
+  and
+- result/review operations are `Producer-consumer-validated` through generated
+  protobuf, coordinator handlers, exact durable persistence, migration,
+  conflict/invalid-state/security cases, real named-pipe generated-client
+  calls, restart, replay, backup/restore, and readback. FindingReport remains
+  implementation-active until the real M2 UI validates that presentation
+  seam.
+
+The complete accepted verification floor and exact final counts are recorded
+below after the review-ready candidate's one final floor.
+
+Remaining limitations: no desktop host or TypeScript consumer, no Phase D,
+no native credential entry or provider execution, no LOOT invocation, no
+whole-run/full-population export, no broader analyzer coverage, no independent
+semantic-oracle qualification, and no M2 activation or product-readiness
+claim.
+
+Security/provenance: Phase C used only developer-owned offline repository
+fixtures and local product roots. It did not access private evaluator material,
+archives, network, providers, credentials, live systems, or billable effects,
+and no expected truth was authored by product output.
+
+### Checkpoint C complete verification receipt
+
+The first accumulated-floor attempts remained diagnostic rather than final:
+
+- Unit exposed one stale exact audit assertion after the dedicated Export
+  write class increased the protected write-class count from six to seven.
+  The exact audit test was corrected and passed 1/1 focused.
+- Integration exposed one shared schema-8 downgrade helper that did not remove
+  schema-14 result/review objects before validating the historical schema.
+  The helper was corrected once for both consumers and both focused migration
+  tests passed 2/2.
+
+Both were ordinary fixture drift. The same mutable candidate was re-reviewed,
+`git diff --check` passed, and the complete final floor was restarted from
+locked restore on the corrected review-ready candidate.
+
+Final accepted commands and results:
+
+- `dotnet restore Infinium.sln --locked-mode --nologo`: passed; every project
+  was already up to date and no package was downloaded.
+- `dotnet build Infinium.sln -c Release --no-restore --nologo`: passed with 0
+  warnings and 0 errors.
+- `dotnet test Infinium.sln -c Release --no-build --nologo --filter
+  "TestCategory=Unit"`: 249 passed, 0 failed, 1 skipped.
+- `dotnet test Infinium.sln -c Release --no-build --nologo --filter
+  "TestCategory=Contract"`: 190 passed, 0 failed, 0 skipped across the tagged
+  Contract, Unit, and Evaluation assemblies.
+- `dotnet test Infinium.sln -c Release --no-build --nologo --filter
+  "TestCategory=Integration"`: 125 passed, 0 failed, 0 skipped across the
+  tagged Integration, Contract, and Evaluation assemblies.
+- `dotnet test Infinium.sln -c Release --no-build --nologo --filter
+  "TestCategory=Evaluation"`: 91 passed, 0 failed, 9 skipped.
+- `dotnet test Infinium.sln -c Release --no-build --nologo --filter
+  "TestCategory=Security"`: 158 passed, 0 failed, 3 skipped.
+- `dotnet test Infinium.sln -c Release --no-build --nologo --filter
+  "TestCategory=Fault"`: 118 passed, 0 failed, 3 skipped.
+- `dotnet test Infinium.sln -c Release --no-build --nologo`: 719 passed, 0
+  failed, 10 skipped across all six test assemblies.
+- `dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity
+  minimal`: passed.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File
+  eng/validate-documentation.ps1`: passed for 150 metadata files, 152 Markdown
+  link sources, and 19 JSON files.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File
+  eng/verify-functional-naming.ps1`: passed with 184 exact reviewed exceptions
+  and zero unexplained findings.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File
+  eng/update-dependency-manifest.ps1 -Check`: passed with no drift.
+- `git diff --check`: passed.
+
+The Contract category includes the application-inventory and capability-matrix
+JSON Schema validation, renderer envelope/registry schema and canonical-hash
+checks, protobuf compilation/unknown-state checks, generated C# binding use,
+and exact transitive protobuf fingerprint verification. Storage migration
+tests bind schema `14` to fingerprint
+`ca3b9b41dde2ed93ea3f86cee9ece3bd4c28705e23da4a76794db6437d8968ba`.
+
+Every final category and unfiltered test invocation performed exact-root
+repository-owned `dotnet`/`testhost` cleanup and reported 0 survivors. The
+final handoff check also reported 0 survivors.
+
+Consolidated review disposition: `ACCEPT`. No owner decision is required.
+Phase D is automatically unblocked by the accepted plan, but it was not
+started and no Phase D artifact is included in this checkpoint.
 
 ## Final closeout fields
 

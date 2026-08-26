@@ -156,6 +156,29 @@ public sealed partial class AuthoritativeStore
                 """,
                 transaction,
                 ("$now", ToText(now)));
+            Execute("DELETE FROM review_projection; DELETE FROM assumption_projection;", transaction);
+            Execute(
+                """
+                INSERT INTO review_projection(
+                    subject_occurrence_id,run_id,subject_kind,revision,disposition,suppressed,
+                    annotation,last_event_id,updated_at)
+                SELECT event.subject_occurrence_id,event.run_id,event.subject_kind,event.revision,
+                       event.disposition,event.suppressed,event.annotation,event.event_id,event.created_at
+                FROM review_events event
+                WHERE event.revision=(SELECT MAX(latest.revision) FROM review_events latest
+                    WHERE latest.subject_occurrence_id=event.subject_occurrence_id);
+
+                INSERT INTO assumption_projection(
+                    assumption_id,profile_id,revision,origin,confirmation,subject,value,scope,
+                    dependency_ids_json,effective,analysis_context_id,last_event_id,updated_at)
+                SELECT event.assumption_id,event.profile_id,event.revision,event.origin,event.confirmation,
+                       event.subject,event.value,event.scope,event.dependency_ids_json,event.effective,
+                       event.analysis_context_id,event.event_id,event.created_at
+                FROM assumption_events event
+                WHERE event.revision=(SELECT MAX(latest.revision) FROM assumption_events latest
+                    WHERE latest.assumption_id=event.assumption_id);
+                """,
+                transaction);
             transaction.Commit();
         }
     }

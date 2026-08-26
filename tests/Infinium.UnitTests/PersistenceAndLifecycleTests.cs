@@ -2551,7 +2551,7 @@ public sealed class PersistenceAndLifecycleTests
                     """;
                 using SqliteDataReader reader = command.ExecuteReader();
                 Assert.IsTrue(reader.Read());
-                Assert.AreEqual(6L, reader.GetInt64(0));
+                Assert.AreEqual(7L, reader.GetInt64(0));
                 Assert.AreEqual(1L, reader.GetInt64(1));
             }
 

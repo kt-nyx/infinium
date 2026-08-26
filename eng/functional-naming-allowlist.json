@@ -1774,6 +1774,76 @@
       "reason": "The token is part of an accepted serialized prompt, artifact, or envelope identity; its code-facing type or member name is functional.",
       "retained_consumer": "Current v1 codec, persistence, replay, schema, or fixture compatibility.",
       "review_condition": "Remove only in a clean-break versioned contract migration that updates every producer, consumer, fixture, and replay seam."
+    },
+    {
+      "path": "contracts/protobuf/infinium/application/v1/application.proto",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "TargetedVerification.successor_run_id at line 1395",
+      "classification": "functional-domain-term",
+      "reason": "Successor identifies the distinct new run created by targeted verification and does not describe development chronology.",
+      "retained_consumer": "Targeted-verification protobuf producers, generated clients, coordinator handlers, persistence, and replay.",
+      "review_condition": "Review if targeted-verification lineage or its serialized contract changes."
+    },
+    {
+      "path": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "TargetedVerification.SuccessorRunId mapping at line 705",
+      "classification": "functional-domain-term",
+      "reason": "Successor identifies the distinct new run created by targeted verification and does not describe development chronology.",
+      "retained_consumer": "Generated application client mapping for targeted-verification lineage.",
+      "review_condition": "Review if targeted-verification lineage or its protobuf mapping changes."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ResultsReview.cs",
+      "scope": "content",
+      "token": "continuation",
+      "symbol_or_context": "exact-continuation reconciliation gate at lines 1170-1171",
+      "classification": "functional-domain-term",
+      "reason": "Continuation names accepted evidence-bearing finding lineage used to authorize exact review-state carryover.",
+      "retained_consumer": "Review carryover validation against retained reconciliation assessments.",
+      "review_condition": "Review if finding/case reconciliation vocabulary or carryover authority changes."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ResultsReview.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "TargetedVerificationPersistenceRecord.SuccessorRunId at line 133",
+      "classification": "functional-domain-term",
+      "reason": "Successor identifies the new durable run and assumption context produced without mutating prior state.",
+      "retained_consumer": "Results/review persistence, targeted-verification readback, and generated application mapping.",
+      "review_condition": "Review if targeted-verification or assumption-lineage semantics change."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.ResultsReviewMigration.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "targeted_verifications.successor_run_id at line 117",
+      "classification": "functional-domain-term",
+      "reason": "Successor identifies the distinct durable run created by a targeted-verification request.",
+      "retained_consumer": "Schema-14 targeted-verification persistence and restore/replay behavior.",
+      "review_condition": "Review if the targeted-verification storage contract changes."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs",
+      "scope": "content",
+      "token": "Continuation",
+      "symbol_or_context": "ExactContinuation carryover evidence assertion at line 373",
+      "classification": "functional-domain-term",
+      "reason": "Continuation verifies the accepted four-gate finding-lineage rule for review carryover.",
+      "retained_consumer": "Durable review carryover integration evidence.",
+      "review_condition": "Review if finding/case reconciliation vocabulary or carryover authority changes."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "successor review and targeted-run assertions at lines 164 and 250",
+      "classification": "functional-domain-term",
+      "reason": "Successor verifies that edits, removals, carryover, and targeted verification create new durable state instead of rewriting prior state.",
+      "retained_consumer": "Phase C persistence, immutability, and lineage integration evidence.",
+      "review_condition": "Review if review, assumption, or targeted-verification lineage semantics change."
     }
   ]
 }
