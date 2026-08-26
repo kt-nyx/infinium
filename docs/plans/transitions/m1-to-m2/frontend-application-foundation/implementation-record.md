@@ -1,16 +1,22 @@
 # M1-to-M2 Foundation — Frontend Application Foundation implementation record
 
 Status: Accepted
-Disposition: Checkpoint B reached; WP1-WP4 accepted, Phase C not started
+Disposition: Corrected Checkpoint B reached; WP1-WP4 accepted and Phase C not started
 
-Last reviewed: 2026-08-25
+Last reviewed: 2026-08-26
 Owner: Project owner
 Plan ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`
 Planning base: `32dbb2c48754666336d2da571e554ad8897ed71c`
 
 ## Plain-language state
 
-Phases A and B have verified the real application surface, assigned every
+Phase A verified the application authority surface. The Phase B correction now
+binds typed prepared runs to the exact retained inputs and supported durable
+analysis operation it claims to execute. WP3 and WP4 passed focused correction,
+consolidated re-review, and the complete accepted verification floor. Phase C
+is unblocked by corrected Checkpoint B but was not started.
+
+The implementation has assigned every
 foundation capability to an exact owner, and implemented the common and
 setup-to-live-run boundaries future frontend work can build on. WP3 adds typed
 tool/profile/configuration setup, honest estimates, and non-secret provider
@@ -24,8 +30,8 @@ workflow, provider effect, or generic native authority was added.
 |---|---|---|---|
 | A | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP1` | Accepted on phase candidate | Receipt below; final phase commit deferred until Checkpoint A |
 | A | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP2` | Accepted after correction | Corrected receipt and complete floor below |
-| B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3` | Accepted after correction | Receipt below; final phase commit deferred until Checkpoint B |
-| B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP4` | Accepted after correction | Receipt below; complete floor and Checkpoint B receipt below |
+| B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3` | Accepted after correction | Earlier receipt retained as superseded evidence; corrected receipt below |
+| B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP4` | Accepted after correction | Earlier receipt retained as superseded evidence; corrected receipt below |
 | C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5` | Not started | None |
 | C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6` | Not started | None |
 | D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` | Not started | None |
@@ -280,7 +286,7 @@ the corrected complete floor. This evidence reinstates Checkpoint A.
   credential, generic path, SQL, command, URL, filesystem, or coordinator-
   proxy authority was accessed or added.
 
-## WP3 receipt — Setup, profile, configuration, estimate, and enrollment status
+## Superseded WP3 receipt — Setup, profile, configuration, estimate, and enrollment status
 
 Work ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3`
 
@@ -341,7 +347,7 @@ Review result: `ACCEPT` after correction and focused re-review.
 - Safety/isolation breach: none. No secret, archive/private fixture, provider,
   network, billable, generic path, SQL, command, or URL authority was used.
 
-## WP4 receipt — Prepared manual run, lifecycle, live state, and reconnect
+## Superseded WP4 receipt — Prepared manual run, lifecycle, live state, and reconnect
 
 Work ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP4`
 
@@ -397,14 +403,15 @@ Review result: `ACCEPT` after correction and focused re-review.
   evaluator material, archive, UI durable state, or renderer gRPC authority was
   introduced.
 
-## Checkpoint B receipt — Phase B accepted candidate
+## Superseded Checkpoint B receipt — Phase B candidate
 
 Candidate: the single review-ready Phase B candidate based directly on accepted
 Phase A commit `59b6de3d80443c0150c15c8d83b5b29d1b3536ef`. The exact immutable
 Checkpoint B commit is reported by the orchestrator after commit creation.
 
-Disposition: `ACCEPT` for WP3 and WP4. Checkpoint B is reached. Phase C is
-unblocked by the accepted plan but was not started; M2 remains inactive.
+Disposition at the time: `ACCEPT` for WP3 and WP4. This disposition is now
+superseded by the Phase B correction. Checkpoint B is suspended, Phase C is
+blocked and was not started, and M2 remains inactive.
 
 Complete accepted verification floor on the final reviewed bytes:
 
@@ -445,6 +452,180 @@ Final consolidated correction/re-review result:
 - Safety/isolation breach: none. Verification used only offline developer
   fixtures/fakes; there was no private/archive access or network, provider,
   credential, live, or billable operation.
+
+## Corrected WP3 receipt — Typed setup and authoritative preparation
+
+Work ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3`
+
+Candidate: one mutable correction candidate beginning at Phase B commit
+`f7b39021097a6954c4d9d1d83ff05a10885c4072`. The exact immutable correction
+commit is reported by the implementation orchestrator after commit creation.
+
+Delivered:
+
+- application contract `1.6.0`, storage contract `1.12.0`, and schema `13`,
+  with full protobuf fingerprint
+  `a95cf80fa175461c93aa0ad36c8d7dc02bd8dee55b97fd142c4d0d85ddd86353`
+  and storage fingerprint
+  `caf9ea9d8b0064c7be838b8dcb396d83c00a7286ae2be18c44dffff334a4dce3`;
+- a closed `AnalysisCapabilityKind` contract. The only accepted Phase B
+  mapping is `DeliveredIndexLocal` to analyzer
+  `candidate-source-delivered-indexes-v1`; unknown, unsupported, legacy
+  arbitrary, non-local, provider-authorizing, or parallel configurations are
+  rejected rather than mapped to invented behavior;
+- exact saved-configuration detail plus bounded list, create, clone, update,
+  delete, optimistic conflict, replay, restart, and schema-12 migration
+  behavior. Legacy arbitrary analyzer strings migrate to the explicit
+  `Unsupported` gap state;
+- profile candidates and explicit confirmation bound to the canonical MO2
+  installation identity as well as profile name, so another installation root
+  with the same displayed profile cannot reuse confirmation;
+- preparation-time validation of the retained installation snapshot, semantic
+  context, resolved input manifest, saved configuration revision, effective
+  configuration, profile revision, and retained input-package fingerprint;
+- local-only estimates with unavailable elapsed/coverage dimensions and zero
+  provider/cost authority; the configured wall-time limit is carried into the
+  resolved durable analysis request; and
+- provider enrollment intent that remains pending but reports
+  `configured=false` and `verified=false` when no credential exists.
+
+Focused evidence:
+
+- real generated-service setup and prepared analysis scenario: 1 passed, 0
+  failed, 0 skipped;
+- setup/schema persistence suites: 7 passed, 0 failed, 0 skipped;
+- application inventory, capability matrix, and exact protobuf fingerprint:
+  3 passed, 0 failed, 0 skipped; and
+- credential canary remained absent from response text, durable database,
+  setup receipts, backup manifest/database, repository-owned log/output files,
+  and restart readback.
+
+Review result: `ACCEPT` after correction and focused re-review.
+
+- Must fix: application `1.6.0` initially advertised negotiated minor `5`;
+  corrected it to minor `6` across runtime and inventory.
+- Must fix: the typed capability field initially reused the retired analyzer-
+  string protobuf tag; reserved the old tag/name and moved the enum to a new
+  field number so legacy bytes fail closed.
+- Must fix: non-local and multi-lane values could imply execution authority the
+  supported operation did not have; restricted Phase B to one local lane and
+  zero provider authority, and mapped the saved wall-time limit into execution.
+- Must fix: historical schema fixtures did not remove the later schema-13
+  migration receipt before replaying from schema 8; corrected the fixtures and
+  passed the two affected integration cases plus the 7-test migration suite.
+- Owner/authority decision: none; the accepted existing analyzer declaration
+  supplied the exact closed mapping, so no product default was invented.
+- Safety/isolation breach: none.
+
+## Corrected WP4 receipt — Durable prepared analysis and lifecycle
+
+Work ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP4`
+
+Candidate: the same mutable correction candidate beginning at
+`f7b39021097a6954c4d9d1d83ff05a10885c4072`; binding occurs once in the final
+correction commit reported by the orchestrator.
+
+Delivered:
+
+- `SubmitPreparedRun` resolves the saved typed configuration to the existing
+  `managed-analysis-v1` path and atomically creates the durable run, exact
+  operation request/hash, command receipt, and prepared-submission authority
+  before scheduling;
+- the retained-input resolver revalidates completed source run/operation,
+  append-only bindings, operation hash, snapshot payload/hash/completion,
+  semantic payload/hash/context fingerprint, input-manifest reference and
+  fingerprint, analyzer declaration, and prior output before admission;
+- a canonical SHA-256 submission fingerprint covers command/requested-run
+  identity, preparation and revision, initiation kind, gesture, deadline, all
+  immutable bindings, and resolved operation kind/hash. Only the original
+  meaning-equivalent request returns `AlreadyAccepted`;
+- a durable global unique gesture constraint prevents reuse by another command,
+  while exact retry of the original command remains valid;
+- missing or substituted snapshot, context, manifest, package, configuration,
+  profile, operation, or run identities fail before a new run is created; and
+- existing authoritative progress, bounded events, cancel/reconnect,
+  snapshot/resync, restart, terminal output, analyzer coverage, and gap
+  readback remain coordinator-owned and expose no raw orchestration JSON.
+
+Real operation-path evidence:
+
+- the offline fixture publishes a real retained MO2 snapshot and semantic
+  payload, executes a completed `managed-analysis-v1` source through a local
+  named-pipe worker, retains that exact input package, and starts the prepared
+  run through the generated application client;
+- readback proves operation kind `managed-analysis-v1`, exact request SHA-256,
+  nonzero 64-character submission fingerprint, the bound effective
+  configuration, configured 60,000 ms wall-time, analyzer
+  `candidate-source-delivered-indexes-v1`, retained snapshot identity,
+  completed analyzer coverage, and zero authoritative coverage gaps; and
+- the same scenario proves exact retry, changed-run/deadline rejection, stale
+  preparation rejection, global gesture-reuse rejection, authoritative
+  progress, reconnect, coordinator restart, output readback, and rejection of
+  nonexistent/substituted inputs.
+
+Review result: `ACCEPT` after correction and focused re-review.
+
+- Must fix: the Phase B candidate scheduled prepared commands without a real
+  analysis operation, allowing generic substrate completion. Replaced that
+  proof with the retained-input managed-analysis path above.
+- Must fix: lower-level generic durable-command replay was temporarily made as
+  strict as a prepared submission. Restored generic command semantics while
+  preserving exact prepared-run ID/deadline/operation/fingerprint checks;
+  focused lifecycle tests passed 2/2 and the real service scenario passed 1/1.
+- Must fix: process cleanup originally matched only absolute coordinator paths;
+  expanded it to the exact repository root plus Debug/Release coordinator
+  tokens so relative launch command lines are also repository-owned.
+- Owner/authority decision: none.
+- Safety/isolation breach: none. No generic path, implicit scan, network,
+  provider request, credential, live, or billable authority was added or used.
+
+## Corrected Checkpoint B receipt — Phase B accepted
+
+Disposition: `ACCEPT` for corrected WP3 and WP4. Checkpoint B is reinstated.
+Phase C is automatically unblocked by the accepted plan but was not started;
+M2 remains inactive.
+
+Complete accepted verification floor on the exact final candidate:
+
+- locked restore passed; Release build passed with 0 warnings and 0 errors;
+- Unit: 249 passed, 0 failed, 1 expected platform skip;
+- Contract: 188 passed, 0 failed, 0 skipped, including schema/protobuf,
+  generated-contract, inventory, capability-matrix, and fingerprint drift;
+- Integration: 119 passed, 0 failed, 0 skipped;
+- Evaluation: 90 passed, 0 failed, 9 expected private/environment skips;
+- Security: 154 passed, 0 failed, 3 expected private/platform skips;
+- Fault: 117 passed, 0 failed, 3 expected environment skips; and
+- complete unfiltered solution: 713 passed, 0 failed, 10 expected skips.
+
+The first diagnostic floor attempt found one generic durable-command replay
+regression; the next integration attempt found two stale historical-schema
+fixtures. Both were corrected on the same mutable candidate, focused checks
+and affected-surface review passed, and the complete accepted floor above was
+then run from restore/build on the exact final bytes.
+
+Documentation, JSON Schema, protobuf/generated drift, dependency manifest,
+formatting, functional naming, and `git diff --check` passed. Documentation
+validation covered 150 metadata files, 152 Markdown link sources, and 19 JSON
+files. Functional naming covered 177 exact reviewed exceptions with zero
+unexplained findings. After every test invocation, exact repository-owned
+cleanup reported 0 surviving `dotnet` or `testhost` processes.
+
+Contract maturity: WP3 setup/configuration and WP4 prepared-run-to-live-run are
+`Producer-consumer-validated` through generated protobuf, service validation,
+durable storage/migration, real retained-input offline execution, conflict and
+invalid-state cases, reconnect, restart, and readback.
+
+Remaining limitations: native credential entry and secure-store choreography,
+LOOT invocation, provider execution, Phase C result/review projections, Phase D
+renderer/desktop consumers, independent semantic-oracle evaluation, and M2
+activation remain unavailable or out of scope. The retained input manifest is
+authoritative as an immutable reference/fingerprint in the durable source
+operation and retained package; Phase B adds no generic manifest-content API.
+
+Security/provenance: all execution evidence used developer-owned offline
+fixtures/fakes and repository state. No private evaluator material, archive,
+external network, provider, credential, live, or billable operation was
+accessed, and no product output authored expected truth.
 
 ## Final closeout fields
 

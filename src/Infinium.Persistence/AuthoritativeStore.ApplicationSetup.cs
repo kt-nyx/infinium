@@ -6,11 +6,12 @@ namespace Infinium.Persistence;
 
 public static class ApplicationSetupPersistenceDeclarations
 {
-    public const int SchemaVersion = 12;
-    public const string StorageContractVersion = "1.11.0";
-    public const string MigrationId = "application-setup-contract-0012";
+    public const int SchemaVersion = 13;
+    public const string StorageContractVersion = "1.12.0";
+    public const string MigrationId = "prepared-analysis-admission-0013";
     public const string SourceSchemaFingerprint = ScopeReversionV2PersistenceDeclarations.SchemaFingerprint;
-    public const string SchemaFingerprint = "e3dcd08192656fcc24b8374198bb1fbf66d9dd75fc6cf160b2558be16059b3ce";
+    public const string Schema12Fingerprint = "e3dcd08192656fcc24b8374198bb1fbf66d9dd75fc6cf160b2558be16059b3ce";
+    public const string SchemaFingerprint = "caf9ea9d8b0064c7be838b8dcb396d83c00a7286ae2be18c44dffff334a4dce3";
 }
 
 public sealed record SetupObjectRecord(
@@ -54,6 +55,13 @@ public sealed record PreparedRunRecord(
     RunBinding Binding,
     string EstimateJson,
     DateTimeOffset PreparedAt);
+
+public sealed record PreparedRunSubmissionRecord(
+    string CommandId,
+    string PreparationId,
+    string UserGestureId,
+    string SubmissionFingerprint,
+    DateTimeOffset SubmittedAt);
 
 public sealed partial class AuthoritativeStore
 {
@@ -294,6 +302,29 @@ public sealed partial class AuthoritativeStore
         }
     }
 
+    public PreparedRunSubmissionRecord GetPreparedRunSubmission(string commandId)
+    {
+        ValidateSetupIdentity(commandId, nameof(commandId));
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT preparation_id,user_gesture_id,submission_fingerprint,submitted_at "
+                + "FROM prepared_run_submissions WHERE command_id=$command;";
+            command.Parameters.AddWithValue("$command", commandId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            return reader.Read()
+                ? new(
+                    commandId,
+                    reader.GetString(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    DateTimeOffset.Parse(reader.GetString(3), System.Globalization.CultureInfo.InvariantCulture))
+                : throw new KeyNotFoundException(
+                    $"Prepared run submission '{commandId}' does not exist.");
+        }
+    }
+
     private PreparedRunRecord? FindPreparedRunByRequestCore(
         string requestId,
         SqliteTransaction transaction)
@@ -426,7 +457,7 @@ public sealed partial class AuthoritativeStore
             ["application_setup_receipts", "prepared_manual_runs", "prepared_run_submissions"],
             transaction);
         string schemaFingerprint = ComputeSchemaFingerprint(connection, transaction);
-        if (schemaFingerprint != ApplicationSetupPersistenceDeclarations.SchemaFingerprint)
+        if (schemaFingerprint != ApplicationSetupPersistenceDeclarations.Schema12Fingerprint)
         {
             throw new InvalidOperationException(
                 $"The application setup migration produced unexpected schema fingerprint '{schemaFingerprint}'.");
@@ -454,10 +485,76 @@ public sealed partial class AuthoritativeStore
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('application_setup_objects','application_setup_receipts','prepared_manual_runs','prepared_run_submissions');";
         string actual = ComputeSchemaFingerprint(connection);
         if (Convert.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 4
-            || actual != ApplicationSetupPersistenceDeclarations.SchemaFingerprint)
+            || actual != ApplicationSetupPersistenceDeclarations.Schema12Fingerprint)
         {
             throw new InvalidOperationException(
                 $"Schema 12 lacks the exact application setup migration: {actual}");
+        }
+    }
+
+    private void ApplyPreparedAnalysisAdmissionMigration()
+    {
+        string sourceFingerprint = ComputeSchemaFingerprint(connection);
+        if (sourceFingerprint != ApplicationSetupPersistenceDeclarations.Schema12Fingerprint)
+        {
+            throw new InvalidOperationException(
+                "The prepared-analysis admission migration source is not the exact accepted schema-12 state.");
+        }
+
+        using SqliteTransaction transaction = BeginTransaction();
+        if (ScalarLong(
+                "SELECT COUNT(*) FROM (SELECT user_gesture_id FROM prepared_run_submissions GROUP BY user_gesture_id HAVING COUNT(*) > 1);",
+                transaction) != 0)
+        {
+            throw new InvalidOperationException(
+                "Schema 12 contains reused one-shot gesture identities and cannot be migrated implicitly.");
+        }
+        Execute(
+            "DROP TRIGGER prepared_run_submissions_append_only_update; "
+            + "DROP TRIGGER prepared_run_submissions_append_only_delete; "
+            + "ALTER TABLE prepared_run_submissions ADD COLUMN submission_fingerprint TEXT NOT NULL "
+            + "DEFAULT '0000000000000000000000000000000000000000000000000000000000000000' "
+            + "CHECK(length(submission_fingerprint)=64 AND lower(submission_fingerprint)=submission_fingerprint); "
+            + "CREATE UNIQUE INDEX prepared_run_submissions_one_shot_gesture ON prepared_run_submissions(user_gesture_id);",
+            transaction);
+        CreateAppendOnlyTriggers(["prepared_run_submissions"], transaction);
+        string schemaFingerprint = ComputeSchemaFingerprint(connection, transaction);
+        if (schemaFingerprint != ApplicationSetupPersistenceDeclarations.SchemaFingerprint)
+        {
+            throw new InvalidOperationException(
+                $"The prepared-analysis admission migration produced unexpected schema fingerprint '{schemaFingerprint}'.");
+        }
+        Execute(
+            "UPDATE store_metadata SET value='13' WHERE key='schema_version'; "
+            + "UPDATE store_metadata SET value='1.12.0' WHERE key='storage_contract_version'; "
+            + "UPDATE application_setup_objects "
+            + "SET payload_json=json_set(json_remove(payload_json,'$.Values.AnalyzerIds'), "
+            + "'$.Values.AnalysisCapabilities',json('[3]')), revision=revision+1, updated_at=$now "
+            + "WHERE object_kind='saved-scan-configuration' "
+            + "AND json_type(payload_json,'$.Values.AnalyzerIds')='array' "
+            + "AND json_type(payload_json,'$.Values.AnalysisCapabilities') IS NULL; "
+            + "UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint'; "
+            + "INSERT INTO migration_history(migration_id,from_version,to_version,applied_at,sqlite_source_id) "
+            + "VALUES('prepared-analysis-admission-0013',12,13,$now,$source); "
+            + "PRAGMA user_version=13;",
+            transaction,
+            ("$fingerprint", schemaFingerprint),
+            ("$now", ToText(DateTimeOffset.UtcNow)),
+            ("$source", BindingIdentity.SourceId));
+        transaction.Commit();
+    }
+
+    private void ValidatePreparedAnalysisAdmissionMigration()
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT COUNT(*) FROM pragma_table_info('prepared_run_submissions') WHERE name='submission_fingerprint';";
+        string actual = ComputeSchemaFingerprint(connection);
+        if (Convert.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1
+            || actual != ApplicationSetupPersistenceDeclarations.SchemaFingerprint)
+        {
+            throw new InvalidOperationException(
+                $"Schema 13 lacks the exact prepared-analysis admission migration: {actual}");
         }
     }
 

@@ -2684,6 +2684,7 @@ public sealed class ProviderBudgetIntegrationTests
             DELETE FROM migration_history WHERE migration_id='M1-S7-WP5-0010';
             DELETE FROM migration_history WHERE migration_id='M1-S8-WP4-0011';
             DELETE FROM migration_history WHERE migration_id='application-setup-contract-0012';
+            DELETE FROM migration_history WHERE migration_id='prepared-analysis-admission-0013';
             UPDATE store_metadata SET value='8' WHERE key='schema_version';
             UPDATE store_metadata SET value='1.7.0' WHERE key='storage_contract_version';
             UPDATE store_metadata

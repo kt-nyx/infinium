@@ -1,9 +1,9 @@
 # Current project state
 
 Status: Accepted
-Disposition: Frontend Application Foundation Checkpoint B reached; Phase C is unblocked but not started and M2 remains inactive
+Disposition: Frontend Application Foundation Checkpoint B reinstated after Phase B correction; Phase C is unblocked but not started and M2 remains inactive
 
-Last reviewed: 2026-08-25
+Last reviewed: 2026-08-26
 Owner: Project owner
 
 This is the single live handoff for Infinium. Product documents define what the
@@ -19,7 +19,9 @@ specific family of suspicious conflict outcomes, retain the evidence and
 uncertainty behind each result, reproduce stored results, and project those
 internal results into a stable report format for a future interface.
 
-Phases A and B of the accepted frontend foundation are complete. The repository
+Phases A and B of the accepted frontend foundation are complete. The corrected
+typed prepared-run path now validates its authoritative retained inputs and
+atomically binds the supported durable analysis operation before scheduling. The repository
 now has an exact application-authority inventory, a bounded display-safe
 bootstrap, common typed error/revision/receipt/cancellation vocabulary, and a
 closed renderer envelope/operation registry with a fail-closed reference
@@ -45,8 +47,8 @@ work.
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
-| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) accepted at Checkpoint B. |
-| Next gate | Phase C begins with `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5` under the accepted plan. It is automatically unblocked by Checkpoint B but was not started by the Phase B task. This does not activate M2. |
+| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) accepted at corrected Checkpoint B. The Phase B correction began from candidate `f7b39021097a6954c4d9d1d83ff05a10885c4072`; the exact correction commit is reported by the implementation orchestrator. |
+| Next gate | Phase C begins with `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5` under the accepted plan. It is automatically unblocked by corrected Checkpoint B but was not started by this task. This does not activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |
 

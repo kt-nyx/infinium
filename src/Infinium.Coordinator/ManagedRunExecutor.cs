@@ -25,7 +25,7 @@ public sealed class ManagedRunExecutor(
 {
     private const string BethesdaSemanticOperation = "bethesda-semantic-v1";
     private const string AnalysisV1Operation = "analysis-v1";
-    private const string ManagedAnalysisOperation = "managed-analysis-v1";
+    internal const string ManagedAnalysisOperation = "managed-analysis-v1";
     private static readonly JsonSerializerOptions StrictJson = new()
     {
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
@@ -126,6 +126,11 @@ public sealed class ManagedRunExecutor(
             DateTimeOffset.UtcNow, initiationKind, dispatchDeadline, ManagedAnalysisOperation,
             Encoding.UTF8.GetString(bytes));
     }
+
+    internal SetupMutationReceipt RetainCompletedPreparedAnalysisInput(
+        string sourceRunId,
+        DateTimeOffset now) =>
+        PreparedAnalysisOperationResolver.RetainCompletedSource(runtime.Store, sourceRunId, now);
 
     public void RecoverAtStartup()
     {

@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Grpc.Core;
+using Infinium.Application.Analysis;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Application.V1;
 using Infinium.Contracts.Protobuf.Common.V1;
@@ -50,10 +51,22 @@ public sealed partial class ApplicationGrpcService
                 "The setup projection is no longer current."));
         }
 
-        return Task.FromResult(new GetSetupStateResponse
+        try
         {
-            Setup = BuildSetupState(checked((int)request.MaximumSavedConfigurations)),
-        });
+            return Task.FromResult(new GetSetupStateResponse
+            {
+                Setup = BuildSetupState(checked((int)request.MaximumSavedConfigurations)),
+            });
+        }
+        catch (Exception exception) when (exception is ArgumentException
+            or InvalidOperationException
+            or InvalidDataException
+            or JsonException)
+        {
+            return Task.FromResult(SetupError(
+                ApplicationErrorCode.Internal,
+                Bounded(exception.Message)));
+        }
     }
 
     public override Task<SubmitSetupCommandResponse> SubmitSetupCommand(
@@ -118,6 +131,43 @@ public sealed partial class ApplicationGrpcService
         }
     }
 
+    public override Task<GetSavedScanConfigurationResponse> GetSavedScanConfiguration(
+        GetSavedScanConfigurationRequest request,
+        ServerCallContext context)
+    {
+        RequireNegotiated(context);
+        try
+        {
+            ApplicationContractValidator.Validate(request);
+            SetupObjectRecord configuration = runtime.Store.FindSetupObject(
+                    ConfigurationObjectKind,
+                    Required(request.ConfigurationId?.Value, "scan-configuration ID"))
+                ?? throw new KeyNotFoundException("The saved scan configuration does not exist.");
+            return Task.FromResult(new GetSavedScanConfigurationResponse
+            {
+                Configuration = ToProto(
+                    configuration,
+                    Deserialize<SavedConfigurationDocument>(configuration.PayloadJson)),
+            });
+        }
+        catch (Exception exception) when (exception is ArgumentException
+            or InvalidDataException
+            or KeyNotFoundException)
+        {
+            return Task.FromResult(new GetSavedScanConfigurationResponse
+            {
+                Error = new ApplicationContractError
+                {
+                    Code = exception is KeyNotFoundException
+                        ? ApplicationErrorCode.NotFound
+                        : ApplicationErrorCode.InvalidArgument,
+                    InertDetail = Bounded(exception.Message),
+                    RetryMayBeSafe = false,
+                },
+            });
+        }
+    }
+
     public override Task<PrepareManualRunResponse> PrepareManualRun(
         PrepareManualRunRequest request,
         ServerCallContext context)
@@ -165,12 +215,10 @@ public sealed partial class ApplicationGrpcService
                     "The selected MO2 installation is not available for run preparation.");
             }
             ProfileStateDocument currentCandidates = ToolInstallationInspector.DiscoverProfiles(mo2);
-            if (!currentCandidates.Candidates.Any(item =>
-                    item.CandidateId == profileDocument.ConfirmedCandidateId))
-            {
-                throw new InvalidOperationException(
+            ProfileCandidateDocument confirmedCandidate = currentCandidates.Candidates.SingleOrDefault(item =>
+                    item.CandidateId == profileDocument.ConfirmedCandidateId)
+                ?? throw new InvalidOperationException(
                     "The explicitly confirmed profile is no longer present in the validated MO2 installation.");
-            }
 
             SavedConfigurationDocument saved =
                 Deserialize<SavedConfigurationDocument>(configuration.PayloadJson);
@@ -182,12 +230,29 @@ public sealed partial class ApplicationGrpcService
             string manifestId = Required(
                 request.ResolvedInputManifestId?.Value,
                 "resolved input manifest ID");
+            AnalysisCapabilityKind capability = ResolveCapability(saved.Values);
+            ResolvedPreparedAnalysisInput retainedInput = PreparedAnalysisOperationResolver.Resolve(
+                runtime.Store,
+                snapshotId,
+                contextId,
+                manifestId);
+            PreparedAnalysisOperationResolver.ValidateSnapshotProfile(
+                runtime.Store,
+                snapshotId,
+                mo2.InstallationRoot,
+                confirmedCandidate.DisplayName);
             string effectiveJson = JsonSerializer.Serialize(new EffectiveConfigurationDocument(
                 configurationId,
                 configuration.Revision,
                 profileDocument.ConfirmedCandidateId,
+                confirmedCandidate.InstallationIdentity,
+                confirmedCandidate.DisplayName,
                 profile.Revision,
-                saved.Values));
+                saved.Values,
+                capability,
+                retainedInput.PackageId,
+                retainedInput.PackageFingerprint,
+                ManagedRunExecutor.ManagedAnalysisOperation));
             string effectiveId = "effective-" + Hash(effectiveJson)[..32];
             WorkEstimate estimate = BuildEstimate(saved.Values);
             string estimateJson = JsonSerializer.Serialize(EstimateDocument.FromProto(estimate));
@@ -219,6 +284,7 @@ public sealed partial class ApplicationGrpcService
         catch (Exception exception) when (exception is ArgumentException
             or InvalidOperationException
             or InvalidDataException
+            or AnalysisIdentityDriftException
             or KeyNotFoundException)
         {
             return Task.FromResult(new PrepareManualRunResponse
@@ -268,6 +334,46 @@ public sealed partial class ApplicationGrpcService
                     expectedPreparation,
                     prepared.Revision);
             }
+            string requestedRunIdentity = request.RequestedRunId is null
+                ? "absent"
+                : Required(request.RequestedRunId.Value, "requested run ID");
+            DateTimeOffset dispatchDeadline = FromProto(request.DispatchDeadline);
+            if (DurableCommandExists(commandId))
+            {
+                DurableCommandRecord durable = runtime.Store.GetDurableCommand(commandId);
+                RunOperationRecord acceptedOperation = runtime.Store.GetRunOperation(durable.RunId)
+                    ?? throw new InvalidOperationException(
+                        "The accepted prepared command has no durable analysis operation.");
+                ResolvedPreparedAnalysisOperation replayOperation = new(
+                    acceptedOperation.OperationKind,
+                    acceptedOperation.RequestJson,
+                    acceptedOperation.RequestSha256);
+                string replayFingerprint = PreparedAnalysisOperationResolver.SubmissionFingerprint(
+                    commandId,
+                    requestedRunIdentity,
+                    prepared.PreparationId,
+                    prepared.Revision,
+                    request.InitiationKind.ToString(),
+                    gestureId,
+                    dispatchDeadline,
+                    prepared.Binding,
+                    replayOperation);
+                PreparedRunSubmissionRecord acceptedSubmission =
+                    runtime.Store.GetPreparedRunSubmission(commandId);
+                if (acceptedSubmission.PreparationId != prepared.PreparationId
+                    || acceptedSubmission.UserGestureId != gestureId
+                    || acceptedSubmission.SubmissionFingerprint != replayFingerprint)
+                {
+                    throw new InvalidOperationException(
+                        "Only an exact retry of the accepted prepared command may reconcile as already accepted.");
+                }
+                return Task.FromResult(new SubmitRunCommandResponse
+                {
+                    Disposition = CommandDisposition.AlreadyAccepted,
+                    DurableCommandId = new DurableCommandId { Value = commandId },
+                    RunId = new RunId { Value = durable.RunId },
+                });
+            }
             SetupObjectRecord currentProfile = ActiveSetupObject(
                 ProfileObjectKind,
                 CurrentProfileObjectId);
@@ -282,8 +388,56 @@ public sealed partial class ApplicationGrpcService
                     currentConfiguration.Revision);
             }
 
-            bool replay = DurableCommandExists(commandId);
-            if (!replay && !runtime.TryAdmitNewDurableCommand(DateTimeOffset.UtcNow))
+            ToolStateDocument mo2 = ReadToolDocument(ExternalToolKind.ModOrganizer2);
+            ProfileStateDocument currentCandidates = ToolInstallationInspector.DiscoverProfiles(mo2);
+            ProfileStateDocument profileDocument = Deserialize<ProfileStateDocument>(currentProfile.PayloadJson);
+            ProfileCandidateDocument confirmedCandidate = currentCandidates.Candidates.SingleOrDefault(item =>
+                    profileDocument.ExplicitlyConfirmed
+                    && item.CandidateId == prepared.ConfirmedProfileId)
+                ?? throw new AnalysisIdentityDriftException(
+                    "The prepared profile is no longer confirmed for the exact MO2 installation.");
+            EffectiveConfigurationDocument effective =
+                Deserialize<EffectiveConfigurationDocument>(prepared.EffectiveConfigurationJson);
+            SavedConfigurationDocument currentSaved =
+                Deserialize<SavedConfigurationDocument>(currentConfiguration.PayloadJson);
+            if (effective.ConfirmedProfileId != confirmedCandidate.CandidateId
+                || effective.ConfirmedInstallationIdentity != confirmedCandidate.InstallationIdentity
+                || effective.ConfirmedProfileName != confirmedCandidate.DisplayName
+                || effective.SavedConfigurationId != prepared.SavedConfigurationId
+                || effective.SavedConfigurationRevision != prepared.SavedConfigurationRevision
+                || effective.ProfileRevision != prepared.ProfileRevision
+                || JsonSerializer.Serialize(effective.Values)
+                    != JsonSerializer.Serialize(currentSaved.Values)
+                || effective.ResolvedOperationKind != ManagedRunExecutor.ManagedAnalysisOperation
+                || ResolveCapability(effective.Values) != effective.Capability)
+            {
+                throw new AnalysisIdentityDriftException(
+                    "The prepared effective configuration no longer resolves to its retained setup authority.");
+            }
+            string expectedEffectiveId = "effective-" + Hash(prepared.EffectiveConfigurationJson)[..32];
+            if (prepared.EffectiveConfigurationId != expectedEffectiveId)
+            {
+                throw new AnalysisIdentityDriftException(
+                    "The prepared effective configuration failed content identity validation.");
+            }
+            ResolvedPreparedAnalysisInput retainedInput = PreparedAnalysisOperationResolver.Resolve(
+                runtime.Store,
+                prepared.Binding.InstallationSnapshotId,
+                prepared.Binding.AnalysisContextId,
+                prepared.Binding.ResolvedInputManifestId);
+            if (retainedInput.PackageId != effective.RetainedInputPackageId
+                || retainedInput.PackageFingerprint != effective.RetainedInputPackageFingerprint)
+            {
+                throw new AnalysisIdentityDriftException(
+                    "The prepared run's retained analysis input package was substituted.");
+            }
+            PreparedAnalysisOperationResolver.ValidateSnapshotProfile(
+                runtime.Store,
+                prepared.Binding.InstallationSnapshotId,
+                mo2.InstallationRoot,
+                confirmedCandidate.DisplayName);
+
+            if (!runtime.TryAdmitNewDurableCommand(DateTimeOffset.UtcNow))
             {
                 return Task.FromResult(new SubmitRunCommandResponse
                 {
@@ -295,7 +449,24 @@ public sealed partial class ApplicationGrpcService
             }
             string runId = request.RequestedRunId is null
                 ? Guid.NewGuid().ToString("N")
-                : Required(request.RequestedRunId.Value, "requested run ID");
+                : requestedRunIdentity;
+            ResolvedPreparedAnalysisOperation operation = PreparedAnalysisOperationResolver.Bind(
+                retainedInput,
+                runId,
+                prepared.Binding,
+                prepared.EffectiveConfigurationJson,
+                effective.Values.MaximumElapsedMilliseconds,
+                prepared.PreparedAt);
+            string submissionFingerprint = PreparedAnalysisOperationResolver.SubmissionFingerprint(
+                commandId,
+                requestedRunIdentity,
+                prepared.PreparationId,
+                prepared.Revision,
+                request.InitiationKind.ToString(),
+                gestureId,
+                dispatchDeadline,
+                prepared.Binding,
+                operation);
             RunRecord run = runtime.Store.CreateRun(
                 commandId,
                 runId,
@@ -303,15 +474,16 @@ public sealed partial class ApplicationGrpcService
                 runtime.Authority.FencingEpoch,
                 DateTimeOffset.UtcNow,
                 request.InitiationKind.ToString(),
-                FromProto(request.DispatchDeadline),
+                dispatchDeadline,
+                operation.OperationKind,
+                operation.RequestJson,
                 startUserGestureId: gestureId,
-                startPreparationId: prepared.PreparationId);
+                startPreparationId: prepared.PreparationId,
+                startSubmissionFingerprint: submissionFingerprint);
             executor.Schedule(run.RunId);
             return Task.FromResult(new SubmitRunCommandResponse
             {
-                Disposition = replay
-                    ? CommandDisposition.AlreadyAccepted
-                    : CommandDisposition.Accepted,
+                Disposition = CommandDisposition.Accepted,
                 DurableCommandId = new DurableCommandId { Value = commandId },
                 RunId = new RunId { Value = run.RunId },
             });
@@ -319,6 +491,7 @@ public sealed partial class ApplicationGrpcService
         catch (Exception exception) when (exception is ArgumentException
             or InvalidOperationException
             or InvalidDataException
+            or AnalysisIdentityDriftException
             or KeyNotFoundException)
         {
             return Task.FromResult(new SubmitRunCommandResponse
@@ -496,6 +669,7 @@ public sealed partial class ApplicationGrpcService
             generationId,
             "pending-enrollment",
             "not-verified",
+            CredentialPresent: false,
             SecureStoreAvailable: false,
             InertStatus: $"Native credential entry for '{label}' remains unavailable in this phase; no secret entered the application contract.");
         return runtime.Store.ApplySetupMutation(new(
@@ -724,6 +898,10 @@ public sealed partial class ApplicationGrpcService
             ConfirmedCandidateId = document.ConfirmedCandidateId ?? string.Empty,
             ExplicitlyConfirmed = document.ExplicitlyConfirmed,
             Revision = Revision(revision),
+            ConfirmedInstallationIdentity = document.ExplicitlyConfirmed
+                ? document.Candidates.SingleOrDefault(item => item.CandidateId == document.ConfirmedCandidateId)
+                    ?.InstallationIdentity ?? string.Empty
+                : string.Empty,
         };
         if (updatedAt is not null)
         {
@@ -734,6 +912,7 @@ public sealed partial class ApplicationGrpcService
             CandidateId = item.CandidateId,
             DisplayName = item.DisplayName,
             SavedSelectionSuggestion = item.SavedSelectionSuggestion,
+            InstallationIdentity = item.InstallationIdentity,
         }));
         return result;
     }
@@ -754,7 +933,7 @@ public sealed partial class ApplicationGrpcService
         SetupObjectRecord record,
         ProviderStateDocument document) => new()
         {
-            Configured = document.LifecycleState is not "deleted",
+            Configured = document.CredentialPresent,
             Verified = document.LifecycleState == "active-verified",
             EnrollmentPending = document.LifecycleState == "pending-enrollment",
             SecureStoreAvailable = document.SecureStoreAvailable,
@@ -809,7 +988,7 @@ public sealed partial class ApplicationGrpcService
             PlannedWorkUnits = new OptionalUInt64
             {
                 Availability = AvailabilityState.Available,
-                Value = checked((ulong)values.AnalyzerIds.Count),
+                Value = checked((ulong)values.AnalysisCapabilities.Count),
             },
             EstimatedElapsedMilliseconds = new OptionalUInt64
             {
@@ -861,20 +1040,28 @@ public sealed partial class ApplicationGrpcService
 
     private static void ValidateConfigurationValues(ConfigurationValuesDocument values)
     {
-        if (values.AnalyzerIds.Count is 0 or > 64
-            || values.AnalyzerIds.Any(item => string.IsNullOrWhiteSpace(item) || item.Length > 128)
-            || values.AnalyzerIds.Distinct(StringComparer.Ordinal).Count() != values.AnalyzerIds.Count
-            || values.MaximumConcurrency is 0 or > 64
+        if (values.AnalysisCapabilities is null
+            || values.AnalysisCapabilities.Count != 1
+            || values.AnalysisCapabilities.Distinct().Count() != values.AnalysisCapabilities.Count
+            || values.AnalysisCapabilities.Any(item => item != AnalysisCapabilityKind.DeliveredIndexLocal)
+            || values.MaximumConcurrency != 1
             || values.MaximumElapsedMilliseconds is 0 or > 604_800_000)
         {
             throw new InvalidDataException("The scan configuration exceeds its typed finite bounds.");
         }
-        if (values.LocalOnly
-            && (values.MaximumProviderDispatches != 0 || values.MaximumCalculatedNanoUsd != 0))
+        if (!values.LocalOnly
+            || values.MaximumProviderDispatches != 0
+            || values.MaximumCalculatedNanoUsd != 0)
         {
             throw new InvalidDataException(
-                "A local-only configuration cannot reserve provider dispatch or calculated cost authority.");
+                "The supported prepared analysis capability is local-only and cannot reserve provider dispatch or calculated cost authority.");
         }
+    }
+
+    private static AnalysisCapabilityKind ResolveCapability(ConfigurationValuesDocument values)
+    {
+        ValidateConfigurationValues(values);
+        return values.AnalysisCapabilities.Single();
     }
 
     private static long ParseRevision(RevisionToken? value, bool allowMissing)
@@ -912,6 +1099,20 @@ public sealed partial class ApplicationGrpcService
             tool == ExternalToolKind.ModOrganizer2 ? "ModOrganizer.exe" : "LOOT.exe",
             version).State;
 
+    internal static string ComputeProfileCandidateId(
+        string installationRoot,
+        string profileName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(installationRoot);
+        ArgumentException.ThrowIfNullOrWhiteSpace(profileName);
+        string installationIdentity = "mo2-installation-" + Hash(
+            Path.GetFullPath(installationRoot)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                .ToUpperInvariant())[..32];
+        return "profile-" + Hash(
+            installationIdentity + "\n" + profileName.ToUpperInvariant())[..24];
+    }
+
     private static string Hash(string value) =>
         Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
 
@@ -931,7 +1132,8 @@ public sealed partial class ApplicationGrpcService
     private sealed record ProfileCandidateDocument(
         string CandidateId,
         string DisplayName,
-        bool SavedSelectionSuggestion);
+        bool SavedSelectionSuggestion,
+        string InstallationIdentity);
 
     private sealed record ProfileStateDocument(
         IReadOnlyList<ProfileCandidateDocument> Candidates,
@@ -943,7 +1145,7 @@ public sealed partial class ApplicationGrpcService
     }
 
     private sealed record ConfigurationValuesDocument(
-        IReadOnlyList<string> AnalyzerIds,
+        IReadOnlyList<AnalysisCapabilityKind> AnalysisCapabilities,
         bool LocalOnly,
         uint MaximumConcurrency,
         ulong MaximumProviderDispatches,
@@ -951,7 +1153,7 @@ public sealed partial class ApplicationGrpcService
         ulong MaximumElapsedMilliseconds)
     {
         public static ConfigurationValuesDocument FromProto(ScanConfigurationValues value) => new(
-            value.AnalyzerIds.ToArray(),
+            value.AnalysisCapabilities.ToArray(),
             value.LocalOnly,
             value.MaximumConcurrency,
             value.MaximumProviderDispatches,
@@ -968,7 +1170,10 @@ public sealed partial class ApplicationGrpcService
                 MaximumCalculatedNanoUsd = MaximumCalculatedNanoUsd,
                 MaximumElapsedMilliseconds = MaximumElapsedMilliseconds,
             };
-            value.AnalyzerIds.Add(AnalyzerIds);
+            value.AnalysisCapabilities.Add(
+                AnalysisCapabilities is { Count: > 0 }
+                    ? AnalysisCapabilities
+                    : [AnalysisCapabilityKind.Unsupported]);
             return value;
         }
     }
@@ -981,14 +1186,21 @@ public sealed partial class ApplicationGrpcService
         string SavedConfigurationId,
         long SavedConfigurationRevision,
         string ConfirmedProfileId,
+        string ConfirmedInstallationIdentity,
+        string ConfirmedProfileName,
         long ProfileRevision,
-        ConfigurationValuesDocument Values);
+        ConfigurationValuesDocument Values,
+        AnalysisCapabilityKind Capability,
+        string RetainedInputPackageId,
+        string RetainedInputPackageFingerprint,
+        string ResolvedOperationKind);
 
     private sealed record ProviderStateDocument(
         string ProfileId,
         string GenerationId,
         string LifecycleState,
         string VerificationState,
+        bool CredentialPresent,
         bool SecureStoreAvailable,
         string InertStatus);
 
@@ -1141,6 +1353,10 @@ public sealed partial class ApplicationGrpcService
                 return ProfileStateDocument.Empty;
             }
             string? savedSelection = ReadSavedSelection(tool.InstallationRoot);
+            string installationIdentity = "mo2-installation-" + Hash(
+                Path.GetFullPath(tool.InstallationRoot)
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                    .ToUpperInvariant())[..32];
             List<ProfileCandidateDocument> candidates = [];
             try
             {
@@ -1155,12 +1371,13 @@ public sealed partial class ApplicationGrpcService
                     }
                     string name = info.Name;
                     candidates.Add(new(
-                        "profile-" + Hash(name.ToUpperInvariant())[..24],
+                        ComputeProfileCandidateId(tool.InstallationRoot, name),
                         name,
                         SavedSelectionSuggestion: string.Equals(
                             name,
                             savedSelection,
-                            StringComparison.Ordinal)));
+                            StringComparison.Ordinal),
+                        installationIdentity));
                 }
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)

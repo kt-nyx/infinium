@@ -16,6 +16,8 @@ service ApplicationService {
   rpc GetApplicationBootstrap(GetApplicationBootstrapRequest)
       returns (GetApplicationBootstrapResponse);
   rpc GetSetupState(GetSetupStateRequest) returns (GetSetupStateResponse);
+  rpc GetSavedScanConfiguration(GetSavedScanConfigurationRequest)
+      returns (GetSavedScanConfigurationResponse);
   rpc SubmitSetupCommand(SubmitSetupCommandRequest)
       returns (SubmitSetupCommandResponse);
   rpc PrepareManualRun(PrepareManualRunRequest)
@@ -269,6 +271,7 @@ message ProfileCandidate {
   string candidate_id = 1;
   string display_name = 2;
   bool saved_selection_suggestion = 3;
+  string installation_identity = 4;
 }
 
 message ProfileSelection {
@@ -278,15 +281,26 @@ message ProfileSelection {
   bool explicitly_confirmed = 4;
   RevisionToken revision = 5;
   infinium.common.v1.Instant updated_at = 6;
+  string confirmed_installation_identity = 7;
+}
+
+enum AnalysisCapabilityKind {
+  ANALYSIS_CAPABILITY_KIND_UNSPECIFIED = 0;
+  ANALYSIS_CAPABILITY_KIND_DELIVERED_INDEX_LOCAL = 1;
+  ANALYSIS_CAPABILITY_KIND_UNKNOWN = 2;
+  ANALYSIS_CAPABILITY_KIND_UNSUPPORTED = 3;
 }
 
 message ScanConfigurationValues {
-  repeated string analyzer_ids = 1;
   bool local_only = 2;
   uint32 maximum_concurrency = 3;
   uint64 maximum_provider_dispatches = 4;
   uint64 maximum_calculated_nano_usd = 5;
   uint64 maximum_elapsed_milliseconds = 6;
+  repeated AnalysisCapabilityKind analysis_capabilities = 7;
+
+  reserved 1;
+  reserved "analyzer_ids";
 }
 
 message SavedScanConfiguration {
@@ -365,6 +379,20 @@ message RequestProviderEnrollment {
 message SubmitSetupCommandResponse {
   UserOperationReceipt receipt = 1;
   SetupState setup = 2;
+}
+
+message GetSavedScanConfigurationRequest {
+  infinium.domain.v1.ScanConfigurationId configuration_id = 1;
+
+  reserved 90 to 99;
+  reserved "generic_path", "sql", "command_line", "url", "credential", "provider_request";
+}
+
+message GetSavedScanConfigurationResponse {
+  oneof result {
+    SavedScanConfiguration configuration = 1;
+    ApplicationContractError error = 2;
+  }
 }
 
 message PrepareManualRunRequest {

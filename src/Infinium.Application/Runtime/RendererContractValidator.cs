@@ -394,6 +394,13 @@ public static class ApplicationContractValidator
         }
     }
 
+    public static void Validate(GetSavedScanConfigurationRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        RejectUnknownFields(request, "$saved-configuration-query");
+        RequireId(request.ConfigurationId?.Value ?? string.Empty, "scan-configuration ID");
+    }
+
     public static void Validate(SubmitSetupCommandRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);

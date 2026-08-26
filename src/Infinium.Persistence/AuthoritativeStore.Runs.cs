@@ -29,7 +29,8 @@ public sealed partial class AuthoritativeStore
         string? operationKind = null,
         string? operationRequestJson = null,
         string? startUserGestureId = null,
-        string? startPreparationId = null)
+        string? startPreparationId = null,
+        string? startSubmissionFingerprint = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(durableCommandId);
         ArgumentException.ThrowIfNullOrWhiteSpace(runId);
@@ -44,10 +45,11 @@ public sealed partial class AuthoritativeStore
         {
             ValidateAuditToken(startInitiationKind, nameof(startInitiationKind));
         }
-        if ((startUserGestureId is null) != (startPreparationId is null))
+        if ((startUserGestureId is null) != (startPreparationId is null)
+            || (startUserGestureId is null) != (startSubmissionFingerprint is null))
         {
             throw new ArgumentException(
-                "A prepared start must bind both its user gesture and preparation identity.");
+                "A prepared start must bind its user gesture, preparation identity, and canonical fingerprint.");
         }
         if (startUserGestureId is not null)
         {
@@ -56,6 +58,19 @@ public sealed partial class AuthoritativeStore
             if (startUserGestureId.Length < 16)
             {
                 throw new ArgumentException("The user gesture identity is too short.", nameof(startUserGestureId));
+            }
+            if (startSubmissionFingerprint!.Length != 64
+                || startSubmissionFingerprint.Any(character =>
+                    !(char.IsAsciiDigit(character) || character is >= 'a' and <= 'f')))
+            {
+                throw new ArgumentException(
+                    "The prepared start fingerprint is not canonical SHA-256.",
+                    nameof(startSubmissionFingerprint));
+            }
+            if (operationKind is null)
+            {
+                throw new ArgumentException(
+                    "A prepared start must atomically bind a supported durable operation.");
             }
         }
         if ((operationKind is null) != (operationRequestJson is null))
@@ -110,15 +125,24 @@ public sealed partial class AuthoritativeStore
                     throw new InvalidOperationException("A durable command key cannot be rebound to different run-operation inputs.");
                 }
                 if (startUserGestureId is not null
-                    && ScalarLong(
-                        "SELECT COUNT(*) FROM prepared_run_submissions WHERE command_id=$command AND preparation_id=$preparation AND user_gesture_id=$gesture;",
-                        transaction,
-                        ("$command", durableCommandId),
-                        ("$preparation", startPreparationId),
-                        ("$gesture", startUserGestureId)) != 1)
+                    && (existingRun.RunId != runId
+                        || !string.Equals(
+                            ScalarStringOrNull(
+                                "SELECT start_dispatch_deadline FROM durable_commands WHERE command_id = $id;",
+                                transaction,
+                                ("$id", durableCommandId)),
+                            startDispatchDeadline is null ? null : ToText(startDispatchDeadline.Value),
+                            StringComparison.Ordinal)
+                        || ScalarLong(
+                            "SELECT COUNT(*) FROM prepared_run_submissions WHERE command_id=$command AND preparation_id=$preparation AND user_gesture_id=$gesture AND submission_fingerprint=$fingerprint;",
+                            transaction,
+                            ("$command", durableCommandId),
+                            ("$preparation", startPreparationId),
+                            ("$gesture", startUserGestureId),
+                            ("$fingerprint", startSubmissionFingerprint)) != 1))
                 {
                     throw new InvalidOperationException(
-                        "A durable command key cannot be rebound to a different preparation or user gesture.");
+                        "A durable command key cannot be rebound to different prepared start inputs.");
                 }
 
                 transaction.Commit();
@@ -132,6 +156,23 @@ public sealed partial class AuthoritativeStore
             }
 
             EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
+            if (startUserGestureId is not null
+                && ScalarLong(
+                    "SELECT COUNT(*) FROM prepared_run_submissions WHERE user_gesture_id=$gesture;",
+                    transaction,
+                    ("$gesture", startUserGestureId)) != 0)
+            {
+                throw new InvalidOperationException(
+                    "A one-shot user gesture identity cannot authorize more than one durable command.");
+            }
+            if (ScalarLong(
+                    "SELECT COUNT(*) FROM runs WHERE run_id=$run;",
+                    transaction,
+                    ("$run", runId)) != 0)
+            {
+                throw new InvalidOperationException(
+                    "A requested run identity cannot be rebound to a different durable command.");
+            }
             Execute(
                 """
                 INSERT INTO runs(
@@ -202,12 +243,13 @@ public sealed partial class AuthoritativeStore
             if (startUserGestureId is not null)
             {
                 Execute(
-                    "INSERT INTO prepared_run_submissions(command_id,preparation_id,user_gesture_id,submitted_at) "
-                    + "VALUES($command,$preparation,$gesture,$now);",
+                    "INSERT INTO prepared_run_submissions(command_id,preparation_id,user_gesture_id,submission_fingerprint,submitted_at) "
+                    + "VALUES($command,$preparation,$gesture,$fingerprint,$now);",
                     transaction,
                     ("$command", durableCommandId),
                     ("$preparation", startPreparationId),
                     ("$gesture", startUserGestureId),
+                    ("$fingerprint", startSubmissionFingerprint),
                     ("$now", ToText(now)));
             }
             transaction.Commit();

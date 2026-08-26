@@ -1,4 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <FileVersion>2.5.2.0</FileVersion>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Infinium.Bethesda\Infinium.Bethesda.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Mo2\Infinium.Mo2.csproj" />

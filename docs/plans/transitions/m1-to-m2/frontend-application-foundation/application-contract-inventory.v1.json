@@ -2,21 +2,21 @@
   "$schema": "application-contract-inventory.v1.schema.json",
   "schema_identity": "infinium.planning.application-contract-inventory/1.0.0",
   "status": "accepted-phase-checkpoint",
-  "last_reviewed": "2026-08-25",
-  "audited_commit": "59b6de3d80443c0150c15c8d83b5b29d1b3536ef",
-  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy through Phase B. Declared-unimplemented RPCs are not reusable behavior. The generated native diagnostic client validates setup-to-live-run behavior; no renderer receives direct gRPC authority and Phase C result/review operations remain unimplemented.",
+  "last_reviewed": "2026-08-26",
+  "audited_commit": "f7b39021097a6954c4d9d1d83ff05a10885c4072",
+  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy through corrected Checkpoint B. The generated native diagnostic client validates the retained-input setup-to-live-run path through the supported durable analysis operation. No renderer receives direct gRPC authority and Phase C result/review operations remain unimplemented.",
   "protocol": {
     "package": "infinium.application.v1",
     "service": "ApplicationService",
     "major": 1,
-    "minor": 5,
-    "application_contract_version": "1.5.0",
+    "minor": 6,
+    "application_contract_version": "1.6.0",
     "domain_contract_version": "1.3.0",
-    "storage_contract_version": "1.11.0",
+    "storage_contract_version": "1.12.0",
     "renderer_contract_version": "1.0.0",
-    "schema_fingerprint_sha256": "c8b540b067fea288ff3c31c1ac71c46a0541812aa0aa4fc4efae96eba8eb7824",
-    "declared_rpc_count": 27,
-    "implemented_rpc_count": 21,
+    "schema_fingerprint_sha256": "a95cf80fa175461c93aa0ad36c8d7dc02bd8dee55b97fd142c4d0d85ddd86353",
+    "declared_rpc_count": 28,
+    "implemented_rpc_count": 22,
     "bounds": {
       "maximum_message_bytes": 1048576,
       "maximum_page_items": 100,
@@ -529,7 +529,7 @@
         "AuthoritativeStore.ListSetupObjects and FindSetupObject"
       ],
       "bounds_and_versions": [
-        "Application 1.5.0, projection version 1, at most 100 saved configurations, closed tool/profile/provider projections"
+        "Application 1.6.0, projection version 1, at most 100 saved configurations, closed tool/profile/provider projections"
       ],
       "requirement_ids": [
         "TOOL-001",
@@ -544,6 +544,33 @@
       ],
       "security_authorities": [
         "ADR-0008",
+        "ADR-0019",
+        "ADR-0037"
+      ],
+      "renderer_policy": "typed-projection-mapping-only"
+    },
+    {
+      "rpc": "GetSavedScanConfiguration",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.Setup.cs#GetSavedScanConfiguration",
+      "current_consumers": [
+        "generated C# native diagnostic client in SolutionIntegrationTests"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.FindSetupObject exact saved-configuration identity"
+      ],
+      "bounds_and_versions": [
+        "One exact typed configuration identity; no generic lookup, path, query language, or unbounded collection"
+      ],
+      "requirement_ids": [
+        "SCAN-001",
+        "SCAN-002"
+      ],
+      "evaluation_ids": [
+        "EVAL-0082",
+        "EVAL-0091"
+      ],
+      "security_authorities": [
         "ADR-0019",
         "ADR-0037"
       ],

@@ -124,21 +124,21 @@ public sealed class AnalysisStatePersistenceTests
     [TestCategory("Cases")]
     [TestProperty("Category", "Unit")]
     [TestProperty("Category", "Cases")]
-    public void AnalysisStateModelSchema12PreservesSchema11ContractAndAddsApplicationSetupObjects()
+    public void AnalysisStateModelSchema13PreservesSetupContractAndAddsPreparedAnalysisAdmission()
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
         Assert.AreEqual(AuthoritativeStore.CurrentSchemaVersion, store.GetSchemaVersion());
 
         using SqliteConnection connection = temporary.OpenRaw();
-        Assert.AreEqual("12", ScalarText(connection, "PRAGMA user_version;"));
+        Assert.AreEqual("13", ScalarText(connection, "PRAGMA user_version;"));
         Assert.AreEqual(
-            "12",
+            "13",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_version';"));
         Assert.AreEqual(
-            "1.11.0",
+            "1.12.0",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
@@ -496,6 +496,7 @@ public sealed class AnalysisStatePersistenceTests
                 DELETE FROM migration_history WHERE migration_id = 'M1-S7-WP5-0010';
                 DELETE FROM migration_history WHERE migration_id = 'M1-S8-WP4-0011';
                 DELETE FROM migration_history WHERE migration_id = 'application-setup-contract-0012';
+                DELETE FROM migration_history WHERE migration_id = 'prepared-analysis-admission-0013';
                 DELETE FROM store_metadata WHERE key = 'slice6_successor_attempt_extension_id';
                 DELETE FROM store_metadata WHERE key = 'slice6_successor_v6_persistence_id';
                 DELETE FROM store_metadata WHERE key = 'slice6_successor_v6_semantic_trigger_correction_id';
@@ -514,7 +515,7 @@ public sealed class AnalysisStatePersistenceTests
 
         using (AuthoritativeStore migrated = migration.Open())
         {
-            Assert.AreEqual(12, migrated.GetSchemaVersion());
+            Assert.AreEqual(13, migrated.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = migration.OpenRaw())
@@ -535,7 +536,7 @@ public sealed class AnalysisStatePersistenceTests
         using (SqliteConnection connection = newer.OpenRaw())
         using (SqliteCommand command = connection.CreateCommand())
         {
-            command.CommandText = "PRAGMA user_version = 13;";
+            command.CommandText = "PRAGMA user_version = 14;";
             command.ExecuteNonQuery();
         }
 
@@ -543,7 +544,7 @@ public sealed class AnalysisStatePersistenceTests
         Assert.IsNotNull(exception.InnerException);
         StringAssert.Contains(
             exception.InnerException.Message,
-            "Database schema 13 is newer than supported schema 12.");
+            "Database schema 14 is newer than supported schema 13.");
     }
 
     [TestMethod]

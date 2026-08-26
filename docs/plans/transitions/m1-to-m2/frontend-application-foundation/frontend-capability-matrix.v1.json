@@ -2,10 +2,10 @@
   "$schema": "frontend-capability-matrix.v1.schema.json",
   "schema_identity": "infinium.planning.frontend-capability-matrix/1.0.0",
   "status": "implementation-active",
-  "last_reviewed": "2026-08-25",
+  "last_reviewed": "2026-08-26",
   "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
   "planning_base": "32dbb2c48754666336d2da571e554ad8897ed71c",
-  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner through Checkpoint B. The producer-consumer-validated setup-to-live-run native path does not claim Phase C result/review completion, desktop delivery, broad semantic accuracy, M2 activation, or M2 acceptance.",
+  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner through corrected Checkpoint B. The producer-consumer-validated retained-input setup-to-live-run native path does not claim Phase C result/review completion, desktop delivery, broad semantic accuracy, M2 activation, or M2 acceptance.",
   "application_contract_inventory": "application-contract-inventory.v1.json",
   "ownership_audit": {
     "capability_count": 19,
@@ -106,6 +106,7 @@
       "current_evidence": [
         "ApplicationService.GetSetupState and SubmitSetupCommand",
         "Exact typed MO2/LOOT validation states and tool-specific roots",
+        "Offline service-level validation with relative, missing, UNC, and device-path rejection",
         "SolutionIntegrationTests native diagnostic client"
       ],
       "gap": "LOOT invocation remains deliberately unavailable and no desktop consumer exists; exact presence and capability consequences are exposed without invocation authority.",
@@ -128,6 +129,7 @@
       "current_evidence": [
         "Typed ProfileSelection candidates, suggestion, confirmation, and revision",
         "Exact ModOrganizer.ini saved-selection hint parser",
+        "Canonical MO2 installation identity plus profile identity",
         "PrepareManualRun revalidates confirmed profile presence"
       ],
       "gap": "The desktop presentation remains WP7; the application contract and generated native consumer preserve explicit confirmation.",
@@ -151,7 +153,8 @@
       ],
       "current_state": "available-and-reusable",
       "current_evidence": [
-        "SubmitSetupCommand closed CRUD/clone commands",
+        "SubmitSetupCommand closed CRUD/clone commands and exact typed detail query",
+        "Closed DeliveredIndexLocal capability mapping with unsupported rejection",
         "application_setup_objects optimistic revisions",
         "application_setup_receipts replay-safe readback"
       ],
@@ -177,7 +180,8 @@
       "current_state": "available-and-reusable",
       "current_evidence": [
         "ApplicationService.PrepareManualRun",
-        "Immutable prepared_manual_runs records",
+        "Immutable prepared_manual_runs records bound to an authoritative retained-input package",
+        "Supported local concurrency and wall-time limits map into the durable operation",
         "WorkEstimate explicit availability states"
       ],
       "gap": "Elapsed time and non-local provider estimates remain explicitly unavailable; Phase B authorizes only offline fixture execution evidence.",
@@ -203,7 +207,8 @@
       "current_state": "partial-or-developer-oriented",
       "current_evidence": [
         "GetSetupState non-secret ProviderEnrollmentStatus",
-        "SubmitSetupCommand enrollment-intent receipt",
+        "SubmitSetupCommand enrollment-intent receipt reports configured=false and verified=false without a credential",
+        "Credential canary absent from responses, persistence, backups, logs, and restart readback",
         "No credential or generic provider payload in the application contract"
       ],
       "gap": "Native secret entry and secure-store choreography remain unavailable in Phase B; the status is honest and local-only work remains available.",
@@ -228,8 +233,9 @@
       "current_state": "available-and-reusable",
       "current_evidence": [
         "ApplicationService.PrepareManualRun and SubmitPreparedRun",
-        "Immutable prepared-run and one-shot gesture bindings",
-        "Durable command receipts and offline native diagnostic execution"
+        "Immutable prepared-run and globally one-shot gesture bindings",
+        "Canonical exact-retry fingerprint over requested start and resolved operation",
+        "Atomic managed-analysis-v1 registration and offline retained-input native diagnostic execution"
       ],
       "gap": "The raw developer-only SubmitRunCommand remains native-internal and denied to renderers; no product desktop mapping exists before WP7.",
       "owning_phase": "B",
@@ -258,7 +264,8 @@
         "ApplicationService.SubscribeEvents",
         "Projection invalidation and resync",
         "Durable pause/resume/cancel commands",
-        "Prepared-run reconnect/restart native diagnostic evidence"
+        "Prepared-run reconnect/restart native diagnostic evidence",
+        "Authoritative configured-analyzer progress, output, coverage, and gap readback"
       ],
       "gap": "Desktop reload/session mapping remains WP7; the native setup-to-live-run path proves authoritative reconnect and restart without UI-owned durable state.",
       "owning_phase": "B",

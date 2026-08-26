@@ -103,18 +103,24 @@ public sealed class ApplicationSetupPersistenceTests
             now,
             "DesktopUserGesture",
             now.AddMinutes(1),
+            "managed-analysis-v1",
+            "{}",
             startUserGestureId: "gesture-1234567890abcdef",
-            startPreparationId: prepared.PreparationId);
+            startPreparationId: prepared.PreparationId,
+            startSubmissionFingerprint: new string('a', 64));
         RunRecord replayed = store.CreateRun(
             "command-prepared-a",
-            "run-rebound",
+            "run-prepared-a",
             binding,
             authority.FencingEpoch,
             now.AddSeconds(1),
             "DesktopUserGesture",
-            now.AddMinutes(2),
+            now.AddMinutes(1),
+            "managed-analysis-v1",
+            "{}",
             startUserGestureId: "gesture-1234567890abcdef",
-            startPreparationId: prepared.PreparationId);
+            startPreparationId: prepared.PreparationId,
+            startSubmissionFingerprint: new string('a', 64));
         Assert.AreEqual(accepted.RunId, replayed.RunId);
 
         DurableCommandRecord receipt = store.GetDurableCommand("command-prepared-a");
@@ -128,8 +134,37 @@ public sealed class ApplicationSetupPersistenceTests
             now.AddSeconds(2),
             "DesktopUserGesture",
             now.AddMinutes(2),
+            "managed-analysis-v1",
+            "{}",
             startUserGestureId: "gesture-fedcba0987654321",
-            startPreparationId: prepared.PreparationId));
+            startPreparationId: prepared.PreparationId,
+            startSubmissionFingerprint: new string('b', 64)));
+        Assert.ThrowsExactly<InvalidOperationException>(() => store.CreateRun(
+            "command-prepared-b",
+            "run-prepared-b",
+            binding,
+            authority.FencingEpoch,
+            now.AddSeconds(3),
+            "DesktopUserGesture",
+            now.AddMinutes(2),
+            "managed-analysis-v1",
+            "{}",
+            startUserGestureId: "gesture-1234567890abcdef",
+            startPreparationId: prepared.PreparationId,
+            startSubmissionFingerprint: new string('c', 64)));
+        Assert.ThrowsExactly<InvalidOperationException>(() => store.CreateRun(
+            "command-prepared-c",
+            "run-prepared-a",
+            binding,
+            authority.FencingEpoch,
+            now.AddSeconds(4),
+            "DesktopUserGesture",
+            now.AddMinutes(2),
+            "managed-analysis-v1",
+            "{}",
+            startUserGestureId: "gesture-unique-run-collision",
+            startPreparationId: prepared.PreparationId,
+            startSubmissionFingerprint: new string('d', 64)));
     }
 
     private sealed class TemporaryProductRoot : IDisposable

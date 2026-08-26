@@ -302,6 +302,18 @@ public sealed partial class AuthoritativeStore
             {
                 ValidateApplicationSetupMigration();
             }
+            using SqliteCommand admissionVersionCommand = connection.CreateCommand();
+            admissionVersionCommand.CommandText = "PRAGMA user_version;";
+            int admissionVersion = Convert.ToInt32(admissionVersionCommand.ExecuteScalar(),
+                System.Globalization.CultureInfo.InvariantCulture);
+            if (admissionVersion == 12)
+            {
+                ApplyPreparedAnalysisAdmissionMigration();
+            }
+            else if (admissionVersion == 13)
+            {
+                ValidatePreparedAnalysisAdmissionMigration();
+            }
         }
     }
 
@@ -2460,6 +2472,7 @@ public sealed partial class AuthoritativeStore
         "table:provider_usage_entries",
         "table:prepared_manual_runs",
         "table:prepared_run_submissions",
+        "index:prepared_run_submissions_one_shot_gesture",
         "trigger:application_setup_receipts_append_only_delete",
         "trigger:application_setup_receipts_append_only_update",
         "trigger:prepared_manual_runs_append_only_delete",
