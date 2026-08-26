@@ -42,6 +42,8 @@ public sealed class ResultsReviewApplicationContractTests
         StringAssert.Contains(application, "string provenance_id = 10;");
         StringAssert.Contains(application, "string artifact_schema_identity = 11;");
         StringAssert.Contains(application, "reserved \"producer_id\", \"producer_version\"");
+        StringAssert.Contains(application, "FindingReportAvailability availability = 4;");
+        StringAssert.Contains(application, "bool retained_results_present = 4;");
     }
 
     [TestMethod]
@@ -51,7 +53,7 @@ public sealed class ResultsReviewApplicationContractTests
     {
         Assert.AreEqual("1.14.0", ProtocolConstants.StorageContractVersion);
         Assert.AreEqual(
-            "093158cf0212c899cc192df3bc9f2a2436e0191e3e8c6a9b5acc3142bcab71e9",
+            "d4db44c3c64f4c661162c938696c8d9ffc3d258f81eac18e9a6479d09c3491f9",
             Convert.ToHexStringLower(ProtocolConstants.Version.SchemaFingerprintSha256.Span));
     }
 

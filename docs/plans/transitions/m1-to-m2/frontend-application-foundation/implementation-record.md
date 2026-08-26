@@ -15,9 +15,11 @@ binds typed prepared runs to the exact retained inputs and supported durable
 analysis operation it claims to execute. WP3 and WP4 passed focused correction,
 consolidated re-review, and the complete accepted verification floor. The first
 Phase C candidate reached `c551c12e22522e7a2cef8c21a322aa76db8fc23e`, but its
-Checkpoint C receipt is suspended while report publication/readback, recursive
-request validation, targeted-verification execution authority, export deletion,
-provenance, and paging semantics are corrected.
+Checkpoint C receipt remains suspended. Independent corrections now cover
+report publication/readback, recursive request validation, export deletion,
+provenance, paging, and populated migration gaps. Targeted-verification
+execution authority remains unresolved; its declared application RPC now
+fails closed without durable mutation.
 
 The implementation has assigned every foundation capability to an exact owner,
 and implemented the common and setup-to-live-run boundaries future frontend
@@ -712,8 +714,9 @@ Delivered:
   exact continuation and causal, applicability, dependency, and producer
   equivalence. Names, prose, visual similarity, or a fabricated assessment ID
   cannot authorize carryover;
-- targeted verification creates a new manually initiated durable run, binds
-  the exact source finding/case and only scopes retained by that source, and
+- the superseded targeted-verification implementation attempted to create a
+  new manually initiated durable run and bind the exact source finding/case and
+  only scopes retained by that source, and
   records scope-limited readiness without reopening a terminal source run or
   borrowing unrelated coverage;
 - local-private structured JSON export contains exact selected result, review,
@@ -734,9 +737,9 @@ Focused evidence:
   successor context identity, effective removal, rebuild/replay, restart,
   backup/restore, export integrity, deletion preview, and canonical source
   immutability passed in the 4-test focused Phase C suite;
-- generated-client calls proved review success and stale conflict, assumption
-  creation, structured export, and targeted verification on the real
-  named-pipe coordinator path; and
+- at that superseded point, generated-client calls proved review success and
+  stale conflict, assumption creation, structured export, and a non-executable
+  targeted-verification record on the real named-pipe coordinator path; and
 - source terminal state stayed `CompletedWithGaps`, the targeted successor was
   a distinct queued run with `scope-limited` readiness, and no unrelated scope
   identity was accepted.
@@ -808,9 +811,9 @@ that defines the typed targeted-scope expansion input, changed-snapshot binding,
 dependency closure, mapping into `managed-analysis-v1`, and exact coverage/gap
 semantics. No new operation kind or generic-substrate fallback is authorized.
 
-### Limited independent Phase C correction receipt
+### Superseded limited independent Phase C correction receipt
 
-Authority: owner-authorized correction from clean commit
+Historical authority: owner-authorized correction from clean commit
 `ef4cead98b48b0a97982867a1baa9b588cd7e70b`. This receipt covers only the
 independent WP5/WP6 defects. It does not research, design, implement, execute,
 or claim completion of targeted verification. WP5/WP6 remain under correction,
@@ -922,7 +925,98 @@ operation was accessed. Documentation validation passed 150 metadata files,
 152 Markdown link sources, and 19 JSON files. Functional naming passed 184
 exact reviewed exceptions with zero unexplained findings.
 
-Contract state before the limited independent correction:
+### Limited fail-closed and populated-migration correction receipt
+
+Authority: owner-authorized correction from reviewed predecessor
+`8ec26bc9926af3f99c2757249486f14bf14fd759`. This receipt covers only
+fail-closed targeted-verification admission, runtime/documentation truth, and
+populated report-publication migration behavior. It does not research, design,
+implement, execute, or claim completion of targeted verification. WP5/WP6
+remain under correction, Checkpoint C remains suspended, and Phase D remains
+blocked.
+
+Corrected behavior:
+
+- `StartTargetedVerification` retains its future-facing typed RPC declaration,
+  performs normal negotiation and recursive request validation, then returns
+  typed `Unsupported`. The handler does not call persistence. A real generated
+  C# client over the current-user named pipe proves a well-formed request leaves
+  runs, operations, jobs, durable commands, payloads, lineage, audit,
+  targeted-verification rows, lifecycle events, and prepared gesture receipts
+  unchanged, and the requested run remains absent;
+- application `1.9.0` adds `FindingReportAvailability` to report-list readback.
+  A run with retained result projection rows but no report publication rows now
+  returns explicit `Unavailable` with `retained_results_present=true`, rather
+  than an empty page that could mean no reportable results; and
+- populated schema-14-to-15 migration evidence starts with retained result and
+  finding/case payload bytes. Migration preserves those exact canonical bytes,
+  creates no inferred report, and exposes the explicit unavailable projection
+  gap. Current schema-15 runs with published reports retain the ordinary bounded
+  page/detail path.
+
+Runtime and documentation truth:
+
+- bootstrap keeps Result Exploration and Durable User Review `Partial`.
+  FindingReport/readback and export deletion/recovery are described as focused
+  evidence; Checkpoint C, desktop consumption, and M2 remain unaccepted;
+- the contract inventory binds reviewed predecessor
+  `8ec26bc9926af3f99c2757249486f14bf14fd759`, records 37 implemented RPCs, and
+  classifies `StartTargetedVerification` as `declared-unimplemented` and
+  native-only until an accepted implementation exists; and
+- current-state, the foundation README, capability matrix, evaluation cases,
+  verification profile, protobuf README, version axes, and fingerprint now
+  state the same fail-closed and migration-gap boundary.
+
+Contract state after this correction: application `1.9.0`, domain `1.3.0`,
+storage `1.14.0`, renderer `1.1.0`, storage schema `15`; protobuf fingerprint
+`d4db44c3c64f4c661162c938696c8d9ffc3d258f81eac18e9a6479d09c3491f9`;
+storage fingerprint
+`a64750491c8cd7e79d96e3190710b4b0c71c6377a83df2a5e25df0bc554f7b1f`.
+The new report-availability response remains implementation-active, with a
+generated named-pipe consumer and populated migration evidence. No complete
+verification floor was run because executable targeted verification remains an
+unresolved Checkpoint C blocker.
+
+Focused verification:
+
+- `dotnet build Infinium.sln -c Release --no-restore`: passed with zero warnings
+  and zero errors;
+- ContractTests `TestCategory=Contract`: 179 passed, zero failed or skipped;
+- UnitTests `TestCategory=Unit`: 249 passed, one environment-dependent symbolic-
+  link test skipped, zero failed;
+- `ResultReviewWorkflowIntegrationTests`: 5 passed, including deterministic
+  result/report exploration, 100,000-summary bounds, populated migration,
+  export deletion/recovery, and exact continuity carryover;
+- real generated-client managed-analysis named-pipe test: 1 passed, including
+  truthful Partial bootstrap claims, targeted `Unsupported` with ten durable
+  population counts unchanged, explicit report-projection unavailability, and
+  ordinary FindingReport queue/detail readback; and
+- documentation validation passed 150 metadata files, 152 Markdown link
+  sources, and 19 JSON files. Functional naming passed 184 exact reviewed
+  exceptions with zero unexplained findings; format verification and
+  `git diff --check` passed.
+
+Classified review result for this limited surface: `ACCEPT` after correction
+and affected-surface re-review, without accepting WP5/WP6 or Checkpoint C.
+
+- Must fix: the first migration guard was mistakenly placed on ordinary result
+  listing. The focused populated-migration test caught the error; the guard now
+  exists only on report listing, and the five-test result/review rerun passes.
+- Must fix: the inventory audit equated the existence of any service handler
+  with executable implementation. It now separately audits implemented RPCs
+  and the exact allowlisted fail-closed handler, so the inventory can truthfully
+  mark `StartTargetedVerification` declared-unimplemented while retaining its
+  typed `Unsupported` boundary.
+- Must fix: re-review found the new availability message lacked the standard
+  future/privileged reservations. It now reserves fields 90-99 and path, SQL,
+  URL, query, payload-path, command, and download names; the final protobuf
+  fingerprint binds those bytes.
+- Follow-up: none for the independently authorized surface.
+- Owner/authority decision: executable targeted verification still requires
+  the accepted changed-snapshot and exact-scope mapping already recorded above.
+- Safety/isolation breach: none.
+
+Historical contract state before the first limited independent correction:
 
 - application `1.7.0`, domain `1.3.0`, storage `1.13.0`, renderer `1.1.0`,
   storage schema `14`;
@@ -937,10 +1031,10 @@ Contract state before the limited independent correction:
   `Implementation-active`. Earlier generated-protobuf, persistence, migration,
   conflict, named-pipe, restart, replay, and backup/restore evidence remains
   diagnostic only until the missing verticals and adversarial cases pass.
-  FindingReport is not yet a queryable generated-service surface.
 
-The complete accepted verification floor and exact final counts are recorded
-below after the review-ready candidate's one final floor.
+The complete-floor receipt below belongs to the superseded Phase C candidate.
+It is retained as historical diagnostic evidence and does not restore
+Checkpoint C for the current correction.
 
 Remaining limitations: no desktop host or TypeScript consumer, no Phase D,
 no native credential entry or provider execution, no LOOT invocation, no

@@ -14,9 +14,11 @@ public sealed partial class ApplicationFoundationAuthorityContractTests
         "GetProviderProfile",
         "GetProviderReplay",
         "ListProviderBudget",
+        "StartTargetedVerification",
         "SubmitProviderEnrollment",
         "SubmitProviderOperation",
     ];
+    private static readonly string[] DeclaredFailClosedRpcs = ["StartTargetedVerification"];
 
     [TestMethod]
     [TestCategory("Contract")]
@@ -55,14 +57,24 @@ public sealed partial class ApplicationFoundationAuthorityContractTests
                     "ApplicationGrpcService*.cs")
                 .Order(StringComparer.Ordinal)
                 .Select(File.ReadAllText));
-        string[] implementedRpcs = declaredRpcs
+        string[] handlerRpcs = declaredRpcs
             .Where(rpc => Regex.IsMatch(
                 coordinatorSource,
                 $@"public\s+override[\s\S]{{0,180}}\b{Regex.Escape(rpc)}\s*\(",
                 RegexOptions.CultureInvariant))
             .Order(StringComparer.Ordinal)
             .ToArray();
-        Assert.AreEqual(implementedRpcs.Length, root.GetProperty("protocol").GetProperty("implemented_rpc_count").GetInt32());
+        string[] inventoryImplemented = root.GetProperty("rpc_inventory")
+            .EnumerateArray()
+            .Where(item => StringComparer.Ordinal.Equals(
+                item.GetProperty("implementation_state").GetString(),
+                "implemented"))
+            .Select(item => item.GetProperty("rpc").GetString()!)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        Assert.AreEqual(inventoryImplemented.Length,
+            root.GetProperty("protocol").GetProperty("implemented_rpc_count").GetInt32());
+        Assert.IsEmpty(inventoryImplemented.Except(handlerRpcs, StringComparer.Ordinal));
 
         string[] inventoryUnimplemented = root.GetProperty("rpc_inventory")
             .EnumerateArray()
@@ -74,8 +86,10 @@ public sealed partial class ApplicationFoundationAuthorityContractTests
             .ToArray();
         CollectionAssert.AreEqual(DeclaredUnimplementedRpcs, inventoryUnimplemented);
         CollectionAssert.AreEqual(
-            declaredRpcs.Except(implementedRpcs, StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray(),
-            inventoryUnimplemented);
+            DeclaredFailClosedRpcs,
+            handlerRpcs.Except(inventoryImplemented, StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray());
+        Assert.IsEmpty(declaredRpcs.Except(
+            handlerRpcs.Concat(inventoryUnimplemented), StringComparer.Ordinal));
     }
 
     [TestMethod]

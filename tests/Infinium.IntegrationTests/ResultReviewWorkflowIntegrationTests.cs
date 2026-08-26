@@ -200,6 +200,91 @@ public sealed class ResultReviewWorkflowIntegrationTests
 
     [TestMethod]
     [TestCategory("Integration")]
+    [TestCategory("Migration")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Migration")]
+    public void PopulatedResultsMigrationReturnsExplicitReportUnavailability()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "infinium-populated-results-migration-" + Guid.NewGuid().ToString("N"));
+        string databasePath;
+        string sourcePayloadId;
+        byte[] canonicalBefore;
+        long retainedResultCount;
+        long findingCasePublicationCount;
+        CandidateStoreContext source = new(root, preserveRoot: true);
+        try
+        {
+            FindingCaseAnalysisPhaseResult publication = Publish(source);
+            databasePath = source.Paths.Database;
+            sourcePayloadId = publication.Receipt.StoredPayloadId;
+            canonicalBefore = source.Store.ReadFindingCasePayload(sourcePayloadId);
+            retainedResultCount = CandidatePipelineIntegrationTests.Count(databasePath, "result_projection_items");
+            findingCasePublicationCount = CandidatePipelineIntegrationTests.Count(databasePath, "finding_case_publications");
+            Assert.IsGreaterThan(0L, retainedResultCount);
+            Assert.IsGreaterThan(0L, findingCasePublicationCount);
+            Assert.IsGreaterThan(0L, CandidatePipelineIntegrationTests.Count(databasePath, "finding_report_publications"));
+        }
+        finally
+        {
+            source.Dispose();
+        }
+
+        try
+        {
+            using (SqliteConnection database = new($"Data Source={databasePath};Pooling=False"))
+            {
+                database.Open();
+                using SqliteCommand downgrade = database.CreateCommand();
+                downgrade.CommandText =
+                    """
+                    DROP TABLE structured_export_projection;
+                    DROP TABLE structured_export_events;
+                    DROP TABLE finding_report_publications;
+                    DELETE FROM migration_history WHERE migration_id=$migration;
+                    UPDATE store_metadata SET value='14' WHERE key='schema_version';
+                    UPDATE store_metadata SET value='1.13.0' WHERE key='storage_contract_version';
+                    UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint';
+                    PRAGMA user_version=14;
+                    """;
+                downgrade.Parameters.AddWithValue("$migration", ResultsPublicationPersistenceDeclarations.MigrationId);
+                downgrade.Parameters.AddWithValue("$fingerprint", ResultsReviewPersistenceDeclarations.SchemaFingerprint);
+                downgrade.ExecuteNonQuery();
+            }
+
+            Assert.AreEqual(retainedResultCount,
+                CandidatePipelineIntegrationTests.Count(databasePath, "result_projection_items"));
+            Assert.AreEqual(findingCasePublicationCount,
+                CandidatePipelineIntegrationTests.Count(databasePath, "finding_case_publications"));
+            using StoragePaths migratedPaths = new(root);
+            using AuthoritativeStore migrated = new(migratedPaths);
+            CollectionAssert.AreEqual(canonicalBefore, migrated.ReadFindingCasePayload(sourcePayloadId));
+            Assert.AreEqual(15, migrated.GetSchemaVersion());
+            Assert.AreEqual(0L, CandidatePipelineIntegrationTests.Count(databasePath, "finding_report_publications"));
+            FindingReportProjectionUnavailableException unavailable = Assert.ThrowsExactly<
+                FindingReportProjectionUnavailableException>(() => migrated.ListFindingReports(
+                    "run-candidate",
+                    ["supported-finding", "resolved-negative", "abstention", "failure", "limited", "coverage-gap"],
+                    string.Empty,
+                    "identity",
+                    100,
+                    null,
+                    null));
+            Assert.AreEqual("run-candidate", unavailable.RunId);
+            TestContext.WriteLine(
+                $"populated-migration schema={migrated.GetSchemaVersion()} retained_results="
+                + $"{retainedResultCount} finding_case_publications={findingCasePublicationCount} reports=0 state=unavailable");
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
     [TestCategory("Security")]
     [TestCategory("Fault")]
     [TestProperty("Category", "Integration")]

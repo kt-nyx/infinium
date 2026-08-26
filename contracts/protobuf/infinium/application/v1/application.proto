@@ -1280,7 +1280,21 @@ message ListFindingReportsResponse {
     FindingReportPage page = 1;
     CursorRejection cursor_rejection = 2;
     infinium.common.v1.Failure failure = 3;
+    FindingReportAvailability availability = 4;
   }
+}
+
+// A retained run can predate durable FindingReport publication. In that case
+// the service exposes the gap explicitly instead of returning an empty page.
+message FindingReportAvailability {
+  infinium.domain.v1.RunId run_id = 1;
+  infinium.common.v1.AvailabilityState availability = 2;
+  string inert_reason = 3;
+  bool retained_results_present = 4;
+  infinium.domain.v1.ProjectionVersion projection_version = 5;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command", "download";
 }
 
 message FindingReportPage {

@@ -8,8 +8,8 @@ namespace Infinium.Application.Runtime;
 public static class ProtocolConstants
 {
     public const uint Major = 1;
-    public const uint Minor = 8;
-    public const string ContractVersion = "1.8.0";
+    public const uint Minor = 9;
+    public const string ContractVersion = "1.9.0";
     public const string DomainContractVersion = "1.3.0";
     public static readonly string StorageContractVersion =
         AuthoritativeStore.CurrentStorageContractVersion;
@@ -52,6 +52,6 @@ public static class ProtocolConstants
         Major = Major,
         Minor = Minor,
         SchemaFingerprintSha256 = ByteString.CopyFrom(
-            Convert.FromHexString("093158cf0212c899cc192df3bc9f2a2436e0191e3e8c6a9b5acc3142bcab71e9")),
+            Convert.FromHexString("d4db44c3c64f4c661162c938696c8d9ffc3d258f81eac18e9a6479d09c3491f9")),
     };
 }

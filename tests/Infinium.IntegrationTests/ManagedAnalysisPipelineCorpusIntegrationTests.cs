@@ -133,6 +133,30 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 RequestedCapabilities = { Capability.ApplicationQuery },
             }).ResponseAsync;
             Assert.AreEqual(HandshakeDisposition.Accepted, handshake.Disposition);
+            GetApplicationBootstrapResponse bootstrap = await client.GetApplicationBootstrapAsync(
+                new GetApplicationBootstrapRequest
+                {
+                    RendererContractVersion = new SemanticVersion
+                    {
+                        Value = ProtocolConstants.RendererContractVersion,
+                    },
+                    MaximumRecentRuns = ProtocolConstants.MaximumBootstrapRecentRuns,
+                    ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion
+                    {
+                        Value = "1",
+                    },
+                }).ResponseAsync;
+            Assert.AreEqual(GetApplicationBootstrapResponse.ResultOneofCase.Bootstrap, bootstrap.ResultCase);
+            ApplicationCapabilityState resultCapability = bootstrap.Bootstrap.Capabilities.Single(
+                value => value.Capability == ApplicationCapability.ResultExploration);
+            Assert.AreEqual(Availability.Partial, resultCapability.Availability);
+            StringAssert.Contains(resultCapability.InertReason, "FindingReport query/readback");
+            StringAssert.Contains(resultCapability.InertReason, "Checkpoint C");
+            ApplicationCapabilityState reviewCapability = bootstrap.Bootstrap.Capabilities.Single(
+                value => value.Capability == ApplicationCapability.DurableUserReview);
+            Assert.AreEqual(Availability.Partial, reviewCapability.Availability);
+            StringAssert.Contains(reviewCapability.InertReason, "export deletion/recovery");
+            StringAssert.Contains(reviewCapability.InertReason, "targeted verification remains unavailable");
 
             Dictionary<string, ManagedCaseObservation> observations = new(StringComparer.Ordinal);
             List<string> executionOrder = [];
@@ -297,6 +321,71 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             }).ResponseAsync;
             Assert.AreEqual(GetResultDetailResponse.ResultOneofCase.Detail, sourceDetail.ResultCase, sourceDetail.Failure?.Detail);
             Assert.IsNotEmpty(sourceDetail.Detail.SubjectIds);
+            string[] targetedMutationTables =
+            [
+                "runs", "run_operations", "job_nodes", "durable_commands", "payloads",
+                "lineage_events", "audit_events", "targeted_verifications", "lifecycle_events",
+                "prepared_run_submissions",
+            ];
+            Dictionary<string, long> beforeTargeted = targetedMutationTables.ToDictionary(
+                table => table,
+                table => CandidatePipelineIntegrationTests.Count(paths.Database, table),
+                StringComparer.Ordinal);
+            DateTimeOffset targetedDeadline = DateTimeOffset.UtcNow.AddMinutes(2);
+            StartTargetedVerificationResponse targeted = await client.StartTargetedVerificationAsync(
+                new StartTargetedVerificationRequest
+                {
+                    IdempotencyKey = "targeted-fail-closed-request",
+                    RequestedRunId = "run-targeted-fail-closed",
+                    SourceRunId = sourceFinding.RunId,
+                    SourceFindingOccurrenceId = sourceFinding.ItemId,
+                    ExactScopeIds = { sourceDetail.Detail.SubjectIds[0] },
+                    UserGestureId = "targeted-fail-closed-gesture",
+                    DispatchDeadline = new Instant
+                    {
+                        UnixSeconds = targetedDeadline.ToUnixTimeSeconds(),
+                        Nanoseconds = 0,
+                    },
+                }).ResponseAsync;
+            Assert.AreEqual(StartTargetedVerificationResponse.ResultOneofCase.Failure, targeted.ResultCase);
+            Assert.AreEqual(FailureCode.Unsupported, targeted.Failure.Code);
+            Assert.IsFalse(targeted.Failure.RetryMayBeSafe);
+            foreach (string table in targetedMutationTables)
+            {
+                Assert.AreEqual(beforeTargeted[table], CandidatePipelineIntegrationTests.Count(paths.Database, table), table);
+            }
+            Assert.ThrowsExactly<KeyNotFoundException>(() => store.GetRun("run-targeted-fail-closed"));
+
+            const string retainedReportGapRunId = "run-retained-report-gap";
+            _ = store.CreateRun(
+                "command-retained-report-gap",
+                retainedReportGapRunId,
+                runBinding,
+                authority.FencingEpoch,
+                DateTimeOffset.UtcNow);
+            ResultItemPersistenceRecord retainedForGap = store.GetResultItem(cleanRunId, sourceFinding.ItemId);
+            store.IndexResultProjectionBatch(
+                [retainedForGap with { RunId = retainedReportGapRunId, ItemId = "retained-report-gap-item" }],
+                DateTimeOffset.UtcNow);
+            ListFindingReportsRequest unavailableReportQuery = new()
+            {
+                RunId = new Infinium.Contracts.Protobuf.Domain.V1.RunId { Value = retainedReportGapRunId },
+                RequestedPageSize = 100,
+                Sort = FindingReportSort.IdentityAscending,
+                ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion { Value = "1" },
+            };
+            unavailableReportQuery.States.Add([
+                ProtoFindingReportState.SupportedFinding, ProtoFindingReportState.ResolvedNegative,
+                ProtoFindingReportState.Abstention, ProtoFindingReportState.Failure,
+                ProtoFindingReportState.Limited, ProtoFindingReportState.CoverageGap,
+            ]);
+            ListFindingReportsResponse unavailableReports = await client.ListFindingReportsAsync(
+                unavailableReportQuery).ResponseAsync;
+            Assert.AreEqual(ListFindingReportsResponse.ResultOneofCase.Availability, unavailableReports.ResultCase);
+            Assert.AreEqual(AvailabilityState.Unavailable, unavailableReports.Availability.Availability);
+            Assert.IsTrue(unavailableReports.Availability.RetainedResultsPresent);
+            Assert.AreEqual(retainedReportGapRunId, unavailableReports.Availability.RunId.Value);
+            Assert.AreEqual("1", unavailableReports.Availability.ProjectionVersion.Value);
             ListFindingReportsRequest reportQuery = new()
             {
                 RunId = sourceFinding.RunId,

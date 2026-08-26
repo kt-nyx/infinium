@@ -63,9 +63,12 @@ an offline retained-input native diagnostic proof through the real durable
 analysis operation, including reconnect and restart. Phase C result/review
 primitives are present but under correction. The independent report-query,
 recursive request-validation, export-deletion/recovery, provenance, and cursor
-defects now have focused offline producer-consumer evidence. Targeted
-verification remains blocked on an accepted changed-snapshot and exact-scope
-architecture decision, so WP5/WP6 are not accepted, the earlier Checkpoint C
+defects now have focused offline producer-consumer evidence. Populated
+pre-publication stores report an explicit unavailable projection gap, and the
+declared targeted-verification RPC validates requests then returns typed
+`Unsupported` without durable mutation. Targeted verification remains blocked
+on an accepted changed-snapshot and exact-scope architecture decision, so
+WP5/WP6 are not accepted, the earlier Checkpoint C
 receipt remains suspended, and Phase D has not started.
 
 M2 remains inactive until a separate accepted M2 plan exists. The transition's

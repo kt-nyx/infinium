@@ -400,6 +400,20 @@ public sealed partial class ApplicationGrpcService
             }
             return Task.FromResult(new ListFindingReportsResponse { Page = page });
         }
+        catch (FindingReportProjectionUnavailableException exception)
+        {
+            return Task.FromResult(new ListFindingReportsResponse
+            {
+                Availability = new FindingReportAvailability
+                {
+                    RunId = new RunId { Value = exception.RunId },
+                    Availability = AvailabilityState.Unavailable,
+                    InertReason = Bounded(exception.Message),
+                    RetainedResultsPresent = true,
+                    ProjectionVersion = new ProjectionVersion { Value = "1" },
+                },
+            });
+        }
         catch (Exception exception) when (exception is ArgumentException or KeyNotFoundException)
         {
             return Task.FromResult(new ListFindingReportsResponse
@@ -641,23 +655,12 @@ public sealed partial class ApplicationGrpcService
         {
             return Task.FromResult(new StartTargetedVerificationResponse { Failure = contractFailure });
         }
-        try
+        return Task.FromResult(new StartTargetedVerificationResponse
         {
-            TargetedVerificationPersistenceRecord value = runtime.Store.StartTargetedVerification(
-                request.IdempotencyKey, request.RequestedRunId, Required(request.SourceRunId?.Value, "source run ID"),
-                EmptyToNull(request.SourceFindingOccurrenceId), EmptyToNull(request.SourceCaseOccurrenceId),
-                request.ExactScopeIds.ToArray(), request.UserGestureId, FromProto(request.DispatchDeadline),
-                runtime.Authority.FencingEpoch, DateTimeOffset.UtcNow);
-            return Task.FromResult(new StartTargetedVerificationResponse { Verification = ToTargetedVerification(value) });
-        }
-        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException or KeyNotFoundException)
-        {
-            return Task.FromResult(new StartTargetedVerificationResponse
-            {
-                Failure = Failure(exception is KeyNotFoundException ? FailureCode.NotFound : FailureCode.InvalidArgument,
-                    Bounded(exception.Message)),
-            });
-        }
+            Failure = Failure(
+                FailureCode.Unsupported,
+                "Targeted verification is declared but unavailable until an accepted executable scope mapping exists."),
+        });
     }
 
     public override Task<CreateStructuredExportResponse> CreateStructuredExport(

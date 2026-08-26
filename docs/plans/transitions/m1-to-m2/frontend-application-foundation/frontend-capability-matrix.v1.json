@@ -5,7 +5,7 @@
   "last_reviewed": "2026-08-26",
   "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
   "planning_base": "32dbb2c48754666336d2da571e554ad8897ed71c",
-  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint C and Phase C acceptance remain suspended. Focused offline evidence now covers FindingReport publication/query/readback, recursive request validation, export deletion/recovery, provenance, and paging; executable targeted verification still requires accepted architecture. No desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, or M2 acceptance is claimed.",
+  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint C and Phase C acceptance remain suspended. Focused offline evidence now covers FindingReport publication/query/readback, recursive request validation, export deletion/recovery, provenance, paging, explicit populated-migration unavailability, and a fail-closed targeted-verification RPC with zero mutation; executable targeted verification still requires accepted architecture. No desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, or M2 acceptance is claimed.",
   "application_contract_inventory": "application-contract-inventory.v1.json",
   "ownership_audit": {
     "capability_count": 19,
@@ -339,7 +339,8 @@
       "current_evidence": [
         "ApplicationService.GetResultDetail, ListFindingReports, and GetFindingReport",
         "FindingCaseAnalysisPhase publishes schema-validated FindingReport payloads beside the exact retained finding-case source",
-        "Generated named-pipe C# consumer proves bounded queue/detail, recommendation meaning, provenance, inert hostile text, and canonical source round-trip"
+        "Generated named-pipe C# consumer proves bounded queue/detail, recommendation meaning, provenance, inert hostile text, canonical source round-trip, and explicit unavailable state for retained results without a publication projection",
+        "Populated schema-14 migration preserves exact retained canonical bytes and returns report-projection unavailable rather than an empty page"
       ],
       "gap": "FindingReport remains implementation-active until the real M2 UI validates its full presentation seam; Phase C does not invent unavailable evidence or recommendation semantics.",
       "owning_phase": "C",
@@ -463,11 +464,11 @@
       ],
       "current_state": "missing-application-vertical",
       "current_evidence": [
-        "ApplicationService.StartTargetedVerification",
-        "Under-correction endpoint currently registers an unsupported targeted-verification operation kind",
+        "ApplicationService.StartTargetedVerification remains declared for future correction but is not implemented",
+        "After negotiation and recursive request validation, a well-formed generated-client request returns typed Unsupported with ten relevant durable populations unchanged",
         "No accepted contract maps changed external setup plus exact source scope into managed-analysis-v1"
       ],
-      "gap": "Architecture must define changed-snapshot capture, typed scope expansion with dependency closure, mapping into managed-analysis-v1, and exact coverage/gap semantics before this operation can create or schedule work.",
+      "gap": "Architecture must define changed-snapshot capture, typed scope expansion with dependency closure, mapping into managed-analysis-v1, and exact coverage/gap semantics before this declared RPC may create or schedule work.",
       "owning_phase": "C",
       "owning_work_package": "WP6",
       "transition_exit_evidence": "A new manually initiated operation retains exact source scope and lineage and reports scope-limited readiness honestly."

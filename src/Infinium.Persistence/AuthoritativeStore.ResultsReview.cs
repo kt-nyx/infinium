@@ -79,6 +79,13 @@ public sealed record FindingReportPagePersistenceRecord(
     bool HasMore,
     string ProjectionVersion);
 
+public sealed class FindingReportProjectionUnavailableException(string runId)
+    : InvalidOperationException(
+        $"Run '{runId}' retains canonical results but has no durable FindingReport publication projection.")
+{
+    public string RunId { get; } = runId;
+}
+
 public sealed record FindingReportDetailPersistenceRecord(
     FindingReportSummaryPersistenceRecord Summary,
     byte[] ReportPayload);
@@ -712,6 +719,18 @@ public sealed partial class AuthoritativeStore
         lock (gate)
         {
             _ = GetRunCore(runId);
+            long reportCount = ScalarLong(
+                "SELECT COUNT(*) FROM finding_report_publications WHERE run_id=$run;",
+                null,
+                ("$run", runId));
+            long resultCount = ScalarLong(
+                "SELECT COUNT(*) FROM result_projection_items WHERE run_id=$run;",
+                null,
+                ("$run", runId));
+            if (reportCount == 0 && resultCount > 0)
+            {
+                throw new FindingReportProjectionUnavailableException(runId);
+            }
             using SqliteCommand command = connection.CreateCommand();
             string stateParameters = string.Join(',', closedStates.Select((_, index) => "$state" + index));
             string order = sort == "state" ? "report_state,report_id" : "report_id";
