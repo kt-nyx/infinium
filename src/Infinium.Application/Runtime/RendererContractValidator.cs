@@ -17,7 +17,16 @@ public sealed record RendererEnvelope(
     string Operation,
     string? RequestId,
     string? SubscriptionId,
-    string? Revision);
+    string? Revision,
+    string? GestureId,
+    string? Outcome);
+
+public sealed record RendererMessageDefinition(
+    string Operation,
+    string MessageKind,
+    string PayloadShape,
+    string Gesture,
+    IReadOnlyList<string> Outcomes);
 
 /// <summary>
 /// Validates the closed renderer transport and advances one host-session
@@ -25,8 +34,10 @@ public sealed record RendererEnvelope(
 /// </summary>
 public sealed class RendererContractValidator(string expectedSessionId)
 {
+    private readonly object sessionState = new();
     private ulong lastSequence;
     private readonly HashSet<string> observedRequestIds = new(StringComparer.Ordinal);
+    private readonly HashSet<string> observedGestureIds = new(StringComparer.Ordinal);
 
     public RendererEnvelope ValidateAndAdvance(ReadOnlyMemory<byte> bytes)
     {
@@ -47,39 +58,92 @@ public sealed class RendererContractValidator(string expectedSessionId)
             throw new InvalidDataException("The renderer envelope belongs to another host session; resync is required.");
         }
 
+        string messageKind = root.GetProperty("message_kind").GetString()!;
+        string operation = root.GetProperty("operation").GetString()!;
+        RendererMessageDefinition definition = RendererOperationRegistry.FindDefinition(operation, messageKind)
+            ?? throw new InvalidDataException("The renderer operation and message kind are not registered.");
+        string? gestureId = root.TryGetProperty("gesture_proof", out JsonElement gesture)
+            ? gesture.GetProperty("gesture_id").GetString()
+            : null;
+        if ((definition.Gesture == "required") != (gestureId is not null))
+        {
+            throw new InvalidDataException("The renderer gesture requirement does not match the registered operation.");
+        }
+
+        string? outcome = root.GetProperty("payload").TryGetProperty("outcome", out JsonElement outcomeElement)
+            ? outcomeElement.GetString()
+            : null;
+        if (definition.Outcomes.Count > 0
+            && (outcome is null || !definition.Outcomes.Contains(outcome, StringComparer.Ordinal)))
+        {
+            throw new InvalidDataException("The renderer outcome is not registered for this message.");
+        }
+
+        if (definition.Outcomes.Count == 0 && outcome is not null)
+        {
+            throw new InvalidDataException("A renderer request cannot claim an operation outcome.");
+        }
+
         ulong sequence = root.GetProperty("sequence").GetUInt64();
-        if (sequence <= lastSequence)
-        {
-            throw new InvalidDataException("The renderer envelope was replayed.");
-        }
-
-        if (sequence != checked(lastSequence + 1))
-        {
-            throw new InvalidDataException("The renderer envelope is out of order; resync is required.");
-        }
-
         string? requestId = root.TryGetProperty("request_id", out JsonElement request)
             ? request.GetString()
             : null;
-        if (requestId is not null && !observedRequestIds.Add(requestId))
+        bool commitsRequestId = messageKind == "request";
+        lock (sessionState)
         {
-            throw new InvalidDataException("The renderer request identifier was replayed.");
+            if (sequence <= lastSequence)
+            {
+                throw new InvalidDataException("The renderer envelope was replayed.");
+            }
+
+            if (sequence != checked(lastSequence + 1))
+            {
+                throw new InvalidDataException("The renderer envelope is out of order; resync is required.");
+            }
+
+            if (commitsRequestId && observedRequestIds.Contains(requestId!))
+            {
+                throw new InvalidDataException("The renderer request identifier was replayed.");
+            }
+
+            if (commitsRequestId && observedRequestIds.Count == ProtocolConstants.MaximumStreamQueueItems)
+            {
+                throw new InvalidDataException("The renderer request replay window is exhausted; resync is required.");
+            }
+
+            if (gestureId is not null && observedGestureIds.Contains(gestureId))
+            {
+                throw new InvalidDataException("The renderer one-shot gesture was replayed.");
+            }
+
+            if (gestureId is not null && observedGestureIds.Count == ProtocolConstants.MaximumStreamQueueItems)
+            {
+                throw new InvalidDataException("The renderer gesture replay window is exhausted; resync is required.");
+            }
+
+            if (commitsRequestId)
+            {
+                observedRequestIds.Add(requestId!);
+            }
+
+            if (gestureId is not null)
+            {
+                observedGestureIds.Add(gestureId);
+            }
+
+            lastSequence = sequence;
         }
 
-        if (observedRequestIds.Count > ProtocolConstants.MaximumStreamQueueItems)
-        {
-            throw new InvalidDataException("The renderer replay window is exhausted; resync is required.");
-        }
-
-        lastSequence = sequence;
         return new RendererEnvelope(
-            root.GetProperty("message_kind").GetString()!,
+            messageKind,
             sessionId,
             sequence,
-            root.GetProperty("operation").GetString()!,
+            operation,
             requestId,
             root.TryGetProperty("subscription_id", out JsonElement subscription) ? subscription.GetString() : null,
-            root.TryGetProperty("revision", out JsonElement revision) ? revision.GetString() : null);
+            root.TryGetProperty("revision", out JsonElement revision) ? revision.GetString() : null,
+            gestureId,
+            outcome);
     }
 }
 
@@ -87,6 +151,8 @@ public static class RendererOperationRegistry
 {
     public const string ResourceName =
         "Infinium.Contracts.Renderer.renderer-operation-registry.v1.json";
+    private static readonly Lazy<IReadOnlyList<RendererMessageDefinition>> Definitions =
+        new(ReadDefinitions, LazyThreadSafetyMode.ExecutionAndPublication);
 
     public static byte[] GetCanonicalInput()
     {
@@ -107,6 +173,38 @@ public static class RendererOperationRegistry
 
     public static string GetCanonicalSha256() =>
         Convert.ToHexString(SHA256.HashData(GetCanonicalInput())).ToLowerInvariant();
+
+    public static IReadOnlyList<RendererMessageDefinition> GetDefinitions() => Definitions.Value;
+
+    public static RendererMessageDefinition? FindDefinition(string operation, string messageKind) =>
+        Definitions.Value.SingleOrDefault(definition =>
+            StringComparer.Ordinal.Equals(definition.Operation, operation)
+            && StringComparer.Ordinal.Equals(definition.MessageKind, messageKind));
+
+    private static System.Collections.ObjectModel.ReadOnlyCollection<RendererMessageDefinition> ReadDefinitions()
+    {
+        byte[] bytes = GetCanonicalInput();
+        using JsonDocument document = JsonDocument.Parse(bytes);
+        List<RendererMessageDefinition> definitions = [];
+        foreach (JsonElement operation in document.RootElement.GetProperty("operations").EnumerateArray())
+        {
+            string operationName = operation.GetProperty("operation").GetString()!;
+            foreach (JsonElement message in operation.GetProperty("messages").EnumerateArray())
+            {
+                List<string> outcomes = message.TryGetProperty("outcomes", out JsonElement outcomeArray)
+                    ? outcomeArray.EnumerateArray().Select(item => item.GetString()!).ToList()
+                    : [];
+                definitions.Add(new RendererMessageDefinition(
+                    operationName,
+                    message.GetProperty("message_kind").GetString()!,
+                    message.GetProperty("payload_shape").GetString()!,
+                    message.GetProperty("gesture").GetString()!,
+                    outcomes.AsReadOnly()));
+            }
+        }
+
+        return definitions.AsReadOnly();
+    }
 }
 
 public static class RendererBootstrapAdapter
@@ -292,17 +390,69 @@ public static class ApplicationContractValidator
         RequireId(receipt.ReceiptId, "receipt ID");
         if (!Enum.IsDefined(receipt.Disposition)
             || receipt.Disposition is OperationDisposition.Unspecified
-                or OperationDisposition.Unknown
-                or OperationDisposition.Unsupported)
+                or OperationDisposition.Unknown)
         {
             throw new InvalidDataException("The operation receipt disposition is not usable.");
         }
 
-        if (receipt.Disposition == OperationDisposition.Conflict
-            && (receipt.Conflict is null
-                || string.IsNullOrWhiteSpace(receipt.Conflict.Current?.OpaqueValue)))
+        switch (receipt.Disposition)
         {
-            throw new InvalidDataException("A conflict receipt requires the current revision.");
+            case OperationDisposition.Accepted:
+            case OperationDisposition.AlreadyAccepted:
+                if (receipt.Error is not null || receipt.Conflict is not null)
+                {
+                    throw new InvalidDataException("A successful operation receipt cannot contain a failure.");
+                }
+
+                break;
+            case OperationDisposition.Rejected:
+                ValidateError(receipt.Error,
+                    ApplicationErrorCode.InvalidArgument,
+                    ApplicationErrorCode.Unauthenticated,
+                    ApplicationErrorCode.Unauthorized,
+                    ApplicationErrorCode.NotFound,
+                    ApplicationErrorCode.IncompatibleVersion,
+                    ApplicationErrorCode.LimitExceeded,
+                    ApplicationErrorCode.DeadlineExpired,
+                    ApplicationErrorCode.StaleFence,
+                    ApplicationErrorCode.Internal,
+                    ApplicationErrorCode.Replayed,
+                    ApplicationErrorCode.OutOfOrder);
+                break;
+            case OperationDisposition.Conflict:
+                if (receipt.Conflict is null
+                    || string.IsNullOrWhiteSpace(receipt.Conflict.Expected?.OpaqueValue)
+                    || string.IsNullOrWhiteSpace(receipt.Conflict.Current?.OpaqueValue)
+                    || !Enum.IsDefined(receipt.Conflict.Disposition)
+                    || receipt.Conflict.Disposition is ConflictDisposition.Unspecified
+                        or ConflictDisposition.Unknown
+                        or ConflictDisposition.Unsupported)
+                {
+                    throw new InvalidDataException("A conflict receipt requires usable expected and current revisions.");
+                }
+
+                ValidateError(receipt.Error, ApplicationErrorCode.Conflict);
+                break;
+            case OperationDisposition.Indeterminate:
+                ValidateError(receipt.Error, ApplicationErrorCode.Indeterminate);
+                break;
+            case OperationDisposition.Cancelled:
+                ValidateError(receipt.Error, ApplicationErrorCode.Cancelled);
+                break;
+            case OperationDisposition.Unsupported:
+                ValidateError(receipt.Error, ApplicationErrorCode.Unsupported);
+                break;
+            case OperationDisposition.Unavailable:
+                ValidateError(receipt.Error, ApplicationErrorCode.Unavailable);
+                break;
+            case OperationDisposition.ResyncRequired:
+                ValidateError(receipt.Error, ApplicationErrorCode.ResyncRequired);
+                if (string.IsNullOrWhiteSpace(receipt.Error.CurrentProjectionVersion?.Value))
+                {
+                    throw new InvalidDataException("A resync-required receipt requires the current projection version.");
+                }
+
+                break;
         }
     }
 
@@ -314,6 +464,61 @@ public static class ApplicationContractValidator
         if (StringComparer.Ordinal.Equals(request.RequestId, request.TargetRequestId))
         {
             throw new InvalidDataException("A cancellation request cannot target itself.");
+        }
+    }
+
+    public static void Validate(CancellationReceipt receipt)
+    {
+        ArgumentNullException.ThrowIfNull(receipt);
+        RequireId(receipt.RequestId, "request ID");
+        RequireId(receipt.TargetRequestId, "target request ID");
+        if (!Enum.IsDefined(receipt.Disposition)
+            || receipt.Disposition is CancellationDisposition.Unspecified
+                or CancellationDisposition.Unknown)
+        {
+            throw new InvalidDataException("The cancellation receipt disposition is not usable.");
+        }
+
+        switch (receipt.Disposition)
+        {
+            case CancellationDisposition.TransportOnly:
+                if (receipt.Error is not null)
+                {
+                    throw new InvalidDataException("A successful cancellation receipt cannot contain a failure.");
+                }
+
+                break;
+            case CancellationDisposition.NotFound:
+                ValidateError(receipt.Error, ApplicationErrorCode.NotFound);
+                break;
+            case CancellationDisposition.AlreadyCompleted:
+                ValidateError(receipt.Error, ApplicationErrorCode.Conflict);
+                break;
+            case CancellationDisposition.Rejected:
+                ValidateError(receipt.Error,
+                    ApplicationErrorCode.InvalidArgument,
+                    ApplicationErrorCode.Unauthorized,
+                    ApplicationErrorCode.StaleFence,
+                    ApplicationErrorCode.Internal);
+                break;
+            case CancellationDisposition.Unsupported:
+                ValidateError(receipt.Error, ApplicationErrorCode.Unsupported);
+                break;
+        }
+    }
+
+    private static void ValidateError(
+        ApplicationContractError? error,
+        params ApplicationErrorCode[] allowedCodes)
+    {
+        if (error is null
+            || !Enum.IsDefined(error.Code)
+            || error.Code is ApplicationErrorCode.Unspecified or ApplicationErrorCode.Unknown
+            || !allowedCodes.Contains(error.Code)
+            || string.IsNullOrWhiteSpace(error.InertDetail)
+            || error.InertDetail.Length > 4096)
+        {
+            throw new InvalidDataException("The typed application failure is missing, unknown, or inconsistent with its disposition.");
         }
     }
 

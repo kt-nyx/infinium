@@ -14,7 +14,7 @@
     "domain_contract_version": "1.3.0",
     "storage_contract_version": "1.10.0",
     "renderer_contract_version": "1.0.0",
-    "schema_fingerprint_sha256": "b438e15250bf23f8b7f290ccf46292b5dcfd249ac15284881f7ef6251844bf48",
+    "schema_fingerprint_sha256": "9fd040e628aa5708f6fd570de1a3d20214e115c6014e660d82b1581d0db15d28",
     "declared_rpc_count": 23,
     "implemented_rpc_count": 17,
     "bounds": {
@@ -774,7 +774,7 @@
       "input": "contracts/json-schema/renderer-envelope.v1.schema.json and contracts/renderer/renderer-operation-registry.v1.json",
       "generated_consumer": "C# reference validator now; TypeScript renderer bindings and host adapters remain WP7",
       "owner": "WP2 contract source and reference validator; WP7 generated product consumers",
-      "drift_check": "canonical registry SHA-256 c302d6cc6728cdab1d65a618313b357d828af01a41069156bc1bfca52433d9ac plus schema and generated-binding checks"
+      "drift_check": "canonical registry SHA-256 b218f5a18198f9e9a2b1ee4ccc4b2ada88a6f8c3668dfca4d2d956f6fbd75704 plus schema and generated-binding checks"
     }
   ]
 }

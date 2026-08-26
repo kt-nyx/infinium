@@ -3,6 +3,86 @@
   "$id": "https://schemas.infinium.dev/json-schema/renderer-envelope.v1.schema.json",
   "title": "Infinium closed renderer envelope v1",
   "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" },
+    "revision": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,256}$" },
+    "inertErrorBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "inert_detail", "retry_may_be_safe"],
+      "properties": {
+        "code": { "type": "string" },
+        "inert_detail": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "retry_may_be_safe": { "type": "boolean" }
+      }
+    },
+    "rejectedError": {
+      "allOf": [
+        { "$ref": "#/$defs/inertErrorBase" },
+        { "properties": { "code": { "enum": ["invalid-argument", "unauthenticated", "unauthorized", "not-found", "incompatible-version", "limit-exceeded", "deadline-expired", "stale-fence", "internal", "replayed", "out-of-order"] } } }
+      ]
+    },
+    "conflictError": {
+      "allOf": [{ "$ref": "#/$defs/inertErrorBase" }, { "properties": { "code": { "const": "conflict" } } }]
+    },
+    "unsupportedError": {
+      "allOf": [{ "$ref": "#/$defs/inertErrorBase" }, { "properties": { "code": { "const": "unsupported" } } }]
+    },
+    "unavailableError": {
+      "allOf": [{ "$ref": "#/$defs/inertErrorBase" }, { "properties": { "code": { "const": "unavailable" } } }]
+    },
+    "cancelledError": {
+      "allOf": [{ "$ref": "#/$defs/inertErrorBase" }, { "properties": { "code": { "const": "cancelled" } } }]
+    },
+    "indeterminateError": {
+      "allOf": [{ "$ref": "#/$defs/inertErrorBase" }, { "properties": { "code": { "const": "indeterminate" } } }]
+    },
+    "resyncRequiredError": {
+      "allOf": [{ "$ref": "#/$defs/inertErrorBase" }, { "properties": { "code": { "const": "resync-required" } } }]
+    },
+    "conflict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_revision", "current_revision", "disposition"],
+      "properties": {
+        "expected_revision": { "$ref": "#/$defs/revision" },
+        "current_revision": { "$ref": "#/$defs/revision" },
+        "disposition": { "enum": ["stale-revision", "already-applied", "resync-required"] }
+      }
+    },
+    "rejectedResponse": {
+      "type": "object", "additionalProperties": false, "required": ["outcome", "error"],
+      "properties": { "outcome": { "const": "rejected" }, "error": { "$ref": "#/$defs/rejectedError" } }
+    },
+    "conflictResponse": {
+      "type": "object", "additionalProperties": false, "required": ["outcome", "error", "conflict"],
+      "properties": {
+        "outcome": { "const": "conflict" }, "error": { "$ref": "#/$defs/conflictError" }, "conflict": { "$ref": "#/$defs/conflict" }
+      }
+    },
+    "unsupportedResponse": {
+      "type": "object", "additionalProperties": false, "required": ["outcome", "error"],
+      "properties": { "outcome": { "const": "unsupported" }, "error": { "$ref": "#/$defs/unsupportedError" } }
+    },
+    "unavailableResponse": {
+      "type": "object", "additionalProperties": false, "required": ["outcome", "error"],
+      "properties": { "outcome": { "const": "unavailable" }, "error": { "$ref": "#/$defs/unavailableError" } }
+    },
+    "cancelledResponse": {
+      "type": "object", "additionalProperties": false, "required": ["outcome", "error"],
+      "properties": { "outcome": { "const": "cancelled" }, "error": { "$ref": "#/$defs/cancelledError" } }
+    },
+    "indeterminateResponse": {
+      "type": "object", "additionalProperties": false, "required": ["outcome", "error"],
+      "properties": { "outcome": { "const": "indeterminate" }, "error": { "$ref": "#/$defs/indeterminateError" } }
+    },
+    "resyncRequiredResponse": {
+      "type": "object", "additionalProperties": false, "required": ["outcome", "error", "current_projection_version"],
+      "properties": {
+        "outcome": { "const": "resync-required" },
+        "error": { "$ref": "#/$defs/resyncRequiredError" },
+        "current_projection_version": { "type": "string", "minLength": 1, "maxLength": 64 }
+      }
+    },
     "bootstrap": {
       "type": "object",
       "additionalProperties": false,
@@ -12,8 +92,8 @@
         "domain_contract_version": { "const": "1.3.0" },
         "storage_contract_version": { "const": "1.10.0" },
         "renderer_contract_version": { "const": "1.0.0" },
-        "coordinator_health": { "enum": ["healthy", "degraded", "unavailable", "unknown", "unsupported"] },
-        "configuration_availability": { "enum": ["available", "partial", "unavailable", "unknown", "unsupported"] },
+        "coordinator_health": { "enum": ["healthy", "degraded", "unavailable"] },
+        "configuration_availability": { "enum": ["available", "partial", "unavailable"] },
         "capabilities": {
           "type": "array", "maxItems": 16, "uniqueItems": true,
           "items": {
@@ -21,7 +101,7 @@
             "required": ["capability", "availability", "inert_reason"],
             "properties": {
               "capability": { "enum": ["bootstrap", "run-query", "event-resync", "configuration", "provider-enrollment"] },
-              "availability": { "enum": ["available", "partial", "unavailable", "unknown", "unsupported"] },
+              "availability": { "enum": ["available", "partial", "unavailable"] },
               "inert_reason": { "type": "string", "minLength": 1, "maxLength": 512 }
             }
           }
@@ -42,6 +122,50 @@
         "coordinator_instance_id": { "type": "string", "minLength": 1, "maxLength": 128 },
         "coordinator_fencing_epoch": { "type": "integer", "minimum": 1 }
       }
+    },
+    "bootstrapRequest": {
+      "type": "object", "additionalProperties": false, "required": ["maximum_recent_runs"],
+      "properties": {
+        "maximum_recent_runs": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "expected_projection_version": { "type": "string", "minLength": 1, "maxLength": 64 }
+      }
+    },
+    "bootstrapAcceptedResponse": {
+      "type": "object", "additionalProperties": false, "required": ["outcome", "bootstrap"],
+      "properties": { "outcome": { "const": "accepted" }, "bootstrap": { "$ref": "#/$defs/bootstrap" } }
+    },
+    "bootstrapResponse": {
+      "oneOf": [
+        { "$ref": "#/$defs/bootstrapAcceptedResponse" }, { "$ref": "#/$defs/rejectedResponse" },
+        { "$ref": "#/$defs/conflictResponse" }, { "$ref": "#/$defs/unsupportedResponse" },
+        { "$ref": "#/$defs/unavailableResponse" }, { "$ref": "#/$defs/cancelledResponse" },
+        { "$ref": "#/$defs/indeterminateResponse" }, { "$ref": "#/$defs/resyncRequiredResponse" }
+      ]
+    },
+    "cancelRequest": {
+      "type": "object", "additionalProperties": false, "required": ["target_request_id"],
+      "properties": { "target_request_id": { "$ref": "#/$defs/identifier" } }
+    },
+    "cancelAcceptedResponse": {
+      "type": "object", "additionalProperties": false, "required": ["outcome"],
+      "properties": { "outcome": { "const": "accepted" } }
+    },
+    "cancelResponse": {
+      "oneOf": [
+        { "$ref": "#/$defs/cancelAcceptedResponse" }, { "$ref": "#/$defs/rejectedResponse" },
+        { "$ref": "#/$defs/conflictResponse" }, { "$ref": "#/$defs/unsupportedResponse" },
+        { "$ref": "#/$defs/unavailableResponse" }, { "$ref": "#/$defs/cancelledResponse" },
+        { "$ref": "#/$defs/indeterminateResponse" }, { "$ref": "#/$defs/resyncRequiredResponse" }
+      ]
+    },
+    "resyncEvent": {
+      "type": "object", "additionalProperties": false,
+      "required": ["outcome", "error", "current_projection_version"],
+      "properties": {
+        "outcome": { "const": "resync-required" },
+        "error": { "$ref": "#/$defs/resyncRequiredError" },
+        "current_projection_version": { "type": "string", "minLength": 1, "maxLength": 64 }
+      }
     }
   },
   "type": "object",
@@ -50,63 +174,43 @@
   "properties": {
     "contract_version": { "const": "1.0.0" },
     "message_kind": { "enum": ["request", "response", "event"] },
-    "session_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" },
+    "session_id": { "$ref": "#/$defs/identifier" },
     "sequence": { "type": "integer", "minimum": 1 },
-    "request_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" },
-    "subscription_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" },
-    "revision": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,256}$" },
+    "request_id": { "$ref": "#/$defs/identifier" },
+    "subscription_id": { "$ref": "#/$defs/identifier" },
+    "revision": { "$ref": "#/$defs/revision" },
     "operation": { "enum": ["application.bootstrap", "application.cancel", "application.resync-required"] },
     "gesture_proof": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["gesture_id"],
-      "properties": {
-        "gesture_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" }
-      }
+      "type": "object", "additionalProperties": false, "required": ["gesture_id"],
+      "properties": { "gesture_id": { "$ref": "#/$defs/identifier" } }
     },
-    "payload": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "maximum_recent_runs": { "type": "integer", "minimum": 1, "maximum": 20 },
-        "expected_projection_version": { "type": "string", "minLength": 1, "maxLength": 64 },
-        "target_request_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" },
-        "outcome": { "enum": ["accepted", "rejected", "conflict", "indeterminate", "cancelled", "resync-required"] },
-        "error_code": { "enum": ["invalid-argument", "unauthenticated", "unauthorized", "not-found", "conflict", "incompatible-version", "unsupported", "limit-exceeded", "deadline-expired", "stale-fence", "resync-required", "indeterminate", "internal", "replayed", "out-of-order", "unknown"] },
-        "inert_detail": { "type": "string", "maxLength": 4096 },
-        "current_projection_version": { "type": "string", "minLength": 1, "maxLength": 64 }
-        ,"bootstrap": { "$ref": "#/$defs/bootstrap" }
-      }
-    }
+    "payload": { "type": "object" }
   },
-  "allOf": [
+  "oneOf": [
     {
-      "if": { "properties": { "message_kind": { "const": "request" } } },
-      "then": { "required": ["request_id"] }
+      "required": ["request_id"],
+      "properties": { "message_kind": { "const": "request" }, "operation": { "const": "application.bootstrap" }, "payload": { "$ref": "#/$defs/bootstrapRequest" } },
+      "not": { "anyOf": [{ "required": ["subscription_id"] }, { "required": ["gesture_proof"] }, { "required": ["revision"] }] }
     },
     {
-      "if": { "properties": { "message_kind": { "const": "response" } } },
-      "then": { "required": ["request_id"], "properties": { "payload": { "required": ["outcome"] } } }
+      "required": ["request_id"],
+      "properties": { "message_kind": { "const": "response" }, "operation": { "const": "application.bootstrap" }, "payload": { "$ref": "#/$defs/bootstrapResponse" } },
+      "not": { "anyOf": [{ "required": ["subscription_id"] }, { "required": ["gesture_proof"] }] }
     },
     {
-      "if": { "properties": { "message_kind": { "const": "event" } } },
-      "then": { "required": ["subscription_id"] }
+      "required": ["request_id", "gesture_proof"],
+      "properties": { "message_kind": { "const": "request" }, "operation": { "const": "application.cancel" }, "payload": { "$ref": "#/$defs/cancelRequest" } },
+      "not": { "anyOf": [{ "required": ["subscription_id"] }, { "required": ["revision"] }] }
     },
     {
-      "if": { "properties": { "operation": { "const": "application.bootstrap" }, "message_kind": { "const": "request" } } },
-      "then": { "properties": { "payload": { "required": ["maximum_recent_runs"] } } }
+      "required": ["request_id"],
+      "properties": { "message_kind": { "const": "response" }, "operation": { "const": "application.cancel" }, "payload": { "$ref": "#/$defs/cancelResponse" } },
+      "not": { "anyOf": [{ "required": ["subscription_id"] }, { "required": ["gesture_proof"] }] }
     },
     {
-      "if": { "properties": { "operation": { "const": "application.bootstrap" }, "message_kind": { "const": "response" } } },
-      "then": { "properties": { "payload": { "required": ["bootstrap"] } } }
-    },
-    {
-      "if": { "properties": { "operation": { "const": "application.cancel" } } },
-      "then": { "required": ["gesture_proof"], "properties": { "payload": { "required": ["target_request_id"] } } }
-    },
-    {
-      "if": { "properties": { "operation": { "const": "application.resync-required" } } },
-      "then": { "properties": { "message_kind": { "const": "event" }, "payload": { "required": ["current_projection_version"] } } }
+      "required": ["subscription_id", "revision"],
+      "properties": { "message_kind": { "const": "event" }, "operation": { "const": "application.resync-required" }, "payload": { "$ref": "#/$defs/resyncEvent" } },
+      "not": { "anyOf": [{ "required": ["request_id"] }, { "required": ["gesture_proof"] }] }
     }
   ]
 }

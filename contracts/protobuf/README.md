@@ -188,7 +188,7 @@ application 1.4.0, domain 1.3.0, storage 1.10.0, and renderer 1.0.0 version
 axes and exposes a bounded display-safe bootstrap alongside the existing
 non-secret provider profile, operation, budget, replay, and command shapes. Its
 full contract-set fingerprint is
-`b438e15250bf23f8b7f290ccf46292b5dcfd249ac15284881f7ef6251844bf48`.
+`9fd040e628aa5708f6fd570de1a3d20214e115c6014e660d82b1581d0db15d28`.
 Helper v2 has a separate fingerprint over only its helper/common/identity
 transitive closure; its fail-closed decoder rejects unknown nested fields,
 unknown enum numerics, and contradictory assignment, revalidation, or receipt

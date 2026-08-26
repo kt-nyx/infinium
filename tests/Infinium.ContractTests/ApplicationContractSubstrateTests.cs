@@ -55,6 +55,11 @@ public sealed class ApplicationContractSubstrateTests
                 Current = new RevisionToken { OpaqueValue = "revision-current" },
                 Disposition = ConflictDisposition.StaleRevision,
             },
+            Error = new ApplicationContractError
+            {
+                Code = ApplicationErrorCode.Conflict,
+                InertDetail = "The expected revision is stale.",
+            },
         };
         ApplicationContractValidator.Validate(receipt);
         Assert.AreEqual(receipt, UserOperationReceipt.Parser.ParseFrom(receipt.ToByteArray()));
@@ -157,7 +162,7 @@ public sealed class ApplicationContractSubstrateTests
     {
         byte[] registry = RendererOperationRegistry.GetCanonicalInput();
         Assert.AreEqual(
-            "c302d6cc6728cdab1d65a618313b357d828af01a41069156bc1bfca52433d9ac",
+            "b218f5a18198f9e9a2b1ee4ccc4b2ada88a6f8c3668dfca4d2d956f6fbd75704",
             RendererOperationRegistry.GetCanonicalSha256());
         byte[] schema = File.ReadAllBytes(TestRepository.PathFromRoot(
             "contracts", "json-schema", "renderer-operation-registry.v1.schema.json"));
@@ -179,9 +184,8 @@ public sealed class ApplicationContractSubstrateTests
         changed["operations"]!.AsArray().Add(new JsonObject
         {
             ["operation"] = "generic.invoke",
-            ["message_kinds"] = new JsonArray("request"),
             ["native_target"] = "GenericProxy",
-            ["gesture"] = "not-required",
+            ["messages"] = new JsonArray(),
             ["maturity"] = "producer-consumer-validated",
             ["owner"] = "frontend-application-contract-foundation",
         });
@@ -270,8 +274,19 @@ public sealed class ApplicationContractSubstrateTests
                 session_id = Session,
                 sequence = 1,
                 subscription_id = "subscription_00001",
+                revision = "2",
                 operation = "application.resync-required",
-                payload = new { current_projection_version = "2" },
+                payload = new
+                {
+                    outcome = "resync-required",
+                    error = new
+                    {
+                        code = "resync-required",
+                        inert_detail = "The event stream must be resynchronized.",
+                        retry_may_be_safe = true,
+                    },
+                    current_projection_version = "2",
+                },
             }));
         Assert.AreEqual("application.resync-required", resync.Operation);
     }

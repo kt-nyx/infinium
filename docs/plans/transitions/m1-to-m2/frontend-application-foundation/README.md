@@ -1,7 +1,7 @@
 # M1-to-M2 Foundation — Frontend Application Foundation
 
 Status: Accepted
-Disposition: Checkpoint A reached; Phase A contract foundation accepted and Phase B not started
+Disposition: Corrected Checkpoint A reached; Phase A contract foundation accepted and Phase B not started
 
 Last reviewed: 2026-08-25
 Owner: Project owner
@@ -55,11 +55,12 @@ escalation defined by the plan.
 
 ## Current authority
 
-The owner accepted the planning package and Phase A implementation. WP1 and
-WP2 now provide the exact authority inventory, bounded application bootstrap,
-common contract vocabulary, and closed renderer contract source. Checkpoint A
-automatically unblocks Phase B under the accepted plan, but this Phase A task
-did not start WP3 or WP4.
+The owner accepted the planning package and the corrected Phase A
+implementation. Focused verification, re-review, and the corrected complete
+floor support Checkpoint A. WP1 and WP2 provide the exact authority inventory,
+bounded application bootstrap, common contract vocabulary, and closed renderer
+contract source. Checkpoint A automatically unblocks Phase B under the accepted
+plan, but this Phase A task did not start WP3 or WP4.
 
 M2 remains inactive until a separate accepted M2 plan exists. The transition's
 diagnostic React surface is development evidence, not the M2 interface.

@@ -13,25 +13,53 @@
   "operations": [
     {
       "operation": "application.bootstrap",
-      "message_kinds": ["request", "response"],
       "native_target": "ApplicationService.GetApplicationBootstrap",
-      "gesture": "not-required",
+      "messages": [
+        {
+          "message_kind": "request",
+          "payload_shape": "bootstrap-request",
+          "gesture": "not-allowed"
+        },
+        {
+          "message_kind": "response",
+          "payload_shape": "bootstrap-response",
+          "gesture": "not-allowed",
+          "outcomes": ["accepted", "rejected", "conflict", "unsupported", "unavailable", "cancelled", "indeterminate", "resync-required"]
+        }
+      ],
       "maturity": "producer-consumer-validated",
       "owner": "frontend-application-contract-foundation"
     },
     {
       "operation": "application.cancel",
-      "message_kinds": ["request", "response"],
       "native_target": "DesktopHost.TransportCancellation",
-      "gesture": "required",
+      "messages": [
+        {
+          "message_kind": "request",
+          "payload_shape": "cancel-request",
+          "gesture": "required"
+        },
+        {
+          "message_kind": "response",
+          "payload_shape": "cancel-response",
+          "gesture": "not-allowed",
+          "outcomes": ["accepted", "rejected", "conflict", "unsupported", "unavailable", "cancelled", "indeterminate", "resync-required"]
+        }
+      ],
       "maturity": "producer-consumer-validated",
       "owner": "frontend-application-contract-foundation"
     },
     {
       "operation": "application.resync-required",
-      "message_kinds": ["event"],
       "native_target": "DesktopHost.ResyncProjection",
-      "gesture": "not-required",
+      "messages": [
+        {
+          "message_kind": "event",
+          "payload_shape": "resync-required-event",
+          "gesture": "not-allowed",
+          "outcomes": ["resync-required"]
+        }
+      ],
       "maturity": "producer-consumer-validated",
       "owner": "frontend-application-contract-foundation"
     }
