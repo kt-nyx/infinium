@@ -290,6 +290,18 @@ public sealed partial class AuthoritativeStore
             {
                 ValidateScopeReversionV2Migration();
             }
+            using SqliteCommand setupVersionCommand = connection.CreateCommand();
+            setupVersionCommand.CommandText = "PRAGMA user_version;";
+            int setupVersion = Convert.ToInt32(setupVersionCommand.ExecuteScalar(),
+                System.Globalization.CultureInfo.InvariantCulture);
+            if (setupVersion == 11)
+            {
+                ApplyApplicationSetupMigration();
+            }
+            else if (setupVersion == 12)
+            {
+                ValidateApplicationSetupMigration();
+            }
         }
     }
 
@@ -2327,6 +2339,8 @@ public sealed partial class AuthoritativeStore
         "index:idx_provider_semantic_admission_artifact_owner",
         "index:idx_provider_request_fingerprint",
         "table:analysis_candidates",
+        "table:application_setup_objects",
+        "table:application_setup_receipts",
         "table:analysis_coverage",
         "table:analysis_coverage_failure_links",
         "table:analysis_coverage_gap_links",
@@ -2444,6 +2458,14 @@ public sealed partial class AuthoritativeStore
         "table:provider_settlements",
         "table:provider_transport_events",
         "table:provider_usage_entries",
+        "table:prepared_manual_runs",
+        "table:prepared_run_submissions",
+        "trigger:application_setup_receipts_append_only_delete",
+        "trigger:application_setup_receipts_append_only_update",
+        "trigger:prepared_manual_runs_append_only_delete",
+        "trigger:prepared_manual_runs_append_only_update",
+        "trigger:prepared_run_submissions_append_only_delete",
+        "trigger:prepared_run_submissions_append_only_update",
         "trigger:m1_slice6_successor_semantic_response_bindings_append_only_delete",
         "trigger:m1_slice6_successor_semantic_response_bindings_append_only_update",
         "trigger:m1_slice6_successor_v6_budget_events_append_only_delete",

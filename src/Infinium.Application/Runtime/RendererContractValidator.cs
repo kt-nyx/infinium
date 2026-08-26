@@ -383,6 +383,42 @@ public static class ApplicationContractValidator
         }
     }
 
+    public static void Validate(GetSetupStateRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        RejectUnknownFields(request, "$setup-query");
+        if (request.MaximumSavedConfigurations is 0 or > ProtocolConstants.MaximumPageItems)
+        {
+            throw new InvalidDataException(
+                "The saved-configuration query exceeds its finite bound.");
+        }
+    }
+
+    public static void Validate(SubmitSetupCommandRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        RejectUnknownFields(request, "$setup-command");
+        RequireId(request.RequestId, "setup request ID");
+        if (request.CommandCase == SubmitSetupCommandRequest.CommandOneofCase.None)
+        {
+            throw new InvalidDataException("A closed setup command is required.");
+        }
+    }
+
+    public static void Validate(PrepareManualRunRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        RejectUnknownFields(request, "$run-preparation");
+        RequireId(request.RequestId, "run-preparation request ID");
+    }
+
+    public static void Validate(SubmitPreparedRunRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        RejectUnknownFields(request, "$prepared-run-command");
+        RequireId(request.IdempotencyKey?.Value ?? string.Empty, "durable command ID");
+    }
+
     public static void Validate(UserOperationReceipt receipt)
     {
         ArgumentNullException.ThrowIfNull(receipt);

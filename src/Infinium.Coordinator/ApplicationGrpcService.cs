@@ -127,8 +127,8 @@ public sealed partial class ApplicationGrpcService(
             CoordinatorHealth = HealthState.Healthy,
             Configuration = new ConfigurationAvailability
             {
-                Availability = Availability.Unavailable,
-                InertReason = "Saved application configuration is owned by a later work package.",
+                Availability = Availability.Available,
+                InertReason = "Versioned setup configuration and prepared local run input are available.",
             },
             ProjectionVersion = new ProjectionVersion { Value = "1" },
             CoordinatorInstanceId = new CoordinatorInstanceId
@@ -142,10 +142,10 @@ public sealed partial class ApplicationGrpcService(
         bootstrap.Capabilities.Add(
         [
             BuildApplicationCapability(ApplicationCapability.Bootstrap, Availability.Available, "Bootstrap projection is active."),
-            BuildApplicationCapability(ApplicationCapability.RunQuery, Availability.Partial, "Bounded run queries are active; later workflow queries remain unavailable."),
+            BuildApplicationCapability(ApplicationCapability.RunQuery, Availability.Available, "Typed prepared-run initiation and bounded run queries are active."),
             BuildApplicationCapability(ApplicationCapability.EventResync, Availability.Available, "Bounded event resync is active."),
-            BuildApplicationCapability(ApplicationCapability.Configuration, Availability.Unavailable, "Owned by the setup contract package."),
-            BuildApplicationCapability(ApplicationCapability.ProviderEnrollment, Availability.Unavailable, "Owned by the setup contract package."),
+            BuildApplicationCapability(ApplicationCapability.Configuration, Availability.Available, "Versioned setup configuration and prepared-run review are active."),
+            BuildApplicationCapability(ApplicationCapability.ProviderEnrollment, Availability.Partial, "Non-secret enrollment intent and status are active; native secret entry remains unavailable in this phase."),
         ]);
         return Task.FromResult(new GetApplicationBootstrapResponse { Bootstrap = bootstrap });
     }

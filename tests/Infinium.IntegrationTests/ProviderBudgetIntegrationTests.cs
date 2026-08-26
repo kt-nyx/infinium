@@ -2629,6 +2629,10 @@ public sealed class ProviderBudgetIntegrationTests
         command.CommandText =
             """
             DROP TRIGGER provider_semantic_validations_semantic_axes_guard;
+            DROP TABLE prepared_run_submissions;
+            DROP TABLE prepared_manual_runs;
+            DROP TABLE application_setup_receipts;
+            DROP TABLE application_setup_objects;
             DROP TABLE scope_reversion_v2_publications;
             DROP TABLE scope_reversion_v2_invalidations;
             DROP TABLE scope_reversion_v2_dependencies;
@@ -2679,6 +2683,7 @@ public sealed class ProviderBudgetIntegrationTests
             DELETE FROM migration_history WHERE migration_id='M1-S6-C2-SEMANTIC-0009';
             DELETE FROM migration_history WHERE migration_id='M1-S7-WP5-0010';
             DELETE FROM migration_history WHERE migration_id='M1-S8-WP4-0011';
+            DELETE FROM migration_history WHERE migration_id='application-setup-contract-0012';
             UPDATE store_metadata SET value='8' WHERE key='schema_version';
             UPDATE store_metadata SET value='1.7.0' WHERE key='storage_contract_version';
             UPDATE store_metadata

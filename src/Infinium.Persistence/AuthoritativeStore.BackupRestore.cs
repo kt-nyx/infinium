@@ -650,6 +650,21 @@ public sealed partial class AuthoritativeStore
             }
         }
 
+        using (var migration = database.CreateCommand())
+        {
+            migration.CommandText =
+                "SELECT COUNT(*) FROM migration_history "
+                + "WHERE migration_id='application-setup-contract-0012' AND from_version=11 AND to_version=12 "
+                + "AND sqlite_source_id=$source;";
+            migration.Parameters.AddWithValue("$source", binding.SourceId);
+            if (Convert.ToInt32(migration.ExecuteScalar(),
+                    System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The application setup storage migration is invalid.");
+            }
+        }
+
         HashSet<string> actualObjects = new(StringComparer.Ordinal);
         using (var schema = database.CreateCommand())
         {

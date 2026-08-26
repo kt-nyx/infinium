@@ -5,7 +5,7 @@
   "last_reviewed": "2026-08-25",
   "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
   "planning_base": "32dbb2c48754666336d2da571e554ad8897ed71c",
-  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner and to the audited application contract inventory. Phase A implementation does not claim later workflow completion, frontend delivery, broad semantic accuracy, or M2 acceptance.",
+  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner through Checkpoint B. The producer-consumer-validated setup-to-live-run native path does not claim Phase C result/review completion, desktop delivery, broad semantic accuracy, M2 activation, or M2 acceptance.",
   "application_contract_inventory": "application-contract-inventory.v1.json",
   "ownership_audit": {
     "capability_count": 19,
@@ -83,7 +83,7 @@
         "RendererContractValidator",
         "renderer-operation-registry.v1.json"
       ],
-      "gap": "The bounded producer and reference consumer are active; the product desktop host and TypeScript renderer consumer remain WP7 and no Phase B workflow is exposed.",
+      "gap": "The bounded producer and reference consumer are active; the product desktop host and TypeScript renderer consumer remain WP7 while Phase C result/review workflow is not exposed.",
       "owning_phase": "A",
       "owning_work_package": "WP2",
       "transition_exit_evidence": "Generated native and TypeScript consumers recover the same bounded bootstrap and typed resync states."
@@ -102,12 +102,13 @@
         "EVAL-0080",
         "EVAL-0091"
       ],
-      "current_state": "partial-or-developer-oriented",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "Exact M1 MO2 configuration/capture contracts",
-        "Human-readable CLI capability reporting"
+        "ApplicationService.GetSetupState and SubmitSetupCommand",
+        "Exact typed MO2/LOOT validation states and tool-specific roots",
+        "SolutionIntegrationTests native diagnostic client"
       ],
-      "gap": "No coherent application query/typed native override workflow or saved user settings path.",
+      "gap": "LOOT invocation remains deliberately unavailable and no desktop consumer exists; exact presence and capability consequences are exposed without invocation authority.",
       "owning_phase": "B",
       "owning_work_package": "WP3",
       "transition_exit_evidence": "Exact tool states and typed overrides persist, revalidate, and expose capability consequences without generic path authority."
@@ -123,12 +124,13 @@
         "EVAL-0045",
         "EVAL-0091"
       ],
-      "current_state": "partial-or-developer-oriented",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "M1 explicit profile binding in snapshot/configuration input",
-        "MO2 saved selection is suggestion-only by ADR-0008"
+        "Typed ProfileSelection candidates, suggestion, confirmation, and revision",
+        "Exact ModOrganizer.ini saved-selection hint parser",
+        "PrepareManualRun revalidates confirmed profile presence"
       ],
-      "gap": "No application list/suggestion/confirm/revision workflow for ordinary users.",
+      "gap": "The desktop presentation remains WP7; the application contract and generated native consumer preserve explicit confirmation.",
       "owning_phase": "B",
       "owning_work_package": "WP3",
       "transition_exit_evidence": "Suggested and confirmed selection remain distinct and an unconfirmed suggestion cannot start a run."
@@ -147,12 +149,13 @@
         "EVAL-0082",
         "EVAL-0091"
       ],
-      "current_state": "partial-or-developer-oriented",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "Versioned effective scan-configuration artifacts",
-        "Granular CLI/development controls"
+        "SubmitSetupCommand closed CRUD/clone commands",
+        "application_setup_objects optimistic revisions",
+        "application_setup_receipts replay-safe readback"
       ],
-      "gap": "No versioned user-facing saved-configuration CRUD/clone application vertical.",
+      "gap": "No desktop form exists; the typed application vertical and durable restart/readback are complete for Phase B.",
       "owning_phase": "B",
       "owning_work_package": "WP3",
       "transition_exit_evidence": "Saved configurations round-trip with revision conflicts and active runs retain immutable effective configuration."
@@ -171,12 +174,13 @@
         "EVAL-0081",
         "EVAL-0091"
       ],
-      "current_state": "partial-or-developer-oriented",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "Provider capability and budget contracts",
-        "Retained effective configuration and local limit substrate"
+        "ApplicationService.PrepareManualRun",
+        "Immutable prepared_manual_runs records",
+        "WorkEstimate explicit availability states"
       ],
-      "gap": "No complete user-facing pre-run projection and typed confirmation; unavailable estimate authority is not assembled for a frontend.",
+      "gap": "Elapsed time and non-local provider estimates remain explicitly unavailable; Phase B authorizes only offline fixture execution evidence.",
       "owning_phase": "B",
       "owning_work_package": "WP3",
       "transition_exit_evidence": "Pre-run review exposes exact limits, planned work, estimates, and unavailable dimensions without invented billing or completion promises."
@@ -198,10 +202,11 @@
       ],
       "current_state": "partial-or-developer-oriented",
       "current_evidence": [
-        "Provider profile and enrollment protobuf shapes are declared but have no ApplicationGrpcService implementation",
-        "ADR-0020 one-shot credential helper"
+        "GetSetupState non-secret ProviderEnrollmentStatus",
+        "SubmitSetupCommand enrollment-intent receipt",
+        "No credential or generic provider payload in the application contract"
       ],
-      "gap": "No callable application RPC implementation, desktop choreography, or renderer-safe status/enrollment consumer; product and development credential paths must remain distinct.",
+      "gap": "Native secret entry and secure-store choreography remain unavailable in Phase B; the status is honest and local-only work remains available.",
       "owning_phase": "B",
       "owning_work_package": "WP3",
       "transition_exit_evidence": "React receives only non-secret status/outcomes and the helper owns entry and exact-target secure storage."
@@ -220,13 +225,13 @@
         "EVAL-0090",
         "EVAL-0091"
       ],
-      "current_state": "partial-or-developer-oriented",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "ApplicationService.SubmitRunCommand",
-        "Durable command receipts and idempotency",
-        "ManualStartCommand.analysis_orchestration_request_json"
+        "ApplicationService.PrepareManualRun and SubmitPreparedRun",
+        "Immutable prepared-run and one-shot gesture bindings",
+        "Durable command receipts and offline native diagnostic execution"
       ],
-      "gap": "Current start substrate includes raw internal orchestration JSON and is not a renderer-safe user operation.",
+      "gap": "The raw developer-only SubmitRunCommand remains native-internal and denied to renderers; no product desktop mapping exists before WP7.",
       "owning_phase": "B",
       "owning_work_package": "WP4",
       "transition_exit_evidence": "Typed user input resolves internally to the durable M1 path and raw orchestration/provider operations are unreachable from the renderer."
@@ -252,9 +257,10 @@
         "ApplicationService.GetProgress",
         "ApplicationService.SubscribeEvents",
         "Projection invalidation and resync",
-        "Durable pause/resume/cancel commands"
+        "Durable pause/resume/cancel commands",
+        "Prepared-run reconnect/restart native diagnostic evidence"
       ],
-      "gap": "Needs user-oriented rollups, renderer/session mapping, and end-to-end desktop reload/reconnect proof.",
+      "gap": "Desktop reload/session mapping remains WP7; the native setup-to-live-run path proves authoritative reconnect and restart without UI-owned durable state.",
       "owning_phase": "B",
       "owning_work_package": "WP4",
       "transition_exit_evidence": "Native and desktop diagnostic consumers recover from loss without owning durable state or duplicating cost."

@@ -367,8 +367,24 @@ public sealed partial class Mo2SnapshotCapture
     {
         Dictionary<string, string> values = ParseIni(bytes);
         return values.TryGetValue("general/selected_profile", out string? value)
-            ? DecodeQtByteArray(value)
+            ? DecodeSavedSelectionValue(value)
             : string.Empty;
+    }
+
+    public static string ReadPortableSavedSelection(string installationRoot)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(installationRoot);
+        using FileStream stream = WindowsReadOnlyObjectIdentity.OpenStableRelativeRead(
+            installationRoot,
+            "ModOrganizer.ini");
+        if (stream.Length > 1_048_576)
+        {
+            throw new InvalidDataException(
+                "The canonical MO2 saved-selection file exceeds its bounded input size.");
+        }
+        byte[] bytes = new byte[checked((int)stream.Length)];
+        stream.ReadExactly(bytes);
+        return ReadSavedProfileHint(bytes);
     }
 
     private static SkipPolicy ValidateInstanceConfiguration(ValidatedPaths paths, byte[] bytes)
@@ -466,7 +482,7 @@ public sealed partial class Mo2SnapshotCapture
 
         void AddValue()
         {
-            string value = DecodeQtByteArray(current.ToString().Trim());
+            string value = DecodeSavedSelectionValue(current.ToString().Trim());
             current.Clear();
             if (value.Length > 0)
             {
@@ -506,7 +522,7 @@ public sealed partial class Mo2SnapshotCapture
 
     private static string NormalizeConfiguredPath(string value)
     {
-        string decoded = DecodeQtByteArray(value).Replace('/', Path.DirectorySeparatorChar);
+        string decoded = DecodeSavedSelectionValue(value).Replace('/', Path.DirectorySeparatorChar);
         return NormalizeAbsolutePath(decoded);
     }
 
@@ -542,7 +558,7 @@ public sealed partial class Mo2SnapshotCapture
         return result;
     }
 
-    private static string DecodeQtByteArray(string value)
+    public static string DecodeSavedSelectionValue(string value)
     {
         if (!value.StartsWith("@ByteArray(", StringComparison.Ordinal)
             || !value.EndsWith(')'))

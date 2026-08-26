@@ -1,7 +1,7 @@
 # Current project state
 
 Status: Accepted
-Disposition: Corrected Frontend Application Foundation Checkpoint A reached; Phase B is unblocked but not started and M2 remains inactive
+Disposition: Frontend Application Foundation Checkpoint B reached; Phase C is unblocked but not started and M2 remains inactive
 
 Last reviewed: 2026-08-25
 Owner: Project owner
@@ -19,12 +19,14 @@ specific family of suspicious conflict outcomes, retain the evidence and
 uncertainty behind each result, reproduce stored results, and project those
 internal results into a stable report format for a future interface.
 
-The corrected Phase A of the accepted frontend foundation is complete. The
-repository now
-has an exact application-authority inventory, a bounded display-safe bootstrap,
-common typed error/revision/receipt/cancellation vocabulary, and a closed
-renderer envelope/operation registry with a fail-closed reference consumer.
-The renderer boundary permits exactly five operation/message combinations,
+Phases A and B of the accepted frontend foundation are complete. The repository
+now has an exact application-authority inventory, a bounded display-safe
+bootstrap, common typed error/revision/receipt/cancellation vocabulary, and a
+closed renderer envelope/operation registry with a fail-closed reference
+consumer. The application contract also exposes typed tool/profile/setup state,
+versioned saved configurations, honest pre-run estimates, non-secret provider
+status, and prepared manual-run initiation with immutable durable bindings.
+The renderer boundary still permits exactly five Phase A operation/message combinations,
 keeps gesture proof request-only, represents accepted and explicit non-success
 outcomes separately, and commits replay state only after complete validation.
 
@@ -43,8 +45,8 @@ work.
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
-| Active implementation | Corrected Frontend Application Foundation Phase A (WP1-WP2) accepted at Checkpoint A. |
-| Next gate | Phase B begins with `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3` under the accepted plan. It is automatically unblocked by corrected Checkpoint A but was not started by the Phase A correction task. This does not activate M2. |
+| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) accepted at Checkpoint B. |
+| Next gate | Phase C begins with `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5` under the accepted plan. It is automatically unblocked by Checkpoint B but was not started by the Phase B task. This does not activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |
 
@@ -117,6 +119,10 @@ asset, script, configuration, dependency, performance, or runtime problem.
   than being treated as safe or compatible.
 - There is no graphical interface, installer, ordinary user workflow, or
   production-readiness claim yet.
+- Native credential entry remains unavailable in Phase B; provider status is
+  non-secret and local-only setup/run evidence remains available.
+- Phase B proves the setup-to-live-run path with offline developer fixtures;
+  it does not expose Phase C result/review workflows or expand analyzer scope.
 
 ## Current authority
 

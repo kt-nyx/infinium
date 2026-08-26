@@ -85,4 +85,6 @@ public sealed record DurableCommandRecord(
     long ExpectedGeneration,
     RunBinding RunBinding,
     string? StartInitiationKind,
-    DateTimeOffset? StartDispatchDeadline);
+    DateTimeOffset? StartDispatchDeadline,
+    string? StartPreparationId,
+    string? StartUserGestureId);

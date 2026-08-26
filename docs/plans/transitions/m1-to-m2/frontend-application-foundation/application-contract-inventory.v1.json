@@ -1,22 +1,22 @@
 {
   "$schema": "application-contract-inventory.v1.schema.json",
   "schema_identity": "infinium.planning.application-contract-inventory/1.0.0",
-  "status": "implementation-active",
+  "status": "accepted-phase-checkpoint",
   "last_reviewed": "2026-08-25",
-  "audited_commit": "d363347339c83d76787de71f6ef1cf4d30288040",
-  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy through Phase A. Declared-unimplemented RPCs are not reusable behavior. No renderer receives direct gRPC authority, and later typed renderer operations remain separately owned by their work packages.",
+  "audited_commit": "59b6de3d80443c0150c15c8d83b5b29d1b3536ef",
+  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy through Phase B. Declared-unimplemented RPCs are not reusable behavior. The generated native diagnostic client validates setup-to-live-run behavior; no renderer receives direct gRPC authority and Phase C result/review operations remain unimplemented.",
   "protocol": {
     "package": "infinium.application.v1",
     "service": "ApplicationService",
     "major": 1,
-    "minor": 4,
-    "application_contract_version": "1.4.0",
+    "minor": 5,
+    "application_contract_version": "1.5.0",
     "domain_contract_version": "1.3.0",
-    "storage_contract_version": "1.10.0",
+    "storage_contract_version": "1.11.0",
     "renderer_contract_version": "1.0.0",
-    "schema_fingerprint_sha256": "9fd040e628aa5708f6fd570de1a3d20214e115c6014e660d82b1581d0db15d28",
-    "declared_rpc_count": 23,
-    "implemented_rpc_count": 17,
+    "schema_fingerprint_sha256": "c8b540b067fea288ff3c31c1ac71c46a0541812aa0aa4fc4efae96eba8eb7824",
+    "declared_rpc_count": 27,
+    "implemented_rpc_count": 21,
     "bounds": {
       "maximum_message_bytes": 1048576,
       "maximum_page_items": 100,
@@ -519,6 +519,138 @@
       "renderer_policy": "developer-internal-never-map"
     },
     {
+      "rpc": "GetSetupState",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.Setup.cs#GetSetupState",
+      "current_consumers": [
+        "generated C# native diagnostic client in SolutionIntegrationTests"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.ListSetupObjects and FindSetupObject"
+      ],
+      "bounds_and_versions": [
+        "Application 1.5.0, projection version 1, at most 100 saved configurations, closed tool/profile/provider projections"
+      ],
+      "requirement_ids": [
+        "TOOL-001",
+        "TOOL-003",
+        "SCOPE-003",
+        "SCAN-001"
+      ],
+      "evaluation_ids": [
+        "EVAL-0080",
+        "EVAL-0082",
+        "EVAL-0091"
+      ],
+      "security_authorities": [
+        "ADR-0008",
+        "ADR-0019",
+        "ADR-0037"
+      ],
+      "renderer_policy": "typed-projection-mapping-only"
+    },
+    {
+      "rpc": "SubmitSetupCommand",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.Setup.cs#SubmitSetupCommand",
+      "current_consumers": [
+        "generated C# native diagnostic client in SolutionIntegrationTests"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.ApplySetupMutation and durable application_setup_receipts"
+      ],
+      "bounds_and_versions": [
+        "Closed oneof commands, optimistic revision tokens, replay-safe request identities, 64 KiB retained typed payload bound"
+      ],
+      "requirement_ids": [
+        "TOOL-002",
+        "SCOPE-003",
+        "SCAN-002",
+        "SCAN-009",
+        "SEC-002"
+      ],
+      "evaluation_ids": [
+        "EVAL-0023",
+        "EVAL-0026",
+        "EVAL-0064",
+        "EVAL-0089",
+        "EVAL-0091"
+      ],
+      "security_authorities": [
+        "ADR-0008",
+        "ADR-0020",
+        "ADR-0023",
+        "ADR-0037"
+      ],
+      "renderer_policy": "typed-projection-mapping-only"
+    },
+    {
+      "rpc": "PrepareManualRun",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.Setup.cs#PrepareManualRun",
+      "current_consumers": [
+        "generated C# native diagnostic client in SolutionIntegrationTests"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.CreatePreparedRun and GetPreparedRun"
+      ],
+      "bounds_and_versions": [
+        "Exact profile/configuration revisions, immutable four-part run binding, content-derived effective configuration identity, explicit unavailable estimate dimensions"
+      ],
+      "requirement_ids": [
+        "SCOPE-004",
+        "SCAN-003",
+        "SCAN-005",
+        "AI-005"
+      ],
+      "evaluation_ids": [
+        "EVAL-0066",
+        "EVAL-0076",
+        "EVAL-0081",
+        "EVAL-0091"
+      ],
+      "security_authorities": [
+        "ADR-0016",
+        "ADR-0023",
+        "ADR-0037"
+      ],
+      "renderer_policy": "typed-projection-mapping-only"
+    },
+    {
+      "rpc": "SubmitPreparedRun",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.Setup.cs#SubmitPreparedRun",
+      "current_consumers": [
+        "generated C# native diagnostic client in SolutionIntegrationTests"
+      ],
+      "persistence_readback": [
+        "AuthoritativeStore.CreateRun, GetDurableCommand, prepared_manual_runs, and prepared_run_submissions"
+      ],
+      "bounds_and_versions": [
+        "One-shot gesture, preparation revision, future dispatch deadline, durable command idempotency, coordinator-owned scheduling"
+      ],
+      "requirement_ids": [
+        "SCAN-004",
+        "SCAN-005",
+        "SCAN-006",
+        "SEC-003"
+      ],
+      "evaluation_ids": [
+        "EVAL-0038",
+        "EVAL-0044",
+        "EVAL-0087",
+        "EVAL-0088",
+        "EVAL-0091"
+      ],
+      "security_authorities": [
+        "ADR-0016",
+        "ADR-0019",
+        "ADR-0023",
+        "ADR-0037"
+      ],
+      "renderer_policy": "typed-projection-mapping-only"
+    },
+    {
       "rpc": "GetProviderProfile",
       "implementation_state": "declared-unimplemented",
       "implementation_owner": "No ApplicationGrpcService override; generated base returns unimplemented",
@@ -697,7 +829,7 @@
     },
     {
       "operation": "SubmitRunCommand.ManualStartCommand.analysis_orchestration_request_json",
-      "reason": "The field carries internal orchestration instructions; WP4 must replace renderer reachability with a typed user-run request.",
+      "reason": "The field carries retained developer-internal orchestration instructions; the typed prepared-run request is the only Phase B renderer-mappable start surface.",
       "retained_consumer": "CLI and development/conformance harnesses"
     },
     {
@@ -752,9 +884,9 @@
     },
     {
       "family": "setup-and-run-operations",
-      "source": "Phase B typed application projections and commands",
+      "source": "application.proto setup/prepared-run messages, ApplicationGrpcService.Setup, and AuthoritativeStore application-setup persistence",
       "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3 and WP4",
-      "maturity": "proposed"
+      "maturity": "producer-consumer-validated"
     },
     {
       "family": "results-and-review-operations",

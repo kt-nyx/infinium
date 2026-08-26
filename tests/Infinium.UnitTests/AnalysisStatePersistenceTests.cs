@@ -124,26 +124,26 @@ public sealed class AnalysisStatePersistenceTests
     [TestCategory("Cases")]
     [TestProperty("Category", "Unit")]
     [TestProperty("Category", "Cases")]
-    public void AnalysisStateModelSchema11PreservesSchema10ContractAndAddsV2Objects()
+    public void AnalysisStateModelSchema12PreservesSchema11ContractAndAddsApplicationSetupObjects()
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
         Assert.AreEqual(AuthoritativeStore.CurrentSchemaVersion, store.GetSchemaVersion());
 
         using SqliteConnection connection = temporary.OpenRaw();
-        Assert.AreEqual("11", ScalarText(connection, "PRAGMA user_version;"));
+        Assert.AreEqual("12", ScalarText(connection, "PRAGMA user_version;"));
         Assert.AreEqual(
-            "11",
+            "12",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_version';"));
         Assert.AreEqual(
-            "1.10.0",
+            "1.11.0",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            ScopeReversionV2PersistenceDeclarations.SchemaFingerprint,
+            ApplicationSetupPersistenceDeclarations.SchemaFingerprint,
             ScalarText(connection, "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
         Assert.AreEqual(
             ProviderPersistenceDeclarations.ProviderUsageTotalityExtensionMigrationId,
@@ -479,6 +479,11 @@ public sealed class AnalysisStatePersistenceTests
                 DROP TABLE scope_reversion_v2_items;
                 DROP TABLE scope_reversion_v2_analyses;
 
+                DROP TABLE prepared_run_submissions;
+                DROP TABLE prepared_manual_runs;
+                DROP TABLE application_setup_receipts;
+                DROP TABLE application_setup_objects;
+
                 DROP TABLE scope_reversion_invalidations;
                 DROP TABLE scope_reversion_dependencies;
                 DROP TABLE scope_reversion_artifacts;
@@ -490,6 +495,7 @@ public sealed class AnalysisStatePersistenceTests
                 DELETE FROM migration_history WHERE migration_id = 'M1-S6-C2-SEMANTIC-0009';
                 DELETE FROM migration_history WHERE migration_id = 'M1-S7-WP5-0010';
                 DELETE FROM migration_history WHERE migration_id = 'M1-S8-WP4-0011';
+                DELETE FROM migration_history WHERE migration_id = 'application-setup-contract-0012';
                 DELETE FROM store_metadata WHERE key = 'slice6_successor_attempt_extension_id';
                 DELETE FROM store_metadata WHERE key = 'slice6_successor_v6_persistence_id';
                 DELETE FROM store_metadata WHERE key = 'slice6_successor_v6_semantic_trigger_correction_id';
@@ -508,7 +514,7 @@ public sealed class AnalysisStatePersistenceTests
 
         using (AuthoritativeStore migrated = migration.Open())
         {
-            Assert.AreEqual(11, migrated.GetSchemaVersion());
+            Assert.AreEqual(12, migrated.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = migration.OpenRaw())
@@ -529,7 +535,7 @@ public sealed class AnalysisStatePersistenceTests
         using (SqliteConnection connection = newer.OpenRaw())
         using (SqliteCommand command = connection.CreateCommand())
         {
-            command.CommandText = "PRAGMA user_version = 12;";
+            command.CommandText = "PRAGMA user_version = 13;";
             command.ExecuteNonQuery();
         }
 
@@ -537,7 +543,7 @@ public sealed class AnalysisStatePersistenceTests
         Assert.IsNotNull(exception.InnerException);
         StringAssert.Contains(
             exception.InnerException.Message,
-            "Database schema 12 is newer than supported schema 11.");
+            "Database schema 13 is newer than supported schema 12.");
     }
 
     [TestMethod]

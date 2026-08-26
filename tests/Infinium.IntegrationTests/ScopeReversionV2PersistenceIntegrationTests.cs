@@ -13,7 +13,7 @@ public sealed class ScopeReversionV2PersistenceIntegrationTests
     [TestCategory("Integration")]
     [TestCategory("Replay")]
     [TestProperty("Category", "ScopeReversionV2")]
-    public void Schema11PublishesReopensReplaysInvalidatesAndDisclosesUnavailableRoot()
+    public void Schema12PublishesReopensReplaysInvalidatesAndDisclosesUnavailableRoot()
     {
         string root = Path.Combine(Path.GetTempPath(), "infinium-scope-reversion-v2-store-" + Guid.NewGuid().ToString("N"));
         string restoredRoot = Path.Combine(Path.GetTempPath(), "infinium-scope-reversion-v2-restored-" + Guid.NewGuid().ToString("N"));
@@ -30,8 +30,8 @@ public sealed class ScopeReversionV2PersistenceIntegrationTests
         {
             using (AuthoritativeStore store = new(new StoragePaths(root)))
             {
-                Assert.AreEqual(11, store.GetSchemaVersion());
-                Assert.AreEqual(ScopeReversionV2PersistenceDeclarations.SchemaFingerprint,
+                Assert.AreEqual(12, store.GetSchemaVersion());
+                Assert.AreEqual(ApplicationSetupPersistenceDeclarations.SchemaFingerprint,
                     store.GetCurrentSchemaFingerprint());
                 ScopeReversionV2PersistencePhaseResult clean = ScopeReversionV2PersistencePhase.ExecuteAndPublish(
                     store, request, artifacts, DateTimeOffset.UtcNow);
@@ -96,7 +96,7 @@ public sealed class ScopeReversionV2PersistenceIntegrationTests
     [TestCategory("Integration")]
     [TestCategory("Migration")]
     [TestProperty("Category", "ScopeReversionV2")]
-    public void V1PublicationAndReadRemainExactUnderSchema11()
+    public void V1PublicationAndReadRemainExactUnderSchema12()
     {
         string root = Path.Combine(Path.GetTempPath(), "infinium-scope-reversion-v1-preservation-" + Guid.NewGuid().ToString("N"));
         try

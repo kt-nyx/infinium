@@ -1,7 +1,7 @@
 # M1-to-M2 Foundation — Frontend Application Foundation implementation record
 
 Status: Accepted
-Disposition: Corrected Checkpoint A reached; WP1 and WP2 accepted, Phase B not started
+Disposition: Checkpoint B reached; WP1-WP4 accepted, Phase C not started
 
 Last reviewed: 2026-08-25
 Owner: Project owner
@@ -10,12 +10,13 @@ Planning base: `32dbb2c48754666336d2da571e554ad8897ed71c`
 
 ## Plain-language state
 
-Phase A has verified the real application surface, assigned every foundation
-capability to an exact owner, and implemented the common boundary future
-frontend work can build on. WP1 established the answer-free authority inventory.
-WP2 added a bounded display-safe bootstrap and corrected closed renderer contract source
-without adding a product UI, provider access, generic native authority, or any
-Phase B workflow.
+Phases A and B have verified the real application surface, assigned every
+foundation capability to an exact owner, and implemented the common and
+setup-to-live-run boundaries future frontend work can build on. WP3 adds typed
+tool/profile/configuration setup, honest estimates, and non-secret provider
+status. WP4 adds prepared manual-run initiation with immutable durable bindings,
+receipts, progress, reconnect, and restart behavior. No product UI, Phase C
+workflow, provider effect, or generic native authority was added.
 
 ## Package status
 
@@ -23,8 +24,8 @@ Phase B workflow.
 |---|---|---|---|
 | A | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP1` | Accepted on phase candidate | Receipt below; final phase commit deferred until Checkpoint A |
 | A | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP2` | Accepted after correction | Corrected receipt and complete floor below |
-| B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3` | Not started | None |
-| B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP4` | Not started | None |
+| B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3` | Accepted after correction | Receipt below; final phase commit deferred until Checkpoint B |
+| B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP4` | Accepted after correction | Receipt below; complete floor and Checkpoint B receipt below |
 | C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5` | Not started | None |
 | C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6` | Not started | None |
 | D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` | Not started | None |
@@ -278,6 +279,172 @@ the corrected complete floor. This evidence reinstates Checkpoint A.
 - Safety/isolation breach: none. No private/archive, provider, network,
   credential, generic path, SQL, command, URL, filesystem, or coordinator-
   proxy authority was accessed or added.
+
+## WP3 receipt — Setup, profile, configuration, estimate, and enrollment status
+
+Work ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3`
+
+Candidate: mutable Phase B working candidate based on accepted Phase A commit
+`59b6de3d80443c0150c15c8d83b5b29d1b3536ef`; package binding is deferred to
+the single Checkpoint B commit.
+
+Delivered:
+
+- application protocol `1.5.0` with exact full-contract fingerprint
+  `c8b540b067fea288ff3c31c1ac71c46a0541812aa0aa4fc4efae96eba8eb7824`,
+  typed `GetSetupState`, and `SubmitSetupCommand` RPCs with closed
+  MO2/LOOT-specific location fields;
+- exact `available`, `missing`, `unsupported`, `misconfigured`, and
+  `not-yet-validated` tool states without tool invocation or network access;
+- bounded MO2 profile discovery plus exact canonical `ModOrganizer.ini`
+  saved-selection decoding, kept separate from explicit confirmation;
+- versioned saved-configuration create/clone/update/delete with optimistic
+  revisions, durable replay-safe receipts, restart, and readback;
+- immutable prepared effective configuration with a separate supplied semantic
+  context and explicit work/time/cost/provider-dispatch availability states;
+- non-secret provider enrollment intent/status that truthfully reports native
+  secret entry and secure-store choreography unavailable in this phase; and
+- schema `12`, storage contract `1.11.0`, exact migration fingerprint
+  `e3dcd08192656fcc24b8374198bb1fbf66d9dd75fc6cf160b2558be16059b3ce`,
+  backup/restore identity integration, and append-only setup receipts.
+
+Focused verification:
+
+- `ApplicationSetupPersistenceTests`: 2 passed, 0 failed, 0 skipped;
+- application/renderer/inventory/fingerprint contract selection: 37 passed,
+  0 failed, 0 skipped; and
+- every focused run used the exact repository root and reported zero
+  repository-owned `dotnet` or `testhost` survivors.
+
+Review result: `ACCEPT` after correction and focused re-review.
+
+- Must fix: an early enrollment-intent path invoked credential persistence
+  before the setup revision receipt was committed. Removed that cross-store
+  side effect; Phase B now records only a replay-safe non-secret intent and
+  truthfully reports that native secret entry is unavailable.
+- Must fix: profile confirmation could outlive a changed MO2 root. Run
+  preparation now rediscovers the exact bounded profile set and rejects a
+  confirmed identity that is no longer present; setup readback also stops
+  calling a missing candidate confirmed.
+- Must fix: the first prepared-run table made a content-derived effective
+  configuration identity unique per preparation. Removed that false
+  uniqueness so multiple snapshots may reuse the same immutable effective
+  configuration while retaining distinct preparation identities.
+- Must fix: create/clone commands could update an existing configuration when
+  supplied a current revision. They now require the absent revision `r0`,
+  while update requires an active existing configuration.
+- Follow-up: native credential entry and exact-target secure-store interaction
+  remain unavailable and are not implied by the non-secret intent receipt.
+- Non-blocking: LOOT presence can be recorded, but invocation remains
+  `not-yet-validated` and unavailable under current authority.
+- Owner/authority decision: none.
+- Safety/isolation breach: none. No secret, archive/private fixture, provider,
+  network, billable, generic path, SQL, command, or URL authority was used.
+
+## WP4 receipt — Prepared manual run, lifecycle, live state, and reconnect
+
+Work ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP4`
+
+Candidate: same mutable Phase B candidate based on accepted Phase A commit
+`59b6de3d80443c0150c15c8d83b5b29d1b3536ef`; package binding is deferred to
+the single Checkpoint B commit.
+
+Delivered:
+
+- typed `PrepareManualRun` and `SubmitPreparedRun` RPCs that do not accept raw
+  analysis JSON, generic provider requests, or generic filesystem authority;
+- immutable binding to confirmed profile revision, saved-configuration
+  revision, installation snapshot, semantic context, effective configuration,
+  resolved input manifest, preparation, and one-shot initiation gesture;
+- atomic durable start receipt and `prepared_run_submissions` binding so an
+  idempotency key cannot be rebound to a different preparation or gesture;
+- coordinator-owned mapping into existing offline run scheduling, progress,
+  bounded event, pause/resume/cancel, snapshot/resync, and durable-command
+  readback infrastructure; and
+- generated C# native diagnostic execution proving setup, replay/conflict,
+  honest estimate, offline completion, reconnect, coordinator restart, and
+  durable readback without UI-owned state.
+
+Focused verification:
+
+- `TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline`: 1 passed,
+  0 failed, 0 skipped after the Release launch artifacts were rebuilt;
+- the same run exercised typed malformed/missing tool locations, exact version
+  classification, saved-selection/confirmation separation, configuration
+  replay/conflict, non-secret enrollment status, preparation, idempotent start,
+  completion, reconnect, restart, and gesture/binding readback; and
+- every focused run reported zero repository-owned `dotnet` or `testhost`
+  survivors after exact-root cleanup.
+
+Review result: `ACCEPT` after correction and focused re-review.
+
+- Must fix: the first prepared start durably stored its four-part run binding
+  but not the initiation gesture or preparation identity. Added an append-only
+  atomic submission binding and replay comparison for both identities.
+- Must fix: the first integration run used stale Debug/Release launch
+  artifacts and timed out before coordinator startup. Rebuilt the exact Release
+  solution artifacts and reran the same generated-client path successfully.
+- Must fix: explicit local tool validation initially admitted fully qualified
+  UNC roots and did not distinguish inaccessible roots. UNC/device-style roots
+  now fail closed before filesystem access; explicit local validation performs
+  one bounded accessibility probe and rejects reparse roots.
+- Follow-up: Phase C result/review projections and Phase D renderer/desktop
+  consumers remain unimplemented.
+- Non-blocking: offline Phase B execution uses the existing substrate worker;
+  it does not claim broader analyzer orchestration or provider execution.
+- Owner/authority decision: none.
+- Safety/isolation breach: none. No live/provider/billable operation, private
+  evaluator material, archive, UI durable state, or renderer gRPC authority was
+  introduced.
+
+## Checkpoint B receipt — Phase B accepted candidate
+
+Candidate: the single review-ready Phase B candidate based directly on accepted
+Phase A commit `59b6de3d80443c0150c15c8d83b5b29d1b3536ef`. The exact immutable
+Checkpoint B commit is reported by the orchestrator after commit creation.
+
+Disposition: `ACCEPT` for WP3 and WP4. Checkpoint B is reached. Phase C is
+unblocked by the accepted plan but was not started; M2 remains inactive.
+
+Complete accepted verification floor on the final reviewed bytes:
+
+- locked restore passed, and Release build passed with 0 warnings and 0 errors;
+- Unit: 249 passed, 0 failed, 1 expected platform skip;
+- Contract: 188 passed, 0 failed, 0 skipped, including JSON Schema, protobuf,
+  generated-contract, inventory, and exact fingerprint drift checks;
+- Integration: 121 passed, 0 failed, 0 skipped;
+- Evaluation: 90 passed, 0 failed, 9 expected private/environment skips;
+- Security: 154 passed, 0 failed, 3 expected private/platform skips;
+- Fault: 117 passed, 0 failed, 3 expected environment skips;
+- complete unfiltered solution: 713 passed, 0 failed, 10 expected skips;
+- formatting, dependency-manifest, documentation, functional-naming, and
+  `git diff --check` gates passed; documentation validation covered 150
+  metadata files, 152 Markdown link sources, and 19 JSON files; functional
+  naming covered 177 exact reviewed exceptions with zero unexplained findings;
+  and
+- exact-root cleanup after every test invocation and every dotnet gate reported
+  0 repository-owned `dotnet` or `testhost` survivors.
+
+Final consolidated correction/re-review result:
+
+- Must fix: schema `12` exposed stale schema-version assertions and downgrade
+  fixtures in four unit and three integration cases. Updated only their current
+  schema expectations, exact schema-12 objects, and migration-history teardown;
+  focused rechecks then passed 4/4 and 3/3 respectively.
+- Must fix: the formatting gate found one indentation-only collection-expression
+  issue in the new coordinator workflow. Applied the repository formatter,
+  reran all non-test gates, then reran the complete accepted floor on the
+  corrected final bytes.
+- Contract maturity: the WP3 setup/configuration and WP4 prepared-run-to-live-
+  lifecycle paths are producer-consumer-validated through generated protobuf,
+  coordinator validation, durable storage, generated C# native diagnostics,
+  reconnect, restart, conflict, invalid-state, and readback evidence. Native
+  secret enrollment remains explicitly unavailable, and Phase C/D result,
+  review, renderer, and desktop consumers remain proposed/unimplemented.
+- Owner/authority decision: none.
+- Safety/isolation breach: none. Verification used only offline developer
+  fixtures/fakes; there was no private/archive access or network, provider,
+  credential, live, or billable operation.
 
 ## Final closeout fields
 

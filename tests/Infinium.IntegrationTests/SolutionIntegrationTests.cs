@@ -2,7 +2,9 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
+using System.Security.Cryptography;
 using System.Security.Principal;
+using System.Text;
 using System.Text.Json;
 using Google.Protobuf;
 using Grpc.Core;
@@ -131,6 +133,296 @@ public sealed class SolutionIntegrationTests
         ProcessResult helper = Run("Infinium.CredentialHelper", []);
         Assert.AreEqual(64, helper.ExitCode);
         StringAssert.Contains(helper.Error, "two private pipes, one secure-store capability, and authoritative time");
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Evaluation")]
+    public async Task TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            Assert.Inconclusive("The named-pipe application workflow requires Windows.");
+        }
+
+        string root = Path.Combine(Path.GetTempPath(), $"infinium-setup-workflow-{Guid.NewGuid():N}");
+        int coordinatorProcessId = 0;
+        try
+        {
+            using (AuthoritativeStore seed = new(new StoragePaths(root)))
+            {
+                string mo2Root = Path.Combine(root, "fixture-mo2");
+                Directory.CreateDirectory(Path.Combine(mo2Root, "profiles", "Profile A"));
+                File.WriteAllText(
+                    Path.Combine(mo2Root, "ModOrganizer.ini"),
+                    "[General]\nselected_profile=@ByteArray(Profile A)\n",
+                    new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+                string profileId = "profile-" + Convert.ToHexStringLower(SHA256.HashData(
+                    Encoding.UTF8.GetBytes("PROFILE A")))[..24];
+                string profilePayload = JsonSerializer.Serialize(new
+                {
+                    Candidates = new[]
+                    {
+                        new
+                        {
+                            CandidateId = profileId,
+                            DisplayName = "Profile A",
+                            SavedSelectionSuggestion = true,
+                        },
+                    },
+                    SuggestedCandidateId = profileId,
+                    ConfirmedCandidateId = profileId,
+                    ExplicitlyConfirmed = true,
+                });
+                string toolPayload = JsonSerializer.Serialize(new
+                {
+                    Tool = 1,
+                    State = 1,
+                    InstallationRoot = mo2Root,
+                    ExecutablePath = Path.Combine(mo2Root, "ModOrganizer.exe"),
+                    ObservedVersion = "2.5.2-fixture",
+                    InertReason = "Offline developer fixture",
+                    CapabilityGaps = Array.Empty<string>(),
+                });
+                DateTimeOffset seededAt = DateTimeOffset.UtcNow;
+                _ = seed.ApplySetupMutation(new(
+                    "seed-tool",
+                    "validate-tool",
+                    "tool-configuration",
+                    "mod-organizer-2",
+                    0,
+                    "active",
+                    toolPayload,
+                    seededAt));
+                _ = seed.ApplySetupMutation(new(
+                    "seed-profile",
+                    "confirm-profile",
+                    "profile-selection",
+                    "current-profile",
+                    0,
+                    "active",
+                    profilePayload,
+                    seededAt));
+            }
+
+            ProcessResult bootstrap = Run(
+                "Infinium.Cli",
+                [
+                    "--root", root,
+                    "start",
+                    "--snapshot", "bootstrap-snapshot",
+                    "--context", "bootstrap-context",
+                    "--configuration", "bootstrap-configuration",
+                    "--manifest", "bootstrap-manifest",
+                    "--json",
+                ],
+                timeoutMilliseconds: 30_000);
+            Assert.AreEqual(0, bootstrap.ExitCode, bootstrap.Error);
+            RuntimeDescriptor descriptor = RuntimeDescriptor.Read(root);
+            coordinatorProcessId = descriptor.ProcessId;
+
+            string preparationId;
+            string preparedRunId;
+            using (GrpcChannel channel = NamedPipeGrpcChannel.Create(descriptor.ApplicationPipe))
+            {
+                ApplicationService.ApplicationServiceClient application = new(channel);
+                HandshakeResponse accepted = await application.NegotiateAsync(
+                    ApplicationHandshake(descriptor)).ResponseAsync;
+                Assert.AreEqual(HandshakeDisposition.Accepted, accepted.Disposition);
+
+                GetSetupStateResponse initial = await application.GetSetupStateAsync(
+                    new GetSetupStateRequest
+                    {
+                        MaximumSavedConfigurations = 10,
+                        ExpectedProjectionVersion = new ProjectionVersion { Value = "1" },
+                    }).ResponseAsync;
+                Assert.AreEqual(
+                    ToolValidationState.Available,
+                    initial.Setup.Tools.Single(item => item.Tool == ExternalToolKind.ModOrganizer2).State);
+                Assert.IsTrue(initial.Setup.ProfileSelection.ExplicitlyConfirmed);
+                Assert.AreEqual(
+                    initial.Setup.ProfileSelection.ConfirmedCandidateId,
+                    initial.Setup.ProfileSelection.SuggestedCandidateId);
+                GetSetupStateRequest unknownFieldSetup = GetSetupStateRequest.Parser.ParseFrom(
+                    new GetSetupStateRequest
+                    {
+                        MaximumSavedConfigurations = 1,
+                    }.ToByteArray().Concat(new byte[] { 0x98, 0x06, 0x01 }).ToArray());
+                GetSetupStateResponse unknownFieldRejected = await application.GetSetupStateAsync(
+                    unknownFieldSetup).ResponseAsync;
+                Assert.AreEqual(ApplicationErrorCode.InvalidArgument, unknownFieldRejected.Error.Code);
+                Assert.AreEqual(
+                    ToolValidationState.Available,
+                    ApplicationGrpcService.ClassifySupportedToolVersion(
+                        ExternalToolKind.ModOrganizer2,
+                        "2.5.2"));
+                Assert.AreEqual(
+                    ToolValidationState.Unsupported,
+                    ApplicationGrpcService.ClassifySupportedToolVersion(
+                        ExternalToolKind.ModOrganizer2,
+                        "2.5.1"));
+                Assert.AreEqual(
+                    ToolValidationState.NotYetValidated,
+                    ApplicationGrpcService.ClassifySupportedToolVersion(
+                        ExternalToolKind.Loot,
+                        "0.24.1"));
+
+                SubmitSetupCommandResponse malformedLoot = await application.SubmitSetupCommandAsync(
+                    new SubmitSetupCommandRequest
+                    {
+                        RequestId = "request-loot-relative",
+                        ExpectedRevision = new RevisionToken { OpaqueValue = "r0" },
+                        ValidateTool = new ValidateToolConfiguration
+                        {
+                            Tool = ExternalToolKind.Loot,
+                            LootInstallationRoot = "relative-path-is-not-authority",
+                        },
+                    }).ResponseAsync;
+                Assert.AreEqual(OperationDisposition.Accepted, malformedLoot.Receipt.Disposition);
+                Assert.AreEqual(
+                    ToolValidationState.Misconfigured,
+                    malformedLoot.Setup.Tools.Single(item => item.Tool == ExternalToolKind.Loot).State);
+                SubmitSetupCommandResponse missingLoot = await application.SubmitSetupCommandAsync(
+                    new SubmitSetupCommandRequest
+                    {
+                        RequestId = "request-loot-missing",
+                        ExpectedRevision = new RevisionToken { OpaqueValue = "r1" },
+                        ValidateTool = new ValidateToolConfiguration
+                        {
+                            Tool = ExternalToolKind.Loot,
+                            LootInstallationRoot = Path.Combine(root, "missing-loot"),
+                        },
+                    }).ResponseAsync;
+                Assert.AreEqual(
+                    ToolValidationState.Missing,
+                    missingLoot.Setup.Tools.Single(item => item.Tool == ExternalToolKind.Loot).State);
+
+                SubmitSetupCommandRequest create = new()
+                {
+                    RequestId = "request-create-local",
+                    ExpectedRevision = new RevisionToken { OpaqueValue = "r0" },
+                    CreateConfiguration = new CreateSavedScanConfiguration
+                    {
+                        ConfigurationId = new ScanConfigurationId { Value = "configuration-local" },
+                        Name = "Local offline",
+                        Values = new ScanConfigurationValues
+                        {
+                            LocalOnly = true,
+                            MaximumConcurrency = 1,
+                            MaximumElapsedMilliseconds = 60_000,
+                        },
+                    },
+                };
+                create.CreateConfiguration.Values.AnalyzerIds.Add("fixture-analyzer");
+                SubmitSetupCommandResponse created = await application.SubmitSetupCommandAsync(create).ResponseAsync;
+                Assert.AreEqual(OperationDisposition.Accepted, created.Receipt.Disposition);
+                Assert.AreEqual("r1", created.Receipt.AcceptedRevision.OpaqueValue);
+
+                SubmitSetupCommandResponse replayed = await application.SubmitSetupCommandAsync(create).ResponseAsync;
+                Assert.AreEqual(OperationDisposition.AlreadyAccepted, replayed.Receipt.Disposition);
+                SubmitSetupCommandRequest stale = create.Clone();
+                stale.RequestId = "request-stale-local";
+                stale.CreateConfiguration.Name = "Stale update";
+                SubmitSetupCommandResponse conflicted = await application.SubmitSetupCommandAsync(stale).ResponseAsync;
+                Assert.AreEqual(OperationDisposition.Conflict, conflicted.Receipt.Disposition);
+
+                SubmitSetupCommandResponse enrollment = await application.SubmitSetupCommandAsync(
+                    new SubmitSetupCommandRequest
+                    {
+                        RequestId = "request-provider-intent",
+                        ExpectedRevision = new RevisionToken { OpaqueValue = "r0" },
+                        RequestProviderEnrollment = new RequestProviderEnrollment
+                        {
+                            ProfileId = new ProviderAccessProfileId { Value = "provider-profile-a" },
+                            DisplayLabel = "Provider profile A",
+                        },
+                    }).ResponseAsync;
+                Assert.AreEqual(OperationDisposition.Accepted, enrollment.Receipt.Disposition);
+                Assert.IsTrue(enrollment.Setup.Provider.EnrollmentPending);
+                Assert.IsFalse(enrollment.Setup.Provider.Verified);
+
+                PrepareManualRunResponse prepared = await application.PrepareManualRunAsync(
+                    new PrepareManualRunRequest
+                    {
+                        RequestId = "request-prepare-local",
+                        SavedConfigurationId = new ScanConfigurationId { Value = "configuration-local" },
+                        ExpectedConfigurationRevision = new RevisionToken { OpaqueValue = "r1" },
+                        ExpectedProfileRevision = new RevisionToken { OpaqueValue = "r1" },
+                        InstallationSnapshotId = new InstallationSnapshotId { Value = "snapshot-local" },
+                        AnalysisContextId = new AnalysisContextId { Value = "context-local" },
+                        ResolvedInputManifestId = new ResolvedInputManifestId { Value = "manifest-local" },
+                    }).ResponseAsync;
+                Assert.AreEqual(PrepareManualRunResponse.ResultOneofCase.Preparation, prepared.ResultCase);
+                preparationId = prepared.Preparation.PreparationId;
+                Assert.AreEqual(AvailabilityState.Available, prepared.Preparation.Estimate.EstimatedCalculatedNanoUsd.Availability);
+                Assert.AreEqual(0L, prepared.Preparation.Estimate.EstimatedCalculatedNanoUsd.Value);
+                Assert.AreEqual(AvailabilityState.Unavailable, prepared.Preparation.Estimate.EstimatedElapsedMilliseconds.Availability);
+                Assert.AreEqual(AvailabilityState.Unavailable, prepared.Preparation.Estimate.EstimatedCoverageUnits.Availability);
+
+                SubmitRunCommandResponse submitted = await application.SubmitPreparedRunAsync(
+                    new SubmitPreparedRunRequest
+                    {
+                        IdempotencyKey = new DurableCommandId { Value = "command-prepared-local" },
+                        PreparationId = prepared.Preparation.PreparationId,
+                        ExpectedPreparationRevision = new RevisionToken { OpaqueValue = "r1" },
+                        RequestedRunId = new RunId { Value = "run-prepared-local" },
+                        InitiationKind = ManualInitiationKind.EvaluationHarness,
+                        UserGestureId = "gesture-1234567890abcdef",
+                        DispatchDeadline = ProtoMapping.ToProto(DateTimeOffset.UtcNow.AddMinutes(1)),
+                    }).ResponseAsync;
+                Assert.AreEqual(CommandDisposition.Accepted, submitted.Disposition);
+                preparedRunId = submitted.RunId.Value;
+
+                SubmitRunCommandResponse duplicate = await application.SubmitPreparedRunAsync(
+                    new SubmitPreparedRunRequest
+                    {
+                        IdempotencyKey = new DurableCommandId { Value = "command-prepared-local" },
+                        PreparationId = prepared.Preparation.PreparationId,
+                        ExpectedPreparationRevision = new RevisionToken { OpaqueValue = "r1" },
+                        RequestedRunId = new RunId { Value = "ignored-on-replay" },
+                        InitiationKind = ManualInitiationKind.EvaluationHarness,
+                        UserGestureId = "gesture-1234567890abcdef",
+                        DispatchDeadline = ProtoMapping.ToProto(DateTimeOffset.UtcNow.AddMinutes(2)),
+                    }).ResponseAsync;
+                Assert.AreEqual(CommandDisposition.AlreadyAccepted, duplicate.Disposition);
+                Assert.AreEqual(preparedRunId, duplicate.RunId.Value);
+            }
+
+            await WaitForRunStateAsync(root, preparedRunId, LifecycleState.Completed, TimeSpan.FromSeconds(30));
+            StopCoordinator(root, coordinatorProcessId);
+            coordinatorProcessId = 0;
+
+            ProcessResult afterRestart = Run(
+                "Infinium.Cli",
+                ["--root", root, "inspect", preparedRunId, "--json"],
+                timeoutMilliseconds: 30_000);
+            Assert.AreEqual(0, afterRestart.ExitCode, afterRestart.Error);
+            RuntimeDescriptor restarted = RuntimeDescriptor.Read(root);
+            coordinatorProcessId = restarted.ProcessId;
+            using JsonDocument restartJson = JsonDocument.Parse(afterRestart.Output);
+            Assert.AreEqual("Completed", restartJson.RootElement.GetProperty("lifecycle").GetProperty("state").GetString());
+
+            StopCoordinator(root, coordinatorProcessId);
+            coordinatorProcessId = 0;
+            using AuthoritativeStore readback = new(new StoragePaths(root));
+            DurableCommandRecord receipt = readback.GetDurableCommand("command-prepared-local");
+            Assert.AreEqual(preparationId, receipt.StartPreparationId);
+            Assert.AreEqual("gesture-1234567890abcdef", receipt.StartUserGestureId);
+            Assert.AreEqual("effective-", receipt.RunBinding.EffectiveScanConfigurationId[..10]);
+            Assert.HasCount(1, readback.ListSetupObjects("saved-scan-configuration"));
+        }
+        finally
+        {
+            StopCoordinator(root, coordinatorProcessId);
+            if (Directory.Exists(root))
+            {
+                DeleteDirectoryAfterWorkerRelease(root);
+            }
+        }
     }
 
     [TestMethod]

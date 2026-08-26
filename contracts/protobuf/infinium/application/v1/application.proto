@@ -15,6 +15,13 @@ service ApplicationService {
   rpc Health(HealthRequest) returns (HealthResponse);
   rpc GetApplicationBootstrap(GetApplicationBootstrapRequest)
       returns (GetApplicationBootstrapResponse);
+  rpc GetSetupState(GetSetupStateRequest) returns (GetSetupStateResponse);
+  rpc SubmitSetupCommand(SubmitSetupCommandRequest)
+      returns (SubmitSetupCommandResponse);
+  rpc PrepareManualRun(PrepareManualRunRequest)
+      returns (PrepareManualRunResponse);
+  rpc SubmitPreparedRun(SubmitPreparedRunRequest)
+      returns (SubmitRunCommandResponse);
   rpc ListRuns(ListRunsRequest) returns (ListRunsResponse);
   rpc GetRun(GetRunRequest) returns (GetRunResponse);
   rpc ListFindings(ListFindingsRequest) returns (ListFindingsResponse);
@@ -200,6 +207,223 @@ message CancellationReceipt {
   string target_request_id = 2;
   CancellationDisposition disposition = 3;
   ApplicationContractError error = 4;
+}
+
+// The native application client uses this closed setup surface. Tool-specific
+// locations never become generic path authority and are not renderer payloads.
+message GetSetupStateRequest {
+  uint32 maximum_saved_configurations = 1;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 2;
+
+  reserved 90 to 99;
+  reserved "generic_path", "sql", "command", "url", "credential", "provider_request";
+}
+
+message GetSetupStateResponse {
+  oneof result {
+    SetupState setup = 1;
+    ApplicationContractError error = 2;
+  }
+}
+
+message SetupState {
+  repeated ToolConfiguration tools = 1;
+  ProfileSelection profile_selection = 2;
+  repeated SavedScanConfiguration saved_configurations = 3;
+  ProviderEnrollmentStatus provider = 4;
+  infinium.domain.v1.ProjectionVersion projection_version = 5;
+  infinium.common.v1.Instant observed_at = 6;
+}
+
+enum ExternalToolKind {
+  EXTERNAL_TOOL_KIND_UNSPECIFIED = 0;
+  EXTERNAL_TOOL_KIND_MOD_ORGANIZER_2 = 1;
+  EXTERNAL_TOOL_KIND_LOOT = 2;
+  EXTERNAL_TOOL_KIND_UNKNOWN = 3;
+  EXTERNAL_TOOL_KIND_UNSUPPORTED = 4;
+}
+
+enum ToolValidationState {
+  TOOL_VALIDATION_STATE_UNSPECIFIED = 0;
+  TOOL_VALIDATION_STATE_AVAILABLE = 1;
+  TOOL_VALIDATION_STATE_MISSING = 2;
+  TOOL_VALIDATION_STATE_UNSUPPORTED = 3;
+  TOOL_VALIDATION_STATE_MISCONFIGURED = 4;
+  TOOL_VALIDATION_STATE_NOT_YET_VALIDATED = 5;
+  TOOL_VALIDATION_STATE_UNKNOWN = 6;
+}
+
+message ToolConfiguration {
+  ExternalToolKind tool = 1;
+  ToolValidationState state = 2;
+  string installation_root = 3;
+  string executable_path = 4;
+  string observed_version = 5;
+  string inert_reason = 6;
+  repeated string capability_gaps = 7;
+  RevisionToken revision = 8;
+  infinium.common.v1.Instant validated_at = 9;
+}
+
+message ProfileCandidate {
+  string candidate_id = 1;
+  string display_name = 2;
+  bool saved_selection_suggestion = 3;
+}
+
+message ProfileSelection {
+  repeated ProfileCandidate candidates = 1;
+  string suggested_candidate_id = 2;
+  string confirmed_candidate_id = 3;
+  bool explicitly_confirmed = 4;
+  RevisionToken revision = 5;
+  infinium.common.v1.Instant updated_at = 6;
+}
+
+message ScanConfigurationValues {
+  repeated string analyzer_ids = 1;
+  bool local_only = 2;
+  uint32 maximum_concurrency = 3;
+  uint64 maximum_provider_dispatches = 4;
+  uint64 maximum_calculated_nano_usd = 5;
+  uint64 maximum_elapsed_milliseconds = 6;
+}
+
+message SavedScanConfiguration {
+  infinium.domain.v1.ScanConfigurationId configuration_id = 1;
+  string name = 2;
+  ScanConfigurationValues values = 3;
+  RevisionToken revision = 4;
+  bool deleted = 5;
+  infinium.common.v1.Instant updated_at = 6;
+}
+
+message ProviderEnrollmentStatus {
+  bool configured = 1;
+  bool verified = 2;
+  bool enrollment_pending = 3;
+  bool secure_store_available = 4;
+  string inert_status = 5;
+  infinium.domain.v1.ProviderAccessProfileId profile_id = 6;
+  RevisionToken revision = 7;
+}
+
+message SubmitSetupCommandRequest {
+  string request_id = 1;
+  RevisionToken expected_revision = 2;
+  oneof command {
+    ValidateToolConfiguration validate_tool = 10;
+    ConfirmProfileSelection confirm_profile = 11;
+    CreateSavedScanConfiguration create_configuration = 12;
+    CloneSavedScanConfiguration clone_configuration = 13;
+    UpdateSavedScanConfiguration update_configuration = 14;
+    DeleteSavedScanConfiguration delete_configuration = 15;
+    RequestProviderEnrollment request_provider_enrollment = 16;
+  }
+
+  reserved 90 to 99;
+  reserved "generic_path", "sql", "command_line", "url", "credential", "provider_request";
+}
+
+message ValidateToolConfiguration {
+  ExternalToolKind tool = 1;
+  oneof location {
+    string mod_organizer_installation_root = 2;
+    string loot_installation_root = 3;
+  }
+}
+
+message ConfirmProfileSelection { string candidate_id = 1; }
+
+message CreateSavedScanConfiguration {
+  infinium.domain.v1.ScanConfigurationId configuration_id = 1;
+  string name = 2;
+  ScanConfigurationValues values = 3;
+}
+
+message CloneSavedScanConfiguration {
+  infinium.domain.v1.ScanConfigurationId source_configuration_id = 1;
+  infinium.domain.v1.ScanConfigurationId configuration_id = 2;
+  string name = 3;
+}
+
+message UpdateSavedScanConfiguration {
+  infinium.domain.v1.ScanConfigurationId configuration_id = 1;
+  string name = 2;
+  ScanConfigurationValues values = 3;
+}
+
+message DeleteSavedScanConfiguration {
+  infinium.domain.v1.ScanConfigurationId configuration_id = 1;
+}
+
+message RequestProviderEnrollment {
+  infinium.domain.v1.ProviderAccessProfileId profile_id = 1;
+  string display_label = 2;
+}
+
+message SubmitSetupCommandResponse {
+  UserOperationReceipt receipt = 1;
+  SetupState setup = 2;
+}
+
+message PrepareManualRunRequest {
+  string request_id = 1;
+  infinium.domain.v1.ScanConfigurationId saved_configuration_id = 2;
+  RevisionToken expected_configuration_revision = 3;
+  RevisionToken expected_profile_revision = 4;
+  infinium.domain.v1.InstallationSnapshotId installation_snapshot_id = 5;
+  infinium.domain.v1.AnalysisContextId analysis_context_id = 6;
+  infinium.domain.v1.ResolvedInputManifestId resolved_input_manifest_id = 7;
+
+  reserved 90 to 99;
+  reserved "analysis_orchestration_request_json", "generic_path", "sql", "command_line", "url", "credential", "provider_request";
+}
+
+message PrepareManualRunResponse {
+  oneof result {
+    PreparedManualRun preparation = 1;
+    RevisionConflict conflict = 2;
+    ApplicationContractError error = 3;
+  }
+}
+
+message PreparedManualRun {
+  string preparation_id = 1;
+  RevisionToken revision = 2;
+  string confirmed_profile_id = 3;
+  RevisionToken profile_revision = 4;
+  infinium.domain.v1.ScanConfigurationId saved_configuration_id = 5;
+  RevisionToken saved_configuration_revision = 6;
+  infinium.domain.v1.ScanConfigurationId effective_configuration_id = 7;
+  infinium.domain.v1.InstallationSnapshotId installation_snapshot_id = 8;
+  infinium.domain.v1.AnalysisContextId analysis_context_id = 9;
+  infinium.domain.v1.ResolvedInputManifestId resolved_input_manifest_id = 10;
+  WorkEstimate estimate = 11;
+  repeated string limitations = 12;
+  infinium.common.v1.Instant prepared_at = 13;
+}
+
+message WorkEstimate {
+  infinium.common.v1.OptionalUInt64 planned_work_units = 1;
+  infinium.common.v1.OptionalUInt64 estimated_elapsed_milliseconds = 2;
+  infinium.common.v1.OptionalInt64 estimated_calculated_nano_usd = 3;
+  infinium.common.v1.OptionalUInt64 provider_dispatches = 4;
+  string authority_statement = 5;
+  infinium.common.v1.OptionalUInt64 estimated_coverage_units = 6;
+}
+
+message SubmitPreparedRunRequest {
+  infinium.domain.v1.DurableCommandId idempotency_key = 1;
+  string preparation_id = 2;
+  RevisionToken expected_preparation_revision = 3;
+  string user_gesture_id = 4;
+  ManualInitiationKind initiation_kind = 5;
+  infinium.common.v1.Instant dispatch_deadline = 6;
+  infinium.domain.v1.RunId requested_run_id = 7;
+
+  reserved 90 to 99;
+  reserved "analysis_orchestration_request_json", "generic_path", "sql", "command_line", "url", "credential", "provider_request";
 }
 
 enum CancellationDisposition {

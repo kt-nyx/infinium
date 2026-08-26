@@ -27,7 +27,9 @@ public sealed partial class AuthoritativeStore
         string? startInitiationKind = null,
         DateTimeOffset? startDispatchDeadline = null,
         string? operationKind = null,
-        string? operationRequestJson = null)
+        string? operationRequestJson = null,
+        string? startUserGestureId = null,
+        string? startPreparationId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(durableCommandId);
         ArgumentException.ThrowIfNullOrWhiteSpace(runId);
@@ -41,6 +43,20 @@ public sealed partial class AuthoritativeStore
         if (startInitiationKind is not null)
         {
             ValidateAuditToken(startInitiationKind, nameof(startInitiationKind));
+        }
+        if ((startUserGestureId is null) != (startPreparationId is null))
+        {
+            throw new ArgumentException(
+                "A prepared start must bind both its user gesture and preparation identity.");
+        }
+        if (startUserGestureId is not null)
+        {
+            ValidateSetupIdentity(startUserGestureId, nameof(startUserGestureId));
+            ValidateSetupIdentity(startPreparationId!, nameof(startPreparationId));
+            if (startUserGestureId.Length < 16)
+            {
+                throw new ArgumentException("The user gesture identity is too short.", nameof(startUserGestureId));
+            }
         }
         if ((operationKind is null) != (operationRequestJson is null))
         {
@@ -92,6 +108,17 @@ public sealed partial class AuthoritativeStore
                         transaction, ("$run", existingRun.RunId), ("$kind", operationKind), ("$sha", operationSha256)) != 1)
                 {
                     throw new InvalidOperationException("A durable command key cannot be rebound to different run-operation inputs.");
+                }
+                if (startUserGestureId is not null
+                    && ScalarLong(
+                        "SELECT COUNT(*) FROM prepared_run_submissions WHERE command_id=$command AND preparation_id=$preparation AND user_gesture_id=$gesture;",
+                        transaction,
+                        ("$command", durableCommandId),
+                        ("$preparation", startPreparationId),
+                        ("$gesture", startUserGestureId)) != 1)
+                {
+                    throw new InvalidOperationException(
+                        "A durable command key cannot be rebound to a different preparation or user gesture.");
                 }
 
                 transaction.Commit();
@@ -171,6 +198,17 @@ public sealed partial class AuthoritativeStore
                     VALUES ($run,$kind,$request,$sha,$now);
                     """, transaction, ("$run", runId), ("$kind", operationKind),
                     ("$request", operationRequestJson), ("$sha", operationSha256), ("$now", ToText(now)));
+            }
+            if (startUserGestureId is not null)
+            {
+                Execute(
+                    "INSERT INTO prepared_run_submissions(command_id,preparation_id,user_gesture_id,submitted_at) "
+                    + "VALUES($command,$preparation,$gesture,$now);",
+                    transaction,
+                    ("$command", durableCommandId),
+                    ("$preparation", startPreparationId),
+                    ("$gesture", startUserGestureId),
+                    ("$now", ToText(now)));
             }
             transaction.Commit();
             return GetRunCore(runId);
@@ -450,9 +488,11 @@ public sealed partial class AuthoritativeStore
                        command.command_kind, command.expected_generation,
                        run.installation_snapshot_id, run.analysis_context_id,
                        run.effective_scan_configuration_id, run.resolved_input_manifest_id,
-                       command.start_initiation_kind, command.start_dispatch_deadline
+                       command.start_initiation_kind, command.start_dispatch_deadline,
+                       submission.preparation_id, submission.user_gesture_id
                 FROM durable_commands command
                 JOIN runs run ON run.run_id = command.run_id
+                LEFT JOIN prepared_run_submissions submission ON submission.command_id = command.command_id
                 WHERE command.command_id = $id;
                 """;
             command.Parameters.AddWithValue("$id", commandId);
@@ -483,7 +523,9 @@ public sealed partial class AuthoritativeStore
                     ? null
                     : DateTimeOffset.Parse(
                         reader.GetString(13),
-                        System.Globalization.CultureInfo.InvariantCulture));
+                        System.Globalization.CultureInfo.InvariantCulture),
+                reader.IsDBNull(14) ? null : reader.GetString(14),
+                reader.IsDBNull(15) ? null : reader.GetString(15));
         }
     }
 
