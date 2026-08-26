@@ -9,6 +9,7 @@ public sealed partial class AuthoritativeStore
     internal FindingCasePersistenceReceipt PublishFindingCase(
         FindingCaseContract value,
         ReadOnlyMemory<byte> serializedValue,
+        IReadOnlyList<FindingReportPublicationPayload> reports,
         AttemptRecord attempt,
         RunBinding binding,
         DateTimeOffset now)
@@ -721,6 +722,13 @@ public sealed partial class AuthoritativeStore
                 value,
                 payloadId,
                 Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(serializedValue.Span)),
+                now,
+                transaction);
+            IndexFindingReportPublications(
+                value,
+                payloadId,
+                Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(serializedValue.Span)),
+                reports,
                 now,
                 transaction);
             transaction.Commit();

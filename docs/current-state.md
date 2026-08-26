@@ -31,12 +31,14 @@ closed renderer envelope/operation registry with a fail-closed reference
 consumer. The application contract also exposes typed tool/profile/setup state,
 versioned saved configurations, honest pre-run estimates, non-secret provider
 status, and prepared manual-run initiation with immutable durable bindings.
-The Phase C candidate contains bounded result/review primitives, but their
-Checkpoint C claims are suspended during correction. In particular, reports
-are not yet proven queryable through a generated service consumer, targeted
-verification is not an accepted executable operation, export deletion is
-missing, and request/cursor/provenance validation is incomplete. Canonical
-analysis truth remains the authority while these application paths are repaired.
+The independent Phase C correction surface now has a real FindingReport
+publication/queue/detail consumer, recursive closed request validation,
+append-only structured-export deletion with crash recovery, and corrected
+provenance and cursor binding. Checkpoint C remains suspended because targeted
+verification is still not an accepted executable operation; that path requires
+the architecture decision recorded in the implementation record. Canonical
+analysis truth remains the authority, WP5/WP6 are not accepted, and Phase D
+remains blocked.
 The renderer boundary still permits exactly five Phase A operation/message combinations,
 keeps gesture proof request-only, represents accepted and explicit non-success
 outcomes separately, and commits replay state only after complete validation.
@@ -56,7 +58,7 @@ work.
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
-| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) remain accepted at corrected Checkpoint B. Phase C (WP5-WP6) is under correction from candidate `c551c12e22522e7a2cef8c21a322aa76db8fc23e`; its earlier Checkpoint C receipt is suspended. |
+| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) remain accepted at corrected Checkpoint B. Independent Phase C corrections continue from clean candidate `ef4cead98b48b0a97982867a1baa9b588cd7e70b`; targeted verification remains architecture-blocked and the earlier Checkpoint C receipt stays suspended. |
 | Next gate | Corrected Checkpoint C. Phase D and `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` remain blocked until every required Phase C vertical passes correction and re-review. This does not activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |
@@ -107,7 +109,7 @@ asset, script, configuration, dependency, performance, or runtime problem.
   semantic admission, persistence, and replay are separated by responsibility.
 - Functional naming is enforced automatically across ordinary source,
   scripts, projects, protobuf, structured contract names, and repository
-  paths. The reviewed allowlist contains 177 exact compatibility,
+  paths. The reviewed allowlist contains 184 exact compatibility,
   governance, retained-evidence, or genuine domain-term exceptions, with zero
   cleanup-debt and zero unexplained findings.
 - Verification closeout now requires zero repository-owned .NET/test-host
@@ -132,10 +134,12 @@ asset, script, configuration, dependency, performance, or runtime problem.
   production-readiness claim yet.
 - Native credential entry remains unavailable in Phase B; provider status is
   non-secret and local-only setup/run evidence remains available.
-- Phase C remains under correction. Its prior offline fixtures and generated-
-  client calls are retained as diagnostic evidence, not as a restored
-  Checkpoint C receipt. It does not build the desktop, expand analyzer scope,
-  qualify an independent semantic oracle, or activate M2.
+- Phase C remains under correction. FindingReport query/readback, recursive
+  Phase C request validation, export deletion/recovery, and corrected
+  provenance/paging have focused offline producer-consumer evidence, but this
+  does not restore Checkpoint C while targeted verification lacks accepted
+  architecture. It does not build the desktop, expand analyzer scope, qualify
+  an independent semantic oracle, or activate M2.
 
 ## Current authority
 

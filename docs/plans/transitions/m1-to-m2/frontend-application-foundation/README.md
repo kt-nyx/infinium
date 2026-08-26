@@ -61,10 +61,12 @@ tool/profile/configuration setup, honest local estimates, non-secret provider
 status, prepared manual-run initiation, durable gesture/binding receipts, and
 an offline retained-input native diagnostic proof through the real durable
 analysis operation, including reconnect and restart. Phase C result/review
-primitives are present but under correction: the earlier
-report-query, request-validation, targeted-verification, export-deletion,
-provenance, and cursor evidence was incomplete. The earlier Checkpoint C receipt
-is suspended, so Phase D is blocked and has not started.
+primitives are present but under correction. The independent report-query,
+recursive request-validation, export-deletion/recovery, provenance, and cursor
+defects now have focused offline producer-consumer evidence. Targeted
+verification remains blocked on an accepted changed-snapshot and exact-scope
+architecture decision, so WP5/WP6 are not accepted, the earlier Checkpoint C
+receipt remains suspended, and Phase D has not started.
 
 M2 remains inactive until a separate accepted M2 plan exists. The transition's
 diagnostic React surface is development evidence, not the M2 interface.

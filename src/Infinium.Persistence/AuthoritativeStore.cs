@@ -14,8 +14,8 @@ namespace Infinium.Persistence;
 
 public sealed partial class AuthoritativeStore : IDisposable
 {
-    public const int CurrentSchemaVersion = ResultsReviewPersistenceDeclarations.SchemaVersion;
-    public const string CurrentStorageContractVersion = ResultsReviewPersistenceDeclarations.StorageContractVersion;
+    public const int CurrentSchemaVersion = ResultsPublicationPersistenceDeclarations.SchemaVersion;
+    public const string CurrentStorageContractVersion = ResultsPublicationPersistenceDeclarations.StorageContractVersion;
     private const string SchemaV3Fingerprint =
         "02fed67fa5dac6c28ec2a9f477733edc9f12eaa03a08f9d7dec05b502e45d6cf";
     private const int MaximumBackupManifestBytes = 16 * 1024 * 1024;
@@ -63,6 +63,7 @@ public sealed partial class AuthoritativeStore : IDisposable
             WindowsGuardedSqliteVfs.EnablePersistentWal(connection);
             ApplyMigrations();
             ValidateDatabaseIdentityAndIntegrity(connection, BindingIdentity);
+            RecoverStructuredExportArtifacts(DateTimeOffset.UtcNow);
             sqliteVfs.VerifyAllGuards();
             RecordWriteClassAuthorityBindings(DateTimeOffset.UtcNow);
         }

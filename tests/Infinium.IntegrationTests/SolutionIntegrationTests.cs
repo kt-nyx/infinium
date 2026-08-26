@@ -666,7 +666,7 @@ public sealed class SolutionIntegrationTests
             StopCoordinator(root, coordinatorProcessId);
             coordinatorProcessId = 0;
             using AuthoritativeStore readback = new(new StoragePaths(root));
-            Assert.AreEqual(14, readback.GetSchemaVersion());
+            Assert.AreEqual(15, readback.GetSchemaVersion());
             DurableCommandRecord receipt = readback.GetDurableCommand("command-prepared-local");
             Assert.AreEqual(preparationId, receipt.StartPreparationId);
             Assert.AreEqual("gesture-1234567890abcdef", receipt.StartUserGestureId);
@@ -1608,6 +1608,9 @@ public sealed class SolutionIntegrationTests
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText =
             """
+            DROP TABLE structured_export_projection;
+            DROP TABLE structured_export_events;
+            DROP TABLE finding_report_publications;
             DROP TABLE structured_exports;
             DROP TABLE targeted_verifications;
             DROP TABLE assumption_projection;
@@ -1616,6 +1619,7 @@ public sealed class SolutionIntegrationTests
             DROP TABLE review_events;
             DROP TABLE result_projection_items;
             DELETE FROM migration_history WHERE migration_id='results-review-workflow-0014';
+            DELETE FROM migration_history WHERE migration_id='result-publication-and-export-deletion-0015';
             DROP TRIGGER prepared_run_submissions_append_only_update;
             DROP TRIGGER prepared_run_submissions_append_only_delete;
             DROP INDEX prepared_run_submissions_one_shot_gesture;

@@ -808,7 +808,121 @@ that defines the typed targeted-scope expansion input, changed-snapshot binding,
 dependency closure, mapping into `managed-analysis-v1`, and exact coverage/gap
 semantics. No new operation kind or generic-substrate fallback is authorized.
 
-Contract state:
+### Limited independent Phase C correction receipt
+
+Authority: owner-authorized correction from clean commit
+`ef4cead98b48b0a97982867a1baa9b588cd7e70b`. This receipt covers only the
+independent WP5/WP6 defects. It does not research, design, implement, execute,
+or claim completion of targeted verification. WP5/WP6 remain under correction,
+Checkpoint C remains suspended, and Phase D remains blocked.
+
+Corrected WP5 surface:
+
+- `FindingCaseAnalysisPhase` now projects and publishes schema-validated
+  FindingReport payloads in the same transaction as the canonical retained
+  finding/case output. `finding_report_publications` is an append-only,
+  run-bound queue index over those payloads and their exact canonical source;
+- application `1.8.0` adds bounded `ListFindingReports` and
+  `GetFindingReport` operations. The generated named-pipe C# consumer proves
+  report publication/readback for supported findings, resolved negatives,
+  limited/lead-only results, abstentions, failures, and coverage gaps. Detail
+  preserves affected subjects, taxonomy, analyzer-local assessment boundaries,
+  action or explicit non-applicability, uncertainty, reversibility, risks,
+  validation, evidence identities, coverage, failures, exclusions, gaps, and
+  exact report/source provenance without inventing evidence; and
+- all result/report lists now require an existing exact run. Result and report
+  cursors bind run, authoritative projection identity, exact allowlisted query,
+  sort, page size, last key, and expiry. Evidence metadata now labels exact
+  provenance and artifact schema identity/version rather than mislabeling them
+  as producer identity/version.
+
+Corrected independent WP6 surface:
+
+- every Phase C request passes the recursive protobuf validator before service
+  execution. Unknown fields at any nesting level, unknown/unsupported enum
+  numerics, invalid closed tokens/defaults, malformed identities, oversized
+  text/collections/cursors, and missing required values fail as typed invalid
+  arguments. This validates only the targeted-verification transport shape and
+  grants no executable authority for that blocked path;
+- assumption cursors now bind an authoritative profile projection fingerprint,
+  which changes after a relevant successor event or explicit projection rebuild,
+  produces projection invalidation rather than cross-revision replay, and remains
+  stable across an ordinary restart and backup/restore; and
+- structured exports have typed preview/delete operations, append-only
+  `created`, `deletion-requested`, and `deleted` events, a typed active/pending/
+  deleted projection, exact idempotent retry, guarded local-private file
+  removal, and tombstoned readback. Startup completes pending deletions and
+  removes undeclared product-owned crash orphans. Active artifact tampering is
+  reported as integrity failure; deletion safely removes missing or tampered
+  artifacts without exposing filesystem authority. Backup includes only active
+  artifact files while retaining every database event/tombstone, and restore
+  completes pending deletion honestly.
+
+Focused verification and measurements:
+
+- `ResultsReviewApplicationContractTests`: 3 passed, including all 16 Phase C
+  request types with recursive unknown-field rejection plus invalid-enum and
+  oversized-text cases;
+- focused result/report plus durable review/export lifecycle integration: 4
+  passed. The lifecycle covers create/get/preview/delete/exact retry, missing
+  artifact, tampering, injected pending-deletion interruption, restart,
+  backup/restore, append-only history, assumption projection mutation, and
+  byte-for-byte source immutability;
+- real managed-analysis named-pipe generated consumer: 1 passed, proving
+  FindingReport queue/detail, complete retained recommendation fields,
+  provenance, structured-export preview/delete, unknown-field, invalid-enum,
+  oversized, and wrong-run service rejection without targeted execution; and
+- 100,000 retained summaries with a 100-item severity/search page: 77 ms local
+  query latency and 15,679-byte protobuf message, below the 1,048,576-byte
+  application limit.
+
+Classified review result for this limited surface: `ACCEPT` after correction
+and affected-surface re-review, without restoring Phase C acceptance.
+
+- Must fix: FindingReport existed only as a detached projection. Added the
+  atomic producer, retained payload/index, generated-service queue/detail
+  consumer, canonical-source enrichment, and hostile-text/round-trip evidence.
+- Must fix: Phase C services performed inconsistent shallow validation. Added
+  one recursive closed validator at every Phase C RPC entry and real service
+  rejection evidence.
+- Must fix: export creation wrote a sensitive local artifact without a deletion
+  lifecycle. Added append-only intent/completion, guarded deletion, typed
+  tombstone/readback, restart orphan/pending recovery, and backup/restore
+  semantics.
+- Must fix: evidence fields claimed producer identity/version when the retained
+  values were artifact provenance and schema metadata; renamed the contract
+  fields. Report summaries separately label the retained source payload record
+  while report provenance retains the canonical report-contract payload ID.
+  A re-review also found general reports using finding/gap/taxonomy identities
+  as `source_assignment_id`; publication now binds the real managed-analysis
+  assignment identity, with the canonical finding/case input identity used only
+  by direct phase-level execution where no managed assignment exists.
+- Must fix: nonexistent result runs could look like an empty population and
+  assumption cursors survived relevant mutation. Added exact run ownership and
+  authoritative projection binding/invalidation.
+- Owner/authority decision: targeted verification remains the previously
+  recorded architecture blocker; no new independent correction blocker was
+  found.
+- Safety/isolation breach: none.
+
+Contract state after this limited correction: application `1.8.0`, domain
+`1.3.0`, storage `1.14.0`, renderer `1.1.0`, storage schema `15`; protobuf
+fingerprint
+`093158cf0212c899cc192df3bc9f2a2436e0191e3e8c6a9b5acc3142bcab71e9`;
+storage fingerprint
+`a64750491c8cd7e79d96e3190710b4b0c71c6377a83df2a5e25df0bc554f7b1f`.
+The new operations and FindingReport contract remain implementation-active;
+their focused producer/consumer and lifecycle seams are validated but are not
+frozen or Phase C accepted.
+
+No complete verification floor was run because the owner explicitly retained
+targeted verification as an unresolved Checkpoint C blocker. No private
+evaluator material, archive, network, provider, credential, live, or billable
+operation was accessed. Documentation validation passed 150 metadata files,
+152 Markdown link sources, and 19 JSON files. Functional naming passed 184
+exact reviewed exceptions with zero unexplained findings.
+
+Contract state before the limited independent correction:
 
 - application `1.7.0`, domain `1.3.0`, storage `1.13.0`, renderer `1.1.0`,
   storage schema `14`;
@@ -839,7 +953,7 @@ fixtures and local product roots. It did not access private evaluator material,
 archives, network, providers, credentials, live systems, or billable effects,
 and no expected truth was authored by product output.
 
-### Checkpoint C complete verification receipt
+### Superseded candidate verification receipt — Checkpoint C suspended
 
 The first accumulated-floor attempts remained diagnostic rather than final:
 
@@ -855,7 +969,7 @@ Both were ordinary fixture drift. The same mutable candidate was re-reviewed,
 `git diff --check` passed, and the complete final floor was restarted from
 locked restore on the corrected review-ready candidate.
 
-Final accepted commands and results:
+Prior candidate commands and diagnostic results (not current acceptance):
 
 - `dotnet restore Infinium.sln --locked-mode --nologo`: passed; every project
   was already up to date and no package was downloaded.

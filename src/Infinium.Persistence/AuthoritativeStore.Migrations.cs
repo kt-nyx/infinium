@@ -326,6 +326,18 @@ public sealed partial class AuthoritativeStore
             {
                 ValidateResultsReviewMigration();
             }
+            using SqliteCommand publicationVersionCommand = connection.CreateCommand();
+            publicationVersionCommand.CommandText = "PRAGMA user_version;";
+            int publicationVersion = Convert.ToInt32(publicationVersionCommand.ExecuteScalar(),
+                System.Globalization.CultureInfo.InvariantCulture);
+            if (publicationVersion == 14)
+            {
+                ApplyResultsPublicationMigration();
+            }
+            else if (publicationVersion == 15)
+            {
+                ValidateResultsPublicationMigration();
+            }
         }
     }
 
@@ -2365,6 +2377,7 @@ public sealed partial class AuthoritativeStore
         "index:idx_result_projection_queue",
         "index:idx_result_projection_severity",
         "index:idx_assumption_projection_profile",
+        "index:idx_finding_report_queue",
         "table:analysis_candidates",
         "table:application_setup_objects",
         "table:application_setup_receipts",
@@ -2375,6 +2388,9 @@ public sealed partial class AuthoritativeStore
         "table:assumption_projection",
         "table:targeted_verifications",
         "table:structured_exports",
+        "table:finding_report_publications",
+        "table:structured_export_events",
+        "table:structured_export_projection",
         "table:analysis_coverage",
         "table:analysis_coverage_failure_links",
         "table:analysis_coverage_gap_links",
@@ -2505,6 +2521,10 @@ public sealed partial class AuthoritativeStore
         "trigger:targeted_verifications_append_only_update",
         "trigger:structured_exports_append_only_delete",
         "trigger:structured_exports_append_only_update",
+        "trigger:finding_report_publications_append_only_delete",
+        "trigger:finding_report_publications_append_only_update",
+        "trigger:structured_export_events_append_only_delete",
+        "trigger:structured_export_events_append_only_update",
         "trigger:prepared_manual_runs_append_only_delete",
         "trigger:prepared_manual_runs_append_only_update",
         "trigger:prepared_run_submissions_append_only_delete",

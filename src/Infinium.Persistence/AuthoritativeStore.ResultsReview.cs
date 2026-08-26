@@ -55,6 +55,34 @@ public sealed record ResultItemPagePersistenceRecord(
     string? NextItemId,
     string ProjectionVersion);
 
+public sealed record FindingReportPublicationPayload(
+    FindingReportDocument Report,
+    byte[] SerializedPayload);
+
+public sealed record FindingReportSummaryPersistenceRecord(
+    string ReportId,
+    string RunId,
+    string State,
+    string? FindingId,
+    string? CaseId,
+    string SubjectId,
+    string Title,
+    string Conclusion,
+    string AnalyzerId,
+    string ReportPayloadId,
+    string ReportPayloadSha256,
+    string SourcePayloadId,
+    string SourcePayloadSha256);
+
+public sealed record FindingReportPagePersistenceRecord(
+    IReadOnlyList<FindingReportSummaryPersistenceRecord> Items,
+    bool HasMore,
+    string ProjectionVersion);
+
+public sealed record FindingReportDetailPersistenceRecord(
+    FindingReportSummaryPersistenceRecord Summary,
+    byte[] ReportPayload);
+
 public sealed record ReviewEventPersistenceRecord(
     string EventId,
     long Revision,
@@ -167,7 +195,25 @@ public sealed record StructuredExportPersistenceRecord(
     IReadOnlyList<string> PrivacyDecisions,
     IReadOnlyList<string> SourcePolicyDecisions,
     IReadOnlyList<string> ProvenanceIds,
+    DateTimeOffset CreatedAt,
+    string State,
+    DateTimeOffset? DeletedAt,
+    long EventRevision,
+    IReadOnlyList<StructuredExportEventPersistenceRecord> History,
+    bool HistoryTruncated);
+
+public sealed record StructuredExportEventPersistenceRecord(
+    string EventId,
+    long Revision,
+    string EventKind,
+    string RequestFingerprintSha256,
     DateTimeOffset CreatedAt);
+
+public sealed record StructuredExportDeletionPreviewPersistenceRecord(
+    string ExportId,
+    string CurrentState,
+    bool ArtifactPresent,
+    bool AuditHistoryRetained);
 
 public sealed record DeletionPreviewPersistenceRecord(
     string SourceId,
@@ -294,6 +340,74 @@ public sealed partial class AuthoritativeStore
                 payloadSha256,
                 now,
                 transaction);
+        }
+    }
+
+    private void IndexFindingReportPublications(
+        FindingCaseContract analysis,
+        string sourcePayloadId,
+        string sourcePayloadSha256,
+        IReadOnlyList<FindingReportPublicationPayload> reports,
+        DateTimeOffset now,
+        SqliteTransaction transaction)
+    {
+        foreach (FindingReportPublicationPayload publication in reports)
+        {
+            FindingReportContract.Validate(publication.Report);
+            if (publication.Report.RunId != analysis.OriginatingRunId
+                || publication.Report.Provenance.SourcePayloadId != analysis.PayloadId
+                || publication.SerializedPayload.Length == 0)
+            {
+                throw new InvalidDataException(
+                    "Finding-report publication must bind the exact canonical finding/case output.");
+            }
+            string reportPayloadId = AdmitCoordinatorPayload(
+                publication.SerializedPayload,
+                "finding-report",
+                publication.Report.ReportId.Value,
+                now,
+                transaction);
+            string reportSha256 = Convert.ToHexStringLower(SHA256.HashData(publication.SerializedPayload));
+            Execute(
+                """
+                INSERT OR IGNORE INTO finding_report_publications(
+                    report_id,run_id,report_state,finding_occurrence_id,case_occurrence_id,
+                    subject_id,analyzer_id,inert_title,inert_conclusion,report_payload_id,
+                    report_payload_sha256,source_payload_id,source_payload_sha256,created_at)
+                VALUES ($report,$run,$state,$finding,$case,$subject,$analyzer,$title,$conclusion,
+                    $report_payload,$report_sha,$source_payload,$source_sha,$now);
+                """,
+                transaction,
+                ("$report", publication.Report.ReportId.Value),
+                ("$run", publication.Report.RunId.Value),
+                ("$state", Kebab(publication.Report.State)),
+                ("$finding", publication.Report.FindingId?.Value),
+                ("$case", publication.Report.CaseId?.Value),
+                ("$subject", publication.Report.SubjectId.Value),
+                ("$analyzer", publication.Report.AnalyzerId.Value),
+                ("$title", BoundedText(publication.Report.Title, 256)),
+                ("$conclusion", BoundedText(publication.Report.Conclusion, 4096)),
+                ("$report_payload", reportPayloadId),
+                ("$report_sha", reportSha256),
+                ("$source_payload", sourcePayloadId),
+                ("$source_sha", sourcePayloadSha256),
+                ("$now", ToText(now)));
+            RequireFindingCaseRow(
+                """
+                SELECT COUNT(*) FROM finding_report_publications
+                WHERE report_id=$report AND run_id=$run AND report_state=$state
+                  AND report_payload_id=$report_payload AND report_payload_sha256=$report_sha
+                  AND source_payload_id=$source_payload AND source_payload_sha256=$source_sha;
+                """,
+                "A finding report resolves to different retained semantics.",
+                transaction,
+                ("$report", publication.Report.ReportId.Value),
+                ("$run", publication.Report.RunId.Value),
+                ("$state", Kebab(publication.Report.State)),
+                ("$report_payload", reportPayloadId),
+                ("$report_sha", reportSha256),
+                ("$source_payload", sourcePayloadId),
+                ("$source_sha", sourcePayloadSha256));
         }
     }
 
@@ -443,6 +557,7 @@ public sealed partial class AuthoritativeStore
 
         lock (gate)
         {
+            _ = GetRunCore(runId);
             using SqliteCommand command = connection.CreateCommand();
             string kindParameters = string.Join(',', closedKinds.Select((_, index) => "$kind" + index));
             string order = sort == "severity"
@@ -496,6 +611,7 @@ public sealed partial class AuthoritativeStore
         ArgumentException.ThrowIfNullOrWhiteSpace(itemId);
         lock (gate)
         {
+            _ = GetRunCore(runId);
             using SqliteCommand command = connection.CreateCommand();
             command.CommandText =
                 """
@@ -518,6 +634,7 @@ public sealed partial class AuthoritativeStore
         ArgumentException.ThrowIfNullOrWhiteSpace(runId);
         lock (gate)
         {
+            _ = GetRunCore(runId);
             using SqliteCommand command = connection.CreateCommand();
             command.CommandText =
                 "SELECT (SELECT COUNT(*) FROM result_projection_items WHERE run_id=$run), "
@@ -546,6 +663,7 @@ public sealed partial class AuthoritativeStore
         }
         lock (gate)
         {
+            _ = GetRunCore(runId);
             using SqliteCommand command = connection.CreateCommand();
             command.CommandText =
                 """
@@ -567,6 +685,127 @@ public sealed partial class AuthoritativeStore
                 items.Add(ReadResultItem(reader));
             }
             return items;
+        }
+    }
+
+    public FindingReportPagePersistenceRecord ListFindingReports(
+        string runId,
+        IReadOnlyCollection<string> states,
+        string searchText,
+        string sort,
+        int maximumCount,
+        string? afterReportId,
+        string? afterState)
+    {
+        if (maximumCount is < 1 or > 100 || states.Count is < 1 or > 6
+            || Encoding.UTF8.GetByteCount(searchText) > 160)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maximumCount));
+        }
+        string[] closedStates = states.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+        if (closedStates.Any(item => item is not (
+                "supported-finding" or "resolved-negative" or "abstention" or "failure" or "limited" or "coverage-gap"))
+            || sort is not ("identity" or "state"))
+        {
+            throw new ArgumentException("The finding-report query contains an unsupported filter or sort.");
+        }
+        lock (gate)
+        {
+            _ = GetRunCore(runId);
+            using SqliteCommand command = connection.CreateCommand();
+            string stateParameters = string.Join(',', closedStates.Select((_, index) => "$state" + index));
+            string order = sort == "state" ? "report_state,report_id" : "report_id";
+            command.CommandText =
+                $"""
+                SELECT report_id,run_id,report_state,finding_occurrence_id,case_occurrence_id,
+                       subject_id,inert_title,inert_conclusion,analyzer_id,report_payload_id,
+                       report_payload_sha256,source_payload_id,source_payload_sha256
+                FROM finding_report_publications
+                WHERE run_id=$run AND report_state IN ({stateParameters})
+                  AND ($search='' OR instr(lower(inert_title),lower($search)) > 0
+                                   OR instr(lower(inert_conclusion),lower($search)) > 0)
+                  AND (($sort='identity' AND ($after='' OR report_id>$after))
+                    OR ($sort='state' AND ($after='' OR report_state>$after_state
+                      OR (report_state=$after_state AND report_id>$after))))
+                ORDER BY {order}
+                LIMIT $limit;
+                """;
+            command.Parameters.AddWithValue("$run", runId);
+            command.Parameters.AddWithValue("$search", searchText);
+            command.Parameters.AddWithValue("$after", afterReportId ?? string.Empty);
+            command.Parameters.AddWithValue("$after_state", afterState ?? string.Empty);
+            command.Parameters.AddWithValue("$sort", sort);
+            command.Parameters.AddWithValue("$limit", maximumCount + 1);
+            for (int index = 0; index < closedStates.Length; index++)
+            {
+                command.Parameters.AddWithValue("$state" + index, closedStates[index]);
+            }
+            using SqliteDataReader reader = command.ExecuteReader();
+            List<FindingReportSummaryPersistenceRecord> items = [];
+            while (reader.Read())
+            {
+                items.Add(ReadFindingReportSummary(reader));
+            }
+            bool more = items.Count > maximumCount;
+            if (more)
+            {
+                items.RemoveAt(items.Count - 1);
+            }
+            return new(items, more, "1");
+        }
+    }
+
+    public FindingReportDetailPersistenceRecord GetFindingReport(string runId, string reportId)
+    {
+        ValidateOpaque(runId, nameof(runId));
+        ValidateOpaque(reportId, nameof(reportId));
+        lock (gate)
+        {
+            _ = GetRunCore(runId);
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT report_id,run_id,report_state,finding_occurrence_id,case_occurrence_id,
+                       subject_id,inert_title,inert_conclusion,analyzer_id,report_payload_id,
+                       report_payload_sha256,source_payload_id,source_payload_sha256
+                FROM finding_report_publications WHERE run_id=$run AND report_id=$report;
+                """;
+            command.Parameters.AddWithValue("$run", runId);
+            command.Parameters.AddWithValue("$report", reportId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                throw new KeyNotFoundException("The requested finding report does not exist in the run.");
+            }
+            FindingReportSummaryPersistenceRecord summary = ReadFindingReportSummary(reader);
+            reader.Close();
+            byte[] payload = ReadCandidateAnalysisPayload(summary.ReportPayloadId);
+            string actualSha = Convert.ToHexStringLower(SHA256.HashData(payload));
+            if (!StringComparer.Ordinal.Equals(actualSha, summary.ReportPayloadSha256))
+            {
+                throw new InvalidDataException("The retained finding report failed integrity validation.");
+            }
+            return new(summary, payload);
+        }
+    }
+
+    public string GetFindingReportProjectionIdentity(string runId)
+    {
+        ValidateOpaque(runId, nameof(runId));
+        lock (gate)
+        {
+            _ = GetRunCore(runId);
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT COUNT(*),COALESCE(group_concat(report_payload_sha256,','),'')
+                FROM (SELECT report_payload_sha256 FROM finding_report_publications
+                      WHERE run_id=$run ORDER BY report_id);
+                """;
+            command.Parameters.AddWithValue("$run", runId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            reader.Read();
+            return Sha256($"{runId}\n{reader.GetInt64(0).ToString(CultureInfo.InvariantCulture)}\n{reader.GetString(1)}");
         }
     }
 
@@ -695,6 +934,25 @@ public sealed partial class AuthoritativeStore
                 values.Add(ReadAssumption(reader));
             }
             return values;
+        }
+    }
+
+    public string GetAssumptionProjectionIdentity(string profileId)
+    {
+        ValidateOpaque(profileId, nameof(profileId));
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT COUNT(*),COALESCE(group_concat(identity,','),'') FROM (
+                    SELECT assumption_id || ':' || revision || ':' || analysis_context_id || ':' || updated_at AS identity
+                    FROM assumption_projection WHERE profile_id=$profile ORDER BY assumption_id);
+                """;
+            command.Parameters.AddWithValue("$profile", profileId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            reader.Read();
+            return Sha256($"{profileId}\n{reader.GetInt64(0).ToString(CultureInfo.InvariantCulture)}\n{reader.GetString(1)}");
         }
     }
 
@@ -1009,6 +1267,19 @@ public sealed partial class AuthoritativeStore
                     ("$manifest", JsonSerializer.Serialize(manifest)), ("$manifest_sha", manifestSha),
                     ("$path", relativePath), ("$artifact_sha", artifactSha),
                     ("$bytes", artifact.Length), ("$now", ToText(now)));
+                string createdEventId = StableId("structured-export-event", exportId, "created");
+                Execute(
+                    """
+                    INSERT INTO structured_export_events(
+                        event_id,idempotency_key,request_sha256,export_id,revision,event_kind,created_at)
+                    VALUES ($event,$key,$sha,$export,1,'created',$now);
+                    INSERT INTO structured_export_projection(
+                        export_id,revision,state,last_event_id,deleted_at,updated_at)
+                    VALUES ($export,1,'active',$event,NULL,$now);
+                    """,
+                    transaction,
+                    ("$event", createdEventId), ("$key", "created-" + exportId),
+                    ("$sha", requestSha), ("$export", exportId), ("$now", ToText(now)));
                 transaction.Commit();
             }
             catch
@@ -1025,6 +1296,88 @@ public sealed partial class AuthoritativeStore
         ValidateOpaque(exportId, nameof(exportId));
         lock (gate)
         {
+            return GetStructuredExportCore(exportId);
+        }
+    }
+
+    public StructuredExportDeletionPreviewPersistenceRecord PreviewStructuredExportDeletion(string exportId)
+    {
+        ValidateOpaque(exportId, nameof(exportId));
+        lock (gate)
+        {
+            StructuredExportPersistenceRecord export = GetStructuredExportCore(exportId, validateArtifact: false);
+            string relativePath = ScalarStringOrNull(
+                    "SELECT artifact_relative_path FROM structured_exports WHERE export_id=$id;",
+                    null,
+                    ("$id", exportId))
+                ?? throw new KeyNotFoundException("The structured export does not exist.");
+            bool present = File.Exists(Paths.ResolveProductPath(ProductWriteClass.Export, relativePath));
+            return new(exportId, export.State, present, true);
+        }
+    }
+
+    public StructuredExportPersistenceRecord DeleteStructuredExport(
+        string idempotencyKey,
+        string exportId,
+        DateTimeOffset now)
+    {
+        ValidateOpaque(idempotencyKey, nameof(idempotencyKey));
+        ValidateOpaque(exportId, nameof(exportId));
+        string requestSha = Sha256(JsonSerializer.Serialize(new { export_id = exportId }));
+        lock (gate)
+        {
+            StructuredExportPersistenceRecord current = GetStructuredExportCore(exportId, validateArtifact: false);
+            string requestEventKey = "delete-requested-" + idempotencyKey;
+            using (SqliteCommand replay = connection.CreateCommand())
+            {
+                replay.CommandText =
+                    "SELECT request_sha256,export_id FROM structured_export_events WHERE idempotency_key=$key;";
+                replay.Parameters.AddWithValue("$key", requestEventKey);
+                using SqliteDataReader reader = replay.ExecuteReader();
+                if (reader.Read()
+                    && (!StringComparer.Ordinal.Equals(reader.GetString(0), requestSha)
+                        || !StringComparer.Ordinal.Equals(reader.GetString(1), exportId)))
+                {
+                    throw new InvalidOperationException("A structured-export deletion key cannot be rebound.");
+                }
+            }
+
+            if (current.State == "active")
+            {
+                long revision = checked(current.EventRevision + 1);
+                string eventId = StableId("structured-export-event", exportId, revision.ToString(CultureInfo.InvariantCulture), requestSha);
+                using SqliteTransaction transaction = BeginTransaction();
+                Execute(
+                    """
+                    INSERT INTO structured_export_events(
+                        event_id,idempotency_key,request_sha256,export_id,revision,event_kind,created_at)
+                    VALUES ($event,$key,$sha,$export,$revision,'deletion-requested',$now);
+                    """,
+                    transaction,
+                    ("$event", eventId), ("$key", requestEventKey), ("$sha", requestSha),
+                    ("$export", exportId), ("$revision", revision), ("$now", ToText(now)));
+                int changed = Execute(
+                    """
+                    UPDATE structured_export_projection
+                    SET revision=$revision,state='deletion-pending',last_event_id=$event,updated_at=$now
+                    WHERE export_id=$export AND revision=$previous AND state='active';
+                    """,
+                    transaction,
+                    ("$event", eventId),
+                    ("$export", exportId), ("$revision", revision),
+                    ("$previous", current.EventRevision), ("$now", ToText(now)));
+                if (changed != 1)
+                {
+                    throw new InvalidOperationException("The structured-export deletion projection changed concurrently.");
+                }
+                transaction.Commit();
+            }
+            else if (current.State == "deleted")
+            {
+                return current;
+            }
+
+            CompleteStructuredExportDeletion(exportId, requestSha, idempotencyKey, now);
             return GetStructuredExportCore(exportId);
         }
     }
@@ -1312,15 +1665,18 @@ public sealed partial class AuthoritativeStore
         }
     }
 
-    private StructuredExportPersistenceRecord GetStructuredExportCore(string exportId)
+    private StructuredExportPersistenceRecord GetStructuredExportCore(string exportId, bool validateArtifact = true)
     {
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText =
             """
-            SELECT export_id,run_id,sharing_class,schema_identity,generator_identity,
+            SELECT export.export_id,export.run_id,export.sharing_class,export.schema_identity,export.generator_identity,
                    selection_manifest_json,selection_manifest_sha256,artifact_sha256,
-                   artifact_bytes,artifact_relative_path,created_at
-            FROM structured_exports WHERE export_id=$id;
+                   artifact_bytes,artifact_relative_path,export.created_at,
+                   projection.state,projection.deleted_at,projection.revision
+            FROM structured_exports export
+            JOIN structured_export_projection projection ON projection.export_id=export.export_id
+            WHERE export.export_id=$id;
             """;
         command.Parameters.AddWithValue("$id", exportId);
         using SqliteDataReader reader = command.ExecuteReader();
@@ -1334,13 +1690,36 @@ public sealed partial class AuthoritativeStore
         {
             throw new InvalidDataException("The retained structured export manifest failed integrity validation.");
         }
-        using (FileStream artifact = Paths.OpenReadFile(ProductWriteClass.Export, reader.GetString(9)))
+        if (validateArtifact && reader.GetString(11) == "active")
         {
+            using FileStream artifact = Paths.OpenReadFile(ProductWriteClass.Export, reader.GetString(9));
             if (artifact.Length != reader.GetInt64(8)
                 || !StringComparer.Ordinal.Equals(HashStream(artifact), reader.GetString(7)))
             {
                 throw new InvalidDataException("The retained structured export artifact failed integrity validation.");
             }
+        }
+        List<StructuredExportEventPersistenceRecord> history = [];
+        using (SqliteCommand events = connection.CreateCommand())
+        {
+            events.CommandText =
+                """
+                SELECT event_id,revision,event_kind,request_sha256,created_at
+                FROM structured_export_events WHERE export_id=$id ORDER BY revision DESC LIMIT 101;
+                """;
+            events.Parameters.AddWithValue("$id", exportId);
+            using SqliteDataReader eventReader = events.ExecuteReader();
+            while (eventReader.Read())
+            {
+                history.Add(new(
+                    eventReader.GetString(0), eventReader.GetInt64(1), eventReader.GetString(2),
+                    eventReader.GetString(3), ParseRoundTrip(eventReader.GetString(4))));
+            }
+        }
+        bool historyTruncated = history.Count > 100;
+        if (historyTruncated)
+        {
+            history.RemoveAt(history.Count - 1);
         }
         return new(
             reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4),
@@ -1349,7 +1728,69 @@ public sealed partial class AuthoritativeStore
             ExportStrings(root, "selected_assumption_ids"), ExportStrings(root, "filters"),
             ExportStrings(root, "declared_omissions"), ExportStrings(root, "privacy_decisions"),
             ExportStrings(root, "source_policy_decisions"), ExportStrings(root, "provenance_ids"),
-            ParseRoundTrip(reader.GetString(10)));
+            ParseRoundTrip(reader.GetString(10)), reader.GetString(11),
+            reader.IsDBNull(12) ? null : ParseRoundTrip(reader.GetString(12)), reader.GetInt64(13),
+            history, historyTruncated);
+    }
+
+    private void CompleteStructuredExportDeletion(
+        string exportId,
+        string requestSha,
+        string idempotencyKey,
+        DateTimeOffset now)
+    {
+        using SqliteCommand location = connection.CreateCommand();
+        location.CommandText = "SELECT artifact_relative_path FROM structured_exports WHERE export_id=$id;";
+        location.Parameters.AddWithValue("$id", exportId);
+        string relativePath = (string)(location.ExecuteScalar()
+            ?? throw new KeyNotFoundException("The structured export does not exist."));
+        Paths.DeleteFile(ProductWriteClass.Export, relativePath, missingIsSuccess: true);
+
+        using SqliteTransaction transaction = BeginTransaction();
+        long revision = ScalarLong(
+            "SELECT revision FROM structured_export_projection WHERE export_id=$id;",
+            transaction,
+            ("$id", exportId));
+        string state = ScalarStringOrNull(
+                "SELECT state FROM structured_export_projection WHERE export_id=$id;",
+                transaction,
+                ("$id", exportId))
+            ?? throw new KeyNotFoundException("The structured export does not exist.");
+        if (state == "deleted")
+        {
+            transaction.Commit();
+            return;
+        }
+        if (state != "deletion-pending")
+        {
+            throw new InvalidOperationException("The structured export is not pending deletion.");
+        }
+        long nextRevision = checked(revision + 1);
+        string eventId = StableId("structured-export-event", exportId, nextRevision.ToString(CultureInfo.InvariantCulture), requestSha);
+        Execute(
+            """
+            INSERT INTO structured_export_events(
+                event_id,idempotency_key,request_sha256,export_id,revision,event_kind,created_at)
+            VALUES ($event,$key,$sha,$export,$revision,'deleted',$now);
+            """,
+            transaction,
+            ("$event", eventId), ("$key", "delete-completed-" + idempotencyKey),
+            ("$sha", requestSha), ("$export", exportId), ("$revision", nextRevision),
+            ("$now", ToText(now)));
+        int changed = Execute(
+            """
+            UPDATE structured_export_projection
+            SET revision=$revision,state='deleted',last_event_id=$event,deleted_at=$now,updated_at=$now
+            WHERE export_id=$export AND revision=$previous AND state='deletion-pending';
+            """,
+            transaction,
+            ("$event", eventId), ("$export", exportId), ("$revision", nextRevision),
+            ("$previous", revision), ("$now", ToText(now)));
+        if (changed != 1)
+        {
+            throw new InvalidOperationException("The structured-export deletion projection changed concurrently.");
+        }
+        transaction.Commit();
     }
 
     private static JsonObject ResultExportObject(ResultItemPersistenceRecord item) => new()
@@ -1475,6 +1916,13 @@ public sealed partial class AuthoritativeStore
         reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7), reader.GetString(8),
         reader.GetString(9), DeserializeStrings(reader.GetString(10)), DeserializeStrings(reader.GetString(11)),
         reader.GetString(12), reader.GetString(13));
+
+    private static FindingReportSummaryPersistenceRecord ReadFindingReportSummary(SqliteDataReader reader) => new(
+        reader.GetString(0), reader.GetString(1), reader.GetString(2),
+        reader.IsDBNull(3) ? null : reader.GetString(3),
+        reader.IsDBNull(4) ? null : reader.GetString(4),
+        reader.GetString(5), reader.GetString(6), reader.GetString(7), reader.GetString(8),
+        reader.GetString(9), reader.GetString(10), reader.GetString(11), reader.GetString(12));
 
     private static string[] Subjects(IdentityEnvelopeContract envelope) =>
         envelope.ParticipantsAndRoles.SelectMany(item => new[] { item.Key, item.Value })

@@ -1,4 +1,5 @@
 using Infinium.Analysis.FindingCases;
+using Infinium.Application.Analysis;
 using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
@@ -15,14 +16,17 @@ public static class FindingCaseAnalysisPhase
         FindingCaseInputBuildRequest request,
         AttemptRecord attempt,
         RunBinding binding,
-        DateTimeOffset now) => Execute(store, FindingCaseInputProducer.Create(request), attempt, binding, now);
+        DateTimeOffset now,
+        OpaqueId? sourceAssignmentId = null) => Execute(
+            store, FindingCaseInputProducer.Create(request), attempt, binding, now, sourceAssignmentId);
 
     public static FindingCaseAnalysisPhaseResult Execute(
         AuthoritativeStore store,
         FindingCaseInputContract input,
         AttemptRecord attempt,
         RunBinding binding,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        OpaqueId? sourceAssignmentId = null)
     {
         ArgumentNullException.ThrowIfNull(store);
         FindingCaseContractInvariants.Validate(input);
@@ -39,12 +43,18 @@ public static class FindingCaseAnalysisPhase
         {
             throw new InvalidDataException("Finding/case publication must round-trip to the exact aggregate semantics.");
         }
-        FindingCasePersistenceReceipt receipt = store.PublishFindingCase(result, payload, attempt, binding, now);
-        return new FindingCaseAnalysisPhaseResult(result, receipt, payload);
+        IReadOnlyList<FindingReportDocument> reports = FindingReportProjection.Project(
+            input, result, sourceAssignmentId ?? input.InputId);
+        FindingReportPublicationPayload[] reportPayloads = reports.Select(report =>
+            new FindingReportPublicationPayload(report, FindingReportJsonCodec.Serialize(report))).ToArray();
+        FindingCasePersistenceReceipt receipt = store.PublishFindingCase(
+            result, payload, reportPayloads, attempt, binding, now);
+        return new FindingCaseAnalysisPhaseResult(result, reports, receipt, payload);
     }
 }
 
 public sealed record FindingCaseAnalysisPhaseResult(
     FindingCaseContract Analysis,
+    IReadOnlyList<FindingReportDocument> Reports,
     FindingCasePersistenceReceipt Receipt,
     byte[] SerializedPayload);

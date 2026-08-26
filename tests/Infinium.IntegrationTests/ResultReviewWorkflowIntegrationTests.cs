@@ -18,6 +18,8 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class ResultReviewWorkflowIntegrationTests
 {
+    private static readonly string[] ExportDeletionEventKinds = ["deleted", "deletion-requested", "created"];
+
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
@@ -75,6 +77,30 @@ public sealed class ResultReviewWorkflowIntegrationTests
         CollectionAssert.AreEqual(before, after);
         Assert.AreEqual(retained.SourcePayloadSha256, roundTrip.SourcePayloadSha256);
         Assert.AreEqual(publication.Receipt.StoredPayloadId, retained.SourcePayloadId);
+        FindingReportPagePersistenceRecord reports = context.Store.ListFindingReports(
+            "run-candidate",
+            ["supported-finding", "resolved-negative", "abstention", "failure", "limited", "coverage-gap"],
+            string.Empty,
+            "identity",
+            100,
+            null,
+            null);
+        Assert.IsNotEmpty(reports.Items);
+        Assert.IsTrue(reports.Items.Any(item => item.State == "supported-finding"));
+        Assert.IsTrue(reports.Items.Any(item => item.State == "limited"));
+        Assert.IsTrue(reports.Items.Any(item => item.State == "failure"));
+        FindingReportSummaryPersistenceRecord hostileReport = reports.Items.Single(item => item.State == "failure");
+        StringAssert.Contains(hostileReport.Conclusion, "<script>alert('inert')</script>");
+        FindingReportDetailPersistenceRecord reportDetail = context.Store.GetFindingReport(
+            "run-candidate", hostileReport.ReportId);
+        FindingReportDocument reportRoundTrip = Infinium.Application.Serialization.FindingReportJsonCodec.Deserialize(
+            reportDetail.ReportPayload);
+        Assert.AreEqual(hostileReport.ReportId, reportRoundTrip.ReportId.Value);
+        Assert.AreEqual(publication.Analysis.PayloadId.Value, reportRoundTrip.Provenance.SourcePayloadId.Value);
+        Assert.AreEqual(publication.Analysis.InputId.Value, reportRoundTrip.Provenance.SourceAssignmentId.Value);
+        StringAssert.Contains(reportRoundTrip.Failures.Single(), "<script>alert('inert')</script>");
+        Assert.ThrowsExactly<KeyNotFoundException>(() => context.Store.ListResultItems(
+            "run-does-not-exist", ["finding"], string.Empty, "identity", 10, null));
 
         DateTimeOffset now = DateTimeOffset.UtcNow;
         ResultPageCursor cursor = new("run-candidate", "projection-a", "query-a", "identity", 20,
@@ -89,6 +115,24 @@ public sealed class ResultReviewWorkflowIntegrationTests
             cursor, "run-candidate", "projection-a", "query-a", "severity", 20, now));
         Assert.AreEqual(CursorDisposition.Expired, ApplicationGrpcService.ValidateResultCursorBinding(
             cursor with { ExpiresAt = now.AddSeconds(-1) }, "run-candidate", "projection-a", "query-a", "identity", 20, now));
+        FindingReportSummaryPersistenceRecord reportPageAnchor = reports.Items[0];
+        FindingReportPageCursor reportCursor = new(
+            "run-candidate", "report-projection-a", "report-query-a", "identity", 20,
+            reportPageAnchor.ReportId, reportPageAnchor.State, now.AddMinutes(5));
+        Assert.AreEqual(CursorDisposition.Unspecified, ApplicationGrpcService.ValidateFindingReportCursorBinding(
+            reportCursor, "run-candidate", "report-projection-a", "report-query-a", "identity", 20, now));
+        Assert.AreEqual(CursorDisposition.ProjectionInvalidated,
+            ApplicationGrpcService.ValidateFindingReportCursorBinding(
+                reportCursor, "run-candidate", "report-projection-b", "report-query-a", "identity", 20, now));
+        Assert.AreEqual(CursorDisposition.QueryMismatch, ApplicationGrpcService.ValidateFindingReportCursorBinding(
+            reportCursor, "run-candidate", "report-projection-a", "report-query-b", "identity", 20, now));
+        Assert.AreEqual(CursorDisposition.SortMismatch, ApplicationGrpcService.ValidateFindingReportCursorBinding(
+            reportCursor, "run-candidate", "report-projection-a", "report-query-a", "state", 20, now));
+        Assert.AreEqual(CursorDisposition.ScopeMismatch, ApplicationGrpcService.ValidateFindingReportCursorBinding(
+            reportCursor, "run-other", "report-projection-a", "report-query-a", "identity", 20, now));
+        Assert.AreEqual(CursorDisposition.Expired, ApplicationGrpcService.ValidateFindingReportCursorBinding(
+            reportCursor with { ExpiresAt = now.AddSeconds(-1) },
+            "run-candidate", "report-projection-a", "report-query-a", "identity", 20, now));
     }
 
     [TestMethod]
@@ -151,7 +195,7 @@ public sealed class ResultReviewWorkflowIntegrationTests
         }
         Assert.IsLessThan(1_048_576, messageBytes);
         Assert.IsLessThan(5_000, timer.ElapsedMilliseconds, "The indexed bounded query exceeded the generous local regression ceiling.");
-        TestContext.WriteLine($"result-query-scale summaries=100000 page=100 latency_ms={timer.ElapsedMilliseconds} message_bytes={messageBytes} schema14={schemaFingerprint}");
+        TestContext.WriteLine($"result-query-scale summaries=100000 page=100 latency_ms={timer.ElapsedMilliseconds} message_bytes={messageBytes} schema15={schemaFingerprint}");
     }
 
     [TestMethod]
@@ -161,7 +205,7 @@ public sealed class ResultReviewWorkflowIntegrationTests
     [TestProperty("Category", "Integration")]
     [TestProperty("Category", "Security")]
     [TestProperty("Category", "Fault")]
-    public void DurableReviewUsesAppendOnlySuccessorsConflictsTargetedRunsAndExactPrivateExports()
+    public void DurableReviewAndExportDeletionPreserveSourcesAcrossFaultsRestartAndRestore()
     {
         string root = Path.Combine(Path.GetTempPath(), "infinium-result-review-" + Guid.NewGuid().ToString("N"));
         string restoreRoot = Path.Combine(Path.GetTempPath(), "infinium-result-review-restore-" + Guid.NewGuid().ToString("N"));
@@ -171,6 +215,7 @@ public sealed class ResultReviewWorkflowIntegrationTests
         string payloadId;
         string reviewEventId;
         string exportId;
+        string assumptionProjectionAfterRebuild;
         CandidateStoreContext context = new(root, preserveRoot: true);
         try
         {
@@ -214,43 +259,29 @@ public sealed class ResultReviewWorkflowIntegrationTests
             Assert.AreEqual(string.Empty, removed.State.Annotation);
             Assert.HasCount(3, removed.State.History);
 
+            string assumptionsBefore = context.Store.GetAssumptionProjectionIdentity("profile-a");
             AssumptionMutationPersistenceResult inferred = context.Store.ApplyAssumptionEvent(
                 new("assumption-create", "assumption-a", "profile-a", 0, "create", "inferred",
                     "unconfirmed", "load-order", "inferred value", "run-candidate", [payloadId]), DateTimeOffset.UtcNow);
+            string assumptionsAfterCreate = context.Store.GetAssumptionProjectionIdentity("profile-a");
+            Assert.AreNotEqual(assumptionsBefore, assumptionsAfterCreate);
             AssumptionMutationPersistenceResult edited = context.Store.ApplyAssumptionEvent(
                 new("assumption-edit", "assumption-a", "profile-a", 1, "edit", "inferred",
                     "unconfirmed", "load-order", "successor value", "run-candidate", [payloadId]), DateTimeOffset.UtcNow.AddSeconds(1));
             Assert.AreNotEqual(inferred.State.AnalysisContextId, edited.State.AnalysisContextId);
+            Assert.AreNotEqual(assumptionsAfterCreate, context.Store.GetAssumptionProjectionIdentity("profile-a"));
             Assert.AreEqual("inferred", edited.State.Origin);
             AssumptionMutationPersistenceResult removedAssumption = context.Store.ApplyAssumptionEvent(
                 new("assumption-remove", "assumption-a", "profile-a", 2, "remove", "inferred",
                     "unconfirmed", "load-order", "successor value", "run-candidate", [payloadId]), DateTimeOffset.UtcNow.AddSeconds(2));
             Assert.IsFalse(removedAssumption.State.Effective);
 
-            Assert.ThrowsExactly<InvalidOperationException>(() => context.Store.StartTargetedVerification(
-                "targeted-active-rejected", "run-targeted-active-rejected", "run-candidate", findingId, null,
-                [finding.IdentityEnvelope.AffectedLocus], "manual-gesture-active-123456",
-                DateTimeOffset.UtcNow.AddMinutes(1), context.Authority.FencingEpoch, DateTimeOffset.UtcNow));
             context.Store.SettleLiveAttempts("run-candidate", "phase-c-terminal-source", context.Authority.FencingEpoch);
             RunRecord running = context.Store.GetRun("run-candidate");
             RunRecord terminal = context.Store.Transition(
                 "transition-phase-c-terminal", running.RunId, running.Generation, DomainLifecycleState.Completed,
                 context.Authority.FencingEpoch, "retained source completed", DateTimeOffset.UtcNow);
-            AnalysisCaseContract unrelatedCase = publication.Analysis.Cases.Single(item =>
-                !item.FindingOccurrenceIds.Contains(finding.FindingOccurrenceId));
-            Assert.ThrowsExactly<ArgumentException>(() => context.Store.StartTargetedVerification(
-                "targeted-unrelated-case-rejected", "run-targeted-unrelated-case", terminal.RunId,
-                findingId, unrelatedCase.CaseOccurrenceId.Value, [finding.IdentityEnvelope.AffectedLocus],
-                "manual-gesture-unrelated-123456", DateTimeOffset.UtcNow.AddMinutes(1),
-                context.Authority.FencingEpoch, DateTimeOffset.UtcNow));
-            TargetedVerificationPersistenceRecord targeted = context.Store.StartTargetedVerification(
-                "targeted-command-a", "run-targeted-a", terminal.RunId, findingId, null,
-                [finding.IdentityEnvelope.AffectedLocus], "manual-gesture-1234567890",
-                DateTimeOffset.UtcNow.AddMinutes(1), context.Authority.FencingEpoch, DateTimeOffset.UtcNow);
-            Assert.AreEqual("run-targeted-a", targeted.SuccessorRunId);
             Assert.AreEqual(DomainLifecycleState.Completed, context.Store.GetRun("run-candidate").State);
-            Assert.AreEqual(DomainLifecycleState.Queued, context.Store.GetRun("run-targeted-a").State);
-            Assert.AreEqual("scope-limited", targeted.ReadinessBoundary);
 
             StructuredExportPersistenceRecord export = context.Store.CreateStructuredExport(
                 new("export-command-a", "run-candidate", [findingId], [reviewEventId], ["assumption-a"],
@@ -263,6 +294,8 @@ public sealed class ResultReviewWorkflowIntegrationTests
             Assert.Contains(context.Binding.InstallationSnapshotId, export.ProvenanceIds);
             Assert.Contains(context.Binding.AnalysisContextId, export.ProvenanceIds);
             Assert.IsGreaterThan(0, export.ArtifactBytes);
+            Assert.AreEqual("active", export.State);
+            Assert.AreEqual(1, export.EventRevision);
             using (JsonDocument artifact = JsonDocument.Parse(
                 File.ReadAllBytes(Path.Combine(context.Paths.Exports, exportId + ".json"))))
             {
@@ -285,6 +318,63 @@ public sealed class ResultReviewWorkflowIntegrationTests
             Assert.Contains(reviewEventId, preview.ReviewEventIds);
             Assert.Contains(exportId, preview.ExportIds);
             Assert.IsTrue(preview.RequiresExplicitCascade);
+            StructuredExportDeletionPreviewPersistenceRecord exportPreview =
+                context.Store.PreviewStructuredExportDeletion(exportId);
+            Assert.AreEqual("active", exportPreview.CurrentState);
+            Assert.IsTrue(exportPreview.ArtifactPresent);
+            Assert.IsTrue(exportPreview.AuditHistoryRetained);
+
+            StructuredExportPersistenceRecord deleted = context.Store.DeleteStructuredExport(
+                "export-delete-a", exportId, DateTimeOffset.UtcNow.AddSeconds(3));
+            Assert.AreEqual("deleted", deleted.State);
+            Assert.AreEqual(3, deleted.EventRevision);
+            CollectionAssert.AreEqual(
+                ExportDeletionEventKinds,
+                deleted.History.Select(item => item.EventKind).ToArray());
+            Assert.IsFalse(File.Exists(Path.Combine(context.Paths.Exports, exportId + ".json")));
+            Assert.AreEqual(3, context.Store.DeleteStructuredExport(
+                "export-delete-a", exportId, DateTimeOffset.UtcNow.AddSeconds(4)).EventRevision);
+
+            StructuredExportPersistenceRecord missing = context.Store.CreateStructuredExport(
+                new("export-command-missing", "run-candidate", [findingId], [], [], [],
+                    "LocalPrivateExport", ["review-state"], ["local-private-only"], ["retained-only"]),
+                DateTimeOffset.UtcNow.AddSeconds(5));
+            File.Delete(Path.Combine(context.Paths.Exports, missing.ExportId + ".json"));
+            Assert.AreEqual("deleted", context.Store.DeleteStructuredExport(
+                "export-delete-missing", missing.ExportId, DateTimeOffset.UtcNow.AddSeconds(6)).State);
+
+            StructuredExportPersistenceRecord tampered = context.Store.CreateStructuredExport(
+                new("export-command-tampered", "run-candidate", [findingId], [], [], [],
+                    "LocalPrivateExport", ["review-state"], ["local-private-only"], ["retained-only"]),
+                DateTimeOffset.UtcNow.AddSeconds(7));
+            File.WriteAllText(Path.Combine(context.Paths.Exports, tampered.ExportId + ".json"), "tampered");
+            Assert.ThrowsExactly<InvalidDataException>(() => context.Store.GetStructuredExport(tampered.ExportId));
+            Assert.AreEqual("deleted", context.Store.DeleteStructuredExport(
+                "export-delete-tampered", tampered.ExportId, DateTimeOffset.UtcNow.AddSeconds(8)).State);
+
+            StructuredExportPersistenceRecord interrupted = context.Store.CreateStructuredExport(
+                new("export-command-interrupted", "run-candidate", [findingId], [], [], [],
+                    "LocalPrivateExport", ["review-state"], ["local-private-only"], ["retained-only"]),
+                DateTimeOffset.UtcNow.AddSeconds(9));
+            using (SqliteConnection rawDeletion = new($"Data Source={context.Paths.Database};Pooling=False"))
+            {
+                rawDeletion.Open();
+                using SqliteCommand pending = rawDeletion.CreateCommand();
+                pending.CommandText =
+                    """
+                    INSERT INTO structured_export_events(
+                        event_id,idempotency_key,request_sha256,export_id,revision,event_kind,created_at)
+                    VALUES ($event,$key,$sha,$export,2,'deletion-requested',$now);
+                    UPDATE structured_export_projection SET revision=2,state='deletion-pending',
+                        last_event_id=$event,updated_at=$now WHERE export_id=$export;
+                    """;
+                pending.Parameters.AddWithValue("$event", interrupted.ExportId + "-interrupted-delete");
+                pending.Parameters.AddWithValue("$key", "delete-requested-interrupted");
+                pending.Parameters.AddWithValue("$sha", new string('a', 64));
+                pending.Parameters.AddWithValue("$export", interrupted.ExportId);
+                pending.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.AddSeconds(10).ToString("O"));
+                Assert.AreEqual(2, pending.ExecuteNonQuery());
+            }
 
             using (SqliteConnection raw = new($"Data Source={context.Paths.Database};Pooling=False"))
             {
@@ -295,11 +385,14 @@ public sealed class ResultReviewWorkflowIntegrationTests
                 Assert.ThrowsExactly<SqliteException>(() => mutate.ExecuteNonQuery());
             }
 
-            context.Store.RebuildProjections(DateTimeOffset.UtcNow.AddSeconds(3));
+            string assumptionProjectionBeforeRebuild = context.Store.GetAssumptionProjectionIdentity("profile-a");
+            context.Store.RebuildProjections(DateTimeOffset.UtcNow.AddSeconds(11));
+            assumptionProjectionAfterRebuild = context.Store.GetAssumptionProjectionIdentity("profile-a");
+            Assert.AreNotEqual(assumptionProjectionBeforeRebuild, assumptionProjectionAfterRebuild);
             Assert.AreEqual(3, context.Store.GetReviewState("run-candidate", "finding", findingId).Revision);
             Assert.AreEqual(3, context.Store.ListAssumptions("profile-a", 10, null).Single().Revision);
             CollectionAssert.AreEqual(canonicalBefore, context.Store.ReadFindingCasePayload(payloadId));
-            backup = context.Store.CreateBackup("PhaseCReview", DateTimeOffset.UtcNow.AddSeconds(4));
+            backup = context.Store.CreateBackup("PhaseCReview", DateTimeOffset.UtcNow.AddSeconds(12));
         }
         finally
         {
@@ -312,15 +405,21 @@ public sealed class ResultReviewWorkflowIntegrationTests
             using (AuthoritativeStore restarted = new(restartPaths))
             {
                 Assert.AreEqual(3, restarted.GetReviewState("run-candidate", "finding", findingId).Revision);
-                Assert.AreEqual(exportId, restarted.GetStructuredExport(exportId).ExportId);
+                Assert.AreEqual("deleted", restarted.GetStructuredExport(exportId).State);
+                Assert.IsTrue(restarted.GetStructuredExport(exportId).History.Any(item => item.EventKind == "deleted"));
+                Assert.AreEqual(assumptionProjectionAfterRebuild,
+                    restarted.GetAssumptionProjectionIdentity("profile-a"));
+                Assert.IsEmpty(Directory.EnumerateFiles(restartPaths.Exports));
                 CollectionAssert.AreEqual(canonicalBefore, restarted.ReadFindingCasePayload(payloadId));
             }
             using StoragePaths restoredPaths = new(restoreRoot);
             AuthoritativeStore.RestoreBackup(backup, restoredPaths);
             using AuthoritativeStore restored = new(restoredPaths);
             Assert.AreEqual(3, restored.GetReviewState("run-candidate", "finding", findingId).Revision);
-            Assert.AreEqual(exportId, restored.GetStructuredExport(exportId).ExportId);
-            Assert.IsNotEmpty(Directory.EnumerateFiles(restoredPaths.Exports));
+            Assert.AreEqual(assumptionProjectionAfterRebuild,
+                restored.GetAssumptionProjectionIdentity("profile-a"));
+            Assert.AreEqual("deleted", restored.GetStructuredExport(exportId).State);
+            Assert.IsEmpty(Directory.EnumerateFiles(restoredPaths.Exports));
             CollectionAssert.AreEqual(canonicalBefore, restored.ReadFindingCasePayload(payloadId));
         }
         finally

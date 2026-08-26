@@ -2628,6 +2628,9 @@ public sealed class ProviderBudgetIntegrationTests
         command.ExecuteNonQuery();
         command.CommandText =
             """
+            DROP TABLE structured_export_projection;
+            DROP TABLE structured_export_events;
+            DROP TABLE finding_report_publications;
             DROP TABLE structured_exports;
             DROP TABLE targeted_verifications;
             DROP TABLE assumption_projection;
@@ -2693,6 +2696,7 @@ public sealed class ProviderBudgetIntegrationTests
             DELETE FROM migration_history WHERE migration_id='application-setup-contract-0012';
             DELETE FROM migration_history WHERE migration_id='prepared-analysis-admission-0013';
             DELETE FROM migration_history WHERE migration_id='results-review-workflow-0014';
+            DELETE FROM migration_history WHERE migration_id='result-publication-and-export-deletion-0015';
             UPDATE store_metadata SET value='8' WHERE key='schema_version';
             UPDATE store_metadata SET value='1.7.0' WHERE key='storage_contract_version';
             UPDATE store_metadata

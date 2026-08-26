@@ -136,7 +136,10 @@ resealed or promoted through an ordinary tooling command.
 - M1 and its post-M1 cleanup are complete under this profile.
 - The accepted M1-to-M2 Foundation — Frontend Application Foundation is the
   current pre-M2 implementation transition. Phases A and B are accepted at
-  Checkpoint B; Phase C is the next unstarted phase. Remaining packages must
+  Checkpoint B. Phase C is under correction: its independent FindingReport,
+  request-validation, export-deletion, provenance, and paging defects have
+  focused evidence, while targeted verification remains architecture-blocked
+  and Checkpoint C remains suspended. Remaining packages must
   exercise EVAL-0090 through EVAL-0094 plus every applicable existing case
   through the same six layers.
 - M2 remains separately planned and authorized work; it must satisfy the

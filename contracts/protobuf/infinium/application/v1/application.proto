@@ -58,6 +58,10 @@ service ApplicationService {
       returns (GetEvidenceExpansionResponse);
   rpc GetFocusedModView(GetFocusedModViewRequest)
       returns (GetFocusedModViewResponse);
+  rpc ListFindingReports(ListFindingReportsRequest)
+      returns (ListFindingReportsResponse);
+  rpc GetFindingReport(GetFindingReportRequest)
+      returns (GetFindingReportResponse);
   rpc GetReviewState(GetReviewStateRequest)
       returns (GetReviewStateResponse);
   rpc SubmitReviewEvent(SubmitReviewEventRequest)
@@ -72,6 +76,10 @@ service ApplicationService {
       returns (CreateStructuredExportResponse);
   rpc GetStructuredExport(GetStructuredExportRequest)
       returns (GetStructuredExportResponse);
+  rpc PreviewStructuredExportDeletion(PreviewStructuredExportDeletionRequest)
+      returns (PreviewStructuredExportDeletionResponse);
+  rpc DeleteStructuredExport(DeleteStructuredExportRequest)
+      returns (DeleteStructuredExportResponse);
   rpc GetProviderProfile(GetProviderProfileRequest)
       returns (GetProviderProfileResponse);
   rpc GetProviderOperation(GetProviderOperationRequest)
@@ -1035,6 +1043,9 @@ message AnalysisSummary {
 message GetResultOverviewRequest {
   infinium.domain.v1.RunId run_id = 1;
   infinium.domain.v1.ProjectionVersion expected_projection_version = 2;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command";
 }
 
 message GetResultOverviewResponse {
@@ -1148,6 +1159,9 @@ message GetResultDetailRequest {
   ResultItemKind kind = 2;
   string item_id = 3;
   infinium.domain.v1.ProjectionVersion expected_projection_version = 4;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command";
 }
 
 message GetResultDetailResponse {
@@ -1207,12 +1221,16 @@ message EvidenceItem {
   string evidence_id = 1;
   string evidence_kind = 2;
   string inert_summary = 3;
-  string producer_id = 4;
-  string producer_version = 5;
   string originating_run_id = 6;
   string llm_involvement_state = 7;
   string availability = 8;
   string content_sha256 = 9;
+  string provenance_id = 10;
+  string artifact_schema_identity = 11;
+  string artifact_schema_version = 12;
+
+  reserved 4, 5, 90 to 99;
+  reserved "producer_id", "producer_version", "path", "payload_path", "url", "query";
 }
 
 message GetFocusedModViewRequest {
@@ -1220,6 +1238,9 @@ message GetFocusedModViewRequest {
   string exact_subject_id = 2;
   uint32 requested_maximum_items = 3;
   infinium.domain.v1.ProjectionVersion expected_projection_version = 4;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command";
 }
 
 message GetFocusedModViewResponse {
@@ -1241,11 +1262,165 @@ message FocusedModView {
   infinium.domain.v1.ProjectionVersion projection_version = 20;
 }
 
+message ListFindingReportsRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  repeated FindingReportState states = 2;
+  string search_text = 3;
+  FindingReportSort sort = 4;
+  uint32 requested_page_size = 5;
+  PageCursor after = 6;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 7;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command", "download";
+}
+
+message ListFindingReportsResponse {
+  oneof result {
+    FindingReportPage page = 1;
+    CursorRejection cursor_rejection = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message FindingReportPage {
+  repeated FindingReportSummary items = 1;
+  PageCursor next = 2;
+  bool has_more = 3;
+  infinium.domain.v1.ProjectionVersion projection_version = 4;
+}
+
+message FindingReportSummary {
+  string report_id = 1;
+  infinium.domain.v1.RunId run_id = 2;
+  FindingReportState state = 3;
+  string finding_id = 4;
+  string case_id = 5;
+  string subject_id = 6;
+  string inert_title = 7;
+  string inert_conclusion = 8;
+  string analyzer_id = 9;
+  string retained_source_payload_id = 10;
+  string retained_source_payload_sha256 = 11;
+}
+
+enum FindingReportState {
+  FINDING_REPORT_STATE_UNSPECIFIED = 0;
+  FINDING_REPORT_STATE_SUPPORTED_FINDING = 1;
+  FINDING_REPORT_STATE_RESOLVED_NEGATIVE = 2;
+  FINDING_REPORT_STATE_ABSTENTION = 3;
+  FINDING_REPORT_STATE_FAILURE = 4;
+  FINDING_REPORT_STATE_LIMITED = 5;
+  FINDING_REPORT_STATE_COVERAGE_GAP = 6;
+  FINDING_REPORT_STATE_UNKNOWN = 7;
+  FINDING_REPORT_STATE_UNSUPPORTED = 8;
+}
+
+enum FindingReportSort {
+  FINDING_REPORT_SORT_UNSPECIFIED = 0;
+  FINDING_REPORT_SORT_IDENTITY_ASCENDING = 1;
+  FINDING_REPORT_SORT_STATE_THEN_IDENTITY_ASCENDING = 2;
+  FINDING_REPORT_SORT_UNKNOWN = 3;
+  FINDING_REPORT_SORT_UNSUPPORTED = 4;
+}
+
+message GetFindingReportRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  string report_id = 2;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 3;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command", "download";
+}
+
+message GetFindingReportResponse {
+  oneof result {
+    FindingReportDetail report = 1;
+    ProjectionInvalidated projection_invalidated = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message FindingReportDetail {
+  FindingReportSummary summary = 1;
+  string schema_identity = 2;
+  string schema_version = 3;
+  string contract_maturity = 4;
+  string inert_what_happened = 5;
+  string inert_why_it_matters = 6;
+  repeated FindingReportSubject affected_subjects = 7;
+  repeated FindingReportTaxonomyAssignment taxonomy_assignments = 8;
+  FindingReportAssessment assessment = 9;
+  repeated string supporting_evidence_ids = 10;
+  repeated string contradicting_evidence_ids = 11;
+  repeated string inert_assumptions = 12;
+  repeated string inert_applicability_conditions = 13;
+  repeated string inert_uncertainty = 14;
+  repeated string inert_unresolved_questions = 15;
+  repeated FindingReportCoverage coverage = 16;
+  repeated string inert_failures = 17;
+  repeated string inert_exclusions = 18;
+  repeated string inert_gaps = 19;
+  string recommendation_kind = 20;
+  string inert_recommended_action = 21;
+  string inert_reversibility = 22;
+  repeated string inert_risks = 23;
+  string inert_validation_steps = 24;
+  FindingReportProvenance provenance = 25;
+  repeated string inert_unsupported_or_not_established = 26;
+  infinium.domain.v1.ProjectionVersion projection_version = 30;
+}
+
+message FindingReportSubject {
+  string kind = 1;
+  string subject_id = 2;
+  string inert_detail = 3;
+}
+
+message FindingReportTaxonomyAssignment {
+  string axis = 1;
+  string code = 2;
+  string applicability = 3;
+  string inert_basis = 4;
+}
+
+message FindingReportAssessment {
+  string severity = 1;
+  string inert_severity_basis = 2;
+  string confidence = 3;
+  string inert_confidence_basis = 4;
+  string analyzer_maturity = 5;
+  string inert_maturity_basis = 6;
+  string inert_calibration_boundary = 7;
+}
+
+message FindingReportCoverage {
+  string population_id = 1;
+  uint64 denominator = 2;
+  uint64 completed = 3;
+  uint64 completed_with_gaps = 4;
+  uint64 failed = 5;
+  uint64 skipped_or_unsupported = 6;
+}
+
+message FindingReportProvenance {
+  string source_schema_identity = 1;
+  string source_schema_version = 2;
+  string source_payload_id = 3;
+  string source_input_fingerprint_sha256 = 4;
+  string source_assignment_id = 5;
+  bool replay_equivalent = 6;
+  string canonical_artifact_role = 7;
+}
+
 message GetReviewStateRequest {
   infinium.domain.v1.RunId run_id = 1;
   string subject_kind = 2;
   string subject_occurrence_id = 3;
   infinium.domain.v1.ProjectionVersion expected_projection_version = 4;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command";
 }
 
 message GetReviewStateResponse {
@@ -1292,6 +1467,9 @@ message SubmitReviewEventRequest {
   string inert_annotation = 9;
   string source_event_id = 10;
   string continuity_assessment_id = 11;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command";
 }
 
 message SubmitReviewEventResponse {
@@ -1312,6 +1490,9 @@ message ListAssumptionsRequest {
   uint32 requested_page_size = 2;
   PageCursor after = 3;
   infinium.domain.v1.ProjectionVersion expected_projection_version = 4;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command";
 }
 
 message ListAssumptionsResponse {
@@ -1356,6 +1537,9 @@ message SubmitAssumptionEventRequest {
   string inert_value = 9;
   string scope = 10;
   repeated string dependency_ids = 11;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command";
 }
 
 message SubmitAssumptionEventResponse {
@@ -1380,6 +1564,9 @@ message StartTargetedVerificationRequest {
   repeated string exact_scope_ids = 6;
   string user_gesture_id = 7;
   infinium.common.v1.Instant dispatch_deadline = 8;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command";
 }
 
 message StartTargetedVerificationResponse {
@@ -1412,6 +1599,9 @@ message CreateStructuredExportRequest {
   repeated string declared_omissions = 8;
   repeated string privacy_decisions = 9;
   repeated string source_policy_decisions = 10;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command", "download";
 }
 
 message CreateStructuredExportResponse {
@@ -1421,7 +1611,12 @@ message CreateStructuredExportResponse {
   }
 }
 
-message GetStructuredExportRequest { string export_id = 1; }
+message GetStructuredExportRequest {
+  string export_id = 1;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command", "download";
+}
 
 message GetStructuredExportResponse {
   oneof result {
@@ -1448,6 +1643,69 @@ message StructuredExport {
   repeated string source_policy_decisions = 15;
   repeated string provenance_ids = 16;
   infinium.common.v1.Instant created_at = 17;
+  StructuredExportState state = 18;
+  infinium.common.v1.Instant deleted_at = 19;
+  uint64 event_revision = 20;
+  repeated StructuredExportEvent history = 21;
+  bool history_truncated = 22;
+}
+
+enum StructuredExportState {
+  STRUCTURED_EXPORT_STATE_UNSPECIFIED = 0;
+  STRUCTURED_EXPORT_STATE_ACTIVE = 1;
+  STRUCTURED_EXPORT_STATE_DELETION_PENDING = 2;
+  STRUCTURED_EXPORT_STATE_DELETED = 3;
+  STRUCTURED_EXPORT_STATE_UNKNOWN = 4;
+  STRUCTURED_EXPORT_STATE_UNSUPPORTED = 5;
+}
+
+message StructuredExportEvent {
+  string event_id = 1;
+  uint64 revision = 2;
+  string event_kind = 3;
+  string request_fingerprint_sha256 = 4;
+  infinium.common.v1.Instant created_at = 5;
+}
+
+message PreviewStructuredExportDeletionRequest {
+  string export_id = 1;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command", "download";
+}
+
+message PreviewStructuredExportDeletionResponse {
+  oneof result {
+    StructuredExportDeletionPreview preview = 1;
+    infinium.common.v1.Failure failure = 2;
+  }
+}
+
+message StructuredExportDeletionPreview {
+  string export_id = 1;
+  StructuredExportState current_state = 2;
+  bool artifact_present = 3;
+  bool source_run_mutated = 4;
+  bool source_results_mutated = 5;
+  bool review_history_mutated = 6;
+  bool assumptions_mutated = 7;
+  bool provenance_mutated = 8;
+  bool audit_history_retained = 9;
+}
+
+message DeleteStructuredExportRequest {
+  string idempotency_key = 1;
+  string export_id = 2;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command", "download";
+}
+
+message DeleteStructuredExportResponse {
+  oneof result {
+    StructuredExport export = 1;
+    infinium.common.v1.Failure failure = 2;
+  }
 }
 
 message ListAnalysisArtifactsRequest {

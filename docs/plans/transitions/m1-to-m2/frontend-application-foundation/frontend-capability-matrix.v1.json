@@ -5,7 +5,7 @@
   "last_reviewed": "2026-08-26",
   "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
   "planning_base": "32dbb2c48754666336d2da571e554ad8897ed71c",
-  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint C and all Phase C availability claims are under correction; the earlier generated-client evidence did not prove the complete FindingReport, recursive request-validation, executable targeted-verification, export-deletion, provenance, and paging surfaces. No desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, or M2 acceptance is claimed.",
+  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint C and Phase C acceptance remain suspended. Focused offline evidence now covers FindingReport publication/query/readback, recursive request validation, export deletion/recovery, provenance, and paging; executable targeted verification still requires accepted architecture. No desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, or M2 acceptance is claimed.",
   "application_contract_inventory": "application-contract-inventory.v1.json",
   "ownership_audit": {
     "capability_count": 19,
@@ -335,11 +335,11 @@
         "EVAL-0083",
         "EVAL-0092"
       ],
-      "current_state": "projection-exists-not-queryable",
+      "current_state": "partial-or-developer-oriented",
       "current_evidence": [
-        "ApplicationService.GetResultDetail",
-        "Exact retained finding-case payload decode and source payload fingerprint",
-        "Diagnostic finding/case detail and hostile inert-text evidence; no FindingReport service producer/consumer exists yet"
+        "ApplicationService.GetResultDetail, ListFindingReports, and GetFindingReport",
+        "FindingCaseAnalysisPhase publishes schema-validated FindingReport payloads beside the exact retained finding-case source",
+        "Generated named-pipe C# consumer proves bounded queue/detail, recommendation meaning, provenance, inert hostile text, and canonical source round-trip"
       ],
       "gap": "FindingReport remains implementation-active until the real M2 UI validates its full presentation seam; Phase C does not invent unavailable evidence or recommendation semantics.",
       "owning_phase": "C",
@@ -486,9 +486,9 @@
       ],
       "current_state": "partial-or-developer-oriented",
       "current_evidence": [
-        "ApplicationService.CreateStructuredExport and GetStructuredExport",
-        "LocalPrivateExport typed write class and append-only exact manifest",
-        "Diagnostic create/get, artifact integrity, restart, backup/restore, deletion preview, provenance, and source-immutability evidence; typed deletion is absent"
+        "ApplicationService.CreateStructuredExport, GetStructuredExport, PreviewStructuredExportDeletion, and DeleteStructuredExport",
+        "LocalPrivateExport typed write class, append-only exact manifest, deletion events, and current-state projection",
+        "Focused create/get/delete/exact-retry, missing/tampered artifact, interrupted deletion recovery, restart, backup/restore, provenance, and source-immutability evidence"
       ],
       "gap": "Exports are local-private, selection-bounded artifacts and are not whole-run/full-population downloads; no desktop selection workflow exists before WP7.",
       "owning_phase": "C",

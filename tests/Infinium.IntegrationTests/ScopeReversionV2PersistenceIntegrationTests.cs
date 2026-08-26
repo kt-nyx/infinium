@@ -30,8 +30,8 @@ public sealed class ScopeReversionV2PersistenceIntegrationTests
         {
             using (AuthoritativeStore store = new(new StoragePaths(root)))
             {
-                Assert.AreEqual(14, store.GetSchemaVersion());
-                Assert.AreEqual(ResultsReviewPersistenceDeclarations.SchemaFingerprint,
+                Assert.AreEqual(15, store.GetSchemaVersion());
+                Assert.AreEqual(ResultsPublicationPersistenceDeclarations.SchemaFingerprint,
                     store.GetCurrentSchemaFingerprint());
                 ScopeReversionV2PersistencePhaseResult clean = ScopeReversionV2PersistencePhase.ExecuteAndPublish(
                     store, request, artifacts, DateTimeOffset.UtcNow);

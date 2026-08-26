@@ -340,6 +340,9 @@ public static class RendererBootstrapAdapter
 
 public static class ApplicationContractValidator
 {
+    private const int MaximumPhaseCTextBytes = 16 * 1024;
+    private const int MaximumPhaseCCollectionItems = 100;
+
     public static GetApplicationBootstrapRequest ParseBootstrapRequest(ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length is 0 || bytes.Length > ProtocolConstants.MaximumMessageBytes)
@@ -424,6 +427,172 @@ public static class ApplicationContractValidator
         ArgumentNullException.ThrowIfNull(request);
         RejectUnknownFields(request, "$prepared-run-command");
         RequireId(request.IdempotencyKey?.Value ?? string.Empty, "durable command ID");
+    }
+
+    public static void ValidatePhaseC(IMessage request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        RejectUnknownFields(request, "$phase-c-request");
+        switch (request)
+        {
+            case GetResultOverviewRequest value:
+                RequireOpaque(value.RunId?.Value ?? string.Empty, "run ID");
+                ValidateProjection(value.ExpectedProjectionVersion?.Value);
+                break;
+            case ListResultItemsRequest value:
+                RequireOpaque(value.RunId?.Value ?? string.Empty, "run ID");
+                ValidateProjection(value.ExpectedProjectionVersion?.Value);
+                ValidatePage(value.RequestedPageSize, value.After?.OpaqueValue);
+                RequireText(value.SearchText, "result search", 160, allowEmpty: true);
+                if (value.Kinds.Count is < 1 or > 6
+                    || value.Kinds.Any(item => !Enum.IsDefined(item)
+                        || item is ResultItemKind.Unspecified or ResultItemKind.Unknown or ResultItemKind.Unsupported)
+                    || !Enum.IsDefined(value.Sort)
+                    || value.Sort is ResultItemSort.Unspecified or ResultItemSort.Unknown or ResultItemSort.Unsupported)
+                {
+                    throw new InvalidDataException("The result query contains an unsupported kind or sort.");
+                }
+                break;
+            case GetResultDetailRequest value:
+                RequireOpaque(value.RunId?.Value ?? string.Empty, "run ID");
+                RequireOpaque(value.ItemId, "result item ID");
+                ValidateProjection(value.ExpectedProjectionVersion?.Value);
+                if (!Enum.IsDefined(value.Kind)
+                    || value.Kind is ResultItemKind.Unspecified or ResultItemKind.Unknown or ResultItemKind.Unsupported)
+                {
+                    throw new InvalidDataException("The result detail kind is unsupported.");
+                }
+                break;
+            case GetEvidenceExpansionRequest value:
+                RequireOpaque(value.RunId?.Value ?? string.Empty, "run ID");
+                RequireOpaque(value.ResultItemId, "result item ID");
+                ValidateProjection(value.ExpectedProjectionVersion?.Value);
+                if (value.RequestedMaximumItems is < 1 or > MaximumPhaseCCollectionItems
+                    || value.EvidenceIds.Count > MaximumPhaseCCollectionItems)
+                {
+                    throw new InvalidDataException("The evidence expansion exceeds its closed bound.");
+                }
+                RequireOpaqueCollection(value.EvidenceIds, "evidence ID");
+                break;
+            case GetFocusedModViewRequest value:
+                RequireOpaque(value.RunId?.Value ?? string.Empty, "run ID");
+                RequireOpaque(value.ExactSubjectId, "exact subject ID");
+                ValidateProjection(value.ExpectedProjectionVersion?.Value);
+                if (value.RequestedMaximumItems is < 1 or > MaximumPhaseCCollectionItems)
+                {
+                    throw new InvalidDataException("The focused result view exceeds its closed bound.");
+                }
+                break;
+            case ListFindingReportsRequest value:
+                RequireOpaque(value.RunId?.Value ?? string.Empty, "run ID");
+                ValidateProjection(value.ExpectedProjectionVersion?.Value);
+                ValidatePage(value.RequestedPageSize, value.After?.OpaqueValue);
+                RequireText(value.SearchText, "finding-report search", 160, allowEmpty: true);
+                if (value.States.Count is < 1 or > 6
+                    || value.States.Any(item => !Enum.IsDefined(item)
+                        || item is FindingReportState.Unspecified or FindingReportState.Unknown or FindingReportState.Unsupported)
+                    || !Enum.IsDefined(value.Sort)
+                    || value.Sort is FindingReportSort.Unspecified or FindingReportSort.Unknown or FindingReportSort.Unsupported)
+                {
+                    throw new InvalidDataException("The finding-report query contains an unsupported state or sort.");
+                }
+                break;
+            case GetFindingReportRequest value:
+                RequireOpaque(value.RunId?.Value ?? string.Empty, "run ID");
+                RequireOpaque(value.ReportId, "finding report ID");
+                ValidateProjection(value.ExpectedProjectionVersion?.Value);
+                break;
+            case GetReviewStateRequest value:
+                RequireOpaque(value.RunId?.Value ?? string.Empty, "run ID");
+                RequireOpaque(value.SubjectOccurrenceId, "review subject occurrence ID");
+                RequireClosedText(value.SubjectKind, "review subject kind", "finding", "case");
+                ValidateProjection(value.ExpectedProjectionVersion?.Value);
+                break;
+            case SubmitReviewEventRequest value:
+                RequireOpaque(value.IdempotencyKey, "review idempotency key");
+                RequireOpaque(value.RunId?.Value ?? string.Empty, "run ID");
+                RequireOpaque(value.SubjectOccurrenceId, "review subject occurrence ID");
+                RequireClosedText(value.SubjectKind, "review subject kind", "finding", "case");
+                RequireClosedText(value.EventKind, "review event kind",
+                    "disposition", "suppression", "annotation", "remove-annotation", "carryover");
+                RequireClosedText(value.Disposition, "review disposition",
+                    "unreviewed", "investigating", "action-required", "resolved",
+                    "accepted-as-is", "not-applicable", "false-positive");
+                RequireText(value.InertAnnotation, "review annotation", MaximumPhaseCTextBytes, allowEmpty: true);
+                RequireOptionalOpaque(value.SourceEventId, "source review event ID");
+                RequireOptionalOpaque(value.ContinuityAssessmentId, "continuity assessment ID");
+                break;
+            case ListAssumptionsRequest value:
+                RequireOpaque(value.ProfileId, "assumption profile ID");
+                ValidateProjection(value.ExpectedProjectionVersion?.Value);
+                ValidatePage(value.RequestedPageSize, value.After?.OpaqueValue);
+                break;
+            case SubmitAssumptionEventRequest value:
+                RequireOpaque(value.IdempotencyKey, "assumption idempotency key");
+                RequireOpaque(value.AssumptionId, "assumption ID");
+                RequireOpaque(value.ProfileId, "assumption profile ID");
+                RequireClosedText(value.EventKind, "assumption event kind", "create", "edit", "confirm", "remove", "revalidate");
+                RequireClosedText(value.Origin, "assumption origin", "inferred", "user-provided");
+                RequireClosedText(value.Confirmation, "assumption confirmation", "unconfirmed", "user-confirmed");
+                RequireText(value.Subject, "assumption subject", 4096);
+                RequireText(value.InertValue, "assumption value", MaximumPhaseCTextBytes);
+                RequireText(value.Scope, "assumption scope", 4096);
+                RequireOpaqueCollection(value.DependencyIds, "assumption dependency ID");
+                break;
+            case StartTargetedVerificationRequest value:
+                // This validates only the closed transport boundary. It grants no executable
+                // operation authority and does not resolve the accepted architecture blocker.
+                RequireOpaque(value.IdempotencyKey, "targeted-verification idempotency key");
+                RequireOpaque(value.RequestedRunId, "requested run ID");
+                RequireOpaque(value.SourceRunId?.Value ?? string.Empty, "source run ID");
+                RequireOptionalOpaque(value.SourceFindingOccurrenceId, "source finding occurrence ID");
+                RequireOptionalOpaque(value.SourceCaseOccurrenceId, "source case occurrence ID");
+                if ((string.IsNullOrWhiteSpace(value.SourceFindingOccurrenceId)
+                        == string.IsNullOrWhiteSpace(value.SourceCaseOccurrenceId))
+                    || value.ExactScopeIds.Count is < 1 or > MaximumPhaseCCollectionItems)
+                {
+                    throw new InvalidDataException("The targeted-verification source or exact scope is malformed.");
+                }
+                RequireOpaqueCollection(value.ExactScopeIds, "targeted-verification scope ID");
+                RequireOpaque(value.UserGestureId, "targeted-verification gesture ID");
+                if (value.DispatchDeadline is null)
+                {
+                    throw new InvalidDataException("The targeted-verification deadline is required.");
+                }
+                break;
+            case CreateStructuredExportRequest value:
+                RequireOpaque(value.IdempotencyKey, "structured-export idempotency key");
+                RequireOpaque(value.RunId?.Value ?? string.Empty, "run ID");
+                RequireClosedText(value.SharingClass, "structured-export sharing class", "LocalPrivateExport");
+                if (value.SelectedResultItemIds.Count + value.SelectedReviewEventIds.Count
+                        + value.SelectedAssumptionIds.Count is < 1 or > MaximumPhaseCCollectionItems
+                    || value.Filters.Count > 16 || value.DeclaredOmissions.Count > 32
+                    || value.PrivacyDecisions.Count is < 1 or > 32
+                    || value.SourcePolicyDecisions.Count is < 1 or > 32)
+                {
+                    throw new InvalidDataException("The structured-export selection or policy manifest is invalid.");
+                }
+                RequireOpaqueCollection(value.SelectedResultItemIds, "selected result item ID");
+                RequireOpaqueCollection(value.SelectedReviewEventIds, "selected review event ID");
+                RequireOpaqueCollection(value.SelectedAssumptionIds, "selected assumption ID");
+                RequireTextCollection(value.Filters, "export filter", 4096);
+                RequireTextCollection(value.DeclaredOmissions, "export omission", 4096);
+                RequireTextCollection(value.PrivacyDecisions, "export privacy decision", 4096);
+                RequireTextCollection(value.SourcePolicyDecisions, "export source-policy decision", 4096);
+                break;
+            case GetStructuredExportRequest value:
+                RequireOpaque(value.ExportId, "structured export ID");
+                break;
+            case PreviewStructuredExportDeletionRequest value:
+                RequireOpaque(value.ExportId, "structured export ID");
+                break;
+            case DeleteStructuredExportRequest value:
+                RequireOpaque(value.IdempotencyKey, "structured-export deletion idempotency key");
+                RequireOpaque(value.ExportId, "structured export ID");
+                break;
+            default:
+                throw new InvalidDataException("The request is not a registered Phase C application contract.");
+        }
     }
 
     public static void Validate(UserOperationReceipt receipt)
@@ -571,6 +740,79 @@ public static class ApplicationContractValidator
             || value.Any(character => !char.IsAsciiLetterOrDigit(character) && character is not '_' and not '-'))
         {
             throw new InvalidDataException($"The {name} is invalid.");
+        }
+    }
+
+    private static void RequireOpaque(string value, string name)
+    {
+        if (string.IsNullOrWhiteSpace(value) || Encoding.UTF8.GetByteCount(value) > 160
+            || value.Any(character => char.IsControl(character) || char.IsSurrogate(character)))
+        {
+            throw new InvalidDataException($"The {name} is invalid or exceeds its closed bound.");
+        }
+    }
+
+    private static void RequireOptionalOpaque(string value, string name)
+    {
+        if (!string.IsNullOrEmpty(value))
+        {
+            RequireOpaque(value, name);
+        }
+    }
+
+    private static void RequireOpaqueCollection(IEnumerable<string> values, string name)
+    {
+        string[] closed = values.ToArray();
+        if (closed.Length > MaximumPhaseCCollectionItems)
+        {
+            throw new InvalidDataException($"The {name} collection exceeds its closed bound.");
+        }
+        foreach (string value in closed)
+        {
+            RequireOpaque(value, name);
+        }
+    }
+
+    private static void RequireText(string value, string name, int maximumBytes, bool allowEmpty = false)
+    {
+        if ((!allowEmpty && string.IsNullOrWhiteSpace(value))
+            || Encoding.UTF8.GetByteCount(value) > maximumBytes
+            || value.Any(character => character == '\0' || char.IsSurrogate(character)))
+        {
+            throw new InvalidDataException($"The {name} is invalid or exceeds its closed bound.");
+        }
+    }
+
+    private static void RequireTextCollection(IEnumerable<string> values, string name, int maximumBytes)
+    {
+        foreach (string value in values)
+        {
+            RequireText(value, name, maximumBytes);
+        }
+    }
+
+    private static void RequireClosedText(string value, string name, params string[] allowed)
+    {
+        if (!allowed.Contains(value, StringComparer.Ordinal))
+        {
+            throw new InvalidDataException($"The {name} is unknown or unsupported.");
+        }
+    }
+
+    private static void ValidateProjection(string? value)
+    {
+        if (value is not null and not ("" or "1"))
+        {
+            throw new InvalidDataException("The application projection version is unsupported.");
+        }
+    }
+
+    private static void ValidatePage(uint pageSize, ByteString? cursor)
+    {
+        if (pageSize is < 1 or > MaximumPhaseCCollectionItems
+            || (cursor?.Length ?? 0) > 8192)
+        {
+            throw new InvalidDataException("The page request exceeds its closed bound.");
         }
     }
 

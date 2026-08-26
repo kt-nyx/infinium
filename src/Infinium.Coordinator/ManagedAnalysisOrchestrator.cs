@@ -415,7 +415,7 @@ internal static class ManagedAnalysisOrchestrator
             return (value, Seal(current), Execution(current, "reused-completed-phase"));
         }
         FindingCaseAnalysisPhaseResult result = FindingCaseAnalysisPhase.Execute(
-            store, request.FindingCase.Bind(candidates), attempt, binding, now);
+            store, request.FindingCase.Bind(candidates), attempt, binding, now, new(request.RequestId));
         string disposition = invalidated.Contains(FindingCaseAnalysisPhase.PhaseId)
             ? "recomputed-invalidated" : "recomputed-run-binding";
         AnalysisPhaseCheckpointRecord recorded = store.RecordAnalysisPhaseCheckpoint(attempt, binding,

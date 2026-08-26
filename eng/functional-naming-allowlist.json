@@ -1838,11 +1838,11 @@
     {
       "path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs",
       "scope": "content",
-      "token": "Successor",
-      "symbol_or_context": "successor review and targeted-run assertions at lines 164 and 250",
+      "token": "successor",
+      "symbol_or_context": "assumption successor and exact-continuation review assertions",
       "classification": "functional-domain-term",
-      "reason": "Successor verifies that edits, removals, carryover, and targeted verification create new durable state instead of rewriting prior state.",
-      "retained_consumer": "Phase C persistence, immutability, and lineage integration evidence.",
+      "reason": "Successor verifies that assumption edits, removals, and review carryover create new durable state instead of rewriting prior state.",
+      "retained_consumer": "Phase C review and assumption persistence, immutability, and lineage integration evidence.",
       "review_condition": "Review if review, assumption, or targeted-verification lineage semantics change."
     }
   ]

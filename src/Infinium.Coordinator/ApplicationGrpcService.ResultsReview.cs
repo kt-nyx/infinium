@@ -7,6 +7,10 @@ using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Domain.V1;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
+using ContractFailure = Infinium.Contracts.Protobuf.Common.V1.Failure;
+using ProtoFindingReportSort = Infinium.Contracts.Protobuf.Application.V1.FindingReportSort;
+using ProtoFindingReportState = Infinium.Contracts.Protobuf.Application.V1.FindingReportState;
+using ProtoStructuredExportState = Infinium.Contracts.Protobuf.Application.V1.StructuredExportState;
 
 namespace Infinium.Coordinator;
 
@@ -22,8 +26,19 @@ internal sealed record ResultPageCursor(
 
 internal sealed record AssumptionPageCursor(
     string ProfileId,
+    string ProjectionIdentity,
     uint PageSize,
     string LastAssumptionId,
+    DateTimeOffset ExpiresAt);
+
+internal sealed record FindingReportPageCursor(
+    string RunId,
+    string ProjectionIdentity,
+    string QueryHash,
+    string Sort,
+    uint PageSize,
+    string LastReportId,
+    string LastState,
     DateTimeOffset ExpiresAt);
 
 public sealed partial class ApplicationGrpcService
@@ -33,6 +48,10 @@ public sealed partial class ApplicationGrpcService
         ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new GetResultOverviewResponse { Failure = contractFailure });
+        }
         if (!IsCurrentProjection(request.ExpectedProjectionVersion))
         {
             return Task.FromResult(new GetResultOverviewResponse { ProjectionInvalidated = ProjectionInvalidated() });
@@ -58,6 +77,10 @@ public sealed partial class ApplicationGrpcService
         ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new ListResultItemsResponse { Failure = contractFailure });
+        }
         if (!IsCurrentProjection(request.ExpectedProjectionVersion))
         {
             return Task.FromResult(ResultCursorRejected(
@@ -141,6 +164,10 @@ public sealed partial class ApplicationGrpcService
         ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new GetResultDetailResponse { Failure = contractFailure });
+        }
         if (!IsCurrentProjection(request.ExpectedProjectionVersion))
         {
             return Task.FromResult(new GetResultDetailResponse { ProjectionInvalidated = ProjectionInvalidated() });
@@ -172,6 +199,10 @@ public sealed partial class ApplicationGrpcService
         ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new GetEvidenceExpansionResponse { Failure = contractFailure });
+        }
         if (!IsCurrentProjection(request.ExpectedProjectionVersion))
         {
             return Task.FromResult(new GetEvidenceExpansionResponse { ProjectionInvalidated = ProjectionInvalidated() });
@@ -211,8 +242,9 @@ public sealed partial class ApplicationGrpcService
                         EvidenceId = evidenceId,
                         EvidenceKind = artifact.Kind,
                         InertSummary = $"Retained {artifact.Kind} evidence ({artifact.State}).",
-                        ProducerId = artifact.ProvenanceId,
-                        ProducerVersion = artifact.SchemaVersion,
+                        ProvenanceId = artifact.ProvenanceId,
+                        ArtifactSchemaIdentity = artifact.SchemaId,
+                        ArtifactSchemaVersion = artifact.SchemaVersion,
                         OriginatingRunId = runId,
                         LlmInvolvementState = "unknown-not-inferred",
                         Availability = "retained-metadata",
@@ -249,6 +281,10 @@ public sealed partial class ApplicationGrpcService
         ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new GetFocusedModViewResponse { Failure = contractFailure });
+        }
         if (!IsCurrentProjection(request.ExpectedProjectionVersion))
         {
             return Task.FromResult(new GetFocusedModViewResponse { ProjectionInvalidated = ProjectionInvalidated() });
@@ -298,11 +334,126 @@ public sealed partial class ApplicationGrpcService
         }
     }
 
+    public override Task<ListFindingReportsResponse> ListFindingReports(
+        ListFindingReportsRequest request,
+        ServerCallContext context)
+    {
+        RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new ListFindingReportsResponse { Failure = contractFailure });
+        }
+        if (!IsCurrentProjection(request.ExpectedProjectionVersion))
+        {
+            return Task.FromResult(FindingReportCursorRejected(
+                CursorDisposition.ProjectionInvalidated, "The finding-report projection was rebuilt."));
+        }
+        try
+        {
+            string runId = Required(request.RunId?.Value, "run ID");
+            string[] states = request.States.Select(FindingReportStateToken)
+                .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+            string sort = request.Sort == ProtoFindingReportSort.StateThenIdentityAscending ? "state" : "identity";
+            string queryHash = ResultQueryHash(states, request.SearchText, sort);
+            string projectionIdentity = runtime.Store.GetFindingReportProjectionIdentity(runId);
+            FindingReportPageCursor? cursor = null;
+            if (request.After?.OpaqueValue.Length > 0)
+            {
+                try
+                {
+                    cursor = JsonSerializer.Deserialize<FindingReportPageCursor>(
+                            DecodeAuthenticated(request.After.OpaqueValue))
+                        ?? throw new InvalidOperationException("The finding-report cursor is malformed.");
+                }
+                catch (Exception exception) when (exception is InvalidOperationException or JsonException)
+                {
+                    return Task.FromResult(FindingReportCursorRejected(CursorDisposition.Malformed, Bounded(exception.Message)));
+                }
+                CursorDisposition binding = ValidateFindingReportCursorBinding(
+                    cursor, runId, projectionIdentity, queryHash, sort,
+                    request.RequestedPageSize, DateTimeOffset.UtcNow);
+                if (binding != CursorDisposition.Unspecified)
+                {
+                    return Task.FromResult(FindingReportCursorRejected(
+                        binding, "The finding-report cursor no longer matches the exact closed query."));
+                }
+            }
+            FindingReportPagePersistenceRecord retained = runtime.Store.ListFindingReports(
+                runId, states, request.SearchText, sort, checked((int)request.RequestedPageSize),
+                cursor?.LastReportId, cursor?.LastState);
+            FindingReportPage page = new()
+            {
+                HasMore = retained.HasMore,
+                ProjectionVersion = new ProjectionVersion { Value = retained.ProjectionVersion },
+            };
+            page.Items.Add(retained.Items.Select(ToFindingReportSummary));
+            if (retained.HasMore && retained.Items.Count > 0)
+            {
+                FindingReportSummaryPersistenceRecord last = retained.Items[^1];
+                page.Next = new PageCursor
+                {
+                    OpaqueValue = EncodeAuthenticated(JsonSerializer.SerializeToUtf8Bytes(
+                        new FindingReportPageCursor(runId, projectionIdentity, queryHash, sort,
+                            request.RequestedPageSize, last.ReportId, last.State,
+                            DateTimeOffset.UtcNow.AddMinutes(5)))),
+                };
+            }
+            return Task.FromResult(new ListFindingReportsResponse { Page = page });
+        }
+        catch (Exception exception) when (exception is ArgumentException or KeyNotFoundException)
+        {
+            return Task.FromResult(new ListFindingReportsResponse
+            {
+                Failure = Failure(exception is KeyNotFoundException ? FailureCode.NotFound : FailureCode.InvalidArgument,
+                    Bounded(exception.Message)),
+            });
+        }
+    }
+
+    public override Task<GetFindingReportResponse> GetFindingReport(
+        GetFindingReportRequest request,
+        ServerCallContext context)
+    {
+        RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new GetFindingReportResponse { Failure = contractFailure });
+        }
+        if (!IsCurrentProjection(request.ExpectedProjectionVersion))
+        {
+            return Task.FromResult(new GetFindingReportResponse { ProjectionInvalidated = ProjectionInvalidated() });
+        }
+        try
+        {
+            string runId = Required(request.RunId?.Value, "run ID");
+            FindingReportDetailPersistenceRecord retained = runtime.Store.GetFindingReport(runId, request.ReportId);
+            FindingReportDocument report = FindingReportJsonCodec.Deserialize(retained.ReportPayload);
+            FindingCaseContract canonical = FindingCaseJsonCodec.Deserialize(
+                runtime.Store.ReadFindingCasePayload(retained.Summary.SourcePayloadId));
+            return Task.FromResult(new GetFindingReportResponse
+            {
+                Report = ToFindingReportDetail(retained.Summary, report, canonical),
+            });
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidDataException or KeyNotFoundException)
+        {
+            return Task.FromResult(new GetFindingReportResponse
+            {
+                Failure = Failure(exception is KeyNotFoundException ? FailureCode.NotFound : FailureCode.InvalidArgument,
+                    Bounded(exception.Message)),
+            });
+        }
+    }
+
     public override Task<GetReviewStateResponse> GetReviewState(
         GetReviewStateRequest request,
         ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new GetReviewStateResponse { Failure = contractFailure });
+        }
         if (!IsCurrentProjection(request.ExpectedProjectionVersion))
         {
             return Task.FromResult(new GetReviewStateResponse { ProjectionInvalidated = ProjectionInvalidated() });
@@ -329,6 +480,10 @@ public sealed partial class ApplicationGrpcService
         ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new SubmitReviewEventResponse { Failure = contractFailure });
+        }
         try
         {
             ReviewMutationPersistenceResult result = runtime.Store.ApplyReviewEvent(
@@ -364,6 +519,10 @@ public sealed partial class ApplicationGrpcService
         ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new ListAssumptionsResponse { Failure = contractFailure });
+        }
         if (!IsCurrentProjection(request.ExpectedProjectionVersion))
         {
             return Task.FromResult(AssumptionCursorRejected(CursorDisposition.ProjectionInvalidated, "The assumption projection was rebuilt."));
@@ -377,6 +536,7 @@ public sealed partial class ApplicationGrpcService
         }
         try
         {
+            string projectionIdentity = runtime.Store.GetAssumptionProjectionIdentity(request.ProfileId);
             AssumptionPageCursor? cursor = null;
             if (request.After?.OpaqueValue.Length > 0)
             {
@@ -398,6 +558,11 @@ public sealed partial class ApplicationGrpcService
                 {
                     return Task.FromResult(AssumptionCursorRejected(CursorDisposition.QueryMismatch, "The assumption cursor belongs to another profile or page size."));
                 }
+                if (!StringComparer.Ordinal.Equals(cursor.ProjectionIdentity, projectionIdentity))
+                {
+                    return Task.FromResult(AssumptionCursorRejected(
+                        CursorDisposition.ProjectionInvalidated, "The assumption projection changed after this cursor was issued."));
+                }
             }
             IReadOnlyList<AssumptionStatePersistenceRecord> values = runtime.Store.ListAssumptions(
                 request.ProfileId, checked((int)request.RequestedPageSize), cursor?.LastAssumptionId);
@@ -414,7 +579,7 @@ public sealed partial class ApplicationGrpcService
                 page.Next = new PageCursor
                 {
                     OpaqueValue = EncodeAuthenticated(JsonSerializer.SerializeToUtf8Bytes(
-                        new AssumptionPageCursor(request.ProfileId, request.RequestedPageSize,
+                        new AssumptionPageCursor(request.ProfileId, projectionIdentity, request.RequestedPageSize,
                             items[^1].AssumptionId, DateTimeOffset.UtcNow.AddMinutes(5)))),
                 };
             }
@@ -434,6 +599,10 @@ public sealed partial class ApplicationGrpcService
         ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new SubmitAssumptionEventResponse { Failure = contractFailure });
+        }
         try
         {
             AssumptionMutationPersistenceResult result = runtime.Store.ApplyAssumptionEvent(
@@ -468,6 +637,10 @@ public sealed partial class ApplicationGrpcService
         ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new StartTargetedVerificationResponse { Failure = contractFailure });
+        }
         try
         {
             TargetedVerificationPersistenceRecord value = runtime.Store.StartTargetedVerification(
@@ -492,6 +665,10 @@ public sealed partial class ApplicationGrpcService
         ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new CreateStructuredExportResponse { Failure = contractFailure });
+        }
         try
         {
             StructuredExportPersistenceRecord value = runtime.Store.CreateStructuredExport(
@@ -518,6 +695,10 @@ public sealed partial class ApplicationGrpcService
         ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new GetStructuredExportResponse { Failure = contractFailure });
+        }
         try
         {
             return Task.FromResult(new GetStructuredExportResponse
@@ -537,6 +718,73 @@ public sealed partial class ApplicationGrpcService
             return Task.FromResult(new GetStructuredExportResponse
             {
                 Failure = Failure(FailureCode.Indeterminate, "The retained structured export failed integrity validation."),
+            });
+        }
+    }
+
+    public override Task<PreviewStructuredExportDeletionResponse> PreviewStructuredExportDeletion(
+        PreviewStructuredExportDeletionRequest request,
+        ServerCallContext context)
+    {
+        RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new PreviewStructuredExportDeletionResponse { Failure = contractFailure });
+        }
+        try
+        {
+            StructuredExportDeletionPreviewPersistenceRecord preview =
+                runtime.Store.PreviewStructuredExportDeletion(request.ExportId);
+            return Task.FromResult(new PreviewStructuredExportDeletionResponse
+            {
+                Preview = new StructuredExportDeletionPreview
+                {
+                    ExportId = preview.ExportId,
+                    CurrentState = StructuredExportStateValue(preview.CurrentState),
+                    ArtifactPresent = preview.ArtifactPresent,
+                    SourceRunMutated = false,
+                    SourceResultsMutated = false,
+                    ReviewHistoryMutated = false,
+                    AssumptionsMutated = false,
+                    ProvenanceMutated = false,
+                    AuditHistoryRetained = preview.AuditHistoryRetained,
+                },
+            });
+        }
+        catch (Exception exception) when (exception is KeyNotFoundException or InvalidDataException)
+        {
+            return Task.FromResult(new PreviewStructuredExportDeletionResponse
+            {
+                Failure = Failure(exception is KeyNotFoundException ? FailureCode.NotFound : FailureCode.Indeterminate,
+                    Bounded(exception.Message)),
+            });
+        }
+    }
+
+    public override Task<DeleteStructuredExportResponse> DeleteStructuredExport(
+        DeleteStructuredExportRequest request,
+        ServerCallContext context)
+    {
+        RequireNegotiated(context);
+        if (PhaseCContractFailure(request) is { } contractFailure)
+        {
+            return Task.FromResult(new DeleteStructuredExportResponse { Failure = contractFailure });
+        }
+        try
+        {
+            return Task.FromResult(new DeleteStructuredExportResponse
+            {
+                Export = ToStructuredExport(runtime.Store.DeleteStructuredExport(
+                    request.IdempotencyKey, request.ExportId, DateTimeOffset.UtcNow)),
+            });
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException
+            or InvalidDataException or KeyNotFoundException)
+        {
+            return Task.FromResult(new DeleteStructuredExportResponse
+            {
+                Failure = Failure(exception is KeyNotFoundException ? FailureCode.NotFound : FailureCode.InvalidArgument,
+                    Bounded(exception.Message)),
             });
         }
     }
@@ -570,6 +818,159 @@ public sealed partial class ApplicationGrpcService
         result.InertGaps.Add(value.Gaps);
         return result;
     }
+
+    private static ContractFailure? PhaseCContractFailure(IMessage request)
+    {
+        try
+        {
+            Infinium.Application.Runtime.ApplicationContractValidator.ValidatePhaseC(request);
+            return null;
+        }
+        catch (InvalidDataException exception)
+        {
+            return Failure(FailureCode.InvalidArgument, Bounded(exception.Message));
+        }
+    }
+
+    private static FindingReportSummary ToFindingReportSummary(FindingReportSummaryPersistenceRecord value) => new()
+    {
+        ReportId = value.ReportId,
+        RunId = new RunId { Value = value.RunId },
+        State = FindingReportStateValue(value.State),
+        FindingId = value.FindingId ?? string.Empty,
+        CaseId = value.CaseId ?? string.Empty,
+        SubjectId = value.SubjectId,
+        InertTitle = value.Title,
+        InertConclusion = value.Conclusion,
+        AnalyzerId = value.AnalyzerId,
+        RetainedSourcePayloadId = value.SourcePayloadId,
+        RetainedSourcePayloadSha256 = value.SourcePayloadSha256,
+    };
+
+    private static FindingReportDetail ToFindingReportDetail(
+        FindingReportSummaryPersistenceRecord summary,
+        FindingReportDocument report,
+        FindingCaseContract canonical)
+    {
+        FindingRecommendationContract? recommendation = FindRecommendation(report, canonical);
+        FindingReportDetail detail = new()
+        {
+            Summary = ToFindingReportSummary(summary),
+            SchemaIdentity = report.SchemaId,
+            SchemaVersion = report.SchemaVersion.ToString(),
+            ContractMaturity = report.ContractMaturity,
+            InertWhatHappened = report.WhatHappened,
+            InertWhyItMatters = report.WhyItMatters,
+            Assessment = new Infinium.Contracts.Protobuf.Application.V1.FindingReportAssessment
+            {
+                Severity = report.Assessment.Severity.ToString(),
+                InertSeverityBasis = report.Assessment.SeverityBasis,
+                Confidence = report.Assessment.Confidence.ToString(),
+                InertConfidenceBasis = report.Assessment.ConfidenceBasis,
+                AnalyzerMaturity = report.Assessment.AnalyzerMaturity.ToString(),
+                InertMaturityBasis = report.Assessment.MaturityBasis,
+                InertCalibrationBoundary = report.Assessment.CalibrationBoundary,
+            },
+            RecommendationKind = recommendation?.Kind.ToString() ?? "not-applicable",
+            InertRecommendedAction = report.RecommendedAction,
+            InertReversibility = recommendation?.Reversibility
+                ?? "No retained recommendation reversibility applies to this non-recommendation result.",
+            InertValidationSteps = recommendation?.Verification ?? report.ValidationSteps,
+            Provenance = new Infinium.Contracts.Protobuf.Application.V1.FindingReportProvenance
+            {
+                SourceSchemaIdentity = report.Provenance.SourceSchemaId,
+                SourceSchemaVersion = report.Provenance.SourceSchemaVersion.ToString(),
+                SourcePayloadId = report.Provenance.SourcePayloadId.Value,
+                SourceInputFingerprintSha256 = report.Provenance.SourceInputFingerprint.Value,
+                SourceAssignmentId = report.Provenance.SourceAssignmentId.Value,
+                ReplayEquivalent = report.Provenance.ReplayEquivalent,
+                CanonicalArtifactRole = report.Provenance.CanonicalArtifactRole,
+            },
+            ProjectionVersion = new ProjectionVersion { Value = "1" },
+        };
+        detail.AffectedSubjects.Add(report.AffectedSubjects.Select(item =>
+            new Infinium.Contracts.Protobuf.Application.V1.FindingReportSubject
+            {
+                Kind = item.Kind,
+                SubjectId = item.SubjectId.Value,
+                InertDetail = item.Detail,
+            }));
+        detail.TaxonomyAssignments.Add(report.TaxonomyAssignments.Select(item =>
+            new Infinium.Contracts.Protobuf.Application.V1.FindingReportTaxonomyAssignment
+            {
+                Axis = item.Axis,
+                Code = item.Code ?? string.Empty,
+                Applicability = item.Applicability,
+                InertBasis = item.Basis,
+            }));
+        detail.Coverage.Add(report.Coverage.Select(item =>
+            new Infinium.Contracts.Protobuf.Application.V1.FindingReportCoverage
+            {
+                PopulationId = item.PopulationId,
+                Denominator = checked((ulong)item.Denominator),
+                Completed = checked((ulong)item.Completed),
+                CompletedWithGaps = checked((ulong)item.CompletedWithGaps),
+                Failed = checked((ulong)item.Failed),
+                SkippedOrUnsupported = checked((ulong)item.SkippedOrUnsupported),
+            }));
+        detail.SupportingEvidenceIds.Add(report.SupportingEvidenceIds.Select(item => item.Value));
+        detail.ContradictingEvidenceIds.Add(report.ContradictingEvidenceIds.Select(item => item.Value));
+        detail.InertAssumptions.Add(report.Assumptions);
+        detail.InertApplicabilityConditions.Add(report.ApplicabilityConditions);
+        detail.InertUncertainty.Add(report.Uncertainty);
+        detail.InertUnresolvedQuestions.Add(report.UnresolvedQuestions);
+        detail.InertFailures.Add(report.Failures);
+        detail.InertExclusions.Add(report.Exclusions);
+        detail.InertGaps.Add(report.Gaps);
+        detail.InertRisks.Add(recommendation?.Risks
+            ?? ["No retained recommendation risk statement applies to this non-recommendation result."]);
+        detail.InertUnsupportedOrNotEstablished.Add(report.UnsupportedOrNotEstablished);
+        return detail;
+    }
+
+    private static FindingRecommendationContract? FindRecommendation(
+        FindingReportDocument report,
+        FindingCaseContract canonical)
+    {
+        if (report.FindingId is not null)
+        {
+            return canonical.Recommendations.SingleOrDefault(item => item.FindingOccurrenceId == report.FindingId);
+        }
+        FindingRecommendationContract? abstention = canonical.Recommendations
+            .SingleOrDefault(item => item.AbstentionId == report.SubjectId);
+        if (abstention is not null || report.CaseId is null)
+        {
+            return abstention;
+        }
+        AnalysisCaseContract? sourceCase = canonical.Cases.SingleOrDefault(item => item.CaseOccurrenceId == report.CaseId);
+        return sourceCase is null
+            ? null
+            : canonical.Recommendations.SingleOrDefault(item =>
+                item.LeadHypothesisId is not null
+                && sourceCase.HypothesisIds.Contains(item.LeadHypothesisId));
+    }
+
+    private static ProtoFindingReportState FindingReportStateValue(string value) => value switch
+    {
+        "supported-finding" => ProtoFindingReportState.SupportedFinding,
+        "resolved-negative" => ProtoFindingReportState.ResolvedNegative,
+        "abstention" => ProtoFindingReportState.Abstention,
+        "failure" => ProtoFindingReportState.Failure,
+        "limited" => ProtoFindingReportState.Limited,
+        "coverage-gap" => ProtoFindingReportState.CoverageGap,
+        _ => ProtoFindingReportState.Unknown,
+    };
+
+    private static string FindingReportStateToken(ProtoFindingReportState value) => value switch
+    {
+        ProtoFindingReportState.SupportedFinding => "supported-finding",
+        ProtoFindingReportState.ResolvedNegative => "resolved-negative",
+        ProtoFindingReportState.Abstention => "abstention",
+        ProtoFindingReportState.Failure => "failure",
+        ProtoFindingReportState.Limited => "limited",
+        ProtoFindingReportState.CoverageGap => "coverage-gap",
+        _ => throw new ArgumentException("The finding-report state is unsupported."),
+    };
 
     private static ResultCoverage ToResultCoverage(ResultCoveragePersistenceRecord value)
     {
@@ -726,6 +1127,10 @@ public sealed partial class ApplicationGrpcService
             ArtifactSha256 = value.ArtifactSha256,
             ArtifactBytes = checked((ulong)value.ArtifactBytes),
             CreatedAt = ProtoMapping.ToProto(value.CreatedAt),
+            State = StructuredExportStateValue(value.State),
+            DeletedAt = value.DeletedAt is null ? null : ProtoMapping.ToProto(value.DeletedAt.Value),
+            EventRevision = checked((ulong)value.EventRevision),
+            HistoryTruncated = value.HistoryTruncated,
         };
         result.SelectedResultItemIds.Add(value.SelectedResultItemIds);
         result.SelectedReviewEventIds.Add(value.SelectedReviewEventIds);
@@ -735,8 +1140,24 @@ public sealed partial class ApplicationGrpcService
         result.PrivacyDecisions.Add(value.PrivacyDecisions);
         result.SourcePolicyDecisions.Add(value.SourcePolicyDecisions);
         result.ProvenanceIds.Add(value.ProvenanceIds);
+        result.History.Add(value.History.Select(item => new StructuredExportEvent
+        {
+            EventId = item.EventId,
+            Revision = checked((ulong)item.Revision),
+            EventKind = item.EventKind,
+            RequestFingerprintSha256 = item.RequestFingerprintSha256,
+            CreatedAt = ProtoMapping.ToProto(item.CreatedAt),
+        }));
         return result;
     }
+
+    private static ProtoStructuredExportState StructuredExportStateValue(string value) => value switch
+    {
+        "active" => ProtoStructuredExportState.Active,
+        "deletion-pending" => ProtoStructuredExportState.DeletionPending,
+        "deleted" => ProtoStructuredExportState.Deleted,
+        _ => ProtoStructuredExportState.Unknown,
+    };
 
     private static ResultItemKind ResultKind(string value) => value switch
     {
@@ -797,6 +1218,36 @@ public sealed partial class ApplicationGrpcService
             : CursorDisposition.SortMismatch;
     }
 
+    internal static CursorDisposition ValidateFindingReportCursorBinding(
+        FindingReportPageCursor cursor,
+        string runId,
+        string projectionIdentity,
+        string queryHash,
+        string sort,
+        uint pageSize,
+        DateTimeOffset now)
+    {
+        if (cursor.ExpiresAt <= now)
+        {
+            return CursorDisposition.Expired;
+        }
+        if (!StringComparer.Ordinal.Equals(cursor.RunId, runId))
+        {
+            return CursorDisposition.ScopeMismatch;
+        }
+        if (!StringComparer.Ordinal.Equals(cursor.ProjectionIdentity, projectionIdentity))
+        {
+            return CursorDisposition.ProjectionInvalidated;
+        }
+        if (!StringComparer.Ordinal.Equals(cursor.QueryHash, queryHash) || cursor.PageSize != pageSize)
+        {
+            return CursorDisposition.QueryMismatch;
+        }
+        return StringComparer.Ordinal.Equals(cursor.Sort, sort)
+            ? CursorDisposition.Unspecified
+            : CursorDisposition.SortMismatch;
+    }
+
     private static ListResultItemsResponse ResultCursorRejected(CursorDisposition disposition, string detail) => new()
     {
         CursorRejection = new CursorRejection
@@ -808,6 +1259,16 @@ public sealed partial class ApplicationGrpcService
     };
 
     private static ListAssumptionsResponse AssumptionCursorRejected(CursorDisposition disposition, string detail) => new()
+    {
+        CursorRejection = new CursorRejection
+        {
+            Disposition = disposition,
+            CurrentProjectionVersion = new ProjectionVersion { Value = "1" },
+            Failure = Failure(FailureCode.ResyncRequired, detail),
+        },
+    };
+
+    private static ListFindingReportsResponse FindingReportCursorRejected(CursorDisposition disposition, string detail) => new()
     {
         CursorRejection = new CursorRejection
         {

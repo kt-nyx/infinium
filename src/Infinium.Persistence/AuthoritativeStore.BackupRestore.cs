@@ -109,7 +109,9 @@ public sealed partial class AuthoritativeStore
                 {
                     command.CommandText =
                         "SELECT artifact_relative_path,artifact_sha256,artifact_bytes "
-                        + "FROM structured_exports ORDER BY artifact_relative_path;";
+                        + "FROM structured_exports export "
+                        + "JOIN structured_export_projection projection ON projection.export_id=export.export_id "
+                        + "WHERE projection.state='active' ORDER BY artifact_relative_path;";
                     using SqliteDataReader reader = command.ExecuteReader();
                     while (reader.Read())
                     {
@@ -821,7 +823,9 @@ public sealed partial class AuthoritativeStore
         using SqliteCommand command = database.CreateCommand();
         command.CommandText =
             "SELECT artifact_relative_path,artifact_sha256,artifact_bytes "
-            + "FROM structured_exports ORDER BY artifact_relative_path;";
+            + "FROM structured_exports export "
+            + "JOIN structured_export_projection projection ON projection.export_id=export.export_id "
+            + "WHERE projection.state='active' ORDER BY artifact_relative_path;";
         using SqliteDataReader reader = command.ExecuteReader();
         List<BackupExportManifest> exports = [];
         while (reader.Read())

@@ -173,12 +173,13 @@ public sealed partial class AuthoritativeStore
                     dependency_ids_json,effective,analysis_context_id,last_event_id,updated_at)
                 SELECT event.assumption_id,event.profile_id,event.revision,event.origin,event.confirmation,
                        event.subject,event.value,event.scope,event.dependency_ids_json,event.effective,
-                       event.analysis_context_id,event.event_id,event.created_at
+                       event.analysis_context_id,event.event_id,$now
                 FROM assumption_events event
                 WHERE event.revision=(SELECT MAX(latest.revision) FROM assumption_events latest
                     WHERE latest.assumption_id=event.assumption_id);
                 """,
-                transaction);
+                transaction,
+                ("$now", ToText(now)));
             transaction.Commit();
         }
     }

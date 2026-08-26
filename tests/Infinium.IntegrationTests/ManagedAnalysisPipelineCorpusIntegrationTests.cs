@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Transport.NamedPipes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using ProtoFindingReportState = Infinium.Contracts.Protobuf.Application.V1.FindingReportState;
 
 namespace Infinium.Tests;
 
@@ -296,6 +297,36 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             }).ResponseAsync;
             Assert.AreEqual(GetResultDetailResponse.ResultOneofCase.Detail, sourceDetail.ResultCase, sourceDetail.Failure?.Detail);
             Assert.IsNotEmpty(sourceDetail.Detail.SubjectIds);
+            ListFindingReportsRequest reportQuery = new()
+            {
+                RunId = sourceFinding.RunId,
+                RequestedPageSize = 100,
+                Sort = FindingReportSort.IdentityAscending,
+                ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion { Value = "1" },
+            };
+            reportQuery.States.Add([
+                ProtoFindingReportState.SupportedFinding, ProtoFindingReportState.ResolvedNegative,
+                ProtoFindingReportState.Abstention, ProtoFindingReportState.Failure,
+                ProtoFindingReportState.Limited, ProtoFindingReportState.CoverageGap,
+            ]);
+            ListFindingReportsResponse reports = await client.ListFindingReportsAsync(reportQuery).ResponseAsync;
+            Assert.AreEqual(ListFindingReportsResponse.ResultOneofCase.Page, reports.ResultCase, reports.Failure?.Detail);
+            Assert.IsNotEmpty(reports.Page.Items);
+            FindingReportSummary supportedReport = reports.Page.Items.First(item =>
+                item.State == ProtoFindingReportState.SupportedFinding);
+            GetFindingReportResponse reportDetail = await client.GetFindingReportAsync(new GetFindingReportRequest
+            {
+                RunId = sourceFinding.RunId,
+                ReportId = supportedReport.ReportId,
+                ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion { Value = "1" },
+            }).ResponseAsync;
+            Assert.AreEqual(GetFindingReportResponse.ResultOneofCase.Report, reportDetail.ResultCase, reportDetail.Failure?.Detail);
+            Assert.AreEqual(sourceFinding.ItemId, reportDetail.Report.Summary.FindingId);
+            Assert.IsNotEmpty(reportDetail.Report.SupportingEvidenceIds);
+            Assert.IsNotEmpty(reportDetail.Report.InertReversibility);
+            Assert.IsNotEmpty(reportDetail.Report.InertRisks);
+            Assert.AreEqual("assignment." + cleanRunId, reportDetail.Report.Provenance.SourceAssignmentId);
+            Assert.AreEqual("raw-run-output-is-canonical", reportDetail.Report.Provenance.CanonicalArtifactRole);
             GetFocusedModViewResponse focused = await client.GetFocusedModViewAsync(new GetFocusedModViewRequest
             {
                 RunId = sourceFinding.RunId,
@@ -357,6 +388,60 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 DependencyIds = { sourceDetail.Detail.SourcePayloadId },
             }).ResponseAsync;
             Assert.AreEqual(SubmitAssumptionEventResponse.ResultOneofCase.State, assumption.ResultCase, assumption.Failure?.Detail);
+            SubmitAssumptionEventResponse secondAssumption = await client.SubmitAssumptionEventAsync(
+                new SubmitAssumptionEventRequest
+                {
+                    IdempotencyKey = "phase-c-native-assumption-second",
+                    AssumptionId = "phase-c-assumption-second",
+                    ProfileId = "profile.001",
+                    ExpectedRevision = 0,
+                    EventKind = "create",
+                    Origin = "inferred",
+                    Confirmation = "unconfirmed",
+                    Subject = "secondary-profile-selection",
+                    InertValue = "inferred for cursor invalidation evidence",
+                    Scope = cleanRunId,
+                    DependencyIds = { sourceDetail.Detail.SourcePayloadId },
+                }).ResponseAsync;
+            Assert.AreEqual(SubmitAssumptionEventResponse.ResultOneofCase.State,
+                secondAssumption.ResultCase, secondAssumption.Failure?.Detail);
+            ListAssumptionsRequest firstAssumptionPageRequest = new()
+            {
+                ProfileId = "profile.001",
+                RequestedPageSize = 1,
+                ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion { Value = "1" },
+            };
+            ListAssumptionsResponse firstAssumptionPage = await client.ListAssumptionsAsync(
+                firstAssumptionPageRequest).ResponseAsync;
+            Assert.AreEqual(ListAssumptionsResponse.ResultOneofCase.Page,
+                firstAssumptionPage.ResultCase, firstAssumptionPage.Failure?.Detail);
+            Assert.IsTrue(firstAssumptionPage.Page.HasMore);
+            Assert.IsFalse(firstAssumptionPage.Page.Next.OpaqueValue.IsEmpty);
+            SubmitAssumptionEventResponse mutatedAssumption = await client.SubmitAssumptionEventAsync(
+                new SubmitAssumptionEventRequest
+                {
+                    IdempotencyKey = "phase-c-native-assumption-second-edit",
+                    AssumptionId = secondAssumption.State.AssumptionId,
+                    ProfileId = secondAssumption.State.ProfileId,
+                    ExpectedRevision = secondAssumption.State.Revision,
+                    EventKind = "edit",
+                    Origin = "inferred",
+                    Confirmation = "unconfirmed",
+                    Subject = secondAssumption.State.Subject,
+                    InertValue = "edited state invalidates the prior cursor",
+                    Scope = secondAssumption.State.Scope,
+                    DependencyIds = { sourceDetail.Detail.SourcePayloadId },
+                }).ResponseAsync;
+            Assert.AreEqual(SubmitAssumptionEventResponse.ResultOneofCase.State,
+                mutatedAssumption.ResultCase, mutatedAssumption.Failure?.Detail);
+            ListAssumptionsRequest replayedAssumptionPageRequest = firstAssumptionPageRequest.Clone();
+            replayedAssumptionPageRequest.After = firstAssumptionPage.Page.Next;
+            ListAssumptionsResponse replayedAssumptionPage = await client.ListAssumptionsAsync(
+                replayedAssumptionPageRequest).ResponseAsync;
+            Assert.AreEqual(ListAssumptionsResponse.ResultOneofCase.CursorRejection,
+                replayedAssumptionPage.ResultCase);
+            Assert.AreEqual(CursorDisposition.ProjectionInvalidated,
+                replayedAssumptionPage.CursorRejection.Disposition);
             CreateStructuredExportRequest exportRequest = new()
             {
                 IdempotencyKey = "phase-c-native-export",
@@ -372,19 +457,51 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             };
             CreateStructuredExportResponse export = await client.CreateStructuredExportAsync(exportRequest).ResponseAsync;
             Assert.AreEqual(CreateStructuredExportResponse.ResultOneofCase.Export, export.ResultCase, export.Failure?.Detail);
-            StartTargetedVerificationResponse targeted = await client.StartTargetedVerificationAsync(
-                new StartTargetedVerificationRequest
+            PreviewStructuredExportDeletionResponse deletionPreview = await client.PreviewStructuredExportDeletionAsync(
+                new PreviewStructuredExportDeletionRequest { ExportId = export.Export.ExportId }).ResponseAsync;
+            Assert.AreEqual(PreviewStructuredExportDeletionResponse.ResultOneofCase.Preview, deletionPreview.ResultCase);
+            Assert.IsTrue(deletionPreview.Preview.ArtifactPresent);
+            Assert.IsFalse(deletionPreview.Preview.SourceRunMutated);
+            DeleteStructuredExportResponse deleted = await client.DeleteStructuredExportAsync(
+                new DeleteStructuredExportRequest
                 {
-                    IdempotencyKey = "phase-c-native-targeted",
-                    RequestedRunId = "run-phase-c-native-targeted",
-                    SourceRunId = sourceFinding.RunId,
-                    SourceFindingOccurrenceId = sourceFinding.ItemId,
-                    ExactScopeIds = { sourceDetail.Detail.SubjectIds[0] },
-                    UserGestureId = "phase-c-user-gesture-0001",
-                    DispatchDeadline = ProtoMapping.ToProto(DateTimeOffset.UtcNow.AddMinutes(1)),
+                    IdempotencyKey = "phase-c-native-export-delete",
+                    ExportId = export.Export.ExportId,
                 }).ResponseAsync;
-            Assert.AreEqual(StartTargetedVerificationResponse.ResultOneofCase.Verification, targeted.ResultCase, targeted.Failure?.Detail);
-            Assert.AreEqual("scope-limited", targeted.Verification.ReadinessBoundary);
+            Assert.AreEqual(DeleteStructuredExportResponse.ResultOneofCase.Export, deleted.ResultCase, deleted.Failure?.Detail);
+            Assert.AreEqual(StructuredExportState.Deleted, deleted.Export.State);
+            Assert.AreEqual(3UL, deleted.Export.EventRevision);
+
+            ListResultItemsRequest unknownResultRequest = ListResultItemsRequest.Parser.ParseFrom(
+                cleanFindingQuery.ToByteArray().Concat(new byte[] { 0x98, 0x06, 0x01 }).ToArray());
+            ListResultItemsResponse unknownResult = await client.ListResultItemsAsync(unknownResultRequest).ResponseAsync;
+            Assert.AreEqual(ListResultItemsResponse.ResultOneofCase.Failure, unknownResult.ResultCase);
+            Assert.AreEqual(FailureCode.InvalidArgument, unknownResult.Failure.Code);
+            ListFindingReportsRequest invalidReportEnum = reportQuery.Clone();
+            invalidReportEnum.States.Clear();
+            invalidReportEnum.States.Add((ProtoFindingReportState)999);
+            ListFindingReportsResponse invalidReport = await client.ListFindingReportsAsync(invalidReportEnum).ResponseAsync;
+            Assert.AreEqual(ListFindingReportsResponse.ResultOneofCase.Failure, invalidReport.ResultCase);
+            SubmitReviewEventRequest oversizedReview = new()
+            {
+                IdempotencyKey = "phase-c-oversized-review",
+                RunId = sourceFinding.RunId,
+                SubjectKind = "finding",
+                SubjectOccurrenceId = sourceFinding.ItemId,
+                EventKind = "annotation",
+                Disposition = "investigating",
+                InertAnnotation = new string('x', 16_385),
+            };
+            SubmitReviewEventResponse rejectedReview = await client.SubmitReviewEventAsync(oversizedReview).ResponseAsync;
+            Assert.AreEqual(SubmitReviewEventResponse.ResultOneofCase.Failure, rejectedReview.ResultCase);
+            GetFindingReportResponse wrongScope = await client.GetFindingReportAsync(new GetFindingReportRequest
+            {
+                RunId = new Infinium.Contracts.Protobuf.Domain.V1.RunId { Value = cleanRunId + "-wrong" },
+                ReportId = supportedReport.ReportId,
+                ExpectedProjectionVersion = new Infinium.Contracts.Protobuf.Domain.V1.ProjectionVersion { Value = "1" },
+            }).ResponseAsync;
+            Assert.AreEqual(GetFindingReportResponse.ResultOneofCase.Failure, wrongScope.ResultCase);
+            Assert.AreEqual(FailureCode.NotFound, wrongScope.Failure.Code);
             Assert.AreEqual(LifecycleState.CompletedWithGaps, store.GetRun(cleanRunId).State);
             WriteComparisonReceipt(repositoryRoot, executionOrder.Select(caseId => observations[caseId]));
         }
