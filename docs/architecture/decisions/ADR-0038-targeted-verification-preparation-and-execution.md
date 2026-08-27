@@ -1,13 +1,16 @@
 # ADR-0038: Targeted-verification preparation and execution
 
-Status: Proposed
+Status: Accepted
 Date: 2026-08-26
+Accepted: 2026-08-26
+Accepted by: Project owner
+Accepted architecture source: `bd936a02562a8df1ddcb62f275cc45b6c225e594`
 Last reviewed: 2026-08-26
 Supersedes: None
 Superseded by: None
 Supplements: ADR-0016 and ADR-0037
 
-## Plain-language proposal
+## Plain-language decision
 
 After a user changes their mod setup, Infinium will first take a fresh,
 read-only picture of that setup and prepare an exact list of the checks needed
@@ -20,8 +23,8 @@ reuse the old snapshot as proof of change, filter facts ad hoc, fall back to a
 generic full run, or invent a new analysis operation. The old and new results
 remain immutable and gain exact append-only lineage.
 
-This ADR is a proposal. It grants no implementation or runtime authority until
-accepted and implemented.
+This ADR is accepted implementation authority for the corrected WP6 vertical.
+It does not itself implement or enable the runtime operation.
 
 ## Context
 
@@ -46,13 +49,13 @@ all missing.
 
 - A post-change result must observe a newly captured installation state.
 - Required dependency work cannot be omitted by a caller or UI projection.
-- Proposed work, reuse, gaps, and limits must be inspectable before start.
+- Prepared work, reuse, gaps, and limits must be inspectable before start.
 - The successor must use an operation that the current executor can run.
 - Source and successor results, dispositions, and readiness remain immutable.
 - Lifecycle and idempotency must survive process and renderer restarts.
 - React receives closed product operations, never paths or backend authority.
 
-## Proposed decision
+## Decision
 
 1. Targeted verification shall use a prepare, inspect, then start workflow.
    The application surface shall provide closed operations equivalent to
@@ -131,13 +134,18 @@ all missing.
     target population plus an evidenced no-match lookup. It and
     `ProvenNotApplicable` are completed coverage members and remain in the
     denominator; neither requires a fabricated candidate/hypothesis.
-    `Ambiguous`, `Unsupported`, `Inaccessible`, `Malformed`, and
-    `MissingRequiredProof` are explicit gaps. Ambiguity/missing proof for a
-    mandatory root or closure edge is non-startable. Known unsupported or
-    inaccessible or malformed members may be carried only by an explicitly
-    limited plan and
-    can never count as complete applicable coverage.
-13. A versioned targeted delivered-input producer shall project executable
+    `ProvenAbsent` is a positive completed observation only: it proves the
+    member was absent from a completely enumerated target population, not that
+    the issue is resolved, the setup is correct, or the game is safe.
+13. Identity/scope correlation is an admission gate distinct from processing a
+    correlated member. An unsupported, ambiguous, or incomplete correlation
+    (including `Ambiguous` or `MissingRequiredProof` for a mandatory root or
+    closure edge) is non-startable. Once identity and closure are fully proven,
+    a known member whose content/analyzer support is `Unsupported`,
+    `Inaccessible`, or `Malformed` remains an explicit denominator gap and may
+    start only in an inspectable limited plan. It never counts as complete
+    applicable coverage and cannot cure a failed correlation.
+14. A versioned targeted delivered-input producer shall project executable
     correlated members into a recomputed `CandidateDeliveredInput`. A
     clean-break `FindingCaseInput` producer shall separately consume
     `TargetedCorrelationCoverage` to emit population/member/failure coverage
@@ -145,33 +153,33 @@ all missing.
     denominator. The producer shall be deterministic, permutation-independent,
     monotonic with added roots, closed over required dependencies, and bounded;
     it is not a post-hoc fact filter.
-14. Preparation shall publish an immutable plan identifying source
+15. Preparation shall publish an immutable plan identifying source
    run/occurrence/logical identity/payload, source and target bindings, new
    snapshot/capture/acquisition/semantic input, direct and expanded scope,
    correlation ledger, target analyzers, proposed reuse and proofs,
    recomputation, coverage denominator, gaps, readiness boundary, resolved
    manifest, and preparation revision/fingerprint.
-15. `StartTargetedVerification` shall accept only the exact startable
+16. `StartTargetedVerification` shall accept only the exact startable
    preparation/revision plus durable command ID, optional requested successor
    run ID, initiation kind, future deadline, and a fresh one-shot gesture. It
    shall not accept executable scope fields.
-16. Start admission shall revalidate every retained byte, hash, identity, and
+17. Start admission shall revalidate every retained byte, hash, identity, and
     saved revision. In one coordinator transaction it shall create the new run,
     durable command, `managed-analysis-v1` operation/request, preparation
     submission, initiation-lineage record, and source/successor link. Scheduling
     occurs only after commit. One preparation may create at most one successor.
-17. The managed request shall bind the new snapshot, acquisition run/output/
+18. The managed request shall bind the new snapshot, acquisition run/output/
     application link and semantic input, current selected context and effective
     configuration, resolved input manifest, supplied targeted delivered input,
     correlation/coverage input, source run as prior reconciliation context, and
     every reuse proof. No run operation kind named
     `targeted-verification` is authorized.
-18. Snapshot-dependent semantic input, candidates, findings, cases, and
+19. Snapshot-dependent semantic input, candidates, findings, cases, and
     checkpoints shall be recomputed. Profile-independent artifacts may be
     reused only through an ADR-0010-valid dependency-equivalence proof and a
     new reuse/application edge. Unknown impact means recompute, explicit gap,
     or non-startable preparation; generic `reuse anyway` is forbidden.
-19. Initiation lineage and analytical lineage are distinct. Initiation lineage
+20. Initiation lineage and analytical lineage are distinct. Initiation lineage
     always records the source occurrence and successor run. Successor
     finding/case continuity continues to use ADR-0022 reconciliation. A missing
     successor occurrence is `not observed` only with complete applicable
@@ -179,47 +187,49 @@ all missing.
     shall not alter source review disposition. Zero current hypotheses may yield
     `NotObserved` only when every applicable member is completed by execution,
     `ProvenAbsent`, or `ProvenNotApplicable`; incomplete coverage yields
-    `NotEvaluated`/unknown plus explicit gaps.
-20. Targeted coverage shall use the prepared closed scope as its denominator
+    `NotEvaluated`/unknown plus explicit gaps. `NotObserved` is only a guarded
+    statement about absence within that completely covered targeted scope; it
+    is not proof of resolution, setup correctness, or game safety.
+21. Targeted coverage shall use the prepared closed scope as its denominator
     and report attempted, completed, failed, unsupported, reused, and omitted
     populations. WP6 results shall expose `scope-limited` or `no-readiness` and
     shall not replace or borrow whole-profile readiness. Any future promotion
     requires a separate accepted full-policy readiness evaluation.
-21. Exact preparation/command retries shall return the prior receipt. A reused
+22. Exact preparation/command retries shall return the prior receipt. A reused
     key, gesture, preparation, or requested run ID with different meaning shall
     conflict. Independent preparations for one source may run concurrently,
     but shall have distinct captures and immutable state.
-22. Transport cancellation shall not cancel durable work. Explicit
+23. Transport cancellation shall not cancel durable work. Explicit
     preparation cancellation shall prevent new stages; retained work already
     completed remains auditable. A running capture lost to process failure
     shall fail under a fence and require a new preparation rather than observe
     a later filesystem state under the old identity. Acquisition and final
     analysis lifecycle are separately fenced and owned as stated above.
     Terminal runs are never reopened.
-23. Replay of the successor shall use its retained inputs and shall not capture
+24. Replay of the successor shall use its retained inputs and shall not capture
     the live installation. A new external recheck always requires a new
     preparation, new snapshot occurrence, and new successor run.
-24. Unsupported/stale/ambiguous/incomplete source mapping or correlation,
-    unproven absence, missing or unknown dependency evidence, incompatible
-    analyzer/identity contracts, substituted bytes, exceeded bounds, or
+25. Stale, unsupported, ambiguous, or incomplete identity/scope correlation;
+    unproven absence; missing or unknown dependency evidence; incompatible
+    identity/producer contracts; substituted bytes; exceeded bounds; or
     unavailable prerequisites shall produce a typed non-startable preparation.
     Failed prerequisite evidence may remain under its preparation/acquisition
-    owner, but no successor analysis run or readiness mutation occurs. Ordinary
-    gaps admitted by an explicitly limited valid scope remain explicit and
-    yield limited/completed-with-gaps results.
-25. Evidence-acquisition migration shall preserve existing source-claim
+    owner, but no successor analysis run or readiness mutation occurs. By
+    contrast, fully correlated known-member support/content failures admitted
+    under item 13 remain explicit and yield limited/completed-with-gaps results.
+26. Evidence-acquisition migration shall preserve existing source-claim
     acquisitions and provider commands unchanged. The current non-null parent-
     analysis constraint may be clean-broken only with a typed initiation
     relation requiring exactly one of parent analysis or targeted preparation,
     plus functional local-semantic job/command and later output-application
     links. No existing row receives invented preparation or successor lineage;
     incompatible populated state fails closed.
-26. The dormant current `targeted_verifications` storage shape and
+27. The dormant current `targeted_verifications` storage shape and
     `targeted-verification` operation kind shall not be reinterpreted. The
     migration shall require both populations to be empty. Unexpected rows stop
     migration with typed incompatible-storage status pending a separately
     reviewed preservation plan; no binding or lineage may be manufactured.
-27. A future renderer bridge may map only the closed preparation/read/start/
+28. A future renderer bridge may map only the closed preparation/read/start/
     cancel projections after producer-consumer validation. It shall expose no
     paths, raw snapshot command, dependency graph query, operation kind/request,
     SQL, command, credential, URL, or generic gRPC method. Until that gate, the
@@ -272,17 +282,19 @@ before authorizing the run.
 ## Validation obligations
 
 No evaluation passes by accepting this ADR. Implementation must satisfy the
-Proposed WP6 addendum and at least EVAL-0019, EVAL-0020, EVAL-0027, EVAL-0040,
+accepted WP6 addendum and at least EVAL-0019, EVAL-0020, EVAL-0027, EVAL-0040,
 EVAL-0041, EVAL-0043, EVAL-0047, EVAL-0048, EVAL-0069, EVAL-0078, EVAL-0079,
 and EVAL-0093, including positive, negative, malformed, concurrency, restart,
 cancellation, replay, migration, closure, and renderer-hostile cases.
 
 ## Acceptance and activation boundary
 
-Only the project owner may accept this ADR. Acceptance would authorize the
-corrected WP6 implementation scope defined by the addendum; it would not mark
-WP5, WP6, or Checkpoint C complete, begin Phase D, activate M2, authorize a
-private evaluator, or change current fail-closed behavior by itself.
+The project owner accepted this ADR and the WP6 addendum on 2026-08-26 from
+reviewed architecture commit
+`bd936a02562a8df1ddcb62f275cc45b6c225e594`. Acceptance authorizes a fresh
+corrected WP6 implementation candidate. It does not mark WP5, WP6, or
+Checkpoint C complete, begin Phase D, activate M2, authorize a private
+evaluator, or change current fail-closed behavior by itself.
 
 ## References
 
@@ -295,4 +307,4 @@ private evaluator, or change current fail-closed behavior by itself.
 - [ADR-0021](ADR-0021-desktop-and-local-operation-security-boundary.md)
 - [ADR-0022](ADR-0022-finding-and-case-continuity-and-reconciliation.md)
 - [ADR-0037](ADR-0037-frontend-application-contract-and-desktop-bridge.md)
-- [Proposed WP6 addendum](../../plans/transitions/m1-to-m2/frontend-application-foundation/wp6-targeted-verification-addendum.md)
+- [Accepted WP6 addendum](../../plans/transitions/m1-to-m2/frontend-application-foundation/wp6-targeted-verification-addendum.md)

@@ -33,11 +33,11 @@ implemented against a producer-consumer-validated application boundary.
 - [Application contract inventory](application-contract-inventory.v1.json)
 - [Application contract inventory schema](application-contract-inventory.v1.schema.json)
 - [Implementation record](implementation-record.md)
-- [Proposed WP6 targeted-verification addendum](wp6-targeted-verification-addendum.md)
+- [Accepted WP6 targeted-verification addendum](wp6-targeted-verification-addendum.md)
 - [Gap investigation](../../../../research/investigations/RESEARCH-0057-frontend-application-foundation-gap.md)
 - [Targeted-verification architecture investigation](../../../../research/investigations/RESEARCH-0058-targeted-verification-executable-architecture.md)
 - [ADR-0037](../../../../architecture/decisions/ADR-0037-frontend-application-contract-and-desktop-bridge.md)
-- [Proposed ADR-0038](../../../../architecture/decisions/ADR-0038-targeted-verification-preparation-and-execution.md)
+- [ADR-0038](../../../../architecture/decisions/ADR-0038-targeted-verification-preparation-and-execution.md)
 - [Product-conformance verification profile](../../../../evaluation/product-conformance-verification-profile.md)
 
 ## Phase map
@@ -69,11 +69,12 @@ recursive request-validation, export-deletion/recovery, provenance, and cursor
 defects now have focused offline producer-consumer evidence. Populated
 pre-publication stores report an explicit unavailable projection gap, and the
 declared targeted-verification RPC validates requests then returns typed
-`Unsupported` without durable mutation. RESEARCH-0058, Proposed ADR-0038, and
-the Proposed WP6 addendum now provide a reviewable changed-snapshot,
-dependency-closed, `managed-analysis-v1` architecture, but it has not been
-accepted and grants no implementation authority. Targeted verification
-therefore remains blocked, so
+`Unsupported` without durable mutation. The project owner accepted
+RESEARCH-0058, ADR-0038, and the WP6 addendum from architecture source
+`bd936a02562a8df1ddcb62f275cc45b6c225e594`. Their changed-snapshot,
+separately owned semantic acquisition, correlation-complete scope, and
+`managed-analysis-v1` mapping now authorize a fresh corrected WP6
+implementation candidate. Targeted verification remains unimplemented, so
 WP5/WP6 are not accepted, the earlier Checkpoint C
 receipt remains suspended, and Phase D has not started.
 

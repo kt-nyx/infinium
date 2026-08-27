@@ -1,32 +1,37 @@
 # Frontend Application Foundation — Phase C/WP6 targeted-verification addendum
 
-Status: Proposed
-Disposition: Architecture and plan correction; implementation not authorized
+Status: Accepted
+Disposition: Accepted architecture and implementation authority; WP6 remains incomplete
 Last reviewed: 2026-08-26
 Owner: Project owner
+Accepted: 2026-08-26
+Accepted by: Project owner
+Accepted architecture source: `bd936a02562a8df1ddcb62f275cc45b6c225e594`
 Work ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6`
-Document role: Proposed addendum to WP6; no subordinate package is created
+Document role: Accepted addendum to WP6; no subordinate package is created
 Planning base: `7c0ceee255c8b9ef79f4116f848a0938376d6ac3`
 
-## Plain-language proposal
+## Plain-language decision
 
 The current backend can show and review findings, but its targeted-verification
 button must still refuse to run. It does not yet know how to take a fresh
 post-change snapshot, include every dependency needed by the selected finding
 or case, and build an analysis request that the executor can actually run.
 
-This addendum proposes the missing vertical. Infinium first prepares an
+This addendum defines the missing vertical. Infinium first prepares an
 inspectable plan from a newly captured installation state. When that plan is
 complete and the user explicitly starts it, Infinium creates a normal
 `managed-analysis-v1` successor run and records exactly why it exists and how
-its results relate to the source. Nothing in this proposal changes current
-runtime behavior. Phase D and M2 remain blocked.
+its results relate to the source. Nothing in this architecture adoption changes
+current runtime behavior. Phase D and M2 remain blocked.
 
 ## Authority and activation
 
-This addendum becomes implementation authority only if both it and Proposed
-ADR-0038 are accepted by the project owner. It supplements rather than rewrites
-the accepted plan and ADR-0037. Until acceptance and implementation:
+The project owner accepted this addendum and ADR-0038 on 2026-08-26 from
+reviewed architecture commit
+`bd936a02562a8df1ddcb62f275cc45b6c225e594`. It now authorizes a fresh corrected
+WP6 implementation candidate and supplements rather than rewrites the accepted
+plan and ADR-0037. Until that implementation is complete and accepted:
 
 - `StartTargetedVerification` must continue returning typed `Unsupported`;
 - the dormant persistence method and `targeted-verification` operation kind
@@ -65,14 +70,14 @@ executable operation kind is exactly `managed-analysis-v1`.
   result review, continuity, coverage, and readiness;
 - ADR-0002, ADR-0010, ADR-0015, ADR-0016, ADR-0019, ADR-0021, ADR-0022, and
   ADR-0037;
-- Proposed ADR-0038 and RESEARCH-0058;
+- accepted ADR-0038 and RESEARCH-0058;
 - accepted WP1-WP4 and current corrected WP5 result identities/readback;
 - current snapshot capture, Bethesda semantic extraction,
   `managed-analysis-v1`, delivered-input, dependency, finding/case, lineage,
   and prepared-start implementation seams; and
 - EVAL-0093 plus EVAL-0019/0020/0027/0040/0041/0043/0047/0048/0069/0078/0079.
 
-## Allowed implementation scope after acceptance
+## Authorized later implementation scope
 
 - clean-break application contract revision for targeted preparation,
   preparation readback/cancellation, start admission, and verification readback;
@@ -93,7 +98,7 @@ The accepted implementation must not add polished UI, TypeScript/React desktop
 delivery owned by Phase D, new analyzer families, a generic workflow engine,
 generic execution fallback, setup mutation, private evaluation, or M2 work.
 
-## Proposed application contract
+## Required application contract
 
 The exact protobuf names may change during normal contract review, but the
 following closed responsibilities and fields are mandatory.
@@ -294,6 +299,15 @@ identity when present, evidence IDs, enumeration or applicability proof,
 current execution member IDs when present, status, reason, and gap/readiness
 effect. There is no implicit absent row.
 
+Correlation qualification happens before processing disposition. If identity
+or scope correlation itself is unsupported, ambiguous, or incomplete, the
+preparation is non-startable; the system does not know enough to authorize the
+work. The `Unsupported`, `Inaccessible`, and `Malformed` rows above apply only
+after the member and its required scope are fully correlated. They mean the
+known member cannot be processed completely, so it stays in the denominator as
+a gap and may start only in an explicitly labeled limited plan. A processing
+gap cannot substitute for or repair failed correlation.
+
 Stable identity is kind-specific and canonical: Bethesda records use plugin/
 master identity plus local record identity and record signature; plugin
 contributions include contribution/winner role and provider lineage; assets use
@@ -309,7 +323,9 @@ proves continuity.
 enumeration producer/version, target population, completeness state,
 count/fingerprint, lookup key/trace, and no-match result. Removing a source mod,
 provider, record, or contribution can therefore count as completed targeted
-work rather than disappearing from coverage.
+work rather than disappearing from coverage. It proves only that the identified
+member was absent from the completely enumerated target population. It does not
+prove the issue resolved, the setup correct, or the game safe.
 
 The targeted delivered-input producer recomputes `CandidateDeliveredInput` only
 for executable current members. A clean-break `FindingCaseInput` producer
@@ -412,6 +428,9 @@ members, not omissions. With zero current candidates/hypotheses, complete
 applicable member coverage may therefore support guarded ADR-0022
 `NotObserved`; any ambiguous, unsupported, inaccessible, malformed, or
 missing-proof member yields `NotEvaluated`/unknown and an explicit gap instead.
+`NotObserved` states only that the prior occurrence was not seen in the
+completely covered targeted scope; neither it nor `ProvenAbsent` is a resolution,
+correctness, or safety verdict.
 
 WP6 targeted results always expose `scope-limited` or `no-readiness`. They do
 not overwrite, replace, or borrow whole-profile readiness, even if the source
@@ -450,13 +469,13 @@ run had broader coverage.
 | Source run nonterminal or occurrence absent/mismatched | `InvalidArgument` or `NotFound` | Exact rejected audit only if current policy requires; no preparation/run |
 | Source payload/hash or closure substituted | `Conflict`/identity drift | No start |
 | Profile/config/context revision stale | typed revision conflict with current safe state | No new stage/run |
-| Analyzer/identity/producer incompatible | non-startable `Unsupported` | Preparation evidence may be retained; no run |
-| Missing/unknown/ambiguous dependency mapping | non-startable mapping gap | Preparation evidence may be retained; no run |
+| Identity/scope correlation unsupported, ambiguous, or incomplete | non-startable correlation gap | Preparation evidence may be retained; no run |
+| Missing/unknown/ambiguous dependency mapping | non-startable scope gap | Preparation evidence may be retained; no run |
 | Closure exceeds bound | non-startable `LimitExceeded` | No fallback run |
 | New snapshot/acquisition/semantic prerequisite absent or failed | failed preparation with retained prerequisite evidence | No successor run |
 | Source participant absent with complete qualified proof | `ProvenAbsent` completed coverage member | Preparation may remain startable; no candidate is fabricated |
 | Claimed absence lacks complete proof | `MissingRequiredProof` gap | No partial/implicit start |
-| Valid execution later encounters unsupported content | explicit gap and limited/completed-with-gaps | Normal run output only |
+| Fully correlated known member has unsupported analyzer/content, inaccessible content, or malformed content | explicit retained gap; plan must be labeled limited | Limited/completed-with-gaps normal run output only |
 | Exact command retry | `AlreadyAccepted` with original receipt | No duplicate mutation |
 | Same key/gesture/ID with changed meaning | `Conflict` | No mutation |
 
@@ -528,9 +547,9 @@ schema and live user-interaction rules. All returned text remains inert.
 
 ## Exact later implementation inventory
 
-This is an anticipated inventory, not authorization to edit these paths now.
-Implementation review must reconcile actual names and generated outputs before
-work begins.
+This is the accepted later implementation inventory. This documentation-only
+adoption does not edit these paths. The fresh implementation candidate must
+reconcile actual names and generated outputs before work begins.
 
 ### Producers and contracts
 
@@ -643,7 +662,9 @@ of the following are true:
 11. atomic admission, exact retry, concurrency, cancellation, restart, recovery,
    replay, and migration behavior pass focused evidence;
 12. unsupported, stale, ambiguous, incomplete, substituted, unknown, and
-    excessive mappings fail closed without fallback or partial start;
+    excessive identity/scope mappings fail closed without fallback or partial
+    start, while fully correlated known-member processing failures remain
+    explicit and permit only a limited plan;
 13. future renderer mapping remains closed, typed, bounded, inert, and free of
     generic backend/local authority;
 14. producers, persistence, generated consumers, round-trip, invalid states,
@@ -680,8 +701,8 @@ accept WP5/WP6, accept Checkpoint C, begin Phase D, or activate M2.
 - **EVAL-0079:** prove initiation links plus ADR-0022 exact/revision/related/
   ambiguous/distinct result reconciliation and guarded `not observed`.
 
-The proposed WP6 expansion must also include the following focused conformance
-cases without changing EVAL-0093's accepted catalog wording before acceptance:
+The accepted WP6 authority also requires the following focused conformance
+cases without changing EVAL-0093's accepted catalog wording:
 
 - removed source mod/provider is `ProvenAbsent` only after complete qualified
   enumeration and remains covered in the denominator;
@@ -701,19 +722,20 @@ No private fixture or independent semantic oracle is authorized. Fixtures are
 developer-owned product-conformance evidence under the accepted verification
 profile.
 
-## Proposed capability-matrix and contract-inventory changes
+## Capability-matrix and contract-inventory authority
 
-While this proposal is pending, the matrix and inventory must continue to say
+The matrix and inventory continue to say
 `missing-application-vertical`, `declared-unimplemented`,
-`native-only-never-map`, and typed `Unsupported`. They may link this proposal
-as the candidate architecture.
+`native-only-never-map`, and typed `Unsupported` because architecture acceptance
+does not implement a producer or consumer.
 
-After acceptance but before implementation, add proposed contract-family rows
-for targeted preparation/scope/input/admission/readback without marking an RPC
-implemented. Only producer-consumer validation may change the capability state,
-implemented RPC count, renderer policy, or Checkpoint C status. Independent
+This adoption adds proposed contract-family rows for targeted preparation,
+scope/correlation, delivered/coverage input, admission, and readback without
+marking an RPC implemented. Only producer-consumer validation may change the
+capability state, implemented RPC count, renderer policy, or Checkpoint C
+status. Independent
 application/domain/storage/renderer versions and the protobuf fingerprint must
-advance from actual generated bytes, never from this proposal alone.
+advance from actual generated bytes, never from architecture adoption alone.
 
 ## Review checklist
 
@@ -726,7 +748,8 @@ advance from actual generated bytes, never from this proposal alone.
 - traceability: matrix, inventory, requirements, WP6, Checkpoint C, EVAL;
 - lifecycle: admission, retry, concurrency, cancel, restart, replay, migration;
 - naming: functional implementation identities only; and
-- status: Proposed only, no completion/unblocking/activation claim.
+- status: accepted architecture and implementation authority only, with no
+  completion/unblocking/activation claim.
 
 ## Resolved decisions and owner action
 
@@ -749,15 +772,14 @@ Existing accepted authority resolves the design choices in this addendum:
 - ADR-0016 lifecycle and atomic admission; and
 - closed renderer operations with coordinator-resolved local authority.
 
-No additional product-meaning decision is unresolved. The remaining owner
-action is formal acceptance, rejection, or requested revision of Proposed
-ADR-0038 and this addendum. Acceptance authorizes later implementation only;
-it does not accept any implementation result.
+No additional product-meaning decision is unresolved. The project owner
+accepted ADR-0038 and this addendum on 2026-08-26 from commit
+`bd936a02562a8df1ddcb62f275cc45b6c225e594`. That receipt authorizes later WP6
+implementation only; it does not accept any implementation result.
 
 ## Exact next step
 
-Architecture steward review, followed by project-owner disposition of
-Proposed ADR-0038 and this addendum. If accepted, start a new corrected WP6
-implementation candidate from the then-current reviewed repository, preserve
-Unsupported until the full vertical is coherent, and stop again for corrected
-Checkpoint C review. Do not begin Phase D automatically from this proposal.
+Start a fresh corrected Phase C/WP6 implementation orchestrator from the
+then-current reviewed repository. It must preserve `Unsupported` until the full
+accepted vertical is coherent and producer-consumer-validated, then stop again
+for corrected Checkpoint C review. Do not begin Phase D automatically.

@@ -3,8 +3,8 @@
   "schema_identity": "infinium.planning.application-contract-inventory/1.0.0",
   "status": "implementation-active",
   "last_reviewed": "2026-08-26",
-  "audited_commit": "7c0ceee255c8b9ef79f4116f848a0938376d6ac3",
-  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy at inspected documentation-planning base 7c0ceee255c8b9ef79f4116f848a0938376d6ac3. Focused offline evidence proves FindingReport publication/query/readback, recursive Phase C request validation, export deletion/recovery, provenance, paging, explicit populated-migration unavailability, and fail-closed targeted-verification admission with zero mutation. RESEARCH-0058, Proposed ADR-0038, and the Proposed WP6 addendum define candidate future contracts but do not change the current RPC count, version axes, schema fingerprint, implementation state, or native-only renderer policy. Checkpoint C remains suspended. No renderer receives direct gRPC authority; desktop delivery, M2 activation, broad analyzer claims, and semantic-oracle qualification remain outside this correction.",
+  "audited_commit": "bd936a02562a8df1ddcb62f275cc45b6c225e594",
+  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy through owner-accepted targeted-verification architecture source bd936a02562a8df1ddcb62f275cc45b6c225e594. Focused offline evidence proves FindingReport publication/query/readback, recursive Phase C request validation, export deletion/recovery, provenance, paging, explicit populated-migration unavailability, and fail-closed targeted-verification admission with zero mutation. ADR-0038 and the accepted WP6 addendum authorize future targeted preparation, acquisition, correlation/coverage, admission, and readback contract families but do not change the current RPC count, version axes, schema fingerprint, implementation state, or native-only renderer policy. Checkpoint C remains suspended. No renderer receives direct gRPC authority; desktop delivery, M2 activation, broad analyzer claims, and semantic-oracle qualification remain outside this correction.",
   "protocol": {
     "package": "infinium.application.v1",
     "service": "ApplicationService",
@@ -656,10 +656,10 @@
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#StartTargetedVerification",
       "current_consumers": ["generated C# named-pipe fail-closed consumer; no accepted executable consumer exists"],
       "persistence_readback": ["After negotiation and recursive request validation, the handler returns typed Unsupported without calling persistence; runs, operations, jobs, commands, payloads, lineage, audit, verification, lifecycle, and prepared-gesture populations remain unchanged"],
-      "bounds_and_versions": ["Declared request shape bounds a manual gesture, deadline, and 1-100 scope identities, but application execution is fail-closed because changed-snapshot and managed-analysis-v1 scope-expansion authority is undefined"],
-      "requirement_ids": ["UX-005", "SCOPE-004", "SNAP-003"],
-      "evaluation_ids": ["EVAL-0027", "EVAL-0029", "EVAL-0078", "EVAL-0093"],
-      "security_authorities": ["ADR-0016", "ADR-0021", "ADR-0037"],
+      "bounds_and_versions": ["Current declared request bounds a manual gesture, deadline, and 1-100 scope identities, but execution remains fail-closed", "Accepted ADR-0038 requires clean-break preparation/read/cancel/start/readback contracts, removes caller-authored executable scope from start, and preserves independent application/domain/storage/renderer versions until actual contract bytes change"],
+      "requirement_ids": ["FIND-005", "FIND-012", "FIND-014", "INTENT-004", "OPS-002", "SCOPE-004", "SNAP-002", "SNAP-003", "SNAP-004", "UX-005"],
+      "evaluation_ids": ["EVAL-0019", "EVAL-0020", "EVAL-0027", "EVAL-0029", "EVAL-0040", "EVAL-0041", "EVAL-0043", "EVAL-0047", "EVAL-0048", "EVAL-0069", "EVAL-0078", "EVAL-0079", "EVAL-0093"],
+      "security_authorities": ["ADR-0010", "ADR-0015", "ADR-0016", "ADR-0021", "ADR-0022", "ADR-0037", "ADR-0038"],
       "renderer_policy": "native-only-never-map"
     },
     {
@@ -1112,6 +1112,36 @@
       "source": "application.proto result/review messages, ApplicationGrpcService.ResultsReview, and AuthoritativeStore results/review persistence",
       "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5 and WP6",
       "maturity": "implementation-active"
+    },
+    {
+      "family": "targeted-verification-preparation",
+      "source": "Accepted ADR-0038 and accepted WP6 addendum; production contract bytes are not yet authored",
+      "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6",
+      "maturity": "proposed"
+    },
+    {
+      "family": "targeted-analysis-scope-correlation",
+      "source": "Accepted ADR-0038 TargetedAnalysisScope and TargetedCorrelationCoverage authority; production contract bytes are not yet authored",
+      "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6",
+      "maturity": "proposed"
+    },
+    {
+      "family": "targeted-delivered-coverage-input",
+      "source": "Accepted WP6 targeted delivered-input and clean-break finding-case coverage authority; production contract bytes are not yet authored",
+      "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6",
+      "maturity": "proposed"
+    },
+    {
+      "family": "targeted-verification-admission",
+      "source": "Accepted ADR-0038 atomic managed-analysis-v1 successor admission authority; production contract bytes are not yet authored",
+      "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6",
+      "maturity": "proposed"
+    },
+    {
+      "family": "targeted-verification-readback",
+      "source": "Accepted WP6 bounded preparation, acquisition, coverage, gap, lifecycle, and lineage readback authority; production contract bytes are not yet authored",
+      "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6",
+      "maturity": "proposed"
     }
   ],
   "generation_ownership": [

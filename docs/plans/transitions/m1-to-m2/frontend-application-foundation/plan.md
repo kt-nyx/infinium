@@ -232,13 +232,16 @@ Checkpoints A-D are automation handoffs, not routine owner approval gates. A
 fresh orchestrator may resume from the checkpoint receipt without rereading
 package chronology that is irrelevant to its phase.
 
-Checkpoint C correction note: targeted verification currently lacks accepted
-executable architecture, so the automatic handoff above is suspended. The
-[Proposed WP6 addendum](wp6-targeted-verification-addendum.md) would, if
-accepted, replace only WP6's targeted-verification vertical and add explicit
-Checkpoint C obligations for new-snapshot capture, dependency-complete scope,
-`managed-analysis-v1` admission, lineage, lifecycle, migration, and closed
-renderer authority. It does not alter the accepted remainder of this plan.
+Checkpoint C correction note: targeted verification now has accepted executable
+architecture in ADR-0038 and the
+[accepted WP6 addendum](wp6-targeted-verification-addendum.md), based on owner-
+accepted architecture source `bd936a02562a8df1ddcb62f275cc45b6c225e594`.
+The addendum controls WP6's targeted-verification vertical and adds explicit
+Checkpoint C obligations for new-snapshot capture, separately owned semantic
+acquisition, correlation-complete dependency scope, `managed-analysis-v1`
+admission, lineage, lifecycle, migration, and closed renderer authority. The
+automatic handoff remains suspended until those obligations are implemented
+and verified. The accepted remainder of this plan is unchanged.
 
 ## 6. Contract and fixture maturity
 
@@ -572,16 +575,17 @@ Objective: implement durable user interaction with results without changing
 the analysis that produced them.
 
 Correction status: review/assumption/export portions have focused correction
-evidence, but the targeted-verification vertical is not accepted. The
-[Proposed targeted-verification addendum](wp6-targeted-verification-addendum.md)
-supplements this section without changing current authority. Until owner
-acceptance and implementation, the RPC remains Unsupported and WP6/Checkpoint
-C remain incomplete.
+evidence. ADR-0038 and the
+[accepted targeted-verification addendum](wp6-targeted-verification-addendum.md)
+now provide implementation authority for the targeted-verification vertical.
+The RPC remains Unsupported until that accepted vertical is implemented and
+producer-consumer-validated; WP6 and Checkpoint C remain incomplete.
 
 Inputs:
 
 - WP5 result identities and views;
-- ADR-0002, ADR-0015, ADR-0021, ADR-0022, and ADR-0037;
+- ADR-0002, ADR-0015, ADR-0021, ADR-0022, ADR-0037, ADR-0038, and the accepted
+  WP6 targeted-verification addendum;
 - INTENT-001 through INTENT-005, FIND-005 through FIND-014, UX-005, OPS-002/003;
   and
 - EVAL-0093 plus EVAL-0019/0020/0027/0040/0041/0043/0047/0048/0069/0078/0079.

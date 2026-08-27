@@ -49,7 +49,7 @@ accepted records are superseded rather than rewritten to hide prior decisions.
 | [ADR-0035](ADR-0035-defer-independent-semantic-oracle-qualification.md) | Accepted | Defer independent semantic-oracle qualification through M1 and M2; reconsider it at the M3 Evaluation Readiness Gate while retaining ADR-0034 product semantics |
 | [ADR-0036](ADR-0036-development-provider-access-and-product-credential-separation.md) | Accepted | Permit explicitly bounded project-funded development provider calls while preserving user-owned shipped-product credentials and no fallback |
 | [ADR-0037](ADR-0037-frontend-application-contract-and-desktop-bridge.md) | Accepted | Add a bounded application-facing contract plus a generated, closed WPF/WebView2-to-React bridge and diagnostic consumer before M2 |
-| [ADR-0038](ADR-0038-targeted-verification-preparation-and-execution.md) | Proposed | Prepare a new-snapshot, dependency-closed targeted plan, then start an ordinary `managed-analysis-v1` successor with exact lineage and no generic renderer authority |
+| [ADR-0038](ADR-0038-targeted-verification-preparation-and-execution.md) | Accepted | Prepare a new-snapshot, dependency-closed targeted plan with separately owned semantic evidence and typed correlation coverage, then start an ordinary `managed-analysis-v1` successor with exact lineage and no generic renderer authority |
 
 ADR-0015 through ADR-0023 are accepted and jointly select the Wave E
 persistence, lifecycle, application-stack, process, IPC, credential, security,

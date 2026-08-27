@@ -18,9 +18,11 @@ Phase C candidate reached `c551c12e22522e7a2cef8c21a322aa76db8fc23e`, but its
 Checkpoint C receipt remains suspended. Independent corrections now cover
 report publication/readback, recursive request validation, export deletion,
 provenance, paging, and populated migration gaps. Targeted-verification
-execution remains fail closed without durable mutation. RESEARCH-0058,
-Proposed ADR-0038, and the Proposed WP6 addendum now document a candidate
-architecture, but they are not accepted and no production surface has changed.
+execution remains fail closed without durable mutation. The project owner
+accepted RESEARCH-0058, ADR-0038, and the WP6 addendum on 2026-08-26 from
+architecture source `bd936a02562a8df1ddcb62f275cc45b6c225e594`. A fresh
+corrected WP6 implementation candidate is authorized; no production surface
+has changed.
 
 The implementation has assigned every foundation capability to an exact owner,
 and implemented the common and setup-to-live-run boundaries future frontend
@@ -1109,12 +1111,12 @@ Every final category and unfiltered test invocation performed exact-root
 repository-owned `dotnet`/`testhost` cleanup and reported 0 survivors. The
 final handoff check also reported 0 survivors.
 
-Consolidated review disposition: superseded by the correction request. The
-targeted-verification operation still requires steward and owner disposition
-of the documentation-only architecture proposal before implementation. Phase D
+Consolidated review disposition: the architecture blocker is resolved by owner
+acceptance, but the implementation blocker remains. The current RPC is still
+declared-unimplemented, native-only-never-map, and typed `Unsupported`. Phase D
 is blocked and no Phase D artifact is included in this candidate.
 
-## Documentation-only targeted-verification correction proposal
+## Documentation-only targeted-verification architecture and adoption
 
 Planning base: `7c0ceee255c8b9ef79f4116f848a0938376d6ac3`.
 
@@ -1128,11 +1130,11 @@ The proposal therefore uses ADR-0016's evidence-acquisition run category and
 requires a new directly initiated local acquisition route, typed preparation,
 correlation/coverage, and targeted delivered-input contracts.
 
-The proposal package is:
+The architecture package is:
 
 - [RESEARCH-0058](../../../../research/investigations/RESEARCH-0058-targeted-verification-executable-architecture.md);
-- [Proposed ADR-0038](../../../../architecture/decisions/ADR-0038-targeted-verification-preparation-and-execution.md); and
-- [Proposed WP6 addendum](wp6-targeted-verification-addendum.md).
+- [ADR-0038](../../../../architecture/decisions/ADR-0038-targeted-verification-preparation-and-execution.md); and
+- [Accepted WP6 addendum](wp6-targeted-verification-addendum.md).
 
 Its recommendation is to capture a new installation snapshot, perform the
 qualified semantic extraction under a separate evidence-acquisition owner,
@@ -1142,7 +1144,7 @@ ordinary `managed-analysis-v1` successor with exact initiation and ADR-0022
 analytical lineage. It rejects source-snapshot reuse, ad-hoc fact filtering,
 automatic full-run fallback, and a new unexecutable analysis operation kind.
 
-This entry is a proposal receipt, not an implementation or checkpoint receipt.
+This entry is an architecture receipt, not an implementation or checkpoint receipt.
 It does not change application/domain/storage/renderer versions, complete an
 EVAL case, accept WP5/WP6 or Checkpoint C, unblock Phase D, or activate M2.
 
@@ -1164,6 +1166,41 @@ plan/status consistency. Documentation validation, both planning JSON Schema
 validations, functional-naming verification, `git diff --check`, and the
 documentation-only path audit passed. No production build or test ran; the
 final repository-owned `dotnet`/`testhost` survivor audit reported zero.
+
+### Owner acceptance receipt
+
+- Proposal commit: `ca300c5626772bc4a5144ed45e3f7c13f5cc86a5`.
+- Corrected reviewed architecture commit:
+  `bd936a02562a8df1ddcb62f275cc45b6c225e594`.
+- Owner decision: accepted RESEARCH-0058's recommendation, ADR-0038, and the
+  WP6 targeted-verification addendum on 2026-08-26.
+- Pre-adoption clarification: identity/scope correlation that is unsupported,
+  ambiguous, or incomplete is non-startable; fully correlated known-member
+  analyzer/content unavailability, inaccessibility, or malformation may proceed
+  only as an explicitly limited retained gap.
+- Pre-adoption clarification: `ProvenAbsent` is a positive completed coverage
+  observation, not proof of resolution, setup correctness, or game safety;
+  ADR-0022 `NotObserved` remains guarded and scope-limited.
+- Authority effect: a fresh corrected Phase C/WP6 implementation orchestrator
+  is authorized to implement the accepted vertical.
+- Traceability effect: the capability matrix and application-contract inventory
+  now carry ADR-0038's expanded requirement/evaluation/security authority,
+  accepted transition evidence, and five `Proposed` later contract families;
+  EVAL-0093 retains its accepted target wording while linking the accepted
+  detailed obligations.
+- Non-effect: no RPC, contract byte, storage schema, renderer mapping, runtime
+  behavior, WP5/WP6 or Checkpoint C receipt, Phase D gate, or M2 state changed.
+
+Adoption review and verification: documentation validation passed 153 metadata
+files, 155 Markdown link sources, and 19 JSON files. Both affected planning JSON
+documents passed their exact JSON Schemas. Functional naming passed 184 exact
+reviewed exceptions with zero unexplained findings. Status/authority assertions
+proved accepted document metadata and source lineage, unchanged EVAL-0093 target
+wording, five `Proposed` later contract families, the still-missing capability
+vertical, and the still-declared-unimplemented/native-only RPC. `git diff
+--check` and the documentation-only changed-path audit passed. No production
+build or test ran; final repository-owned `dotnet`/`testhost` survivors were
+zero.
 
 ## Final closeout fields
 

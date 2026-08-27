@@ -1,9 +1,12 @@
 # RESEARCH-0058: Executable targeted-verification architecture
 
 Status: Completed
-Disposition: Recommendation proposed; architecture acceptance pending
+Disposition: Recommendation accepted through ADR-0038 and the accepted WP6 addendum
 
 Date: 2026-08-26
+Accepted: 2026-08-26
+Accepted by: Project owner
+Accepted architecture source: `bd936a02562a8df1ddcb62f275cc45b6c225e594`
 Last reviewed: 2026-08-26
 Researcher: Codex
 Research question: RQ-042
@@ -21,7 +24,7 @@ not prove that a new post-change snapshot was captured, expand the selected
 issue to all of its required dependencies, or construct an executable managed
 analysis request. Its fail-closed `Unsupported` behavior is therefore correct.
 
-The recommended architecture is a **prepare, inspect, then start** workflow.
+The accepted architecture is a **prepare, inspect, then start** workflow.
 Preparation performs a fresh read-only snapshot capture, derives current
 semantic input, rehydrates the canonical source finding or case, and builds a
 dependency-complete, immutable targeted-analysis plan. The user can inspect
@@ -268,12 +271,14 @@ gap/readiness effect. The exhaustive statuses are:
 `MatchedExecutable` and `ChangedCorrelated` feed current target facts into a
 recomputed targeted `CandidateDeliveredInput`. `ProvenAbsent` and
 `ProvenNotApplicable` are completed coverage members with no fabricated
-candidate or hypothesis; they remain in the denominator. The other four
-statuses are explicit gaps. Ambiguity or missing proof for any mandatory root
-or closure edge makes preparation non-startable. A known, closed scope may be
-startable with `Unsupported`, `Inaccessible`, or `Malformed` members only as an
-explicit limited plan when every omission remains in the denominator; it can
-never yield complete applicable coverage.
+candidate or hypothesis; they remain in the denominator. The remaining states
+are explicit gaps, but their admission effects differ. Unsupported, ambiguous,
+or incomplete identity/scope correlation—including ambiguity or missing proof
+for a mandatory root or closure edge—makes preparation non-startable. Only
+after identity and closure are fully proven may a known member with
+`Unsupported`, `Inaccessible`, or `Malformed` processing be included in an
+explicitly limited plan. It remains in the denominator and can never yield
+complete applicable coverage.
 
 Stable identity is typed by participant kind. Examples include canonical
 Bethesda record identity (plugin/master identity plus local record identity and
@@ -286,9 +291,13 @@ display subjects, prose, and visual similarity never grant identity. A renamed
 or identity-changed plugin is therefore ambiguous or missing proof unless a
 typed accepted mapping proves continuity.
 
-Proven absence is positive evidence, not failure to rehydrate. Its proof binds
+Proven absence is a positive, completed coverage observation, not failure to
+rehydrate. Its proof binds
 the acquisition run/output, enumeration producer/version, population identity,
 completeness state, count/fingerprint, lookup key/trace, and no-match result.
+It proves only that the identified source member was not present in the
+completely enumerated target population. It does not prove that the issue is
+resolved, the setup is correct, or the game is safe.
 The `FindingCaseInput` producer must clean-break to consume the ledger and emit
 the corresponding population/member/failure facts independently of current
 hypotheses. Complete applicable coverage with zero current hypotheses can then
@@ -341,7 +350,10 @@ occurrences. Exact continuation, analytical revision, related follow-up,
 not-observed, ambiguous, and distinct outcomes keep their existing proof
 requirements. A result may be called `not observed` only when the prepared
 scope was executed with applicable complete coverage; otherwise it is unknown
-or a gap. Verification never changes the source disposition automatically.
+or a gap. ADR-0022 `NotObserved` means only that the prior occurrence was not
+observed within that completely covered targeted scope; it is not a resolution,
+correctness, or safety verdict. Verification never changes the source
+disposition automatically.
 
 ### Coverage and readiness remain deliberately narrow
 
@@ -405,19 +417,21 @@ preparation and snapshot.
 
 ## Failure and migration behavior
 
-Unsupported analyzer family, stale source/config/profile/context, ambiguous or
-missing occurrence membership, ambiguous correlation, unproven absence,
-missing dependency closure, incompatible identity/producer contracts,
-incomplete closure, substituted payload, unknown edge, excessive scope, or
-absent new-snapshot/acquisition prerequisite returns a typed, inert,
-non-startable preparation. A failed prerequisite may retain its own preparation
-and acquisition evidence, but no successor analysis run, analysis command, or
-readiness record is created.
+The correlation gate and the later processing result are distinct. An
+unsupported, ambiguous, or incomplete identity/scope correlation; stale or
+missing occurrence membership; unproven absence; missing dependency closure;
+incompatible identity/producer contracts; incomplete closure; substituted
+payload; unknown edge; excessive scope; or absent new-snapshot/acquisition
+prerequisite returns a typed, inert, non-startable preparation. A failed
+prerequisite may retain its own preparation and acquisition evidence, but no
+successor analysis run, analysis command, or readiness record is created.
 
-A valid plan may later produce ordinary analyzer gaps for malformed,
-inaccessible, or unsupported changed-snapshot content. Those gaps are retained
-against the prepared denominator and yield completed-with-gaps/no-readiness;
-they are not silently omitted.
+Only after identity and scope are fully correlated may a known member whose
+content or analyzer support is unavailable, inaccessible, or malformed be
+admitted. It remains in the denominator as an explicit processing gap, and the
+plan is startable only when labeled limited. Such execution yields limited or
+completed-with-gaps/no-readiness; the member is never silently omitted. This
+processing state does not repair an unsupported correlation.
 
 The current schema contains a dormant `targeted_verifications` shape that
 cannot be truthfully upgraded because it lacks a new snapshot, complete scope,
@@ -462,10 +476,10 @@ to be inspectable before manual start.
 
 ## Recommendation and decision status
 
-Adopt Proposed ADR-0038 and the Proposed WP6 addendum. Existing accepted
-authority resolves the product meaning and the recommended design; no new
-product choice remains. The architecture steward and project owner must still
-accept or reject the proposal before implementation. Until then,
+The project owner accepted this recommendation, ADR-0038, and the WP6 addendum
+on 2026-08-26 from reviewed architecture commit
+`bd936a02562a8df1ddcb62f275cc45b6c225e594`. This authorizes a fresh corrected
+WP6 implementation candidate; it does not implement or enable the operation.
 `StartTargetedVerification` remains typed `Unsupported`, WP5/WP6 and Checkpoint
 C remain under correction, Phase D remains blocked, and M2 remains inactive.
 
