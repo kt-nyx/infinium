@@ -5,7 +5,7 @@ Date: 2026-08-26
 Last reviewed: 2026-08-26
 Supersedes: None
 Superseded by: None
-Supplements: ADR-0037
+Supplements: ADR-0016 and ADR-0037
 
 ## Plain-language proposal
 
@@ -33,10 +33,14 @@ or create a supported durable operation. Its typed `Unsupported` behavior is
 the current safe boundary.
 
 [RESEARCH-0058](../../research/investigations/RESEARCH-0058-targeted-verification-executable-architecture.md)
-shows that the repository already has the required executable endpoints: a
-durable snapshot capture, `bethesda-semantic-v1` extraction, and
-`managed-analysis-v1`. The missing authority is a typed preparation and
-dependency-closed input contract connecting them.
+shows that snapshot capture and `managed-analysis-v1` are usable components,
+but the existing `bethesda-semantic-v1` endpoint is not a pre-start lifecycle:
+it registers against an existing analysis run and terminally publishes through
+that owner. ADR-0016 already accepts the correct separate owner category—an
+evidence-acquisition run—but current source-claim-specific acquisition storage
+does not implement this local semantic route. Typed acquisition ownership,
+preparation, correlation/coverage, and dependency-closed input contracts are
+all missing.
 
 ## Decision drivers
 
@@ -67,90 +71,155 @@ dependency-closed input contract connecting them.
    authority. The captured snapshot must be a new occurrence produced after
    this preparation begins. It may be structurally equivalent to the source;
    the comparison state shall be reported.
-4. Preparation shall perform qualified Bethesda semantic extraction against
-   the new snapshot before it derives final target scope. The initial
-   architecture authorizes full extraction of the supported semantic surface,
-   not an unqualified partial extractor.
-5. The coordinator shall rehydrate the canonical source occurrence and payload.
+4. After the new snapshot is durably published, and before a preparation can be
+   startable, the coordinator shall create a directly initiated ADR-0016
+   **evidence-acquisition run** for qualified Bethesda semantic extraction. It
+   is linked to the preparation and snapshot, has no parent analysis run at
+   creation, and is not the later successor. This ADR applies ADR-0016's
+   accepted owner category and explicitly permits a later successor-application
+   link; it does not create a new owner category.
+5. Acquisition admission shall immutably bind acquisition/preparation/capture/
+   snapshot identities, confirmed-profile revision, extraction configuration
+   and producer/version, support manifest, qualified-enumeration policy, sealed
+   input closure, canonical request/hash, and limits. Its job nodes, attempts,
+   checkpoints, progress, staged output, publication receipt, provenance, gaps,
+   and lifecycle events have the acquisition run as their single owner.
+   Ownership never transfers to preparation or successor.
+6. Acquisition shall perform full extraction of the qualified supported
+   semantic surface. It follows ADR-0016 generation/fence, retry, cancellation,
+   pause, restart, checkpoint, staged-publication, terminal, retention, and
+   deletion rules. Retry uses the exact retained snapshot and originally sealed
+   inputs; it shall not reseal changed live bytes. Invalid seals invalidate the
+   prerequisite and block start. Preparation cancellation requests acquisition
+   cancellation and stops later stages; transport cancellation does nothing.
+7. Acquisition progress and output are prerequisite evidence, not analytical
+   results. Readback may show bounded prerequisite state/progress and general
+   history may label the run as a preparation prerequisite, but it cannot
+   publish findings, cases, analysis readiness, or a FindingReport. Active or
+   depended-on acquisition deletion is blocked; deletion preview names
+   preparation/successor/replay dependants. Authorized later removal creates an
+   explicit gap and blocks dependent start/replay.
+8. The coordinator shall rehydrate the canonical source occurrence and payload.
    A finding root includes its candidate, hypothesis, identity envelope,
    dependency closure, evidence, affected locus, and participant roles. A case
    root additionally includes every member finding/candidate/hypothesis,
    shared-cause identity, proof evidence, and member closure. Display
    projection subject IDs are never execution authority.
-6. A versioned `TargetedAnalysisScope` contract shall expand those roots through
+9. A versioned `TargetedAnalysisScope` contract shall expand those roots through
    allowlisted typed dependency edges to a deterministic fixed point. Required
    partners, contributors, providers, files, analyzer declarations,
    applicability populations, context/config dependencies, and shared-cause
    members may not be removed. The contract shall retain direct roots,
    expanded members, edge/proof identities, policy/version, limits, gaps, and
    one canonical fingerprint.
-7. A versioned targeted delivered-input producer shall project the new
-   semantic input and closed scope into a valid `CandidateDeliveredInput` with
-   matching population, dependency, coverage, failure, and gap semantics. It
-   shall be deterministic, permutation-independent, monotonic with added roots,
-   closed over required dependencies, and bounded. It is not a post-hoc fact
-   filter.
-8. Preparation shall publish an immutable plan identifying source
+10. A versioned `TargetedCorrelationCoverage` contract shall contain exactly
+    one row for every required scope member and preserve the denominator even
+    when no current target candidate or hypothesis exists. Each row binds typed
+    stable source identity, source occurrence/scope member, target population,
+    correlation policy/version, target identity when present, evidence and
+    enumeration proof, execution-member identities when present, and exactly
+    one status: `MatchedExecutable`, `ChangedCorrelated`, `ProvenAbsent`,
+    `ProvenNotApplicable`, `Ambiguous`, `Unsupported`, `Inaccessible`,
+    `Malformed`, or `MissingRequiredProof`.
+11. Identity shall be granted only by typed canonical participant/record/asset/
+    provider identities and retained identity, equivalence, contribution,
+    provider-chain, content, or qualified-enumeration evidence. Names, display
+    subjects, prose, and visual similarity are non-authoritative. A renamed or
+    identity-changed plugin requires an accepted typed continuity mapping or
+    remains ambiguous/missing proof.
+12. `ProvenAbsent` requires complete qualified enumeration of the applicable
+    target population plus an evidenced no-match lookup. It and
+    `ProvenNotApplicable` are completed coverage members and remain in the
+    denominator; neither requires a fabricated candidate/hypothesis.
+    `Ambiguous`, `Unsupported`, `Inaccessible`, `Malformed`, and
+    `MissingRequiredProof` are explicit gaps. Ambiguity/missing proof for a
+    mandatory root or closure edge is non-startable. Known unsupported or
+    inaccessible or malformed members may be carried only by an explicitly
+    limited plan and
+    can never count as complete applicable coverage.
+13. A versioned targeted delivered-input producer shall project executable
+    correlated members into a recomputed `CandidateDeliveredInput`. A
+    clean-break `FindingCaseInput` producer shall separately consume
+    `TargetedCorrelationCoverage` to emit population/member/failure coverage
+    even with zero current hypotheses. Both contracts share one canonical
+    denominator. The producer shall be deterministic, permutation-independent,
+    monotonic with added roots, closed over required dependencies, and bounded;
+    it is not a post-hoc fact filter.
+14. Preparation shall publish an immutable plan identifying source
    run/occurrence/logical identity/payload, source and target bindings, new
-   snapshot/capture/semantic input, direct and expanded scope, target analyzers,
-   proposed reuse and proofs, recomputation, coverage denominator, gaps,
-   readiness boundary, resolved manifest, and preparation revision/fingerprint.
-9. `StartTargetedVerification` shall accept only the exact startable
+   snapshot/capture/acquisition/semantic input, direct and expanded scope,
+   correlation ledger, target analyzers, proposed reuse and proofs,
+   recomputation, coverage denominator, gaps, readiness boundary, resolved
+   manifest, and preparation revision/fingerprint.
+15. `StartTargetedVerification` shall accept only the exact startable
    preparation/revision plus durable command ID, optional requested successor
    run ID, initiation kind, future deadline, and a fresh one-shot gesture. It
    shall not accept executable scope fields.
-10. Start admission shall revalidate every retained byte, hash, identity, and
+16. Start admission shall revalidate every retained byte, hash, identity, and
     saved revision. In one coordinator transaction it shall create the new run,
     durable command, `managed-analysis-v1` operation/request, preparation
     submission, initiation-lineage record, and source/successor link. Scheduling
     occurs only after commit. One preparation may create at most one successor.
-11. The managed request shall bind the new snapshot and semantic input, current
-    selected context and effective configuration, resolved input manifest,
-    supplied targeted delivered input, source run as prior reconciliation
-    context, and every reuse proof. No run operation kind named
+17. The managed request shall bind the new snapshot, acquisition run/output/
+    application link and semantic input, current selected context and effective
+    configuration, resolved input manifest, supplied targeted delivered input,
+    correlation/coverage input, source run as prior reconciliation context, and
+    every reuse proof. No run operation kind named
     `targeted-verification` is authorized.
-12. Snapshot-dependent semantic input, candidates, findings, cases, and
+18. Snapshot-dependent semantic input, candidates, findings, cases, and
     checkpoints shall be recomputed. Profile-independent artifacts may be
     reused only through an ADR-0010-valid dependency-equivalence proof and a
     new reuse/application edge. Unknown impact means recompute, explicit gap,
     or non-startable preparation; generic `reuse anyway` is forbidden.
-13. Initiation lineage and analytical lineage are distinct. Initiation lineage
+19. Initiation lineage and analytical lineage are distinct. Initiation lineage
     always records the source occurrence and successor run. Successor
     finding/case continuity continues to use ADR-0022 reconciliation. A missing
     successor occurrence is `not observed` only with complete applicable
     targeted coverage; otherwise it is unknown or a retained gap. Verification
-    shall not alter source review disposition.
-14. Targeted coverage shall use the prepared closed scope as its denominator
+    shall not alter source review disposition. Zero current hypotheses may yield
+    `NotObserved` only when every applicable member is completed by execution,
+    `ProvenAbsent`, or `ProvenNotApplicable`; incomplete coverage yields
+    `NotEvaluated`/unknown plus explicit gaps.
+20. Targeted coverage shall use the prepared closed scope as its denominator
     and report attempted, completed, failed, unsupported, reused, and omitted
     populations. WP6 results shall expose `scope-limited` or `no-readiness` and
     shall not replace or borrow whole-profile readiness. Any future promotion
     requires a separate accepted full-policy readiness evaluation.
-15. Exact preparation/command retries shall return the prior receipt. A reused
+21. Exact preparation/command retries shall return the prior receipt. A reused
     key, gesture, preparation, or requested run ID with different meaning shall
     conflict. Independent preparations for one source may run concurrently,
     but shall have distinct captures and immutable state.
-16. Transport cancellation shall not cancel durable work. Explicit
+22. Transport cancellation shall not cancel durable work. Explicit
     preparation cancellation shall prevent new stages; retained work already
     completed remains auditable. A running capture lost to process failure
     shall fail under a fence and require a new preparation rather than observe
-    a later filesystem state under the old identity. Semantic/final run
-    restart, retry, pause, and cancellation follow ADR-0016. Terminal runs are
-    never reopened.
-17. Replay of the successor shall use its retained inputs and shall not capture
+    a later filesystem state under the old identity. Acquisition and final
+    analysis lifecycle are separately fenced and owned as stated above.
+    Terminal runs are never reopened.
+23. Replay of the successor shall use its retained inputs and shall not capture
     the live installation. A new external recheck always requires a new
     preparation, new snapshot occurrence, and new successor run.
-18. Unsupported/stale/ambiguous/incomplete source mapping, missing or unknown
-    dependency evidence, incompatible analyzer/identity contracts, substituted
-    bytes, exceeded bounds, or unavailable prerequisites shall produce a typed
-    non-startable preparation without a run or readiness mutation. Ordinary
-    gaps discovered only while executing a valid scope remain explicit and
+24. Unsupported/stale/ambiguous/incomplete source mapping or correlation,
+    unproven absence, missing or unknown dependency evidence, incompatible
+    analyzer/identity contracts, substituted bytes, exceeded bounds, or
+    unavailable prerequisites shall produce a typed non-startable preparation.
+    Failed prerequisite evidence may remain under its preparation/acquisition
+    owner, but no successor analysis run or readiness mutation occurs. Ordinary
+    gaps admitted by an explicitly limited valid scope remain explicit and
     yield limited/completed-with-gaps results.
-19. The dormant current `targeted_verifications` storage shape and
+25. Evidence-acquisition migration shall preserve existing source-claim
+    acquisitions and provider commands unchanged. The current non-null parent-
+    analysis constraint may be clean-broken only with a typed initiation
+    relation requiring exactly one of parent analysis or targeted preparation,
+    plus functional local-semantic job/command and later output-application
+    links. No existing row receives invented preparation or successor lineage;
+    incompatible populated state fails closed.
+26. The dormant current `targeted_verifications` storage shape and
     `targeted-verification` operation kind shall not be reinterpreted. The
     migration shall require both populations to be empty. Unexpected rows stop
     migration with typed incompatible-storage status pending a separately
     reviewed preservation plan; no binding or lineage may be manufactured.
-20. A future renderer bridge may map only the closed preparation/read/start/
+27. A future renderer bridge may map only the closed preparation/read/start/
     cancel projections after producer-consumer validation. It shall expose no
     paths, raw snapshot command, dependency graph query, operation kind/request,
     SQL, command, credential, URL, or generic gRPC method. Until that gate, the

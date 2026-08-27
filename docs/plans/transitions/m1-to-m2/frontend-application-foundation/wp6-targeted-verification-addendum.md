@@ -4,9 +4,9 @@ Status: Proposed
 Disposition: Architecture and plan correction; implementation not authorized
 Last reviewed: 2026-08-26
 Owner: Project owner
-Plan ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6/ADDENDUM-TARGETED-VERIFICATION`
+Work ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6`
+Document role: Proposed addendum to WP6; no subordinate package is created
 Planning base: `7c0ceee255c8b9ef79f4116f848a0938376d6ac3`
-Supplements: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6`
 
 ## Plain-language proposal
 
@@ -42,9 +42,11 @@ exact terminal source run + exactly one finding/case occurrence
   -> coordinator rehydrates canonical source payload and identity
   -> durable, renderer-safe preparation admission
   -> new snapshot capture from the still-confirmed saved profile
-  -> full qualified Bethesda semantic extraction on that snapshot
+  -> directly initiated ADR-0016 evidence-acquisition run
+  -> acquisition-owned qualified Bethesda semantic extraction on that snapshot
   -> dependency-closed TargetedAnalysisScope planning
-  -> targeted CandidateDeliveredInput + resolved manifest
+  -> one correlation/coverage row per required source member
+  -> targeted CandidateDeliveredInput + coverage ledger + resolved manifest
   -> immutable inspectable preparation
   -> fresh one-shot user start
   -> atomic successor run + managed-analysis-v1 operation + initiation lineage
@@ -53,8 +55,9 @@ exact terminal source run + exactly one finding/case occurrence
 ```
 
 Snapshot capture and semantic extraction are prerequisites, not alternative
-result runs. The successor result run's executable operation kind is exactly
-`managed-analysis-v1`.
+result runs. Semantic extraction is durably owned by an evidence-acquisition
+run and cannot publish analytical results. The successor result run's
+executable operation kind is exactly `managed-analysis-v1`.
 
 ## Inputs
 
@@ -75,8 +78,9 @@ result runs. The successor result run's executable operation kind is exactly
   preparation readback/cancellation, start admission, and verification readback;
 - functional domain contracts for targeted scope, preparation, admission,
   reuse decisions, coverage, gaps, and initiation lineage;
-- coordinator planners/resolvers that compose existing snapshot capture,
-  Bethesda semantic extraction, and `managed-analysis-v1`;
+- coordinator planners/resolvers that compose existing snapshot capture and
+  `managed-analysis-v1`, plus the new ADR-0016 evidence-acquisition route needed
+  to host Bethesda semantic extraction before successor admission;
 - a deterministic dependency-closed targeted delivered-input producer;
 - append-only persistence, migrations, projections, backup/restore, replay, and
   recovery for the corrected vertical;
@@ -122,12 +126,15 @@ The bounded projection includes:
 - exact source run, occurrence kind/ID, logical ID, payload ID/hash, canonical
   signature, analyzer/semantic/identity versions, and source binding;
 - newly captured snapshot ID, capture operation/attempt, capture time,
-  structural fingerprint/comparison, semantic-input identity, and profile
-  revision;
+  structural fingerprint/comparison, and profile revision;
+- prerequisite evidence-acquisition run, lifecycle/progress, attempts/fences,
+  retained semantic-output identity/publication/provenance, and terminal gaps;
 - selected context, configuration, effective configuration, and resolved
   manifest identities/revisions/fingerprints;
 - direct roots and dependency-expanded members, each with typed kind, reason,
   source edge/proof, and whether it is mandatory;
+- one source-to-target correlation/coverage row per required member, including
+  target identity or absence/applicability proof and denominator effect;
 - target analyzers and compatibility proof;
 - recomputed and proposed-reuse artifacts with exact validity proofs;
 - population denominator, expected work/limits, coverage classes, gaps,
@@ -169,11 +176,67 @@ The bounded read model joins, without rewriting:
 - preparation and admission identity;
 - source and successor run/occurrence identity;
 - new snapshot and run binding;
+- prerequisite acquisition and semantic-output application link;
 - direct/expanded scope and managed operation hash;
 - current successor lifecycle state;
 - targeted population coverage, failures, gaps, reuse, and readiness boundary;
 - result reconciliation/lineage outcomes when published; and
 - restart/cancel/failure history needed to explain current state.
+
+## Durable semantic-acquisition owner
+
+The pre-start Bethesda semantic output is owned by an ADR-0016
+`EvidenceAcquisitionRunContract`, not by preparation and not by an ordinary
+analysis `RunContract`. The coordinator creates this acquisition after the
+fresh snapshot publishes and before the preparation can become startable. It is
+directly initiated by the user-authorized preparation, has no parent analysis
+run at creation, and gains a later successor-application link only during
+atomic start admission.
+
+The current `ExecuteBethesdaSemanticAsync` route cannot be called as-is: it
+registers `bethesda-semantic-v1` against an existing analysis run, creates a
+run-owned attempt, and terminally completes that run on publication. The
+current evidence-acquisition persistence route is also source-claim/provider
+specific and requires a parent analysis run. Later implementation must
+generalize the accepted evidence-acquisition owner honestly; it must not create
+a placeholder result run or describe current endpoints as already sufficient.
+
+Acquisition admission immutably binds:
+
+- acquisition and preparation identities/revisions;
+- capture occurrence, target snapshot, and confirmed-profile revision;
+- extraction configuration and producer family/version;
+- resolved support manifest and qualified-enumeration policy/version;
+- exact sealed input closure, canonical operation request/hash, limits, and
+  deadlines; and
+- owner/schema revisions required for replay and compatibility checks.
+
+The acquisition owns its job graph, attempts, generation/fence, checkpoints,
+progress denominator, staged bytes, validated content-addressed output,
+publication receipt, provenance, lifecycle events, terminal gaps, and deletion
+state. At most one attempt is live. Only its current fenced attempt may
+checkpoint or publish. Every checkpoint binds the acquisition run, job,
+attempt/generation/fence, target snapshot, extraction configuration, support
+manifest, producer version, and exact sealed-input-closure fingerprint; a
+different binding invalidates rather than resumes it. Retry creates a new attempt against the same retained
+snapshot and original input seals; it cannot re-open mutable live paths and
+assign new bytes to the old acquisition. Restart settles/fences interrupted
+attempts and resumes/retries only when all seals still validate; otherwise the
+acquisition is invalidated and the preparation is non-startable.
+
+Explicit preparation cancellation requests acquisition cancellation and
+prevents later stages. An uninterruptible worker may finish staging, but stale
+or cancelled fences cannot publish. Transport cancellation has no durable
+meaning. Completed output remains auditable. Preparation readback shows bounded
+prerequisite lifecycle/progress; acquisition history may describe it as a
+preparation prerequisite. It never exposes findings, cases, readiness, or a
+FindingReport and therefore cannot be mistaken for the targeted result run.
+
+Active acquisition deletion is blocked. Deletion preview traverses preparation,
+successor, replay, checkpoint, and output links. Completed output cannot be
+deleted while a retained dependent exists. If a future authorized retention
+policy removes unreferenced evidence, dependent readback shows an explicit gap
+and start/replay fails closed; evidence is never silently regenerated.
 
 ## TargetedAnalysisScope contract
 
@@ -204,11 +267,70 @@ populations, and shared-cause members. The algorithm must:
 7. be permutation-independent and monotonic when roots are added; and
 8. emit one canonical policy/version/fingerprint-bound scope.
 
-The targeted delivered-input producer creates a valid
-`CandidateDeliveredInput` from this scope and the new semantic input. Its
-eligible, included, excluded, unsupported, and gap populations share the same
-denominator. No later stage may remove mandatory members. If the producer
-cannot prove closure, the preparation is not startable.
+The current `CandidateDeliveredInput` is insufficient as the sole contract: it
+contains target semantic facts and coverage-gap facts, but no cross-snapshot
+member ledger, and an absent target fact creates neither a candidate nor a
+population member. WP6 therefore proposes a separate clean-break
+`TargetedCorrelationCoverage` input rather than overloading a target-fact
+contract with source-to-target identity meaning.
+
+It contains exactly one row for every direct or expanded required member:
+
+| Status | Required proof and execution meaning | Coverage/start effect |
+|---|---|---|
+| `MatchedExecutable` | exact typed target identity plus executable current semantic input | current target facts execute; completed only after analyzer coverage |
+| `ChangedCorrelated` | accepted identity/equivalence proof shows the same participant with changed relevant state | current target facts execute; result may reconcile as revision/follow-up |
+| `ProvenAbsent` | complete qualified target-population enumeration plus evidenced stable-identity no-match | completed covered member; no fabricated candidate/hypothesis |
+| `ProvenNotApplicable` | qualified target evidence proves the applicability predicates false | completed covered member; remains in denominator |
+| `Ambiguous` | multiple/conflicting plausible targets | explicit gap; mandatory ambiguity is non-startable |
+| `Unsupported` | target population/member is known but its shape lacks an accepted analyzer/adapter | explicit gap; only an inspectable limited plan may start |
+| `Inaccessible` | expected target bytes/semantics cannot be read completely | explicit gap; only an inspectable limited plan may start |
+| `Malformed` | target bytes are present but cannot be decoded or fail the qualified structural contract | explicit gap; only an inspectable limited plan may start |
+| `MissingRequiredProof` | identity, equivalence, applicability, or enumeration proof is incomplete | explicit gap; mandatory missing proof is non-startable |
+
+Each row binds source occurrence and scope-member IDs, typed source stable
+identity, target population, correlation policy/version/fingerprint, target
+identity when present, evidence IDs, enumeration or applicability proof,
+current execution member IDs when present, status, reason, and gap/readiness
+effect. There is no implicit absent row.
+
+Stable identity is kind-specific and canonical: Bethesda records use plugin/
+master identity plus local record identity and record signature; plugin
+contributions include contribution/winner role and provider lineage; assets use
+normalized virtual path plus provider-chain identity; and MO2 providers use
+captured provider-participant identity. Exact canonical bytes, declared master
+relationships, contribution/provider lineage, content fingerprints, and a
+separately accepted identity-change map may serve as evidence. Names, display
+subjects, prose, and visual similarity cannot. A renamed or identity-changed
+plugin is therefore ambiguous or missing proof unless typed retained evidence
+proves continuity.
+
+`ProvenAbsent` is a positive result. Its proof names the acquisition run/output,
+enumeration producer/version, target population, completeness state,
+count/fingerprint, lookup key/trace, and no-match result. Removing a source mod,
+provider, record, or contribution can therefore count as completed targeted
+work rather than disappearing from coverage.
+
+The targeted delivered-input producer recomputes `CandidateDeliveredInput` only
+for executable current members. A clean-break `FindingCaseInput` producer
+separately projects the correlation ledger into population/member/failure facts
+and prior occurrence inputs. This retains the prepared denominator even when no
+current candidate or hypothesis exists. No later stage may remove mandatory
+members. One-row-per-member, denominator equality, deterministic
+canonicalization, permutation independence, monotonicity, and closure
+completeness are invariants. If closure or mandatory correlation cannot be
+proved, preparation is not startable.
+
+The projection is exact: every prior finding/case receives the applicable
+targeted population IDs derived from its required members; every ledger row
+creates a `CoverageMemberFact`; and each population carries acquisition/
+enumeration evidence. `ProvenAbsent` and `ProvenNotApplicable` project to
+`CoverageMemberState.Completed`. Executed members become `Completed` only after
+successful analyzer coverage. `Unsupported` projects to `Unsupported` with a
+gap. Ambiguous, inaccessible, malformed, and missing-proof rows project to
+`Failed` with a typed `CoverageFailureFact` and gap (with retryability reflecting
+the actual cause), and can never satisfy the current all-members-completed
+`NotObserved` guard. Thus zero hypotheses do not mean zero denominator.
 
 ## Mapping to managed-analysis-v1
 
@@ -217,11 +339,13 @@ operation. It binds:
 
 - successor run ID and `managed-analysis-v1`;
 - new installation snapshot ID;
-- new Bethesda semantic input ID/fingerprint;
+- prerequisite evidence-acquisition run/output/application-link identities and
+  new Bethesda semantic input ID/fingerprint;
 - target effective configuration and selected analysis context;
 - a resolved input manifest naming source/preparation/scope/target input and
   every retained external input;
 - the supplied targeted delivered input/fingerprint;
+- the supplied targeted correlation/coverage input/fingerprint;
 - source run as prior analytical context for reconciliation;
 - exact allowed phase reuse decisions and proof edges; and
 - current hard limits/deadline.
@@ -236,7 +360,7 @@ run output, and reconciliation remain authoritative.
 |---|---|---|
 | Source snapshot occurrence | Never reused as target | It cannot observe the external change |
 | New snapshot capture | Always performed | It is the post-change observation |
-| Bethesda semantic input | Recomputed from new snapshot | Initial design avoids an unqualified partial extractor |
+| Bethesda semantic input | Recomputed by the prerequisite evidence-acquisition run | Initial design avoids an unqualified partial extractor; successor applies retained output without taking ownership |
 | Candidate delivered input | Recomputed through targeted producer | Its population and dependencies bind the new snapshot and closed scope |
 | Candidate decisions/hypotheses/findings/cases | Recomputed | They are snapshot-dependent analytical outputs |
 | Finding/case logical identities | Reconciled, not copied | ADR-0022 requires proof of continuity |
@@ -250,14 +374,17 @@ run output, and reconciliation remain authoritative.
 The implementation shall retain these immutable links:
 
 1. preparation -> source run and exact source occurrence/payload/hash;
-2. preparation -> new capture operation/attempt/snapshot/semantic input;
-3. preparation -> profile/context/configuration/resolved manifest;
-4. preparation -> direct roots -> expanded scope members/proof edges;
-5. preparation -> reuse decisions/proofs and recomputation declarations;
-6. admission -> preparation revision/fingerprint, gesture, command, operation
+2. preparation -> new capture operation/attempt/snapshot;
+3. preparation -> evidence-acquisition run -> jobs/attempts/checkpoints/output;
+4. successor admission -> retained acquisition-output application link;
+5. preparation -> profile/context/configuration/resolved manifest;
+6. preparation -> direct roots -> expanded scope members/proof edges -> one
+   correlation/coverage row per member;
+7. preparation -> reuse decisions/proofs and recomputation declarations;
+8. admission -> preparation revision/fingerprint, gesture, command, operation
    request/hash, and successor run;
-7. successor run -> normal published results/coverage/gaps; and
-8. source occurrence(s) -> successor occurrence(s), only through ADR-0022
+9. successor run -> normal published results/coverage/gaps; and
+10. source occurrence(s) -> successor occurrence(s), only through ADR-0022
    reconciliation and lineage events.
 
 The source result, its disposition, the target preparation, and published
@@ -280,7 +407,11 @@ Mapping gaps that prevent closure make preparation non-startable. Gaps that
 arise only while valid work executes are published normally and produce a
 limited/completed-with-gaps result. A prior issue may be reported `not
 observed` only when its applicable closed scope completed without a material
-coverage gap.
+coverage gap. `ProvenAbsent` and `ProvenNotApplicable` count as completed
+members, not omissions. With zero current candidates/hypotheses, complete
+applicable member coverage may therefore support guarded ADR-0022
+`NotObserved`; any ambiguous, unsupported, inaccessible, malformed, or
+missing-proof member yields `NotEvaluated`/unknown and an explicit gap instead.
 
 WP6 targeted results always expose `scope-limited` or `no-readiness`. They do
 not overwrite, replace, or borrow whole-profile readiness, even if the source
@@ -293,8 +424,8 @@ run had broader coverage.
 - One preparation admits at most one successor run. Multiple preparations for
   one source are independent and bind distinct capture occurrences.
 - Start revalidates source terminal state, source payload, preparation bytes,
-  saved revisions, new snapshot/semantic input, scope, input package, manifest,
-  operation bytes, deadline, and fencing epoch.
+  saved revisions, new snapshot/acquisition/semantic input, scope, correlation
+  ledger, input package, manifest, operation bytes, deadline, and fencing epoch.
 - Run, command, operation, preparation submission, and initiation lineage are
   committed atomically. Nothing is scheduled on partial publication.
 - Explicit preparation cancellation prevents new stages. An in-flight
@@ -302,6 +433,9 @@ run had broader coverage.
 - On coordinator restart, queued steps may resume under the same fence. A
   capture running at process loss fails and requires a new preparation because
   later filesystem observation cannot be assigned the old attempt identity.
+- An acquisition attempt interrupted by restart is settled and fenced. It may
+  retry only against the retained snapshot and original validated input seals;
+  seal drift invalidates the prerequisite and blocks start.
 - Final managed run pause/resume/cancel/retry follows ADR-0016. Retrying work in
   a terminal run requires a new preparation and run.
 - Renderer/shell restart merely re-reads durable state. Transport cancellation
@@ -319,7 +453,9 @@ run had broader coverage.
 | Analyzer/identity/producer incompatible | non-startable `Unsupported` | Preparation evidence may be retained; no run |
 | Missing/unknown/ambiguous dependency mapping | non-startable mapping gap | Preparation evidence may be retained; no run |
 | Closure exceeds bound | non-startable `LimitExceeded` | No fallback run |
-| New snapshot/semantic prerequisite absent or failed | failed preparation | No successor run |
+| New snapshot/acquisition/semantic prerequisite absent or failed | failed preparation with retained prerequisite evidence | No successor run |
+| Source participant absent with complete qualified proof | `ProvenAbsent` completed coverage member | Preparation may remain startable; no candidate is fabricated |
+| Claimed absence lacks complete proof | `MissingRequiredProof` gap | No partial/implicit start |
 | Valid execution later encounters unsupported content | explicit gap and limited/completed-with-gaps | Normal run output only |
 | Exact command retry | `AlreadyAccepted` with original receipt | No duplicate mutation |
 | Same key/gesture/ID with changed meaning | `Conflict` | No mutation |
@@ -329,10 +465,16 @@ run had broader coverage.
 Required append-only logical populations are:
 
 - targeted-verification preparations and canonical request payloads;
-- preparation events/attempts and current rebuildable projection;
-- snapshot/semantic prerequisite links;
+- preparation events and current rebuildable projection;
+- snapshot prerequisite links;
+- directly initiated evidence-acquisition runs, functional semantic-acquisition
+  job/command/attempt/checkpoint/progress/output/publication rows, preparation
+  links, and later successor-output application links;
 - direct roots, expanded scope members, dependency proof edges, and scope
   payload/fingerprint;
+- source-to-target correlation rows, stable identity/evidence,
+  enumeration/applicability proofs, coverage members/failures, and canonical
+  ledger fingerprint;
 - proposed reuse/recompute decisions and validity proofs;
 - immutable preparation plans and resolved manifests;
 - start submissions/admissions and managed operation bindings;
@@ -343,6 +485,17 @@ Foreign keys must bind existing runs, occurrences, snapshots, payloads,
 contexts, configurations, manifests, operations, commands, and lineage where
 those identities already exist. All authority-bearing rows are append-only;
 mutable projections are rebuildable.
+
+The acquisition migration must preserve every existing source-claim
+acquisition unchanged. It may clean-break the current non-null parent-analysis
+constraint only by adding a typed initiation relation whose invariant is
+exactly one of parent analysis or targeted preparation. It must add a functional
+local semantic-acquisition command/job discriminator, preparation link, and
+later output-application link without reclassifying provider commands or
+ordinary analysis runs. Existing rows receive no invented preparation or
+successor. Zero/nonzero, interrupted, downgrade/refusal, foreign-key, and
+projection-rebuild cases apply to this generalization as well as the dormant
+targeted-verification preflight.
 
 The migration must preflight `targeted_verifications` and any run operation
 whose kind is `targeted-verification`. Both counts must be zero. Nonzero state
@@ -384,13 +537,16 @@ work begins.
 - `contracts/protobuf/infinium/application/v1/application.proto`: clean-break
   preparation/start/readback/cancellation messages and RPCs.
 - `src/Infinium.Domain/Contracts/`: functional targeted scope, preparation,
-  reuse, coverage/gap, admission, and initiation-lineage contracts plus
-  invariants and canonical fingerprints.
-- `src/Infinium.Application/Analysis/`: dependency-closure planner and targeted
-  delivered-input producer; no UI-projection filtering.
+  evidence-acquisition binding/application, correlation/absence proof, reuse,
+  coverage/gap, admission, and initiation-lineage contracts plus invariants and
+  canonical fingerprints.
+- `src/Infinium.Application/Analysis/`: dependency-closure planner, cross-
+  snapshot correlation producer, targeted delivered-input producer, and clean-
+  break finding/case coverage producer; no UI-projection filtering.
 - `src/Infinium.Coordinator/`: application handlers, recursive validators,
-  saved-setup snapshot resolver, preparation executor/recovery, targeted
-  operation resolver, and composition with `ManagedRunExecutor`.
+  saved-setup snapshot resolver, preparation executor/recovery, direct semantic
+  evidence-acquisition admission/executor/worker adapter, targeted operation
+  resolver, and composition with `ManagedRunExecutor`.
 
 ### Consumers and execution
 
@@ -399,15 +555,18 @@ work begins.
 - Phase C native diagnostic consumer for begin/status/cancel/start/readback;
 - `ManagedRunExecutor` and `ManagedAnalysisOrchestrator` only where needed to
   accept/validate the supplied targeted input and prior reconciliation context;
-- existing snapshot and Bethesda semantic executors through typed adapters,
-  without renderer exposure; and
+- existing snapshot executor and reusable Bethesda worker/staging validation
+  through typed adapters, with semantic operation registration/publication
+  moved under the acquisition owner and no renderer exposure; and
 - future Phase D renderer registry/TypeScript generation only after Checkpoint
   C, under a separately active WP7/WP8 candidate.
 
 ### Persistence, migration, and readback
 
 - `src/Infinium.Persistence/AuthoritativeStore.*`: append-only preparation,
-  scope, admission, linkage, readback, and atomic start methods;
+  evidence-acquisition admission/job/attempt/checkpoint/progress/publication,
+  preparation/acquisition/application links, scope, correlation/coverage,
+  admission, lineage, readback, deletion impact, and atomic start methods;
 - functional schema migration files and expected-object inventory;
 - content-addressed payload admission for canonical requests/plans/scope/reuse
   proofs and operation hashes;
@@ -421,6 +580,14 @@ work begins.
 - dependency-closure positive, permutation, monotonicity, cycle, missing-edge,
   unknown-edge, excessive-scope, and adversarial-omission tests;
 - source finding and case tests, including all case members/shared cause;
+- removed source mod/provider; removed record/contribution; renamed or
+  identity-changed plugin; unchanged equivalent target; ambiguous correlation;
+  one absent member of a multi-member case; all case members absent; and zero
+  current hypotheses with complete versus incomplete applicable coverage;
+- acquisition-owner admission/binding, parentless direct initiation,
+  job/attempt/fence/checkpoint/progress/publication, cancellation, restart,
+  exact-input retry, stale-seal invalidation, visibility, application-link,
+  deletion-impact, and no-FindingReport tests;
 - new/equivalent/stale/changed snapshot tests and proof that source snapshot is
   never the target;
 - managed request golden/round-trip tests proving exact operation kind and
@@ -428,7 +595,8 @@ work begins.
 - atomicity, idempotency, conflicting replay, gesture reuse, concurrency,
   cancellation, restart, crash-window, fence, terminal-run, and replay tests;
 - zero/nonzero/tampered/interrupted migration and backup/restore tests;
-- coverage/gap/no-readiness and `not observed` guard tests;
+- denominator-preserving correlation/absence coverage, gap/no-readiness, and
+  guarded `NotObserved` versus `NotEvaluated` tests;
 - ADR-0022 exact/revision/related/ambiguous/distinct lineage tests;
 - renderer hostile/oversized/unknown-field and no-generic-authority tests; and
 - focused EVAL cases below plus documentation/schema/naming validation.
@@ -453,29 +621,36 @@ of the following are true:
    producer, executor mapping, readback, and diagnostic consumer are coherent;
 2. every start uses a new snapshot capture occurrence and never the source
    snapshot as target proof;
-3. source run and exactly one canonical occurrence are validated from retained
+3. pre-start semantic extraction is owned by a directly initiated, immutable
+   ADR-0016 evidence-acquisition run with complete lifecycle, fencing,
+   provenance, visibility, application-link, retention, and deletion evidence;
+4. source run and exactly one canonical occurrence are validated from retained
    authority, not UI projection fields;
-4. dependency closure is deterministic, complete, bounded, explainable, and
+5. dependency closure is deterministic, complete, bounded, explainable, and
    cannot be narrowed by a caller;
-5. final execution is exactly `managed-analysis-v1` with the new binding and a
-   valid supplied targeted delivered input;
-6. reuse/recompute choices meet the matrix above and every reuse has a retained
+6. every scope member has one typed, evidenced correlation state; proven
+   absence/applicability remains in the denominator and ambiguous/unproven
+   mappings fail closed;
+7. final execution is exactly `managed-analysis-v1` with the new binding and
+   valid supplied targeted delivered and correlation/coverage inputs;
+8. reuse/recompute choices meet the matrix above and every reuse has a retained
    proof edge;
-7. source, successor, initiation, and analytical lineage are exact and
+9. source, acquisition, successor, initiation, and analytical lineage are exact and
    immutable;
-8. coverage/gaps use the prepared denominator and readiness remains
+10. coverage/gaps use the prepared denominator, zero-candidate coverage reaches
+    honest reconciliation, and readiness remains
    scope-limited/no-readiness;
-9. atomic admission, exact retry, concurrency, cancellation, restart, recovery,
+11. atomic admission, exact retry, concurrency, cancellation, restart, recovery,
    replay, and migration behavior pass focused evidence;
-10. unsupported, stale, ambiguous, incomplete, substituted, unknown, and
+12. unsupported, stale, ambiguous, incomplete, substituted, unknown, and
     excessive mappings fail closed without fallback or partial start;
-11. future renderer mapping remains closed, typed, bounded, inert, and free of
+13. future renderer mapping remains closed, typed, bounded, inert, and free of
     generic backend/local authority;
-12. producers, persistence, generated consumers, round-trip, invalid states,
+14. producers, persistence, generated consumers, round-trip, invalid states,
     and focused fixtures reach `Producer-consumer-validated` together;
-13. consolidated semantic/security/provenance/diff review has no must-fix
+15. consolidated semantic/security/provenance/diff review has no must-fix
     finding; and
-14. the accepted focused and complete verification floors pass on the same
+16. the accepted focused and complete verification floors pass on the same
     final candidate with zero repository-owned .NET/test-host survivors.
 
 Passing these criteria would permit Checkpoint C review. It would not itself
@@ -504,6 +679,23 @@ accept WP5/WP6, accept Checkpoint C, begin Phase D, or activate M2.
   with proof, full semantic recapture, and no source-snapshot reuse.
 - **EVAL-0079:** prove initiation links plus ADR-0022 exact/revision/related/
   ambiguous/distinct result reconciliation and guarded `not observed`.
+
+The proposed WP6 expansion must also include the following focused conformance
+cases without changing EVAL-0093's accepted catalog wording before acceptance:
+
+- removed source mod/provider is `ProvenAbsent` only after complete qualified
+  enumeration and remains covered in the denominator;
+- removed record or contribution follows the same positive-absence rule;
+- renamed or identity-changed plugin fails ambiguous/missing-proof unless an
+  accepted typed mapping proves continuity;
+- unchanged equivalent target becomes `MatchedExecutable` through canonical
+  identity evidence, not display/name matching;
+- ambiguous correlation is an explicit non-startable gap;
+- one proven-absent member of a multi-member case remains in member coverage;
+- all case members proven absent can support guarded case `NotObserved` only
+  with complete member-first closure; and
+- zero current hypotheses yields `NotObserved` with complete applicable
+  coverage, but `NotEvaluated`/unknown with any incomplete applicable member.
 
 No private fixture or independent semantic oracle is authorized. Fixtures are
 developer-owned product-conformance evidence under the accepted verification
@@ -544,6 +736,12 @@ Existing accepted authority resolves the design choices in this addendum:
 - canonical occurrence identity rather than display scope;
 - dependency-complete expansion rather than ad-hoc filtering;
 - inspectable preparation before manual start;
+- directly initiated ADR-0016 evidence-acquisition ownership for pre-start
+  semantic extraction, rather than a placeholder analysis run;
+- typed cross-snapshot correlation with proven absence retained as coverage;
+- a separate targeted correlation/coverage input because current
+  `CandidateDeliveredInput` cannot carry zero-current-candidate denominator
+  meaning;
 - `managed-analysis-v1` rather than a new or generic operation;
 - proof-bound reuse and snapshot-dependent recomputation;
 - append-only initiation plus ADR-0022 analytical lineage;

@@ -1122,8 +1122,11 @@ The correction investigation inspected the current snapshot capture,
 retained-input/prepared-run admission, `bethesda-semantic-v1`,
 `managed-analysis-v1`, candidate/dependency expansion, finding/case identity,
 lineage, persistence/migration, and `StartTargetedVerification` seams. It found
-that the existing executable operations are sufficient only when joined by a
-new typed preparation and targeted delivered-input contract.
+that snapshot capture and `managed-analysis-v1` are reusable, but the current
+run-bound Bethesda semantic endpoint cannot own required pre-start extraction.
+The proposal therefore uses ADR-0016's evidence-acquisition run category and
+requires a new directly initiated local acquisition route, typed preparation,
+correlation/coverage, and targeted delivered-input contracts.
 
 The proposal package is:
 
@@ -1132,15 +1135,35 @@ The proposal package is:
 - [Proposed WP6 addendum](wp6-targeted-verification-addendum.md).
 
 Its recommendation is to capture a new installation snapshot, perform the
-qualified semantic extraction, derive an inspectable dependency-closed scope,
-and atomically start one ordinary `managed-analysis-v1` successor with exact
-initiation and ADR-0022 analytical lineage. It rejects source-snapshot reuse,
-ad-hoc fact filtering, automatic full-run fallback, and a new unexecutable
-operation kind.
+qualified semantic extraction under a separate evidence-acquisition owner,
+correlate every required source member (including proven target absence),
+derive an inspectable dependency-closed scope, and atomically start one
+ordinary `managed-analysis-v1` successor with exact initiation and ADR-0022
+analytical lineage. It rejects source-snapshot reuse, ad-hoc fact filtering,
+automatic full-run fallback, and a new unexecutable analysis operation kind.
 
 This entry is a proposal receipt, not an implementation or checkpoint receipt.
 It does not change application/domain/storage/renderer versions, complete an
 EVAL case, accept WP5/WP6 or Checkpoint C, unblock Phase D, or activate M2.
+
+Follow-up review correction from proposal commit
+`ca300c5626772bc4a5144ed45e3f7c13f5cc86a5` replaced the incomplete semantic-
+extraction lifecycle claim with a directly initiated ADR-0016 evidence-
+acquisition owner. It also added one typed source-to-target correlation/
+coverage row per required member, positive proven-absence coverage, and the
+zero-current-hypothesis route into guarded ADR-0022 reconciliation. The review
+restored EVAL-0093's accepted target wording, restored the capability matrix's
+accepted exit/traceability fields, removed proposal documents from current RPC
+consumers and contract families, and restored the canonical WP6 work identity.
+
+The correction re-review covered product meaning, lifecycle and ownership,
+immutable results, snapshot/input provenance, dependency closure,
+cross-snapshot identity/absence, coverage/readiness/reconciliation, renderer
+security, matrix/evaluation traceability, functional naming, migration, and
+plan/status consistency. Documentation validation, both planning JSON Schema
+validations, functional-naming verification, `git diff --check`, and the
+documentation-only path audit passed. No production build or test ran; the
+final repository-owned `dotnet`/`testhost` survivor audit reported zero.
 
 ## Final closeout fields
 

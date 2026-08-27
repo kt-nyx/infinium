@@ -452,28 +452,14 @@
       "capability_id": "targeted-verification",
       "plain_language_need": "After the user changes the external setup, rerun only affected checks and link the new outcome to the earlier issue.",
       "requirement_ids": [
-        "FIND-005",
-        "FIND-012",
-        "FIND-014",
-        "INTENT-004",
-        "OPS-002",
-        "SNAP-002",
         "UX-005",
         "SCOPE-004",
-        "SNAP-003",
-        "SNAP-004"
+        "SNAP-003"
       ],
       "evaluation_ids": [
-        "EVAL-0019",
-        "EVAL-0020",
         "EVAL-0027",
         "EVAL-0029",
-        "EVAL-0043",
-        "EVAL-0047",
-        "EVAL-0048",
-        "EVAL-0069",
         "EVAL-0078",
-        "EVAL-0079",
         "EVAL-0093"
       ],
       "current_state": "missing-application-vertical",
@@ -486,7 +472,7 @@
       "gap": "The proposed package defines changed-snapshot preparation, canonical source hydration, typed dependency closure, managed-analysis-v1 mapping, reuse, lineage, coverage/gap/readiness, lifecycle, migration, and renderer boundaries. It still requires steward/owner acceptance and a complete producer-persistence-consumer implementation before this RPC may create or schedule work.",
       "owning_phase": "C",
       "owning_work_package": "WP6",
-      "transition_exit_evidence": "A fresh snapshot and dependency-complete inspectable preparation atomically start one managed-analysis-v1 successor; exact initiation and analytical lineage, lifecycle/replay/migration behavior, and scope-limited coverage/readiness pass producer-consumer validation with no generic renderer authority."
+      "transition_exit_evidence": "A new manually initiated operation retains exact source scope and lineage and reports scope-limited readiness honestly."
     },
     {
       "capability_id": "structured-user-export",

@@ -654,12 +654,12 @@
       "rpc": "StartTargetedVerification",
       "implementation_state": "declared-unimplemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#StartTargetedVerification",
-      "current_consumers": ["generated C# named-pipe fail-closed consumer; no accepted executable consumer exists", "RESEARCH-0058, Proposed ADR-0038, and the Proposed WP6 addendum are documentation-only candidate consumers of the current inventory"],
+      "current_consumers": ["generated C# named-pipe fail-closed consumer; no accepted executable consumer exists"],
       "persistence_readback": ["After negotiation and recursive request validation, the handler returns typed Unsupported without calling persistence; runs, operations, jobs, commands, payloads, lineage, audit, verification, lifecycle, and prepared-gesture populations remain unchanged"],
-      "bounds_and_versions": ["Current declared request bounds a manual gesture, deadline, and 1-100 scope identities, but execution is fail-closed", "The proposal would clean-break this into preparation/read/cancel/start/readback contracts, remove caller-authored executable scope from start, and preserve independent application/domain/storage/renderer versions until actual bytes change"],
-      "requirement_ids": ["FIND-005", "FIND-012", "FIND-014", "INTENT-004", "OPS-002", "SCOPE-004", "SNAP-002", "SNAP-003", "SNAP-004", "UX-005"],
-      "evaluation_ids": ["EVAL-0019", "EVAL-0020", "EVAL-0027", "EVAL-0029", "EVAL-0043", "EVAL-0047", "EVAL-0048", "EVAL-0069", "EVAL-0078", "EVAL-0079", "EVAL-0093"],
-      "security_authorities": ["ADR-0010", "ADR-0015", "ADR-0016", "ADR-0021", "ADR-0022", "ADR-0037"],
+      "bounds_and_versions": ["Declared request shape bounds a manual gesture, deadline, and 1-100 scope identities, but application execution is fail-closed because changed-snapshot and managed-analysis-v1 scope-expansion authority is undefined"],
+      "requirement_ids": ["UX-005", "SCOPE-004", "SNAP-003"],
+      "evaluation_ids": ["EVAL-0027", "EVAL-0029", "EVAL-0078", "EVAL-0093"],
+      "security_authorities": ["ADR-0016", "ADR-0021", "ADR-0037"],
       "renderer_policy": "native-only-never-map"
     },
     {
@@ -1112,12 +1112,6 @@
       "source": "application.proto result/review messages, ApplicationGrpcService.ResultsReview, and AuthoritativeStore results/review persistence",
       "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5 and WP6",
       "maturity": "implementation-active"
-    },
-    {
-      "family": "targeted-verification-proposal",
-      "source": "RESEARCH-0058, Proposed ADR-0038, and wp6-targeted-verification-addendum.md",
-      "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6 after owner acceptance",
-      "maturity": "proposed"
     }
   ],
   "generation_ownership": [
