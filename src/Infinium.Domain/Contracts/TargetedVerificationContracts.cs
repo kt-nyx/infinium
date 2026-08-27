@@ -77,6 +77,10 @@ public sealed record TargetedVerificationSourceContract(
     OpaqueId SourcePayloadId,
     Sha256Fingerprint SourcePayloadFingerprint,
     Sha256Fingerprint CanonicalSignature,
+    string AnalyzerFamily,
+    ContractVersion AnalyzerVersion,
+    ContractVersion SemanticContractVersion,
+    ContractVersion IdentityContractVersion,
     OpaqueId SourceSnapshotId,
     OpaqueId AnalysisContextId,
     OpaqueId EffectiveConfigurationId,
@@ -333,7 +337,7 @@ public static class TargetedVerificationContractInvariants
         Validate(plan.CorrelationCoverage, plan.Scope);
         ValidatePlanIdentity(plan);
         if (plan.SchemaId != "infinium/targeted-verification-plan"
-            || plan.SchemaVersion != new ContractVersion(1, 0, 0)
+            || plan.SchemaVersion != new ContractVersion(1, 1, 0)
             || plan.PreparationRevision < 1
             || plan.PreparationId != plan.Scope.PreparationId
             || plan.PreparationId != plan.CorrelationCoverage.PreparationId

@@ -70,31 +70,32 @@ internal static class TargetedVerificationOperationResolver
         store.ValidateTargetedPlanProjection(plan);
         ResultItemPersistenceRecord sourceOccurrence = store.GetResultItem(
             sourceRun.RunId, preparation.SourceOccurrenceId);
-        string canonicalSourceSignature = Hash(string.Join('\n', sourceOccurrence.ItemId,
-            sourceOccurrence.LogicalId, sourceOccurrence.SourcePayloadSha256, sourceOccurrence.AnalyzerId,
-            sourceOccurrence.AnalyzerVersion));
-        if (sourceOccurrence.Kind != preparation.SourceOccurrenceKind
+        if (!TargetedVerificationSourceIdentity.ProjectionKindMatches(
+                preparation.SourceOccurrenceKind, sourceOccurrence.Kind)
             || sourceOccurrence.LogicalId != plan.Source.LogicalId.Value
             || sourceOccurrence.SourcePayloadId != plan.Source.SourcePayloadId.Value
-            || sourceOccurrence.SourcePayloadSha256 != plan.Source.SourcePayloadFingerprint.Value
-            || canonicalSourceSignature != plan.Source.CanonicalSignature.Value)
+            || sourceOccurrence.SourcePayloadSha256 != plan.Source.SourcePayloadFingerprint.Value)
         {
             throw new AnalysisIdentityDriftException(
                 "The canonical targeted source occurrence identity drifted.");
         }
-        byte[] sourcePayloadBytes = store.ReadFindingCasePayload(sourceOccurrence.SourcePayloadId);
-        if (Hash(sourcePayloadBytes) != sourceOccurrence.SourcePayloadSha256)
-        {
-            throw new AnalysisIdentityDriftException("The canonical targeted source payload bytes drifted.");
-        }
+        byte[] sourcePayloadBytes = TargetedVerificationSourceIdentity.ReadCanonicalPayload(
+            store, sourceRun.RunId, sourceOccurrence);
         FindingCaseContract canonicalSource = FindingCaseJsonCodec.Deserialize(sourcePayloadBytes);
-        int occurrenceMatches = preparation.SourceOccurrenceKind == "finding"
-            ? canonicalSource.Findings.Count(item => item.FindingOccurrenceId.Value == preparation.SourceOccurrenceId)
-            : canonicalSource.Cases.Count(item => item.CaseOccurrenceId.Value == preparation.SourceOccurrenceId);
-        if (occurrenceMatches != 1)
+        TargetedCanonicalSourceIdentity canonicalIdentity = TargetedVerificationSourceIdentity.Resolve(
+            canonicalSource, preparation.SourceOccurrenceKind, preparation.SourceOccurrenceId);
+        IdentityEnvelopeContract identityEnvelope = canonicalIdentity.IdentityEnvelope;
+        if (canonicalIdentity.LogicalId != plan.Source.LogicalId
+            || identityEnvelope.CanonicalSignature != plan.Source.CanonicalSignature
+            || identityEnvelope.AnalyzerFamily != plan.Source.AnalyzerFamily
+            || identityEnvelope.AnalyzerVersion != plan.Source.AnalyzerVersion
+            || identityEnvelope.SemanticContractVersion != plan.Source.SemanticContractVersion
+            || identityEnvelope.IdentityContractVersion != plan.Source.IdentityContractVersion
+            || sourceOccurrence.AnalyzerId != identityEnvelope.AnalyzerFamily
+            || sourceOccurrence.AnalyzerVersion != identityEnvelope.AnalyzerVersion.ToString())
         {
             throw new AnalysisIdentityDriftException(
-                "The canonical targeted source occurrence no longer resolves exactly once.");
+                "The canonical targeted source identity envelope or producer versions drifted.");
         }
         RunOperationRecord sourceOperation = store.GetRunOperation(sourceRun.RunId)
             ?? throw new InvalidOperationException("The targeted source run has no managed operation.");

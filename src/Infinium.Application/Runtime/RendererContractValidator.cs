@@ -573,6 +573,29 @@ public static class ApplicationContractValidator
                 {
                     throw new InvalidDataException("The targeted-preparation page size is outside its bound.");
                 }
+                if (value.MaximumLifecycleEvents is < 1 or > MaximumPhaseCCollectionItems)
+                {
+                    throw new InvalidDataException("The targeted-preparation lifecycle page size is outside its bound.");
+                }
+                if (value.AfterLifecycleSequence > long.MaxValue)
+                {
+                    throw new InvalidDataException("The targeted-preparation lifecycle cursor is outside its bound.");
+                }
+                if (value.MaximumArtifactDecisions is < 1 or > MaximumPhaseCCollectionItems
+                    || string.IsNullOrWhiteSpace(value.AfterArtifactKind) !=
+                       string.IsNullOrWhiteSpace(value.AfterArtifactId))
+                {
+                    throw new InvalidDataException("The targeted-preparation artifact page is outside its bound.");
+                }
+                RequireOptionalOpaque(value.AfterArtifactKind, "targeted-preparation artifact-kind cursor");
+                RequireOptionalOpaque(value.AfterArtifactId, "targeted-preparation artifact-ID cursor");
+                if (value.MaximumDependencies is < 1 or > MaximumPhaseCCollectionItems
+                    || value.MaximumTargetAnalyzers is < 1 or > MaximumPhaseCCollectionItems)
+                {
+                    throw new InvalidDataException("The targeted-preparation dependency or analyzer page is outside its bound.");
+                }
+                RequireOptionalOpaque(value.AfterDependencyEdgeId, "targeted-preparation dependency cursor");
+                RequireOptionalOpaque(value.AfterTargetAnalyzerId, "targeted-preparation analyzer cursor");
                 break;
             case CancelTargetedVerificationPreparationRequest value:
                 RequireOpaque(value.IdempotencyKey, "targeted-preparation cancellation idempotency key");

@@ -183,23 +183,27 @@ buffers/rate limits, process supervision, private-handle inheritance, staging
 authorization, and coordinator-side admission remain runtime obligations for
 later slices.
 
-The additive application v1 surface is at protocol 1.10.0. It separates the
-application 1.10.0, domain 1.4.0, storage 1.15.0, and renderer 1.1.0 version
-axes and exposes bounded display-safe bootstrap, typed setup/configuration,
+The additive application v1 surface is at protocol 1.11.0. It separates the
+application 1.11.0, domain 1.5.0, storage 1.15.0, and renderer 1.1.0 version
+axes; the corrected persisted `TargetedVerificationPlan` is schema 1.1.0. The
+surface exposes bounded display-safe bootstrap, typed setup/configuration,
 prepared manual-run, non-secret provider status, live progress, reconnect,
 canonical result exploration, FindingReport queues/detail, append-only durable
 review shapes, structured-export deletion/tombstone operations, and an
 explicit unavailable state when retained results predate a durable report
 publication projection. Five native-only targeted-verification RPCs expose
-durable preparation, fresh snapshot/evidence acquisition, inspectable closed
-scope and correlation coverage, atomic `managed-analysis-v1` successor
-admission, and immutable lineage/readback. `StartTargetedVerification` remains
+durable preparation, canonical finding/case identity-envelope authority,
+independently paged scope, dependency, target-analyzer, lifecycle, and artifact
+evidence, fresh snapshot/evidence acquisition, inspectable proof/correlation/
+reuse/limit state,
+atomic `managed-analysis-v1` successor admission, and immutable lineage/readback.
+`StartTargetedVerification` remains
 `native-only-never-map`; no renderer operation was added. The
 renderer registry still contains only its five previously accepted
 operation/message combinations; renderer 1.1.0 updates bootstrap compatibility
 and Phase C capability flags without adding desktop operations. The full
 protobuf contract-set fingerprint is
-`c51f6c400547b948fd7f350ef5ac72f29d6032b2671cfba957a7be71cfc44e74`.
+`eaf72f2bd8c04ad16035ff7ae45ea4c08b514216a0b0f07ce50e7560c55342d8`.
 Helper v2 has a separate fingerprint over only its helper/common/identity
 transitive closure; its fail-closed decoder rejects unknown nested fields,
 unknown enum numerics, and contradictory assignment, revalidation, or receipt

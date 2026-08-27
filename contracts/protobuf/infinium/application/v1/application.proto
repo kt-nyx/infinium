@@ -1655,6 +1655,15 @@ message GetTargetedVerificationPreparationRequest {
   string preparation_id = 1;
   uint32 maximum_members = 2;
   string after_member_id = 3;
+  uint32 maximum_lifecycle_events = 4;
+  uint64 after_lifecycle_sequence = 5;
+  uint32 maximum_artifact_decisions = 6;
+  string after_artifact_kind = 7;
+  string after_artifact_id = 8;
+  uint32 maximum_dependencies = 9;
+  string after_dependency_edge_id = 10;
+  uint32 maximum_target_analyzers = 11;
+  string after_target_analyzer_id = 12;
 
   reserved 90 to 99;
   reserved "sql", "path", "url", "query", "payload_path", "command", "filter";
@@ -1736,6 +1745,30 @@ message TargetedVerificationPreparation {
   uint64 evidence_progress_completed = 48;
   uint64 evidence_progress_denominator = 49;
   string evidence_checkpoint_id = 50;
+  string source_analyzer_family = 51;
+  infinium.common.v1.SemanticVersion source_analyzer_version = 52;
+  infinium.common.v1.SemanticVersion source_semantic_contract_version = 53;
+  infinium.common.v1.SemanticVersion source_identity_contract_version = 54;
+  infinium.common.v1.Instant target_snapshot_captured_at = 55;
+  uint64 confirmed_profile_revision = 56;
+  string effective_configuration_fingerprint_sha256 = 57;
+  string resolved_input_manifest_fingerprint_sha256 = 58;
+  repeated TargetedScopeDependency scope_dependencies = 59;
+  repeated TargetedAnalyzerCompatibility target_analyzers = 60;
+  repeated TargetedArtifactDecision artifact_decisions = 61;
+  TargetedPreparationWork expected_work = 62;
+  TargetedAcquisitionEvidence acquisition_evidence = 63;
+  repeated TargetedPreparationLifecycleEvent lifecycle_events = 64;
+  uint64 next_lifecycle_sequence = 65;
+  string correlation_coverage_id = 66;
+  string correlation_coverage_fingerprint_sha256 = 67;
+  string correlation_policy_id = 68;
+  infinium.common.v1.SemanticVersion correlation_policy_version = 69;
+  string correlation_policy_fingerprint_sha256 = 70;
+  string next_artifact_kind = 71;
+  string next_artifact_id = 72;
+  string next_dependency_edge_id = 73;
+  string next_target_analyzer_id = 74;
 }
 
 message TargetedScopeMember {
@@ -1745,6 +1778,83 @@ message TargetedScopeMember {
   string inert_reason = 4;
   bool mandatory = 5;
   repeated string source_proof_ids = 6;
+  bool direct_root = 7;
+}
+
+message TargetedScopeDependency {
+  string edge_id = 1;
+  string from_member_id = 2;
+  string to_member_id = 3;
+  string relation = 4;
+  repeated string proof_ids = 5;
+}
+
+message TargetedAnalyzerCompatibility {
+  string analyzer_family = 1;
+  infinium.common.v1.SemanticVersion analyzer_version = 2;
+  infinium.common.v1.SemanticVersion semantic_contract_version = 3;
+  infinium.common.v1.SemanticVersion identity_contract_version = 4;
+  string compatibility_proof_id = 5;
+  string compatibility_proof_fingerprint_sha256 = 6;
+  bool compatible = 7;
+  string inert_reason = 8;
+  string analyzer_declaration_id = 9;
+}
+
+message TargetedArtifactDecision {
+  string artifact_kind = 1;
+  string artifact_id = 2;
+  string disposition = 3;
+  string validity_proof_id = 4;
+  string validity_proof_fingerprint_sha256 = 5;
+  string inert_reason = 6;
+}
+
+message TargetedPreparationWork {
+  uint64 direct_root_count = 1;
+  uint64 expanded_member_count = 2;
+  uint64 dependency_edge_count = 3;
+  uint64 maximum_members = 4;
+  uint64 maximum_edges = 5;
+  uint64 matched_executable = 6;
+  uint64 changed_correlated = 7;
+  uint64 proven_absent = 8;
+  uint64 proven_not_applicable = 9;
+  uint64 ambiguous = 10;
+  uint64 unsupported = 11;
+  uint64 inaccessible = 12;
+  uint64 malformed = 13;
+  uint64 missing_required_proof = 14;
+}
+
+message TargetedAcquisitionEvidence {
+  string acquisition_request_fingerprint_sha256 = 1;
+  string sealed_input_fingerprint_sha256 = 2;
+  string producer_family = 3;
+  infinium.common.v1.SemanticVersion producer_version = 4;
+  string support_manifest_id = 5;
+  string enumeration_policy_id = 6;
+  infinium.common.v1.SemanticVersion enumeration_policy_version = 7;
+  uint64 coordinator_fencing_epoch = 8;
+  uint64 attempt_fencing_token = 9;
+  string publication_id = 10;
+  string publication_payload_id = 11;
+  string staged_manifest_fingerprint_sha256 = 12;
+  string provenance_fingerprint_sha256 = 13;
+  infinium.common.v1.Instant published_at = 14;
+  string inert_terminal_reason = 15;
+  repeated string inert_terminal_gaps = 16;
+}
+
+message TargetedPreparationLifecycleEvent {
+  uint64 sequence = 1;
+  string owner = 2;
+  string event_kind = 3;
+  uint64 generation = 4;
+  uint64 coordinator_fencing_epoch = 5;
+  infinium.common.v1.Instant occurred_at = 6;
+  string evidence_fingerprint_sha256 = 7;
+  string inert_summary = 8;
 }
 
 message TargetedCorrelationCoverageRow {

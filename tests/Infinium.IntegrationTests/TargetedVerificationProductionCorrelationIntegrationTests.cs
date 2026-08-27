@@ -225,4 +225,107 @@ public sealed class TargetedVerificationProductionCorrelationIntegrationTests
         Assert.AreEqual(2L, coverage.PopulationDenominator);
         Assert.IsTrue(coverage.Rows.All(row => row.DenominatorEffect == "retained-gap"));
     }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    public void RawSemanticEqualityAndUnprovedSlotChangesNeverGrantTypedIdentity()
+    {
+        BethesdaSemanticRequest request = BethesdaSemanticTestSnapshot.Create("BETH-NPC-DEV");
+        BethesdaSemanticExtractionResult extracted = new BethesdaSemanticExtractor().Extract(request);
+        BethesdaSemanticSnapshot snapshot = extracted.Snapshot!;
+        CandidateDeliveredInputContract source = CandidateDeliveredInputAdapter.Create(
+            new("typed-correlation-source"), snapshot.SourceSnapshotId, new("context"),
+            new("configuration"), snapshot, null);
+        OpaqueId proof = new("typed-correlation-publication");
+
+        BethesdaOverrideChain rawRecord = snapshot.OverrideChains.Values.First();
+        BethesdaFaceGenFact rawAsset = snapshot.FaceGen[0];
+        string rawPluginName = snapshot.Plugins[0].PluginName;
+        foreach (TargetedScopeMemberContract hostile in new[]
+                 {
+                     new TargetedScopeMemberContract(new("hostile-record"), TargetedScopeMemberKind.Record,
+                         new(rawRecord.Identity.FormKey), "hostile raw form-key equality", true, [proof]),
+                     new TargetedScopeMemberContract(new("hostile-asset"), TargetedScopeMemberKind.Asset,
+                         new(rawAsset.Mesh.NormalizedRelativePath), "hostile raw path equality", true, [proof]),
+                     new TargetedScopeMemberContract(new("hostile-provider"), TargetedScopeMemberKind.Provider,
+                         new(rawPluginName), "hostile raw plugin-name equality", true, [proof]),
+                 })
+        {
+            TargetedCurrentObservationContract observation = TargetedVerificationExecutor.CorrelateCurrentMember(
+                hostile, source, source, snapshot, extracted, request.AcceptedSnapshot, proof);
+            Assert.AreNotEqual(TargetedCorrelationStatus.MatchedExecutable, observation.Status, hostile.MemberId.Value);
+            Assert.AreNotEqual(TargetedCorrelationStatus.ChangedCorrelated, observation.Status, hostile.MemberId.Value);
+        }
+
+        CandidateDeliveredLinkFactContract contributionFact = source.LinkFacts[0];
+        TargetedScopeMemberContract contribution = new(new("changed-contribution"),
+            TargetedScopeMemberKind.Contribution, contributionFact.PriorContributionId,
+            "typed source contribution", true, [proof]);
+        OpaqueId changedContributionId = new("typed-current-contribution-without-continuity-proof");
+        CandidateDeliveredInputContract changedContributionTarget = source with
+        {
+            LinkFacts = source.LinkFacts.Select(item => item with
+            {
+                PriorContributionId = item.PriorContributionId == contribution.StableIdentity
+                    ? changedContributionId : item.PriorContributionId,
+                WinningContributionId = item.WinningContributionId == contribution.StableIdentity
+                    ? changedContributionId : item.WinningContributionId,
+            }).ToArray(),
+        };
+        BethesdaSemanticSnapshot contributionTargetSnapshot = snapshot with
+        {
+            OverrideChains = new Dictionary<string, BethesdaOverrideChain>(StringComparer.OrdinalIgnoreCase),
+        };
+        TargetedCurrentObservationContract changedContribution = TargetedVerificationExecutor.CorrelateCurrentMember(
+            contribution, source, changedContributionTarget, contributionTargetSnapshot,
+            extracted with { Snapshot = contributionTargetSnapshot }, request.AcceptedSnapshot, proof);
+        Assert.AreEqual(TargetedCorrelationStatus.Ambiguous, changedContribution.Status);
+        Assert.IsFalse(changedContribution.CorrelationQualified);
+        StringAssert.Contains(changedContribution.Reason, "no retained typed continuity");
+
+        CandidateDeliveredFaceGenFactContract assetFact = source.FaceGenFacts[0];
+        TargetedScopeMemberContract asset = new(new("changed-asset"), TargetedScopeMemberKind.Asset,
+            assetFact.MeshAssetId, "typed source asset", true, [proof]);
+        CandidateDeliveredInputContract changedAssetTarget = source with
+        {
+            FaceGenFacts = source.FaceGenFacts.Select(item => item with
+            {
+                MeshAssetId = item.MeshAssetId == asset.StableIdentity
+                    ? new("typed-current-asset-without-continuity-proof") : item.MeshAssetId,
+                TintAssetId = item.TintAssetId == asset.StableIdentity
+                    ? new("typed-current-asset-without-continuity-proof") : item.TintAssetId,
+            }).ToArray(),
+        };
+        BethesdaSemanticSnapshot assetTargetSnapshot = snapshot with { FaceGen = [] };
+        TargetedCurrentObservationContract changedAsset = TargetedVerificationExecutor.CorrelateCurrentMember(
+            asset, source, changedAssetTarget, assetTargetSnapshot,
+            extracted with { Snapshot = assetTargetSnapshot }, request.AcceptedSnapshot, proof);
+        Assert.AreEqual(TargetedCorrelationStatus.Ambiguous, changedAsset.Status);
+        Assert.IsFalse(changedAsset.CorrelationQualified);
+
+        CandidateDeliveredLinkFactContract[] sourceContributionSlots = source.LinkFacts.Where(item =>
+            item.PriorContributionId == contribution.StableIdentity
+            || item.WinningContributionId == contribution.StableIdentity).ToArray();
+        CandidateDeliveredInputContract removedContributionTarget = source with
+        {
+            LinkFacts = source.LinkFacts.Where(item => item.PriorContributionId != contribution.StableIdentity
+                && item.WinningContributionId != contribution.StableIdentity
+                && !sourceContributionSlots.Any(slot => item.RecordParticipantId == slot.RecordParticipantId
+                    && item.Field == slot.Field && item.Component == slot.Component && item.Ordinal == slot.Ordinal))
+                .Append(contributionFact with
+                {
+                    PriorContributionId = new("unrelated-retained-prior-contribution"),
+                    WinningContributionId = new("unrelated-retained-winning-contribution"),
+                    Field = "unrelated-retained-slot",
+                }).ToArray(),
+        };
+        Assert.IsTrue(removedContributionTarget.LinkFacts.Any(item =>
+            item.RecordParticipantId == contributionFact.RecordParticipantId));
+        TargetedCurrentObservationContract removedContribution = TargetedVerificationExecutor.CorrelateCurrentMember(
+            contribution, source, removedContributionTarget, contributionTargetSnapshot,
+            extracted with { Snapshot = contributionTargetSnapshot }, request.AcceptedSnapshot, proof);
+        Assert.AreEqual(TargetedCorrelationStatus.ProvenAbsent, removedContribution.Status);
+        Assert.IsNull(removedContribution.CurrentExecutionMemberId);
+    }
 }

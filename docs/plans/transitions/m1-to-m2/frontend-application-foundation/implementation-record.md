@@ -1443,6 +1443,104 @@ the format gate caught one misplaced `Microsoft.Data.Sqlite` import; the import
 was ordered, its focused format check passed, and the complete floor above was
 rerun on the corrected candidate.
 
+## Corrected Checkpoint C contract and identity correction candidate
+
+Date: 2026-08-27
+Starting commit: `08dffeb2723df2af2c1d478e1ceb991ec5e0183a`
+Status: Implementation candidate awaiting corrected Checkpoint C architecture-steward review
+
+Architecture-steward review found that the preparation status projection was
+smaller than the accepted addendum, canonical source signatures were derived
+from result-index metadata, and production correlation still allowed raw
+semantic equality or slot position to imply identity. The same mutable
+candidate corrected all three findings without changing ADR-0038 meaning.
+
+The application `1.11.0` preparation readback now exposes, through generated
+C# protobuf/gRPC clients, the exact canonical finding or case signature plus
+analyzer family/version, semantic-contract version, and identity-contract
+version. It independently pages at most 100 scope members, dependency edges,
+target analyzers, lifecycle events, and artifact reuse or recomputation
+decisions. It projects capture
+time/profile revision, acquisition request/input
+seals, attempts/fences, publication/provenance, terminal evidence, context and
+configuration fingerprints, manifest identity/fingerprint, direct roots,
+dependency/proof edges, one coverage row per visible member, correlation policy,
+target-analyzer compatibility, recompute/reuse validity proofs, denominator,
+expected work/limits, coverage classifications, gaps, and startability. Returned
+data remains typed, inert, path-free, and free of payload bodies, commands,
+SQL, URLs, credentials, generic execution, or renderer authority.
+
+`TargetedVerificationSourceIdentity` now resolves exactly one retained finding
+or case from the immutable canonical payload and treats its `IdentityEnvelope`
+as authority. Begin, plan construction, readback, and start compare the result
+index only as a bounded lookup and then bind/revalidate the canonical logical
+identity, signature, analyzer family/version, semantic version, and identity
+version. Start rejects signature or version substitution before any successor
+run, command, operation input, admission, lineage, or scheduling mutation.
+Supported and lead-only case projection kinds are normalized only for lookup;
+their canonical case envelope remains authoritative.
+
+Production correlation now compares raw Bethesda/MO2 semantic values only
+after applying the exact `candidate-delivered-source` typed identity function.
+Raw plugin names, form keys, participant/contribution strings, and normalized
+paths cannot equal a source stable ID directly. A different contribution or
+asset in the same record/field/component/ordinal or NPC/mesh/tint slot is
+`Ambiguous` without retained typed continuity/equivalence/provider-lineage
+proof and is non-startable. Independently removed contributions can still be
+`ProvenAbsent` when complete qualified enumeration contains neither their
+typed identity nor a conflicting same-slot mapping. Qualified processing
+`Unsupported`, `Inaccessible`, and `Malformed` states remain reachable only
+after exact identity correlation and retain limited-plan denominator gaps.
+
+Focused evidence includes generated-message round trip of every new field;
+unknown request-field and invalid-bound rejection; real named-pipe finding and
+case identity-envelope readback; independent member, dependency, analyzer,
+lifecycle, and artifact pagination;
+raw-name/path/form-key adversarial equality; contribution and asset slot
+changes without continuity proof; removed contribution with its record still
+present; all-absent and mixed-absence denominator/no-fabrication planner cases;
+qualified limited states; source signature/version tamper with zero partial
+writes; and the unseeded begin through fresh capture, semantic acquisition,
+production plan, exact `managed-analysis-v1`, completion, and lineage readback
+path. Storage remains schema `16`, storage contract `1.15.0`, and fingerprint
+`727285fbdb9a4a91e850a6bfad3749262be75e6388eae14edf9954eed23d783c`:
+the append-only rows already retained the required evidence, so this correction
+adds bounded read queries rather than a new database migration or expected-object
+shape. Unaccepted schema-1.0 targeted plans are invalidated by the clean-break
+schema-1.1 validator rather than migrated into successor authority.
+
+Application contract `1.11.0`, domain contract `1.5.0`, and the persisted
+`TargetedVerificationPlan` schema `1.1.0` are the advanced contract axes.
+Renderer contract `1.1.0`, all renderer operation mappings, 48
+declared/42 implemented RPCs, and generated-output ownership are unchanged.
+The protobuf contract-set fingerprint is
+`eaf72f2bd8c04ad16035ff7ae45ea4c08b514216a0b0f07ce50e7560c55342d8`;
+C# generated output remains build-owned by `Grpc.Tools` under
+`src/Infinium.Application/Infinium.Application.csproj`. Checkpoint C, WP5,
+WP6, Phase D, and M2 remain unaccepted/inactive.
+
+The consolidated correction review found and fixed four additional must-fix
+defects on the same candidate: canonical bytes were still selected through the
+result index instead of the retained finding/case checkpoint; dependency and
+target-analyzer lists lacked independent cursors; an unsigned lifecycle cursor
+could overflow the signed persistence boundary; and the changed persisted plan
+bytes still declared schema 1.0.0. Re-review confirmed checkpoint-selected
+canonical bytes, five independently bounded pages, typed overflow rejection,
+schema 1.1.0 invalidation, and typed drift failures with no renderer or generic
+execution authority.
+
+Final focused verification passed 9 targeted planner/reconciliation unit tests,
+4 preparation-contract tests, and 4 production/named-pipe integration tests.
+The first complete-floor attempt passed all 738 tests with 10 expected skips but
+found whitespace-only formatter drift in two expanded test files. The same
+candidate was formatted, its 5 directly affected tests and focused format check
+passed, and changed-surface re-review found no semantic change. The repeated
+complete floor then passed locked restore, warning-free Release build, all 738
+tests with the same 10 expected skips, full format verification, documentation
+validation, functional naming, dependency-manifest check, and `git diff --check`.
+Repository-owned `dotnet`/`testhost`/`vstest` survivor count was zero after every
+.NET batch.
+
 ## Final closeout fields
 
 WP9 will replace this placeholder with the accepted contract maturity,

@@ -174,6 +174,53 @@ public sealed class FindingCasePipelineTests
     [TestMethod]
     [TestCategory("Unit"), TestCategory("Cases")]
     [TestProperty("Category", "Unit"), TestProperty("Category", "Cases")]
+    public void ZeroCurrentHypothesesUseCompleteCoverageForNotObservedAndIncompleteCoverageForNotEvaluated()
+    {
+        FindingCaseContract baseline = FindingCasePipeline.Execute(CreateInput("run-zero-baseline"));
+        PriorFindingContract prior = PriorFindings(baseline)
+            .OrderBy(item => item.FindingOccurrenceId.Value, StringComparer.Ordinal).First();
+        FindingCaseInputContract empty = CreateInput("run-zero-current", priorFindings: [prior]);
+        CandidateAnalysisContract noHypotheses = CandidatePipeline.Execute(new CandidatePipelineRequest(
+            Id("run-zero-current"), Id("population-zero-current"), Id("candidate-policy"), Id("candidate-threshold"),
+            CandidateExecutionLimits.Default, new CandidatePopulationContext(null),
+            [new Source(Id("analyzer-cases"), [])])).Analysis;
+        empty = Reidentify(empty with
+        {
+            CandidateAnalysis = noHypotheses,
+            FindingEvidenceFacts = [],
+            FindingRecommendationFacts = [],
+            SharedCauseProofs = [],
+            RelatedFindingFacts = [],
+            ReconciliationCandidateFacts = [],
+            CoveragePopulationFacts = empty.CoveragePopulationFacts.Select(item => item with
+            {
+                EvidenceIds = [Id("complete-targeted-coverage-proof")],
+            }).ToArray(),
+        });
+
+        FindingCaseContract complete = FindingCasePipeline.Execute(empty);
+        Assert.IsTrue(complete.ReconciliationAssessments.Any(item =>
+            item.PriorOccurrenceId == prior.FindingOccurrenceId && item.Outcome == ReconciliationOutcome.NotObserved));
+
+        FindingCaseInputContract incomplete = Reidentify(empty with
+        {
+            CoverageMemberFacts = empty.CoverageMemberFacts.Select(item => item with
+            {
+                State = CoverageMemberState.SkippedByLimit,
+                Reason = "bounded targeted coverage gap",
+                MissingCapabilityOrInformation = "current member was not evaluated",
+            }).ToArray(),
+        });
+        FindingCaseContract unknown = FindingCasePipeline.Execute(incomplete);
+        Assert.IsTrue(unknown.ReconciliationAssessments.Any(item =>
+            item.PriorOccurrenceId == prior.FindingOccurrenceId && item.Outcome == ReconciliationOutcome.NotEvaluated));
+        Assert.IsFalse(unknown.ReconciliationAssessments.Any(item =>
+            item.PriorOccurrenceId == prior.FindingOccurrenceId && item.Outcome == ReconciliationOutcome.NotObserved));
+    }
+
+    [TestMethod]
+    [TestCategory("Unit"), TestCategory("Cases")]
+    [TestProperty("Category", "Unit"), TestProperty("Category", "Cases")]
     public void TaxonomyHistoryPreservesAllMergeSourcesAndDoesNotMutateProductAssignments()
     {
         FindingCaseInputContract input = CreateInput("run-taxonomy");
@@ -365,7 +412,9 @@ public sealed class FindingCasePipelineTests
         public OpaqueId AnalyzerId => analyzerId;
         public AnalyzerDeclarationContract Declaration { get; } = CandidateAnalyzerDeclarations.Create(
             analyzerId, Math.Max(1, members.Count), 1_000_000,
-            supportedShapes: members.Select(item => item.JoinKind).Distinct(StringComparer.Ordinal).ToArray());
+            supportedShapes: members.Count == 0
+                ? ["typed-causal-join"]
+                : members.Select(item => item.JoinKind).Distinct(StringComparer.Ordinal).ToArray());
         public IReadOnlyList<CausalJoinPopulationMember> DeclarePopulation(
             CandidatePopulationContext context, CancellationToken cancellationToken = default) => members;
         public IReadOnlyList<CausalJoinPopulationMember> ConstructPopulation(

@@ -487,6 +487,8 @@
         "Start admission revalidates source and target identities, capture/acquisition seals, canonical plan projections, reuse/configuration/context proofs, derived inputs, request bytes, deadline, and fence before mutation",
         "One-shot gestures are globally unique across preparation, cancellation, ordinary prepared-run start, and targeted start while exact retries remain idempotent",
         "A primary unseeded named-pipe test executes actual snapshot and semantic producers, production planning, managed-analysis-v1 completion, and initiation/reconciliation readback",
+        "Preparation readback exposes canonical identity versions, capture/acquisition lifecycle and seals, dependency proofs, analyzer compatibility, reuse/recompute proofs, limits, classifications, and bounded pages",
+        "Typed correlation rejects raw name, form-key, and path equality; contribution or asset slot changes remain non-startable without retained typed continuity proof",
         "StartTargetedVerification atomically admits exactly managed-analysis-v1 and remains native-only-never-map; no Phase D renderer authority exists"
       ],
       "gap": "The corrected Phase C candidate requires architecture-steward Checkpoint C review; this record does not accept WP5, WP6, Checkpoint C, Phase D, or M2.",

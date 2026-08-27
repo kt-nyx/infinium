@@ -53,9 +53,11 @@ public sealed class ResultsReviewApplicationContractTests
     [TestProperty("Category", "Contract")]
     public void PhaseCComputedVersionAxesAndFingerprintAreExact()
     {
+        Assert.AreEqual("1.11.0", ProtocolConstants.Compatibility.ApplicationContract.Value);
+        Assert.AreEqual("1.5.0", ProtocolConstants.Compatibility.DomainContract.Value);
         Assert.AreEqual("1.15.0", ProtocolConstants.StorageContractVersion);
         Assert.AreEqual(
-            "c51f6c400547b948fd7f350ef5ac72f29d6032b2671cfba957a7be71cfc44e74",
+            "eaf72f2bd8c04ad16035ff7ae45ea4c08b514216a0b0f07ce50e7560c55342d8",
             Convert.ToHexStringLower(ProtocolConstants.Version.SchemaFingerprintSha256.Span));
     }
 
@@ -108,6 +110,197 @@ public sealed class ResultsReviewApplicationContractTests
                 Disposition = "investigating",
                 InertAnnotation = new string('x', 16_385),
             }));
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationContractValidator.ValidatePhaseC(
+            new GetTargetedVerificationPreparationRequest
+            {
+                PreparationId = "targeted-preparation-contract-id",
+                MaximumMembers = 10,
+                MaximumLifecycleEvents = 101,
+                MaximumArtifactDecisions = 10,
+                MaximumDependencies = 10,
+                MaximumTargetAnalyzers = 10,
+            }));
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationContractValidator.ValidatePhaseC(
+            new GetTargetedVerificationPreparationRequest
+            {
+                PreparationId = "targeted-preparation-contract-id",
+                MaximumMembers = 10,
+                MaximumLifecycleEvents = 10,
+                AfterLifecycleSequence = ulong.MaxValue,
+                MaximumArtifactDecisions = 10,
+                MaximumDependencies = 10,
+                MaximumTargetAnalyzers = 10,
+            }));
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationContractValidator.ValidatePhaseC(
+            new GetTargetedVerificationPreparationRequest
+            {
+                PreparationId = "targeted-preparation-contract-id",
+                MaximumMembers = 10,
+                MaximumLifecycleEvents = 10,
+                MaximumArtifactDecisions = 101,
+                MaximumDependencies = 10,
+                MaximumTargetAnalyzers = 10,
+            }));
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationContractValidator.ValidatePhaseC(
+            new GetTargetedVerificationPreparationRequest
+            {
+                PreparationId = "targeted-preparation-contract-id",
+                MaximumMembers = 10,
+                MaximumLifecycleEvents = 10,
+                MaximumArtifactDecisions = 10,
+                AfterArtifactKind = "candidate-delivered-input",
+                MaximumDependencies = 10,
+                MaximumTargetAnalyzers = 10,
+            }));
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationContractValidator.ValidatePhaseC(
+            new GetTargetedVerificationPreparationRequest
+            {
+                PreparationId = "targeted-preparation-contract-id",
+                MaximumMembers = 10,
+                MaximumLifecycleEvents = 10,
+                MaximumArtifactDecisions = 10,
+                MaximumDependencies = 101,
+                MaximumTargetAnalyzers = 10,
+            }));
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationContractValidator.ValidatePhaseC(
+            new GetTargetedVerificationPreparationRequest
+            {
+                PreparationId = "targeted-preparation-contract-id",
+                MaximumMembers = 10,
+                MaximumLifecycleEvents = 10,
+                MaximumArtifactDecisions = 10,
+                MaximumDependencies = 10,
+                MaximumTargetAnalyzers = 101,
+            }));
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
+    public void TargetedPreparationProjectionRoundTripsCompleteTypedReadback()
+    {
+        TargetedVerificationPreparation value = new()
+        {
+            PreparationId = "targeted-preparation-roundtrip",
+            Revision = 7,
+            PreparationFingerprintSha256 = new string('a', 64),
+            State = TargetedVerificationPreparationState.ReadyWithGaps,
+            SourceRunId = new RunId { Value = "source-run-roundtrip" },
+            SourceFindingOccurrenceId = "finding-roundtrip",
+            SourceLogicalId = "logical-roundtrip",
+            SourcePayloadId = "payload-roundtrip",
+            SourcePayloadFingerprintSha256 = new string('b', 64),
+            SourceCanonicalSignatureSha256 = new string('c', 64),
+            SourceAnalyzerFamily = "bethesda-link-consistency",
+            SourceAnalyzerVersion = new SemanticVersion { Value = "4.3.2" },
+            SourceSemanticContractVersion = new SemanticVersion { Value = "3.2.1" },
+            SourceIdentityContractVersion = new SemanticVersion { Value = "2.1.0" },
+            SourceSnapshotId = "source-snapshot-roundtrip",
+            TargetSnapshotId = "target-snapshot-roundtrip",
+            TargetSnapshotCapturedAt = new Instant { UnixSeconds = 1_800_000_000 },
+            ConfirmedProfileRevision = 9,
+            EvidenceAcquisitionId = "acquisition-roundtrip",
+            AnalysisContextFingerprintSha256 = new string('d', 64),
+            EffectiveConfigurationFingerprintSha256 = new string('e', 64),
+            ResolvedInputManifestId = "manifest-roundtrip",
+            ResolvedInputManifestFingerprintSha256 = new string('f', 64),
+            CorrelationCoverageId = "coverage-roundtrip",
+            CorrelationCoverageFingerprintSha256 = new string('1', 64),
+            CorrelationPolicyId = "typed-correlation",
+            CorrelationPolicyVersion = new SemanticVersion { Value = "1.0.0" },
+            CorrelationPolicyFingerprintSha256 = new string('2', 64),
+            NextDependencyEdgeId = "edge-cursor-roundtrip",
+            NextTargetAnalyzerId = "analyzer-cursor-roundtrip",
+            ExpectedWork = new TargetedPreparationWork
+            {
+                DirectRootCount = 1,
+                ExpandedMemberCount = 2,
+                DependencyEdgeCount = 1,
+                MaximumMembers = 4096,
+                MaximumEdges = 16384,
+                Unsupported = 1,
+            },
+            AcquisitionEvidence = new TargetedAcquisitionEvidence
+            {
+                AcquisitionRequestFingerprintSha256 = new string('3', 64),
+                SealedInputFingerprintSha256 = new string('4', 64),
+                ProducerFamily = "bethesda-semantic-extraction",
+                ProducerVersion = new SemanticVersion { Value = "1.0.0" },
+                SupportManifestId = "support-manifest",
+                EnumerationPolicyId = "qualified-enumeration",
+                EnumerationPolicyVersion = new SemanticVersion { Value = "1.0.0" },
+                CoordinatorFencingEpoch = 11,
+                AttemptFencingToken = 12,
+                PublicationId = "publication-roundtrip",
+                PublicationPayloadId = "publication-payload-roundtrip",
+                StagedManifestFingerprintSha256 = new string('5', 64),
+                ProvenanceFingerprintSha256 = new string('6', 64),
+                PublishedAt = new Instant { UnixSeconds = 1_800_000_001 },
+            },
+        };
+        value.ScopeMembers.Add(new TargetedScopeMember
+        {
+            MemberId = "member-roundtrip",
+            Kind = TargetedScopeMemberKind.Contribution,
+            StableIdentity = "typed-stable-id",
+            InertReason = "required contribution",
+            Mandatory = true,
+            DirectRoot = true,
+            SourceProofIds = { "proof-roundtrip" },
+        });
+        value.ScopeDependencies.Add(new TargetedScopeDependency
+        {
+            EdgeId = "edge-roundtrip",
+            FromMemberId = "member-roundtrip",
+            ToMemberId = "member-expanded",
+            Relation = "record-contribution",
+            ProofIds = { "proof-roundtrip" },
+        });
+        value.TargetAnalyzers.Add(new TargetedAnalyzerCompatibility
+        {
+            AnalyzerDeclarationId = "bethesda-link-consistency",
+            AnalyzerFamily = value.SourceAnalyzerFamily,
+            AnalyzerVersion = value.SourceAnalyzerVersion,
+            SemanticContractVersion = value.SourceSemanticContractVersion,
+            IdentityContractVersion = value.SourceIdentityContractVersion,
+            CompatibilityProofId = "analyzer-proof",
+            CompatibilityProofFingerprintSha256 = new string('7', 64),
+            Compatible = true,
+            InertReason = "exact retained declaration",
+        });
+        value.ArtifactDecisions.Add(new TargetedArtifactDecision
+        {
+            ArtifactKind = "candidate-delivered-input",
+            ArtifactId = "candidate-input",
+            Disposition = "recompute",
+            ValidityProofId = "recompute-proof",
+            ValidityProofFingerprintSha256 = new string('8', 64),
+            InertReason = "fresh snapshot dependency",
+        });
+        value.LifecycleEvents.Add(new TargetedPreparationLifecycleEvent
+        {
+            Sequence = 3,
+            Owner = "evidence-acquisition",
+            EventKind = "published",
+            Generation = 1,
+            CoordinatorFencingEpoch = 11,
+            OccurredAt = new Instant { UnixSeconds = 1_800_000_002 },
+            EvidenceFingerprintSha256 = new string('9', 64),
+            InertSummary = "published",
+        });
+
+        TargetedVerificationPreparation reparsed = TargetedVerificationPreparation.Parser.ParseFrom(value.ToByteArray());
+        Assert.AreEqual(value, reparsed);
+        Assert.AreEqual("4.3.2", reparsed.SourceAnalyzerVersion.Value);
+        Assert.IsTrue(reparsed.ScopeMembers[0].DirectRoot);
+        Assert.AreEqual("record-contribution", reparsed.ScopeDependencies[0].Relation);
+        Assert.AreEqual("bethesda-link-consistency", reparsed.TargetAnalyzers[0].AnalyzerDeclarationId);
+        Assert.AreEqual("edge-cursor-roundtrip", reparsed.NextDependencyEdgeId);
+        Assert.AreEqual("analyzer-cursor-roundtrip", reparsed.NextTargetAnalyzerId);
+        Assert.AreEqual(1UL, reparsed.ExpectedWork.Unsupported);
+        Assert.AreEqual(12UL, reparsed.AcquisitionEvidence.AttemptFencingToken);
+        Assert.AreEqual("recompute", reparsed.ArtifactDecisions[0].Disposition);
+        Assert.AreEqual("published", reparsed.LifecycleEvents[0].EventKind);
     }
 
     private static IMessage[] ValidPhaseCRequests()
@@ -182,6 +375,10 @@ public sealed class ResultsReviewApplicationContractTests
             new GetTargetedVerificationPreparationRequest
             {
                 PreparationId = "targeted-preparation-contract-id", MaximumMembers = 10,
+                MaximumLifecycleEvents = 10,
+                MaximumArtifactDecisions = 10,
+                MaximumDependencies = 10,
+                MaximumTargetAnalyzers = 10,
             },
             new CancelTargetedVerificationPreparationRequest
             {

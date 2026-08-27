@@ -83,5 +83,16 @@ revalidates all retained authority before atomic start. WP5/WP6 are not accepted
 Checkpoint C receipt remains suspended pending architecture-steward review,
 and Phase D has not started.
 
+The latest contract correction completes the accepted preparation readback:
+generated native clients receive the canonical finding/case signature and
+producer/semantic/identity versions, capture and acquisition lifecycle/fencing/
+publication/provenance evidence, direct roots and dependency proofs, typed
+correlation coverage, analyzer compatibility, reuse/recompute proofs, and work
+limits through independent bounded pages. Canonical typed identities are now
+the only correlation authority; raw names, form keys, contribution strings,
+and paths cannot match a stable identity, and slot similarity alone cannot
+create changed-correlation authority. Application `1.11.0`, domain `1.5.0`,
+and persisted targeted-plan `1.1.0` identify the corrected contract bytes.
+
 M2 remains inactive until a separate accepted M2 plan exists. The transition's
 diagnostic React surface is development evidence, not the M2 interface.

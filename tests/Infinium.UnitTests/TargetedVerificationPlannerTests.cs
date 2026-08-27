@@ -146,6 +146,35 @@ public sealed class TargetedVerificationPlannerTests
 
     [TestMethod]
     [TestCategory("Unit")]
+    public void OneAbsentCaseMemberRetainsTheCompleteCaseDenominatorWithoutInventingExecution()
+    {
+        TargetedScopeMemberContract sourceCase = Member("case", TargetedScopeMemberKind.Case);
+        TargetedScopeMemberContract retained = Member("retained", TargetedScopeMemberKind.Candidate);
+        TargetedScopeMemberContract removed = Member("removed", TargetedScopeMemberKind.Candidate);
+        TargetedAnalysisScopeContract scope = Close([sourceCase], [sourceCase, retained, removed],
+        [
+            Edge("case-retained", sourceCase, retained, "case-member"),
+            Edge("case-removed", sourceCase, removed, "case-member"),
+        ]);
+        OpaqueId proof = new("complete-population-proof");
+
+        TargetedCorrelationCoverageContract coverage = Correlate(scope,
+        [
+            Observation(sourceCase, TargetedCorrelationStatus.ChangedCorrelated, true, true, sourceCase.MemberId, proof),
+            Observation(retained, TargetedCorrelationStatus.MatchedExecutable, true, true, retained.MemberId, proof),
+            Observation(removed, TargetedCorrelationStatus.ProvenAbsent, true, true, null, proof),
+        ]);
+
+        Assert.IsTrue(coverage.Startable);
+        Assert.AreEqual(3L, coverage.PopulationDenominator);
+        TargetedCorrelationCoverageRowContract absent = coverage.Rows.Single(row => row.ScopeMemberId == removed.MemberId);
+        Assert.IsNull(absent.CurrentExecutionMemberId);
+        Assert.AreEqual("completed-observation", absent.DenominatorEffect);
+        Assert.AreEqual(2, coverage.Rows.Count(row => row.CurrentExecutionMemberId is not null));
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
     public void PlanIdentityBindsCanonicalContentAndRejectsMutation()
     {
         TargetedScopeMemberContract member = Member("finding", TargetedScopeMemberKind.Finding);
@@ -155,8 +184,9 @@ public sealed class TargetedVerificationPlannerTests
             [Observation(member, TargetedCorrelationStatus.ChangedCorrelated, true, true, member.MemberId, proof)]);
         TargetedVerificationSourceContract source = new(new("source-run"), TargetedVerificationRootKind.Finding,
             new("source-occurrence"), new("source-logical"), new("source-payload"), new(new string('1', 64)),
-            new(new string('2', 64)), new("source-snapshot"), new("context"), new("configuration"), new("manifest"));
-        TargetedVerificationPlanContract draft = new("infinium/targeted-verification-plan", new(1, 0, 0),
+            new(new string('2', 64)), "analyzer-family", new(1, 2, 3), new(2, 0, 0), new(3, 0, 0),
+            new("source-snapshot"), new("context"), new("configuration"), new("manifest"));
+        TargetedVerificationPlanContract draft = new("infinium/targeted-verification-plan", new(1, 1, 0),
             new("targeted-plan-pending"), new("preparation"), 4, source, new("capture"), new("target-snapshot"),
             new(new string('3', 64)), new("acquisition"), new("semantic-output"), new(new string('4', 64)),
             scope, coverage, [], "scope-limited-no-readiness", true, false, [], [], new(new string('0', 64)));

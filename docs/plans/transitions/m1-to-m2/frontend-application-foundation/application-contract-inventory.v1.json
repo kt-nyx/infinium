@@ -4,17 +4,17 @@
   "status": "implementation-active",
   "last_reviewed": "2026-08-27",
   "audited_commit": "bd936a02562a8df1ddcb62f275cc45b6c225e594",
-  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy for the corrected targeted-verification implementation candidate authorized by ADR-0038 and its accepted WP6 addendum. The five native-only RPCs expose durable preparation, real fresh acquisition, production scope/correlation planning including qualified limited processing gaps, atomically revalidated managed-analysis-v1 successor admission, and lineage/readback without renderer authority. A primary generated-C# named-pipe test proves the complete preparation-to-completed-successor path without seeding a ready plan. Checkpoint C remains under architecture-steward review. Desktop delivery, Phase D, M2 activation, broad analyzer claims, and semantic-oracle qualification remain outside this candidate.",
+  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy for the corrected targeted-verification implementation candidate authorized by ADR-0038 and its accepted WP6 addendum. The five native-only RPCs expose durable preparation, canonical finding/case identity-envelope authority, complete bounded preparation evidence, real fresh acquisition, typed scope/correlation planning including qualified limited processing gaps, atomically revalidated managed-analysis-v1 successor admission, and lineage/readback without renderer authority. A primary generated-C# named-pipe test proves the complete preparation-to-completed-successor path without seeding a ready plan. Checkpoint C remains under architecture-steward review. Desktop delivery, Phase D, M2 activation, broad analyzer claims, and semantic-oracle qualification remain outside this candidate.",
   "protocol": {
     "package": "infinium.application.v1",
     "service": "ApplicationService",
     "major": 1,
-    "minor": 10,
-    "application_contract_version": "1.10.0",
-    "domain_contract_version": "1.4.0",
+    "minor": 11,
+    "application_contract_version": "1.11.0",
+    "domain_contract_version": "1.5.0",
     "storage_contract_version": "1.15.0",
     "renderer_contract_version": "1.1.0",
-    "schema_fingerprint_sha256": "c51f6c400547b948fd7f350ef5ac72f29d6032b2671cfba957a7be71cfc44e74",
+    "schema_fingerprint_sha256": "eaf72f2bd8c04ad16035ff7ae45ea4c08b514216a0b0f07ce50e7560c55342d8",
     "declared_rpc_count": 48,
     "implemented_rpc_count": 42,
     "bounds": {
@@ -524,7 +524,7 @@
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#GetResultOverview",
       "current_consumers": ["generated C# contracts and ResultReviewWorkflowIntegrationTests; desktop consumer remains WP7"],
       "persistence_readback": ["AuthoritativeStore.GetResultOverview over immutable finding/case and coverage state"],
-      "bounds_and_versions": ["Application 1.10.0, projection version 1, bounded summary/failure/gap disclosure, explicit scope-limited or no-readiness state"],
+      "bounds_and_versions": ["Application 1.11.0, projection version 1, bounded summary/failure/gap disclosure, explicit scope-limited or no-readiness state"],
       "requirement_ids": ["PROD-004", "COVER-003", "UX-001"],
       "evaluation_ids": ["EVAL-0027", "EVAL-0085", "EVAL-0092"],
       "security_authorities": ["ADR-0019", "ADR-0021", "ADR-0037"],
@@ -667,8 +667,8 @@
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.TargetedVerification.cs#GetTargetedVerificationPreparation",
       "current_consumers": ["generated C# native diagnostic status and inspectable-plan consumer; no renderer mapping"],
-      "persistence_readback": ["Append-only preparation/acquisition events and rebuildable projections plus content-addressed plan, scope, correlation, reuse, and evidence publication records"],
-      "bounds_and_versions": ["At most 100 scope rows per cursor-bound read; every prepared member has exactly one correlation status and remains in the denominator"],
+      "persistence_readback": ["Append-only preparation/acquisition events and rebuildable projections plus content-addressed plan, direct roots, dependency proofs, correlation, reuse, capture, fencing, publication, provenance, and evidence records"],
+      "bounds_and_versions": ["Application 1.11.0, domain 1.5.0, and TargetedVerificationPlan 1.1.0; independent pages of at most 100 scope rows, dependency edges, target analyzers, lifecycle events, and artifact decisions; exact canonical source signature and producer/semantic/identity versions; typed limits, classifications, decisions, proofs, and target-analyzer compatibility"],
       "requirement_ids": ["FIND-005", "FIND-012", "FIND-014", "OPS-002", "SCOPE-004", "SNAP-003"],
       "evaluation_ids": ["EVAL-0019", "EVAL-0020", "EVAL-0027", "EVAL-0040", "EVAL-0043", "EVAL-0048", "EVAL-0069", "EVAL-0079", "EVAL-0093"],
       "security_authorities": ["ADR-0016", "ADR-0019", "ADR-0021", "ADR-0022", "ADR-0037", "ADR-0038"],
@@ -769,7 +769,7 @@
         "AuthoritativeStore.ListSetupObjects and FindSetupObject"
       ],
       "bounds_and_versions": [
-        "Application 1.10.0, projection version 1, at most 100 saved configurations, closed tool/profile/provider projections"
+        "Application 1.11.0, projection version 1, at most 100 saved configurations, closed tool/profile/provider projections"
       ],
       "requirement_ids": [
         "TOOL-001",
@@ -1163,7 +1163,7 @@
     },
     {
       "family": "targeted-verification-preparation",
-      "source": "application.proto targeted preparation RPC/messages, TargetedVerificationContracts, TargetedVerificationExecutor, and AuthoritativeStore targeted preparation/acquisition persistence",
+      "source": "application.proto targeted preparation RPC/messages, TargetedVerificationContracts, TargetedVerificationSourceIdentity, TargetedVerificationExecutor, and AuthoritativeStore targeted preparation/acquisition persistence/readback",
       "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6",
       "maturity": "implementation-active"
     },
@@ -1187,7 +1187,7 @@
     },
     {
       "family": "targeted-verification-readback",
-      "source": "ApplicationGrpcService.TargetedVerification bounded preparation/successor readback and AuthoritativeStore immutable initiation/reconciliation lineage",
+      "source": "ApplicationGrpcService.TargetedVerification bounded member/dependency/analyzer/lifecycle/artifact preparation projection and successor readback, AuthoritativeStore append-only capture/acquisition evidence queries, and immutable initiation/reconciliation lineage",
       "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6",
       "maturity": "implementation-active"
     }

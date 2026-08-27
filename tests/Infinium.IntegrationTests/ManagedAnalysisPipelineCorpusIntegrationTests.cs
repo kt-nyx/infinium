@@ -404,6 +404,44 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             Assert.IsNotEmpty(sourceDetail.Detail.SubjectIds);
             ManagedAnalysisOrchestrationRequest sourceManaged = JsonSerializer.Deserialize<ManagedAnalysisOrchestrationRequest>(
                 store.GetRunOperation(cleanRunId)!.RequestJson, ContractJsonSerializer.Options)!;
+            ResultItemPersistenceRecord sourceCaseItem = store.ListResultItems(cleanRunId, ["supported-case"],
+                string.Empty, "identity", 1, null).Items.Single();
+            FindingCaseContract sourceCasePayload = FindingCaseJsonCodec.Deserialize(
+                store.ReadFindingCasePayload(sourceCaseItem.SourcePayloadId));
+            AnalysisCaseContract canonicalSourceCase = sourceCasePayload.Cases.Single(item =>
+                item.CaseOccurrenceId.Value == sourceCaseItem.ItemId);
+            const string casePreparationJson = "{\"schema\":\"case-readback-preparation\"}";
+            string caseCaptureJson = JsonSerializer.Serialize(qualifiedCaptureAssignment);
+            TargetedPreparationPersistenceRecord casePreparation = store.CreateTargetedPreparation(new(
+                "case-readback-command", "case-readback-preparation", "case-readback-gesture",
+                casePreparationJson, Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(casePreparationJson))),
+                cleanRunId, "case", sourceCaseItem.ItemId, "profile-targeted", 1, targetedConfigurationId, 1,
+                runBinding.AnalysisContextId, 1, sourceManaged.AnalysisContext.CanonicalFingerprint.Value,
+                "EvaluationHarness", DateTimeOffset.UtcNow.AddMinutes(2), "case-readback-capture",
+                caseCaptureJson, Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(caseCaptureJson)))),
+                authority.FencingEpoch, DateTimeOffset.UtcNow);
+            GetTargetedVerificationPreparationResponse caseReadback =
+                await client.GetTargetedVerificationPreparationAsync(new GetTargetedVerificationPreparationRequest
+                {
+                    PreparationId = casePreparation.PreparationId,
+                    MaximumMembers = 1,
+                    MaximumLifecycleEvents = 10,
+                    MaximumArtifactDecisions = 10,
+                    MaximumDependencies = 10,
+                    MaximumTargetAnalyzers = 10,
+                }).ResponseAsync;
+            Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Preparation,
+                caseReadback.ResultCase, caseReadback.Failure?.Detail);
+            Assert.AreEqual(canonicalSourceCase.IdentityEnvelope.CanonicalSignature.Value,
+                caseReadback.Preparation.SourceCanonicalSignatureSha256);
+            Assert.AreEqual(canonicalSourceCase.IdentityEnvelope.AnalyzerFamily,
+                caseReadback.Preparation.SourceAnalyzerFamily);
+            Assert.AreEqual(canonicalSourceCase.IdentityEnvelope.AnalyzerVersion.ToString(),
+                caseReadback.Preparation.SourceAnalyzerVersion.Value);
+            Assert.AreEqual(canonicalSourceCase.IdentityEnvelope.SemanticContractVersion.ToString(),
+                caseReadback.Preparation.SourceSemanticContractVersion.Value);
+            Assert.AreEqual(canonicalSourceCase.IdentityEnvelope.IdentityContractVersion.ToString(),
+                caseReadback.Preparation.SourceIdentityContractVersion.Value);
             BeginTargetedVerificationPreparationRequest beginRequest = new()
             {
                 IdempotencyKey = "targeted-native-begin",
@@ -441,6 +479,10 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 {
                     PreparationId = begun.Preparation.PreparationId,
                     MaximumMembers = 100,
+                    MaximumLifecycleEvents = 100,
+                    MaximumArtifactDecisions = 100,
+                    MaximumDependencies = 100,
+                    MaximumTargetAnalyzers = 100,
                 }).ResponseAsync;
             Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Preparation,
                 begunStatus.ResultCase, begunStatus.Failure?.Detail);
@@ -496,6 +538,10 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                         {
                             PreparationId = begun.Preparation.PreparationId,
                             MaximumMembers = 100,
+                            MaximumLifecycleEvents = 100,
+                            MaximumArtifactDecisions = 100,
+                            MaximumDependencies = 100,
+                            MaximumTargetAnalyzers = 100,
                         }).ResponseAsync;
                     Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Preparation,
                         productionReadyStatus.ResultCase, productionReadyStatus.Failure?.Detail);
@@ -519,6 +565,88 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             Assert.IsNotEmpty(productionReadyStatus.Preparation.EvidenceAcquisitionId);
             Assert.AreEqual(1UL, productionReadyStatus.Preparation.EvidenceAcquisitionAttemptCount);
             Assert.IsNotEmpty(productionReadyStatus.Preparation.EvidenceAcquisitionAttemptId);
+            TargetedVerificationPlanContract productionPlan = store.ReadTargetedPlan(
+                productionReadyStatus.Preparation.PreparationId);
+            ResultItemPersistenceRecord productionSourceItem = store.GetResultItem(cleanRunId, sourceFinding.ItemId);
+            FindingCaseContract productionCanonical = FindingCaseJsonCodec.Deserialize(
+                store.ReadFindingCasePayload(productionSourceItem.SourcePayloadId));
+            FindingContract productionCanonicalFinding = productionCanonical.Findings.Single(item =>
+                item.FindingOccurrenceId.Value == sourceFinding.ItemId);
+            Assert.AreEqual(productionCanonicalFinding.IdentityEnvelope.CanonicalSignature.Value,
+                productionReadyStatus.Preparation.SourceCanonicalSignatureSha256);
+            Assert.AreEqual(productionCanonicalFinding.IdentityEnvelope.AnalyzerFamily,
+                productionReadyStatus.Preparation.SourceAnalyzerFamily);
+            Assert.AreEqual(productionCanonicalFinding.IdentityEnvelope.AnalyzerVersion.ToString(),
+                productionReadyStatus.Preparation.SourceAnalyzerVersion.Value);
+            Assert.AreEqual(productionCanonicalFinding.IdentityEnvelope.SemanticContractVersion.ToString(),
+                productionReadyStatus.Preparation.SourceSemanticContractVersion.Value);
+            Assert.AreEqual(productionCanonicalFinding.IdentityEnvelope.IdentityContractVersion.ToString(),
+                productionReadyStatus.Preparation.SourceIdentityContractVersion.Value);
+            Assert.AreEqual(productionPlan.Scope.DirectRoots.Count,
+                productionReadyStatus.Preparation.ScopeMembers.Count(item => item.DirectRoot));
+            Assert.AreEqual(productionPlan.Scope.Dependencies.Count,
+                productionReadyStatus.Preparation.ScopeDependencies.Count);
+            Assert.AreEqual(productionPlan.ReuseDecisions.Count,
+                productionReadyStatus.Preparation.ArtifactDecisions.Count);
+            Assert.AreEqual(productionPlan.Scope.MaximumMembers,
+                checked((long)productionReadyStatus.Preparation.ExpectedWork.MaximumMembers));
+            Assert.AreEqual(productionPlan.CorrelationCoverage.CoverageId.Value,
+                productionReadyStatus.Preparation.CorrelationCoverageId);
+            Assert.IsNotNull(productionReadyStatus.Preparation.TargetSnapshotCapturedAt);
+            Assert.IsTrue(productionReadyStatus.Preparation.TargetSnapshotCapturedAt.UnixSeconds > 0);
+            Assert.IsNotEmpty(productionReadyStatus.Preparation.EffectiveConfigurationFingerprintSha256);
+            Assert.IsNotEmpty(productionReadyStatus.Preparation.ResolvedInputManifestFingerprintSha256);
+            Assert.IsNotEmpty(productionReadyStatus.Preparation.AcquisitionEvidence.PublicationId);
+            Assert.IsNotEmpty(productionReadyStatus.Preparation.AcquisitionEvidence.ProvenanceFingerprintSha256);
+            Assert.IsTrue(productionReadyStatus.Preparation.AcquisitionEvidence.AttemptFencingToken > 0);
+            Assert.IsNotEmpty(productionReadyStatus.Preparation.LifecycleEvents);
+            Assert.HasCount(1, productionReadyStatus.Preparation.TargetAnalyzers);
+            Assert.IsTrue(productionReadyStatus.Preparation.TargetAnalyzers[0].Compatible);
+
+            GetTargetedVerificationPreparationResponse firstPage =
+                await client.GetTargetedVerificationPreparationAsync(new GetTargetedVerificationPreparationRequest
+                {
+                    PreparationId = begun.Preparation.PreparationId,
+                    MaximumMembers = 1,
+                    MaximumLifecycleEvents = 1,
+                    MaximumArtifactDecisions = 1,
+                    MaximumDependencies = 1,
+                    MaximumTargetAnalyzers = 1,
+                }).ResponseAsync;
+            Assert.HasCount(1, firstPage.Preparation.ScopeMembers);
+            Assert.IsNotEmpty(firstPage.Preparation.NextMemberCursor);
+            Assert.HasCount(1, firstPage.Preparation.LifecycleEvents);
+            Assert.IsTrue(firstPage.Preparation.NextLifecycleSequence > 0);
+            Assert.HasCount(1, firstPage.Preparation.ArtifactDecisions);
+            Assert.IsNotEmpty(firstPage.Preparation.NextArtifactKind);
+            Assert.IsNotEmpty(firstPage.Preparation.NextArtifactId);
+            Assert.IsTrue(productionPlan.Scope.Dependencies.Count > 1);
+            Assert.HasCount(1, firstPage.Preparation.ScopeDependencies);
+            Assert.IsNotEmpty(firstPage.Preparation.NextDependencyEdgeId);
+            GetTargetedVerificationPreparationResponse secondPage =
+                await client.GetTargetedVerificationPreparationAsync(new GetTargetedVerificationPreparationRequest
+                {
+                    PreparationId = begun.Preparation.PreparationId,
+                    MaximumMembers = 1,
+                    AfterMemberId = firstPage.Preparation.NextMemberCursor,
+                    MaximumLifecycleEvents = 1,
+                    AfterLifecycleSequence = firstPage.Preparation.NextLifecycleSequence,
+                    MaximumArtifactDecisions = 1,
+                    AfterArtifactKind = firstPage.Preparation.NextArtifactKind,
+                    AfterArtifactId = firstPage.Preparation.NextArtifactId,
+                    MaximumDependencies = 1,
+                    AfterDependencyEdgeId = firstPage.Preparation.NextDependencyEdgeId,
+                    MaximumTargetAnalyzers = 1,
+                    AfterTargetAnalyzerId = firstPage.Preparation.NextTargetAnalyzerId,
+                }).ResponseAsync;
+            Assert.AreNotEqual(firstPage.Preparation.ScopeMembers[0].MemberId,
+                secondPage.Preparation.ScopeMembers[0].MemberId);
+            Assert.IsTrue(secondPage.Preparation.LifecycleEvents[0].Sequence
+                > firstPage.Preparation.LifecycleEvents[0].Sequence);
+            Assert.AreNotEqual(firstPage.Preparation.ArtifactDecisions[0].ArtifactId,
+                secondPage.Preparation.ArtifactDecisions[0].ArtifactId);
+            Assert.AreNotEqual(firstPage.Preparation.ScopeDependencies[0].EdgeId,
+                secondPage.Preparation.ScopeDependencies[0].EdgeId);
             StartTargetedVerificationRequest productionStartRequest = new()
             {
                 PreparationId = productionReadyStatus.Preparation.PreparationId,
@@ -710,9 +838,10 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             TargetedVerificationSourceContract nativeSource = new(new(cleanRunId), TargetedVerificationRootKind.Finding,
                 canonicalFinding.FindingOccurrenceId, canonicalFinding.LogicalFindingId,
                 new(canonicalItem.SourcePayloadId), new(canonicalItem.SourcePayloadSha256),
-                new(Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join('\n',
-                    canonicalItem.ItemId, canonicalItem.LogicalId, canonicalItem.SourcePayloadSha256,
-                    canonicalItem.AnalyzerId, canonicalItem.AnalyzerVersion))))),
+                canonicalFinding.IdentityEnvelope.CanonicalSignature,
+                canonicalFinding.IdentityEnvelope.AnalyzerFamily, canonicalFinding.IdentityEnvelope.AnalyzerVersion,
+                canonicalFinding.IdentityEnvelope.SemanticContractVersion,
+                canonicalFinding.IdentityEnvelope.IdentityContractVersion,
                 new(runBinding.InstallationSnapshotId), new(runBinding.AnalysisContextId),
                 new(runBinding.EffectiveScanConfigurationId), new(runBinding.ResolvedInputManifestId));
             SetupObjectRecord targetedConfiguration = store.FindSetupObject(
@@ -748,7 +877,7 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 new TargetedReuseDecisionContract("analyzer-declaration", item.ArtifactId, "reuse-with-proof",
                     new("targeted-analyzer-proof-" + item.Fingerprint.Value[..24]), item.Fingerprint,
                     "The accepted analyzer declaration is reused only by exact bytes.")));
-            TargetedVerificationPlanContract nativeDraft = new("infinium/targeted-verification-plan", new(1, 0, 0),
+            TargetedVerificationPlanContract nativeDraft = new("infinium/targeted-verification-plan", new(1, 1, 0),
                 new("targeted-plan-pending"), new(readySeed.PreparationId), preparingSeed.Revision, nativeSource,
                 new(readySeed.CaptureOperationId), new("snapshot-targeted"), new(retainedTargetSha),
                 new(nativeAcquisitionId), new("bethesda-semantic-targeted-native"), new(nativeSemanticSha),
@@ -767,6 +896,10 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                     {
                         PreparationId = ready.PreparationId,
                         MaximumMembers = 100,
+                        MaximumLifecycleEvents = 100,
+                        MaximumArtifactDecisions = 100,
+                        MaximumDependencies = 100,
+                        MaximumTargetAnalyzers = 100,
                     }).ResponseAsync;
             Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Preparation,
                 readyStatus.ResultCase, readyStatus.Failure?.Detail);
@@ -794,6 +927,59 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 "semantic_acquisition_application_links",
             ];
             LifecycleState retainedSourceState = store.GetRun(cleanRunId).State;
+            string planRelativePath;
+            using (SqliteConnection planPathConnection = new($"Data Source={paths.Database};Mode=ReadOnly;Pooling=False"))
+            {
+                planPathConnection.Open();
+                using SqliteCommand planPathCommand = planPathConnection.CreateCommand();
+                planPathCommand.CommandText =
+                    "SELECT payload.object_relative_path FROM targeted_verification_plans plan " +
+                    "JOIN payloads payload ON payload.payload_id=plan.plan_payload_id " +
+                    "WHERE plan.preparation_id=$preparation;";
+                planPathCommand.Parameters.AddWithValue("$preparation", ready.PreparationId);
+                planRelativePath = (string)planPathCommand.ExecuteScalar()!;
+            }
+            string planPayloadPath = Path.Combine(paths.Payloads,
+                planRelativePath["payloads/".Length..].Replace('/', Path.DirectorySeparatorChar));
+            byte[] retainedPlanBytes = File.ReadAllBytes(planPayloadPath);
+            foreach ((string Suffix, TargetedVerificationPlanContract Mutated) mutation in new[]
+                     {
+                         ("source-identity-signature", nativePlan with
+                         {
+                             Source = nativePlan.Source with { CanonicalSignature = new(new string('0', 64)) },
+                         }),
+                         ("source-analyzer-version", nativePlan with
+                         {
+                             Source = nativePlan.Source with { AnalyzerVersion = new(99, 0, 0) },
+                         }),
+                     })
+            {
+                Dictionary<string, long> beforeRejectedStart = startMutationTables.ToDictionary(
+                    table => table, table => CandidatePipelineIntegrationTests.Count(paths.Database, table),
+                    StringComparer.Ordinal);
+                File.WriteAllBytes(planPayloadPath, JsonSerializer.SerializeToUtf8Bytes(mutation.Mutated));
+                try
+                {
+                    StartTargetedVerificationRequest staleStart = nativeStartRequest.Clone();
+                    staleStart.IdempotencyKey = "targeted-stale-" + mutation.Suffix;
+                    staleStart.RequestedRunId = "run-targeted-stale-" + mutation.Suffix;
+                    staleStart.UserGestureId = "targeted-stale-gesture-" + mutation.Suffix;
+                    StartTargetedVerificationResponse rejectedStale =
+                        await client.StartTargetedVerificationAsync(staleStart).ResponseAsync;
+                    Assert.AreEqual(CommandDisposition.Rejected, rejectedStale.Disposition, mutation.Suffix);
+                    Assert.AreEqual(FailureCode.Conflict, rejectedStale.Failure.Code, mutation.Suffix);
+                    Assert.ThrowsExactly<KeyNotFoundException>(() => store.GetRun(staleStart.RequestedRunId));
+                    foreach (string table in startMutationTables)
+                    {
+                        Assert.AreEqual(beforeRejectedStart[table],
+                            CandidatePipelineIntegrationTests.Count(paths.Database, table), mutation.Suffix + ":" + table);
+                    }
+                }
+                finally
+                {
+                    File.WriteAllBytes(planPayloadPath, retainedPlanBytes);
+                }
+            }
             foreach ((string suffix, string mutate, string restore) in new[]
                      {
                          ("source-terminal-state",

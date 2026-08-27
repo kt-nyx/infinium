@@ -73,7 +73,8 @@ public sealed partial class ApplicationGrpcService
                 return Task.FromResult(new BeginTargetedVerificationPreparationResponse
                 {
                     Disposition = CommandDisposition.AlreadyAccepted,
-                    Preparation = ToTargetedPreparation(replay, 100, null),
+                    Preparation = ToTargetedPreparation(replay, 100, null, 100, 0, 100, null, null,
+                        100, null, 100, null),
                 });
             }
             if (!runtime.TryAdmitNewDurableCommand(DateTimeOffset.UtcNow))
@@ -94,25 +95,23 @@ public sealed partial class ApplicationGrpcService
             }
 
             ResultItemPersistenceRecord sourceItem = runtime.Store.GetResultItem(sourceRunId, occurrenceId);
-            if (!StringComparer.Ordinal.Equals(sourceItem.Kind, occurrenceKind))
+            if (!TargetedVerificationSourceIdentity.ProjectionKindMatches(occurrenceKind, sourceItem.Kind))
             {
                 throw new InvalidOperationException("The targeted source occurrence kind differs from canonical result state.");
             }
 
-            byte[] canonicalBytes = runtime.Store.ReadFindingCasePayload(sourceItem.SourcePayloadId);
-            if (HashTargeted(canonicalBytes) != sourceItem.SourcePayloadSha256)
-            {
-                throw new AnalysisIdentityDriftException("The targeted source occurrence payload drifted.");
-            }
+            byte[] canonicalBytes = TargetedVerificationSourceIdentity.ReadCanonicalPayload(
+                runtime.Store, sourceRunId, sourceItem);
 
             FindingCaseContract canonical = FindingCaseJsonCodec.Deserialize(canonicalBytes);
-            if (occurrenceKind == "finding")
+            TargetedCanonicalSourceIdentity canonicalIdentity = TargetedVerificationSourceIdentity.Resolve(
+                canonical, occurrenceKind, occurrenceId);
+            if (canonicalIdentity.LogicalId.Value != sourceItem.LogicalId
+                || canonicalIdentity.IdentityEnvelope.AnalyzerFamily != sourceItem.AnalyzerId
+                || canonicalIdentity.IdentityEnvelope.AnalyzerVersion.ToString() != sourceItem.AnalyzerVersion)
             {
-                _ = canonical.Findings.Single(item => item.FindingOccurrenceId.Value == occurrenceId);
-            }
-            else
-            {
-                _ = canonical.Cases.Single(item => item.CaseOccurrenceId.Value == occurrenceId);
+                throw new AnalysisIdentityDriftException(
+                    "The targeted source occurrence index differs from its canonical identity envelope.");
             }
 
             SetupObjectRecord profile = ActiveSetupObject(ProfileObjectKind, CurrentProfileObjectId);
@@ -162,7 +161,8 @@ public sealed partial class ApplicationGrpcService
             return Task.FromResult(new BeginTargetedVerificationPreparationResponse
             {
                 Disposition = replay is null ? CommandDisposition.Accepted : CommandDisposition.AlreadyAccepted,
-                Preparation = ToTargetedPreparation(admitted, 100, null),
+                Preparation = ToTargetedPreparation(admitted, 100, null, 100, 0, 100, null, null,
+                    100, null, 100, null),
             });
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException
@@ -193,11 +193,15 @@ public sealed partial class ApplicationGrpcService
             TargetedPreparationPersistenceRecord value = runtime.Store.GetTargetedPreparation(request.PreparationId);
             return Task.FromResult(new GetTargetedVerificationPreparationResponse
             {
-                Preparation = ToTargetedPreparation(value, checked((int)request.MaximumMembers), request.AfterMemberId),
+                Preparation = ToTargetedPreparation(value, checked((int)request.MaximumMembers), request.AfterMemberId,
+                    checked((int)request.MaximumLifecycleEvents), checked((long)request.AfterLifecycleSequence),
+                    checked((int)request.MaximumArtifactDecisions), request.AfterArtifactKind, request.AfterArtifactId,
+                    checked((int)request.MaximumDependencies), request.AfterDependencyEdgeId,
+                    checked((int)request.MaximumTargetAnalyzers), request.AfterTargetAnalyzerId),
             });
         }
         catch (Exception exception) when (exception is InvalidOperationException or InvalidDataException
-            or KeyNotFoundException or OverflowException)
+            or KeyNotFoundException or OverflowException or AnalysisIdentityDriftException)
         {
             return Task.FromResult(new GetTargetedVerificationPreparationResponse
             {
@@ -225,7 +229,8 @@ public sealed partial class ApplicationGrpcService
             return Task.FromResult(new CancelTargetedVerificationPreparationResponse
             {
                 Disposition = receipt.Replayed ? CommandDisposition.AlreadyAccepted : CommandDisposition.Accepted,
-                Preparation = ToTargetedPreparation(receipt.Preparation, 100, null),
+                Preparation = ToTargetedPreparation(receipt.Preparation, 100, null, 100, 0, 100, null, null,
+                    100, null, 100, null),
             });
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException
@@ -358,7 +363,10 @@ public sealed partial class ApplicationGrpcService
     }
 
     private TargetedVerificationPreparation ToTargetedPreparation(
-        TargetedPreparationPersistenceRecord value, int maximumMembers, string? afterMemberId)
+        TargetedPreparationPersistenceRecord value, int maximumMembers, string? afterMemberId,
+        int maximumLifecycleEvents, long afterLifecycleSequence, int maximumArtifactDecisions,
+        string? afterArtifactKind, string? afterArtifactId, int maximumDependencies,
+        string? afterDependencyEdgeId, int maximumTargetAnalyzers, string? afterTargetAnalyzerId)
     {
         TargetedVerificationPreparation result = new()
         {
@@ -383,6 +391,7 @@ public sealed partial class ApplicationGrpcService
             ReadinessBoundary = "scope-limited-no-readiness",
             CreatedAt = ProtoMapping.ToProto(value.CreatedAt),
             UpdatedAt = ProtoMapping.ToProto(value.UpdatedAt),
+            ConfirmedProfileRevision = checked((ulong)value.ConfirmedProfileRevision),
         };
         if (value.SourceOccurrenceKind == "finding")
         {
@@ -394,11 +403,25 @@ public sealed partial class ApplicationGrpcService
         }
 
         ResultItemPersistenceRecord sourceItem = runtime.Store.GetResultItem(value.SourceRunId, value.SourceOccurrenceId);
-        result.SourceLogicalId = sourceItem.LogicalId;
+        byte[] sourcePayloadBytes = TargetedVerificationSourceIdentity.ReadCanonicalPayload(
+            runtime.Store, value.SourceRunId, sourceItem);
+        TargetedCanonicalSourceIdentity canonicalIdentity = TargetedVerificationSourceIdentity.Resolve(
+            FindingCaseJsonCodec.Deserialize(sourcePayloadBytes), value.SourceOccurrenceKind, value.SourceOccurrenceId);
+        if (canonicalIdentity.LogicalId.Value != sourceItem.LogicalId
+            || canonicalIdentity.IdentityEnvelope.AnalyzerFamily != sourceItem.AnalyzerId
+            || canonicalIdentity.IdentityEnvelope.AnalyzerVersion.ToString() != sourceItem.AnalyzerVersion)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The targeted source occurrence index differs from its canonical identity envelope.");
+        }
+        result.SourceLogicalId = canonicalIdentity.LogicalId.Value;
         result.SourcePayloadId = sourceItem.SourcePayloadId;
         result.SourcePayloadFingerprintSha256 = sourceItem.SourcePayloadSha256;
-        result.SourceCanonicalSignatureSha256 = HashTargeted(string.Join('\n', sourceItem.ItemId,
-            sourceItem.LogicalId, sourceItem.SourcePayloadSha256, sourceItem.AnalyzerId, sourceItem.AnalyzerVersion));
+        result.SourceCanonicalSignatureSha256 = canonicalIdentity.IdentityEnvelope.CanonicalSignature.Value;
+        result.SourceAnalyzerFamily = canonicalIdentity.IdentityEnvelope.AnalyzerFamily;
+        result.SourceAnalyzerVersion = ToProto(canonicalIdentity.IdentityEnvelope.AnalyzerVersion);
+        result.SourceSemanticContractVersion = ToProto(canonicalIdentity.IdentityEnvelope.SemanticContractVersion);
+        result.SourceIdentityContractVersion = ToProto(canonicalIdentity.IdentityEnvelope.IdentityContractVersion);
         result.SourceSnapshotId = runtime.Store.GetRun(value.SourceRunId).Binding.InstallationSnapshotId;
         try
         {
@@ -425,9 +448,9 @@ public sealed partial class ApplicationGrpcService
             result.TargetSnapshotFingerprintSha256 = plan.TargetSnapshotFingerprint.Value;
             result.ScopeId = plan.Scope.ScopeId.Value;
             result.ScopeFingerprintSha256 = plan.Scope.CanonicalFingerprint.Value;
+            result.CorrelationCoverageId = plan.CorrelationCoverage.CoverageId.Value;
+            result.CorrelationCoverageFingerprintSha256 = plan.CorrelationCoverage.CanonicalFingerprint.Value;
             result.PopulationDenominator = checked((ulong)plan.CorrelationCoverage.PopulationDenominator);
-            result.InertGaps.Add(plan.Gaps);
-            result.InertNonStartableReasons.Add(plan.NonStartableReasons);
             TargetedScopeMemberContract[] page = plan.Scope.Members
                 .Where(item => string.IsNullOrWhiteSpace(afterMemberId)
                     || StringComparer.Ordinal.Compare(item.MemberId.Value, afterMemberId) > 0)
@@ -435,7 +458,8 @@ public sealed partial class ApplicationGrpcService
             bool hasMore = page.Length > maximumMembers;
             foreach (TargetedScopeMemberContract member in page.Take(maximumMembers))
             {
-                result.ScopeMembers.Add(ToProto(member));
+                result.ScopeMembers.Add(ToProto(member,
+                    plan.Scope.DirectRoots.Any(root => root.MemberId == member.MemberId)));
             }
 
             HashSet<OpaqueId> visible = result.ScopeMembers.Select(item => new OpaqueId(item.MemberId)).ToHashSet();
@@ -444,6 +468,94 @@ public sealed partial class ApplicationGrpcService
             {
                 result.CorrelationRows.Add(ToProto(row));
             }
+            result.InertGaps.Add(result.CorrelationRows
+                .Where(row => row.Status is Infinium.Contracts.Protobuf.Application.V1.TargetedCorrelationStatus.Unsupported
+                    or Infinium.Contracts.Protobuf.Application.V1.TargetedCorrelationStatus.Inaccessible
+                    or Infinium.Contracts.Protobuf.Application.V1.TargetedCorrelationStatus.Malformed
+                    or Infinium.Contracts.Protobuf.Application.V1.TargetedCorrelationStatus.Ambiguous
+                    or Infinium.Contracts.Protobuf.Application.V1.TargetedCorrelationStatus.MissingRequiredProof)
+                .Select(row => row.InertReason));
+            result.InertNonStartableReasons.Add(result.CorrelationRows
+                .Where(row => !row.CorrelationQualified)
+                .Select(row => row.InertReason));
+            TargetedScopeDependencyContract[] dependencyPage = plan.Scope.Dependencies
+                .OrderBy(item => item.EdgeId.Value, StringComparer.Ordinal)
+                .Where(item => string.IsNullOrWhiteSpace(afterDependencyEdgeId)
+                    || StringComparer.Ordinal.Compare(item.EdgeId.Value, afterDependencyEdgeId) > 0)
+                .Take(maximumDependencies + 1).ToArray();
+            bool moreDependencies = dependencyPage.Length > maximumDependencies;
+            result.ScopeDependencies.Add(dependencyPage.Take(maximumDependencies).Select(ToProto));
+            if (moreDependencies)
+            {
+                result.NextDependencyEdgeId = dependencyPage[maximumDependencies - 1].EdgeId.Value;
+            }
+
+            TargetedCorrelationCoverageRowContract policy = plan.CorrelationCoverage.Rows[0];
+            result.CorrelationPolicyId = policy.CorrelationPolicyId.Value;
+            result.CorrelationPolicyVersion = ToProto(policy.CorrelationPolicyVersion);
+            result.CorrelationPolicyFingerprintSha256 = policy.CorrelationPolicyFingerprint.Value;
+            TargetedReuseDecisionContract[] artifactPage = plan.ReuseDecisions
+                .OrderBy(item => item.ArtifactKind, StringComparer.Ordinal)
+                .ThenBy(item => item.ArtifactId.Value, StringComparer.Ordinal)
+                .Where(item => string.IsNullOrWhiteSpace(afterArtifactKind)
+                    || StringComparer.Ordinal.Compare(item.ArtifactKind, afterArtifactKind) > 0
+                    || item.ArtifactKind == afterArtifactKind
+                    && StringComparer.Ordinal.Compare(item.ArtifactId.Value, afterArtifactId) > 0)
+                .Take(maximumArtifactDecisions + 1).ToArray();
+            bool moreArtifacts = artifactPage.Length > maximumArtifactDecisions;
+            result.ArtifactDecisions.Add(artifactPage.Take(maximumArtifactDecisions).Select(ToProto));
+            if (moreArtifacts)
+            {
+                TargetedReuseDecisionContract last = artifactPage[maximumArtifactDecisions - 1];
+                result.NextArtifactKind = last.ArtifactKind;
+                result.NextArtifactId = last.ArtifactId.Value;
+            }
+            TargetedReuseDecisionContract? effectiveConfiguration = plan.ReuseDecisions.SingleOrDefault(item =>
+                item.ArtifactKind == "effective-configuration");
+            result.EffectiveConfigurationId = plan.Source.EffectiveConfigurationId.Value;
+            result.EffectiveConfigurationFingerprintSha256 =
+                effectiveConfiguration?.ProofFingerprint.Value ?? string.Empty;
+            result.ResolvedInputManifestId = plan.Source.ResolvedInputManifestId.Value;
+
+            RunOperationRecord sourceOperation = runtime.Store.GetRunOperation(value.SourceRunId)
+                ?? throw new InvalidOperationException("The targeted source managed operation is not retained.");
+            ManagedAnalysisOrchestrationRequest sourceRequest = JsonSerializer.Deserialize<ManagedAnalysisOrchestrationRequest>(
+                sourceOperation.RequestJson, ContractJsonSerializer.Options)
+                ?? throw new InvalidDataException("The targeted source managed operation is malformed.");
+            result.ResolvedInputManifestFingerprintSha256 =
+                sourceRequest.ExecutionInput.ResolvedInputManifest.Fingerprint.Value;
+            ArtifactReferenceContract[] analyzerPage = sourceRequest.ExecutionInput.AnalyzerDeclarations
+                .OrderBy(item => item.ArtifactId.Value, StringComparer.Ordinal)
+                .Where(item => string.IsNullOrWhiteSpace(afterTargetAnalyzerId)
+                    || StringComparer.Ordinal.Compare(item.ArtifactId.Value, afterTargetAnalyzerId) > 0)
+                .Take(maximumTargetAnalyzers + 1).ToArray();
+            bool moreAnalyzers = analyzerPage.Length > maximumTargetAnalyzers;
+            foreach (ArtifactReferenceContract analyzer in analyzerPage.Take(maximumTargetAnalyzers))
+            {
+                TargetedReuseDecisionContract? analyzerProof = plan.ReuseDecisions.SingleOrDefault(item =>
+                    item.ArtifactKind == "analyzer-declaration" && item.ArtifactId == analyzer.ArtifactId);
+                bool compatible = analyzerProof?.ProofFingerprint == analyzer.Fingerprint
+                    && analyzer.ArtifactId.Value == plan.Source.AnalyzerFamily
+                    && analyzer.ArtifactVersion == plan.Source.AnalyzerVersion;
+                result.TargetAnalyzers.Add(new TargetedAnalyzerCompatibility
+                {
+                    AnalyzerDeclarationId = analyzer.ArtifactId.Value,
+                    AnalyzerFamily = analyzer.ArtifactId.Value,
+                    AnalyzerVersion = ToProto(analyzer.ArtifactVersion),
+                    SemanticContractVersion = ToProto(plan.Source.SemanticContractVersion),
+                    IdentityContractVersion = ToProto(plan.Source.IdentityContractVersion),
+                    CompatibilityProofId = analyzerProof?.ProofId.Value ?? string.Empty,
+                    CompatibilityProofFingerprintSha256 = analyzerProof?.ProofFingerprint.Value ?? string.Empty,
+                    Compatible = compatible,
+                    InertReason = compatible ? analyzerProof!.Reason :
+                        "The retained target analyzer declaration lacks an exact identity, version, and byte-equivalence proof.",
+                });
+            }
+            if (moreAnalyzers)
+            {
+                result.NextTargetAnalyzerId = analyzerPage[maximumTargetAnalyzers - 1].ArtifactId.Value;
+            }
+            result.ExpectedWork = ToWork(plan);
 
             if (hasMore)
             {
@@ -459,7 +571,50 @@ public sealed partial class ApplicationGrpcService
         result.EvidenceProgressCompleted = checked((ulong)diagnostics.EvidenceProgressCompleted);
         result.EvidenceProgressDenominator = checked((ulong)diagnostics.EvidenceProgressDenominator);
         result.EvidenceCheckpointId = diagnostics.EvidenceCheckpointId ?? string.Empty;
-        result.EffectiveConfigurationId = value.SavedConfigurationId;
+        if (value.PlanId is null)
+        {
+            result.EffectiveConfigurationId = value.SavedConfigurationId;
+        }
+
+        TargetedPreparationReadbackEvidenceRecord evidence = runtime.Store.GetTargetedPreparationReadbackEvidence(
+            value.PreparationId, maximumLifecycleEvents, afterLifecycleSequence);
+        if (evidence.Snapshot is { } snapshot)
+        {
+            result.TargetSnapshotCapturedAt = ProtoMapping.ToProto(snapshot.CapturedAt);
+            result.ConfirmedProfileRevision = checked((ulong)snapshot.ConfirmedProfileRevision);
+            result.TargetSnapshotFingerprintSha256 = snapshot.SnapshotFingerprint;
+            result.StructuralComparison = snapshot.StructuralComparison;
+        }
+        if (evidence.Acquisition is { } readbackAcquisition)
+        {
+            result.AcquisitionEvidence = new TargetedAcquisitionEvidence
+            {
+                AcquisitionRequestFingerprintSha256 = readbackAcquisition.RequestFingerprint,
+                SealedInputFingerprintSha256 = readbackAcquisition.SealedInputFingerprint,
+                ProducerFamily = readbackAcquisition.ProducerFamily,
+                ProducerVersion = new SemanticVersion { Value = readbackAcquisition.ProducerVersion },
+                SupportManifestId = readbackAcquisition.SupportManifestId,
+                EnumerationPolicyId = readbackAcquisition.EnumerationPolicyId,
+                EnumerationPolicyVersion = new SemanticVersion { Value = readbackAcquisition.EnumerationPolicyVersion },
+                CoordinatorFencingEpoch = checked((ulong)readbackAcquisition.CoordinatorFencingEpoch),
+                AttemptFencingToken = checked((ulong)readbackAcquisition.AttemptFencingToken),
+                PublicationId = readbackAcquisition.PublicationId ?? string.Empty,
+                PublicationPayloadId = readbackAcquisition.PublicationPayloadId ?? string.Empty,
+                StagedManifestFingerprintSha256 = readbackAcquisition.StagedManifestFingerprint ?? string.Empty,
+                ProvenanceFingerprintSha256 = readbackAcquisition.ProvenanceFingerprint ?? string.Empty,
+                InertTerminalReason = readbackAcquisition.TerminalReason,
+            };
+            if (readbackAcquisition.PublishedAt is { } publishedAt)
+            {
+                result.AcquisitionEvidence.PublishedAt = ProtoMapping.ToProto(publishedAt);
+            }
+            if (!string.IsNullOrWhiteSpace(readbackAcquisition.TerminalReason))
+            {
+                result.AcquisitionEvidence.InertTerminalGaps.Add(Bounded(readbackAcquisition.TerminalReason));
+            }
+        }
+        result.LifecycleEvents.Add(evidence.LifecycleEvents.Select(ToProto));
+        result.NextLifecycleSequence = checked((ulong)(evidence.NextLifecycleSequence ?? 0));
         return result;
     }
 
@@ -555,7 +710,7 @@ public sealed partial class ApplicationGrpcService
         return result;
     }
 
-    private static TargetedScopeMember ToProto(TargetedScopeMemberContract value)
+    private static TargetedScopeMember ToProto(TargetedScopeMemberContract value, bool directRoot)
     {
         TargetedScopeMember result = new()
         {
@@ -564,10 +719,71 @@ public sealed partial class ApplicationGrpcService
             StableIdentity = value.StableIdentity.Value,
             InertReason = value.Reason,
             Mandatory = value.Mandatory,
+            DirectRoot = directRoot,
         };
         result.SourceProofIds.Add(value.SourceProofIds.Select(item => item.Value));
         return result;
     }
+
+    private static TargetedScopeDependency ToProto(TargetedScopeDependencyContract value)
+    {
+        TargetedScopeDependency result = new()
+        {
+            EdgeId = value.EdgeId.Value,
+            FromMemberId = value.FromMemberId.Value,
+            ToMemberId = value.ToMemberId.Value,
+            Relation = value.Relation,
+        };
+        result.ProofIds.Add(value.ProofIds.Select(item => item.Value));
+        return result;
+    }
+
+    private static TargetedArtifactDecision ToProto(TargetedReuseDecisionContract value) => new()
+    {
+        ArtifactKind = value.ArtifactKind,
+        ArtifactId = value.ArtifactId.Value,
+        Disposition = value.Disposition,
+        ValidityProofId = value.ProofId.Value,
+        ValidityProofFingerprintSha256 = value.ProofFingerprint.Value,
+        InertReason = value.Reason,
+    };
+
+    private static TargetedPreparationLifecycleEvent ToProto(TargetedLifecycleReadbackEvent value) => new()
+    {
+        Sequence = checked((ulong)value.Sequence),
+        Owner = value.Owner,
+        EventKind = value.EventKind,
+        Generation = checked((ulong)value.Generation),
+        CoordinatorFencingEpoch = checked((ulong)value.CoordinatorFencingEpoch),
+        OccurredAt = ProtoMapping.ToProto(value.OccurredAt),
+        EvidenceFingerprintSha256 = value.EvidenceFingerprint,
+        InertSummary = Bounded(value.Summary),
+    };
+
+    private static TargetedPreparationWork ToWork(TargetedVerificationPlanContract plan)
+    {
+        ulong Count(Infinium.Domain.Contracts.TargetedCorrelationStatus status) =>
+            checked((ulong)plan.CorrelationCoverage.Rows.Count(row => row.Status == status));
+        return new()
+        {
+            DirectRootCount = checked((ulong)plan.Scope.DirectRoots.Count),
+            ExpandedMemberCount = checked((ulong)plan.Scope.Members.Count),
+            DependencyEdgeCount = checked((ulong)plan.Scope.Dependencies.Count),
+            MaximumMembers = checked((ulong)plan.Scope.MaximumMembers),
+            MaximumEdges = checked((ulong)plan.Scope.MaximumEdges),
+            MatchedExecutable = Count(Infinium.Domain.Contracts.TargetedCorrelationStatus.MatchedExecutable),
+            ChangedCorrelated = Count(Infinium.Domain.Contracts.TargetedCorrelationStatus.ChangedCorrelated),
+            ProvenAbsent = Count(Infinium.Domain.Contracts.TargetedCorrelationStatus.ProvenAbsent),
+            ProvenNotApplicable = Count(Infinium.Domain.Contracts.TargetedCorrelationStatus.ProvenNotApplicable),
+            Ambiguous = Count(Infinium.Domain.Contracts.TargetedCorrelationStatus.Ambiguous),
+            Unsupported = Count(Infinium.Domain.Contracts.TargetedCorrelationStatus.Unsupported),
+            Inaccessible = Count(Infinium.Domain.Contracts.TargetedCorrelationStatus.Inaccessible),
+            Malformed = Count(Infinium.Domain.Contracts.TargetedCorrelationStatus.Malformed),
+            MissingRequiredProof = Count(Infinium.Domain.Contracts.TargetedCorrelationStatus.MissingRequiredProof),
+        };
+    }
+
+    private static SemanticVersion ToProto(ContractVersion value) => new() { Value = value.ToString() };
 
     private static TargetedCorrelationCoverageRow ToProto(TargetedCorrelationCoverageRowContract value)
     {

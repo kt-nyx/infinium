@@ -391,12 +391,18 @@ public sealed class TargetedVerificationExecutor
         ManagedAnalysisOrchestrator.Validate(sourceRequest, sourceRun.RunId, sourceRun.Binding);
         ResultItemPersistenceRecord rootItem = runtime.Store.GetResultItem(
             preparation.SourceRunId, preparation.SourceOccurrenceId);
-        byte[] sourcePayloadBytes = runtime.Store.ReadFindingCasePayload(rootItem.SourcePayloadId);
-        if (Hash(sourcePayloadBytes) != rootItem.SourcePayloadSha256)
-        {
-            throw new AnalysisIdentityDriftException("The canonical source occurrence payload drifted.");
-        }
+        byte[] sourcePayloadBytes = TargetedVerificationSourceIdentity.ReadCanonicalPayload(
+            runtime.Store, preparation.SourceRunId, rootItem);
         FindingCaseContract canonical = FindingCaseJsonCodec.Deserialize(sourcePayloadBytes);
+        TargetedCanonicalSourceIdentity canonicalIdentity = TargetedVerificationSourceIdentity.Resolve(
+            canonical, preparation.SourceOccurrenceKind, preparation.SourceOccurrenceId);
+        if (canonicalIdentity.LogicalId.Value != rootItem.LogicalId
+            || canonicalIdentity.IdentityEnvelope.AnalyzerFamily != rootItem.AnalyzerId
+            || canonicalIdentity.IdentityEnvelope.AnalyzerVersion.ToString() != rootItem.AnalyzerVersion)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The canonical source occurrence identity differs from its retained index.");
+        }
         AnalysisPhaseCheckpointRecord candidateCheckpoint = runtime.Store.ReadLatestAnalysisPhaseCheckpoint(
             preparation.SourceRunId, CandidateAnalysisPhase.PhaseId)
             ?? throw new InvalidOperationException("The retained source run has no canonical candidate checkpoint.");
@@ -560,9 +566,11 @@ public sealed class TargetedVerificationExecutor
             new(publication.SemanticOutputId), observations);
         TargetedVerificationSourceContract source = new(new(preparation.SourceRunId),
             preparation.SourceOccurrenceKind == "finding" ? TargetedVerificationRootKind.Finding : TargetedVerificationRootKind.Case,
-            new(preparation.SourceOccurrenceId), new(rootItem.LogicalId), new(rootItem.SourcePayloadId),
-            new(rootItem.SourcePayloadSha256), new(Hash(string.Join('\n', rootItem.ItemId, rootItem.LogicalId,
-                rootItem.SourcePayloadSha256, rootItem.AnalyzerId, rootItem.AnalyzerVersion))),
+            new(preparation.SourceOccurrenceId), canonicalIdentity.LogicalId, new(rootItem.SourcePayloadId),
+            new(rootItem.SourcePayloadSha256), canonicalIdentity.IdentityEnvelope.CanonicalSignature,
+            canonicalIdentity.IdentityEnvelope.AnalyzerFamily, canonicalIdentity.IdentityEnvelope.AnalyzerVersion,
+            canonicalIdentity.IdentityEnvelope.SemanticContractVersion,
+            canonicalIdentity.IdentityEnvelope.IdentityContractVersion,
             new(sourceRun.Binding.InstallationSnapshotId), new(sourceRun.Binding.AnalysisContextId),
             new(sourceRun.Binding.EffectiveScanConfigurationId), new(sourceRun.Binding.ResolvedInputManifestId));
         List<TargetedReuseDecisionContract> reuse =
@@ -621,7 +629,7 @@ public sealed class TargetedVerificationExecutor
             new("targeted-configuration-proof-" + effectiveConfigurationFingerprint.Value[..24]),
             effectiveConfigurationFingerprint,
             "The exact active saved-configuration revision is rebound and revalidated at start."));
-        TargetedVerificationPlanContract draft = new("infinium/targeted-verification-plan", new(1, 0, 0),
+        TargetedVerificationPlanContract draft = new("infinium/targeted-verification-plan", new(1, 1, 0),
             new("targeted-plan-pending"), new(preparation.PreparationId), preparation.Revision,
             source, new(preparation.CaptureOperationId), new(publication.TargetSnapshotId),
             new(Hash(qualifiedSnapshotBytes)),
@@ -706,19 +714,12 @@ public sealed class TargetedVerificationExecutor
         }
 
         OpaqueId[] related = RelatedCurrentIdentities(member, source, target);
-        if (related.Length == 1 && member.Kind is TargetedScopeMemberKind.Contribution or TargetedScopeMemberKind.Asset)
-        {
-            OpaqueId relatedIdentity = related[0];
-            return new(member.StableIdentity, new("qualified-target-semantic-population"), relatedIdentity,
-                Member(relatedIdentity.Value, member.Kind, relatedIdentity, "correlated current execution member", true, [proof]).MemberId,
-                TargetedCorrelationStatus.ChangedCorrelated, true, true,
-                "The fresh complete population proves one changed identity in the same canonical source slot.", [proof], proof);
-        }
         if (related.Length != 0)
         {
             return new(member.StableIdentity, new("qualified-target-semantic-population"), null, null,
                 TargetedCorrelationStatus.Ambiguous, false, false,
-                "The source slot has a different current identity without a unique retained equivalence proof.", [proof], proof);
+                "The source slot has a different current identity but no retained typed continuity, equivalence, or provider-lineage proof.",
+                [proof], proof);
         }
         if (RequiresMissingProof(member, source, target))
         {
@@ -939,27 +940,23 @@ public sealed class TargetedVerificationExecutor
         kind switch
         {
             TargetedScopeMemberKind.Participant or TargetedScopeMemberKind.Record =>
-                snapshot.ResolvedParticipants.ContainsKey(identity)
-                || snapshot.ResolvedParticipants.Values.Any(item => item.ParticipantId == identity || item.FormKey == identity)
-                || snapshot.ResolvedParticipants.Values.Any(item =>
+                snapshot.ResolvedParticipants.Values.Any(item =>
                     DeliveredIdentity("record", item.ParticipantId).Value == identity)
-                || snapshot.OverrideChains.Values.Any(item => item.Identity.ParticipantId == identity
-                    || item.Identity.FormKey == identity
-                    || DeliveredIdentity("record", item.Identity.ParticipantId).Value == identity),
+                || snapshot.OverrideChains.Values.Any(item =>
+                    DeliveredIdentity("record", item.Identity.ParticipantId).Value == identity),
             TargetedScopeMemberKind.Contribution => snapshot.OverrideChains.Values
-                .SelectMany(item => item.Contributions).Any(item => item.ContributionId == identity
-                    || DeliveredIdentity("contribution", item.ContributionId).Value == identity),
-            TargetedScopeMemberKind.Provider => snapshot.Plugins.Any(item => item.PluginName == identity
-                || item.LocalInstalledEntityId.Value == identity
-                || DeliveredIdentity("provider", item.LocalInstalledEntityId.Value).Value == identity)
+                .SelectMany(item => item.Contributions).Any(item =>
+                    DeliveredIdentity("contribution", item.ContributionId).Value == identity),
+            TargetedScopeMemberKind.Provider => snapshot.Plugins.Any(item =>
+                DeliveredIdentity("provider", item.LocalInstalledEntityId.Value).Value == identity)
                 || snapshot.FaceGen.SelectMany(item => item.Mesh.ProviderParticipantIds
                     .Concat(item.Tint.ProviderParticipantIds)).Any(item =>
-                    item == identity || DeliveredIdentity("provider", item).Value == identity),
-            TargetedScopeMemberKind.Asset => snapshot.FaceGen.Any(item => item.Mesh.NormalizedRelativePath == identity
-                || item.Tint.NormalizedRelativePath == identity
-                || DeliveredIdentity("asset", item.Mesh.NormalizedRelativePath).Value == identity
+                    DeliveredIdentity("provider", item).Value == identity),
+            TargetedScopeMemberKind.Asset => snapshot.FaceGen.Any(item =>
+                DeliveredIdentity("asset", item.Mesh.NormalizedRelativePath).Value == identity
                 || DeliveredIdentity("asset", item.Tint.NormalizedRelativePath).Value == identity),
-            TargetedScopeMemberKind.ApplicabilityPopulation => snapshot.Coverage.Any(item => item.Population == identity),
+            TargetedScopeMemberKind.ApplicabilityPopulation => snapshot.Coverage.Any(item =>
+                DeliveredIdentity("population", item.Population).Value == identity),
             _ => false,
         };
 

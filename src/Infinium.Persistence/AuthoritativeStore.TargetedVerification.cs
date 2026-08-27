@@ -154,6 +154,48 @@ public sealed record TargetedPreparationDiagnosticsPersistenceRecord(
     long EvidenceProgressDenominator,
     string? EvidenceCheckpointId);
 
+public sealed record TargetedSnapshotReadbackEvidenceRecord(
+    string SnapshotPayloadId,
+    string SnapshotFingerprint,
+    string SourceStructuralFingerprint,
+    string TargetStructuralFingerprint,
+    string StructuralComparison,
+    long ConfirmedProfileRevision,
+    DateTimeOffset CapturedAt);
+
+public sealed record TargetedAcquisitionReadbackEvidenceRecord(
+    string RequestFingerprint,
+    string SealedInputFingerprint,
+    string ProducerFamily,
+    string ProducerVersion,
+    string SupportManifestId,
+    string EnumerationPolicyId,
+    string EnumerationPolicyVersion,
+    long CoordinatorFencingEpoch,
+    long AttemptFencingToken,
+    string? PublicationId,
+    string? PublicationPayloadId,
+    string? StagedManifestFingerprint,
+    string? ProvenanceFingerprint,
+    DateTimeOffset? PublishedAt,
+    string TerminalReason);
+
+public sealed record TargetedLifecycleReadbackEvent(
+    long Sequence,
+    string Owner,
+    string EventKind,
+    long Generation,
+    long CoordinatorFencingEpoch,
+    DateTimeOffset OccurredAt,
+    string EvidenceFingerprint,
+    string Summary);
+
+public sealed record TargetedPreparationReadbackEvidenceRecord(
+    TargetedSnapshotReadbackEvidenceRecord? Snapshot,
+    TargetedAcquisitionReadbackEvidenceRecord? Acquisition,
+    IReadOnlyList<TargetedLifecycleReadbackEvent> LifecycleEvents,
+    long? NextLifecycleSequence);
+
 public sealed partial class AuthoritativeStore
 {
     public TargetedPreparationPersistenceRecord CreateTargetedPreparation(
@@ -1289,6 +1331,116 @@ public sealed partial class AuthoritativeStore
                 ("$acquisition", acquisition.AcquisitionId));
             return new(captureAttemptId, comparison, attemptCount, attemptId,
                 acquisition.ProgressCompleted, acquisition.ProgressDenominator, checkpointId);
+        }
+    }
+
+    public TargetedPreparationReadbackEvidenceRecord GetTargetedPreparationReadbackEvidence(
+        string preparationId,
+        int maximumLifecycleEvents,
+        long afterLifecycleSequence)
+    {
+        if (maximumLifecycleEvents is < 1 or > 100 || afterLifecycleSequence < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maximumLifecycleEvents));
+        }
+        lock (gate)
+        {
+            TargetedPreparationPersistenceRecord preparation = GetTargetedPreparationCore(preparationId);
+            TargetedSnapshotReadbackEvidenceRecord? snapshot = null;
+            using (SqliteCommand command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    "SELECT snapshot_payload_id,snapshot_fingerprint,source_structural_fingerprint," +
+                    "target_structural_fingerprint,structural_comparison,confirmed_profile_revision,created_at " +
+                    "FROM targeted_snapshot_links WHERE preparation_id=$preparation;";
+                command.Parameters.AddWithValue("$preparation", preparationId);
+                using SqliteDataReader reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    snapshot = new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+                        reader.GetString(4), reader.GetInt64(5), ParseTargetedTimestamp(reader.GetString(6)));
+                    if (reader.Read())
+                    {
+                        throw new InvalidOperationException("The targeted snapshot readback is ambiguous.");
+                    }
+                }
+            }
+
+            TargetedAcquisitionReadbackEvidenceRecord? acquisition = null;
+            if (preparation.EvidenceAcquisitionId is not null)
+            {
+                using SqliteCommand command = connection.CreateCommand();
+                command.CommandText =
+                    "SELECT r.request_sha256,r.sealed_input_fingerprint,r.producer_id,r.producer_version," +
+                    "r.support_manifest_id,r.enumeration_policy_id,r.enumeration_policy_version," +
+                    "COALESCE(a.coordinator_fencing_epoch,0),COALESCE(a.attempt_fencing_token,0)," +
+                    "p.publication_id,p.payload_id,p.staged_manifest_sha256,p.provenance_json,p.created_at," +
+                    "projection.terminal_reason " +
+                    "FROM semantic_acquisition_runs r " +
+                    "JOIN semantic_acquisition_projection projection USING(acquisition_id) " +
+                    "LEFT JOIN semantic_acquisition_attempts a ON a.attempt_id=(SELECT attempt_id " +
+                    "FROM semantic_acquisition_attempts WHERE acquisition_id=r.acquisition_id " +
+                    "ORDER BY attempt_generation DESC LIMIT 1) " +
+                    "LEFT JOIN semantic_acquisition_publications p USING(acquisition_id) " +
+                    "WHERE r.acquisition_id=$acquisition;";
+                command.Parameters.AddWithValue("$acquisition", preparation.EvidenceAcquisitionId);
+                using SqliteDataReader reader = command.ExecuteReader();
+                if (!reader.Read())
+                {
+                    throw new InvalidOperationException("The targeted semantic acquisition readback is missing.");
+                }
+                string? provenance = reader.IsDBNull(12) ? null : reader.GetString(12);
+                acquisition = new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+                    reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetInt64(7), reader.GetInt64(8),
+                    reader.IsDBNull(9) ? null : reader.GetString(9), reader.IsDBNull(10) ? null : reader.GetString(10),
+                    reader.IsDBNull(11) ? null : reader.GetString(11), provenance is null ? null : Hash(provenance),
+                    reader.IsDBNull(13) ? null : ParseTargetedTimestamp(reader.GetString(13)), reader.GetString(14));
+                if (reader.Read())
+                {
+                    throw new InvalidOperationException("The targeted semantic acquisition readback is ambiguous.");
+                }
+            }
+
+            List<TargetedLifecycleReadbackEvent> allEvents = [];
+            using (SqliteCommand command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    "SELECT revision,event_kind,event_sha256,created_at FROM targeted_preparation_events " +
+                    "WHERE preparation_id=$preparation ORDER BY revision;";
+                command.Parameters.AddWithValue("$preparation", preparationId);
+                using SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    long sequence = checked(reader.GetInt64(0) * 2);
+                    allEvents.Add(new(sequence, "preparation", reader.GetString(1), reader.GetInt64(0), 0,
+                        ParseTargetedTimestamp(reader.GetString(3)), reader.GetString(2), reader.GetString(1)));
+                }
+            }
+            if (preparation.EvidenceAcquisitionId is not null)
+            {
+                using SqliteCommand command = connection.CreateCommand();
+                command.CommandText =
+                    "SELECT sequence,event_kind,generation,coordinator_fencing_epoch,event_json,created_at " +
+                    "FROM semantic_acquisition_events WHERE acquisition_id=$acquisition ORDER BY sequence;";
+                command.Parameters.AddWithValue("$acquisition", preparation.EvidenceAcquisitionId);
+                using SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    long sequence = checked(reader.GetInt64(0) * 2 + 1);
+                    string eventJson = reader.GetString(4);
+                    allEvents.Add(new(sequence, "evidence-acquisition", reader.GetString(1), reader.GetInt64(2),
+                        reader.GetInt64(3), ParseTargetedTimestamp(reader.GetString(5)), Hash(eventJson), reader.GetString(1)));
+                }
+            }
+            TargetedLifecycleReadbackEvent[] page = allEvents
+                .Where(item => item.Sequence > afterLifecycleSequence)
+                .OrderBy(item => item.Sequence)
+                .Take(maximumLifecycleEvents + 1)
+                .ToArray();
+            bool hasMore = page.Length > maximumLifecycleEvents;
+            IReadOnlyList<TargetedLifecycleReadbackEvent> visible = page.Take(maximumLifecycleEvents).ToArray();
+            return new(snapshot, acquisition, visible,
+                hasMore ? visible[^1].Sequence : null);
         }
     }
 
