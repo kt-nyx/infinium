@@ -232,6 +232,14 @@ Checkpoints A-D are automation handoffs, not routine owner approval gates. A
 fresh orchestrator may resume from the checkpoint receipt without rereading
 package chronology that is irrelevant to its phase.
 
+Checkpoint C correction note: targeted verification currently lacks accepted
+executable architecture, so the automatic handoff above is suspended. The
+[Proposed WP6 addendum](wp6-targeted-verification-addendum.md) would, if
+accepted, replace only WP6's targeted-verification vertical and add explicit
+Checkpoint C obligations for new-snapshot capture, dependency-complete scope,
+`managed-analysis-v1` admission, lineage, lifecycle, migration, and closed
+renderer authority. It does not alter the accepted remainder of this plan.
+
 ## 6. Contract and fixture maturity
 
 - Plan-only shapes begin `Proposed`.
@@ -562,6 +570,13 @@ Work ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6`
 Phase: C
 Objective: implement durable user interaction with results without changing
 the analysis that produced them.
+
+Correction status: review/assumption/export portions have focused correction
+evidence, but the targeted-verification vertical is not accepted. The
+[Proposed targeted-verification addendum](wp6-targeted-verification-addendum.md)
+supplements this section without changing current authority. Until owner
+acceptance and implementation, the RPC remains Unsupported and WP6/Checkpoint
+C remain incomplete.
 
 Inputs:
 

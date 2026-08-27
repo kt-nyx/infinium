@@ -23,7 +23,11 @@ Phases A and B of the accepted frontend foundation are complete. Phase C is
 under correction. FindingReport query/readback, application validation,
 export deletion/recovery, provenance, paging, and populated migration gaps now
 have focused evidence, but targeted verification has no accepted executable
-architecture. The corrected typed prepared-run
+architecture. A documentation-only proposal now exists in RESEARCH-0058,
+Proposed ADR-0038, and the Proposed WP6 addendum: capture a new snapshot,
+prepare an inspectable dependency-closed scope, and start an ordinary
+`managed-analysis-v1` successor with exact lineage. The proposal is not
+accepted and does not change current runtime authority. The corrected typed prepared-run
 path validates its authoritative retained inputs and
 atomically binds the supported durable analysis operation before scheduling. The repository
 now has an exact application-authority inventory, a bounded display-safe
@@ -59,7 +63,7 @@ work.
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
-| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) remain accepted at corrected Checkpoint B. The current limited Phase C correction builds on reviewed predecessor `8ec26bc9926af3f99c2757249486f14bf14fd759`; the declared targeted-verification RPC fails closed with no durable mutation, its executable architecture remains unresolved, and the earlier Checkpoint C receipt stays suspended. |
+| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) remain accepted at corrected Checkpoint B. The current limited Phase C correction builds on reviewed predecessor `8ec26bc9926af3f99c2757249486f14bf14fd759`; the declared targeted-verification RPC fails closed with no durable mutation. RESEARCH-0058, Proposed ADR-0038, and the Proposed WP6 addendum define a candidate executable architecture but await steward/owner disposition, and the earlier Checkpoint C receipt stays suspended. |
 | Next gate | Corrected Checkpoint C. Phase D and `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` remain blocked until every required Phase C vertical passes correction and re-review. This does not activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |
@@ -154,6 +158,7 @@ asset, script, configuration, dependency, performance, or runtime problem.
 - [Independent semantic-oracle deferral ADR](architecture/decisions/ADR-0035-defer-independent-semantic-oracle-qualification.md)
 - [Functional implementation naming governance](governance/functional-implementation-naming.md)
 - [Frontend application contract and desktop bridge ADR](architecture/decisions/ADR-0037-frontend-application-contract-and-desktop-bridge.md)
+- [Proposed targeted-verification preparation and execution ADR](architecture/decisions/ADR-0038-targeted-verification-preparation-and-execution.md)
 - [M1-to-M2 Foundation — Frontend Application Foundation](plans/transitions/m1-to-m2/frontend-application-foundation/README.md)
 - [Post-M1 cleanup closeout](plans/transitions/post-m1-cleanup/README.md)
 - [Post-M1 cleanup implementation record](plans/transitions/post-m1-cleanup/implementation-record.md)

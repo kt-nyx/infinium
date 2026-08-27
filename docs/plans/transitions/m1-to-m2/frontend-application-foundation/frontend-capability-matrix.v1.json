@@ -5,7 +5,7 @@
   "last_reviewed": "2026-08-26",
   "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
   "planning_base": "32dbb2c48754666336d2da571e554ad8897ed71c",
-  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint C and Phase C acceptance remain suspended. Focused offline evidence now covers FindingReport publication/query/readback, recursive request validation, export deletion/recovery, provenance, paging, explicit populated-migration unavailability, and a fail-closed targeted-verification RPC with zero mutation; executable targeted verification still requires accepted architecture. No desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, or M2 acceptance is claimed.",
+  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint C and Phase C acceptance remain suspended. Focused offline evidence covers FindingReport publication/query/readback, recursive request validation, export deletion/recovery, provenance, paging, explicit populated-migration unavailability, and a fail-closed targeted-verification RPC with zero mutation. RESEARCH-0058, Proposed ADR-0038, and the Proposed WP6 addendum define a candidate new-snapshot, dependency-closed, managed-analysis-v1 architecture but grant no implementation or renderer authority. No desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, or M2 acceptance is claimed.",
   "application_contract_inventory": "application-contract-inventory.v1.json",
   "ownership_audit": {
     "capability_count": 19,
@@ -452,26 +452,41 @@
       "capability_id": "targeted-verification",
       "plain_language_need": "After the user changes the external setup, rerun only affected checks and link the new outcome to the earlier issue.",
       "requirement_ids": [
+        "FIND-005",
+        "FIND-012",
+        "FIND-014",
+        "INTENT-004",
+        "OPS-002",
+        "SNAP-002",
         "UX-005",
         "SCOPE-004",
-        "SNAP-003"
+        "SNAP-003",
+        "SNAP-004"
       ],
       "evaluation_ids": [
+        "EVAL-0019",
+        "EVAL-0020",
         "EVAL-0027",
         "EVAL-0029",
+        "EVAL-0043",
+        "EVAL-0047",
+        "EVAL-0048",
+        "EVAL-0069",
         "EVAL-0078",
+        "EVAL-0079",
         "EVAL-0093"
       ],
       "current_state": "missing-application-vertical",
       "current_evidence": [
         "ApplicationService.StartTargetedVerification remains declared for future correction but is not implemented",
         "After negotiation and recursive request validation, a well-formed generated-client request returns typed Unsupported with ten relevant durable populations unchanged",
-        "No accepted contract maps changed external setup plus exact source scope into managed-analysis-v1"
+        "No accepted contract maps changed external setup plus exact source scope into managed-analysis-v1",
+        "RESEARCH-0058, Proposed ADR-0038, and the Proposed WP6 addendum document a reviewable candidate architecture without changing runtime authority"
       ],
-      "gap": "Architecture must define changed-snapshot capture, typed scope expansion with dependency closure, mapping into managed-analysis-v1, and exact coverage/gap semantics before this declared RPC may create or schedule work.",
+      "gap": "The proposed package defines changed-snapshot preparation, canonical source hydration, typed dependency closure, managed-analysis-v1 mapping, reuse, lineage, coverage/gap/readiness, lifecycle, migration, and renderer boundaries. It still requires steward/owner acceptance and a complete producer-persistence-consumer implementation before this RPC may create or schedule work.",
       "owning_phase": "C",
       "owning_work_package": "WP6",
-      "transition_exit_evidence": "A new manually initiated operation retains exact source scope and lineage and reports scope-limited readiness honestly."
+      "transition_exit_evidence": "A fresh snapshot and dependency-complete inspectable preparation atomically start one managed-analysis-v1 successor; exact initiation and analytical lineage, lifecycle/replay/migration behavior, and scope-limited coverage/readiness pass producer-consumer validation with no generic renderer authority."
     },
     {
       "capability_id": "structured-user-export",

@@ -98,6 +98,7 @@ proposed disposition enabled by the report.
 | [RESEARCH-0055](RESEARCH-0055-slice6-local-input-bound-policy.md) | Completed; owner policy accepted | WP1 pins offline Microsoft o200k packages and the conservative `openai-responses-o200k-byte-envelope/v1` byte-plus-structural-margin proof; provider token-count, credentials, and network remain unauthorized |
 | [RESEARCH-0056](RESEARCH-0056-slice6-live-semantic-authority-conflict.md) | Completed; recommendation proposed | Current frozen WP10 truth admits zero proposals and cannot supply WP11's required durable predecessor; recommends a five-identity public v2 family and successor finite campaign without a new ADR |
 | [RESEARCH-0057](RESEARCH-0057-frontend-application-foundation-gap.md) | Completed; recommendation accepted | RQ-041 is resolved by ADR-0037 and the accepted M1-to-M2 Foundation — Frontend Application Foundation: build the application-facing contract, durable user workflows, generated clients, and diagnostic desktop consumer before M2 |
+| [RESEARCH-0058](RESEARCH-0058-targeted-verification-executable-architecture.md) | Completed; recommendation proposed | RQ-042 identifies a prepare-inspect-start architecture that binds a new snapshot and dependency-closed scope to `managed-analysis-v1`; ADR-0038 and the WP6 addendum await owner disposition |
 
 Supporting artifact:
 

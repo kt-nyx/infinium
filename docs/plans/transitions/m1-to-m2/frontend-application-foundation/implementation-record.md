@@ -18,8 +18,9 @@ Phase C candidate reached `c551c12e22522e7a2cef8c21a322aa76db8fc23e`, but its
 Checkpoint C receipt remains suspended. Independent corrections now cover
 report publication/readback, recursive request validation, export deletion,
 provenance, paging, and populated migration gaps. Targeted-verification
-execution authority remains unresolved; its declared application RPC now
-fails closed without durable mutation.
+execution remains fail closed without durable mutation. RESEARCH-0058,
+Proposed ADR-0038, and the Proposed WP6 addendum now document a candidate
+architecture, but they are not accepted and no production surface has changed.
 
 The implementation has assigned every foundation capability to an exact owner,
 and implemented the common and setup-to-live-run boundaries future frontend
@@ -1109,10 +1110,37 @@ repository-owned `dotnet`/`testhost` cleanup and reported 0 survivors. The
 final handoff check also reported 0 survivors.
 
 Consolidated review disposition: superseded by the correction request. The
-targeted-verification operation currently requires an owner/architecture
-decision because no accepted contract maps exact finding/case scope into the
-supported analyzer operation. Phase D is blocked and no Phase D artifact is
-included in this candidate.
+targeted-verification operation still requires steward and owner disposition
+of the documentation-only architecture proposal before implementation. Phase D
+is blocked and no Phase D artifact is included in this candidate.
+
+## Documentation-only targeted-verification correction proposal
+
+Planning base: `7c0ceee255c8b9ef79f4116f848a0938376d6ac3`.
+
+The correction investigation inspected the current snapshot capture,
+retained-input/prepared-run admission, `bethesda-semantic-v1`,
+`managed-analysis-v1`, candidate/dependency expansion, finding/case identity,
+lineage, persistence/migration, and `StartTargetedVerification` seams. It found
+that the existing executable operations are sufficient only when joined by a
+new typed preparation and targeted delivered-input contract.
+
+The proposal package is:
+
+- [RESEARCH-0058](../../../../research/investigations/RESEARCH-0058-targeted-verification-executable-architecture.md);
+- [Proposed ADR-0038](../../../../architecture/decisions/ADR-0038-targeted-verification-preparation-and-execution.md); and
+- [Proposed WP6 addendum](wp6-targeted-verification-addendum.md).
+
+Its recommendation is to capture a new installation snapshot, perform the
+qualified semantic extraction, derive an inspectable dependency-closed scope,
+and atomically start one ordinary `managed-analysis-v1` successor with exact
+initiation and ADR-0022 analytical lineage. It rejects source-snapshot reuse,
+ad-hoc fact filtering, automatic full-run fallback, and a new unexecutable
+operation kind.
+
+This entry is a proposal receipt, not an implementation or checkpoint receipt.
+It does not change application/domain/storage/renderer versions, complete an
+EVAL case, accept WP5/WP6 or Checkpoint C, unblock Phase D, or activate M2.
 
 ## Final closeout fields
 
