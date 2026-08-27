@@ -2,21 +2,21 @@
   "$schema": "application-contract-inventory.v1.schema.json",
   "schema_identity": "infinium.planning.application-contract-inventory/1.0.0",
   "status": "implementation-active",
-  "last_reviewed": "2026-08-26",
+  "last_reviewed": "2026-08-27",
   "audited_commit": "bd936a02562a8df1ddcb62f275cc45b6c225e594",
-  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy through owner-accepted targeted-verification architecture source bd936a02562a8df1ddcb62f275cc45b6c225e594. Focused offline evidence proves FindingReport publication/query/readback, recursive Phase C request validation, export deletion/recovery, provenance, paging, explicit populated-migration unavailability, and fail-closed targeted-verification admission with zero mutation. ADR-0038 and the accepted WP6 addendum authorize future targeted preparation, acquisition, correlation/coverage, admission, and readback contract families but do not change the current RPC count, version axes, schema fingerprint, implementation state, or native-only renderer policy. Checkpoint C remains suspended. No renderer receives direct gRPC authority; desktop delivery, M2 activation, broad analyzer claims, and semantic-oracle qualification remain outside this correction.",
+  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy for the targeted-verification implementation candidate authorized by ADR-0038 and its accepted WP6 addendum. The five native-only RPCs expose durable preparation, fresh acquisition, exact scope/correlation coverage, atomic managed-analysis-v1 successor admission, and lineage/readback without renderer authority. Checkpoint C remains under architecture-steward review. Desktop delivery, Phase D, M2 activation, broad analyzer claims, and semantic-oracle qualification remain outside this candidate.",
   "protocol": {
     "package": "infinium.application.v1",
     "service": "ApplicationService",
     "major": 1,
-    "minor": 9,
-    "application_contract_version": "1.9.0",
-    "domain_contract_version": "1.3.0",
-    "storage_contract_version": "1.14.0",
+    "minor": 10,
+    "application_contract_version": "1.10.0",
+    "domain_contract_version": "1.4.0",
+    "storage_contract_version": "1.15.0",
     "renderer_contract_version": "1.1.0",
-    "schema_fingerprint_sha256": "d4db44c3c64f4c661162c938696c8d9ffc3d258f81eac18e9a6479d09c3491f9",
-    "declared_rpc_count": 44,
-    "implemented_rpc_count": 37,
+    "schema_fingerprint_sha256": "c51f6c400547b948fd7f350ef5ac72f29d6032b2671cfba957a7be71cfc44e74",
+    "declared_rpc_count": 48,
+    "implemented_rpc_count": 42,
     "bounds": {
       "maximum_message_bytes": 1048576,
       "maximum_page_items": 100,
@@ -524,7 +524,7 @@
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#GetResultOverview",
       "current_consumers": ["generated C# contracts and ResultReviewWorkflowIntegrationTests; desktop consumer remains WP7"],
       "persistence_readback": ["AuthoritativeStore.GetResultOverview over immutable finding/case and coverage state"],
-      "bounds_and_versions": ["Application 1.9.0, projection version 1, bounded summary/failure/gap disclosure, explicit scope-limited or no-readiness state"],
+      "bounds_and_versions": ["Application 1.10.0, projection version 1, bounded summary/failure/gap disclosure, explicit scope-limited or no-readiness state"],
       "requirement_ids": ["PROD-004", "COVER-003", "UX-001"],
       "evaluation_ids": ["EVAL-0027", "EVAL-0085", "EVAL-0092"],
       "security_authorities": ["ADR-0019", "ADR-0021", "ADR-0037"],
@@ -651,15 +651,63 @@
       "renderer_policy": "typed-projection-mapping-only"
     },
     {
-      "rpc": "StartTargetedVerification",
-      "implementation_state": "declared-unimplemented",
-      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#StartTargetedVerification",
-      "current_consumers": ["generated C# named-pipe fail-closed consumer; no accepted executable consumer exists"],
-      "persistence_readback": ["After negotiation and recursive request validation, the handler returns typed Unsupported without calling persistence; runs, operations, jobs, commands, payloads, lineage, audit, verification, lifecycle, and prepared-gesture populations remain unchanged"],
-      "bounds_and_versions": ["Current declared request bounds a manual gesture, deadline, and 1-100 scope identities, but execution remains fail-closed", "Accepted ADR-0038 requires clean-break preparation/read/cancel/start/readback contracts, removes caller-authored executable scope from start, and preserves independent application/domain/storage/renderer versions until actual contract bytes change"],
+      "rpc": "BeginTargetedVerificationPreparation",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.TargetedVerification.cs#BeginTargetedVerificationPreparation",
+      "current_consumers": ["generated C# native diagnostic consumer; no renderer mapping"],
+      "persistence_readback": ["AuthoritativeStore.CreateTargetedPreparation atomically retains the exact source selection, setup/context revisions, durable command and gesture, fresh snapshot operation, initiation event, and current projection"],
+      "bounds_and_versions": ["Exactly one retained finding or case occurrence, confirmed profile/configuration/context revisions, bounded deadline, recursive unknown-field rejection, and exact idempotent replay"],
       "requirement_ids": ["FIND-005", "FIND-012", "FIND-014", "INTENT-004", "OPS-002", "SCOPE-004", "SNAP-002", "SNAP-003", "SNAP-004", "UX-005"],
-      "evaluation_ids": ["EVAL-0019", "EVAL-0020", "EVAL-0027", "EVAL-0029", "EVAL-0040", "EVAL-0041", "EVAL-0043", "EVAL-0047", "EVAL-0048", "EVAL-0069", "EVAL-0078", "EVAL-0079", "EVAL-0093"],
-      "security_authorities": ["ADR-0010", "ADR-0015", "ADR-0016", "ADR-0021", "ADR-0022", "ADR-0037", "ADR-0038"],
+      "evaluation_ids": ["EVAL-0019", "EVAL-0020", "EVAL-0027", "EVAL-0040", "EVAL-0041", "EVAL-0043", "EVAL-0047", "EVAL-0048", "EVAL-0069", "EVAL-0078", "EVAL-0079", "EVAL-0093"],
+      "security_authorities": ["ADR-0015", "ADR-0016", "ADR-0019", "ADR-0021", "ADR-0022", "ADR-0035", "ADR-0037", "ADR-0038"],
+      "renderer_policy": "native-only-never-map"
+    },
+    {
+      "rpc": "GetTargetedVerificationPreparation",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.TargetedVerification.cs#GetTargetedVerificationPreparation",
+      "current_consumers": ["generated C# native diagnostic status and inspectable-plan consumer; no renderer mapping"],
+      "persistence_readback": ["Append-only preparation/acquisition events and rebuildable projections plus content-addressed plan, scope, correlation, reuse, and evidence publication records"],
+      "bounds_and_versions": ["At most 100 scope rows per cursor-bound read; every prepared member has exactly one correlation status and remains in the denominator"],
+      "requirement_ids": ["FIND-005", "FIND-012", "FIND-014", "OPS-002", "SCOPE-004", "SNAP-003"],
+      "evaluation_ids": ["EVAL-0019", "EVAL-0020", "EVAL-0027", "EVAL-0040", "EVAL-0043", "EVAL-0048", "EVAL-0069", "EVAL-0079", "EVAL-0093"],
+      "security_authorities": ["ADR-0016", "ADR-0019", "ADR-0021", "ADR-0022", "ADR-0037", "ADR-0038"],
+      "renderer_policy": "native-only-never-map"
+    },
+    {
+      "rpc": "CancelTargetedVerificationPreparation",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.TargetedVerification.cs#CancelTargetedVerificationPreparation",
+      "current_consumers": ["generated C# native diagnostic cancellation consumer; no renderer mapping"],
+      "persistence_readback": ["AuthoritativeStore.CancelTargetedPreparation records an exact revision-bound command, gesture, append-only event, and compare-and-swap projection transition"],
+      "bounds_and_versions": ["Exact replay returns the prior cancellation; conflicting command reuse, gesture reuse, stale revision, and terminal cancellation are rejected"],
+      "requirement_ids": ["OPS-002", "UX-005"],
+      "evaluation_ids": ["EVAL-0040", "EVAL-0041", "EVAL-0047", "EVAL-0078", "EVAL-0093"],
+      "security_authorities": ["ADR-0019", "ADR-0021", "ADR-0037", "ADR-0038"],
+      "renderer_policy": "native-only-never-map"
+    },
+    {
+      "rpc": "StartTargetedVerification",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.TargetedVerification.cs#StartTargetedVerification",
+      "current_consumers": ["generated C# native diagnostic start consumer; deliberately never mapped to a renderer"],
+      "persistence_readback": ["AuthoritativeStore.CreateRun atomically binds the ready preparation, fresh snapshot, closed scope, complete correlation ledger, retained operation inputs, reuse proofs, managed-analysis-v1 request, durable command, successor run, job, admission, and initiation lineage"],
+      "bounds_and_versions": ["No caller-authored scope or generic operation; exact preparation revision/fingerprint and gesture/deadline binding; conflicting replay, concurrency loss, stale evidence, and non-startable coverage fail closed"],
+      "requirement_ids": ["FIND-005", "FIND-012", "FIND-014", "INTENT-004", "OPS-002", "SCOPE-004", "SNAP-002", "SNAP-003", "SNAP-004", "UX-005"],
+      "evaluation_ids": ["EVAL-0019", "EVAL-0020", "EVAL-0027", "EVAL-0040", "EVAL-0041", "EVAL-0043", "EVAL-0047", "EVAL-0048", "EVAL-0069", "EVAL-0078", "EVAL-0079", "EVAL-0093"],
+      "security_authorities": ["ADR-0015", "ADR-0016", "ADR-0019", "ADR-0021", "ADR-0022", "ADR-0035", "ADR-0037", "ADR-0038"],
+      "renderer_policy": "native-only-never-map"
+    },
+    {
+      "rpc": "GetTargetedVerification",
+      "implementation_state": "implemented",
+      "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.TargetedVerification.cs#GetTargetedVerification",
+      "current_consumers": ["generated C# native diagnostic successor and reconciliation readback consumer; no renderer mapping"],
+      "persistence_readback": ["Immutable targeted initiation lineage joins the ordinary successor run, retained plan and evidence identities, exact managed operation fingerprint, denominator/gaps, and append-only ADR-0022 reconciliation relationships"],
+      "bounds_and_versions": ["One exact targeted-verification identity; readback exposes typed identities and inert gaps without paths, commands, provider authority, or renderer execution authority"],
+      "requirement_ids": ["FIND-005", "FIND-014", "OPS-002", "SNAP-004"],
+      "evaluation_ids": ["EVAL-0020", "EVAL-0040", "EVAL-0043", "EVAL-0047", "EVAL-0079", "EVAL-0093"],
+      "security_authorities": ["ADR-0019", "ADR-0021", "ADR-0022", "ADR-0037", "ADR-0038"],
       "renderer_policy": "native-only-never-map"
     },
     {
@@ -721,7 +769,7 @@
         "AuthoritativeStore.ListSetupObjects and FindSetupObject"
       ],
       "bounds_and_versions": [
-        "Application 1.9.0, projection version 1, at most 100 saved configurations, closed tool/profile/provider projections"
+        "Application 1.10.0, projection version 1, at most 100 saved configurations, closed tool/profile/provider projections"
       ],
       "requirement_ids": [
         "TOOL-001",
@@ -1115,33 +1163,33 @@
     },
     {
       "family": "targeted-verification-preparation",
-      "source": "Accepted ADR-0038 and accepted WP6 addendum; production contract bytes are not yet authored",
+      "source": "application.proto targeted preparation RPC/messages, TargetedVerificationContracts, TargetedVerificationExecutor, and AuthoritativeStore targeted preparation/acquisition persistence",
       "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6",
-      "maturity": "proposed"
+      "maturity": "implementation-active"
     },
     {
       "family": "targeted-analysis-scope-correlation",
-      "source": "Accepted ADR-0038 TargetedAnalysisScope and TargetedCorrelationCoverage authority; production contract bytes are not yet authored",
+      "source": "TargetedVerificationContracts and TargetedVerificationPlanner canonical dependency closure and correlation coverage",
       "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6",
-      "maturity": "proposed"
+      "maturity": "implementation-active"
     },
     {
       "family": "targeted-delivered-coverage-input",
-      "source": "Accepted WP6 targeted delivered-input and clean-break finding-case coverage authority; production contract bytes are not yet authored",
+      "source": "AnalysisExecutionContracts targeted finding/case coverage, TargetedVerificationOperationResolver, and atomic targeted_operation_inputs persistence",
       "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6",
-      "maturity": "proposed"
+      "maturity": "implementation-active"
     },
     {
       "family": "targeted-verification-admission",
-      "source": "Accepted ADR-0038 atomic managed-analysis-v1 successor admission authority; production contract bytes are not yet authored",
+      "source": "ApplicationGrpcService.TargetedVerification start mapping and AuthoritativeStore.CreateRun atomic managed-analysis-v1 admission",
       "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6",
-      "maturity": "proposed"
+      "maturity": "implementation-active"
     },
     {
       "family": "targeted-verification-readback",
-      "source": "Accepted WP6 bounded preparation, acquisition, coverage, gap, lifecycle, and lineage readback authority; production contract bytes are not yet authored",
+      "source": "ApplicationGrpcService.TargetedVerification bounded preparation/successor readback and AuthoritativeStore immutable initiation/reconciliation lineage",
       "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6",
-      "maturity": "proposed"
+      "maturity": "implementation-active"
     }
   ],
   "generation_ownership": [

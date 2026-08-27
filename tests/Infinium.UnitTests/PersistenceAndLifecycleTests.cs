@@ -165,6 +165,117 @@ public sealed class PersistenceAndLifecycleTests
 
     [TestMethod]
     [TestCategory("Unit")]
+    [TestCategory("Lifecycle")]
+    public void TargetedPreparationCommandsRecoveryAndProjectionRebuildAreDurable()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        CoordinatorAuthority authority = store.AcquireCoordinatorAuthority(
+            "targeted-preparation-test", now, TimeSpan.FromMinutes(5));
+        RunRecord queued = store.CreateRun("source-command", "source-run", Binding("targeted-source"),
+            authority.FencingEpoch, now);
+        RunRecord running = store.Transition("source-running", queued.RunId, queued.Generation,
+            LifecycleState.Running, authority.FencingEpoch, "test source execution", now);
+        _ = store.Transition("source-completed", running.RunId, running.Generation,
+            LifecycleState.Completed, authority.FencingEpoch, "test source completion", now);
+
+        const string requestJson = "{\"schema\":\"targeted-preparation-test\"}";
+        const string captureJson = "{\"schema\":\"targeted-capture-test\"}";
+        string requestSha = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(requestJson)));
+        string captureSha = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(captureJson)));
+        TargetedPreparationPersistenceRequest request = new(
+            "targeted-prepare-command", "targeted-preparation", "targeted-prepare-gesture-0001",
+            requestJson, requestSha, "source-run", "finding", "source-finding",
+            "profile", 1, "configuration", 1, "context", 1, new string('1', 64),
+            "DiagnosticUserGesture", now.AddMinutes(2), "targeted-capture-operation", captureJson, captureSha);
+        TargetedPreparationPersistenceRecord preparation = store.CreateTargetedPreparation(
+            request, authority.FencingEpoch, now);
+        Assert.AreEqual(TargetedVerificationPreparationState.CapturingSnapshot, preparation.State);
+        Assert.AreEqual(preparation, store.CreateTargetedPreparation(request, authority.FencingEpoch, now));
+        Assert.ThrowsExactly<InvalidOperationException>(() => store.CreateTargetedPreparation(
+            request with { RequestJson = "{}", RequestSha256 = Convert.ToHexStringLower(SHA256.HashData("{}"u8)) },
+            authority.FencingEpoch, now));
+
+        TargetedPreparationPersistenceRecord acquiring = store.TransitionTargetedPreparation(
+            preparation.PreparationId, preparation.Revision, preparation.State,
+            TargetedVerificationPreparationState.AcquiringEvidence, "snapshot-ready", "{}", string.Empty,
+            "target-snapshot", "semantic-acquisition", null, null, false, false, now.AddSeconds(1));
+        const string acquisitionJson = "{\"schema\":\"semantic-acquisition-test\"}";
+        string acquisitionSha = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(acquisitionJson)));
+        SemanticAcquisitionPersistenceRecord acquisition = store.CreateSemanticAcquisition(
+            "semantic-acquisition", preparation.PreparationId, "target-snapshot", acquisitionJson,
+            acquisitionSha, new string('2', 64), now.AddMinutes(2), authority.FencingEpoch, now.AddSeconds(1));
+        _ = store.DispatchSemanticAcquisition(acquisition.AcquisitionId, 0, authority.FencingEpoch,
+            TimeSpan.FromMinutes(1), now.AddSeconds(2));
+        Assert.AreEqual(1, store.RecoverInterruptedSemanticAcquisitions(authority.FencingEpoch, now.AddSeconds(3)));
+        SemanticAcquisitionPersistenceRecord recovered = store.GetSemanticAcquisition(acquisition.AcquisitionId);
+        Assert.AreEqual("Retrying", recovered.State);
+        Assert.AreEqual(1L, recovered.Generation);
+
+        store.RebuildProjections(now.AddSeconds(4));
+        Assert.AreEqual(acquiring, store.GetTargetedPreparation(preparation.PreparationId) with
+        {
+            UpdatedAt = acquiring.UpdatedAt,
+        });
+        Assert.AreEqual("Retrying", store.GetSemanticAcquisition(acquisition.AcquisitionId).State);
+
+        TargetedCancellationPersistenceReceipt cancelled = store.CancelTargetedPreparation(
+            "targeted-cancel-command", preparation.PreparationId, acquiring.Revision,
+            "targeted-cancel-gesture-0001", authority.FencingEpoch, now.AddSeconds(5));
+        Assert.IsFalse(cancelled.Replayed);
+        Assert.AreEqual("Cancelled", store.GetSemanticAcquisition(acquisition.AcquisitionId).State);
+        Assert.ThrowsExactly<InvalidOperationException>(() => store.DispatchSemanticAcquisition(
+            acquisition.AcquisitionId, recovered.Generation, authority.FencingEpoch,
+            TimeSpan.FromMinutes(1), now.AddSeconds(6)));
+        TargetedCancellationPersistenceReceipt replay = store.CancelTargetedPreparation(
+            "targeted-cancel-command", preparation.PreparationId, acquiring.Revision,
+            "targeted-cancel-gesture-0001", authority.FencingEpoch, now.AddSeconds(6));
+        Assert.IsTrue(replay.Replayed);
+        Assert.ThrowsExactly<InvalidOperationException>(() => store.CancelTargetedPreparation(
+            "targeted-cancel-command", preparation.PreparationId, acquiring.Revision,
+            "targeted-cancel-gesture-rebound", authority.FencingEpoch, now.AddSeconds(7)));
+
+        BackupArtifact backup = store.CreateBackup("TargetedPreparation", now.AddSeconds(8));
+        string restoreRoot = Path.Combine(Path.GetTempPath(), $"infinium-targeted-restore-{Guid.NewGuid():N}");
+        try
+        {
+            using (StoragePaths restorePaths = new(restoreRoot))
+            {
+                AuthoritativeStore.RestoreBackup(backup, restorePaths);
+            }
+            using (AuthoritativeStore restored = new(new StoragePaths(restoreRoot)))
+            {
+                TargetedPreparationPersistenceRecord restoredPreparation =
+                    restored.GetTargetedPreparation(preparation.PreparationId);
+                Assert.AreEqual(TargetedVerificationPreparationState.Cancelled, restoredPreparation.State);
+                Assert.AreEqual(cancelled.Preparation.PreparationFingerprint,
+                    restoredPreparation.PreparationFingerprint);
+                restored.RebuildProjections(now.AddSeconds(9));
+                Assert.AreEqual(TargetedVerificationPreparationState.Cancelled,
+                    restored.GetTargetedPreparation(preparation.PreparationId).State);
+            }
+
+            TamperRetainedTargetedEvents(restoreRoot, preparation.PreparationId, acquisition.AcquisitionId);
+            using AuthoritativeStore tampered = new(new StoragePaths(restoreRoot));
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                tampered.GetTargetedPreparation(preparation.PreparationId));
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                tampered.GetSemanticAcquisition(acquisition.AcquisitionId));
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                tampered.RebuildProjections(now.AddSeconds(10)));
+        }
+        finally
+        {
+            if (Directory.Exists(restoreRoot))
+            {
+                Directory.Delete(restoreRoot, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
     public void Schema10ProviderPersistenceBackupRestoreRetainsOnlyBlockedAuthorityState()
     {
@@ -3326,6 +3437,39 @@ public sealed class PersistenceAndLifecycleTests
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText = sql;
         command.ExecuteNonQuery();
+    }
+
+    private static void TamperRetainedTargetedEvents(
+        string productRoot,
+        string preparationId,
+        string acquisitionId)
+    {
+        using SqliteConnection connection = OpenRaw(productRoot);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name='targeted_preparation_events_append_only_update';";
+        string preparationTrigger = (string)command.ExecuteScalar()!;
+        command.CommandText =
+            "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name='semantic_acquisition_events_append_only_update';";
+        string acquisitionTrigger = (string)command.ExecuteScalar()!;
+        using SqliteTransaction transaction = connection.BeginTransaction();
+        command.Transaction = transaction;
+        command.CommandText =
+            "DROP TRIGGER targeted_preparation_events_append_only_update; "
+            + "DROP TRIGGER semantic_acquisition_events_append_only_update;";
+        command.ExecuteNonQuery();
+        command.CommandText =
+            "UPDATE targeted_preparation_events SET projection_json='{}' "
+            + "WHERE preparation_id=$preparation AND revision=(SELECT MAX(revision) FROM targeted_preparation_events WHERE preparation_id=$preparation); "
+            + "UPDATE semantic_acquisition_events SET projection_json='{}' "
+            + "WHERE acquisition_id=$acquisition AND sequence=(SELECT MAX(sequence) FROM semantic_acquisition_events WHERE acquisition_id=$acquisition);";
+        command.Parameters.AddWithValue("$preparation", preparationId);
+        command.Parameters.AddWithValue("$acquisition", acquisitionId);
+        command.ExecuteNonQuery();
+        command.Parameters.Clear();
+        command.CommandText = preparationTrigger + "; " + acquisitionTrigger + ";";
+        command.ExecuteNonQuery();
+        transaction.Commit();
     }
 
     private static RunRecord Transition(

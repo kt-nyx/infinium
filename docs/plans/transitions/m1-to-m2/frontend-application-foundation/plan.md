@@ -574,12 +574,14 @@ Phase: C
 Objective: implement durable user interaction with results without changing
 the analysis that produced them.
 
-Correction status: review/assumption/export portions have focused correction
-evidence. ADR-0038 and the
+Correction status: review/assumption/export portions and the targeted-
+verification implementation candidate have focused correction evidence.
+ADR-0038 and the
 [accepted targeted-verification addendum](wp6-targeted-verification-addendum.md)
-now provide implementation authority for the targeted-verification vertical.
-The RPC remains Unsupported until that accepted vertical is implemented and
-producer-consumer-validated; WP6 and Checkpoint C remain incomplete.
+provide implementation authority for the targeted-verification vertical. The
+five clean-break RPCs are now implemented and producer-consumer-validated in a
+candidate awaiting corrected Checkpoint C architecture-steward review. WP6 and
+Checkpoint C remain unaccepted.
 
 Inputs:
 

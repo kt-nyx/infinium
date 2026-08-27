@@ -30,7 +30,8 @@ internal sealed record AnalysisArtifactCursor(
 public sealed partial class ApplicationGrpcService(
     CoordinatorRuntime runtime,
     ManagedRunExecutor executor,
-    SnapshotCaptureExecutor snapshotExecutor)
+    SnapshotCaptureExecutor snapshotExecutor,
+    TargetedVerificationExecutor targetedVerificationExecutor)
     : ApplicationService.ApplicationServiceBase
 {
     public override Task<HandshakeResponse> Negotiate(

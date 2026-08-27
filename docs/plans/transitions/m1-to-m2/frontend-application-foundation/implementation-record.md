@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Checkpoint C under correction; WP1-WP4 remain accepted, WP5-WP6 receipts are suspended, and Phase D is blocked
 
-Last reviewed: 2026-08-26
+Last reviewed: 2026-08-27
 Owner: Project owner
 Plan ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`
 Planning base: `32dbb2c48754666336d2da571e554ad8897ed71c`
@@ -17,12 +17,14 @@ consolidated re-review, and the complete accepted verification floor. The first
 Phase C candidate reached `c551c12e22522e7a2cef8c21a322aa76db8fc23e`, but its
 Checkpoint C receipt remains suspended. Independent corrections now cover
 report publication/readback, recursive request validation, export deletion,
-provenance, paging, and populated migration gaps. Targeted-verification
-execution remains fail closed without durable mutation. The project owner
+provenance, paging, and populated migration gaps. Targeted verification now
+has a corrected implementation candidate with fresh acquisition, closed scope
+and correlation, atomic ordinary successor admission, and immutable lineage.
+The project owner
 accepted RESEARCH-0058, ADR-0038, and the WP6 addendum on 2026-08-26 from
 architecture source `bd936a02562a8df1ddcb62f275cc45b6c225e594`. A fresh
-corrected WP6 implementation candidate is authorized; no production surface
-has changed.
+corrected WP6 implementation candidate is awaiting architecture-steward
+Checkpoint C review; WP5/WP6 and Checkpoint C remain unaccepted.
 
 The implementation has assigned every foundation capability to an exact owner,
 and implemented the common and setup-to-live-run boundaries future frontend
@@ -42,7 +44,7 @@ authority was added.
 | B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3` | Accepted after correction | Earlier receipt retained as superseded evidence; corrected receipt below |
 | B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP4` | Accepted after correction | Earlier receipt retained as superseded evidence; corrected receipt below |
 | C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5` | Under correction | Earlier receipt below is suspended pending corrected producer/consumer evidence |
-| C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6` | Under correction | Earlier receipt below is suspended; targeted verification has an architecture decision gap |
+| C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6` | Under correction | Corrected targeted-verification candidate below awaits architecture-steward Checkpoint C review; earlier receipt remains suspended |
 | D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` | Not started | None |
 | D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP8` | Not started | None |
 | E | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP9` | Not started | None |
@@ -1201,6 +1203,144 @@ vertical, and the still-declared-unimplemented/native-only RPC. `git diff
 --check` and the documentation-only changed-path audit passed. No production
 build or test ran; final repository-owned `dotnet`/`testhost` survivors were
 zero.
+
+## Corrected WP6 targeted-verification implementation candidate
+
+Designation: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6`
+targeted-verification implementation correction. Starting commit:
+`fb7478cd6c824572b534935774ed01af8e6b4382`. The final immutable candidate
+identity is the commit containing this record and is reported by the
+implementation orchestrator after commit creation.
+
+Plain-language result: the application can now prepare an inspectable recheck
+after external setup changes, capture and analyze a fresh target snapshot,
+retain exactly how every required source member correlates to that target, and
+start one ordinary managed-analysis successor without changing the source
+result. The implementation is a candidate for corrected Checkpoint C review;
+it does not accept WP5, WP6, Checkpoint C, begin Phase D, or activate M2.
+
+### Contract and execution vertical
+
+- Application protobuf `1.10.0` adds clean-break begin, status, cancellation,
+  start, and successor-readback RPCs plus bounded preparation, scope,
+  correlation, evidence progress/checkpoint, gap, and lineage projections.
+  Generated C# client/server bindings remain build-owned by `Grpc.Tools`.
+- Domain contract `1.4.0` adds functional targeted source, scope dependency,
+  correlation coverage, reuse proof, plan, acquisition, and initiation-lineage
+  contracts with deterministic identity and bounded validation.
+- A native diagnostic consumer exercises all five generated RPCs over the real
+  named-pipe application service. `StartTargetedVerification` is deliberately
+  `native-only-never-map`; renderer contract `1.1.0` adds no operation.
+- Preparation captures a fresh saved-profile snapshot, directly initiates the
+  ADR-0016 evidence-acquisition owner, hydrates one canonical retained finding
+  or case from authoritative records, closes its required members/shared-cause
+  dependencies, and assigns exactly one evidenced correlation status to every
+  member. Identity/scope ambiguity, unsupported correlation, or missing proof
+  is non-startable; correlated analyzer/content gaps may start only as an
+  inspectable limited plan with the member retained in the denominator.
+- Start resolves current delivered candidates plus the separate finding/case
+  coverage denominator and atomically admits their three content-addressed
+  input payloads, explicit reuse decisions, target snapshot, operation hash,
+  durable command, successor run/job, admission, and initiation lineage. The
+  only executable operation is `managed-analysis-v1`; source-snapshot proof,
+  caller narrowing, generic fallback, fabricated absent candidates, and source
+  result mutation are rejected.
+- Successor completion retains exact/revision/related/ambiguous/distinct
+  ADR-0022 reconciliation. `ProvenAbsent` remains a completed scoped coverage
+  observation and never becomes a claim that the original issue is resolved or
+  the installation is safe.
+
+### Persistence, migration, and version identities
+
+- Storage contract `1.15.0` and schema `16` add append-only preparation,
+  snapshot/acquisition, attempt/fence/checkpoint/progress/publication, scope,
+  correlation, reuse, content-addressed operation input, start admission,
+  application link, initiation lineage, and result-link state with rebuildable
+  current projections.
+- Migration `targeted-verification-preparation-0016` accepts the exact schema-15
+  source, handles zero population, rejects nonzero retired targeted-operation
+  state, binds expected objects/triggers, and fails closed on interruption,
+  drift, or tamper. Backup/restore, replay, recovery, projection rebuild,
+  deletion-impact, and payload reconciliation include the new state.
+- Protobuf contract-set fingerprint:
+  `c51f6c400547b948fd7f350ef5ac72f29d6032b2671cfba957a7be71cfc44e74`.
+  Schema-16 fingerprint:
+  `727285fbdb9a4a91e850a6bfad3749262be75e6388eae14edf9954eed23d783c`.
+  The application inventory records 48 declared and 42 implemented RPCs.
+
+### Consolidated review and corrections
+
+The consolidated product-meaning, invariant, security, provenance, lifecycle,
+persistence, migration, generated-contract, evaluation, naming, and diff review
+found and corrected the following must-fix defects on the same mutable
+candidate:
+
+- negative deterministic seeds could violate identifier bounds;
+- a malformed queued snapshot request could repeat a recovery crash loop;
+- targeted admission initially shared the wrong prepared-run foreign-key path
+  and did not enforce gesture uniqueness across both admission families;
+- empty coverage and duplicate typed references could misstate missing input;
+- correlation initially required statuses only for mandatory members, admitted
+  invalid status/proof shapes, and allowed out-of-scope observations;
+- changed stable identities were not included when rebuilding current delivered
+  candidates; finding closure could duplicate its root and self-edge;
+- cancellation did not atomically cancel and fence active evidence acquisition;
+- event hashes did not bind their projection bytes, and read/rebuild did not
+  reject projection/event tamper;
+- evidence attempt, progress, checkpoint, structural comparison, and effective
+  configuration were not all visible through native readback;
+- reconciliation retry could duplicate immutable relationship rows;
+- the three successor operation inputs were admitted before the atomic start
+  transaction, allowing failed admission to leave payloads; they are now
+  admitted, linked, counted, and exact-retry-validated inside that transaction.
+- the first plan mislabeled the finding/case payload as reusable documentation
+  while the successor retained different source inputs; source documentation,
+  analyzer declarations, analysis context, and effective configuration now
+  require explicit exact-fingerprint reuse proofs, the prior delivered input is
+  explicitly recomputed, and unclassified source inputs fail closed.
+- the first complete floor exposed four historical migration fixtures that
+  downgraded schema metadata without removing schema-16 targeted objects, plus
+  two assertions still fixed at schema 15; the fixtures now use one exact
+  schema-16 removal manifest and assert the implementation-active schema.
+
+No owner/authority decision was required. Review found no new analysis
+operation, generic execution authority, renderer/backend proxy, path/command/
+credential/provider authority, source-result mutation, private-fixture access,
+or independent semantic-oracle claim.
+
+### Verification receipt
+
+Focused verification before the final floor:
+
+- targeted planner, lifecycle, persistence, and migration selection: 10 passed;
+- real named-pipe managed-analysis targeted successor integration: 1 passed;
+- targeted application/authority/renderer contract selection: 34 passed;
+- earlier full unit selection during development: 275 passed, 1 expected skip;
+- earlier full contract selection during development: 216 passed.
+
+Final complete verification floor on the corrected review-ready candidate:
+
+- `dotnet restore Infinium.sln --locked-mode --nologo`: passed;
+- `dotnet build Infinium.sln -c Release --no-restore --nologo`: passed with
+  zero warnings and zero errors;
+- `dotnet test Infinium.sln -c Release --no-build --nologo`: 731 passed,
+  10 expected skips, zero failed (unit 277/1 skip, contract 216, integration
+  138, security 22, fault 10, evaluation 68/9 skips);
+- `dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity
+  minimal`: passed;
+- documentation validation: passed 153 metadata files, 155 Markdown link
+  sources, and 19 JSON files;
+- functional naming: passed 190 exact reviewed exceptions with zero
+  unexplained findings;
+- dependency-manifest check and `git diff --check`: passed.
+
+The first complete-floor attempt exposed stale downgrade fixtures and was
+treated as diagnostic evidence; after the focused 5/5 migration/restart rerun,
+the complete floor above passed. Repository-owned `dotnet`/`testhost` process
+audits after every development batch and final floor reported exactly zero
+survivors; the final audit matches both repository executable paths and
+repository-bearing command lines so system-hosted repository processes are
+included.
 
 ## Final closeout fields
 

@@ -305,7 +305,7 @@ internal static class PreparedAnalysisTestFixture
             100);
     }
 
-    private static Mo2SnapshotCaptureResult Snapshot(
+    internal static Mo2SnapshotCaptureResult Snapshot(
         string snapshotId,
         string mo2Root,
         string profileName)
@@ -322,7 +322,11 @@ internal static class PreparedAnalysisTestFixture
             executable,
             executable,
             executable,
-            [], [], [], [], [], []);
+            [], [], [],
+            [new("mods", Path.Combine(mo2Root, "mods"), "fixture-mods-root"),
+                new("overwrite", Path.Combine(mo2Root, "overwrite"), "fixture-overwrite-root"),
+                new("game-data", Path.Combine(mo2Root, "game", "Data"), "fixture-game-data-root")],
+            [], []);
         InstallationSnapshotContract contract = new(
             new OpaqueId(snapshotId),
             new ContractVersion(3, 0, 0),
@@ -353,18 +357,19 @@ internal static class PreparedAnalysisTestFixture
         return new(SnapshotCaptureState.Completed, snapshot, []);
     }
 
-    private static void PublishSnapshot(
+    internal static void PublishSnapshot(
         AuthoritativeStore store,
         CoordinatorAuthority authority,
         Mo2SnapshotCaptureResult capture,
         byte[] bytes,
-        string sha256)
+        string sha256,
+        string operationId = "snapshot-operation-prepared")
     {
         DateTimeOffset now = DateTimeOffset.UtcNow;
         const string request = "{}";
         SnapshotCaptureOperationRecord operation = store.CreateSnapshotCaptureOperation(
-            "snapshot-operation-prepared",
-            "snapshot-command-prepared",
+            operationId,
+            operationId + "-command",
             request,
             Hash(Encoding.UTF8.GetBytes(request)),
             "EvaluationHarness",

@@ -176,6 +176,48 @@ public sealed class SnapshotCaptureAuthorityIntegrationTests
 
     [TestMethod]
     [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
+    public void MalformedQueuedRequestBecomesDurablyFailed()
+    {
+        using CaptureStoreContext context = new();
+        string json = "{\"unknown\":true}";
+        string sha256 = Convert.ToHexString(
+            SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(json)))
+            .ToLowerInvariant();
+        SnapshotCaptureOperationRecord operation =
+            context.Store.CreateSnapshotCaptureOperation(
+                "malformed-command",
+                "malformed-operation",
+                json,
+                sha256,
+                "EvaluationHarness",
+                context.Now.AddMinutes(1),
+                context.Authority.FencingEpoch,
+                context.Now);
+
+        context.Store.FailQueuedSnapshotCapture(
+            operation.OperationId,
+            operation.Generation,
+            context.Authority.FencingEpoch,
+            context.Now.AddSeconds(1));
+
+        SnapshotCaptureOperationRecord failed =
+            context.Store.GetSnapshotCaptureOperation(operation.OperationId);
+        Assert.AreEqual("Failed", failed.State);
+        Assert.AreEqual(operation.Generation + 1, failed.Generation);
+        Assert.IsNull(context.Store.GetNextDispatchableSnapshotCapture());
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            context.Store.FailQueuedSnapshotCapture(
+                operation.OperationId,
+                operation.Generation,
+                context.Authority.FencingEpoch,
+                context.Now.AddSeconds(2)));
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
     [TestCategory("Security")]
     [TestProperty("Category", "Integration")]
     [TestProperty("Category", "Security")]

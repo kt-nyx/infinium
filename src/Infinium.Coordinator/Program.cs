@@ -98,6 +98,7 @@ try
     builder.Services.AddSingleton<WorkerBootstrapRegistry>();
     builder.Services.AddSingleton<ManagedRunExecutor>();
     builder.Services.AddSingleton<SnapshotCaptureExecutor>();
+    builder.Services.AddSingleton<TargetedVerificationExecutor>();
     builder.Services.AddHostedService<CoordinatorLeaseRenewalService>();
     builder.Services.AddGrpc(options =>
     {
@@ -150,6 +151,7 @@ try
             DateTimeOffset.UtcNow);
         app.Services.GetRequiredService<ManagedRunExecutor>().RecoverAtStartup();
         app.Services.GetRequiredService<SnapshotCaptureExecutor>().RecoverAtStartup();
+        app.Services.GetRequiredService<TargetedVerificationExecutor>().RecoverAtStartup();
         await app.WaitForShutdownAsync().ConfigureAwait(false);
     }
     finally

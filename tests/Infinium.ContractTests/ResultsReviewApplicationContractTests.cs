@@ -23,7 +23,9 @@ public sealed class ResultsReviewApplicationContractTests
         [
             "GetResultOverview", "ListResultItems", "GetResultDetail", "GetEvidenceExpansion",
             "GetFocusedModView", "GetReviewState", "SubmitReviewEvent", "ListAssumptions",
-            "SubmitAssumptionEvent", "StartTargetedVerification", "CreateStructuredExport",
+            "SubmitAssumptionEvent", "BeginTargetedVerificationPreparation",
+            "GetTargetedVerificationPreparation", "CancelTargetedVerificationPreparation",
+            "StartTargetedVerification", "GetTargetedVerification", "CreateStructuredExport",
             "GetStructuredExport", "ListFindingReports", "GetFindingReport",
             "PreviewStructuredExportDeletion", "DeleteStructuredExport",
         ];
@@ -51,9 +53,9 @@ public sealed class ResultsReviewApplicationContractTests
     [TestProperty("Category", "Contract")]
     public void PhaseCComputedVersionAxesAndFingerprintAreExact()
     {
-        Assert.AreEqual("1.14.0", ProtocolConstants.StorageContractVersion);
+        Assert.AreEqual("1.15.0", ProtocolConstants.StorageContractVersion);
         Assert.AreEqual(
-            "d4db44c3c64f4c661162c938696c8d9ffc3d258f81eac18e9a6479d09c3491f9",
+            "c51f6c400547b948fd7f350ef5ac72f29d6032b2671cfba957a7be71cfc44e74",
             Convert.ToHexStringLower(ProtocolConstants.Version.SchemaFingerprintSha256.Span));
     }
 
@@ -65,7 +67,7 @@ public sealed class ResultsReviewApplicationContractTests
     public void EveryPhaseCRequestRejectsUnknownFieldsAndInvalidEnumsRecursively()
     {
         IMessage[] requests = ValidPhaseCRequests();
-        Assert.HasCount(16, requests);
+        Assert.HasCount(20, requests);
         foreach (IMessage request in requests)
         {
             ApplicationContractValidator.ValidatePhaseC(request);
@@ -165,12 +167,38 @@ public sealed class ResultsReviewApplicationContractTests
                 ProfileId = "profile-contract-id", EventKind = "create", Origin = "user-provided",
                 Confirmation = "user-confirmed", Subject = "subject", InertValue = "value", Scope = "scope",
             },
+            new BeginTargetedVerificationPreparationRequest
+            {
+                IdempotencyKey = "verification-prepare-contract-key", UserGestureId = "prepare-gesture-contract-id",
+                SourceRunId = Run(), SourceFindingOccurrenceId = "finding-contract-id",
+                ConfirmedProfileId = "profile-contract-id", ExpectedConfirmedProfileRevision = 1,
+                SavedConfigurationId = "configuration-contract-id", ExpectedSavedConfigurationRevision = 1,
+                AnalysisContextId = "context-contract-id", ExpectedAnalysisContextRevision = 1,
+                AnalysisContextFingerprintSha256 = new string('a', 64),
+                RequestedPreparationId = "targeted-preparation-contract-id",
+                InitiationKind = ManualInitiationKind.EvaluationHarness,
+                DispatchDeadline = new Instant { UnixSeconds = 1_800_000_000 },
+            },
+            new GetTargetedVerificationPreparationRequest
+            {
+                PreparationId = "targeted-preparation-contract-id", MaximumMembers = 10,
+            },
+            new CancelTargetedVerificationPreparationRequest
+            {
+                IdempotencyKey = "verification-cancel-contract-key", PreparationId = "targeted-preparation-contract-id",
+                ExpectedRevision = 1, UserGestureId = "cancel-gesture-contract-id",
+            },
             new StartTargetedVerificationRequest
             {
+                PreparationId = "targeted-preparation-contract-id", ExpectedPreparationRevision = 2,
+                ExpectedPreparationFingerprintSha256 = new string('b', 64),
                 IdempotencyKey = "verification-contract-key", RequestedRunId = "run-target-contract-id",
-                SourceRunId = Run(), SourceFindingOccurrenceId = "finding-contract-id",
-                ExactScopeIds = { "scope-contract-id" }, UserGestureId = "gesture-contract-id",
+                InitiationKind = ManualInitiationKind.EvaluationHarness, UserGestureId = "gesture-contract-id",
                 DispatchDeadline = new Instant { UnixSeconds = 1_800_000_000 },
+            },
+            new GetTargetedVerificationRequest
+            {
+                TargetedVerificationId = "targeted-verification-contract-id",
             },
             new CreateStructuredExportRequest
             {

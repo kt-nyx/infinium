@@ -231,6 +231,22 @@ internal static class ManagedAnalysisOrchestrator
         {
             AnalysisComposition.Validate(request.AnalysisComposition);
         }
+        if (request.TargetedCorrelationCoverage is not null)
+        {
+            ArtifactReferenceContract? coverageReference = request.ExecutionInput.SourceInputs.SingleOrDefault(item =>
+                item.ArtifactId == request.TargetedCorrelationCoverage.CoverageId);
+            if (coverageReference is null
+                || coverageReference.Fingerprint != request.TargetedCorrelationCoverage.CanonicalFingerprint
+                || coverageReference.Availability != "retained"
+                || request.TargetedCorrelationCoverage.TargetSnapshotId
+                    != request.ExecutionInput.InstallationSnapshot.ArtifactId
+                || request.TargetedCorrelationCoverage.PopulationDenominator
+                    != request.FindingCase.CoverageMemberFacts.Count)
+            {
+                throw new AnalysisIdentityDriftException(
+                    "The targeted correlation coverage differs from the immutable managed request.");
+            }
+        }
         _ = WithDocumentationReferences(request, request.ExecutionInput);
         ValidateDeliveredCandidateInput(request, runId, binding);
         SemanticAnalysisContextIdentity.Validate(request.AnalysisContext);

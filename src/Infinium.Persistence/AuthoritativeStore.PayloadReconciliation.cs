@@ -180,6 +180,7 @@ public sealed partial class AuthoritativeStore
                 """,
                 transaction,
                 ("$now", ToText(now)));
+            RebuildTargetedVerificationProjections(transaction);
             transaction.Commit();
         }
     }

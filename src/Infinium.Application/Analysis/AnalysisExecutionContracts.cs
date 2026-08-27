@@ -87,17 +87,40 @@ public sealed record FindingCasePhaseParameters(
 {
     public IReadOnlyList<ReconciliationCandidateFactContract> ReconciliationCandidateFacts { get; init; } = [];
 
-    public FindingCaseInputBuildRequest Bind(CandidateAnalysisContract candidateAnalysis) => new(
-        PromotionPolicyId, PromotionPolicyVersion, ReconciliationPolicyId,
-        ReconciliationPolicyVersion, ReconciliationActorId, AssessmentTime,
-        candidateAnalysis, FindingEvidenceFacts, FindingRecommendationFacts,
-        SharedCauseProofs, TaxonomySubjects, RetainedTaxonomyFacts,
-        TaxonomyProjectionInputs, CoveragePopulationFacts, CoverageMemberFacts,
-        CoverageFailureFacts, PriorFindings, PriorCases, ProducerCompatibilities,
-        RelatedFindingFacts, Boundaries)
+    public TargetedCorrelationCoverageContract? TargetedCorrelationCoverage { get; init; }
+
+    public FindingCaseInputBuildRequest Bind(CandidateAnalysisContract candidateAnalysis)
     {
-        ReconciliationCandidateFacts = ReconciliationCandidateFacts,
-    };
+        HashSet<OpaqueId> currentHypotheses = candidateAnalysis.Hypotheses.Select(item => item.HypothesisId).ToHashSet();
+        IReadOnlyList<FindingEvidenceFactContract> evidence = TargetedCorrelationCoverage is null
+            ? FindingEvidenceFacts : FindingEvidenceFacts.Where(item => currentHypotheses.Contains(item.HypothesisId)).ToArray();
+        IReadOnlyList<FindingRecommendationFactContract> recommendations = TargetedCorrelationCoverage is null
+            ? FindingRecommendationFacts : FindingRecommendationFacts.Where(item => currentHypotheses.Contains(item.HypothesisId)).ToArray();
+        IReadOnlyList<SharedCauseProofContract> causes = TargetedCorrelationCoverage is null
+            ? SharedCauseProofs : SharedCauseProofs.Where(item => item.HypothesisIds.All(currentHypotheses.Contains)).ToArray();
+        IReadOnlyList<TaxonomyClassificationFactContract> taxonomy = TargetedCorrelationCoverage is null
+            ? RetainedTaxonomyFacts : RetainedTaxonomyFacts.Where(item => currentHypotheses.Contains(item.HypothesisId)).ToArray();
+        IReadOnlyList<TaxonomySubjectFact> subjects = TargetedCorrelationCoverage is null
+            ? TaxonomySubjects : TaxonomySubjects.Where(item => currentHypotheses.Contains(item.HypothesisId)).ToArray();
+        IReadOnlyList<TaxonomyProjectionInputContract> projections = TargetedCorrelationCoverage is null
+            ? TaxonomyProjectionInputs : [];
+        IReadOnlyList<RelatedFindingFactContract> related = TargetedCorrelationCoverage is null
+            ? RelatedFindingFacts : RelatedFindingFacts.Where(item => currentHypotheses.Contains(item.CurrentHypothesisId)).ToArray();
+        IReadOnlyList<ReconciliationCandidateFactContract> candidates = TargetedCorrelationCoverage is null
+            ? ReconciliationCandidateFacts
+            : currentHypotheses.Select(id => new ReconciliationCandidateFactContract(
+                CandidateAnalysisIdentity.StableId("targeted-reconciliation-candidate", id.Value), id,
+                PriorFindings.Select(item => item.FindingOccurrenceId).ToArray())).ToArray();
+        return new(PromotionPolicyId, PromotionPolicyVersion, ReconciliationPolicyId,
+            ReconciliationPolicyVersion, ReconciliationActorId, AssessmentTime,
+            candidateAnalysis, evidence, recommendations, causes, subjects, taxonomy,
+            projections, CoveragePopulationFacts, CoverageMemberFacts,
+            CoverageFailureFacts, PriorFindings, PriorCases, ProducerCompatibilities,
+            related, Boundaries)
+        {
+            ReconciliationCandidateFacts = candidates,
+        };
+    }
 }
 
 public sealed record ManagedAnalysisOrchestrationRequest(
@@ -120,6 +143,8 @@ public sealed record ManagedAnalysisOrchestrationRequest(
     public const long MaximumRequestBytes = 896L * 1024;
     [JsonPropertyName("m1_slice9_composition")]
     public AnalysisCompositionEnvelope? AnalysisComposition { get; init; }
+
+    public TargetedCorrelationCoverageContract? TargetedCorrelationCoverage { get; init; }
 }
 
 public sealed record AnalysisPhaseExecution(

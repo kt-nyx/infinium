@@ -14,11 +14,10 @@ public sealed partial class ApplicationFoundationAuthorityContractTests
         "GetProviderProfile",
         "GetProviderReplay",
         "ListProviderBudget",
-        "StartTargetedVerification",
         "SubmitProviderEnrollment",
         "SubmitProviderOperation",
     ];
-    private static readonly string[] DeclaredFailClosedRpcs = ["StartTargetedVerification"];
+    private static readonly string[] DeclaredFailClosedRpcs = [];
 
     [TestMethod]
     [TestCategory("Contract")]

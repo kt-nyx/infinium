@@ -338,6 +338,18 @@ public sealed partial class AuthoritativeStore
             {
                 ValidateResultsPublicationMigration();
             }
+            using SqliteCommand targetedVersionCommand = connection.CreateCommand();
+            targetedVersionCommand.CommandText = "PRAGMA user_version;";
+            int targetedVersion = Convert.ToInt32(targetedVersionCommand.ExecuteScalar(),
+                System.Globalization.CultureInfo.InvariantCulture);
+            if (targetedVersion == 15)
+            {
+                ApplyTargetedVerificationMigration();
+            }
+            else if (targetedVersion == 16)
+            {
+                ValidateTargetedVerificationMigration();
+            }
         }
     }
 
@@ -2280,6 +2292,33 @@ public sealed partial class AuthoritativeStore
         "candidate_evidence_authority",
     ];
 
+    private static readonly string[] TargetedVerificationAppendOnlyTables =
+    [
+        "targeted_preparation_requests",
+        "targeted_preparation_events",
+        "targeted_preparation_commands",
+        "targeted_snapshot_links",
+        "semantic_acquisition_runs",
+        "semantic_acquisition_jobs",
+        "semantic_acquisition_commands",
+        "semantic_acquisition_events",
+        "semantic_acquisition_attempts",
+        "semantic_acquisition_checkpoints",
+        "semantic_acquisition_progress",
+        "semantic_acquisition_publications",
+        "semantic_acquisition_application_links",
+        "targeted_scope_roots",
+        "targeted_scope_members",
+        "targeted_scope_dependencies",
+        "targeted_correlation_rows",
+        "targeted_reuse_decisions",
+        "targeted_verification_plans",
+        "targeted_operation_inputs",
+        "targeted_start_admissions",
+        "targeted_initiation_lineage",
+        "targeted_result_links",
+    ];
+
     private static readonly (string Table, string Column, bool Optional)[] ProviderAuthorizationExtensionCanonicalTimestampColumns =
     [
         ("provider_budget_limits", "created_at", false),
@@ -2291,6 +2330,15 @@ public sealed partial class AuthoritativeStore
 
     private static readonly HashSet<string> RequiredSchemaObjects =
     [
+        .. TargetedVerificationAppendOnlyTables.Select(table => $"table:{table}"),
+        .. TargetedVerificationAppendOnlyTables.SelectMany(table => new[]
+        {
+            $"trigger:{table}_append_only_update",
+            $"trigger:{table}_append_only_delete",
+        }),
+        "table:targeted_preparation_projection",
+        "table:semantic_acquisition_projection",
+        "index:idx_targeted_preparation_source",
         "table:scope_reversion_v2_analyses",
         "table:scope_reversion_v2_items",
         "table:scope_reversion_v2_artifacts",

@@ -30,7 +30,8 @@ public sealed partial class AuthoritativeStore
         string? operationRequestJson = null,
         string? startUserGestureId = null,
         string? startPreparationId = null,
-        string? startSubmissionFingerprint = null)
+        string? startSubmissionFingerprint = null,
+        TargetedStartAdmissionPersistence? targetedStart = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(durableCommandId);
         ArgumentException.ThrowIfNullOrWhiteSpace(runId);
@@ -76,6 +77,37 @@ public sealed partial class AuthoritativeStore
         if ((operationKind is null) != (operationRequestJson is null))
         {
             throw new ArgumentException("A durable run operation kind and request must be supplied together.");
+        }
+        if (targetedStart is not null
+            && (startPreparationId != targetedStart.PreparationId
+                || startUserGestureId != targetedStart.UserGestureId
+                || startSubmissionFingerprint != targetedStart.SubmissionFingerprint
+                || operationKind != ManagedRunOperationKinds.ManagedAnalysis
+                || runId != targetedStart.TargetedVerificationId.Replace("targeted-verification-", "", StringComparison.Ordinal)))
+        {
+            throw new ArgumentException("The targeted start admission differs from its prepared run submission.");
+        }
+        if (targetedStart is not null)
+        {
+            ValidateSha256(targetedStart.StartRequestSha256);
+            string[] requiredInputKinds =
+            [
+                "targeted-candidate-delivered-input",
+                "targeted-correlation-coverage",
+                "targeted-resolved-input-manifest",
+            ];
+            if (targetedStart.OperationInputs.Count != requiredInputKinds.Length
+                || !targetedStart.OperationInputs.Select(item => item.InputKind)
+                    .Order(StringComparer.Ordinal).SequenceEqual(requiredInputKinds.Order(StringComparer.Ordinal))
+                || targetedStart.OperationInputs.Select(item => (item.InputKind, item.InputId)).Distinct().Count()
+                    != targetedStart.OperationInputs.Count
+                || targetedStart.OperationInputs.Any(item => item.InputKind.Length is < 1 or > 64
+                    || item.InputId.Length is < 1 or > 256
+                    || item.Bytes.Length is < 1 or > 64 * 1024 * 1024))
+            {
+                throw new InvalidDataException(
+                    "A targeted start requires exactly the closed bounded operation-input set.");
+            }
         }
         string? operationSha256 = null;
         if (operationKind is not null)
@@ -125,6 +157,7 @@ public sealed partial class AuthoritativeStore
                     throw new InvalidOperationException("A durable command key cannot be rebound to different run-operation inputs.");
                 }
                 if (startUserGestureId is not null
+                    && targetedStart is null
                     && (existingRun.RunId != runId
                         || !string.Equals(
                             ScalarStringOrNull(
@@ -144,6 +177,25 @@ public sealed partial class AuthoritativeStore
                     throw new InvalidOperationException(
                         "A durable command key cannot be rebound to different prepared start inputs.");
                 }
+                if (targetedStart is not null
+                    && (ScalarLong(
+                            "SELECT COUNT(*) FROM targeted_start_admissions WHERE command_id=$command AND targeted_verification_id=$verification AND preparation_id=$preparation AND successor_run_id=$run AND start_request_sha256=$startRequest AND submission_fingerprint=$fingerprint;",
+                            transaction, ("$command", durableCommandId), ("$verification", targetedStart.TargetedVerificationId),
+                            ("$preparation", targetedStart.PreparationId), ("$run", runId),
+                            ("$startRequest", targetedStart.StartRequestSha256),
+                            ("$fingerprint", targetedStart.SubmissionFingerprint)) != 1
+                        || ScalarLong(
+                            "SELECT COUNT(*) FROM targeted_operation_inputs WHERE preparation_id=$preparation;",
+                            transaction, ("$preparation", targetedStart.PreparationId))
+                            != targetedStart.OperationInputs.Count
+                        || targetedStart.OperationInputs.Any(input => ScalarLong(
+                            "SELECT COUNT(*) FROM targeted_operation_inputs WHERE preparation_id=$preparation AND input_kind=$kind AND input_id=$input AND input_sha256=$sha;",
+                            transaction, ("$preparation", targetedStart.PreparationId),
+                            ("$kind", input.InputKind), ("$input", input.InputId),
+                            ("$sha", Convert.ToHexStringLower(SHA256.HashData(input.Bytes)))) != 1)))
+                {
+                    throw new InvalidOperationException("A targeted start retry differs from its accepted admission.");
+                }
 
                 transaction.Commit();
                 return existingRun;
@@ -157,10 +209,14 @@ public sealed partial class AuthoritativeStore
 
             EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
             if (startUserGestureId is not null
-                && ScalarLong(
+                && (ScalarLong(
                     "SELECT COUNT(*) FROM prepared_run_submissions WHERE user_gesture_id=$gesture;",
                     transaction,
-                    ("$gesture", startUserGestureId)) != 0)
+                    ("$gesture", startUserGestureId))
+                    + ScalarLong(
+                        "SELECT COUNT(*) FROM targeted_start_admissions WHERE user_gesture_id=$gesture;",
+                        transaction,
+                        ("$gesture", startUserGestureId))) != 0)
             {
                 throw new InvalidOperationException(
                     "A one-shot user gesture identity cannot authorize more than one durable command.");
@@ -240,7 +296,7 @@ public sealed partial class AuthoritativeStore
                     """, transaction, ("$run", runId), ("$kind", operationKind),
                     ("$request", operationRequestJson), ("$sha", operationSha256), ("$now", ToText(now)));
             }
-            if (startUserGestureId is not null)
+            if (startUserGestureId is not null && targetedStart is null)
             {
                 Execute(
                     "INSERT INTO prepared_run_submissions(command_id,preparation_id,user_gesture_id,submission_fingerprint,submitted_at) "
@@ -251,6 +307,111 @@ public sealed partial class AuthoritativeStore
                     ("$gesture", startUserGestureId),
                     ("$fingerprint", startSubmissionFingerprint),
                     ("$now", ToText(now)));
+            }
+            if (targetedStart is not null)
+            {
+                TargetedPreparationPersistenceRecord preparation = GetTargetedPreparationCore(
+                    targetedStart.PreparationId, transaction);
+                if (preparation.State is not (TargetedVerificationPreparationState.Ready
+                        or TargetedVerificationPreparationState.ReadyWithGaps)
+                    || !preparation.Startable
+                    || preparation.PreparationFingerprint != targetedStart.PreparationFingerprint
+                    || preparation.TargetSnapshotId != targetedStart.TargetSnapshotId
+                    || preparation.EvidenceAcquisitionId != targetedStart.EvidenceAcquisitionId)
+                {
+                    throw new InvalidOperationException("The targeted preparation is stale or no longer startable.");
+                }
+                foreach (TargetedOperationInputPersistence input in targetedStart.OperationInputs)
+                {
+                    string payloadId = AdmitCoordinatorPayload(
+                        input.Bytes, input.InputKind, input.InputId, now, transaction);
+                    string inputSha = Convert.ToHexStringLower(SHA256.HashData(input.Bytes));
+                    string inputRowId = "targeted-input-" + Convert.ToHexStringLower(SHA256.HashData(
+                        Encoding.UTF8.GetBytes(string.Join('\n', targetedStart.PreparationId,
+                            input.InputKind, input.InputId, inputSha))))[..32];
+                    Execute(
+                        "INSERT INTO targeted_operation_inputs(input_row_id,preparation_id,input_kind,input_id,payload_id,input_sha256,created_at) "
+                        + "VALUES($row,$preparation,$kind,$input,$payload,$sha,$now);",
+                        transaction,
+                        ("$row", inputRowId), ("$preparation", targetedStart.PreparationId),
+                        ("$kind", input.InputKind), ("$input", input.InputId),
+                        ("$payload", payloadId), ("$sha", inputSha), ("$now", ToText(now)));
+                }
+                string lineageId = targetedStart.TargetedVerificationId + "-initiation-lineage";
+                Execute(
+                    """
+                    INSERT INTO targeted_start_admissions(
+                        admission_id,targeted_verification_id,preparation_id,command_id,user_gesture_id,
+                        start_request_sha256,submission_fingerprint,successor_run_id,managed_operation_kind,managed_operation_fingerprint,created_at)
+                    VALUES($admission,$verification,$preparation,$command,$gesture,$startRequest,$fingerprint,$run,
+                        'managed-analysis-v1',$operationFingerprint,$now);
+                    INSERT INTO targeted_initiation_lineage(
+                        lineage_id,targeted_verification_id,source_run_id,source_occurrence_id,successor_run_id,
+                        preparation_id,target_snapshot_id,evidence_acquisition_id,managed_operation_fingerprint,created_at)
+                    VALUES($lineage,$verification,$source,$occurrence,$run,$preparation,$snapshot,$acquisition,
+                        $operationFingerprint,$now);
+                    INSERT INTO semantic_acquisition_application_links(
+                        link_id,acquisition_id,preparation_id,successor_run_id,semantic_output_id,use_kind,created_at)
+                    SELECT $applicationLink,$acquisition,$preparation,$run,p.semantic_output_id,'successor-input',$now
+                    FROM semantic_acquisition_publications p WHERE p.acquisition_id=$acquisition;
+                    """, transaction,
+                    ("$admission", targetedStart.AdmissionId), ("$verification", targetedStart.TargetedVerificationId),
+                    ("$preparation", targetedStart.PreparationId), ("$command", durableCommandId),
+                    ("$gesture", targetedStart.UserGestureId), ("$startRequest", targetedStart.StartRequestSha256),
+                    ("$fingerprint", targetedStart.SubmissionFingerprint),
+                    ("$run", runId), ("$operationFingerprint", targetedStart.ManagedOperationFingerprint),
+                    ("$lineage", lineageId), ("$source", targetedStart.SourceRunId),
+                    ("$occurrence", targetedStart.SourceOccurrenceId), ("$snapshot", targetedStart.TargetSnapshotId),
+                    ("$acquisition", targetedStart.EvidenceAcquisitionId),
+                    ("$applicationLink", targetedStart.TargetedVerificationId + "-semantic-input"), ("$now", ToText(now)));
+                long revision = checked(preparation.Revision + 1);
+                string eventId = preparation.PreparationId + "-event-" + revision;
+                string eventJson = JsonSerializer.Serialize(new
+                {
+                    targetedStart.TargetedVerificationId,
+                    successorRunId = runId,
+                    managedOperationFingerprint = targetedStart.ManagedOperationFingerprint,
+                });
+                string preparationFingerprint = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(
+                    string.Join('\n', preparation.PreparationFingerprint, revision, "Started", runId,
+                        targetedStart.ManagedOperationFingerprint))));
+                string projectionJson = PreparationProjectionJson(revision,
+                    TargetedVerificationPreparationState.Started, preparationFingerprint,
+                    preparation.TerminalReason, preparation.CaptureOperationId, preparation.TargetSnapshotId,
+                    preparation.EvidenceAcquisitionId, preparation.PlanId, preparation.PlanFingerprint,
+                    false, preparation.Limited, eventId, now);
+                Execute(
+                    "INSERT INTO targeted_preparation_events(event_id,preparation_id,revision,event_kind,event_sha256,event_json,projection_json,created_at) "
+                    + "VALUES($event,$preparation,$revision,'successor-admitted',$eventSha,$eventJson,$projectionJson,$now);",
+                    transaction, ("$event", eventId), ("$preparation", preparation.PreparationId),
+                    ("$revision", revision),
+                    ("$eventSha", TargetedEventHash(eventJson, projectionJson)),
+                    ("$eventJson", eventJson), ("$projectionJson", projectionJson), ("$now", ToText(now)));
+                int targetedProjectionChanges = Execute(
+                    "UPDATE targeted_preparation_projection SET revision=$revision,lifecycle_state='Started',"
+                    + "preparation_fingerprint=$preparationFingerprint,startable=0,last_event_id=$event,updated_at=$now "
+                    + "WHERE preparation_id=$preparation AND revision=$expectedRevision AND lifecycle_state IN ('Ready','ReadyWithGaps');",
+                    transaction, ("$event", eventId), ("$preparation", preparation.PreparationId),
+                    ("$revision", revision), ("$now", ToText(now)),
+                    ("$preparationFingerprint", preparationFingerprint), ("$expectedRevision", preparation.Revision));
+                if (targetedProjectionChanges != 1)
+                {
+                    throw new InvalidOperationException("The targeted preparation start lost its compare-and-swap race.");
+                }
+                if (ScalarLong(
+                        "SELECT COUNT(*) FROM semantic_acquisition_application_links WHERE link_id=$link;",
+                        transaction, ("$link", targetedStart.TargetedVerificationId + "-semantic-input")) != 1)
+                {
+                    throw new InvalidOperationException("The targeted successor semantic input was not atomically linked.");
+                }
+                if (ScalarLong(
+                        "SELECT COUNT(*) FROM targeted_operation_inputs WHERE preparation_id=$preparation;",
+                        transaction, ("$preparation", targetedStart.PreparationId))
+                    != targetedStart.OperationInputs.Count)
+                {
+                    throw new InvalidOperationException(
+                        "The targeted successor operation inputs were not atomically linked.");
+                }
             }
             transaction.Commit();
             return GetRunCore(runId);

@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Frontend Application Foundation Checkpoint C under correction; Phase D blocked and not started, and M2 remains inactive
 
-Last reviewed: 2026-08-26
+Last reviewed: 2026-08-27
 Owner: Project owner
 
 This is the single live handoff for Infinium. Product documents define what the
@@ -27,8 +27,11 @@ architecture in RESEARCH-0058, ADR-0038, and the accepted WP6 addendum: capture
 a new snapshot, acquire semantic evidence under a separate durable owner,
 prepare an inspectable dependency-closed and correlation-complete scope, and
 start an ordinary `managed-analysis-v1` successor with exact lineage. The
-architecture is not implemented and does not change current runtime behavior.
-The corrected typed prepared-run
+architecture now has a complete implementation candidate. It prepares an
+inspectable recheck, captures a fresh saved-profile snapshot, acquires current
+semantic evidence, preserves every required member in the coverage denominator,
+and atomically starts an ordinary `managed-analysis-v1` successor with exact
+source-to-successor lineage. The corrected typed prepared-run
 path validates its authoritative retained inputs and
 atomically binds the supported durable analysis operation before scheduling. The repository
 now has an exact application-authority inventory, a bounded display-safe
@@ -40,10 +43,10 @@ status, and prepared manual-run initiation with immutable durable bindings.
 The independent Phase C correction surface now has a real FindingReport
 publication/queue/detail consumer, recursive closed request validation,
 append-only structured-export deletion with crash recovery, and corrected
-provenance and cursor binding. Checkpoint C remains suspended because the
-accepted targeted-verification architecture has not yet been implemented as an
-executable operation; that path is now governed by ADR-0038 and the accepted
-WP6 addendum recorded in the implementation record. Canonical
+provenance and cursor binding. Checkpoint C remains suspended because the new
+targeted-verification candidate still requires corrected architecture-steward
+Checkpoint C review; implementation does not accept its own checkpoint.
+Canonical
 analysis truth remains the authority, WP5/WP6 are not accepted, and Phase D
 remains blocked.
 The renderer boundary still permits exactly five Phase A operation/message combinations,
@@ -65,8 +68,8 @@ work.
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
-| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) remain accepted at corrected Checkpoint B. The declared targeted-verification RPC still fails closed with no durable mutation. The project owner accepted RESEARCH-0058, ADR-0038, and the WP6 addendum from architecture source `bd936a02562a8df1ddcb62f275cc45b6c225e594`; a fresh corrected Phase C/WP6 implementation candidate is now authorized, but WP5/WP6 remain incomplete and the earlier Checkpoint C receipt stays suspended. |
-| Next authorized action and gate | Start a fresh corrected Phase C/WP6 implementation orchestrator under ADR-0038 and the accepted addendum; then return to corrected Checkpoint C after implementation, verification, correction, and re-review. Phase D and `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` remain blocked. This does not activate M2. |
+| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) remain accepted at corrected Checkpoint B. The ADR-0038 targeted-verification vertical is implemented as a corrected Phase C/WP6 candidate with five native-only RPCs, schema-16 durability, fresh acquisition, closed scope/correlation, atomic `managed-analysis-v1` successor admission, and exact lineage. WP5/WP6 remain under correction and the earlier Checkpoint C receipt stays suspended. |
+| Next authorized action and gate | Perform corrected Checkpoint C architecture-steward review of the Phase C candidate. Phase D and `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` remain blocked. This does not activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |
 
@@ -116,7 +119,7 @@ asset, script, configuration, dependency, performance, or runtime problem.
   semantic admission, persistence, and replay are separated by responsibility.
 - Functional naming is enforced automatically across ordinary source,
   scripts, projects, protobuf, structured contract names, and repository
-  paths. The reviewed allowlist contains 184 exact compatibility,
+  paths. The reviewed allowlist contains 190 exact compatibility,
   governance, retained-evidence, or genuine domain-term exceptions, with zero
   cleanup-debt and zero unexplained findings.
 - Verification closeout now requires zero repository-owned .NET/test-host
@@ -145,9 +148,9 @@ asset, script, configuration, dependency, performance, or runtime problem.
   Phase C request validation, export deletion/recovery, and corrected
   provenance/paging have focused offline producer-consumer evidence. Populated
   pre-publication stores now expose a typed report-projection-unavailable gap
-  instead of an ambiguous empty page. This does not restore Checkpoint C while
-  targeted verification lacks an accepted implementation of its now-accepted
-  architecture. It does not build the desktop, expand analyzer scope, qualify
+  instead of an ambiguous empty page. Targeted verification now has an
+  implementation candidate, but that does not restore or accept Checkpoint C
+  before architecture-steward review. It does not build the desktop, expand analyzer scope, qualify
   an independent semantic oracle, or activate M2.
 
 ## Current authority

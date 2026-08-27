@@ -646,23 +646,6 @@ public sealed partial class ApplicationGrpcService
         }
     }
 
-    public override Task<StartTargetedVerificationResponse> StartTargetedVerification(
-        StartTargetedVerificationRequest request,
-        ServerCallContext context)
-    {
-        RequireNegotiated(context);
-        if (PhaseCContractFailure(request) is { } contractFailure)
-        {
-            return Task.FromResult(new StartTargetedVerificationResponse { Failure = contractFailure });
-        }
-        return Task.FromResult(new StartTargetedVerificationResponse
-        {
-            Failure = Failure(
-                FailureCode.Unsupported,
-                "Targeted verification is declared but unavailable until an accepted executable scope mapping exists."),
-        });
-    }
-
     public override Task<CreateStructuredExportResponse> CreateStructuredExport(
         CreateStructuredExportRequest request,
         ServerCallContext context)
@@ -1097,23 +1080,6 @@ public sealed partial class ApplicationGrpcService
             CreatedAt = ProtoMapping.ToProto(value.CreatedAt),
         };
         result.DependencyIds.Add(value.DependencyIds);
-        return result;
-    }
-
-    private static TargetedVerification ToTargetedVerification(TargetedVerificationPersistenceRecord value)
-    {
-        TargetedVerification result = new()
-        {
-            VerificationId = value.VerificationId,
-            SourceRunId = new RunId { Value = value.SourceRunId },
-            SuccessorRunId = new RunId { Value = value.SuccessorRunId },
-            SourceFindingOccurrenceId = value.SourceFindingOccurrenceId ?? string.Empty,
-            SourceCaseOccurrenceId = value.SourceCaseOccurrenceId ?? string.Empty,
-            ReadinessBoundary = value.ReadinessBoundary,
-            State = value.State,
-            CreatedAt = ProtoMapping.ToProto(value.CreatedAt),
-        };
-        result.ExactScopeIds.Add(value.ExactScopeIds);
         return result;
     }
 

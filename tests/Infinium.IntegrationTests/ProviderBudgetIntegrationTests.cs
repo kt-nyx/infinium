@@ -2626,7 +2626,7 @@ public sealed class ProviderBudgetIntegrationTests
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText = "PRAGMA foreign_keys=OFF;";
         command.ExecuteNonQuery();
-        command.CommandText =
+        command.CommandText = TargetedVerificationMigrationTestSupport.DropSchema16Sql +
             """
             DROP TABLE structured_export_projection;
             DROP TABLE structured_export_events;

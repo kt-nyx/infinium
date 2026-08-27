@@ -539,26 +539,75 @@ public static class ApplicationContractValidator
                 RequireText(value.Scope, "assumption scope", 4096);
                 RequireOpaqueCollection(value.DependencyIds, "assumption dependency ID");
                 break;
-            case StartTargetedVerificationRequest value:
-                // This validates only the closed transport boundary. It grants no executable
-                // operation authority and does not resolve the accepted architecture blocker.
-                RequireOpaque(value.IdempotencyKey, "targeted-verification idempotency key");
-                RequireOpaque(value.RequestedRunId, "requested run ID");
+            case BeginTargetedVerificationPreparationRequest value:
+                RequireOpaque(value.IdempotencyKey, "targeted-preparation idempotency key");
+                RequireOpaque(value.UserGestureId, "targeted-preparation gesture ID");
                 RequireOpaque(value.SourceRunId?.Value ?? string.Empty, "source run ID");
-                RequireOptionalOpaque(value.SourceFindingOccurrenceId, "source finding occurrence ID");
-                RequireOptionalOpaque(value.SourceCaseOccurrenceId, "source case occurrence ID");
-                if ((string.IsNullOrWhiteSpace(value.SourceFindingOccurrenceId)
-                        == string.IsNullOrWhiteSpace(value.SourceCaseOccurrenceId))
-                    || value.ExactScopeIds.Count is < 1 or > MaximumPhaseCCollectionItems)
+                RequireOpaque(value.ConfirmedProfileId, "confirmed profile ID");
+                RequireOpaque(value.SavedConfigurationId, "saved configuration ID");
+                RequireOpaque(value.AnalysisContextId, "analysis context ID");
+                RequireSha256(value.AnalysisContextFingerprintSha256, "analysis context fingerprint");
+                RequireOptionalOpaque(value.RequestedPreparationId, "requested preparation ID");
+                if (value.SourceOccurrenceCase is not (
+                        BeginTargetedVerificationPreparationRequest.SourceOccurrenceOneofCase.SourceFindingOccurrenceId
+                        or BeginTargetedVerificationPreparationRequest.SourceOccurrenceOneofCase.SourceCaseOccurrenceId)
+                    || value.ExpectedConfirmedProfileRevision == 0
+                    || value.ExpectedSavedConfigurationRevision == 0
+                    || value.ExpectedAnalysisContextRevision == 0
+                    || value.InitiationKind is not (ManualInitiationKind.CliUserAction
+                        or ManualInitiationKind.DesktopUserGesture
+                        or ManualInitiationKind.EvaluationHarness)
+                    || value.DispatchDeadline is null)
                 {
-                    throw new InvalidDataException("The targeted-verification source or exact scope is malformed.");
+                    throw new InvalidDataException("The targeted-verification preparation request is incomplete.");
                 }
-                RequireOpaqueCollection(value.ExactScopeIds, "targeted-verification scope ID");
+                RequireOpaque(value.SourceOccurrenceCase ==
+                    BeginTargetedVerificationPreparationRequest.SourceOccurrenceOneofCase.SourceFindingOccurrenceId
+                        ? value.SourceFindingOccurrenceId : value.SourceCaseOccurrenceId,
+                    "source occurrence ID");
+                break;
+            case GetTargetedVerificationPreparationRequest value:
+                RequireOpaque(value.PreparationId, "targeted-preparation ID");
+                RequireOptionalOpaque(value.AfterMemberId, "targeted-preparation member cursor");
+                if (value.MaximumMembers is < 1 or > MaximumPhaseCCollectionItems)
+                {
+                    throw new InvalidDataException("The targeted-preparation page size is outside its bound.");
+                }
+                break;
+            case CancelTargetedVerificationPreparationRequest value:
+                RequireOpaque(value.IdempotencyKey, "targeted-preparation cancellation idempotency key");
+                RequireOpaque(value.PreparationId, "targeted-preparation ID");
+                RequireOpaque(value.UserGestureId, "targeted-preparation cancellation gesture ID");
+                if (value.ExpectedRevision == 0)
+                {
+                    throw new InvalidDataException("The targeted-preparation cancellation revision is required.");
+                }
+                break;
+            case StartTargetedVerificationRequest value:
+                RequireOpaque(value.PreparationId, "targeted-preparation ID");
+                RequireSha256(value.ExpectedPreparationFingerprintSha256, "targeted-preparation fingerprint");
+                RequireOpaque(value.IdempotencyKey, "targeted-verification idempotency key");
+                RequireOptionalOpaque(value.RequestedRunId, "requested run ID");
                 RequireOpaque(value.UserGestureId, "targeted-verification gesture ID");
-                if (value.DispatchDeadline is null)
+                if (value.ExpectedPreparationRevision == 0
+                    || value.InitiationKind is not (ManualInitiationKind.CliUserAction
+                        or ManualInitiationKind.DesktopUserGesture
+                        or ManualInitiationKind.EvaluationHarness)
+                    || value.DispatchDeadline is null)
                 {
-                    throw new InvalidDataException("The targeted-verification deadline is required.");
+                    throw new InvalidDataException("The targeted-verification start request is incomplete.");
                 }
+                break;
+            case GetTargetedVerificationRequest value:
+                if (value.IdentityCase is not (
+                        GetTargetedVerificationRequest.IdentityOneofCase.TargetedVerificationId
+                        or GetTargetedVerificationRequest.IdentityOneofCase.SuccessorRunId))
+                {
+                    throw new InvalidDataException("A targeted-verification identity is required.");
+                }
+                RequireOpaque(value.IdentityCase == GetTargetedVerificationRequest.IdentityOneofCase.TargetedVerificationId
+                    ? value.TargetedVerificationId : value.SuccessorRunId?.Value ?? string.Empty,
+                    "targeted-verification identity");
                 break;
             case CreateStructuredExportRequest value:
                 RequireOpaque(value.IdempotencyKey, "structured-export idempotency key");
@@ -757,6 +806,15 @@ public static class ApplicationContractValidator
         if (!string.IsNullOrEmpty(value))
         {
             RequireOpaque(value, name);
+        }
+    }
+
+    private static void RequireSha256(string value, string name)
+    {
+        if (value.Length != 64 || value.Any(character =>
+                !(char.IsAsciiDigit(character) || character is >= 'a' and <= 'f')))
+        {
+            throw new InvalidDataException($"The {name} must be canonical lower-case SHA-256.");
         }
     }
 

@@ -731,6 +731,7 @@ public sealed partial class AuthoritativeStore
                 reports,
                 now,
                 transaction);
+            RecordTargetedReconciliation(value, now, transaction);
             transaction.Commit();
             return new FindingCasePersistenceReceipt(
                 value.PayloadId.Value, payloadId, value.Findings.Count, value.Recommendations.Count,
@@ -740,6 +741,65 @@ public sealed partial class AuthoritativeStore
     }
 
     public byte[] ReadFindingCasePayload(string payloadId) => ReadCandidateAnalysisPayload(payloadId);
+
+    private void RecordTargetedReconciliation(
+        FindingCaseContract value,
+        DateTimeOffset now,
+        SqliteTransaction transaction)
+    {
+        string? targetedVerificationId = ScalarStringOrNull(
+            "SELECT targeted_verification_id FROM targeted_start_admissions WHERE successor_run_id=$run;",
+            transaction, ("$run", value.OriginatingRunId.Value));
+        if (targetedVerificationId is null)
+        {
+            return;
+        }
+        string sourceOccurrenceId = ScalarString(
+            "SELECT source_occurrence_id FROM targeted_initiation_lineage WHERE targeted_verification_id=$verification;",
+            transaction, ("$verification", targetedVerificationId));
+        OccurrenceReconciliationContract reconciliation = value.ReconciliationAssessments.SingleOrDefault(item =>
+                item.PriorOccurrenceId?.Value == sourceOccurrenceId)
+            ?? throw new InvalidOperationException(
+                "A targeted successor publication must reconcile its exact canonical source occurrence.");
+        string relationship = reconciliation.Outcome switch
+        {
+            ReconciliationOutcome.ExactContinuation => "Exact",
+            ReconciliationOutcome.AnalyticalRevision => "Revision",
+            ReconciliationOutcome.RelatedFollowUp => "Related",
+            ReconciliationOutcome.NewDistinct => "Distinct",
+            ReconciliationOutcome.Ambiguous or ReconciliationOutcome.Unknown => "Ambiguous",
+            ReconciliationOutcome.NotObserved => "NotObserved",
+            ReconciliationOutcome.NotEvaluated => "NotEvaluated",
+            _ => throw new InvalidOperationException("The targeted reconciliation outcome is not closed."),
+        };
+        string proofJson = JsonSerializer.Serialize(new
+        {
+            reconciliation.Gates,
+            outcome = reconciliation.Outcome.ToString(),
+            reconciliation.Gaps,
+            consideredOccurrenceIds = reconciliation.ConsideredOccurrenceIds.Select(item => item.Value),
+            proofEvidenceIds = reconciliation.ProofEvidenceIds.Select(item => item.Value),
+        }, ContractJsonSerializer.Options);
+        string linkId = CandidateAnalysisIdentity.StableId(
+            "targeted-result-link", targetedVerificationId, sourceOccurrenceId).Value;
+        Execute(
+            "INSERT OR IGNORE INTO targeted_result_links(link_id,targeted_verification_id,source_occurrence_id,successor_occurrence_id,relationship,assessment_id,proof_json,created_at) "
+            + "VALUES($link,$verification,$source,$successor,$relationship,$assessment,$proof,$now);",
+            transaction, ("$link", linkId), ("$verification", targetedVerificationId),
+            ("$source", sourceOccurrenceId), ("$successor", reconciliation.CurrentOccurrenceId?.Value),
+            ("$relationship", relationship), ("$assessment", reconciliation.AssessmentId.Value),
+            ("$proof", proofJson), ("$now", ToText(now)));
+        RequireFindingCaseRow(
+            "SELECT COUNT(*) FROM targeted_result_links WHERE link_id=$link AND targeted_verification_id=$verification "
+            + "AND source_occurrence_id=$source AND successor_occurrence_id IS $successor "
+            + "AND relationship=$relationship AND assessment_id=$assessment AND proof_json=$proof;",
+            "A targeted reconciliation identity resolves to different retained lineage.",
+            transaction,
+            ("$link", linkId), ("$verification", targetedVerificationId),
+            ("$source", sourceOccurrenceId), ("$successor", reconciliation.CurrentOccurrenceId?.Value),
+            ("$relationship", relationship), ("$assessment", reconciliation.AssessmentId.Value),
+            ("$proof", proofJson));
+    }
 
     private string AdmitJsonPayload<T>(
         T value, string kind, string ownerId, DateTimeOffset now, SqliteTransaction transaction) =>

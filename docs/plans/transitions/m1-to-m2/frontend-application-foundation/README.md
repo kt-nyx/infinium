@@ -3,11 +3,11 @@
 Status: Accepted
 Disposition: Checkpoint C under correction; Phase D blocked and not started
 
-Last reviewed: 2026-08-26
+Last reviewed: 2026-08-27
 Owner: Project owner
 Accepted: 2026-08-25
 Plan ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`
-Next work package: corrected `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5-WP6`
+Next gate: corrected Checkpoint C architecture-steward review
 
 ## Plain-language purpose
 
@@ -67,16 +67,17 @@ analysis operation, including reconnect and restart. Phase C result/review
 primitives are present but under correction. The independent report-query,
 recursive request-validation, export-deletion/recovery, provenance, and cursor
 defects now have focused offline producer-consumer evidence. Populated
-pre-publication stores report an explicit unavailable projection gap, and the
-declared targeted-verification RPC validates requests then returns typed
-`Unsupported` without durable mutation. The project owner accepted
+pre-publication stores report an explicit unavailable projection gap. The
+project owner accepted
 RESEARCH-0058, ADR-0038, and the WP6 addendum from architecture source
 `bd936a02562a8df1ddcb62f275cc45b6c225e594`. Their changed-snapshot,
 separately owned semantic acquisition, correlation-complete scope, and
-`managed-analysis-v1` mapping now authorize a fresh corrected WP6
-implementation candidate. Targeted verification remains unimplemented, so
-WP5/WP6 are not accepted, the earlier Checkpoint C
-receipt remains suspended, and Phase D has not started.
+`managed-analysis-v1` mapping now have a corrected implementation candidate:
+five native-only generated-client RPCs, durable preparation and evidence
+acquisition, dependency-complete scope/correlation, atomic successor admission,
+and immutable lineage/readback. WP5/WP6 are not accepted, the earlier
+Checkpoint C receipt remains suspended pending architecture-steward review,
+and Phase D has not started.
 
 M2 remains inactive until a separate accepted M2 plan exists. The transition's
 diagnostic React surface is development evidence, not the M2 interface.

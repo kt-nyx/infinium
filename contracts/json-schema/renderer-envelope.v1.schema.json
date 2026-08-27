@@ -88,9 +88,9 @@
       "additionalProperties": false,
       "required": ["application_contract_version", "domain_contract_version", "storage_contract_version", "renderer_contract_version", "coordinator_health", "configuration_availability", "capabilities", "recent_runs", "projection_version", "coordinator_instance_id", "coordinator_fencing_epoch"],
       "properties": {
-        "application_contract_version": { "const": "1.9.0" },
-        "domain_contract_version": { "const": "1.3.0" },
-        "storage_contract_version": { "const": "1.14.0" },
+        "application_contract_version": { "const": "1.10.0" },
+        "domain_contract_version": { "const": "1.4.0" },
+        "storage_contract_version": { "const": "1.15.0" },
         "renderer_contract_version": { "const": "1.1.0" },
         "coordinator_health": { "enum": ["healthy", "degraded", "unavailable"] },
         "configuration_availability": { "enum": ["available", "partial", "unavailable"] },

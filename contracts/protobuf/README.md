@@ -183,20 +183,23 @@ buffers/rate limits, process supervision, private-handle inheritance, staging
 authorization, and coordinator-side admission remain runtime obligations for
 later slices.
 
-The additive application v1 surface is at protocol 1.9.0. It separates the
-application 1.9.0, domain 1.3.0, storage 1.14.0, and renderer 1.1.0 version
+The additive application v1 surface is at protocol 1.10.0. It separates the
+application 1.10.0, domain 1.4.0, storage 1.15.0, and renderer 1.1.0 version
 axes and exposes bounded display-safe bootstrap, typed setup/configuration,
 prepared manual-run, non-secret provider status, live progress, reconnect,
 canonical result exploration, FindingReport queues/detail, append-only durable
 review shapes, structured-export deletion/tombstone operations, and an
 explicit unavailable state when retained results predate a durable report
-publication projection. The targeted-verification RPC remains declared but
-fails closed with typed `Unsupported` and no durable mutation. The
+publication projection. Five native-only targeted-verification RPCs expose
+durable preparation, fresh snapshot/evidence acquisition, inspectable closed
+scope and correlation coverage, atomic `managed-analysis-v1` successor
+admission, and immutable lineage/readback. `StartTargetedVerification` remains
+`native-only-never-map`; no renderer operation was added. The
 renderer registry still contains only its five previously accepted
 operation/message combinations; renderer 1.1.0 updates bootstrap compatibility
 and Phase C capability flags without adding desktop operations. The full
 protobuf contract-set fingerprint is
-`d4db44c3c64f4c661162c938696c8d9ffc3d258f81eac18e9a6479d09c3491f9`.
+`c51f6c400547b948fd7f350ef5ac72f29d6032b2671cfba957a7be71cfc44e74`.
 Helper v2 has a separate fingerprint over only its helper/common/identity
 transitive closure; its fail-closed decoder rejects unknown nested fields,
 unknown enum numerics, and contradictory assignment, revalidation, or receipt

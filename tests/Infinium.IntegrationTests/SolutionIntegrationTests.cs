@@ -666,7 +666,7 @@ public sealed class SolutionIntegrationTests
             StopCoordinator(root, coordinatorProcessId);
             coordinatorProcessId = 0;
             using AuthoritativeStore readback = new(new StoragePaths(root));
-            Assert.AreEqual(15, readback.GetSchemaVersion());
+            Assert.AreEqual(AuthoritativeStore.CurrentSchemaVersion, readback.GetSchemaVersion());
             DurableCommandRecord receipt = readback.GetDurableCommand("command-prepared-local");
             Assert.AreEqual(preparationId, receipt.StartPreparationId);
             Assert.AreEqual("gesture-1234567890abcdef", receipt.StartUserGestureId);
@@ -1606,7 +1606,7 @@ public sealed class SolutionIntegrationTests
         using SqliteConnection connection = new($"Data Source={paths.Database};Pooling=False");
         connection.Open();
         using SqliteCommand command = connection.CreateCommand();
-        command.CommandText =
+        command.CommandText = TargetedVerificationMigrationTestSupport.DropSchema16Sql +
             """
             DROP TABLE structured_export_projection;
             DROP TABLE structured_export_events;

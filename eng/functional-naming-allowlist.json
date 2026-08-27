@@ -688,8 +688,8 @@
     {
       "path": "src/Infinium.Persistence/AuthoritativeStore.FindingCases.cs",
       "scope": "content",
-      "token": "continuation",
-      "symbol_or_context": "line 888",
+      "token": "Continuation",
+      "symbol_or_context": "reconciliation relationship mapping",
       "classification": "functional-domain-term",
       "reason": "Continuation or successor describes a real persisted lineage, credential-generation, or reconciliation relationship rather than development chronology.",
       "retained_consumer": "Current domain contract, analysis behavior, persistence, or conformance verification.",
@@ -1786,10 +1786,10 @@
       "review_condition": "Review if targeted-verification lineage or its serialized contract changes."
     },
     {
-      "path": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs",
+      "path": "src/Infinium.Coordinator/ApplicationGrpcService.TargetedVerification.cs",
       "scope": "content",
       "token": "Successor",
-      "symbol_or_context": "TargetedVerification.SuccessorRunId mapping at line 705",
+      "symbol_or_context": "targeted-verification successor admission and readback mapping",
       "classification": "functional-domain-term",
       "reason": "Successor identifies the distinct new run created by targeted verification and does not describe development chronology.",
       "retained_consumer": "Generated application client mapping for targeted-verification lineage.",
@@ -1808,8 +1808,8 @@
     {
       "path": "src/Infinium.Persistence/AuthoritativeStore.ResultsReview.cs",
       "scope": "content",
-      "token": "Successor",
-      "symbol_or_context": "TargetedVerificationPersistenceRecord.SuccessorRunId at line 133",
+      "token": "successor",
+      "symbol_or_context": "assumption and targeted-verification successor lineage",
       "classification": "functional-domain-term",
       "reason": "Successor identifies the new durable run and assumption context produced without mutating prior state.",
       "retained_consumer": "Results/review persistence, targeted-verification readback, and generated application mapping.",
@@ -1844,6 +1844,66 @@
       "reason": "Successor verifies that assumption edits, removals, and review carryover create new durable state instead of rewriting prior state.",
       "retained_consumer": "Phase C review and assumption persistence, immutability, and lineage integration evidence.",
       "review_condition": "Review if review, assumption, or targeted-verification lineage semantics change."
+    },
+    {
+      "path": "src/Infinium.Application/Runtime/RendererContractValidator.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "targeted-verification generated contract validation",
+      "classification": "functional-domain-term",
+      "reason": "Successor identifies the distinct new run created without mutating the retained source result.",
+      "retained_consumer": "Generated application request validation for targeted-verification lineage.",
+      "review_condition": "Review if targeted-verification lineage or its application contract changes."
+    },
+    {
+      "path": "src/Infinium.Domain/Contracts/TargetedVerificationContracts.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "immutable targeted initiation lineage contract",
+      "classification": "functional-domain-term",
+      "reason": "Successor identifies the distinct new run created without mutating the retained source result.",
+      "retained_consumer": "Targeted-verification contract validation, persistence, and readback.",
+      "review_condition": "Review if targeted-verification lineage semantics change."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.Runs.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "atomic targeted successor admission",
+      "classification": "functional-domain-term",
+      "reason": "Successor identifies the distinct durable run atomically created from a retained preparation.",
+      "retained_consumer": "Targeted-verification durable command, run, input, and initiation-lineage admission.",
+      "review_condition": "Review if targeted-verification admission or lineage semantics change."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.TargetedVerification.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "targeted successor readback and application links",
+      "classification": "functional-domain-term",
+      "reason": "Successor identifies the distinct durable run created from a retained targeted preparation.",
+      "retained_consumer": "Targeted-verification persistence, projection rebuild, replay, and readback.",
+      "review_condition": "Review if targeted-verification persistence or lineage semantics change."
+    },
+    {
+      "path": "src/Infinium.Persistence/AuthoritativeStore.TargetedVerificationMigration.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "schema-16 successor run and semantic application-link columns",
+      "classification": "functional-domain-term",
+      "reason": "Successor identifies the distinct durable run created from a retained targeted preparation.",
+      "retained_consumer": "Schema-16 targeted-verification migration, restore, replay, and tamper checks.",
+      "review_condition": "Review if the targeted-verification storage contract changes."
+    },
+    {
+      "path": "tests/Infinium.IntegrationTests/ManagedAnalysisPipelineCorpusIntegrationTests.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "native targeted managed-analysis successor integration evidence",
+      "classification": "functional-domain-term",
+      "reason": "Successor verifies the distinct new run and exact lineage created without mutating source analysis.",
+      "retained_consumer": "Generated-client targeted-verification admission, execution, retry, and readback evidence.",
+      "review_condition": "Review if targeted-verification execution or lineage semantics change."
     }
   ]
 }

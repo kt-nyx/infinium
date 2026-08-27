@@ -813,7 +813,7 @@ public sealed class ManagedRunExecutor(
         return request is null ? null : ManagedAnalysisOrchestrator.TerminalAssignment(runtime.Store, request);
     }
 
-    private static ManagedBethesdaSemanticAssignment SealBethesdaAssignment(
+    internal static ManagedBethesdaSemanticAssignment SealBethesdaAssignment(
         ManagedBethesdaSemanticAssignment assignment)
     {
         Mo2InstallationSnapshot snapshot = assignment.AcceptedSnapshot.Snapshot

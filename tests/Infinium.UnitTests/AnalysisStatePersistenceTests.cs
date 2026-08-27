@@ -7,6 +7,35 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class AnalysisStatePersistenceTests
 {
+    private const string DropTargetedVerificationSchema16 =
+        """
+        DROP TABLE targeted_result_links;
+        DROP TABLE targeted_initiation_lineage;
+        DROP TABLE targeted_operation_inputs;
+        DROP TABLE targeted_start_admissions;
+        DROP TABLE targeted_verification_plans;
+        DROP TABLE targeted_reuse_decisions;
+        DROP TABLE targeted_correlation_rows;
+        DROP TABLE targeted_scope_dependencies;
+        DROP TABLE targeted_scope_members;
+        DROP TABLE targeted_scope_roots;
+        DROP TABLE semantic_acquisition_application_links;
+        DROP TABLE semantic_acquisition_publications;
+        DROP TABLE semantic_acquisition_progress;
+        DROP TABLE semantic_acquisition_checkpoints;
+        DROP TABLE semantic_acquisition_attempts;
+        DROP TABLE semantic_acquisition_projection;
+        DROP TABLE semantic_acquisition_events;
+        DROP TABLE semantic_acquisition_commands;
+        DROP TABLE semantic_acquisition_jobs;
+        DROP TABLE semantic_acquisition_runs;
+        DROP TABLE targeted_snapshot_links;
+        DROP TABLE targeted_preparation_projection;
+        DROP TABLE targeted_preparation_commands;
+        DROP TABLE targeted_preparation_events;
+        DROP TABLE targeted_preparation_requests;
+        DELETE FROM migration_history WHERE migration_id = 'targeted-verification-preparation-0016';
+        """;
     private static readonly string[] AnalysisFindingCaseTables =
     [
         "finding_case_publications",
@@ -124,26 +153,26 @@ public sealed class AnalysisStatePersistenceTests
     [TestCategory("Cases")]
     [TestProperty("Category", "Unit")]
     [TestProperty("Category", "Cases")]
-    public void AnalysisStateModelSchema15AddsReportPublicationAndExportDeletion()
+    public void AnalysisStateModelSchema16AddsTargetedVerificationPreparationAndAdmission()
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
         Assert.AreEqual(AuthoritativeStore.CurrentSchemaVersion, store.GetSchemaVersion());
 
         using SqliteConnection connection = temporary.OpenRaw();
-        Assert.AreEqual("15", ScalarText(connection, "PRAGMA user_version;"));
+        Assert.AreEqual("16", ScalarText(connection, "PRAGMA user_version;"));
         Assert.AreEqual(
-            "15",
+            "16",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_version';"));
         Assert.AreEqual(
-            "1.14.0",
+            "1.15.0",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            ResultsPublicationPersistenceDeclarations.SchemaFingerprint,
+            TargetedVerificationPersistenceDeclarations.SchemaFingerprint,
             ScalarText(connection, "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
         Assert.AreEqual(
             ProviderPersistenceDeclarations.ProviderUsageTotalityExtensionMigrationId,
@@ -458,6 +487,7 @@ public sealed class AnalysisStatePersistenceTests
         using (SqliteCommand command = connection.CreateCommand())
         {
             command.CommandText =
+                DropTargetedVerificationSchema16 +
                 "DROP VIEW m1_slice6_successor_all_transport_responses;" +
                 "DROP VIEW m1_slice6_successor_all_semantic_response_bindings;" +
                 "DROP TABLE m1_slice6_successor_v6_semantic_response_bindings;" +
@@ -528,7 +558,7 @@ public sealed class AnalysisStatePersistenceTests
 
         using (AuthoritativeStore migrated = migration.Open())
         {
-            Assert.AreEqual(15, migrated.GetSchemaVersion());
+            Assert.AreEqual(16, migrated.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = migration.OpenRaw())
@@ -549,7 +579,7 @@ public sealed class AnalysisStatePersistenceTests
         using (SqliteConnection connection = newer.OpenRaw())
         using (SqliteCommand command = connection.CreateCommand())
         {
-            command.CommandText = "PRAGMA user_version = 16;";
+            command.CommandText = "PRAGMA user_version = 17;";
             command.ExecuteNonQuery();
         }
 
@@ -557,7 +587,44 @@ public sealed class AnalysisStatePersistenceTests
         Assert.IsNotNull(exception.InnerException);
         StringAssert.Contains(
             exception.InnerException.Message,
-            "Database schema 16 is newer than supported schema 15.");
+            "Database schema 17 is newer than supported schema 16.");
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Migration")]
+    public void TargetedVerificationMigrationRejectsNonzeroLegacyOperationPopulation()
+    {
+        using TemporaryStore temporary = new();
+        using (AuthoritativeStore store = temporary.Open())
+        {
+            CoordinatorAuthority authority = store.AcquireCoordinatorAuthority(
+                "targeted-migration-preflight", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1));
+            _ = store.CreateRun("legacy-targeted-command", "legacy-targeted-run",
+                new("snapshot", "context", "configuration", "manifest"), authority.FencingEpoch,
+                DateTimeOffset.UtcNow);
+            _ = store.RegisterRunOperation("legacy-targeted-run", "targeted-verification", "{}",
+                DateTimeOffset.UtcNow);
+        }
+
+        using (SqliteConnection connection = temporary.OpenRaw())
+        using (SqliteCommand command = connection.CreateCommand())
+        {
+            command.CommandText = DropTargetedVerificationSchema16 +
+                """
+                UPDATE store_metadata SET value='15' WHERE key='schema_version';
+                UPDATE store_metadata SET value='1.14.0' WHERE key='storage_contract_version';
+                UPDATE store_metadata SET value='a64750491c8cd7e79d96e3190710b4b0c71c6377a83df2a5e25df0bc554f7b1f'
+                    WHERE key='schema_fingerprint';
+                PRAGMA user_version=15;
+                """;
+            command.ExecuteNonQuery();
+        }
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(temporary.Open);
+        Assert.IsNotNull(exception.InnerException);
+        StringAssert.Contains(exception.InnerException.Message,
+            "Legacy targeted-verification state is incompatible with the preparation-first contract.");
     }
 
     [TestMethod]

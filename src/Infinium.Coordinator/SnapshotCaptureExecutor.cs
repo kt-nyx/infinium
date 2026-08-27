@@ -85,10 +85,10 @@ public sealed class SnapshotCaptureExecutor(
     private async Task ExecuteCoreAsync(string operationId)
     {
         SnapshotCaptureAttemptRecord? attempt = null;
+        SnapshotCaptureOperationRecord? operation = null;
         try
         {
-            SnapshotCaptureOperationRecord operation =
-                runtime.Store.GetSnapshotCaptureOperation(operationId);
+            operation = runtime.Store.GetSnapshotCaptureOperation(operationId);
             if (operation.State != "Queued")
             {
                 return;
@@ -177,6 +177,24 @@ public sealed class SnapshotCaptureExecutor(
                     logger.LogError(
                         failure,
                         "Failed to persist snapshot capture failure for {OperationId}.",
+                        operationId);
+                }
+            }
+            else if (operation is not null && operation.State == "Queued")
+            {
+                try
+                {
+                    runtime.Store.FailQueuedSnapshotCapture(
+                        operation.OperationId,
+                        operation.Generation,
+                        runtime.Authority.FencingEpoch,
+                        DateTimeOffset.UtcNow);
+                }
+                catch (Exception failure)
+                {
+                    logger.LogError(
+                        failure,
+                        "Failed to persist queued snapshot capture failure for {OperationId}.",
                         operationId);
                 }
             }

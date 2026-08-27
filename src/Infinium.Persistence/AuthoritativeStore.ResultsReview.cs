@@ -162,17 +162,6 @@ public sealed record AssumptionMutationPersistenceResult(
     bool Conflict,
     long ExpectedRevision);
 
-public sealed record TargetedVerificationPersistenceRecord(
-    string VerificationId,
-    string SourceRunId,
-    string SuccessorRunId,
-    string? SourceFindingOccurrenceId,
-    string? SourceCaseOccurrenceId,
-    IReadOnlyList<string> ExactScopeIds,
-    string ReadinessBoundary,
-    string State,
-    DateTimeOffset CreatedAt);
-
 public sealed record StructuredExportPersistenceRequest(
     string IdempotencyKey,
     string RunId,
@@ -1062,107 +1051,6 @@ public sealed partial class AuthoritativeStore
         }
     }
 
-    public TargetedVerificationPersistenceRecord StartTargetedVerification(
-        string idempotencyKey,
-        string requestedRunId,
-        string sourceRunId,
-        string? sourceFindingOccurrenceId,
-        string? sourceCaseOccurrenceId,
-        IReadOnlyList<string> exactScopeIds,
-        string userGestureId,
-        DateTimeOffset dispatchDeadline,
-        long coordinatorFencingEpoch,
-        DateTimeOffset now)
-    {
-        ValidateOpaque(idempotencyKey, nameof(idempotencyKey));
-        ValidateOpaque(requestedRunId, nameof(requestedRunId));
-        ValidateOpaque(userGestureId, nameof(userGestureId));
-        if (userGestureId.Length < 16 || exactScopeIds.Count is < 1 or > 100
-            || dispatchDeadline <= now
-            || (string.IsNullOrWhiteSpace(sourceFindingOccurrenceId)
-                && string.IsNullOrWhiteSpace(sourceCaseOccurrenceId)))
-        {
-            throw new ArgumentException("The targeted verification request is incomplete or unbounded.");
-        }
-        RunRecord source = GetRun(sourceRunId);
-        if (requestedRunId == sourceRunId
-            || source.State is not (LifecycleState.Completed or LifecycleState.CompletedWithGaps
-                or LifecycleState.Failed or LifecycleState.Cancelled or LifecycleState.LimitReached
-                or LifecycleState.InvalidatedByChangedInput))
-        {
-            throw new InvalidOperationException(
-                "Targeted verification requires a distinct successor and an immutable terminal source run.");
-        }
-        ValidateTargetedSource(sourceRunId, sourceFindingOccurrenceId, sourceCaseOccurrenceId);
-        if (sourceFindingOccurrenceId is not null && sourceCaseOccurrenceId is not null)
-        {
-            ResultItemPersistenceRecord selectedFinding = GetResultItem(sourceRunId, sourceFindingOccurrenceId);
-            if (!StringComparer.Ordinal.Equals(selectedFinding.CaseOccurrenceId, sourceCaseOccurrenceId))
-            {
-                throw new ArgumentException(
-                    "The selected source finding is not retained by the selected source case.");
-            }
-        }
-        string[] scopes = exactScopeIds.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
-        HashSet<string> permittedScopes = new(StringComparer.Ordinal);
-        if (sourceFindingOccurrenceId is not null)
-        {
-            permittedScopes.UnionWith(GetResultItem(sourceRunId, sourceFindingOccurrenceId).SubjectIds);
-        }
-        if (sourceCaseOccurrenceId is not null)
-        {
-            permittedScopes.UnionWith(GetResultItem(sourceRunId, sourceCaseOccurrenceId).SubjectIds);
-        }
-        if (scopes.Any(scope => !permittedScopes.Contains(scope)))
-        {
-            throw new ArgumentException(
-                "Targeted verification scope must be retained by the exact source finding or case.");
-        }
-        string requestJson = JsonSerializer.Serialize(new
-        {
-            schema_identity = "infinium.application.targeted-verification/v1",
-            source_run_id = sourceRunId,
-            source_finding_occurrence_id = sourceFindingOccurrenceId,
-            source_case_occurrence_id = sourceCaseOccurrenceId,
-            exact_scope_ids = scopes,
-            readiness_boundary = "scope-limited",
-        });
-        string requestSha = Sha256(requestJson);
-        string verificationId = StableId("targeted-verification", idempotencyKey, sourceRunId, requestSha);
-        RunRecord successor = CreateRun(
-            idempotencyKey, requestedRunId, source.Binding, coordinatorFencingEpoch, now,
-            "manual-targeted-verification", dispatchDeadline, "targeted-verification", requestJson);
-        lock (gate)
-        {
-            using SqliteTransaction transaction = BeginTransaction();
-            string? replaySha = ScalarStringOrNull(
-                "SELECT request_sha256 FROM targeted_verifications WHERE idempotency_key=$id;",
-                transaction,
-                ("$id", idempotencyKey));
-            if (replaySha is not null && !StringComparer.Ordinal.Equals(replaySha, requestSha))
-            {
-                throw new InvalidOperationException("A targeted-verification idempotency key cannot be rebound.");
-            }
-            Execute(
-                """
-                INSERT OR IGNORE INTO targeted_verifications(
-                    verification_id,idempotency_key,request_sha256,source_run_id,successor_run_id,
-                    source_finding_occurrence_id,source_case_occurrence_id,exact_scope_ids_json,
-                    user_gesture_id,readiness_boundary,state,created_at)
-                VALUES ($verification,$key,$sha,$source,$successor,$finding,$case,$scope,$gesture,
-                    'scope-limited','manually-initiated',$now);
-                """,
-                transaction,
-                ("$verification", verificationId), ("$key", idempotencyKey), ("$sha", requestSha),
-                ("$source", sourceRunId), ("$successor", successor.RunId),
-                ("$finding", sourceFindingOccurrenceId), ("$case", sourceCaseOccurrenceId),
-                ("$scope", JsonSerializer.Serialize(scopes)), ("$gesture", userGestureId),
-                ("$now", ToText(now)));
-            transaction.Commit();
-            return GetTargetedVerificationCore(verificationId);
-        }
-    }
-
     public StructuredExportPersistenceRecord CreateStructuredExport(
         StructuredExportPersistenceRequest request,
         DateTimeOffset now)
@@ -1421,6 +1309,9 @@ public sealed partial class AuthoritativeStore
                 ORDER BY export_id;
                 """,
                 sourceId);
+            string[] targetedPreparations = ReadIds(
+                "SELECT preparation_id FROM targeted_preparation_requests WHERE source_occurrence_id=$id ORDER BY preparation_id;",
+                sourceId);
             List<string> effects = ["Historical analysis and source provenance must not be rewritten."];
             if (review.Length > 0)
             {
@@ -1430,7 +1321,13 @@ public sealed partial class AuthoritativeStore
             {
                 effects.Add("Independently retained local-private exports contain the selected identity.");
             }
-            return new(sourceId, review, exports, effects, review.Length > 0 || exports.Length > 0);
+            if (targetedPreparations.Length > 0)
+            {
+                effects.Add("Targeted verification preparations retain this canonical source occurrence: "
+                    + string.Join(", ", targetedPreparations));
+            }
+            return new(sourceId, review, exports, effects,
+                review.Length > 0 || exports.Length > 0 || targetedPreparations.Length > 0);
         }
     }
 
@@ -1627,46 +1524,6 @@ public sealed partial class AuthoritativeStore
         reader.GetString(0), reader.GetString(1), reader.GetInt64(2), reader.GetString(3), reader.GetString(4),
         reader.GetString(5), reader.GetString(6), reader.GetString(7), DeserializeStrings(reader.GetString(8)),
         reader.GetInt64(9) == 1, reader.GetString(10), ParseRoundTrip(reader.GetString(11)));
-
-    private void ValidateTargetedSource(
-        string runId,
-        string? findingOccurrenceId,
-        string? caseOccurrenceId)
-    {
-        lock (gate)
-        {
-            if (findingOccurrenceId is not null)
-            {
-                ValidateReviewSubjectCore(runId, "finding", findingOccurrenceId);
-            }
-            if (caseOccurrenceId is not null)
-            {
-                ValidateReviewSubjectCore(runId, "case", caseOccurrenceId);
-            }
-        }
-    }
-
-    private TargetedVerificationPersistenceRecord GetTargetedVerificationCore(string verificationId)
-    {
-        using SqliteCommand command = connection.CreateCommand();
-        command.CommandText =
-            """
-            SELECT verification_id,source_run_id,successor_run_id,source_finding_occurrence_id,
-                   source_case_occurrence_id,exact_scope_ids_json,readiness_boundary,state,created_at
-            FROM targeted_verifications WHERE verification_id=$id;
-            """;
-        command.Parameters.AddWithValue("$id", verificationId);
-        using SqliteDataReader reader = command.ExecuteReader();
-        if (!reader.Read())
-        {
-            throw new KeyNotFoundException("The targeted verification does not exist.");
-        }
-        return new(
-            reader.GetString(0), reader.GetString(1), reader.GetString(2),
-            reader.IsDBNull(3) ? null : reader.GetString(3), reader.IsDBNull(4) ? null : reader.GetString(4),
-            DeserializeStrings(reader.GetString(5)), reader.GetString(6), reader.GetString(7),
-            ParseRoundTrip(reader.GetString(8)));
-    }
 
     private static void ValidateExportRequest(StructuredExportPersistenceRequest request)
     {

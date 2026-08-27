@@ -70,8 +70,16 @@ service ApplicationService {
       returns (ListAssumptionsResponse);
   rpc SubmitAssumptionEvent(SubmitAssumptionEventRequest)
       returns (SubmitAssumptionEventResponse);
+  rpc BeginTargetedVerificationPreparation(BeginTargetedVerificationPreparationRequest)
+      returns (BeginTargetedVerificationPreparationResponse);
+  rpc GetTargetedVerificationPreparation(GetTargetedVerificationPreparationRequest)
+      returns (GetTargetedVerificationPreparationResponse);
+  rpc CancelTargetedVerificationPreparation(CancelTargetedVerificationPreparationRequest)
+      returns (CancelTargetedVerificationPreparationResponse);
   rpc StartTargetedVerification(StartTargetedVerificationRequest)
       returns (StartTargetedVerificationResponse);
+  rpc GetTargetedVerification(GetTargetedVerificationRequest)
+      returns (GetTargetedVerificationResponse);
   rpc CreateStructuredExport(CreateStructuredExportRequest)
       returns (CreateStructuredExportResponse);
   rpc GetStructuredExport(GetStructuredExportRequest)
@@ -1569,21 +1577,229 @@ message AssumptionConflict {
   AssumptionState current_safe_state = 2;
 }
 
-message StartTargetedVerificationRequest {
+enum TargetedVerificationPreparationState {
+  TARGETED_VERIFICATION_PREPARATION_STATE_UNSPECIFIED = 0;
+  TARGETED_VERIFICATION_PREPARATION_STATE_QUEUED = 1;
+  TARGETED_VERIFICATION_PREPARATION_STATE_CAPTURING_SNAPSHOT = 2;
+  TARGETED_VERIFICATION_PREPARATION_STATE_ACQUIRING_EVIDENCE = 3;
+  TARGETED_VERIFICATION_PREPARATION_STATE_PREPARING_PLAN = 4;
+  TARGETED_VERIFICATION_PREPARATION_STATE_READY = 5;
+  TARGETED_VERIFICATION_PREPARATION_STATE_READY_WITH_GAPS = 6;
+  TARGETED_VERIFICATION_PREPARATION_STATE_CANCELLING = 7;
+  TARGETED_VERIFICATION_PREPARATION_STATE_CANCELLED = 8;
+  TARGETED_VERIFICATION_PREPARATION_STATE_INVALIDATED = 9;
+  TARGETED_VERIFICATION_PREPARATION_STATE_FAILED = 10;
+  TARGETED_VERIFICATION_PREPARATION_STATE_STARTED = 11;
+}
+
+enum TargetedScopeMemberKind {
+  TARGETED_SCOPE_MEMBER_KIND_UNSPECIFIED = 0;
+  TARGETED_SCOPE_MEMBER_KIND_FINDING = 1;
+  TARGETED_SCOPE_MEMBER_KIND_CASE = 2;
+  TARGETED_SCOPE_MEMBER_KIND_CANDIDATE = 3;
+  TARGETED_SCOPE_MEMBER_KIND_HYPOTHESIS = 4;
+  TARGETED_SCOPE_MEMBER_KIND_PARTICIPANT = 5;
+  TARGETED_SCOPE_MEMBER_KIND_RECORD = 6;
+  TARGETED_SCOPE_MEMBER_KIND_CONTRIBUTION = 7;
+  TARGETED_SCOPE_MEMBER_KIND_ASSET = 8;
+  TARGETED_SCOPE_MEMBER_KIND_PROVIDER = 9;
+  TARGETED_SCOPE_MEMBER_KIND_APPLICABILITY_POPULATION = 10;
+  TARGETED_SCOPE_MEMBER_KIND_ANALYZER = 11;
+  TARGETED_SCOPE_MEMBER_KIND_EVIDENCE = 12;
+}
+
+enum TargetedCorrelationStatus {
+  TARGETED_CORRELATION_STATUS_UNSPECIFIED = 0;
+  TARGETED_CORRELATION_STATUS_MATCHED_EXECUTABLE = 1;
+  TARGETED_CORRELATION_STATUS_CHANGED_CORRELATED = 2;
+  TARGETED_CORRELATION_STATUS_PROVEN_ABSENT = 3;
+  TARGETED_CORRELATION_STATUS_PROVEN_NOT_APPLICABLE = 4;
+  TARGETED_CORRELATION_STATUS_AMBIGUOUS = 5;
+  TARGETED_CORRELATION_STATUS_UNSUPPORTED = 6;
+  TARGETED_CORRELATION_STATUS_INACCESSIBLE = 7;
+  TARGETED_CORRELATION_STATUS_MALFORMED = 8;
+  TARGETED_CORRELATION_STATUS_MISSING_REQUIRED_PROOF = 9;
+}
+
+message BeginTargetedVerificationPreparationRequest {
   string idempotency_key = 1;
-  string requested_run_id = 2;
+  string user_gesture_id = 2;
   infinium.domain.v1.RunId source_run_id = 3;
-  string source_finding_occurrence_id = 4;
-  string source_case_occurrence_id = 5;
-  repeated string exact_scope_ids = 6;
-  string user_gesture_id = 7;
-  infinium.common.v1.Instant dispatch_deadline = 8;
+  oneof source_occurrence {
+    string source_finding_occurrence_id = 4;
+    string source_case_occurrence_id = 5;
+  }
+  string confirmed_profile_id = 6;
+  uint64 expected_confirmed_profile_revision = 7;
+  string saved_configuration_id = 8;
+  uint64 expected_saved_configuration_revision = 9;
+  string analysis_context_id = 10;
+  uint64 expected_analysis_context_revision = 11;
+  string analysis_context_fingerprint_sha256 = 12;
+  string requested_preparation_id = 13;
+  ManualInitiationKind initiation_kind = 14;
+  infinium.common.v1.Instant dispatch_deadline = 15;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command", "filter",
+      "exact_scope_ids", "dependency_ids", "operation_kind", "operation_json", "credential";
+}
+
+message BeginTargetedVerificationPreparationResponse {
+  CommandDisposition disposition = 1;
+  TargetedVerificationPreparation preparation = 2;
+  infinium.common.v1.Failure failure = 3;
+}
+
+message GetTargetedVerificationPreparationRequest {
+  string preparation_id = 1;
+  uint32 maximum_members = 2;
+  string after_member_id = 3;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command", "filter";
+}
+
+message GetTargetedVerificationPreparationResponse {
+  oneof result {
+    TargetedVerificationPreparation preparation = 1;
+    infinium.common.v1.Failure failure = 2;
+  }
+}
+
+message CancelTargetedVerificationPreparationRequest {
+  string idempotency_key = 1;
+  string preparation_id = 2;
+  uint64 expected_revision = 3;
+  string user_gesture_id = 4;
 
   reserved 90 to 99;
   reserved "sql", "path", "url", "query", "payload_path", "command";
 }
 
+message CancelTargetedVerificationPreparationResponse {
+  CommandDisposition disposition = 1;
+  TargetedVerificationPreparation preparation = 2;
+  infinium.common.v1.Failure failure = 3;
+}
+
+message TargetedVerificationPreparation {
+  string preparation_id = 1;
+  uint64 revision = 2;
+  string preparation_fingerprint_sha256 = 3;
+  TargetedVerificationPreparationState state = 4;
+  string inert_terminal_reason = 5;
+  infinium.domain.v1.RunId source_run_id = 6;
+  oneof source_occurrence {
+    string source_finding_occurrence_id = 7;
+    string source_case_occurrence_id = 8;
+  }
+  string source_logical_id = 9;
+  string source_payload_id = 10;
+  string source_payload_fingerprint_sha256 = 11;
+  string source_canonical_signature_sha256 = 12;
+  string source_snapshot_id = 13;
+  string capture_operation_id = 14;
+  string capture_attempt_id = 15;
+  string target_snapshot_id = 16;
+  string target_snapshot_fingerprint_sha256 = 17;
+  string structural_comparison = 18;
+  string evidence_acquisition_id = 19;
+  string evidence_acquisition_state = 20;
+  uint64 evidence_acquisition_generation = 21;
+  uint64 evidence_acquisition_attempt_count = 22;
+  string semantic_output_id = 23;
+  string semantic_output_fingerprint_sha256 = 24;
+  string analysis_context_id = 25;
+  uint64 analysis_context_revision = 26;
+  string analysis_context_fingerprint_sha256 = 27;
+  string saved_configuration_id = 28;
+  uint64 saved_configuration_revision = 29;
+  string effective_configuration_id = 30;
+  string resolved_input_manifest_id = 31;
+  string scope_id = 32;
+  string scope_fingerprint_sha256 = 33;
+  repeated TargetedScopeMember scope_members = 34;
+  repeated TargetedCorrelationCoverageRow correlation_rows = 35;
+  uint64 population_denominator = 36;
+  repeated string inert_gaps = 37;
+  string readiness_boundary = 38;
+  bool startable = 39;
+  bool limited = 40;
+  repeated string inert_non_startable_reasons = 41;
+  string plan_id = 42;
+  string plan_fingerprint_sha256 = 43;
+  infinium.common.v1.Instant created_at = 44;
+  infinium.common.v1.Instant updated_at = 45;
+  string next_member_cursor = 46;
+  string evidence_acquisition_attempt_id = 47;
+  uint64 evidence_progress_completed = 48;
+  uint64 evidence_progress_denominator = 49;
+  string evidence_checkpoint_id = 50;
+}
+
+message TargetedScopeMember {
+  string member_id = 1;
+  TargetedScopeMemberKind kind = 2;
+  string stable_identity = 3;
+  string inert_reason = 4;
+  bool mandatory = 5;
+  repeated string source_proof_ids = 6;
+}
+
+message TargetedCorrelationCoverageRow {
+  string row_id = 1;
+  string scope_member_id = 2;
+  TargetedScopeMemberKind member_kind = 3;
+  string source_stable_identity = 4;
+  string target_population_id = 5;
+  string target_stable_identity = 6;
+  string current_execution_member_id = 7;
+  TargetedCorrelationStatus status = 8;
+  bool correlation_qualified = 9;
+  bool processing_qualified = 10;
+  string denominator_effect = 11;
+  string readiness_effect = 12;
+  string inert_reason = 13;
+  repeated string evidence_ids = 14;
+  string enumeration_or_applicability_proof_id = 15;
+}
+
+message StartTargetedVerificationRequest {
+  string preparation_id = 1;
+  uint64 expected_preparation_revision = 2;
+  string expected_preparation_fingerprint_sha256 = 3;
+  string idempotency_key = 4;
+  string requested_run_id = 5;
+  ManualInitiationKind initiation_kind = 6;
+  string user_gesture_id = 7;
+  infinium.common.v1.Instant dispatch_deadline = 8;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command", "filter",
+      "exact_scope_ids", "dependency_ids", "operation_kind", "operation_json", "credential",
+      "source_run_id", "source_finding_occurrence_id", "source_case_occurrence_id";
+}
+
 message StartTargetedVerificationResponse {
+  CommandDisposition disposition = 1;
+  infinium.domain.v1.DurableCommandId durable_command_id = 2;
+  infinium.domain.v1.RunId successor_run_id = 3;
+  string targeted_verification_id = 4;
+  infinium.common.v1.Failure failure = 5;
+}
+
+message GetTargetedVerificationRequest {
+  oneof identity {
+    string targeted_verification_id = 1;
+    infinium.domain.v1.RunId successor_run_id = 2;
+  }
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "query", "payload_path", "command";
+}
+
+message GetTargetedVerificationResponse {
   oneof result {
     TargetedVerification verification = 1;
     infinium.common.v1.Failure failure = 2;
@@ -1591,15 +1807,28 @@ message StartTargetedVerificationResponse {
 }
 
 message TargetedVerification {
-  string verification_id = 1;
-  infinium.domain.v1.RunId source_run_id = 2;
-  infinium.domain.v1.RunId successor_run_id = 3;
-  string source_finding_occurrence_id = 4;
-  string source_case_occurrence_id = 5;
-  repeated string exact_scope_ids = 6;
-  string readiness_boundary = 7;
-  string state = 8;
-  infinium.common.v1.Instant created_at = 9;
+  string targeted_verification_id = 1;
+  string preparation_id = 2;
+  string admission_id = 3;
+  infinium.domain.v1.RunId source_run_id = 4;
+  string source_occurrence_id = 5;
+  infinium.domain.v1.RunId successor_run_id = 6;
+  string target_snapshot_id = 7;
+  string evidence_acquisition_id = 8;
+  string semantic_output_id = 9;
+  string scope_id = 10;
+  string scope_fingerprint_sha256 = 11;
+  string correlation_coverage_id = 12;
+  string correlation_coverage_fingerprint_sha256 = 13;
+  string managed_operation_kind = 14;
+  string managed_operation_fingerprint_sha256 = 15;
+  string successor_lifecycle_state = 16;
+  uint64 population_denominator = 17;
+  repeated string inert_gaps = 18;
+  string readiness_boundary = 19;
+  bool limited = 20;
+  repeated string reconciliation_relationships = 21;
+  infinium.common.v1.Instant created_at = 22;
 }
 
 message CreateStructuredExportRequest {

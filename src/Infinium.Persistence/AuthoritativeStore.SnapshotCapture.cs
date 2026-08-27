@@ -349,6 +349,50 @@ public sealed partial class AuthoritativeStore
         }
     }
 
+    public void FailQueuedSnapshotCapture(
+        string operationId,
+        long expectedGeneration,
+        long coordinatorFencingEpoch,
+        DateTimeOffset now)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(operationId);
+        RequirePositive(coordinatorFencingEpoch, nameof(coordinatorFencingEpoch));
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginTransaction();
+            EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
+            int changed = Execute(
+                """
+                UPDATE snapshot_capture_operations
+                SET lifecycle_state = 'Failed',
+                    lifecycle_generation = lifecycle_generation + 1,
+                    coordinator_fencing_epoch = $epoch,
+                    updated_at = $now
+                WHERE operation_id = $operation
+                  AND lifecycle_state = 'Queued'
+                  AND lifecycle_generation = $generation;
+                """,
+                transaction,
+                ("$epoch", coordinatorFencingEpoch),
+                ("$now", ToText(now)),
+                ("$operation", operationId),
+                ("$generation", expectedGeneration));
+            if (changed != 1)
+            {
+                throw new InvalidOperationException(
+                    "The queued snapshot capture failure compare-and-swap lost its race.");
+            }
+
+            InsertAuditEvent(
+                "snapshot-capture-queued-request-failed",
+                "snapshot-capture-operation",
+                operationId,
+                now,
+                transaction);
+            transaction.Commit();
+        }
+    }
+
     public PayloadAdmission AdmitSnapshotCapturePayload(
         SnapshotCaptureAttemptRecord attempt,
         string stagedRelativePath,

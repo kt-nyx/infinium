@@ -235,7 +235,7 @@ public sealed class ResultReviewWorkflowIntegrationTests
             {
                 database.Open();
                 using SqliteCommand downgrade = database.CreateCommand();
-                downgrade.CommandText =
+                downgrade.CommandText = TargetedVerificationMigrationTestSupport.DropSchema16Sql +
                     """
                     DROP TABLE structured_export_projection;
                     DROP TABLE structured_export_events;
@@ -258,7 +258,7 @@ public sealed class ResultReviewWorkflowIntegrationTests
             using StoragePaths migratedPaths = new(root);
             using AuthoritativeStore migrated = new(migratedPaths);
             CollectionAssert.AreEqual(canonicalBefore, migrated.ReadFindingCasePayload(sourcePayloadId));
-            Assert.AreEqual(15, migrated.GetSchemaVersion());
+            Assert.AreEqual(AuthoritativeStore.CurrentSchemaVersion, migrated.GetSchemaVersion());
             Assert.AreEqual(0L, CandidatePipelineIntegrationTests.Count(databasePath, "finding_report_publications"));
             FindingReportProjectionUnavailableException unavailable = Assert.ThrowsExactly<
                 FindingReportProjectionUnavailableException>(() => migrated.ListFindingReports(
