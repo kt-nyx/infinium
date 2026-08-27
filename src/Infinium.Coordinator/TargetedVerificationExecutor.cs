@@ -16,11 +16,7 @@ namespace Infinium.Coordinator;
 
 #pragma warning disable CA1848 // Failures are exceptional and retain preparation identity.
 
-public sealed class TargetedVerificationExecutor(
-    CoordinatorRuntime runtime,
-    SnapshotCaptureExecutor snapshotExecutor,
-    ManagedRunExecutor workerLauncher,
-    ILogger<TargetedVerificationExecutor> logger)
+public sealed class TargetedVerificationExecutor
 {
     private const long MaximumSemanticBytes = 64L * 1024 * 1024;
     private static readonly JsonSerializerOptions StrictJson = new()
@@ -28,7 +24,37 @@ public sealed class TargetedVerificationExecutor(
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
     };
     private readonly Lock gate = new();
+    private readonly CoordinatorRuntime runtime;
+    private readonly SnapshotCaptureExecutor snapshotExecutor;
+    private readonly ManagedRunExecutor workerLauncher;
+    private readonly ILogger<TargetedVerificationExecutor> logger;
+    private readonly Func<ManagedBethesdaSemanticAssignment, BethesdaSemanticExtractionResult>?
+        inProcessSemanticExecution;
     private bool pumpRunning;
+
+    public TargetedVerificationExecutor(
+        CoordinatorRuntime runtime,
+        SnapshotCaptureExecutor snapshotExecutor,
+        ManagedRunExecutor workerLauncher,
+        ILogger<TargetedVerificationExecutor> logger)
+        : this(runtime, snapshotExecutor, workerLauncher, logger, null)
+    {
+    }
+
+    internal TargetedVerificationExecutor(
+        CoordinatorRuntime runtime,
+        SnapshotCaptureExecutor snapshotExecutor,
+        ManagedRunExecutor workerLauncher,
+        ILogger<TargetedVerificationExecutor> logger,
+        Func<ManagedBethesdaSemanticAssignment, BethesdaSemanticExtractionResult>?
+            inProcessSemanticExecution)
+    {
+        this.runtime = runtime;
+        this.snapshotExecutor = snapshotExecutor;
+        this.workerLauncher = workerLauncher;
+        this.logger = logger;
+        this.inProcessSemanticExecution = inProcessSemanticExecution;
+    }
 
     public void Schedule(string preparationId)
     {
@@ -286,8 +312,26 @@ public sealed class TargetedVerificationExecutor(
                 Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
                 DateTimeOffset.UtcNow.AddMinutes(2), ManagedWorkerOperationKind.BethesdaSemanticExtraction,
                 "2.0.0", null, assignment);
-            ManagedWorkerResult result = await workerLauncher.LaunchWorkerAsync(bootstrap, staging.Handle)
-                .ConfigureAwait(false);
+            ManagedWorkerResult result;
+            if (inProcessSemanticExecution is null)
+            {
+                result = await workerLauncher.LaunchWorkerAsync(bootstrap, staging.Handle)
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                BethesdaSemanticExtractionResult local = inProcessSemanticExecution(assignment);
+                byte[] localBytes = JsonSerializer.SerializeToUtf8Bytes(local);
+                string localSha = Hash(localBytes);
+                File.WriteAllBytes(Path.Combine(runtime.Store.Paths.Staging, attempt.AttemptId,
+                    bootstrap.OutputRelativeName), localBytes);
+                result = new ManagedWorkerResult(1, bootstrap.BootstrapId, attempt.AttemptId,
+                    attempt.CoordinatorFencingEpoch, attempt.AttemptFencingToken,
+                    bootstrap.OutputRelativeName, localSha, localBytes.LongLength,
+                    Convert.ToHexStringLower(ManagedWorkerManifest.ComputeDigest(
+                        bootstrap.StagedArtifactId, bootstrap.OutputRelativeName, localSha,
+                        localBytes.LongLength, bootstrap.OutputSchemaVersion)));
+            }
             byte[] staged = runtime.Store.ReadSemanticAcquisitionStagedPayload(attempt,
                 result.OutputRelativeName, result.Sha256, result.ByteLength, bootstrap.MaximumOutputBytes);
             BethesdaSemanticExtractionResult semantic = BethesdaSemanticPublicationValidator.DeserializeAndValidate(
@@ -362,8 +406,16 @@ public sealed class TargetedVerificationExecutor(
             throw new AnalysisIdentityDriftException("The canonical source candidate payload drifted.");
         }
         CandidateAnalysisContract sourceCandidates = CandidateAnalysisJsonCodec.Deserialize(candidateBytes);
-        byte[] sourceDeliveredBytes = runtime.Store.ReadCandidateAnalysisPayload(sourceCandidates.DeliveredInputId.Value);
-        CandidateDeliveredInputContract sourceDelivered = CandidateDeliveredInputJsonCodec.Deserialize(sourceDeliveredBytes);
+        CandidateDeliveredInputContract sourceDelivered = sourceRequest.Candidate.DeliveredInput
+            ?? throw new AnalysisIdentityDriftException(
+                "The retained source managed operation has no canonical delivered input.");
+        byte[] sourceDeliveredBytes = CandidateDeliveredInputJsonCodec.Serialize(sourceDelivered);
+        if (sourceDelivered.PayloadId != sourceCandidates.DeliveredInputId
+            || sourceRequest.Candidate.DeliveredInputByteFingerprint?.Value != Hash(sourceDeliveredBytes))
+        {
+            throw new AnalysisIdentityDriftException(
+                "The canonical source delivered input differs from the retained candidate checkpoint.");
+        }
         if (sourceDelivered.OriginatingRunId.Value != preparation.SourceRunId
             || sourceDelivered.SourceSnapshotId.Value != sourceRun.Binding.InstallationSnapshotId)
         {
@@ -501,7 +553,7 @@ public sealed class TargetedVerificationExecutor(
                 continue;
             }
             observations.Add(CorrelateCurrentMember(member, sourceDelivered, targetDelivered,
-                targetSnapshot, acquisitionProof));
+                targetSnapshot, targetSemantic, qualifiedCapture, acquisitionProof));
         }
         TargetedCorrelationCoverageContract coverage = TargetedVerificationPlanner.Correlate(
             new(preparation.PreparationId), scope, new(publication.TargetSnapshotId), new(publication.AcquisitionId),
@@ -515,6 +567,10 @@ public sealed class TargetedVerificationExecutor(
             new(sourceRun.Binding.EffectiveScanConfigurationId), new(sourceRun.Binding.ResolvedInputManifestId));
         List<TargetedReuseDecisionContract> reuse =
         [
+            new("source-managed-operation", new(sourceRun.RunId), "reuse-with-proof",
+                new("targeted-source-operation-proof-" + sourceOperation.RequestSha256[..24]),
+                new(sourceOperation.RequestSha256),
+                "The exact retained managed-analysis-v1 source operation is revalidated before targeted start admission."),
             Recompute("installation-snapshot", publication.TargetSnapshotId, publication.PublicationId,
                 "The source snapshot is never target proof."),
             Recompute("bethesda-semantic-input", publication.SemanticOutputId, publication.PublicationId,
@@ -624,17 +680,26 @@ public sealed class TargetedVerificationExecutor(
         _ => TargetedScopeMemberKind.Participant,
     };
 
-    private static TargetedCurrentObservationContract CorrelateCurrentMember(
+    internal static TargetedCurrentObservationContract CorrelateCurrentMember(
         TargetedScopeMemberContract member,
         CandidateDeliveredInputContract source,
         CandidateDeliveredInputContract target,
         BethesdaSemanticSnapshot targetSnapshot,
+        BethesdaSemanticExtractionResult targetSemantic,
+        Mo2SnapshotCaptureResult targetCapture,
         OpaqueId proof)
     {
         HashSet<OpaqueId> current = CurrentIdentities(target, member.Kind);
         if (current.Contains(member.StableIdentity)
             || TargetContains(targetSnapshot, member.Kind, member.StableIdentity.Value))
         {
+            if (ProcessingGap(member, target, targetSnapshot, targetSemantic, targetCapture) is
+                (TargetedCorrelationStatus Status, string Reason, OpaqueId Evidence) gap)
+            {
+                return new(member.StableIdentity, new("qualified-target-semantic-population"),
+                    member.StableIdentity, member.MemberId, gap.Status, true, false, gap.Reason,
+                    [proof, gap.Evidence], proof);
+            }
             return new(member.StableIdentity, new("qualified-target-semantic-population"), member.StableIdentity,
                 member.MemberId, TargetedCorrelationStatus.MatchedExecutable, true, true,
                 "The exact typed stable identity is present in the fresh semantic extraction.", [proof], proof);
@@ -666,6 +731,82 @@ public sealed class TargetedVerificationExecutor(
             "Complete qualified target enumeration contains no match for the exact typed stable identity; this proves absence only.",
             [proof], proof);
     }
+
+    private static (TargetedCorrelationStatus Status, string Reason, OpaqueId Evidence)? ProcessingGap(
+        TargetedScopeMemberContract member,
+        CandidateDeliveredInputContract target,
+        BethesdaSemanticSnapshot targetSnapshot,
+        BethesdaSemanticExtractionResult targetSemantic,
+        Mo2SnapshotCaptureResult targetCapture)
+    {
+        if (member.Kind is TargetedScopeMemberKind.Record or TargetedScopeMemberKind.Participant)
+        {
+            string[] signatures = targetSnapshot.OverrideChains.Values
+                .Where(chain => CandidateAnalysisIdentity.StableId(
+                    "candidate-delivered-source", "record", chain.Identity.ParticipantId) == member.StableIdentity)
+                .Select(chain => chain.Identity.Signature.ToLowerInvariant())
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+            BethesdaCoverageGap? malformed = targetSemantic.Gaps.FirstOrDefault(gap =>
+                gap.Category == BethesdaCoverageGapCategory.UnsupportedShape
+                && signatures.Any(signature => gap.Detail.StartsWith(signature + ":", StringComparison.Ordinal)));
+            if (malformed is not null)
+            {
+                return (TargetedCorrelationStatus.Malformed,
+                    "The exact correlated record is retained, but qualified semantic evidence reports an unsupported content shape; the member remains in the denominator as malformed processing.",
+                    GapEvidence("semantic", malformed.GapId));
+            }
+            BethesdaCoverageGap? unsupported = targetSemantic.Gaps.FirstOrDefault(gap =>
+                gap.Category is BethesdaCoverageGapCategory.UnsupportedRecord
+                    or BethesdaCoverageGapCategory.UnsupportedField
+                && signatures.Any(signature => gap.Detail.StartsWith(signature, StringComparison.Ordinal)));
+            if (unsupported is not null)
+            {
+                return (TargetedCorrelationStatus.Unsupported,
+                    "The exact correlated record is retained, but its qualified semantic population reports unsupported processing; the member remains in the denominator.",
+                    GapEvidence("semantic", unsupported.GapId));
+            }
+        }
+
+        if (member.Kind is TargetedScopeMemberKind.Asset or TargetedScopeMemberKind.Provider)
+        {
+            CandidateDeliveredFaceGenFactContract[] facts = target.FaceGenFacts.Where(fact =>
+                    fact.MeshAssetId == member.StableIdentity || fact.TintAssetId == member.StableIdentity
+                    || fact.MeshProviderParticipantId == member.StableIdentity
+                    || fact.TintProviderParticipantId == member.StableIdentity)
+                .ToArray();
+            bool unknownContent = facts.Any(fact =>
+                (fact.MeshAssetId == member.StableIdentity || fact.MeshProviderParticipantId == member.StableIdentity)
+                    && fact.MeshAvailability == CandidateDeliveredAssetAvailability.Unknown
+                || (fact.TintAssetId == member.StableIdentity || fact.TintProviderParticipantId == member.StableIdentity)
+                    && fact.TintAvailability == CandidateDeliveredAssetAvailability.Unknown);
+            if (unknownContent)
+            {
+                SnapshotGap? inaccessible = targetCapture.Gaps.FirstOrDefault(gap =>
+                    gap.Code == "reparse-point-unsupported" && gap.Population == "filesystem");
+                if (inaccessible is not null)
+                {
+                    return (TargetedCorrelationStatus.Inaccessible,
+                        "The exact correlated asset or provider identity is retained, but the qualified capture could not traverse part of its content population; the member remains in the denominator.",
+                        GapEvidence("snapshot", inaccessible.Code + "\n" + inaccessible.Population));
+                }
+                BethesdaCoverageGap? unsupported = targetSemantic.Gaps.FirstOrDefault(gap =>
+                    gap.Category == BethesdaCoverageGapCategory.Capability
+                    && gap.Population is "face-gen-archive-assets" or "face-gen-loose-assets");
+                if (unsupported is not null)
+                {
+                    return (TargetedCorrelationStatus.Unsupported,
+                        "The exact correlated asset or provider identity is retained, but its accepted content adapter is unsupported; the member remains in the denominator.",
+                        GapEvidence("semantic", unsupported.GapId));
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static OpaqueId GapEvidence(string kind, string identity) =>
+        new("targeted-processing-gap-" + Hash(kind + "\n" + identity)[..32]);
 
     private static HashSet<OpaqueId> CurrentIdentities(
         CandidateDeliveredInputContract input, TargetedScopeMemberKind kind)
@@ -800,17 +941,30 @@ public sealed class TargetedVerificationExecutor(
             TargetedScopeMemberKind.Participant or TargetedScopeMemberKind.Record =>
                 snapshot.ResolvedParticipants.ContainsKey(identity)
                 || snapshot.ResolvedParticipants.Values.Any(item => item.ParticipantId == identity || item.FormKey == identity)
+                || snapshot.ResolvedParticipants.Values.Any(item =>
+                    DeliveredIdentity("record", item.ParticipantId).Value == identity)
                 || snapshot.OverrideChains.Values.Any(item => item.Identity.ParticipantId == identity
-                    || item.Identity.FormKey == identity),
+                    || item.Identity.FormKey == identity
+                    || DeliveredIdentity("record", item.Identity.ParticipantId).Value == identity),
             TargetedScopeMemberKind.Contribution => snapshot.OverrideChains.Values
-                .SelectMany(item => item.Contributions).Any(item => item.ContributionId == identity),
+                .SelectMany(item => item.Contributions).Any(item => item.ContributionId == identity
+                    || DeliveredIdentity("contribution", item.ContributionId).Value == identity),
             TargetedScopeMemberKind.Provider => snapshot.Plugins.Any(item => item.PluginName == identity
-                || item.LocalInstalledEntityId.Value == identity),
+                || item.LocalInstalledEntityId.Value == identity
+                || DeliveredIdentity("provider", item.LocalInstalledEntityId.Value).Value == identity)
+                || snapshot.FaceGen.SelectMany(item => item.Mesh.ProviderParticipantIds
+                    .Concat(item.Tint.ProviderParticipantIds)).Any(item =>
+                    item == identity || DeliveredIdentity("provider", item).Value == identity),
             TargetedScopeMemberKind.Asset => snapshot.FaceGen.Any(item => item.Mesh.NormalizedRelativePath == identity
-                || item.Tint.NormalizedRelativePath == identity),
+                || item.Tint.NormalizedRelativePath == identity
+                || DeliveredIdentity("asset", item.Mesh.NormalizedRelativePath).Value == identity
+                || DeliveredIdentity("asset", item.Tint.NormalizedRelativePath).Value == identity),
             TargetedScopeMemberKind.ApplicabilityPopulation => snapshot.Coverage.Any(item => item.Population == identity),
             _ => false,
         };
+
+    private static OpaqueId DeliveredIdentity(string kind, string value) =>
+        CandidateAnalysisIdentity.StableId("candidate-delivered-source", kind, value);
 
     private static TargetedReuseDecisionContract Recompute(string kind, string artifactId, string proofId,
         string reason) => new(kind, new(artifactId), "recompute", new(proofId),

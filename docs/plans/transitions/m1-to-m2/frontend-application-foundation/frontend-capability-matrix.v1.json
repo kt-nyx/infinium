@@ -2,10 +2,10 @@
   "$schema": "frontend-capability-matrix.v1.schema.json",
   "schema_identity": "infinium.planning.frontend-capability-matrix/1.0.0",
   "status": "implementation-active",
-  "last_reviewed": "2026-08-26",
+  "last_reviewed": "2026-08-27",
   "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
   "planning_base": "32dbb2c48754666336d2da571e554ad8897ed71c",
-  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint C and Phase C acceptance remain suspended. Focused offline evidence covers FindingReport publication/query/readback, recursive request validation, export deletion/recovery, provenance, paging, explicit populated-migration unavailability, and the ADR-0038 targeted-verification candidate: new-snapshot capture, separately owned semantic acquisition, correlation-complete scope, exact managed-analysis-v1 successor admission, and immutable lineage through five native-only RPCs. StartTargetedVerification remains native-only-never-map and no renderer authority is granted. No desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, or M2 acceptance is claimed.",
+  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint C and Phase C acceptance remain suspended. Focused offline evidence covers FindingReport publication/query/readback, recursive request validation, export deletion/recovery, provenance, paging, explicit populated-migration unavailability, and the corrected ADR-0038 targeted-verification candidate: an unseeded native named-pipe path performs real fresh-snapshot capture, separately owned semantic acquisition, production dependency/correlation planning, exact managed-analysis-v1 successor admission, completion, and lineage readback. Production planning now retains qualified unsupported, inaccessible, and malformed processing gaps as limited plans, while identity/scope failures remain non-startable. StartTargetedVerification remains native-only-never-map and no renderer authority is granted. No desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, or M2 acceptance is claimed.",
   "application_contract_inventory": "application-contract-inventory.v1.json",
   "ownership_audit": {
     "capability_count": 19,
@@ -483,6 +483,10 @@
         "Five clean-break ApplicationService RPCs and generated C# contracts expose begin, status, cancellation, atomic start, and successor readback over the native named-pipe boundary",
         "Append-only schema 16 persistence retains preparation, acquisition, snapshot links, scope, correlation, reuse, operation input, admission, initiation lineage, reconciliation, replay, recovery, and rebuildable projections",
         "TargetedAnalysisScope is hydrated from canonical finding/case and candidate-delivered evidence, closed without caller narrowing, and every member receives exactly one retained correlation status",
+        "Qualified production acquisition evidence makes unsupported, inaccessible, and malformed known-member processing gaps reachable as startable limited plans without weakening identity/scope qualification",
+        "Start admission revalidates source and target identities, capture/acquisition seals, canonical plan projections, reuse/configuration/context proofs, derived inputs, request bytes, deadline, and fence before mutation",
+        "One-shot gestures are globally unique across preparation, cancellation, ordinary prepared-run start, and targeted start while exact retries remain idempotent",
+        "A primary unseeded named-pipe test executes actual snapshot and semantic producers, production planning, managed-analysis-v1 completion, and initiation/reconciliation readback",
         "StartTargetedVerification atomically admits exactly managed-analysis-v1 and remains native-only-never-map; no Phase D renderer authority exists"
       ],
       "gap": "The corrected Phase C candidate requires architecture-steward Checkpoint C review; this record does not accept WP5, WP6, Checkpoint C, Phase D, or M2.",

@@ -141,7 +141,11 @@ resealed or promoted through an ordinary tooling command.
   migration-gap defects have focused evidence. Its five native-only targeted-
   verification RPCs now have a producer-to-consumer implementation candidate
   covering fresh acquisition, closed scope/correlation, atomic ordinary
-  successor admission, and lineage. Corrected Checkpoint C review is pending;
+  successor admission, and lineage. The corrected candidate also exercises the
+  complete native producer-to-consumer path without seeding ready persistence,
+  retains qualified processing gaps as limited plans, rejects pre-start drift
+  before successor mutation, and enforces cross-family one-shot gestures.
+  Corrected Checkpoint C review is pending;
   the checkpoint remains suspended. Remaining packages must
   exercise EVAL-0090 through EVAL-0094 plus every applicable existing case
   through the same six layers.

@@ -276,6 +276,88 @@ public sealed class PersistenceAndLifecycleTests
 
     [TestMethod]
     [TestCategory("Unit")]
+    [TestCategory("Concurrency")]
+    public void AuthorityGestureRaceAcrossPreparationAndCancellationAdmitsExactlyOneCommand()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore preparationStore = temporary.Open();
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        CoordinatorAuthority authority = preparationStore.AcquireCoordinatorAuthority(
+            "targeted-gesture-race", now, TimeSpan.FromMinutes(5));
+        RunRecord queued = preparationStore.CreateRun("gesture-source-command", "gesture-source-run",
+            Binding("gesture-source"), authority.FencingEpoch, now);
+        RunRecord running = preparationStore.Transition("gesture-source-running", queued.RunId,
+            queued.Generation, LifecycleState.Running, authority.FencingEpoch, "test source execution", now);
+        _ = preparationStore.Transition("gesture-source-completed", running.RunId, running.Generation,
+            LifecycleState.Completed, authority.FencingEpoch, "test source completion", now);
+
+        static TargetedPreparationPersistenceRequest Request(
+            string commandId, string preparationId, string gestureId, string captureId,
+            string sourceRunId, DateTimeOffset createdAt)
+        {
+            string requestJson = JsonSerializer.Serialize(new { schema = "targeted-gesture-race", preparationId });
+            string captureJson = JsonSerializer.Serialize(new { schema = "targeted-capture-race", captureId });
+            return new(commandId, preparationId, gestureId, requestJson,
+                Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(requestJson))),
+                sourceRunId, "finding", "gesture-source-finding", "profile", 1,
+                "configuration", 1, "context", 1, new string('1', 64), "DiagnosticUserGesture",
+                createdAt.AddMinutes(2), captureId, captureJson,
+                Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(captureJson))));
+        }
+
+        TargetedPreparationPersistenceRecord cancellable = preparationStore.CreateTargetedPreparation(
+            Request("gesture-cancellable-command", "gesture-cancellable", "gesture-cancellable-origin",
+                "gesture-cancellable-capture", queued.RunId, now), authority.FencingEpoch, now);
+        using AuthoritativeStore cancellationStore = temporary.Open();
+        const string racedGesture = "targeted-cross-family-raced-gesture";
+        using ManualResetEventSlim start = new(initialState: false);
+        Exception? preparationFailure = null;
+        Exception? cancellationFailure = null;
+        Task preparation = Task.Run(() =>
+        {
+            start.Wait();
+            try
+            {
+                _ = preparationStore.CreateTargetedPreparation(
+                    Request("gesture-raced-preparation-command", "gesture-raced-preparation", racedGesture,
+                        "gesture-raced-capture", queued.RunId, now), authority.FencingEpoch, now);
+            }
+            catch (Exception exception)
+            {
+                preparationFailure = exception;
+            }
+        });
+        Task cancellation = Task.Run(() =>
+        {
+            start.Wait();
+            try
+            {
+                _ = cancellationStore.CancelTargetedPreparation("gesture-raced-cancellation-command",
+                    cancellable.PreparationId, cancellable.Revision, racedGesture,
+                    authority.FencingEpoch, now.AddSeconds(1));
+            }
+            catch (Exception exception)
+            {
+                cancellationFailure = exception;
+            }
+        });
+        start.Set();
+        Task.WaitAll(preparation, cancellation);
+
+        Assert.AreEqual(1, new[] { preparationFailure, cancellationFailure }.Count(item => item is null));
+        Assert.IsTrue(new[] { preparationFailure, cancellationFailure }.Single(item => item is not null)
+            is InvalidOperationException);
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand count = connection.CreateCommand();
+        count.CommandText =
+            "SELECT (SELECT COUNT(*) FROM targeted_preparation_requests WHERE user_gesture_id=$gesture) "
+            + "+ (SELECT COUNT(*) FROM targeted_preparation_commands WHERE user_gesture_id=$gesture);";
+        count.Parameters.AddWithValue("$gesture", racedGesture);
+        Assert.AreEqual(1L, (long)count.ExecuteScalar()!);
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
     public void Schema10ProviderPersistenceBackupRestoreRetainsOnlyBlockedAuthorityState()
     {

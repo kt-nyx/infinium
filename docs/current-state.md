@@ -46,6 +46,12 @@ append-only structured-export deletion with crash recovery, and corrected
 provenance and cursor binding. Checkpoint C remains suspended because the new
 targeted-verification candidate still requires corrected architecture-steward
 Checkpoint C review; implementation does not accept its own checkpoint.
+The correction now proves the complete native named-pipe path without manually
+publishing a ready plan: the actual snapshot and semantic producers feed the
+production planner, qualified known-member processing failures remain visible
+as limited plans, all authority-bearing gestures are globally one-shot, and
+start rejects retained-source, target, plan, acquisition, proof, input, or
+fencing drift before creating any successor authority.
 Canonical
 analysis truth remains the authority, WP5/WP6 are not accepted, and Phase D
 remains blocked.
@@ -68,7 +74,7 @@ work.
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
-| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) remain accepted at corrected Checkpoint B. The ADR-0038 targeted-verification vertical is implemented as a corrected Phase C/WP6 candidate with five native-only RPCs, schema-16 durability, fresh acquisition, closed scope/correlation, atomic `managed-analysis-v1` successor admission, and exact lineage. WP5/WP6 remain under correction and the earlier Checkpoint C receipt stays suspended. |
+| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) remain accepted at corrected Checkpoint B. The ADR-0038 targeted-verification vertical is implemented as a corrected Phase C/WP6 candidate with five native-only RPCs, schema-16 durability, real fresh acquisition, production limited-plan correlation, globally one-shot gestures, pre-mutation start revalidation, atomic `managed-analysis-v1` successor admission, and exact lineage. WP5/WP6 remain under correction and the earlier Checkpoint C receipt stays suspended. |
 | Next authorized action and gate | Perform corrected Checkpoint C architecture-steward review of the Phase C candidate. Phase D and `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` remain blocked. This does not activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |

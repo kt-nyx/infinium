@@ -181,6 +181,16 @@ public sealed class CandidatePipelineIntegrationTests
         command.CommandText = $"SELECT COUNT(*) FROM {table};";
         return Convert.ToInt64(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture);
     }
+
+    internal static long CountWhere(string database, string table, string column, string value)
+    {
+        using SqliteConnection connection = new($"Data Source={database};Mode=ReadOnly;Pooling=False");
+        connection.Open();
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = $"SELECT COUNT(*) FROM {table} WHERE {column}=$value;";
+        command.Parameters.AddWithValue("$value", value);
+        return Convert.ToInt64(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture);
+    }
 }
 
 [TestClass]

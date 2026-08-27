@@ -148,7 +148,7 @@ public sealed partial class ApplicationGrpcService(
             BuildApplicationCapability(ApplicationCapability.Configuration, Availability.Available, "Versioned setup configuration and prepared-run review are active."),
             BuildApplicationCapability(ApplicationCapability.ProviderEnrollment, Availability.Partial, "Non-secret enrollment intent and status are active; native secret entry remains unavailable in this phase."),
             BuildApplicationCapability(ApplicationCapability.ResultExploration, Availability.Partial, "FindingReport query/readback and adversarial request validation have focused correction evidence; Checkpoint C and desktop consumption remain unaccepted."),
-            BuildApplicationCapability(ApplicationCapability.DurableUserReview, Availability.Partial, "Review and export deletion/recovery have focused correction evidence; targeted verification remains unavailable without an accepted executable scope mapping, so Checkpoint C is suspended."),
+            BuildApplicationCapability(ApplicationCapability.DurableUserReview, Availability.Partial, "Review, export deletion/recovery, and the native targeted-verification workflow are implemented; corrected Checkpoint C review and desktop delivery remain pending."),
         ]);
         return Task.FromResult(new GetApplicationBootstrapResponse { Bootstrap = bootstrap });
     }

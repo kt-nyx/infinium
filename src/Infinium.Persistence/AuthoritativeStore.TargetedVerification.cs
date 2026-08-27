@@ -191,7 +191,7 @@ public sealed partial class AuthoritativeStore
 
         lock (gate)
         {
-            using SqliteTransaction transaction = BeginTransaction();
+            using SqliteTransaction transaction = BeginImmediateTransaction();
             string? existing = ScalarStringOrNull(
                 "SELECT preparation_id FROM targeted_preparation_requests WHERE durable_command_id=$command;",
                 transaction, ("$command", request.DurableCommandId));
@@ -207,12 +207,13 @@ public sealed partial class AuthoritativeStore
                 transaction.Commit();
                 return replay;
             }
-            if (ScalarLong("SELECT COUNT(*) FROM targeted_preparation_requests WHERE user_gesture_id=$gesture OR preparation_id=$preparation;",
-                    transaction, ("$gesture", request.UserGestureId), ("$preparation", request.PreparationId)) != 0)
+            if (ScalarLong("SELECT COUNT(*) FROM targeted_preparation_requests WHERE preparation_id=$preparation;",
+                    transaction, ("$preparation", request.PreparationId)) != 0)
             {
-                throw new InvalidOperationException("A targeted preparation identity or gesture cannot be reused.");
+                throw new InvalidOperationException("A targeted preparation identity cannot be reused.");
             }
-            RunRecord source = GetRunCore(request.SourceRunId);
+            EnsureAuthorityGestureUnused(request.UserGestureId, transaction);
+            RunRecord source = GetRunCore(request.SourceRunId, transaction);
             if (source.State is not (LifecycleState.Completed or LifecycleState.CompletedWithGaps
                     or LifecycleState.LimitReached))
             {
@@ -411,6 +412,43 @@ public sealed partial class AuthoritativeStore
         }
     }
 
+    public void ValidateTargetedSnapshotLink(
+        string preparationId,
+        string captureOperationId,
+        string targetSnapshotId,
+        string snapshotFingerprint)
+    {
+        ValidateSha256(snapshotFingerprint);
+        lock (gate)
+        {
+            if (ScalarLong(
+                    "SELECT COUNT(*) FROM targeted_snapshot_links link "
+                    + "JOIN snapshot_capture_operations capture "
+                    + "ON capture.operation_id=link.capture_operation_id "
+                    + "AND capture.installation_snapshot_id=link.target_snapshot_id "
+                    + "AND capture.payload_id=link.snapshot_payload_id "
+                    + "AND capture.lifecycle_state='Completed' "
+                    + "JOIN snapshot_capture_publications publication "
+                    + "ON publication.operation_id=link.capture_operation_id "
+                    + "AND publication.installation_snapshot_id=link.target_snapshot_id "
+                    + "AND publication.payload_id=link.snapshot_payload_id "
+                    + "JOIN payloads payload ON payload.payload_id=link.snapshot_payload_id "
+                    + "AND payload.content_sha256=link.snapshot_fingerprint "
+                    + "WHERE link.preparation_id=$preparation "
+                    + "AND link.capture_operation_id=$capture AND link.target_snapshot_id=$snapshot "
+                    + "AND link.snapshot_fingerprint=$fingerprint;",
+                    null,
+                    ("$preparation", preparationId),
+                    ("$capture", captureOperationId),
+                    ("$snapshot", targetSnapshotId),
+                    ("$fingerprint", snapshotFingerprint)) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The targeted snapshot capture occurrence or retained fingerprint drifted.");
+            }
+        }
+    }
+
     public TargetedCancellationPersistenceReceipt CancelTargetedPreparation(
         string commandId, string preparationId, long expectedRevision, string userGestureId,
         long coordinatorFencingEpoch, DateTimeOffset now)
@@ -422,7 +460,7 @@ public sealed partial class AuthoritativeStore
             preparationId, expectedRevision, userGestureId));
         lock (gate)
         {
-            using SqliteTransaction transaction = BeginTransaction();
+            using SqliteTransaction transaction = BeginImmediateTransaction();
             EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
             string? existingPreparation = ScalarStringOrNull(
                 "SELECT preparation_id FROM targeted_preparation_commands WHERE command_id=$command;",
@@ -439,11 +477,7 @@ public sealed partial class AuthoritativeStore
                 transaction.Commit();
                 return new(GetTargetedPreparationCore(preparationId), true);
             }
-            if (ScalarLong("SELECT COUNT(*) FROM targeted_preparation_commands WHERE user_gesture_id=$gesture;",
-                    transaction, ("$gesture", userGestureId)) != 0)
-            {
-                throw new InvalidOperationException("A targeted cancellation gesture cannot authorize another command.");
-            }
+            EnsureAuthorityGestureUnused(userGestureId, transaction);
             TargetedPreparationPersistenceRecord current = GetTargetedPreparationCore(preparationId, transaction);
             if (current.Revision != expectedRevision)
             {
@@ -547,6 +581,29 @@ public sealed partial class AuthoritativeStore
             }
             transaction.Commit();
             return new(GetTargetedPreparationCore(preparationId), false);
+        }
+    }
+
+    private void EnsureAuthorityGestureUnused(string userGestureId, SqliteTransaction transaction)
+    {
+        long uses = ScalarLong(
+            """
+            SELECT COUNT(*) FROM (
+                SELECT user_gesture_id FROM targeted_preparation_requests WHERE user_gesture_id=$gesture
+                UNION ALL
+                SELECT user_gesture_id FROM targeted_preparation_commands WHERE user_gesture_id=$gesture
+                UNION ALL
+                SELECT user_gesture_id FROM prepared_run_submissions WHERE user_gesture_id=$gesture
+                UNION ALL
+                SELECT user_gesture_id FROM targeted_start_admissions WHERE user_gesture_id=$gesture
+            );
+            """,
+            transaction,
+            ("$gesture", userGestureId));
+        if (uses != 0)
+        {
+            throw new InvalidOperationException(
+                "A one-shot user gesture identity cannot authorize more than one authority-bearing command.");
         }
     }
 
@@ -991,6 +1048,30 @@ public sealed partial class AuthoritativeStore
             {
                 throw new InvalidOperationException("The targeted plan publication lost its compare-and-swap race.");
             }
+            foreach (TargetedScopeMemberContract root in plan.Scope.DirectRoots)
+            {
+                if (ScalarLong(
+                        "SELECT COUNT(*) FROM targeted_scope_roots WHERE preparation_id=$preparation "
+                        + "AND member_id=$member AND root_json=$json;", transaction,
+                        ("$preparation", plan.PreparationId.Value), ("$member", root.MemberId.Value),
+                        ("$json", JsonSerializer.Serialize(root))) != 1)
+                {
+                    throw new InvalidOperationException("A retained targeted direct-root projection drifted.");
+                }
+            }
+            foreach (TargetedScopeDependencyContract edge in plan.Scope.Dependencies)
+            {
+                if (ScalarLong(
+                        "SELECT COUNT(*) FROM targeted_scope_dependencies WHERE preparation_id=$preparation "
+                        + "AND edge_id=$edge AND from_member_id=$from AND to_member_id=$to "
+                        + "AND relation=$relation AND edge_json=$json;", transaction,
+                        ("$preparation", plan.PreparationId.Value), ("$edge", edge.EdgeId.Value),
+                        ("$from", edge.FromMemberId.Value), ("$to", edge.ToMemberId.Value),
+                        ("$relation", edge.Relation), ("$json", JsonSerializer.Serialize(edge))) != 1)
+                {
+                    throw new InvalidOperationException("A retained targeted dependency projection drifted.");
+                }
+            }
             transaction.Commit();
             return GetTargetedPreparationCore(preparationId);
         }
@@ -1013,6 +1094,109 @@ public sealed partial class AuthoritativeStore
             if (plan.PlanFingerprint.Value != fingerprint)
                 throw new InvalidOperationException("The targeted plan payload failed identity validation.");
             return plan;
+        }
+    }
+
+    public void ValidateTargetedPlanProjection(TargetedVerificationPlanContract plan)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        lock (gate)
+        {
+            if (ScalarLong(
+                    "SELECT COUNT(*) FROM targeted_verification_plans WHERE preparation_id=$preparation "
+                    + "AND plan_id=$plan AND plan_fingerprint=$planFingerprint AND scope_id=$scope "
+                    + "AND scope_fingerprint=$scopeFingerprint AND coverage_id=$coverage "
+                    + "AND coverage_fingerprint=$coverageFingerprint AND startable=$startable AND limited=$limited;",
+                    null,
+                    ("$preparation", plan.PreparationId.Value), ("$plan", plan.PlanId.Value),
+                    ("$planFingerprint", plan.PlanFingerprint.Value), ("$scope", plan.Scope.ScopeId.Value),
+                    ("$scopeFingerprint", plan.Scope.CanonicalFingerprint.Value),
+                    ("$coverage", plan.CorrelationCoverage.CoverageId.Value),
+                    ("$coverageFingerprint", plan.CorrelationCoverage.CanonicalFingerprint.Value),
+                    ("$startable", plan.Startable ? 1 : 0), ("$limited", plan.Limited ? 1 : 0)) != 1
+                || ScalarLong("SELECT COUNT(*) FROM targeted_scope_roots WHERE preparation_id=$preparation;",
+                    null, ("$preparation", plan.PreparationId.Value)) != plan.Scope.DirectRoots.Count
+                || ScalarLong("SELECT COUNT(*) FROM targeted_scope_members WHERE preparation_id=$preparation;",
+                    null, ("$preparation", plan.PreparationId.Value)) != plan.Scope.Members.Count
+                || ScalarLong("SELECT COUNT(*) FROM targeted_scope_dependencies WHERE preparation_id=$preparation;",
+                    null, ("$preparation", plan.PreparationId.Value)) != plan.Scope.Dependencies.Count
+                || ScalarLong("SELECT COUNT(*) FROM targeted_correlation_rows WHERE preparation_id=$preparation;",
+                    null, ("$preparation", plan.PreparationId.Value)) != plan.CorrelationCoverage.Rows.Count
+                || ScalarLong("SELECT COUNT(*) FROM targeted_reuse_decisions WHERE preparation_id=$preparation;",
+                    null, ("$preparation", plan.PreparationId.Value)) != plan.ReuseDecisions.Count)
+            {
+                throw new InvalidOperationException(
+                    "The targeted plan projection, scope, correlation denominator, or reuse inventory drifted.");
+            }
+            foreach (TargetedScopeMemberContract member in plan.Scope.Members)
+            {
+                if (ScalarLong(
+                        "SELECT COUNT(*) FROM targeted_scope_members WHERE preparation_id=$preparation "
+                        + "AND member_id=$member AND member_kind=$kind AND stable_identity=$stable "
+                        + "AND mandatory=$mandatory AND member_json=$json;", null,
+                        ("$preparation", plan.PreparationId.Value), ("$member", member.MemberId.Value),
+                        ("$kind", member.Kind.ToString()), ("$stable", member.StableIdentity.Value),
+                        ("$mandatory", member.Mandatory ? 1 : 0),
+                        ("$json", JsonSerializer.Serialize(member))) != 1)
+                {
+                    throw new InvalidOperationException("A retained targeted scope member projection drifted.");
+                }
+            }
+            foreach (TargetedCorrelationCoverageRowContract row in plan.CorrelationCoverage.Rows)
+            {
+                if (ScalarLong(
+                        "SELECT COUNT(*) FROM targeted_correlation_rows WHERE preparation_id=$preparation "
+                        + "AND row_id=$row AND scope_member_id=$member AND status=$status "
+                        + "AND correlation_qualified=$correlation AND processing_qualified=$processing "
+                        + "AND row_json=$json;", null,
+                        ("$preparation", plan.PreparationId.Value), ("$row", row.RowId.Value),
+                        ("$member", row.ScopeMemberId.Value), ("$status", row.Status.ToString()),
+                        ("$correlation", row.CorrelationQualified ? 1 : 0),
+                        ("$processing", row.ProcessingQualified ? 1 : 0),
+                        ("$json", JsonSerializer.Serialize(row))) != 1)
+                {
+                    throw new InvalidOperationException("A retained targeted correlation row projection drifted.");
+                }
+            }
+            foreach (TargetedReuseDecisionContract decision in plan.ReuseDecisions)
+            {
+                if (ScalarLong(
+                        "SELECT COUNT(*) FROM targeted_reuse_decisions WHERE preparation_id=$preparation "
+                        + "AND artifact_kind=$kind AND artifact_id=$artifact AND disposition=$disposition "
+                        + "AND proof_fingerprint=$proof AND decision_json=$json;", null,
+                        ("$preparation", plan.PreparationId.Value), ("$kind", decision.ArtifactKind),
+                        ("$artifact", decision.ArtifactId.Value), ("$disposition", decision.Disposition),
+                        ("$proof", decision.ProofFingerprint.Value),
+                        ("$json", JsonSerializer.Serialize(decision))) != 1)
+                {
+                    throw new InvalidOperationException("A retained targeted reuse proof projection drifted.");
+                }
+            }
+        }
+    }
+
+    public void ValidateSemanticAcquisitionPublicationSeal(
+        SemanticAcquisitionPersistenceRecord acquisition,
+        SemanticAcquisitionPublicationRecord publication)
+    {
+        lock (gate)
+        {
+            if (ScalarLong(
+                    "SELECT COUNT(*) FROM semantic_acquisition_attempts WHERE attempt_id=$attempt "
+                    + "AND acquisition_id=$acquisition AND attempt_fencing_token=$token "
+                    + "AND sealed_input_fingerprint=$seal;", null,
+                    ("$attempt", publication.AttemptId), ("$acquisition", acquisition.AcquisitionId),
+                    ("$token", publication.AttemptFencingToken),
+                    ("$seal", acquisition.SealedInputFingerprint)) != 1
+                || ScalarLong(
+                    "SELECT COUNT(*) FROM payloads WHERE payload_id=$payload AND content_sha256=$sha "
+                    + "AND byte_length=$length;", null,
+                    ("$payload", publication.PayloadId), ("$sha", publication.PayloadSha256),
+                    ("$length", publication.PayloadByteLength)) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The targeted semantic acquisition attempt fence or published payload seal drifted.");
+            }
         }
     }
 

@@ -1342,6 +1342,107 @@ survivors; the final audit matches both repository executable paths and
 repository-bearing command lines so system-hosted repository processes are
 included.
 
+## Corrected Checkpoint C review-disposition candidate
+
+Correction base: `4364b4a82a1d789b481cfa40ff9ef1d61d25972f`.
+The correction commit is the commit containing this record and is reported by
+the orchestrator after creation. This section records a correction candidate,
+not acceptance of WP5, WP6, Checkpoint C, Phase D, or M2.
+
+Plain-language result: the native application now truthfully reports that
+targeted verification is implemented, can create limited plans from real
+qualified processing evidence, rechecks every retained authority before a
+start, and prevents one user gesture from authorizing different durable
+actions. The primary native test now begins from the public RPC and reaches a
+completed ordinary analysis plus lineage readback without manually inserting a
+ready plan.
+
+### Architecture-steward findings corrected
+
+1. Bootstrap capability truth now distinguishes the implemented native
+   targeted-verification workflow from pending corrected Checkpoint C review
+   and desktop delivery. It no longer claims that executable architecture or
+   capability is unavailable.
+2. Production correlation maps exact, fully qualified known-member processing
+   evidence to `Unsupported`, `Inaccessible`, or `Malformed`. Those members
+   remain in the denominator and yield only an inspectable limited plan;
+   ambiguous, unsupported, or incomplete identity/scope correlation remains
+   non-startable. `ProvenAbsent` remains only an absence observation.
+3. Start-time binding now revalidates the source terminal state and canonical
+   occurrence/payload/signature, exact source operation and snapshot, distinct
+   target capture/publication, preparation and canonical plan projections,
+   scope/correlation denominator, acquisition attempt/publication/payload
+   seals, reuse/configuration/context proofs, recomputed delivered and coverage
+   inputs, resolved manifest, exact managed request, deadline, and coordinator
+   fence before atomic persistence can create successor authority.
+4. Preparation, cancellation, ordinary prepared-run start, and targeted start
+   now share one globally one-shot gesture check. Immediate SQLite write
+   transactions serialize independent connections; exact replay is evaluated
+   first and remains idempotent. A two-connection preparation/cancellation race
+   proves exactly one command wins.
+5. The primary generated-C# named-pipe qualification invokes begin/status/start/
+   readback, runs the actual MO2 snapshot capture and Bethesda semantic
+   extractor through their durable owners, invokes the production planner,
+   reaches `Ready` or `ReadyWithGaps`, completes exactly
+   `managed-analysis-v1`, and reads initiation plus reconciliation lineage.
+   It never calls `StoreTargetedPlan` or another persistence method to make
+   that preparation ready.
+6. Focused production-correlation tests cover unchanged identity, removed
+   provider/mod, removed record/contribution, identity-change ambiguity, and
+   production-reachable limited processing states. Existing planner,
+   lifecycle, migration, backup/restore, tamper, hostile-input, renderer-denial,
+   reconciliation, and evaluation tests remain part of the accepted floor.
+
+The correction review also found and fixed three defects while rechecking the
+same mutable candidate: canonical record/contribution/provider/asset matching
+initially compared raw semantic identifiers rather than delivered stable IDs;
+source delivered input was initially hydrated from a payload store that does
+not own its embedded managed-operation bytes; and the first immediate-transaction
+gesture hardening used transactionless helper reads. The final implementation
+uses canonical delivered identities, verifies the embedded source delivered
+input against its retained byte fingerprint, and attaches every new read to
+the active transaction. A further re-review bound target links to the exact
+capture operation/publication/payload and checked both source-root and target-
+snapshot identities.
+
+### Corrected evidence and unchanged identities
+
+- Focused targeted unit/concurrency selection: 10 passed, 0 failed.
+- Focused production/native integration selection: 4 passed, 0 failed.
+- Broader targeted-verification plus finding/case selection before the final
+  concurrency addition: 14 unit and 2 integration tests passed, 0 failed.
+- Final complete floor: restore passed; Release build passed with zero warnings
+  and zero errors; 734 tests passed with 10 expected skips and zero failures
+  (unit 278/1 skip, contract 216, integration 140, security 22, fault 10,
+  evaluation 68/9 skips); format, documentation validation, functional naming,
+  dependency-manifest check, and `git diff --check` passed.
+- Every .NET build/test batch and final handoff cleanup reported exactly zero
+  repository-owned `dotnet`, `testhost`, or `vstest` survivors.
+- No protobuf or generated-client byte changed. Application `1.10.0`, domain
+  `1.4.0`, storage `1.15.0`, renderer `1.1.0`, schema `16`, 48 declared/42
+  implemented RPCs, protobuf fingerprint
+  `c51f6c400547b948fd7f350ef5ac72f29d6032b2671cfba957a7be71cfc44e74`,
+  and schema fingerprint
+  `727285fbdb9a4a91e850a6bfad3749262be75e6388eae14edf9954eed23d783c`
+  remain unchanged. Generated C# output remains build-owned by `Grpc.Tools`.
+- No database migration or expected-object shape changed; the correction
+  strengthens schema-16 transactional use and read-time seal validation.
+
+The consolidated semantic, security, provenance, lifecycle, persistence,
+migration, evaluation, naming, and diff re-review found no remaining must-fix
+defect, generic execution/renderer/local-machine authority, source-result
+mutation, private-fixture access, independent semantic-oracle claim, product-
+meaning change, or owner decision. Corrected Checkpoint C architecture-steward
+review remains the next and only authorized gate.
+
+The first complete-floor attempt correctly rejected one new capability-matrix
+evidence sentence at 266 characters against its 256-character schema bound.
+The sentence was shortened without changing meaning, the focused schema test
+and changed-document review passed. The next floor passed all 734 tests but
+the format gate caught one misplaced `Microsoft.Data.Sqlite` import; the import
+was ordered, its focused format check passed, and the complete floor above was
+rerun on the corrected candidate.
+
 ## Final closeout fields
 
 WP9 will replace this placeholder with the accepted contract maturity,

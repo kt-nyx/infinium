@@ -41,6 +41,61 @@ internal static class TargetedVerificationOperationResolver
         DateTimeOffset now)
     {
         RunRecord sourceRun = store.GetRun(preparation.SourceRunId);
+        if (sourceRun.State is not (LifecycleState.Completed or LifecycleState.CompletedWithGaps
+                or LifecycleState.LimitReached))
+        {
+            throw new AnalysisIdentityDriftException(
+                "The targeted source run no longer has the required terminal analytical state.");
+        }
+        if (plan.PreparationId.Value != preparation.PreparationId
+            || plan.PreparationRevision != preparation.Revision - 1
+            || preparation.PlanId != plan.PlanId.Value
+            || preparation.PlanFingerprint != plan.PlanFingerprint.Value
+            || preparation.TargetSnapshotId != plan.TargetSnapshotId.Value
+            || preparation.EvidenceAcquisitionId != plan.EvidenceAcquisitionId.Value
+            || preparation.State is not (TargetedVerificationPreparationState.Ready
+                or TargetedVerificationPreparationState.ReadyWithGaps)
+            || preparation.Startable != plan.Startable
+            || preparation.Limited != plan.Limited)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The retained targeted preparation revision or plan binding drifted.");
+        }
+        if (Hash(preparation.RequestJson) != preparation.RequestSha256)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The retained targeted preparation request bytes drifted.");
+        }
+        ValidateCanonicalPlanIdentities(plan);
+        store.ValidateTargetedPlanProjection(plan);
+        ResultItemPersistenceRecord sourceOccurrence = store.GetResultItem(
+            sourceRun.RunId, preparation.SourceOccurrenceId);
+        string canonicalSourceSignature = Hash(string.Join('\n', sourceOccurrence.ItemId,
+            sourceOccurrence.LogicalId, sourceOccurrence.SourcePayloadSha256, sourceOccurrence.AnalyzerId,
+            sourceOccurrence.AnalyzerVersion));
+        if (sourceOccurrence.Kind != preparation.SourceOccurrenceKind
+            || sourceOccurrence.LogicalId != plan.Source.LogicalId.Value
+            || sourceOccurrence.SourcePayloadId != plan.Source.SourcePayloadId.Value
+            || sourceOccurrence.SourcePayloadSha256 != plan.Source.SourcePayloadFingerprint.Value
+            || canonicalSourceSignature != plan.Source.CanonicalSignature.Value)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The canonical targeted source occurrence identity drifted.");
+        }
+        byte[] sourcePayloadBytes = store.ReadFindingCasePayload(sourceOccurrence.SourcePayloadId);
+        if (Hash(sourcePayloadBytes) != sourceOccurrence.SourcePayloadSha256)
+        {
+            throw new AnalysisIdentityDriftException("The canonical targeted source payload bytes drifted.");
+        }
+        FindingCaseContract canonicalSource = FindingCaseJsonCodec.Deserialize(sourcePayloadBytes);
+        int occurrenceMatches = preparation.SourceOccurrenceKind == "finding"
+            ? canonicalSource.Findings.Count(item => item.FindingOccurrenceId.Value == preparation.SourceOccurrenceId)
+            : canonicalSource.Cases.Count(item => item.CaseOccurrenceId.Value == preparation.SourceOccurrenceId);
+        if (occurrenceMatches != 1)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The canonical targeted source occurrence no longer resolves exactly once.");
+        }
         RunOperationRecord sourceOperation = store.GetRunOperation(sourceRun.RunId)
             ?? throw new InvalidOperationException("The targeted source run has no managed operation.");
         if (sourceOperation.OperationKind != ManagedRunExecutor.ManagedAnalysisOperation
@@ -52,8 +107,65 @@ internal static class TargetedVerificationOperationResolver
             sourceOperation.RequestJson, ContractJsonSerializer.Options)
             ?? throw new InvalidDataException("The targeted source managed operation is malformed.");
         ManagedAnalysisOrchestrator.Validate(source, sourceRun.RunId, sourceRun.Binding);
+        TargetedReuseDecisionContract sourceOperationProof = plan.ReuseDecisions.SingleOrDefault(item =>
+            item.ArtifactKind == "source-managed-operation"
+            && item.ArtifactId.Value == sourceRun.RunId)
+            ?? throw new AnalysisIdentityDriftException(
+                "The targeted source managed operation lacks an exact retained proof.");
+        if (sourceOperationProof.Disposition != "reuse-with-proof"
+            || sourceOperationProof.ProofFingerprint.Value != sourceOperation.RequestSha256
+            || plan.Source.SourceRunId.Value != sourceRun.RunId
+            || plan.Source.RootOccurrenceId.Value != preparation.SourceOccurrenceId
+            || !string.Equals(plan.Source.RootKind.ToString(), preparation.SourceOccurrenceKind,
+                StringComparison.OrdinalIgnoreCase)
+            || plan.Source.SourceSnapshotId.Value != sourceRun.Binding.InstallationSnapshotId
+            || plan.Source.AnalysisContextId.Value != sourceRun.Binding.AnalysisContextId
+            || plan.Source.EffectiveConfigurationId.Value != sourceRun.Binding.EffectiveScanConfigurationId
+            || plan.Source.ResolvedInputManifestId.Value != sourceRun.Binding.ResolvedInputManifestId
+            || source.ExecutionInput.InstallationSnapshot.ArtifactId.Value != sourceRun.Binding.InstallationSnapshotId)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The retained source operation, binding, or exact proof drifted.");
+        }
+        byte[] sourceSnapshotBytes = store.ReadPublishedSnapshotPayload(
+            sourceRun.Binding.InstallationSnapshotId, 64 * 1024 * 1024);
+        Mo2SnapshotCaptureResult sourceSnapshot = JsonSerializer.Deserialize<Mo2SnapshotCaptureResult>(
+            sourceSnapshotBytes, StrictJson)
+            ?? throw new InvalidDataException("The retained targeted source snapshot is malformed.");
+        if (sourceSnapshot.Snapshot?.Contract.SnapshotId.Value != sourceRun.Binding.InstallationSnapshotId)
+        {
+            throw new AnalysisIdentityDriftException("The retained source snapshot identity drifted.");
+        }
+        if (plan.TargetSnapshotId == plan.Source.SourceSnapshotId)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The source snapshot occurrence can never serve as targeted-verification target proof.");
+        }
+        SnapshotCaptureOperationRecord capture = store.GetSnapshotCaptureOperation(plan.CaptureOperationId.Value);
+        if (capture.State != "Completed"
+            || capture.InstallationSnapshotId != plan.TargetSnapshotId.Value
+            || capture.OperationId != preparation.CaptureOperationId
+            || Hash(capture.RequestJson) != capture.RequestSha256
+            || capture.CreatedAt < preparation.CreatedAt)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The targeted snapshot is not the distinct fresh capture retained by this preparation.");
+        }
+        store.ValidateTargetedSnapshotLink(preparation.PreparationId, capture.OperationId,
+            plan.TargetSnapshotId.Value, plan.TargetSnapshotFingerprint.Value);
+        SemanticAcquisitionPersistenceRecord acquisition = store.GetSemanticAcquisition(
+            plan.EvidenceAcquisitionId.Value);
+        if (acquisition.State != "Completed"
+            || acquisition.PreparationId != preparation.PreparationId
+            || acquisition.TargetSnapshotId != plan.TargetSnapshotId.Value
+            || Hash(acquisition.RequestJson) != acquisition.RequestSha256)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The retained targeted semantic acquisition lifecycle or request seal drifted.");
+        }
         SemanticAcquisitionPublicationRecord publication = store.GetSemanticAcquisitionPublication(
             plan.EvidenceAcquisitionId.Value);
+        store.ValidateSemanticAcquisitionPublicationSeal(acquisition, publication);
         byte[] semanticBytes = store.ReadCandidateAnalysisPayload(publication.PayloadId);
         if (Hash(semanticBytes) != publication.PayloadSha256
             || publication.SemanticOutputId != plan.SemanticOutputId.Value)
@@ -71,8 +183,17 @@ internal static class TargetedVerificationOperationResolver
         Mo2SnapshotCaptureResult snapshotCapture = JsonSerializer.Deserialize<Mo2SnapshotCaptureResult>(
             snapshotBytes, StrictJson)
             ?? throw new InvalidDataException("The targeted snapshot publication is malformed.");
+        if (snapshotCapture.Snapshot?.Contract.SnapshotId != plan.TargetSnapshotId)
+        {
+            throw new AnalysisIdentityDriftException("The retained target snapshot identity drifted.");
+        }
         ManagedBethesdaSemanticAssignment semanticAssignment = ManagedRunExecutor.SealBethesdaAssignment(
             new(snapshotCapture, []));
+        if (Hash(JsonSerializer.Serialize(semanticAssignment)) != acquisition.SealedInputFingerprint)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The targeted semantic acquisition sealed input drifted.");
+        }
         BethesdaSemanticExtractionResult extraction = BethesdaSemanticPublicationValidator.DeserializeAndValidate(
             semanticBytes, semanticAssignment, 64L * 1024 * 1024);
 
@@ -300,6 +421,33 @@ internal static class TargetedVerificationOperationResolver
         ];
         return new(binding, request, requestJson, requestSha, submission, verificationId,
             "targeted-admission-" + submission[..32], operationInputs);
+    }
+
+    private static void ValidateCanonicalPlanIdentities(TargetedVerificationPlanContract plan)
+    {
+        TargetedAnalysisScopeContract rebuiltScope = TargetedVerificationPlanner.CloseScope(
+            plan.PreparationId, plan.Source.RootOccurrenceId, plan.Scope.DirectRoots,
+            plan.Scope.Members, plan.Scope.Dependencies, plan.Scope.MaximumMembers, plan.Scope.MaximumEdges);
+        if (rebuiltScope.ScopeId != plan.Scope.ScopeId
+            || rebuiltScope.CanonicalFingerprint != plan.Scope.CanonicalFingerprint)
+        {
+            throw new AnalysisIdentityDriftException("The retained targeted scope fingerprint drifted.");
+        }
+        TargetedCurrentObservationContract[] observations = plan.CorrelationCoverage.Rows.Select(row => new
+            TargetedCurrentObservationContract(row.SourceStableIdentity, row.TargetPopulationId,
+                row.TargetStableIdentity, row.CurrentExecutionMemberId, row.Status, row.CorrelationQualified,
+                row.ProcessingQualified, row.Reason, row.EvidenceIds,
+                row.EnumerationOrApplicabilityProofId)).ToArray();
+        TargetedCorrelationCoverageContract rebuiltCoverage = TargetedVerificationPlanner.Correlate(
+            plan.PreparationId, rebuiltScope, plan.TargetSnapshotId, plan.EvidenceAcquisitionId,
+            plan.SemanticOutputId, observations);
+        if (rebuiltCoverage.CoverageId != plan.CorrelationCoverage.CoverageId
+            || rebuiltCoverage.CanonicalFingerprint != plan.CorrelationCoverage.CanonicalFingerprint
+            || rebuiltCoverage.PopulationDenominator != plan.Scope.Members.Count)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The retained targeted correlation fingerprint or denominator drifted.");
+        }
     }
 
     private static FindingContract[] SelectedFindings(AuthoritativeStore store,

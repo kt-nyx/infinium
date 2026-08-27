@@ -75,7 +75,11 @@ separately owned semantic acquisition, correlation-complete scope, and
 `managed-analysis-v1` mapping now have a corrected implementation candidate:
 five native-only generated-client RPCs, durable preparation and evidence
 acquisition, dependency-complete scope/correlation, atomic successor admission,
-and immutable lineage/readback. WP5/WP6 are not accepted, the earlier
+and immutable lineage/readback. The corrected candidate additionally proves an
+unseeded native preparation-to-completed-successor path through the actual
+snapshot and semantic producers, makes qualified limited processing gaps
+reachable in production planning, enforces cross-family one-shot gestures, and
+revalidates all retained authority before atomic start. WP5/WP6 are not accepted, the earlier
 Checkpoint C receipt remains suspended pending architecture-steward review,
 and Phase D has not started.
 

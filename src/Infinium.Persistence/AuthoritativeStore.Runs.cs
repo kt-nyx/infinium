@@ -123,14 +123,14 @@ public sealed partial class AuthoritativeStore
 
         lock (gate)
         {
-            using var transaction = BeginTransaction();
+            using var transaction = BeginImmediateTransaction();
             var existingRunId = ScalarStringOrNull(
                 "SELECT run_id FROM durable_commands WHERE command_id = $id;",
                 transaction,
                 ("$id", durableCommandId));
             if (existingRunId is not null)
             {
-                RunRecord existingRun = GetRunCore(existingRunId);
+                RunRecord existingRun = GetRunCore(existingRunId, transaction);
                 if (existingRun.Binding != binding
                     || !string.Equals(
                         ScalarString(
@@ -208,18 +208,9 @@ public sealed partial class AuthoritativeStore
             }
 
             EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
-            if (startUserGestureId is not null
-                && (ScalarLong(
-                    "SELECT COUNT(*) FROM prepared_run_submissions WHERE user_gesture_id=$gesture;",
-                    transaction,
-                    ("$gesture", startUserGestureId))
-                    + ScalarLong(
-                        "SELECT COUNT(*) FROM targeted_start_admissions WHERE user_gesture_id=$gesture;",
-                        transaction,
-                        ("$gesture", startUserGestureId))) != 0)
+            if (startUserGestureId is not null)
             {
-                throw new InvalidOperationException(
-                    "A one-shot user gesture identity cannot authorize more than one durable command.");
+                EnsureAuthorityGestureUnused(startUserGestureId, transaction);
             }
             if (ScalarLong(
                     "SELECT COUNT(*) FROM runs WHERE run_id=$run;",
@@ -1594,9 +1585,13 @@ public sealed partial class AuthoritativeStore
         }
     }
 
-    private RunRecord GetRunCore(string runId)
+    private RunRecord GetRunCore(string runId, SqliteTransaction? transaction = null)
     {
         using var command = connection.CreateCommand();
+        if (transaction is not null)
+        {
+            command.Transaction = transaction;
+        }
         command.CommandText =
             """
             SELECT run_id, installation_snapshot_id, analysis_context_id,

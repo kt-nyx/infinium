@@ -11,10 +11,7 @@ namespace Infinium.Coordinator;
 
 #pragma warning disable CA1848 // Failures are exceptional and retain operation identity.
 
-public sealed class SnapshotCaptureExecutor(
-    CoordinatorRuntime runtime,
-    ManagedRunExecutor workerLauncher,
-    ILogger<SnapshotCaptureExecutor> logger)
+public sealed class SnapshotCaptureExecutor
 {
     private const long MaximumSnapshotBytes = 64L * 1024 * 1024;
     private static readonly JsonSerializerOptions StrictJson = new()
@@ -22,7 +19,34 @@ public sealed class SnapshotCaptureExecutor(
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
     };
     private readonly Lock gate = new();
+    private readonly CoordinatorRuntime runtime;
+    private readonly ManagedRunExecutor workerLauncher;
+    private readonly ILogger<SnapshotCaptureExecutor> logger;
+    private readonly Func<ManagedMo2SnapshotCaptureAssignment, Mo2SnapshotCaptureResult>? inProcessExecution;
+    private readonly IExecutableAdmissionService? inProcessAdmissions;
     private bool pumpRunning;
+
+    public SnapshotCaptureExecutor(
+        CoordinatorRuntime runtime,
+        ManagedRunExecutor workerLauncher,
+        ILogger<SnapshotCaptureExecutor> logger)
+        : this(runtime, workerLauncher, logger, null, null)
+    {
+    }
+
+    internal SnapshotCaptureExecutor(
+        CoordinatorRuntime runtime,
+        ManagedRunExecutor workerLauncher,
+        ILogger<SnapshotCaptureExecutor> logger,
+        Func<ManagedMo2SnapshotCaptureAssignment, Mo2SnapshotCaptureResult>? inProcessExecution,
+        IExecutableAdmissionService? inProcessAdmissions)
+    {
+        this.runtime = runtime;
+        this.workerLauncher = workerLauncher;
+        this.logger = logger;
+        this.inProcessExecution = inProcessExecution;
+        this.inProcessAdmissions = inProcessAdmissions;
+    }
 
     public void Schedule(string operationId)
     {
@@ -128,9 +152,28 @@ public sealed class SnapshotCaptureExecutor(
                 ManagedWorkerOperationKind.Mo2SnapshotCapture,
                 "3.0.0",
                 assignment);
-            ManagedWorkerResult result = await workerLauncher.LaunchWorkerAsync(
-                bootstrap,
-                staging.Handle).ConfigureAwait(false);
+            ManagedWorkerResult result;
+            if (inProcessExecution is null)
+            {
+                result = await workerLauncher.LaunchWorkerAsync(
+                    bootstrap,
+                    staging.Handle).ConfigureAwait(false);
+            }
+            else
+            {
+                Mo2SnapshotCaptureResult local = inProcessExecution(assignment);
+                byte[] localBytes = JsonSerializer.SerializeToUtf8Bytes(local);
+                string localSha = Convert.ToHexStringLower(SHA256.HashData(localBytes));
+                string stagingPath = Path.Combine(runtime.Store.Paths.Staging, attempt.AttemptId,
+                    bootstrap.OutputRelativeName);
+                File.WriteAllBytes(stagingPath, localBytes);
+                result = new ManagedWorkerResult(1, bootstrap.BootstrapId, attempt.AttemptId,
+                    attempt.CoordinatorFencingEpoch, attempt.AttemptFencingToken,
+                    bootstrap.OutputRelativeName, localSha, localBytes.LongLength,
+                    Convert.ToHexStringLower(ManagedWorkerManifest.ComputeDigest(
+                        bootstrap.StagedArtifactId, bootstrap.OutputRelativeName, localSha,
+                        localBytes.LongLength, bootstrap.OutputSchemaVersion)));
+            }
 
             byte[] bytes = runtime.Store.ReadSnapshotCaptureStagedPayload(
                 attempt,
@@ -144,7 +187,7 @@ public sealed class SnapshotCaptureExecutor(
                     StrictJson)
                 ?? throw new InvalidOperationException(
                     "The staged snapshot result is not valid JSON.");
-            ValidateCapturedSnapshot(captured, assignment);
+            ValidateCapturedSnapshot(captured, assignment, inProcessAdmissions);
             string snapshotId = captured.Snapshot!.Contract.SnapshotId.Value;
             _ = runtime.Store.AdmitSnapshotCapturePayload(
                 attempt,
