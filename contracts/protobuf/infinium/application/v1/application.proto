@@ -1656,7 +1656,8 @@ message GetTargetedVerificationPreparationRequest {
   uint32 maximum_members = 2;
   string after_member_id = 3;
   uint32 maximum_lifecycle_events = 4;
-  uint64 after_lifecycle_sequence = 5;
+  reserved 5;
+  reserved "after_lifecycle_sequence";
   uint32 maximum_artifact_decisions = 6;
   string after_artifact_kind = 7;
   string after_artifact_id = 8;
@@ -1666,6 +1667,7 @@ message GetTargetedVerificationPreparationRequest {
   string after_target_analyzer_id = 12;
   uint32 maximum_terminal_gaps = 13;
   string after_terminal_gap = 14;
+  string after_lifecycle_cursor = 15;
 
   reserved 90 to 99;
   reserved "sql", "path", "url", "query", "payload_path", "command", "filter";
@@ -1761,7 +1763,8 @@ message TargetedVerificationPreparation {
   TargetedPreparationWork expected_work = 62;
   TargetedAcquisitionEvidence acquisition_evidence = 63;
   repeated TargetedPreparationLifecycleEvent lifecycle_events = 64;
-  uint64 next_lifecycle_sequence = 65;
+  reserved 65;
+  reserved "next_lifecycle_sequence";
   string correlation_coverage_id = 66;
   string correlation_coverage_fingerprint_sha256 = 67;
   string correlation_policy_id = 68;
@@ -1771,6 +1774,7 @@ message TargetedVerificationPreparation {
   string next_artifact_id = 72;
   string next_dependency_edge_id = 73;
   string next_target_analyzer_id = 74;
+  string next_lifecycle_cursor = 75;
 }
 
 message TargetedScopeMember {
@@ -1859,6 +1863,7 @@ message TargetedPreparationLifecycleEvent {
   infinium.common.v1.Instant occurred_at = 6;
   string evidence_fingerprint_sha256 = 7;
   string inert_summary = 8;
+  uint64 owner_sequence = 9;
 }
 
 message TargetedCorrelationCoverageRow {

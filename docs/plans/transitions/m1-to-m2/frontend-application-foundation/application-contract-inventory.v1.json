@@ -3,18 +3,18 @@
   "schema_identity": "infinium.planning.application-contract-inventory/1.0.0",
   "status": "implementation-active",
   "last_reviewed": "2026-08-27",
-  "audited_commit": "bd936a02562a8df1ddcb62f275cc45b6c225e594",
-  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy for the corrected targeted-verification implementation candidate authorized by ADR-0038 and its accepted WP6 addendum. The five native-only RPCs expose durable preparation, canonical finding/case identity-envelope authority, one revision-coherent and tamper-evident bounded preparation readback, real fresh acquisition, typed scope/correlation planning including qualified limited processing gaps, a preparation-owned resolved manifest and exact prepared inputs, atomically revalidated managed-analysis-v1 successor admission, and lineage/readback without renderer authority. A primary generated-C# named-pipe test proves the complete preparation-to-completed-successor path without seeding a ready plan. Checkpoint C remains under architecture-steward review. Desktop delivery, Phase D, M2 activation, broad analyzer claims, and semantic-oracle qualification remain outside this candidate.",
+  "audited_commit": "2a8fd071f64e26d5e7c00a6a2053311031511a3e",
+  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy for the corrected targeted-verification implementation candidate authorized by ADR-0038 and its accepted WP6 addendum. The five native-only RPCs expose durable preparation, canonical finding/case identity-envelope authority, one revision-coherent and tamper-evident bounded preparation readback with generation-bound terminal-gap cursors and durable sealed lifecycle ordering, real fresh acquisition, typed scope/correlation planning including qualified limited processing gaps, a preparation-owned resolved manifest and exact prepared inputs, atomically revalidated managed-analysis-v1 successor admission, and lineage/readback without renderer authority. A primary generated-C# named-pipe test proves the complete preparation-to-completed-successor path without seeding a ready plan. Checkpoint C remains under architecture-steward review. Desktop delivery, Phase D, M2 activation, broad analyzer claims, and semantic-oracle qualification remain outside this candidate.",
   "protocol": {
     "package": "infinium.application.v1",
     "service": "ApplicationService",
     "major": 1,
-    "minor": 12,
-    "application_contract_version": "1.12.0",
+    "minor": 13,
+    "application_contract_version": "1.13.0",
     "domain_contract_version": "1.6.0",
-    "storage_contract_version": "1.15.0",
+    "storage_contract_version": "1.16.0",
     "renderer_contract_version": "1.1.0",
-    "schema_fingerprint_sha256": "77076fc13a34bfc7a3d2e3c6808c6e5dbb8048bd38622286eb078c7c705c918b",
+    "schema_fingerprint_sha256": "d234d44dabf902041461b5c2318fd5c71f10eff46e7ec75f9a586812fab014c7",
     "declared_rpc_count": 48,
     "implemented_rpc_count": 42,
     "bounds": {
@@ -524,7 +524,7 @@
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#GetResultOverview",
       "current_consumers": ["generated C# contracts and ResultReviewWorkflowIntegrationTests; desktop consumer remains WP7"],
       "persistence_readback": ["AuthoritativeStore.GetResultOverview over immutable finding/case and coverage state"],
-      "bounds_and_versions": ["Application 1.12.0, projection version 1, bounded summary/failure/gap disclosure, explicit scope-limited or no-readiness state"],
+      "bounds_and_versions": ["Application 1.13.0, projection version 1, bounded summary/failure/gap disclosure, explicit scope-limited or no-readiness state"],
       "requirement_ids": ["PROD-004", "COVER-003", "UX-001"],
       "evaluation_ids": ["EVAL-0027", "EVAL-0085", "EVAL-0092"],
       "security_authorities": ["ADR-0019", "ADR-0021", "ADR-0037"],
@@ -667,8 +667,11 @@
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.TargetedVerification.cs#GetTargetedVerificationPreparation",
       "current_consumers": ["generated C# native diagnostic status and inspectable-plan consumer; no renderer mapping"],
-      "persistence_readback": ["One store-locked readback validates and returns one revision-consistent generation from append-only preparation/acquisition events and rebuildable projections plus content-addressed plan, prepared inputs, direct roots, dependency proofs, correlation, reuse, capture, fencing, checkpoint, publication, provenance, application-link, and payload evidence"],
-      "bounds_and_versions": ["Application 1.12.0, domain 1.6.0, and TargetedVerificationPlan 1.2.0; independent pages of at most 100 scope rows, dependency edges, target analyzers, lifecycle events, artifact decisions, and classified terminal gaps; exact canonical source signature and producer/semantic/identity versions; plan-wide gaps and non-startable reasons on every member page; exact prepared manifest/delivered/coverage identities; typed limits, classifications, decisions, proofs, and target-analyzer compatibility"],
+      "persistence_readback": ["One store-locked readback validates and returns one revision-consistent generation from append-only preparation/acquisition events, schema-17 sealed cross-owner lifecycle evidence, and rebuildable projections plus content-addressed plan, prepared inputs, direct roots, dependency proofs, correlation, reuse, capture, fencing, checkpoint, publication, provenance, application-link, and payload evidence"],
+      "bounds_and_versions": [
+        "Application 1.13.0, domain 1.6.0, storage 1.16.0/schema 17, and TargetedVerificationPlan 1.2.0; independent pages of at most 100 scope rows, dependency edges, target analyzers, lifecycle events, artifact decisions, and classified terminal gaps; terminal-gap cursors are opaque, at most 160 UTF-8 bytes, and bind the exact preparation/acquisition generation and ordered gap set; lifecycle cursors bind an immutable persisted sequence and evidence seal and remain stable across later appends",
+        "Exact canonical source signature and producer/semantic/identity versions; plan-wide gaps and non-startable reasons on every member page; exact prepared manifest/delivered/coverage identities; typed limits, classifications, decisions, proofs, and target-analyzer compatibility"
+      ],
       "requirement_ids": ["FIND-005", "FIND-012", "FIND-014", "OPS-002", "SCOPE-004", "SNAP-003"],
       "evaluation_ids": ["EVAL-0019", "EVAL-0020", "EVAL-0027", "EVAL-0040", "EVAL-0043", "EVAL-0048", "EVAL-0069", "EVAL-0079", "EVAL-0093"],
       "security_authorities": ["ADR-0016", "ADR-0019", "ADR-0021", "ADR-0022", "ADR-0037", "ADR-0038"],
@@ -769,7 +772,7 @@
         "AuthoritativeStore.ListSetupObjects and FindSetupObject"
       ],
       "bounds_and_versions": [
-        "Application 1.12.0, projection version 1, at most 100 saved configurations, closed tool/profile/provider projections"
+        "Application 1.13.0, projection version 1, at most 100 saved configurations, closed tool/profile/provider projections"
       ],
       "requirement_ids": [
         "TOOL-001",

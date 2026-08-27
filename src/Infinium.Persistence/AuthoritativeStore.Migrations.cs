@@ -345,10 +345,17 @@ public sealed partial class AuthoritativeStore
             if (targetedVersion == 15)
             {
                 ApplyTargetedVerificationMigration();
+                targetedVersion = 16;
             }
-            else if (targetedVersion == 16)
+            if (targetedVersion == 16)
             {
                 ValidateTargetedVerificationMigration();
+                ApplyTargetedLifecycleEvidenceMigration();
+                targetedVersion = 17;
+            }
+            if (targetedVersion == 17)
+            {
+                ValidateTargetedLifecycleEvidenceMigration();
             }
         }
     }
@@ -2317,6 +2324,7 @@ public sealed partial class AuthoritativeStore
         "targeted_start_admissions",
         "targeted_initiation_lineage",
         "targeted_result_links",
+        "targeted_lifecycle_evidence",
     ];
 
     private static readonly (string Table, string Column, bool Optional)[] ProviderAuthorizationExtensionCanonicalTimestampColumns =
@@ -2339,6 +2347,7 @@ public sealed partial class AuthoritativeStore
         "table:targeted_preparation_projection",
         "table:semantic_acquisition_projection",
         "index:idx_targeted_preparation_source",
+        "index:idx_targeted_lifecycle_preparation",
         "table:scope_reversion_v2_analyses",
         "table:scope_reversion_v2_items",
         "table:scope_reversion_v2_artifacts",

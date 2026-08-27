@@ -2,8 +2,9 @@ namespace Infinium.Tests;
 
 internal static class TargetedVerificationMigrationTestSupport
 {
-    public const string DropSchema16Sql =
+    public const string DropSchema17Sql =
         """
+        DROP TABLE targeted_lifecycle_evidence;
         DROP TABLE targeted_result_links;
         DROP TABLE targeted_initiation_lineage;
         DROP TABLE targeted_operation_inputs;
@@ -31,5 +32,7 @@ internal static class TargetedVerificationMigrationTestSupport
         DROP TABLE targeted_preparation_requests;
         DELETE FROM migration_history
           WHERE migration_id='targeted-verification-preparation-0016';
+        DELETE FROM migration_history
+          WHERE migration_id='targeted-lifecycle-evidence-0017';
         """;
 }

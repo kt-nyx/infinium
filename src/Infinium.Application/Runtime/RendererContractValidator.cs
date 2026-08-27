@@ -577,10 +577,7 @@ public static class ApplicationContractValidator
                 {
                     throw new InvalidDataException("The targeted-preparation lifecycle page size is outside its bound.");
                 }
-                if (value.AfterLifecycleSequence > long.MaxValue)
-                {
-                    throw new InvalidDataException("The targeted-preparation lifecycle cursor is outside its bound.");
-                }
+                RequireOptionalOpaque(value.AfterLifecycleCursor, "targeted-preparation lifecycle cursor");
                 if (value.MaximumArtifactDecisions is < 1 or > MaximumPhaseCCollectionItems
                     || string.IsNullOrWhiteSpace(value.AfterArtifactKind) !=
                        string.IsNullOrWhiteSpace(value.AfterArtifactId))

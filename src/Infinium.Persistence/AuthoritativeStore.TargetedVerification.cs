@@ -183,6 +183,7 @@ public sealed record TargetedAcquisitionReadbackEvidenceRecord(
 
 public sealed record TargetedLifecycleReadbackEvent(
     long Sequence,
+    long OwnerSequence,
     string Owner,
     string EventKind,
     long Generation,
@@ -195,7 +196,11 @@ public sealed record TargetedPreparationReadbackEvidenceRecord(
     TargetedSnapshotReadbackEvidenceRecord? Snapshot,
     TargetedAcquisitionReadbackEvidenceRecord? Acquisition,
     IReadOnlyList<TargetedLifecycleReadbackEvent> LifecycleEvents,
-    long? NextLifecycleSequence);
+    TargetedLifecycleReadbackEvent? NextLifecycleCursorAnchor);
+
+public sealed record TargetedLifecycleCursorKey(
+    long Sequence,
+    string EvidenceFingerprint);
 
 public sealed record TargetedSourceReadbackEvidenceRecord(
     RunRecord Run,
@@ -334,6 +339,8 @@ public sealed partial class AuthoritativeStore
                 ("$eventSha", TargetedEventHash(eventJson, projectionJson)),
                 ("$eventJson", eventJson), ("$projectionJson", projectionJson), ("$now", ToText(now)), ("$fingerprint", fingerprint),
                 ("$operation", request.CaptureOperationId));
+            InsertTargetedLifecycleEvidence(request.PreparationId, "preparation", eventId, 1, "admitted", 1, 0,
+                eventJson, projectionJson, now, transaction);
             InsertAuditEvent("targeted-preparation-admitted", "targeted-preparation", request.PreparationId, now, transaction);
             transaction.Commit();
             return GetTargetedPreparationCore(request.PreparationId);
@@ -415,6 +422,8 @@ public sealed partial class AuthoritativeStore
                 ("$event", eventId), ("$preparation", preparationId), ("$revision", revision), ("$kind", eventKind),
                 ("$sha", TargetedEventHash(eventJson, projectionJson)), ("$json", eventJson),
                 ("$projectionJson", projectionJson), ("$now", ToText(now)));
+            InsertTargetedLifecycleEvidence(preparationId, "preparation", eventId, revision, eventKind, revision, 0,
+                eventJson, projectionJson, now, transaction);
             int changed = Execute(
                 """
                 UPDATE targeted_preparation_projection
@@ -573,6 +582,8 @@ public sealed partial class AuthoritativeStore
                 ("$now", ToText(now)),
                 ("$command", commandId), ("$expectedRevision", expectedRevision), ("$gesture", userGestureId),
                 ("$requestSha", requestSha));
+            InsertTargetedLifecycleEvidence(preparationId, "preparation", eventId, revision, "cancelled", revision, 0,
+                eventJson, projectionJson, now, transaction);
             int changed = Execute(
                 "UPDATE targeted_preparation_projection SET revision=$revision,lifecycle_state='Cancelled',"
                 + "preparation_fingerprint=$fingerprint,terminal_reason=$reason,startable=0,last_event_id=$event,updated_at=$now "
@@ -622,6 +633,10 @@ public sealed partial class AuthoritativeStore
                         ("$acquisitionEventJson", acquisitionEventJson),
                         ("$acquisitionProjectionJson", acquisitionProjectionJson),
                         ("$now", ToText(now)));
+                    InsertTargetedLifecycleEvidence(preparationId, "evidence-acquisition",
+                        acquisition.AcquisitionId + "-event-" + acquisitionSequence, acquisitionSequence,
+                        "cancelled", acquisition.Generation, coordinatorFencingEpoch,
+                        acquisitionEventJson, acquisitionProjectionJson, now, transaction);
                     int acquisitionChanged = Execute(
                         "UPDATE semantic_acquisition_projection SET lifecycle_state='Cancelled',"
                         + "durable_sequence=$sequence,active_attempt_id=NULL,terminal_reason=$reason,updated_at=$now "
@@ -731,6 +746,8 @@ public sealed partial class AuthoritativeStore
                 ("$event", acquisitionId + "-event-1"), ("$epoch", coordinatorFencingEpoch),
                 ("$eventJson", eventJson),
                 ("$projectionJson", projectionJson));
+            InsertTargetedLifecycleEvidence(preparationId, "evidence-acquisition", acquisitionId + "-event-1", 1,
+                "admitted", 0, coordinatorFencingEpoch, eventJson, projectionJson, now, transaction);
             transaction.Commit();
             return GetSemanticAcquisitionCore(acquisitionId);
         }
@@ -785,6 +802,11 @@ public sealed partial class AuthoritativeStore
                     ("$epoch", coordinatorFencingEpoch),
                     ("$json", eventJson),
                     ("$projectionJson", projectionJson));
+                InsertTargetedLifecycleEvidence(
+                    ScalarString("SELECT preparation_id FROM semantic_acquisition_runs WHERE acquisition_id=$acquisition;",
+                        transaction, ("$acquisition", acquisitionId)),
+                    "evidence-acquisition", acquisitionId + "-event-" + nextSequence, nextSequence,
+                    "recovered", nextGeneration, coordinatorFencingEpoch, eventJson, projectionJson, now, transaction);
                 int changed = Execute(
                     "UPDATE semantic_acquisition_projection SET lifecycle_state='Retrying',generation=$nextGeneration,"
                     + "durable_sequence=$sequence,active_attempt_id=NULL,terminal_reason='',updated_at=$now "
@@ -846,6 +868,9 @@ public sealed partial class AuthoritativeStore
                 ("$sequence", sequence), ("$generation", expectedGeneration), ("$epoch", coordinatorFencingEpoch),
                 ("$json", eventJson),
                 ("$projectionJson", projectionJson), ("$now", ToText(now)));
+            InsertTargetedLifecycleEvidence(current.PreparationId, "evidence-acquisition",
+                acquisitionId + "-event-" + sequence, sequence, "dispatched", expectedGeneration,
+                coordinatorFencingEpoch, eventJson, projectionJson, now, transaction);
             int changed = Execute(
                 "UPDATE semantic_acquisition_projection SET lifecycle_state='Running',durable_sequence=$sequence,active_attempt_id=$attempt,updated_at=$now "
                 + "WHERE acquisition_id=$acquisition AND lifecycle_state IN ('Queued','Retrying') AND generation=$generation;",
@@ -945,6 +970,9 @@ public sealed partial class AuthoritativeStore
                 ("$checkpointSha", Hash(checkpointJson)), ("$checkpointJson", checkpointJson),
                 ("$json", eventJson),
                 ("$projectionJson", projectionJson));
+            InsertTargetedLifecycleEvidence(current.PreparationId, "evidence-acquisition",
+                attempt.AcquisitionId + "-event-" + sequence, sequence, "published", current.Generation,
+                attempt.CoordinatorFencingEpoch, eventJson, projectionJson, now, transaction);
             int changed = Execute(
                 "UPDATE semantic_acquisition_projection SET lifecycle_state='Completed',durable_sequence=$sequence,progress_completed=1,progress_denominator=1,active_attempt_id=NULL,updated_at=$now "
                 + "WHERE acquisition_id=$acquisition AND lifecycle_state='Running' AND active_attempt_id=$attempt;",
@@ -984,6 +1012,9 @@ public sealed partial class AuthoritativeStore
                 ("$sequence", sequence), ("$generation", current.Generation), ("$epoch", attempt.CoordinatorFencingEpoch),
                 ("$json", eventJson), ("$projectionJson", projectionJson),
                 ("$now", ToText(now)));
+            InsertTargetedLifecycleEvidence(current.PreparationId, "evidence-acquisition",
+                attempt.AcquisitionId + "-event-" + sequence, sequence, "failed", current.Generation,
+                attempt.CoordinatorFencingEpoch, eventJson, projectionJson, now, transaction);
             int changed = Execute("UPDATE semantic_acquisition_projection SET lifecycle_state='Failed',durable_sequence=$sequence,active_attempt_id=NULL,terminal_reason=$reason,updated_at=$now "
                 + "WHERE acquisition_id=$acquisition AND lifecycle_state='Running' AND active_attempt_id=$attempt;", transaction,
                 ("$sequence", sequence), ("$reason", reason), ("$now", ToText(now)),
@@ -1142,6 +1173,8 @@ public sealed partial class AuthoritativeStore
                 ("$event", eventId), ("$preparation", preparationId), ("$revision", revision),
                 ("$sha", TargetedEventHash(eventJson, projectionJson)), ("$json", eventJson),
                 ("$projectionJson", projectionJson), ("$now", ToText(now)));
+            InsertTargetedLifecycleEvidence(preparationId, "preparation", eventId, revision, "plan-published",
+                revision, 0, eventJson, projectionJson, now, transaction);
             int projectionChanges = Execute("UPDATE targeted_preparation_projection SET revision=$revision,lifecycle_state=$state,preparation_fingerprint=$preparationFingerprint,terminal_reason=$reason,plan_id=$plan,plan_fingerprint=$planFingerprint,startable=$startable,limited=$limited,last_event_id=$event,updated_at=$now "
                 + "WHERE preparation_id=$preparation AND revision=$expectedRevision AND lifecycle_state='PreparingPlan';", transaction,
                 ("$revision", revision), ("$state", state.ToString()), ("$preparationFingerprint", preparationFingerprint),
@@ -1459,9 +1492,10 @@ public sealed partial class AuthoritativeStore
     private TargetedPreparationReadbackEvidenceRecord GetTargetedPreparationReadbackEvidence(
         string preparationId,
         int maximumLifecycleEvents,
-        long afterLifecycleSequence)
+        TargetedLifecycleCursorKey? afterLifecycle)
     {
-        if (maximumLifecycleEvents is < 1 or > 100 || afterLifecycleSequence < 0)
+        if (maximumLifecycleEvents is < 1 or > 100
+            || afterLifecycle is { Sequence: <= 0 })
         {
             throw new ArgumentOutOfRangeException(nameof(maximumLifecycleEvents));
         }
@@ -1484,24 +1518,29 @@ public sealed partial class AuthoritativeStore
                     "AND capture.lifecycle_state='Completed' " +
                     "JOIN snapshot_capture_publications publication ON publication.operation_id=capture.operation_id " +
                     "JOIN snapshot_capture_attempts attempt ON attempt.attempt_id=publication.attempt_id " +
-                    "WHERE link.preparation_id=$preparation;";
+                    "WHERE link.preparation_id=$preparation AND link.target_snapshot_id=$targetSnapshot;";
                 command.Parameters.AddWithValue("$preparation", preparationId);
+                command.Parameters.AddWithValue("$targetSnapshot",
+                    preparation.TargetSnapshotId is null ? DBNull.Value : preparation.TargetSnapshotId);
                 using SqliteDataReader reader = command.ExecuteReader();
                 if (reader.Read())
                 {
                     string requestJson = reader.GetString(6);
-                    if (Hash(requestJson) != reader.GetString(7)
-                        || reader.GetString(8) != preparation.TargetSnapshotId
-                        || reader.GetString(9) != reader.GetString(0)
-                        || reader.GetString(14) != reader.GetString(0)
-                        || reader.GetString(15) != preparation.TargetSnapshotId
-                        || reader.GetString(16) != preparation.CaptureOperationId
-                        || reader.GetInt64(17) != reader.GetInt64(11)
-                        || reader.GetInt64(18) != reader.GetInt64(12)
-                        || reader.GetString(19) != "completed-staged")
+                    List<string> driftedBindings = [];
+                    if (Hash(requestJson) != reader.GetString(7)) driftedBindings.Add("request-hash");
+                    if (reader.GetString(8) != preparation.TargetSnapshotId) driftedBindings.Add("capture-snapshot");
+                    if (reader.GetString(9) != reader.GetString(0)) driftedBindings.Add("capture-payload");
+                    if (reader.GetString(14) != reader.GetString(0)) driftedBindings.Add("publication-payload");
+                    if (reader.GetString(15) != preparation.TargetSnapshotId) driftedBindings.Add("publication-snapshot");
+                    if (reader.GetString(16) != preparation.CaptureOperationId) driftedBindings.Add("attempt-operation");
+                    if (reader.GetInt64(17) != reader.GetInt64(11)) driftedBindings.Add("attempt-epoch");
+                    if (reader.GetInt64(18) != reader.GetInt64(12)) driftedBindings.Add("attempt-fence");
+                    if (reader.GetString(19) != "completed-staged") driftedBindings.Add("attempt-outcome");
+                    if (driftedBindings.Count != 0)
                     {
                         throw new InvalidOperationException(
-                            "The targeted snapshot link, capture request, publication, or attempt fence drifted.");
+                            "The targeted snapshot link, capture request, publication, or attempt fence drifted: "
+                            + string.Join(',', driftedBindings) + ".");
                     }
                     ValidateSha256(reader.GetString(13));
                     byte[] snapshotBytes = ReadPublishedSnapshotPayload(preparation.TargetSnapshotId!, 64 * 1024 * 1024);
@@ -1516,6 +1555,11 @@ public sealed partial class AuthoritativeStore
                     {
                         throw new InvalidOperationException("The targeted snapshot readback is ambiguous.");
                     }
+                }
+                else if (preparation.TargetSnapshotId is not null)
+                {
+                    throw new InvalidOperationException(
+                        "The targeted snapshot evidence is missing or differs from the retained preparation generation.");
                 }
             }
 
@@ -1576,56 +1620,59 @@ public sealed partial class AuthoritativeStore
                 }
             }
 
-            List<TargetedLifecycleReadbackEvent> allEvents = [];
+            ValidateTargetedLifecycleEvidencePopulation(preparationId, preparation.EvidenceAcquisitionId);
+            long afterLifecycleSequence = afterLifecycle?.Sequence ?? 0;
+            if (afterLifecycle is not null
+                && ScalarLong(
+                    "SELECT COUNT(*) FROM targeted_lifecycle_evidence WHERE preparation_id=$preparation "
+                    + "AND lifecycle_sequence=$sequence AND evidence_sha256=$fingerprint "
+                    + "AND (owner='preparation' OR (owner='evidence-acquisition' AND owner_event_id IN "
+                    + "(SELECT event_id FROM semantic_acquisition_events WHERE acquisition_id=$acquisition)));",
+                    null, ("$preparation", preparationId), ("$sequence", afterLifecycle.Sequence),
+                    ("$fingerprint", afterLifecycle.EvidenceFingerprint),
+                    ("$acquisition", preparation.EvidenceAcquisitionId is null
+                        ? DBNull.Value
+                        : preparation.EvidenceAcquisitionId)) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The targeted lifecycle cursor is stale, substituted, or no longer bound to retained evidence.");
+            }
+            List<TargetedLifecycleReadbackEvent> page = [];
             using (SqliteCommand command = connection.CreateCommand())
             {
                 command.CommandText =
-                    "SELECT revision,event_kind,event_sha256,created_at FROM targeted_preparation_events " +
-                    "WHERE preparation_id=$preparation ORDER BY revision;";
+                    "SELECT lifecycle_sequence,owner_sequence,owner,event_kind,generation," +
+                    "coordinator_fencing_epoch,occurred_at,evidence_sha256,inert_summary " +
+                    "FROM targeted_lifecycle_evidence WHERE preparation_id=$preparation " +
+                    "AND lifecycle_sequence>$after " +
+                    "AND (owner='preparation' OR (owner='evidence-acquisition' AND owner_event_id IN " +
+                    "(SELECT event_id FROM semantic_acquisition_events WHERE acquisition_id=$acquisition))) " +
+                    "ORDER BY lifecycle_sequence LIMIT $limit;";
                 command.Parameters.AddWithValue("$preparation", preparationId);
+                command.Parameters.AddWithValue("$acquisition", preparation.EvidenceAcquisitionId is null
+                    ? DBNull.Value
+                    : preparation.EvidenceAcquisitionId);
+                command.Parameters.AddWithValue("$after", afterLifecycleSequence);
+                command.Parameters.AddWithValue("$limit", maximumLifecycleEvents + 1);
                 using SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    allEvents.Add(new(reader.GetInt64(0), "preparation", reader.GetString(1), reader.GetInt64(0), 0,
-                        ParseTargetedTimestamp(reader.GetString(3)), reader.GetString(2), reader.GetString(1)));
+                    page.Add(new(reader.GetInt64(0), reader.GetInt64(1), reader.GetString(2), reader.GetString(3),
+                        reader.GetInt64(4), reader.GetInt64(5), ParseTargetedTimestamp(reader.GetString(6)),
+                        reader.GetString(7), reader.GetString(8)));
                 }
             }
-            if (preparation.EvidenceAcquisitionId is not null)
-            {
-                using SqliteCommand command = connection.CreateCommand();
-                command.CommandText =
-                    "SELECT sequence,event_kind,generation,coordinator_fencing_epoch,event_json,created_at " +
-                    "FROM semantic_acquisition_events WHERE acquisition_id=$acquisition ORDER BY sequence;";
-                command.Parameters.AddWithValue("$acquisition", preparation.EvidenceAcquisitionId);
-                using SqliteDataReader reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    string eventJson = reader.GetString(4);
-                    allEvents.Add(new(reader.GetInt64(0), "evidence-acquisition", reader.GetString(1), reader.GetInt64(2),
-                        reader.GetInt64(3), ParseTargetedTimestamp(reader.GetString(5)), Hash(eventJson), reader.GetString(1)));
-                }
-            }
-            TargetedLifecycleReadbackEvent[] ordered = allEvents
-                .OrderBy(item => item.OccurredAt)
-                .ThenBy(item => item.Owner, StringComparer.Ordinal)
-                .ThenBy(item => item.Sequence)
-                .Select((item, index) => item with { Sequence = checked(index + 1L) })
-                .ToArray();
-            TargetedLifecycleReadbackEvent[] page = ordered
-                .Where(item => item.Sequence > afterLifecycleSequence)
-                .Take(maximumLifecycleEvents + 1)
-                .ToArray();
-            bool hasMore = page.Length > maximumLifecycleEvents;
+            bool hasMore = page.Count > maximumLifecycleEvents;
             IReadOnlyList<TargetedLifecycleReadbackEvent> visible = page.Take(maximumLifecycleEvents).ToArray();
             return new(snapshot, acquisition, visible,
-                hasMore ? visible[^1].Sequence : null);
+                hasMore ? visible[^1] : null);
         }
     }
 
     public TargetedPreparationReadbackSnapshotRecord GetTargetedPreparationReadbackSnapshot(
         string preparationId,
         int maximumLifecycleEvents,
-        long afterLifecycleSequence)
+        TargetedLifecycleCursorKey? afterLifecycle)
     {
         lock (gate)
         {
@@ -1651,7 +1698,7 @@ public sealed partial class AuthoritativeStore
                 publication = GetSemanticAcquisitionPublication(acquisition.AcquisitionId);
             }
             TargetedPreparationReadbackEvidenceRecord evidence = GetTargetedPreparationReadbackEvidence(
-                preparationId, maximumLifecycleEvents, afterLifecycleSequence);
+                preparationId, maximumLifecycleEvents, afterLifecycle);
             TargetedPreparationPersistenceRecord confirmed = GetTargetedPreparationCore(preparationId);
             if (confirmed.Revision != preparation.Revision
                 || confirmed.PreparationFingerprint != preparation.PreparationFingerprint
@@ -2118,6 +2165,24 @@ public sealed partial class AuthoritativeStore
     private void RebuildTargetedVerificationProjections(SqliteTransaction transaction)
     {
         ValidateTargetedVerificationEventHistory(transaction);
+        using (SqliteCommand preparations = connection.CreateCommand())
+        {
+            preparations.Transaction = transaction;
+            preparations.CommandText =
+                "SELECT preparation_id,evidence_acquisition_id FROM targeted_preparation_projection ORDER BY preparation_id;";
+            using SqliteDataReader reader = preparations.ExecuteReader();
+            List<(string PreparationId, string? AcquisitionId)> rows = [];
+            while (reader.Read())
+            {
+                rows.Add((reader.GetString(0), reader.IsDBNull(1) ? null : reader.GetString(1)));
+            }
+            reader.Close();
+            foreach ((string preparationId, string? acquisitionId) in rows)
+            {
+                ValidateTargetedLifecycleEvidencePopulation(
+                    preparationId, acquisitionId, transaction, includeUnboundAcquisitions: true);
+            }
+        }
         Execute("DELETE FROM targeted_preparation_projection; DELETE FROM semantic_acquisition_projection;", transaction);
         Execute(
             """
@@ -2193,6 +2258,369 @@ public sealed partial class AuthoritativeStore
             }
         }
     }
+
+    private sealed record TargetedLifecycleSourceEvent(
+        string PreparationId,
+        string Owner,
+        string OwnerEventId,
+        long OwnerSequence,
+        string EventKind,
+        long Generation,
+        long CoordinatorFencingEpoch,
+        string EventJson,
+        string ProjectionJson,
+        DateTimeOffset OccurredAt,
+        string? PreparationEventFingerprint);
+
+    private void BackfillTargetedLifecycleEvidence(SqliteTransaction transaction)
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            SELECT preparation_id,owner,owner_event_id,owner_sequence,event_kind,generation,
+                   coordinator_fencing_epoch,event_json,projection_json,occurred_at,preparation_event_fingerprint
+            FROM (
+                SELECT event.preparation_id AS preparation_id,'preparation' AS owner,
+                       event.event_id AS owner_event_id,event.revision AS owner_sequence,
+                       event.event_kind AS event_kind,event.revision AS generation,
+                       0 AS coordinator_fencing_epoch,event.event_json AS event_json,
+                       event.projection_json AS projection_json,event.created_at AS occurred_at,
+                       event.event_sha256 AS preparation_event_fingerprint
+                FROM targeted_preparation_events event
+                UNION ALL
+                SELECT run.preparation_id AS preparation_id,'evidence-acquisition' AS owner,
+                       event.event_id AS owner_event_id,event.sequence AS owner_sequence,
+                       event.event_kind AS event_kind,event.generation AS generation,
+                       event.coordinator_fencing_epoch AS coordinator_fencing_epoch,
+                       event.event_json AS event_json,event.projection_json AS projection_json,
+                       event.created_at AS occurred_at,NULL AS preparation_event_fingerprint
+                FROM semantic_acquisition_events event
+                JOIN semantic_acquisition_runs run USING(acquisition_id)
+            )
+            ORDER BY preparation_id,occurred_at,
+                CASE
+                    WHEN owner='preparation' AND event_kind='admitted' THEN 0
+                    WHEN owner='evidence-acquisition' AND event_kind='admitted' THEN 10
+                    WHEN owner='preparation' AND event_kind='fresh-snapshot-published' THEN 20
+                    WHEN owner='evidence-acquisition' AND event_kind IN ('dispatched','recovered') THEN 30
+                    WHEN owner='evidence-acquisition' AND event_kind IN ('published','failed') THEN 40
+                    WHEN owner='preparation' AND event_kind='semantic-evidence-published' THEN 50
+                    WHEN owner='preparation' AND event_kind='plan-published' THEN 60
+                    WHEN owner='preparation' AND event_kind='successor-admitted' THEN 70
+                    WHEN owner='preparation' AND event_kind='cancelled' THEN 80
+                    WHEN owner='evidence-acquisition' AND event_kind='cancelled' THEN 81
+                    WHEN owner='preparation' AND event_kind IN ('preparation-invalidated','preparation-failed') THEN 90
+                    ELSE 100
+                END,
+                owner_sequence,owner,owner_event_id;
+            """;
+        using SqliteDataReader reader = command.ExecuteReader();
+        List<TargetedLifecycleSourceEvent> events = [];
+        while (reader.Read())
+        {
+            events.Add(new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetInt64(3),
+                reader.GetString(4), reader.GetInt64(5), reader.GetInt64(6), reader.GetString(7),
+                reader.GetString(8), ParseTargetedTimestamp(reader.GetString(9)),
+                reader.IsDBNull(10) ? null : reader.GetString(10)));
+        }
+        reader.Close();
+
+        string? preparationId = null;
+        long sequence = 0;
+        foreach (TargetedLifecycleSourceEvent item in events)
+        {
+            if (!StringComparer.Ordinal.Equals(preparationId, item.PreparationId))
+            {
+                preparationId = item.PreparationId;
+                sequence = 0;
+            }
+            sequence = checked(sequence + 1);
+            ValidateTargetedLifecycleSourceEvent(item);
+            InsertTargetedLifecycleEvidence(item, sequence, transaction);
+        }
+    }
+
+    private void InsertTargetedLifecycleEvidence(
+        string preparationId,
+        string owner,
+        string ownerEventId,
+        long ownerSequence,
+        string eventKind,
+        long generation,
+        long coordinatorFencingEpoch,
+        string eventJson,
+        string projectionJson,
+        DateTimeOffset occurredAt,
+        SqliteTransaction transaction)
+    {
+        long lifecycleSequence = ScalarLong(
+            "SELECT COALESCE(MAX(lifecycle_sequence),0)+1 FROM targeted_lifecycle_evidence "
+            + "WHERE preparation_id=$preparation;", transaction, ("$preparation", preparationId));
+        TargetedLifecycleSourceEvent item = new(preparationId, owner, ownerEventId, ownerSequence, eventKind,
+            generation, coordinatorFencingEpoch, eventJson, projectionJson, occurredAt,
+            owner == "preparation" ? Hash(eventJson + "\n" + projectionJson) : null);
+        ValidateTargetedLifecycleSourceEvent(item);
+        InsertTargetedLifecycleEvidence(item, lifecycleSequence, transaction);
+    }
+
+    private void InsertTargetedLifecycleEvidence(
+        TargetedLifecycleSourceEvent item,
+        long lifecycleSequence,
+        SqliteTransaction transaction)
+    {
+        string summary = item.EventKind;
+        string evidenceFingerprint = TargetedLifecycleEvidenceFingerprint(
+            lifecycleSequence, item.PreparationId, item.Owner, item.OwnerEventId, item.OwnerSequence,
+            item.EventKind, item.Generation, item.CoordinatorFencingEpoch, item.EventJson,
+            item.ProjectionJson, item.OccurredAt, summary);
+        Execute(
+            """
+            INSERT INTO targeted_lifecycle_evidence(
+                lifecycle_event_id,preparation_id,lifecycle_sequence,owner,owner_event_id,owner_sequence,
+                event_kind,generation,coordinator_fencing_epoch,event_json,projection_json,occurred_at,
+                inert_summary,evidence_sha256)
+            VALUES($id,$preparation,$sequence,$owner,$ownerEvent,$ownerSequence,$kind,$generation,$epoch,
+                $eventJson,$projectionJson,$occurredAt,$summary,$evidence);
+            """, transaction,
+            ("$id", item.PreparationId + "-lifecycle-" + lifecycleSequence),
+            ("$preparation", item.PreparationId), ("$sequence", lifecycleSequence),
+            ("$owner", item.Owner), ("$ownerEvent", item.OwnerEventId),
+            ("$ownerSequence", item.OwnerSequence), ("$kind", item.EventKind),
+            ("$generation", item.Generation), ("$epoch", item.CoordinatorFencingEpoch),
+            ("$eventJson", item.EventJson), ("$projectionJson", item.ProjectionJson),
+            ("$occurredAt", ToText(item.OccurredAt)), ("$summary", summary),
+            ("$evidence", evidenceFingerprint));
+    }
+
+    private void ValidateTargetedLifecycleEvidencePopulation()
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "SELECT preparation_id,evidence_acquisition_id FROM targeted_preparation_projection ORDER BY preparation_id;";
+        using SqliteDataReader reader = command.ExecuteReader();
+        List<(string PreparationId, string? AcquisitionId)> preparations = [];
+        while (reader.Read())
+        {
+            preparations.Add((reader.GetString(0), reader.IsDBNull(1) ? null : reader.GetString(1)));
+        }
+        reader.Close();
+        foreach ((string preparationId, string? acquisitionId) in preparations)
+        {
+            ValidateTargetedLifecycleEvidencePopulation(
+                preparationId, acquisitionId, includeUnboundAcquisitions: true);
+        }
+    }
+
+    private void ValidateTargetedLifecycleEvidencePopulation(
+        string preparationId,
+        string? acquisitionId,
+        SqliteTransaction? transaction = null,
+        bool includeUnboundAcquisitions = false)
+    {
+        long expectedCount = ScalarLong(
+            "SELECT COUNT(*) FROM targeted_preparation_events WHERE preparation_id=$preparation;",
+            transaction, ("$preparation", preparationId));
+        if (includeUnboundAcquisitions)
+        {
+            expectedCount = checked(expectedCount + ScalarLong(
+                "SELECT COUNT(*) FROM semantic_acquisition_events event "
+                + "JOIN semantic_acquisition_runs run USING(acquisition_id) "
+                + "WHERE run.preparation_id=$preparation;",
+                transaction, ("$preparation", preparationId)));
+        }
+        else if (acquisitionId is not null)
+        {
+            expectedCount = checked(expectedCount + ScalarLong(
+                "SELECT COUNT(*) FROM semantic_acquisition_events WHERE acquisition_id=$acquisition;",
+                transaction, ("$acquisition", acquisitionId)));
+        }
+        long lifecycleCount = ScalarLong(
+            "SELECT COUNT(*) FROM targeted_lifecycle_evidence WHERE preparation_id=$preparation "
+            + (includeUnboundAcquisitions
+                ? ";"
+                : "AND (owner='preparation' OR (owner='evidence-acquisition' AND owner_event_id IN "
+                    + "(SELECT event_id FROM semantic_acquisition_events WHERE acquisition_id=$acquisition)));"),
+            transaction, ("$preparation", preparationId),
+            ("$acquisition", acquisitionId is null ? DBNull.Value : acquisitionId));
+        if (lifecycleCount != expectedCount)
+        {
+            throw new InvalidOperationException(
+                "The targeted lifecycle evidence does not cover every retained owner event exactly once.");
+        }
+
+        using SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            "SELECT lifecycle_sequence,owner,owner_event_id,owner_sequence,event_kind,generation," +
+            "coordinator_fencing_epoch,event_json,projection_json,occurred_at,inert_summary,evidence_sha256 " +
+            "FROM targeted_lifecycle_evidence WHERE preparation_id=$preparation "
+            + (includeUnboundAcquisitions
+                ? ""
+                : "AND (owner='preparation' OR (owner='evidence-acquisition' AND owner_event_id IN "
+                    + "(SELECT event_id FROM semantic_acquisition_events WHERE acquisition_id=$acquisition))) ")
+            + "ORDER BY lifecycle_sequence;";
+        command.Parameters.AddWithValue("$preparation", preparationId);
+        command.Parameters.AddWithValue("$acquisition", acquisitionId is null ? DBNull.Value : acquisitionId);
+        using SqliteDataReader reader = command.ExecuteReader();
+        long expectedSequence = 0;
+        List<(TargetedLifecycleSourceEvent Source, long Sequence, string Summary, string Evidence)> rows = [];
+        while (reader.Read())
+        {
+            expectedSequence = checked(expectedSequence + 1);
+            long lifecycleSequence = reader.GetInt64(0);
+            if (lifecycleSequence != expectedSequence)
+            {
+                throw new InvalidOperationException("The targeted lifecycle ordering is not contiguous.");
+            }
+            rows.Add((new(preparationId, reader.GetString(1), reader.GetString(2), reader.GetInt64(3),
+                reader.GetString(4), reader.GetInt64(5), reader.GetInt64(6), reader.GetString(7),
+                reader.GetString(8), ParseTargetedTimestamp(reader.GetString(9)), null),
+                lifecycleSequence, reader.GetString(10), reader.GetString(11)));
+        }
+        reader.Close();
+
+        foreach ((TargetedLifecycleSourceEvent source, long sequence, string summary, string evidence) in rows)
+        {
+            ValidateTargetedLifecycleSourceEvent(source);
+            if (!StringComparer.Ordinal.Equals(summary, source.EventKind)
+                || !StringComparer.Ordinal.Equals(evidence, TargetedLifecycleEvidenceFingerprint(
+                    sequence, preparationId, source.Owner, source.OwnerEventId, source.OwnerSequence,
+                    source.EventKind, source.Generation, source.CoordinatorFencingEpoch, source.EventJson,
+                    source.ProjectionJson, source.OccurredAt, summary)))
+            {
+                throw new InvalidOperationException("The targeted lifecycle evidence seal is invalid.");
+            }
+
+            long sourceMatches = source.Owner == "preparation"
+                ? ScalarLong(
+                    "SELECT COUNT(*) FROM targeted_preparation_events WHERE event_id=$event "
+                    + "AND preparation_id=$preparation AND revision=$ownerSequence AND event_kind=$kind "
+                    + "AND event_json=$eventJson AND projection_json=$projectionJson AND event_sha256=$eventHash "
+                    + "AND created_at=$occurredAt;",
+                    transaction, ("$event", source.OwnerEventId), ("$preparation", preparationId),
+                    ("$ownerSequence", source.OwnerSequence), ("$kind", source.EventKind),
+                    ("$eventJson", source.EventJson), ("$projectionJson", source.ProjectionJson),
+                    ("$eventHash", TargetedEventHash(source.EventJson, source.ProjectionJson)),
+                    ("$occurredAt", ToText(source.OccurredAt)))
+                : ScalarLong(
+                    "SELECT COUNT(*) FROM semantic_acquisition_events event "
+                    + "JOIN semantic_acquisition_runs run USING(acquisition_id) "
+                    + "WHERE event.event_id=$event AND run.preparation_id=$preparation "
+                    + "AND event.sequence=$ownerSequence AND event.event_kind=$kind "
+                    + "AND event.generation=$generation AND event.coordinator_fencing_epoch=$epoch "
+                    + "AND event.event_json=$eventJson AND event.projection_json=$projectionJson "
+                    + "AND event.created_at=$occurredAt;", transaction,
+                    ("$event", source.OwnerEventId), ("$preparation", preparationId),
+                    ("$ownerSequence", source.OwnerSequence), ("$kind", source.EventKind),
+                    ("$generation", source.Generation), ("$epoch", source.CoordinatorFencingEpoch),
+                    ("$eventJson", source.EventJson), ("$projectionJson", source.ProjectionJson),
+                    ("$occurredAt", ToText(source.OccurredAt)));
+            if (sourceMatches != 1)
+            {
+                throw new InvalidOperationException(
+                    "The targeted lifecycle evidence differs from its retained owner event.");
+            }
+        }
+    }
+
+    private static void ValidateTargetedLifecycleSourceEvent(TargetedLifecycleSourceEvent item)
+    {
+        if (item.Owner is not ("preparation" or "evidence-acquisition")
+            || item.OwnerSequence <= 0
+            || item.Generation < 0
+            || item.CoordinatorFencingEpoch < 0
+            || item.EventKind.Length is < 1 or > 128
+            || ToText(item.OccurredAt) != ToText(ParseTargetedTimestamp(ToText(item.OccurredAt))))
+        {
+            throw new InvalidOperationException("The retained targeted lifecycle source metadata is invalid.");
+        }
+        using JsonDocument projection = JsonDocument.Parse(item.ProjectionJson);
+        JsonElement root = projection.RootElement;
+        string occurredAt = ToText(item.OccurredAt);
+        if (!root.TryGetProperty("updated_at", out JsonElement updatedAt)
+            || updatedAt.GetString() != occurredAt)
+        {
+            throw new InvalidOperationException("The targeted lifecycle timestamp is not bound to its owner projection.");
+        }
+        if (item.Owner == "preparation")
+        {
+            if (item.CoordinatorFencingEpoch != 0
+                || item.Generation != item.OwnerSequence
+                || !root.TryGetProperty("revision", out JsonElement revision)
+                || revision.GetInt64() != item.OwnerSequence
+                || item.PreparationEventFingerprint is not null
+                    && TargetedEventHash(item.EventJson, item.ProjectionJson) != item.PreparationEventFingerprint
+                || !PreparationEventKindMatchesState(item.EventKind, root.GetProperty("state").GetString()))
+            {
+                throw new InvalidOperationException("The targeted preparation lifecycle metadata is not sealed.");
+            }
+        }
+        else if (item.CoordinatorFencingEpoch <= 0
+            || !SemanticProjectionIsBound(item.EventJson, item.ProjectionJson)
+            || !root.TryGetProperty("sequence", out JsonElement sequence)
+            || sequence.GetInt64() != item.OwnerSequence
+            || !root.TryGetProperty("generation", out JsonElement generation)
+            || generation.GetInt64() != item.Generation
+            || !AcquisitionEventKindMatchesState(item.EventKind, root.GetProperty("state").GetString()))
+        {
+            throw new InvalidOperationException("The semantic acquisition lifecycle metadata is not sealed.");
+        }
+    }
+
+    private static bool PreparationEventKindMatchesState(string eventKind, string? state) =>
+        (eventKind, state) switch
+        {
+            ("admitted", "CapturingSnapshot") => true,
+            ("fresh-snapshot-published", "AcquiringEvidence") => true,
+            ("semantic-evidence-published", "PreparingPlan") => true,
+            ("plan-published", "Ready" or "ReadyWithGaps") => true,
+            ("preparation-invalidated", "Invalidated") => true,
+            ("preparation-failed", "Failed") => true,
+            ("cancelled", "Cancelled") => true,
+            ("successor-admitted", "Started") => true,
+            _ => false,
+        };
+
+    private static bool AcquisitionEventKindMatchesState(string eventKind, string? state) =>
+        (eventKind, state) switch
+        {
+            ("admitted", "Queued") => true,
+            ("dispatched", "Running") => true,
+            ("recovered", "Retrying") => true,
+            ("published", "Completed" or "CompletedWithGaps") => true,
+            ("failed", "Failed") => true,
+            ("cancelled", "Cancelled") => true,
+            _ => false,
+        };
+
+    private static string TargetedLifecycleEvidenceFingerprint(
+        long lifecycleSequence,
+        string preparationId,
+        string owner,
+        string ownerEventId,
+        long ownerSequence,
+        string eventKind,
+        long generation,
+        long coordinatorFencingEpoch,
+        string eventJson,
+        string projectionJson,
+        DateTimeOffset occurredAt,
+        string summary) => Hash(JsonSerializer.Serialize(new
+        {
+            schema = "infinium/targeted-lifecycle-evidence/v1",
+            preparationId,
+            lifecycleSequence,
+            owner,
+            ownerEventId,
+            ownerSequence,
+            eventKind,
+            generation,
+            coordinatorFencingEpoch,
+            eventJson,
+            projectionJson,
+            occurredAt = ToText(occurredAt),
+            summary,
+        }));
 
     private static string PreparationProjectionJson(
         long revision, TargetedVerificationPreparationState state, string fingerprint, string terminalReason,

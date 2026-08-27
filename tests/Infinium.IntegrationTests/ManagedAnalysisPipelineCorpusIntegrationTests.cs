@@ -70,7 +70,7 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
         try
         {
             paths = new StoragePaths(root);
-            using AuthoritativeStore store = ownedStore = new(paths);
+            AuthoritativeStore store = ownedStore = new(paths);
             CoordinatorAuthority authority = store.AcquireCoordinatorAuthority(
                 "analysis_pipeline-managed-corpus", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(10));
             RunBinding runBinding = new("snapshot.001", "context.001", "configuration.001", "manifest.001");
@@ -131,6 +131,18 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 retainedSourceBytes, Convert.ToHexStringLower(SHA256.HashData(retainedSourceBytes)));
             Mo2SnapshotCaptureResult retainedTargetCapture = PreparedAnalysisTestFixture.Snapshot(
                 "snapshot-targeted", targetedMo2Root, "Profile A");
+            SnapshotGap[] hostileCaptureGaps =
+            [
+                new("hostile-gap-a", "plugins", "stable-id-looking:" + new string('a', 480)),
+                new("hostile-gap-b", "npc-records", "cursor.like.value:" + new string('b', 320)),
+                new("hostile-gap-c", "race-records", "../not/authority/" + new string('c', 240)),
+                new("hostile-gap-d", "placed-reference-records", new string('d', 161)),
+            ];
+            retainedTargetCapture = retainedTargetCapture with
+            {
+                State = SnapshotCaptureState.CompletedWithGaps,
+                Gaps = hostileCaptureGaps,
+            };
             byte[] retainedTargetBytes = JsonSerializer.SerializeToUtf8Bytes(retainedTargetCapture);
             string retainedTargetSha = Convert.ToHexStringLower(SHA256.HashData(retainedTargetBytes));
             _ = store.ApplySetupMutation(new("targeted-profile-setup", "confirm-profile", "profile-selection",
@@ -433,15 +445,15 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             try
             {
                 Task<TargetedPreparationReadbackSnapshotRecord> oldReadback = Task.Run(() =>
-                    store.GetTargetedPreparationReadbackSnapshot(casePreparation.PreparationId, 10, 0));
+                    store.GetTargetedPreparationReadbackSnapshot(casePreparation.PreparationId, 10, null));
                 Assert.IsTrue(readbackLocked.Wait(TimeSpan.FromSeconds(5)));
                 Task<TargetedPreparationPersistenceRecord> advancePreparation = Task.Run(() =>
                 {
                     transitionStarted.Set();
                     return store.TransitionTargetedPreparation(casePreparation.PreparationId,
                         casePreparation.Revision, casePreparation.State,
-                        Infinium.Domain.Contracts.TargetedVerificationPreparationState.CapturingSnapshot,
-                        "coherent-readback-concurrency-advance", "{}", string.Empty,
+                        Infinium.Domain.Contracts.TargetedVerificationPreparationState.Failed,
+                        "preparation-failed", "{}", "coherent readback concurrency fixture completed",
                         null, null, null, null, false, false, DateTimeOffset.UtcNow);
                 });
                 Assert.IsTrue(transitionStarted.Wait(TimeSpan.FromSeconds(5)));
@@ -459,7 +471,7 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             Assert.AreEqual(casePreparation.Revision, caseCoherentReadback.Preparation.Revision);
             Assert.AreEqual(casePreparation.State, caseCoherentReadback.Preparation.State);
             TargetedPreparationReadbackSnapshotRecord newReadback =
-                store.GetTargetedPreparationReadbackSnapshot(casePreparation.PreparationId, 10, 0);
+                store.GetTargetedPreparationReadbackSnapshot(casePreparation.PreparationId, 10, null);
             Assert.AreEqual(advancedCasePreparation.Revision, newReadback.Preparation.Revision);
             Assert.AreEqual(advancedCasePreparation.State, newReadback.Preparation.State);
             GetTargetedVerificationPreparationResponse caseReadback =
@@ -679,7 +691,7 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             Assert.AreEqual(productionPlan.Limited, firstPage.Preparation.Limited);
             Assert.IsNotEmpty(firstPage.Preparation.NextMemberCursor);
             Assert.HasCount(1, firstPage.Preparation.LifecycleEvents);
-            Assert.IsTrue(firstPage.Preparation.NextLifecycleSequence > 0);
+            Assert.IsNotEmpty(firstPage.Preparation.NextLifecycleCursor);
             Assert.HasCount(1, firstPage.Preparation.ArtifactDecisions);
             Assert.IsNotEmpty(firstPage.Preparation.NextArtifactKind);
             Assert.IsNotEmpty(firstPage.Preparation.NextArtifactId);
@@ -693,7 +705,7 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                     MaximumMembers = 1,
                     AfterMemberId = firstPage.Preparation.NextMemberCursor,
                     MaximumLifecycleEvents = 1,
-                    AfterLifecycleSequence = firstPage.Preparation.NextLifecycleSequence,
+                    AfterLifecycleCursor = firstPage.Preparation.NextLifecycleCursor,
                     MaximumArtifactDecisions = 1,
                     AfterArtifactKind = firstPage.Preparation.NextArtifactKind,
                     AfterArtifactId = firstPage.Preparation.NextArtifactId,
@@ -739,10 +751,65 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             Assert.AreEqual(FailureCode.Conflict, rejectedMismatchedPreparedRun.Failure.Code);
             Assert.AreEqual(runsBeforeMismatchedPreparedRun,
                 CandidatePipelineIntegrationTests.Count(paths.Database, "runs"));
-            StartTargetedVerificationResponse productionStart = await client.StartTargetedVerificationAsync(
-                productionStartRequest).ResponseAsync;
+            GetTargetedVerificationPreparationRequest stableLifecyclePageRequest = new()
+            {
+                PreparationId = begun.Preparation.PreparationId,
+                MaximumMembers = 1,
+                MaximumLifecycleEvents = 1,
+                AfterLifecycleCursor = firstPage.Preparation.NextLifecycleCursor,
+                MaximumArtifactDecisions = 1,
+                MaximumDependencies = 1,
+                MaximumTargetAnalyzers = 1,
+                MaximumTerminalGaps = 1,
+            };
+            using ManualResetEventSlim lifecycleReadbackLocked = new();
+            using ManualResetEventSlim releaseLifecycleReadback = new();
+            using ManualResetEventSlim successorAdmissionStarted = new();
+            GetTargetedVerificationPreparationResponse stableLifecyclePageDuringAppend;
+            StartTargetedVerificationResponse productionStart;
+            store.TargetedReadbackLockedTestHook = () =>
+            {
+                lifecycleReadbackLocked.Set();
+                releaseLifecycleReadback.Wait();
+            };
+            try
+            {
+                Task<GetTargetedVerificationPreparationResponse> concurrentLifecycleReadback = Task.Run(async () =>
+                    await client.GetTargetedVerificationPreparationAsync(stableLifecyclePageRequest).ResponseAsync);
+                Assert.IsTrue(lifecycleReadbackLocked.Wait(TimeSpan.FromSeconds(5)));
+                Task<StartTargetedVerificationResponse> concurrentSuccessorAdmission = Task.Run(async () =>
+                {
+                    successorAdmissionStarted.Set();
+                    return await client.StartTargetedVerificationAsync(productionStartRequest).ResponseAsync;
+                });
+                Assert.IsTrue(successorAdmissionStarted.Wait(TimeSpan.FromSeconds(5)));
+                Assert.IsFalse(concurrentSuccessorAdmission.IsCompleted,
+                    "Successor admission must wait for the coherent lifecycle readback lock.");
+                releaseLifecycleReadback.Set();
+                stableLifecyclePageDuringAppend = await concurrentLifecycleReadback;
+                productionStart = await concurrentSuccessorAdmission;
+            }
+            finally
+            {
+                releaseLifecycleReadback.Set();
+                store.TargetedReadbackLockedTestHook = null;
+            }
+            Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Preparation,
+                stableLifecyclePageDuringAppend.ResultCase, stableLifecyclePageDuringAppend.Failure?.Detail);
+            Assert.AreEqual(secondPage.Preparation.LifecycleEvents[0].Sequence,
+                stableLifecyclePageDuringAppend.Preparation.LifecycleEvents[0].Sequence);
+            Assert.AreEqual(secondPage.Preparation.LifecycleEvents[0].EvidenceFingerprintSha256,
+                stableLifecyclePageDuringAppend.Preparation.LifecycleEvents[0].EvidenceFingerprintSha256);
             Assert.AreEqual(CommandDisposition.Accepted, productionStart.Disposition,
                 productionStart.Failure?.Detail);
+            GetTargetedVerificationPreparationResponse stableLifecyclePageAfterAppend =
+                await client.GetTargetedVerificationPreparationAsync(stableLifecyclePageRequest).ResponseAsync;
+            Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Preparation,
+                stableLifecyclePageAfterAppend.ResultCase, stableLifecyclePageAfterAppend.Failure?.Detail);
+            Assert.AreEqual(secondPage.Preparation.LifecycleEvents[0].Sequence,
+                stableLifecyclePageAfterAppend.Preparation.LifecycleEvents[0].Sequence);
+            Assert.AreEqual(secondPage.Preparation.LifecycleEvents[0].EvidenceFingerprintSha256,
+                stableLifecyclePageAfterAppend.Preparation.LifecycleEvents[0].EvidenceFingerprintSha256);
             Assert.AreEqual(productionPlan.PreparedResolvedInputManifest.ArtifactId.Value,
                 store.GetRun(productionStart.SuccessorRunId.Value).Binding.ResolvedInputManifestId);
             using (CancellationTokenSource productionSuccessorTimeout = new(TimeSpan.FromSeconds(45)))
@@ -829,7 +896,7 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             TargetedPreparationPersistenceRecord acquiringSeed = store.TransitionTargetedPreparation(
                 readySeed.PreparationId, readySeed.Revision, readySeed.State,
                 Infinium.Domain.Contracts.TargetedVerificationPreparationState.AcquiringEvidence,
-                "native-target-snapshot-published", "{}", string.Empty, "snapshot-targeted", nativeAcquisitionId,
+                "fresh-snapshot-published", "{}", string.Empty, "snapshot-targeted", nativeAcquisitionId,
                 null, null, false, false, DateTimeOffset.UtcNow);
             store.RecordTargetedSnapshotLink(readySeed.PreparationId, readySeed.CaptureOperationId, "snapshot-targeted",
                 retainedTargetSha, retainedSourceCapture.Snapshot!.Contract.StructuralManifestFingerprint.Value,
@@ -900,7 +967,7 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             TargetedPreparationPersistenceRecord preparingSeed = store.TransitionTargetedPreparation(
                 acquiringSeed.PreparationId, acquiringSeed.Revision, acquiringSeed.State,
                 Infinium.Domain.Contracts.TargetedVerificationPreparationState.PreparingPlan,
-                "native-semantic-published", "{}", string.Empty, null, nativeAcquisitionId,
+                "semantic-evidence-published", "{}", string.Empty, null, nativeAcquisitionId,
                 null, null, false, false, DateTimeOffset.UtcNow);
             ResultItemPersistenceRecord canonicalItem = store.GetResultItem(cleanRunId, sourceFinding.ItemId);
             FindingCaseContract canonicalResult = FindingCaseJsonCodec.Deserialize(
@@ -1056,6 +1123,68 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             Assert.IsNotEmpty(readyStatus.Preparation.EvidenceAcquisitionAttemptId);
             Assert.IsNotEmpty(readyStatus.Preparation.EvidenceCheckpointId);
             Assert.AreEqual("equivalent", readyStatus.Preparation.StructuralComparison);
+            List<string> pagedTerminalGaps = [];
+            string terminalGapCursor = string.Empty;
+            do
+            {
+                GetTargetedVerificationPreparationResponse gapPage =
+                    await client.GetTargetedVerificationPreparationAsync(
+                        new GetTargetedVerificationPreparationRequest
+                        {
+                            PreparationId = ready.PreparationId,
+                            MaximumMembers = 100,
+                            MaximumLifecycleEvents = 100,
+                            MaximumArtifactDecisions = 100,
+                            MaximumDependencies = 100,
+                            MaximumTargetAnalyzers = 100,
+                            MaximumTerminalGaps = 1,
+                            AfterTerminalGap = terminalGapCursor,
+                        }).ResponseAsync;
+                Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Preparation,
+                    gapPage.ResultCase, gapPage.Failure?.Detail);
+                Assert.HasCount(1, gapPage.Preparation.AcquisitionEvidence.InertTerminalGaps);
+                pagedTerminalGaps.Add(gapPage.Preparation.AcquisitionEvidence.InertTerminalGaps[0]);
+                terminalGapCursor = gapPage.Preparation.AcquisitionEvidence.NextTerminalGap;
+                Assert.IsTrue(string.IsNullOrEmpty(terminalGapCursor)
+                    || Encoding.UTF8.GetByteCount(terminalGapCursor) <= 160);
+            }
+            while (!string.IsNullOrEmpty(terminalGapCursor));
+            Assert.AreEqual(4, pagedTerminalGaps.Count);
+            Assert.AreEqual(4, pagedTerminalGaps.Distinct(StringComparer.Ordinal).Count());
+            Assert.IsTrue(pagedTerminalGaps.All(gap => gap.Length is >= 161 and <= 512));
+
+            GetTargetedVerificationPreparationRequest malformedGapCursorRequest = new()
+            {
+                PreparationId = ready.PreparationId,
+                MaximumMembers = 100,
+                MaximumLifecycleEvents = 100,
+                MaximumArtifactDecisions = 100,
+                MaximumDependencies = 100,
+                MaximumTargetAnalyzers = 100,
+                MaximumTerminalGaps = 1,
+                AfterTerminalGap = "tg1.hostile-diagnostic-text-is-not-a-cursor",
+            };
+            GetTargetedVerificationPreparationResponse malformedGapCursor =
+                await client.GetTargetedVerificationPreparationAsync(malformedGapCursorRequest).ResponseAsync;
+            Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Failure,
+                malformedGapCursor.ResultCase);
+            Assert.AreEqual(FailureCode.Conflict, malformedGapCursor.Failure.Code);
+
+            GetTargetedVerificationPreparationRequest firstGapPageRequest = malformedGapCursorRequest.Clone();
+            firstGapPageRequest.AfterTerminalGap = string.Empty;
+            GetTargetedVerificationPreparationResponse firstGapPage =
+                await client.GetTargetedVerificationPreparationAsync(firstGapPageRequest).ResponseAsync;
+            Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Preparation,
+                firstGapPage.ResultCase, firstGapPage.Failure?.Detail);
+            string retainedTerminalGapCursor = firstGapPage.Preparation.AcquisitionEvidence.NextTerminalGap;
+            GetTargetedVerificationPreparationRequest substitutedGapCursorRequest = malformedGapCursorRequest.Clone();
+            substitutedGapCursorRequest.PreparationId = productionReadyStatus.Preparation.PreparationId;
+            substitutedGapCursorRequest.AfterTerminalGap = retainedTerminalGapCursor;
+            GetTargetedVerificationPreparationResponse substitutedGapCursor =
+                await client.GetTargetedVerificationPreparationAsync(substitutedGapCursorRequest).ResponseAsync;
+            Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Failure,
+                substitutedGapCursor.ResultCase);
+            Assert.AreEqual(FailureCode.Conflict, substitutedGapCursor.Failure.Code);
 
             async Task AssertReadbackTamperRejected(
                 string label,
@@ -1386,6 +1515,13 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             StartTargetedVerificationResponse nativeStart = await client.StartTargetedVerificationAsync(
                 nativeStartRequest).ResponseAsync;
             Assert.AreEqual(CommandDisposition.Accepted, nativeStart.Disposition, nativeStart.Failure?.Detail);
+            GetTargetedVerificationPreparationRequest staleGapCursorRequest = malformedGapCursorRequest.Clone();
+            staleGapCursorRequest.AfterTerminalGap = retainedTerminalGapCursor;
+            GetTargetedVerificationPreparationResponse staleGapCursor =
+                await client.GetTargetedVerificationPreparationAsync(staleGapCursorRequest).ResponseAsync;
+            Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Failure,
+                staleGapCursor.ResultCase);
+            Assert.AreEqual(FailureCode.Conflict, staleGapCursor.Failure.Code);
             StartTargetedVerificationResponse exactRetry = await client.StartTargetedVerificationAsync(
                 nativeStartRequest).ResponseAsync;
             Assert.AreEqual(CommandDisposition.AlreadyAccepted, exactRetry.Disposition, exactRetry.Failure?.Detail);

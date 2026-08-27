@@ -183,8 +183,8 @@ buffers/rate limits, process supervision, private-handle inheritance, staging
 authorization, and coordinator-side admission remain runtime obligations for
 later slices.
 
-The additive application v1 surface is at protocol 1.12.0. It separates the
-application 1.12.0, domain 1.6.0, storage 1.15.0, and renderer 1.1.0 version
+The additive application v1 surface is at protocol 1.13.0. It separates the
+application 1.13.0, domain 1.6.0, storage 1.16.0, and renderer 1.1.0 version
 axes; the corrected persisted `TargetedVerificationPlan` is schema 1.2.0. The
 surface exposes bounded display-safe bootstrap, typed setup/configuration,
 prepared manual-run, non-secret provider status, live progress, reconnect,
@@ -194,7 +194,9 @@ explicit unavailable state when retained results predate a durable report
 publication projection. Five native-only targeted-verification RPCs expose
 durable preparation, canonical finding/case identity-envelope authority,
 independently paged scope, dependency, target-analyzer, lifecycle, artifact,
-and terminal-gap evidence, fresh snapshot/evidence acquisition, inspectable
+and terminal-gap evidence. Lifecycle pages use durable sealed ordering, and
+terminal-gap pages use bounded opaque generation-bound cursors rather than
+diagnostic text. The surface also exposes fresh snapshot/evidence acquisition, inspectable
 proof/correlation/reuse/limit state, a preparation-owned resolved input
 manifest and exact prepared successor inputs,
 atomic `managed-analysis-v1` successor admission, and immutable lineage/readback.
@@ -204,7 +206,7 @@ renderer registry still contains only its five previously accepted
 operation/message combinations; renderer 1.1.0 updates bootstrap compatibility
 and Phase C capability flags without adding desktop operations. The full
 protobuf contract-set fingerprint is
-`77076fc13a34bfc7a3d2e3c6808c6e5dbb8048bd38622286eb078c7c705c918b`.
+`d234d44dabf902041461b5c2318fd5c71f10eff46e7ec75f9a586812fab014c7`.
 Helper v2 has a separate fingerprint over only its helper/common/identity
 transitive closure; its fail-closed decoder rejects unknown nested fields,
 unknown enum numerics, and contradictory assignment, revalidation, or receipt

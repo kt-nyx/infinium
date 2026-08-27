@@ -15,6 +15,12 @@ using Infinium.Persistence;
 
 namespace Infinium.Coordinator;
 
+internal sealed record TargetedTerminalGapCursor(
+    long PreparationRevision,
+    long AcquisitionSequence,
+    int Offset,
+    string BindingFingerprint);
+
 public sealed partial class ApplicationGrpcService
 {
     public override Task<BeginTargetedVerificationPreparationResponse> BeginTargetedVerificationPreparation(
@@ -75,7 +81,7 @@ public sealed partial class ApplicationGrpcService
                 {
                     Disposition = CommandDisposition.AlreadyAccepted,
                     Preparation = ToTargetedPreparation(runtime.Store.GetTargetedPreparationReadbackSnapshot(
-                        replay.PreparationId, 100, 0), 100, null, 100, null, null,
+                        replay.PreparationId, 100, null), 100, null, 100, null, null,
                         100, null, 100, null, 100, null),
                 });
             }
@@ -164,7 +170,7 @@ public sealed partial class ApplicationGrpcService
             {
                 Disposition = replay is null ? CommandDisposition.Accepted : CommandDisposition.AlreadyAccepted,
                 Preparation = ToTargetedPreparation(runtime.Store.GetTargetedPreparationReadbackSnapshot(
-                    admitted.PreparationId, 100, 0), 100, null, 100, null, null,
+                    admitted.PreparationId, 100, null), 100, null, 100, null, null,
                     100, null, 100, null, 100, null),
             });
         }
@@ -193,10 +199,12 @@ public sealed partial class ApplicationGrpcService
 
         try
         {
+            TargetedLifecycleCursorKey? lifecycleCursor = DecodeLifecycleCursor(
+                request.PreparationId, request.AfterLifecycleCursor);
             TargetedPreparationReadbackSnapshotRecord value =
                 runtime.Store.GetTargetedPreparationReadbackSnapshot(
                     request.PreparationId, checked((int)request.MaximumLifecycleEvents),
-                    checked((long)request.AfterLifecycleSequence));
+                    lifecycleCursor);
             return Task.FromResult(new GetTargetedVerificationPreparationResponse
             {
                 Preparation = ToTargetedPreparation(value, checked((int)request.MaximumMembers), request.AfterMemberId,
@@ -236,7 +244,7 @@ public sealed partial class ApplicationGrpcService
             {
                 Disposition = receipt.Replayed ? CommandDisposition.AlreadyAccepted : CommandDisposition.Accepted,
                 Preparation = ToTargetedPreparation(runtime.Store.GetTargetedPreparationReadbackSnapshot(
-                    receipt.Preparation.PreparationId, 100, 0), 100, null, 100, null, null,
+                    receipt.Preparation.PreparationId, 100, null), 100, null, 100, null, null,
                     100, null, 100, null, 100, null),
             });
         }
@@ -658,19 +666,30 @@ public sealed partial class ApplicationGrpcService
             }
             string[] orderedGaps = terminalGaps.Distinct(StringComparer.Ordinal)
                 .Order(StringComparer.Ordinal).ToArray();
+            long acquisitionSequence = readback.Acquisition?.DurableSequence ?? 0;
+            int terminalGapOffset = DecodeTerminalGapCursor(
+                value, acquisitionSequence, orderedGaps, afterTerminalGap);
             string[] gapPage = orderedGaps
-                .Where(item => string.IsNullOrWhiteSpace(afterTerminalGap)
-                    || StringComparer.Ordinal.Compare(item, afterTerminalGap) > 0)
+                .Skip(terminalGapOffset)
                 .Take(maximumTerminalGaps + 1).ToArray();
             result.AcquisitionEvidence.TerminalGapCount = checked((ulong)orderedGaps.LongLength);
             result.AcquisitionEvidence.InertTerminalGaps.Add(gapPage.Take(maximumTerminalGaps));
             if (gapPage.Length > maximumTerminalGaps)
             {
-                result.AcquisitionEvidence.NextTerminalGap = gapPage[maximumTerminalGaps - 1];
+                result.AcquisitionEvidence.NextTerminalGap = EncodeTerminalGapCursor(
+                    value, acquisitionSequence, orderedGaps, checked(terminalGapOffset + maximumTerminalGaps));
             }
         }
+        else if (!string.IsNullOrWhiteSpace(afterTerminalGap))
+        {
+            throw new InvalidOperationException(
+                "The targeted terminal-gap cursor is stale because this readback has no acquisition evidence.");
+        }
         result.LifecycleEvents.Add(evidence.LifecycleEvents.Select(ToProto));
-        result.NextLifecycleSequence = checked((ulong)(evidence.NextLifecycleSequence ?? 0));
+        if (evidence.NextLifecycleCursorAnchor is { } lifecycleAnchor)
+        {
+            result.NextLifecycleCursor = EncodeLifecycleCursor(value.PreparationId, lifecycleAnchor);
+        }
         return result;
     }
 
@@ -807,6 +826,7 @@ public sealed partial class ApplicationGrpcService
     private static TargetedPreparationLifecycleEvent ToProto(TargetedLifecycleReadbackEvent value) => new()
     {
         Sequence = checked((ulong)value.Sequence),
+        OwnerSequence = checked((ulong)value.OwnerSequence),
         Owner = value.Owner,
         EventKind = value.EventKind,
         Generation = checked((ulong)value.Generation),
@@ -815,6 +835,128 @@ public sealed partial class ApplicationGrpcService
         EvidenceFingerprintSha256 = value.EvidenceFingerprint,
         InertSummary = Bounded(value.Summary),
     };
+
+    private static string EncodeLifecycleCursor(
+        string preparationId,
+        TargetedLifecycleReadbackEvent anchor)
+    {
+        string sequence = anchor.Sequence.ToString("x16", System.Globalization.CultureInfo.InvariantCulture);
+        string binding = HashTargeted(string.Join('\n',
+            "infinium/targeted-lifecycle-cursor/v1", preparationId, sequence, anchor.EvidenceFingerprint));
+        string cursor = string.Join('.', "tl1", sequence, anchor.EvidenceFingerprint, binding);
+        if (Encoding.UTF8.GetByteCount(cursor) > 160)
+        {
+            throw new InvalidOperationException("The targeted lifecycle cursor exceeds its contract bound.");
+        }
+        return cursor;
+    }
+
+    private static TargetedLifecycleCursorKey? DecodeLifecycleCursor(
+        string preparationId,
+        string cursor)
+    {
+        if (string.IsNullOrWhiteSpace(cursor))
+        {
+            return null;
+        }
+        string[] parts = cursor.Split('.', StringSplitOptions.None);
+        if (parts.Length != 4 || parts[0] != "tl1"
+            || !IsCanonicalLowerHex(parts[1], 16)
+            || !ulong.TryParse(parts[1], System.Globalization.NumberStyles.AllowHexSpecifier,
+                System.Globalization.CultureInfo.InvariantCulture, out ulong parsedSequence)
+            || parsedSequence is 0 or > long.MaxValue
+            || !IsCanonicalLowerHex(parts[2], 64) || !IsCanonicalLowerHex(parts[3], 64))
+        {
+            throw new InvalidOperationException("The targeted lifecycle cursor is malformed.");
+        }
+        string expected = HashTargeted(string.Join('\n',
+            "infinium/targeted-lifecycle-cursor/v1", preparationId, parts[1], parts[2]));
+        if (!CryptographicOperations.FixedTimeEquals(
+                Convert.FromHexString(expected), Convert.FromHexString(parts[3])))
+        {
+            throw new InvalidOperationException("The targeted lifecycle cursor is substituted.");
+        }
+        return new(checked((long)parsedSequence), parts[2]);
+    }
+
+    private static string EncodeTerminalGapCursor(
+        TargetedPreparationPersistenceRecord preparation,
+        long acquisitionSequence,
+        string[] orderedGaps,
+        int offset)
+    {
+        string revision = preparation.Revision.ToString("x16", System.Globalization.CultureInfo.InvariantCulture);
+        string acquisition = acquisitionSequence.ToString("x16", System.Globalization.CultureInfo.InvariantCulture);
+        string encodedOffset = offset.ToString("x8", System.Globalization.CultureInfo.InvariantCulture);
+        string binding = TerminalGapCursorBinding(
+            preparation, acquisitionSequence, orderedGaps, offset);
+        string cursor = string.Join('.', "tg1", revision, acquisition, encodedOffset, binding);
+        if (Encoding.UTF8.GetByteCount(cursor) > 160)
+        {
+            throw new InvalidOperationException("The targeted terminal-gap cursor exceeds its contract bound.");
+        }
+        return cursor;
+    }
+
+    private static int DecodeTerminalGapCursor(
+        TargetedPreparationPersistenceRecord preparation,
+        long acquisitionSequence,
+        string[] orderedGaps,
+        string? cursor)
+    {
+        if (string.IsNullOrWhiteSpace(cursor))
+        {
+            return 0;
+        }
+        string[] parts = cursor.Split('.', StringSplitOptions.None);
+        if (parts.Length != 5 || parts[0] != "tg1"
+            || !IsCanonicalLowerHex(parts[1], 16)
+            || !ulong.TryParse(parts[1], System.Globalization.NumberStyles.AllowHexSpecifier,
+                System.Globalization.CultureInfo.InvariantCulture, out ulong revision)
+            || revision > long.MaxValue
+            || !IsCanonicalLowerHex(parts[2], 16)
+            || !ulong.TryParse(parts[2], System.Globalization.NumberStyles.AllowHexSpecifier,
+                System.Globalization.CultureInfo.InvariantCulture, out ulong acquisition)
+            || acquisition > long.MaxValue
+            || !IsCanonicalLowerHex(parts[3], 8)
+            || !uint.TryParse(parts[3], System.Globalization.NumberStyles.AllowHexSpecifier,
+                System.Globalization.CultureInfo.InvariantCulture, out uint offset)
+            || offset > int.MaxValue || !IsCanonicalLowerHex(parts[4], 64))
+        {
+            throw new InvalidOperationException("The targeted terminal-gap cursor is malformed.");
+        }
+        if (checked((long)revision) != preparation.Revision
+            || checked((long)acquisition) != acquisitionSequence
+            || offset > orderedGaps.Length)
+        {
+            throw new InvalidOperationException("The targeted terminal-gap cursor is stale.");
+        }
+        string expected = TerminalGapCursorBinding(
+            preparation, acquisitionSequence, orderedGaps, checked((int)offset));
+        if (!CryptographicOperations.FixedTimeEquals(
+                Convert.FromHexString(expected), Convert.FromHexString(parts[4])))
+        {
+            throw new InvalidOperationException("The targeted terminal-gap cursor is substituted or stale.");
+        }
+        return checked((int)offset);
+    }
+
+    private static string TerminalGapCursorBinding(
+        TargetedPreparationPersistenceRecord preparation,
+        long acquisitionSequence,
+        string[] orderedGaps,
+        int offset) => HashTargeted(string.Join('\n',
+            "infinium/targeted-terminal-gap-cursor/v1",
+            preparation.PreparationId,
+            preparation.Revision,
+            preparation.PreparationFingerprint,
+            acquisitionSequence,
+            offset,
+            HashTargeted(JsonSerializer.Serialize(orderedGaps))));
+
+    private static bool IsCanonicalLowerHex(string value, int expectedLength) =>
+        value.Length == expectedLength
+        && value.All(character => char.IsAsciiDigit(character) || character is >= 'a' and <= 'f');
 
     private static TargetedPreparationWork ToWork(TargetedVerificationPlanContract plan)
     {

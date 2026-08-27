@@ -4,11 +4,13 @@ namespace Infinium.Persistence;
 
 public static class TargetedVerificationPersistenceDeclarations
 {
-    public const int SchemaVersion = 16;
-    public const string StorageContractVersion = "1.15.0";
+    public const int SchemaVersion = 17;
+    public const string StorageContractVersion = "1.16.0";
     public const string MigrationId = "targeted-verification-preparation-0016";
+    public const string LifecycleEvidenceMigrationId = "targeted-lifecycle-evidence-0017";
     public const string SourceSchemaFingerprint = ResultsPublicationPersistenceDeclarations.SchemaFingerprint;
-    public const string SchemaFingerprint = "727285fbdb9a4a91e850a6bfad3749262be75e6388eae14edf9954eed23d783c";
+    public const string PreparationSchemaFingerprint = "727285fbdb9a4a91e850a6bfad3749262be75e6388eae14edf9954eed23d783c";
+    public const string SchemaFingerprint = "69c73053cc861efd6edd2ce27cfeba6c8bda0c42afd22e713bdbc691fbdaca50";
 }
 
 public sealed partial class AuthoritativeStore
@@ -370,6 +372,34 @@ public sealed partial class AuthoritativeStore
         CREATE TRIGGER targeted_result_links_append_only_delete BEFORE DELETE ON targeted_result_links BEGIN SELECT RAISE(ABORT,'append-only history'); END;
         """;
 
+    private const string TargetedLifecycleEvidenceSchema =
+        """
+        CREATE TABLE targeted_lifecycle_evidence(
+            lifecycle_event_id TEXT PRIMARY KEY,
+            preparation_id TEXT NOT NULL REFERENCES targeted_preparation_requests(preparation_id) ON DELETE RESTRICT,
+            lifecycle_sequence INTEGER NOT NULL CHECK(lifecycle_sequence>0),
+            owner TEXT NOT NULL CHECK(owner IN ('preparation','evidence-acquisition')),
+            owner_event_id TEXT NOT NULL,
+            owner_sequence INTEGER NOT NULL CHECK(owner_sequence>0),
+            event_kind TEXT NOT NULL,
+            generation INTEGER NOT NULL CHECK(generation>=0),
+            coordinator_fencing_epoch INTEGER NOT NULL CHECK(coordinator_fencing_epoch>=0),
+            event_json TEXT NOT NULL CHECK(json_valid(event_json)),
+            projection_json TEXT NOT NULL CHECK(json_valid(projection_json)),
+            occurred_at TEXT NOT NULL,
+            inert_summary TEXT NOT NULL,
+            evidence_sha256 TEXT NOT NULL CHECK(length(evidence_sha256)=64),
+            UNIQUE(preparation_id,lifecycle_sequence),
+            UNIQUE(owner,owner_event_id)
+        ) STRICT;
+        CREATE INDEX idx_targeted_lifecycle_preparation
+            ON targeted_lifecycle_evidence(preparation_id,lifecycle_sequence);
+        CREATE TRIGGER targeted_lifecycle_evidence_append_only_update
+            BEFORE UPDATE ON targeted_lifecycle_evidence BEGIN SELECT RAISE(ABORT,'append-only history'); END;
+        CREATE TRIGGER targeted_lifecycle_evidence_append_only_delete
+            BEFORE DELETE ON targeted_lifecycle_evidence BEGIN SELECT RAISE(ABORT,'append-only history'); END;
+        """;
+
     private void ApplyTargetedVerificationMigration()
     {
         string source = ComputeSchemaFingerprint(connection);
@@ -391,7 +421,7 @@ public sealed partial class AuthoritativeStore
         using SqliteTransaction transaction = BeginTransaction();
         Execute(TargetedVerificationSchema, transaction);
         string fingerprint = ComputeSchemaFingerprint(connection, transaction);
-        if (!StringComparer.Ordinal.Equals(fingerprint, TargetedVerificationPersistenceDeclarations.SchemaFingerprint))
+        if (!StringComparer.Ordinal.Equals(fingerprint, TargetedVerificationPersistenceDeclarations.PreparationSchemaFingerprint))
         {
             throw new InvalidOperationException(
                 $"The targeted-verification schema bytes do not match the accepted schema-16 contract ({fingerprint}).");
@@ -425,9 +455,64 @@ public sealed partial class AuthoritativeStore
         string stored = (string)(metadata.ExecuteScalar()
             ?? throw new InvalidOperationException("The schema fingerprint metadata is missing."));
         if (count != 1 || !StringComparer.Ordinal.Equals(fingerprint, stored)
-            || !StringComparer.Ordinal.Equals(fingerprint, TargetedVerificationPersistenceDeclarations.SchemaFingerprint))
+            || !StringComparer.Ordinal.Equals(fingerprint, TargetedVerificationPersistenceDeclarations.PreparationSchemaFingerprint))
         {
             throw new InvalidOperationException("The targeted-verification migration is incomplete or drifted.");
         }
+    }
+
+    private void ApplyTargetedLifecycleEvidenceMigration()
+    {
+        string source = ComputeSchemaFingerprint(connection);
+        if (!StringComparer.Ordinal.Equals(source,
+                TargetedVerificationPersistenceDeclarations.PreparationSchemaFingerprint))
+        {
+            throw new InvalidOperationException(
+                "The targeted lifecycle-evidence migration source does not match the accepted schema-16 contract.");
+        }
+
+        using SqliteTransaction transaction = BeginTransaction();
+        Execute(TargetedLifecycleEvidenceSchema, transaction);
+        BackfillTargetedLifecycleEvidence(transaction);
+        string fingerprint = ComputeSchemaFingerprint(connection, transaction);
+        if (!StringComparer.Ordinal.Equals(fingerprint, TargetedVerificationPersistenceDeclarations.SchemaFingerprint))
+        {
+            throw new InvalidOperationException(
+                $"The targeted lifecycle-evidence schema bytes do not match the accepted schema-17 contract ({fingerprint}).");
+        }
+        Execute(
+            """
+            UPDATE store_metadata SET value='17' WHERE key='schema_version';
+            UPDATE store_metadata SET value='1.16.0' WHERE key='storage_contract_version';
+            UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint';
+            INSERT INTO migration_history(migration_id,from_version,to_version,applied_at,sqlite_source_id)
+            VALUES ($id,16,17,$now,$sqlite);
+            PRAGMA user_version=17;
+            """, transaction,
+            ("$fingerprint", fingerprint),
+            ("$id", TargetedVerificationPersistenceDeclarations.LifecycleEvidenceMigrationId),
+            ("$now", ToText(DateTimeOffset.UtcNow)),
+            ("$sqlite", BindingIdentity.SourceId));
+        transaction.Commit();
+    }
+
+    private void ValidateTargetedLifecycleEvidenceMigration()
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT COUNT(*) FROM migration_history WHERE migration_id=$id AND from_version=16 AND to_version=17;";
+        command.Parameters.AddWithValue("$id", TargetedVerificationPersistenceDeclarations.LifecycleEvidenceMigrationId);
+        long count = Convert.ToInt64(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture);
+        string fingerprint = ComputeSchemaFingerprint(connection);
+        using SqliteCommand metadata = connection.CreateCommand();
+        metadata.CommandText = "SELECT value FROM store_metadata WHERE key='schema_fingerprint';";
+        string stored = (string)(metadata.ExecuteScalar()
+            ?? throw new InvalidOperationException("The schema fingerprint metadata is missing."));
+        if (count != 1 || !StringComparer.Ordinal.Equals(fingerprint, stored)
+            || !StringComparer.Ordinal.Equals(fingerprint, TargetedVerificationPersistenceDeclarations.SchemaFingerprint))
+        {
+            throw new InvalidOperationException("The targeted lifecycle-evidence migration is incomplete or drifted.");
+        }
+        ValidateTargetedLifecycleEvidencePopulation();
     }
 }

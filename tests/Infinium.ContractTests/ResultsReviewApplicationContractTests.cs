@@ -53,11 +53,11 @@ public sealed class ResultsReviewApplicationContractTests
     [TestProperty("Category", "Contract")]
     public void PhaseCComputedVersionAxesAndFingerprintAreExact()
     {
-        Assert.AreEqual("1.12.0", ProtocolConstants.Compatibility.ApplicationContract.Value);
+        Assert.AreEqual("1.13.0", ProtocolConstants.Compatibility.ApplicationContract.Value);
         Assert.AreEqual("1.6.0", ProtocolConstants.Compatibility.DomainContract.Value);
-        Assert.AreEqual("1.15.0", ProtocolConstants.StorageContractVersion);
+        Assert.AreEqual("1.16.0", ProtocolConstants.StorageContractVersion);
         Assert.AreEqual(
-            "77076fc13a34bfc7a3d2e3c6808c6e5dbb8048bd38622286eb078c7c705c918b",
+            "d234d44dabf902041461b5c2318fd5c71f10eff46e7ec75f9a586812fab014c7",
             Convert.ToHexStringLower(ProtocolConstants.Version.SchemaFingerprintSha256.Span));
     }
 
@@ -127,7 +127,7 @@ public sealed class ResultsReviewApplicationContractTests
                 PreparationId = "targeted-preparation-contract-id",
                 MaximumMembers = 10,
                 MaximumLifecycleEvents = 10,
-                AfterLifecycleSequence = ulong.MaxValue,
+                AfterLifecycleCursor = new string('x', 161),
                 MaximumArtifactDecisions = 10,
                 MaximumDependencies = 10,
                 MaximumTargetAnalyzers = 10,
@@ -301,6 +301,7 @@ public sealed class ResultsReviewApplicationContractTests
         value.LifecycleEvents.Add(new TargetedPreparationLifecycleEvent
         {
             Sequence = 3,
+            OwnerSequence = 2,
             Owner = "evidence-acquisition",
             EventKind = "published",
             Generation = 1,

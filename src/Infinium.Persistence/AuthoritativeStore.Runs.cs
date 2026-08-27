@@ -377,6 +377,8 @@ public sealed partial class AuthoritativeStore
                     ("$revision", revision),
                     ("$eventSha", TargetedEventHash(eventJson, projectionJson)),
                     ("$eventJson", eventJson), ("$projectionJson", projectionJson), ("$now", ToText(now)));
+                InsertTargetedLifecycleEvidence(preparation.PreparationId, "preparation", eventId, revision,
+                    "successor-admitted", revision, 0, eventJson, projectionJson, now, transaction);
                 int targetedProjectionChanges = Execute(
                     "UPDATE targeted_preparation_projection SET revision=$revision,lifecycle_state='Started',"
                     + "preparation_fingerprint=$preparationFingerprint,startable=0,last_event_id=$event,updated_at=$now "

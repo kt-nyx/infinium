@@ -160,6 +160,11 @@ public sealed class TargetedVerificationExecutor
                         acquisitionId,
                     }), string.Empty, capture.InstallationSnapshotId, acquisitionId, null, null, false, false,
                     DateTimeOffset.UtcNow);
+                if (preparation.TargetSnapshotId != capture.InstallationSnapshotId)
+                {
+                    throw new InvalidOperationException(
+                        "The targeted preparation did not retain the exact fresh capture occurrence.");
+                }
             }
 
             if (preparation.State == TargetedVerificationPreparationState.AcquiringEvidence)
@@ -184,6 +189,11 @@ public sealed class TargetedVerificationExecutor
                         publication.PayloadSha256,
                     }), string.Empty, null, publication.AcquisitionId, null, null, false, false,
                     DateTimeOffset.UtcNow);
+                if (preparation.TargetSnapshotId != publication.TargetSnapshotId)
+                {
+                    throw new InvalidOperationException(
+                        "The targeted preparation lost its fresh capture occurrence before planning.");
+                }
             }
 
             if (preparation.State == TargetedVerificationPreparationState.PreparingPlan)
@@ -192,10 +202,15 @@ public sealed class TargetedVerificationExecutor
                 SemanticAcquisitionPublicationRecord publication = runtime.Store
                     .GetSemanticAcquisitionPublication(preparation.EvidenceAcquisitionId!);
                 PreparedTargetedPlan preparedPlan = BuildPlan(preparation, publication);
-                _ = runtime.Store.StoreTargetedPlan(
+                TargetedPreparationPersistenceRecord ready = runtime.Store.StoreTargetedPlan(
                     preparedPlan.Plan,
                     preparedPlan.OperationInputs,
                     DateTimeOffset.UtcNow);
+                if (ready.TargetSnapshotId != preparation.TargetSnapshotId)
+                {
+                    throw new InvalidOperationException(
+                        "The targeted preparation lost its fresh capture occurrence while publishing the plan.");
+                }
             }
         }
         catch (Exception exception)

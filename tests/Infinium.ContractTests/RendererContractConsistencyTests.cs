@@ -387,9 +387,9 @@ public sealed class RendererContractConsistencyTests
 
     private static JsonObject Bootstrap() => new()
     {
-        ["application_contract_version"] = "1.12.0",
+        ["application_contract_version"] = "1.13.0",
         ["domain_contract_version"] = "1.6.0",
-        ["storage_contract_version"] = "1.15.0",
+        ["storage_contract_version"] = "1.16.0",
         ["renderer_contract_version"] = "1.1.0",
         ["coordinator_health"] = "healthy",
         ["configuration_availability"] = "unavailable",

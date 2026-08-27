@@ -144,7 +144,11 @@ resealed or promoted through an ordinary tooling command.
   successor admission, and lineage. The corrected candidate also exercises the
   complete native producer-to-consumer path without seeding ready persistence,
   retains qualified processing gaps as limited plans, rejects pre-start drift
-  before successor mutation, and enforces cross-family one-shot gestures.
+  before successor mutation, and enforces cross-family one-shot gestures. Its
+  corrected readback evidence also exercises hostile bounded terminal gaps,
+  malformed/substituted/stale cursors, equal-timestamp lifecycle events,
+  append-stable continuation, sealed owner metadata and event bytes, schema-17
+  zero/nonzero migration, interrupted rollback, rebuild, restart, and restore.
   Corrected Checkpoint C review is pending;
   the checkpoint remains suspended. Remaining packages must
   exercise EVAL-0090 through EVAL-0094 plus every applicable existing case

@@ -1695,6 +1695,105 @@ documentation validation, functional naming, dependency-manifest consistency,
 and `git diff --check`. Repository-owned `dotnet`/`testhost`/`vstest` survivor
 count was zero after every .NET batch and at closeout.
 
+## Corrected Checkpoint C stable-pagination and lifecycle-evidence candidate
+
+Date: 2026-08-27
+
+Status: Implementation candidate awaiting another corrected Checkpoint C
+architecture-steward review
+
+Starting commit: `2a8fd071f64e26d5e7c00a6a2053311031511a3e`
+
+This correction removes diagnostic text from terminal-gap continuation. The
+application now returns a bounded opaque token that binds the preparation ID,
+revision and fingerprint, acquisition durable sequence, continuation offset,
+and exact ordered gap-set fingerprint. A token is at most 160 UTF-8 bytes and
+therefore always fits the generated request contract. Malformed, substituted,
+or stale tokens fail closed; a source-like stable ID, path fragment, or other
+hostile diagnostic text has no continuation authority.
+
+Lifecycle readback now uses schema-17 `targeted_lifecycle_evidence`, an
+append-only unified ledger with an immutable per-preparation sequence. Each row
+retains and seals the ordering, owner and owner event, owner sequence/revision,
+kind, generation, coordinator fence, complete event JSON, complete projection
+JSON, timestamp, inert summary, and evidence fingerprint. Readback cross-checks
+the sealed row against the exact retained preparation or acquisition owner
+event before projecting it. Lifecycle cursors bind the immutable sequence and
+seal; later appends, including equal-timestamp events, cannot renumber earlier
+pages. Projection rebuild, restart, and backup/restore retain the same order.
+
+The schema-16 to schema-17 migration is
+`targeted-lifecycle-evidence-0017`. It validates the schema-16 source, creates
+the strict table, index, and update/delete denial triggers, backfills existing
+preparation and acquisition histories deterministically, validates population
+and seals, updates metadata/receipt/user-version atomically, and rolls back
+without partial schema-17 objects when retained history is tampered. Storage
+contract `1.16.0`, schema `17`, and schema fingerprint
+`69c73053cc861efd6edd2ce27cfeba6c8bda0c42afd22e713bdbc691fbdaca50`
+are the current expected-object authority. The expected append-only object
+inventory now includes `targeted_lifecycle_evidence`,
+`idx_targeted_lifecycle_preparation`, and its two mutation-denial triggers.
+
+Application protocol/contract `1.13.0` reserves the former numeric lifecycle
+continuation fields, adds bounded opaque request/response lifecycle cursors,
+and exposes each owner's durable sequence. Domain `1.6.0`, targeted-plan
+`1.2.0`, and renderer `1.1.0` are unchanged. The exact protobuf contract-set
+fingerprint is
+`d234d44dabf902041461b5c2318fd5c71f10eff46e7ec75f9a586812fab014c7`.
+The application inventory remains 48 declared/42 implemented RPCs.
+Generated C# client/server output remains build-owned by `Grpc.Tools` through
+`src/Infinium.Application/Infinium.Application.csproj`; no generated output is
+checked in. `StartTargetedVerification` remains native-only-never-map, and the
+renderer registry gains no operation.
+
+Focused Release evidence passes 13 lifecycle/persistence/migration tests, 33
+application/renderer contract tests, and the primary generated-C#
+gRPC named-pipe corpus test. That primary test still performs unseeded begin,
+real capture, separately owned semantic acquisition, production planning,
+prepared-plan inspection, exact `managed-analysis-v1` start and completion,
+and initiation/reconciliation lineage readback. It additionally pages four
+hostile 161-512-character capture gaps without duplication or omission,
+rejects malformed/substituted/stale gap cursors, and proves a lifecycle page is
+unchanged when successor admission attempts to append concurrently and after
+that append commits.
+
+The consolidated review found and corrected nine must-fix defects on the same
+candidate: the initial aggregate evidence query exposed a newly committed
+snapshot link to an older preparation generation; unbound acquisition history
+could similarly appear ahead of the preparation revision; the lifecycle page
+query itself was initially broader than that revision-scoped validation;
+schema-16 equal-timestamp backfill used a lexical tie-break that could invert
+known cross-owner causality; cursor decoding accepted noncanonical alternate-
+width or uppercase hexadecimal components; seeded tests used non-product
+lifecycle names that could not be sealed; owner-event hashes were not rechecked
+during whole-population validation; and store disposal was not serialized with repository
+operations. The corrected readback selects only evidence named by the retained
+generation while whole-store migration/open/rebuild validation still covers
+every bound and temporarily unbound event. Equal-timestamp backfill now uses
+the accepted producer phases plus each owner's retained sequence to reconstruct
+a deterministic causally valid order. Re-review found no product-meaning
+change, weakened provenance, generic backend/renderer authority, lifecycle
+renumbering, hostile-text authority, partial migration path, or functional-
+naming exception. No allowlist change was required. No private evaluator,
+evaluator archive, development-history archive, legacy archive, or independent
+semantic oracle was accessed.
+
+The ninth review/floor defect was bounded documentation evidence that exceeded
+the inventory's existing 512-character bound and the capability matrix's
+existing 256-character bound. The evidence was split or shortened without
+changing meaning, and the two affected authority-contract tests passed on the
+same candidate.
+
+The complete final floor passed locked restore, warning-free Release build,
+all 749 tests with 10 expected skips and zero failures, format verification,
+documentation validation (153 metadata files, 155 Markdown link sources, and
+19 JSON files), functional naming (193 exact reviewed exceptions and zero
+unexplained findings), dependency-manifest consistency, and `git diff --check`.
+The exact correction commit is reported in the handoff because a commit cannot
+contain its own final identity. Repository-owned `dotnet`/`testhost`/`vstest`
+survivor count was zero after every .NET batch and at closeout. WP5, WP6,
+Checkpoint C, Phase D, and M2 remain unaccepted/inactive.
+
 ## Final closeout fields
 
 WP9 will replace this placeholder with the accepted contract maturity,

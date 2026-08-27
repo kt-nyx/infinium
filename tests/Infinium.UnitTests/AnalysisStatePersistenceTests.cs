@@ -7,8 +7,9 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class AnalysisStatePersistenceTests
 {
-    private const string DropTargetedVerificationSchema16 =
+    private const string DropTargetedVerificationSchema17 =
         """
+        DROP TABLE targeted_lifecycle_evidence;
         DROP TABLE targeted_result_links;
         DROP TABLE targeted_initiation_lineage;
         DROP TABLE targeted_operation_inputs;
@@ -35,6 +36,7 @@ public sealed class AnalysisStatePersistenceTests
         DROP TABLE targeted_preparation_events;
         DROP TABLE targeted_preparation_requests;
         DELETE FROM migration_history WHERE migration_id = 'targeted-verification-preparation-0016';
+        DELETE FROM migration_history WHERE migration_id = 'targeted-lifecycle-evidence-0017';
         """;
     private static readonly string[] AnalysisFindingCaseTables =
     [
@@ -153,21 +155,21 @@ public sealed class AnalysisStatePersistenceTests
     [TestCategory("Cases")]
     [TestProperty("Category", "Unit")]
     [TestProperty("Category", "Cases")]
-    public void AnalysisStateModelSchema16AddsTargetedVerificationPreparationAndAdmission()
+    public void AnalysisStateModelSchema17AddsSealedTargetedLifecycleEvidence()
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
         Assert.AreEqual(AuthoritativeStore.CurrentSchemaVersion, store.GetSchemaVersion());
 
         using SqliteConnection connection = temporary.OpenRaw();
-        Assert.AreEqual("16", ScalarText(connection, "PRAGMA user_version;"));
+        Assert.AreEqual("17", ScalarText(connection, "PRAGMA user_version;"));
         Assert.AreEqual(
-            "16",
+            "17",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_version';"));
         Assert.AreEqual(
-            "1.15.0",
+            "1.16.0",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
@@ -487,7 +489,7 @@ public sealed class AnalysisStatePersistenceTests
         using (SqliteCommand command = connection.CreateCommand())
         {
             command.CommandText =
-                DropTargetedVerificationSchema16 +
+                DropTargetedVerificationSchema17 +
                 "DROP VIEW m1_slice6_successor_all_transport_responses;" +
                 "DROP VIEW m1_slice6_successor_all_semantic_response_bindings;" +
                 "DROP TABLE m1_slice6_successor_v6_semantic_response_bindings;" +
@@ -558,7 +560,7 @@ public sealed class AnalysisStatePersistenceTests
 
         using (AuthoritativeStore migrated = migration.Open())
         {
-            Assert.AreEqual(16, migrated.GetSchemaVersion());
+            Assert.AreEqual(17, migrated.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = migration.OpenRaw())
@@ -579,7 +581,7 @@ public sealed class AnalysisStatePersistenceTests
         using (SqliteConnection connection = newer.OpenRaw())
         using (SqliteCommand command = connection.CreateCommand())
         {
-            command.CommandText = "PRAGMA user_version = 17;";
+            command.CommandText = "PRAGMA user_version = 18;";
             command.ExecuteNonQuery();
         }
 
@@ -587,7 +589,7 @@ public sealed class AnalysisStatePersistenceTests
         Assert.IsNotNull(exception.InnerException);
         StringAssert.Contains(
             exception.InnerException.Message,
-            "Database schema 17 is newer than supported schema 16.");
+            "Database schema 18 is newer than supported schema 17.");
     }
 
     [TestMethod]
@@ -610,7 +612,7 @@ public sealed class AnalysisStatePersistenceTests
         using (SqliteConnection connection = temporary.OpenRaw())
         using (SqliteCommand command = connection.CreateCommand())
         {
-            command.CommandText = DropTargetedVerificationSchema16 +
+            command.CommandText = DropTargetedVerificationSchema17 +
                 """
                 UPDATE store_metadata SET value='15' WHERE key='schema_version';
                 UPDATE store_metadata SET value='1.14.0' WHERE key='storage_contract_version';

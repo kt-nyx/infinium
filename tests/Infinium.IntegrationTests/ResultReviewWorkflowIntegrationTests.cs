@@ -235,7 +235,7 @@ public sealed class ResultReviewWorkflowIntegrationTests
             {
                 database.Open();
                 using SqliteCommand downgrade = database.CreateCommand();
-                downgrade.CommandText = TargetedVerificationMigrationTestSupport.DropSchema16Sql +
+                downgrade.CommandText = TargetedVerificationMigrationTestSupport.DropSchema17Sql +
                     """
                     DROP TABLE structured_export_projection;
                     DROP TABLE structured_export_events;

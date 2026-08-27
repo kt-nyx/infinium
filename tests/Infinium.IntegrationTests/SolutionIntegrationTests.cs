@@ -1606,7 +1606,7 @@ public sealed class SolutionIntegrationTests
         using SqliteConnection connection = new($"Data Source={paths.Database};Pooling=False");
         connection.Open();
         using SqliteCommand command = connection.CreateCommand();
-        command.CommandText = TargetedVerificationMigrationTestSupport.DropSchema16Sql +
+        command.CommandText = TargetedVerificationMigrationTestSupport.DropSchema17Sql +
             """
             DROP TABLE structured_export_projection;
             DROP TABLE structured_export_events;

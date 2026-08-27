@@ -20,6 +20,22 @@ public sealed class PersistenceAndLifecycleTests
         "provider_profile_projection",
     ];
 
+    private static readonly string[] LiveTargetedLifecycleOrder =
+    [
+        "preparation:admitted",
+        "preparation:fresh-snapshot-published",
+        "evidence-acquisition:admitted",
+        "evidence-acquisition:dispatched",
+    ];
+
+    private static readonly string[] MigratedTargetedLifecycleOrder =
+    [
+        "preparation:admitted",
+        "evidence-acquisition:admitted",
+        "preparation:fresh-snapshot-published",
+        "evidence-acquisition:dispatched",
+    ];
+
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
@@ -199,7 +215,7 @@ public sealed class PersistenceAndLifecycleTests
 
         TargetedPreparationPersistenceRecord acquiring = store.TransitionTargetedPreparation(
             preparation.PreparationId, preparation.Revision, preparation.State,
-            TargetedVerificationPreparationState.AcquiringEvidence, "snapshot-ready", "{}", string.Empty,
+            TargetedVerificationPreparationState.AcquiringEvidence, "fresh-snapshot-published", "{}", string.Empty,
             "target-snapshot", "semantic-acquisition", null, null, false, false, now.AddSeconds(1));
         const string acquisitionJson = "{\"schema\":\"semantic-acquisition-test\"}";
         string acquisitionSha = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(acquisitionJson)));
@@ -257,13 +273,10 @@ public sealed class PersistenceAndLifecycleTests
             }
 
             TamperRetainedTargetedEvents(restoreRoot, preparation.PreparationId, acquisition.AcquisitionId);
-            using AuthoritativeStore tampered = new(new StoragePaths(restoreRoot));
             Assert.ThrowsExactly<InvalidOperationException>(() =>
-                tampered.GetTargetedPreparation(preparation.PreparationId));
-            Assert.ThrowsExactly<InvalidOperationException>(() =>
-                tampered.GetSemanticAcquisition(acquisition.AcquisitionId));
-            Assert.ThrowsExactly<InvalidOperationException>(() =>
-                tampered.RebuildProjections(now.AddSeconds(10)));
+            {
+                using AuthoritativeStore _ = new(new StoragePaths(restoreRoot));
+            });
         }
         finally
         {
@@ -272,6 +285,206 @@ public sealed class PersistenceAndLifecycleTests
                 Directory.Delete(restoreRoot, recursive: true);
             }
         }
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Lifecycle")]
+    public void TargetedLifecyclePaginationRetainsEqualTimestampOrderAcrossAppendRebuildAndRestart()
+    {
+        using TemporaryStore temporary = new();
+        DateTimeOffset occurredAt = DateTimeOffset.UtcNow;
+        TargetedLifecycleTestRow[] expectedRows;
+        string preparationId;
+        using (AuthoritativeStore store = temporary.Open())
+        {
+            TargetedLifecycleFixture fixture = SeedTargetedLifecycle(store, occurredAt);
+            preparationId = fixture.Preparation.PreparationId;
+            TargetedLifecycleTestRow[] firstPage = ReadTargetedLifecycleRows(temporary.Root, preparationId)
+                .Take(2).ToArray();
+            Assert.HasCount(2, firstPage);
+
+            _ = store.DispatchSemanticAcquisition(fixture.Acquisition.AcquisitionId, 0,
+                fixture.Authority.FencingEpoch, TimeSpan.FromMinutes(1), occurredAt);
+            expectedRows = ReadTargetedLifecycleRows(temporary.Root, preparationId);
+            CollectionAssert.AreEqual(new long[] { 1, 2, 3, 4 },
+                expectedRows.Select(item => item.Sequence).ToArray());
+            CollectionAssert.AreEqual(firstPage.Select(item => item.EvidenceFingerprint).ToArray(),
+                expectedRows.Take(2).Select(item => item.EvidenceFingerprint).ToArray());
+            Assert.AreEqual(1L, expectedRows[2].OwnerSequence);
+            Assert.AreEqual(2L, expectedRows[3].OwnerSequence);
+            CollectionAssert.AreEqual(
+                LiveTargetedLifecycleOrder,
+                expectedRows.Select(item => $"{item.Owner}:{item.EventKind}").ToArray());
+            Assert.IsTrue(expectedRows.All(item => item.OccurredAt == occurredAt));
+            store.RebuildProjections(occurredAt.AddSeconds(1));
+            CollectionAssert.AreEqual(expectedRows.Select(item => item.EvidenceFingerprint).ToArray(),
+                ReadTargetedLifecycleRows(temporary.Root, preparationId)
+                    .Select(item => item.EvidenceFingerprint).ToArray());
+        }
+
+        using AuthoritativeStore restarted = temporary.Open();
+        CollectionAssert.AreEqual(expectedRows.Select(item => item.EvidenceFingerprint).ToArray(),
+            ReadTargetedLifecycleRows(temporary.Root, preparationId)
+                .Select(item => item.EvidenceFingerprint).ToArray());
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [DataRow("preparation-kind")]
+    [DataRow("preparation-revision")]
+    [DataRow("preparation-timestamp")]
+    [DataRow("acquisition-kind")]
+    [DataRow("acquisition-generation")]
+    [DataRow("acquisition-fence")]
+    [DataRow("acquisition-timestamp")]
+    [DataRow("acquisition-event-json")]
+    public void TargetedLifecycleReadbackRejectsTamperedOwnerEvidence(string mutation)
+    {
+        using TemporaryStore temporary = new();
+        DateTimeOffset occurredAt = DateTimeOffset.UtcNow;
+        using (AuthoritativeStore store = temporary.Open())
+        {
+            _ = SeedTargetedLifecycle(store, occurredAt);
+        }
+
+        string sql = mutation switch
+        {
+            "preparation-kind" =>
+                "DROP TRIGGER targeted_preparation_events_append_only_update; "
+                + "UPDATE targeted_preparation_events SET event_kind='cancelled' WHERE revision=1;",
+            "preparation-revision" =>
+                "DROP TRIGGER targeted_preparation_events_append_only_update; "
+                + "UPDATE targeted_preparation_events SET revision=7 WHERE revision=1;",
+            "preparation-timestamp" =>
+                "DROP TRIGGER targeted_preparation_events_append_only_update; "
+                + "UPDATE targeted_preparation_events SET created_at='2026-08-27T12:30:01.0000000+00:00' WHERE revision=1;",
+            "acquisition-kind" =>
+                "DROP TRIGGER semantic_acquisition_events_append_only_update; "
+                + "UPDATE semantic_acquisition_events SET event_kind='cancelled' WHERE sequence=1;",
+            "acquisition-generation" =>
+                "DROP TRIGGER semantic_acquisition_events_append_only_update; "
+                + "UPDATE semantic_acquisition_events SET generation=7 WHERE sequence=1;",
+            "acquisition-fence" =>
+                "DROP TRIGGER semantic_acquisition_events_append_only_update; "
+                + "UPDATE semantic_acquisition_events SET coordinator_fencing_epoch=999 WHERE sequence=1;",
+            "acquisition-timestamp" =>
+                "DROP TRIGGER semantic_acquisition_events_append_only_update; "
+                + "UPDATE semantic_acquisition_events SET created_at='2026-08-27T12:30:01.0000000+00:00' WHERE sequence=1;",
+            "acquisition-event-json" =>
+                "DROP TRIGGER semantic_acquisition_events_append_only_update; "
+                + "UPDATE semantic_acquisition_events SET event_json=json_set(event_json,'$.hostileMutation','retained') "
+                + "WHERE sequence=1;",
+            _ => throw new InvalidOperationException("Unknown targeted lifecycle mutation."),
+        };
+        ExecuteRaw(temporary.Root, sql);
+        if (mutation == "acquisition-event-json")
+        {
+            using SqliteConnection connection = OpenRaw(temporary.Root);
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT event_json,projection_json FROM semantic_acquisition_events WHERE sequence=1;";
+            using SqliteDataReader reader = command.ExecuteReader();
+            Assert.IsTrue(reader.Read());
+            using JsonDocument eventDocument = JsonDocument.Parse(reader.GetString(0));
+            string projectionJson = reader.GetString(1);
+            Assert.AreEqual(Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(projectionJson))),
+                eventDocument.RootElement.GetProperty("projectionSha256").GetString());
+        }
+
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+        {
+            using AuthoritativeStore _ = temporary.Open();
+        }, mutation);
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Migration")]
+    public void TargetedLifecycleMigrationHandlesZeroAndNonzeroPopulationAndBacksUpSealedOrder()
+    {
+        using TemporaryStore zero = new();
+        using (AuthoritativeStore store = zero.Open()) { }
+        DowngradeTargetedLifecycleEvidence(zero.Root);
+        using (AuthoritativeStore migratedZero = zero.Open())
+        {
+            Assert.AreEqual(17, migratedZero.GetSchemaVersion());
+        }
+        Assert.AreEqual(0, ReadTargetedLifecycleRows(zero.Root, "missing-preparation").Length);
+
+        using TemporaryStore populated = new();
+        string preparationId;
+        BackupArtifact backup;
+        using (AuthoritativeStore store = populated.Open())
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            TargetedLifecycleFixture fixture = SeedTargetedLifecycle(store, now);
+            preparationId = fixture.Preparation.PreparationId;
+            _ = store.DispatchSemanticAcquisition(fixture.Acquisition.AcquisitionId, 0,
+                fixture.Authority.FencingEpoch, TimeSpan.FromMinutes(1), now);
+        }
+        DowngradeTargetedLifecycleEvidence(populated.Root);
+        using (AuthoritativeStore migrated = populated.Open())
+        {
+            Assert.AreEqual(17, migrated.GetSchemaVersion());
+            TargetedLifecycleTestRow[] migratedRows = ReadTargetedLifecycleRows(populated.Root, preparationId);
+            Assert.HasCount(4, migratedRows);
+            CollectionAssert.AreEqual(
+                MigratedTargetedLifecycleOrder,
+                migratedRows.Select(item => $"{item.Owner}:{item.EventKind}").ToArray());
+            backup = migrated.CreateBackup("TargetedLifecycleEvidence", DateTimeOffset.UtcNow);
+        }
+        string restoreRoot = Path.Combine(Path.GetTempPath(), $"infinium-targeted-lifecycle-restore-{Guid.NewGuid():N}");
+        try
+        {
+            using (StoragePaths paths = new(restoreRoot))
+            {
+                AuthoritativeStore.RestoreBackup(backup, paths);
+            }
+            using AuthoritativeStore restored = new(new StoragePaths(restoreRoot));
+            Assert.HasCount(4, ReadTargetedLifecycleRows(restoreRoot, preparationId));
+        }
+        finally
+        {
+            if (Directory.Exists(restoreRoot))
+            {
+                Directory.Delete(restoreRoot, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Migration")]
+    [TestCategory("Security")]
+    public void TargetedLifecycleMigrationRejectsTamperedPopulationWithoutPartialSchema17Writes()
+    {
+        using TemporaryStore temporary = new();
+        using (AuthoritativeStore store = temporary.Open())
+        {
+            _ = SeedTargetedLifecycle(store, DateTimeOffset.UtcNow);
+        }
+        DowngradeTargetedLifecycleEvidence(temporary.Root);
+        ExecuteRaw(temporary.Root,
+            "DROP TRIGGER targeted_preparation_events_append_only_update; "
+            + "UPDATE targeted_preparation_events SET event_kind='cancelled' WHERE revision=1;");
+
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+        {
+            using AuthoritativeStore _ = temporary.Open();
+        });
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT (SELECT user_version FROM pragma_user_version),"
+            + "(SELECT COUNT(*) FROM sqlite_schema WHERE type='table' AND name='targeted_lifecycle_evidence'),"
+            + "(SELECT COUNT(*) FROM migration_history WHERE migration_id='targeted-lifecycle-evidence-0017');";
+        using SqliteDataReader reader = command.ExecuteReader();
+        Assert.IsTrue(reader.Read());
+        Assert.AreEqual(16L, reader.GetInt64(0));
+        Assert.AreEqual(0L, reader.GetInt64(1));
+        Assert.AreEqual(0L, reader.GetInt64(2));
     }
 
     [TestMethod]
@@ -3496,6 +3709,84 @@ public sealed class PersistenceAndLifecycleTests
     {
         SqliteException exception = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
         StringAssert.Contains(exception.Message, "cancelled provider operation is terminal");
+    }
+
+    private sealed record TargetedLifecycleFixture(
+        CoordinatorAuthority Authority,
+        TargetedPreparationPersistenceRecord Preparation,
+        SemanticAcquisitionPersistenceRecord Acquisition);
+
+    private sealed record TargetedLifecycleTestRow(
+        long Sequence,
+        long OwnerSequence,
+        string Owner,
+        string EventKind,
+        DateTimeOffset OccurredAt,
+        string EvidenceFingerprint);
+
+    private static void DowngradeTargetedLifecycleEvidence(string productRoot) => ExecuteRaw(productRoot,
+        "DROP TABLE targeted_lifecycle_evidence; "
+        + "DELETE FROM migration_history WHERE migration_id='targeted-lifecycle-evidence-0017'; "
+        + "UPDATE store_metadata SET value='16' WHERE key='schema_version'; "
+        + "UPDATE store_metadata SET value='1.15.0' WHERE key='storage_contract_version'; "
+        + $"UPDATE store_metadata SET value='{TargetedVerificationPersistenceDeclarations.PreparationSchemaFingerprint}' "
+        + "WHERE key='schema_fingerprint'; PRAGMA user_version=16;");
+
+    private static TargetedLifecycleFixture SeedTargetedLifecycle(
+        AuthoritativeStore store,
+        DateTimeOffset occurredAt)
+    {
+        CoordinatorAuthority authority = store.AcquireCoordinatorAuthority(
+            "targeted-lifecycle-seal-test", occurredAt, TimeSpan.FromMinutes(5));
+        RunRecord queued = store.CreateRun("targeted-lifecycle-source-command", "targeted-lifecycle-source-run",
+            Binding("targeted-lifecycle-source"), authority.FencingEpoch, occurredAt);
+        RunRecord running = store.Transition("targeted-lifecycle-source-running", queued.RunId, queued.Generation,
+            LifecycleState.Running, authority.FencingEpoch, "source running", occurredAt);
+        _ = store.Transition("targeted-lifecycle-source-completed", running.RunId, running.Generation,
+            LifecycleState.Completed, authority.FencingEpoch, "source completed", occurredAt);
+        const string requestJson = "{\"schema\":\"targeted-lifecycle-seal-test\"}";
+        const string captureJson = "{\"schema\":\"targeted-lifecycle-capture-test\"}";
+        TargetedPreparationPersistenceRecord preparation = store.CreateTargetedPreparation(new(
+            "targeted-lifecycle-preparation-command", "targeted-lifecycle-preparation",
+            "targeted-lifecycle-preparation-gesture", requestJson,
+            Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(requestJson))),
+            queued.RunId, "finding", "targeted-lifecycle-source-finding", "profile", 1,
+            "configuration", 1, "context", 1, new string('1', 64), "DiagnosticUserGesture",
+            occurredAt.AddMinutes(2), "targeted-lifecycle-capture", captureJson,
+            Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(captureJson)))),
+            authority.FencingEpoch, occurredAt);
+        const string acquisitionId = "targeted-lifecycle-acquisition";
+        _ = store.TransitionTargetedPreparation(preparation.PreparationId, preparation.Revision,
+            preparation.State, TargetedVerificationPreparationState.AcquiringEvidence,
+            "fresh-snapshot-published", "{}", string.Empty, "targeted-lifecycle-snapshot", acquisitionId,
+            null, null, false, false, occurredAt);
+        const string acquisitionJson = "{\"schema\":\"targeted-lifecycle-acquisition-test\"}";
+        SemanticAcquisitionPersistenceRecord acquisition = store.CreateSemanticAcquisition(
+            acquisitionId, preparation.PreparationId, "targeted-lifecycle-snapshot", acquisitionJson,
+            Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(acquisitionJson))),
+            new string('2', 64), occurredAt.AddMinutes(2), authority.FencingEpoch, occurredAt);
+        return new(authority, preparation, acquisition);
+    }
+
+    private static TargetedLifecycleTestRow[] ReadTargetedLifecycleRows(
+        string productRoot,
+        string preparationId)
+    {
+        using SqliteConnection connection = OpenRaw(productRoot);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT lifecycle_sequence,owner_sequence,owner,event_kind,occurred_at,evidence_sha256 "
+            + "FROM targeted_lifecycle_evidence WHERE preparation_id=$preparation ORDER BY lifecycle_sequence;";
+        command.Parameters.AddWithValue("$preparation", preparationId);
+        using SqliteDataReader reader = command.ExecuteReader();
+        List<TargetedLifecycleTestRow> rows = [];
+        while (reader.Read())
+        {
+            rows.Add(new(reader.GetInt64(0), reader.GetInt64(1), reader.GetString(2), reader.GetString(3),
+                DateTimeOffset.Parse(reader.GetString(4), System.Globalization.CultureInfo.InvariantCulture),
+                reader.GetString(5)));
+        }
+        return rows.ToArray();
     }
 
     private static SqliteConnection OpenRaw(string productRoot)

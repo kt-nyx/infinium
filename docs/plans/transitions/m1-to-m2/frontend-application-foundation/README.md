@@ -98,8 +98,13 @@ the only correlation authority; raw names, form keys, contribution strings,
 and paths cannot match a stable identity, and slot similarity alone cannot
 create changed-correlation authority. The preparation also owns the exact
 resolved target manifest, delivered input, coverage input, and successor
-identity later consumed by atomic start. Application `1.12.0`, domain `1.6.0`,
-and persisted targeted-plan `1.2.0` identify the corrected contract bytes.
+identity later consumed by atomic start. Terminal-gap pages now use bounded
+opaque cursors tied to the exact preparation/acquisition generation and gap
+ordering. Lifecycle pages use a schema-17 append-only sealed cross-owner
+sequence, preserving equal-timestamp causality and stable continuation across
+later appends, rebuild, restart, and restore. Application `1.13.0`, domain
+`1.6.0`, storage `1.16.0`, schema `17`, and persisted targeted-plan `1.2.0`
+identify the corrected contract bytes.
 
 M2 remains inactive until a separate accepted M2 plan exists. The transition's
 diagnostic React surface is development evidence, not the M2 interface.

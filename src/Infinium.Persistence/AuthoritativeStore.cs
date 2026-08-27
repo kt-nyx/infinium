@@ -296,12 +296,15 @@ public sealed partial class AuthoritativeStore : IDisposable
 
     public void Dispose()
     {
-        if (!disposed)
+        lock (gate)
         {
-            connection.Dispose();
-            sqliteVfs.Dispose();
-            Paths.Dispose();
-            disposed = true;
+            if (!disposed)
+            {
+                connection.Dispose();
+                sqliteVfs.Dispose();
+                Paths.Dispose();
+                disposed = true;
+            }
         }
     }
 
