@@ -54,8 +54,14 @@ start rejects retained-source, target, plan, acquisition, proof, input, or
 fencing drift before creating any successor authority.
 The contract correction now projects the complete accepted preparation evidence
 through generated C# clients with independent member, dependency, target-analyzer,
-lifecycle, and artifact-decision pagination. Application `1.11.0`, domain `1.5.0`,
-and persisted targeted-plan `1.1.0` bind the corrected bytes.
+lifecycle, artifact-decision, and terminal-gap pagination. One store-locked
+readback returns a single preparation/acquisition generation and validates all
+retained capture, lifecycle, publication, provenance, and application-link
+evidence before projecting it. The immutable preparation now retains the exact
+resolved input manifest, delivered input, coverage input, and preallocated
+successor identity that start must consume without replacement. Application
+`1.12.0`, domain `1.6.0`, and persisted targeted-plan `1.2.0` bind the corrected
+bytes.
 It binds finding and case roots to their retained canonical identity envelopes,
 including analyzer, analyzer-version, semantic-contract, and identity-contract
 versions. Raw plugin names, form keys, contribution strings, and normalized

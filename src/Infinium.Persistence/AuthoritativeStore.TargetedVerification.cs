@@ -161,7 +161,7 @@ public sealed record TargetedSnapshotReadbackEvidenceRecord(
     string TargetStructuralFingerprint,
     string StructuralComparison,
     long ConfirmedProfileRevision,
-    DateTimeOffset CapturedAt);
+    byte[] SnapshotPayloadBytes);
 
 public sealed record TargetedAcquisitionReadbackEvidenceRecord(
     string RequestFingerprint,
@@ -178,7 +178,8 @@ public sealed record TargetedAcquisitionReadbackEvidenceRecord(
     string? StagedManifestFingerprint,
     string? ProvenanceFingerprint,
     DateTimeOffset? PublishedAt,
-    string TerminalReason);
+    string TerminalReason,
+    byte[]? SemanticPayloadBytes);
 
 public sealed record TargetedLifecycleReadbackEvent(
     long Sequence,
@@ -196,8 +197,26 @@ public sealed record TargetedPreparationReadbackEvidenceRecord(
     IReadOnlyList<TargetedLifecycleReadbackEvent> LifecycleEvents,
     long? NextLifecycleSequence);
 
+public sealed record TargetedSourceReadbackEvidenceRecord(
+    RunRecord Run,
+    RunOperationRecord Operation,
+    ResultItemPersistenceRecord Occurrence,
+    byte[] CanonicalPayloadBytes,
+    byte[] SnapshotPayloadBytes);
+
+public sealed record TargetedPreparationReadbackSnapshotRecord(
+    TargetedPreparationPersistenceRecord Preparation,
+    TargetedSourceReadbackEvidenceRecord Source,
+    TargetedVerificationPlanContract? Plan,
+    TargetedPreparationDiagnosticsPersistenceRecord Diagnostics,
+    SemanticAcquisitionPersistenceRecord? Acquisition,
+    SemanticAcquisitionPublicationRecord? AcquisitionPublication,
+    TargetedPreparationReadbackEvidenceRecord Evidence);
+
 public sealed partial class AuthoritativeStore
 {
+    internal Action? TargetedReadbackLockedTestHook { get; set; }
+
     public TargetedPreparationPersistenceRecord CreateTargetedPreparation(
         TargetedPreparationPersistenceRequest request,
         long coordinatorFencingEpoch,
@@ -690,7 +709,7 @@ public sealed partial class AuthoritativeStore
                     producer_id,producer_version,support_manifest_id,enumeration_policy_id,enumeration_policy_version,
                     sealed_input_fingerprint,dispatch_deadline,created_at)
                 VALUES($acquisition,$preparation,$snapshot,'bethesda-semantic-extraction',$sha,$json,
-                    'infinium-bethesda-semantic-extractor','2.0.0','bethesda-semantic-support-v2',
+                    'infinium.bethesda.semantic-index','2.0.0','bethesda-semantic-support-v2',
                     'qualified-bethesda-enumeration','1.0.0',$sealed,$deadline,$now);
                 INSERT INTO semantic_acquisition_jobs(job_id,acquisition_id,job_kind,created_at)
                 VALUES($job,$acquisition,'semantic-extraction-root',$now);
@@ -996,10 +1015,40 @@ public sealed partial class AuthoritativeStore
     }
 
     public TargetedPreparationPersistenceRecord StoreTargetedPlan(
-        TargetedVerificationPlanContract plan, DateTimeOffset now)
+        TargetedVerificationPlanContract plan,
+        IReadOnlyList<TargetedOperationInputPersistence> preparedInputs,
+        DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(plan);
+        ArgumentNullException.ThrowIfNull(preparedInputs);
         TargetedVerificationContractInvariants.Validate(plan);
+        string[] requiredInputKinds =
+        [
+            "targeted-candidate-delivered-input",
+            "targeted-correlation-coverage",
+            "targeted-resolved-input-manifest",
+        ];
+        if (preparedInputs.Count != requiredInputKinds.Length
+            || !preparedInputs.Select(item => item.InputKind).Order(StringComparer.Ordinal)
+                .SequenceEqual(requiredInputKinds.Order(StringComparer.Ordinal))
+            || preparedInputs.Select(item => (item.InputKind, item.InputId)).Distinct().Count()
+                != preparedInputs.Count
+            || preparedInputs.Any(item => item.Bytes.Length is < 1 or > 64 * 1024 * 1024)
+            || preparedInputs.Single(item => item.InputKind == "targeted-candidate-delivered-input").InputId
+                != plan.PreparedDeliveredInput.ArtifactId.Value
+            || Hash(preparedInputs.Single(item => item.InputKind == "targeted-candidate-delivered-input").Bytes)
+                != plan.PreparedDeliveredInput.Fingerprint.Value
+            || preparedInputs.Single(item => item.InputKind == "targeted-correlation-coverage").InputId
+                != plan.PreparedCoverageInput.ArtifactId.Value
+            || Hash(preparedInputs.Single(item => item.InputKind == "targeted-correlation-coverage").Bytes)
+                != plan.PreparedCoverageInput.Fingerprint.Value
+            || preparedInputs.Single(item => item.InputKind == "targeted-resolved-input-manifest").InputId
+                != plan.PreparedResolvedInputManifest.ArtifactId.Value
+            || Hash(preparedInputs.Single(item => item.InputKind == "targeted-resolved-input-manifest").Bytes)
+                != plan.PreparedResolvedInputManifest.Fingerprint.Value)
+        {
+            throw new InvalidDataException("The targeted plan does not bind its exact prepared operation inputs.");
+        }
         byte[] planBytes = JsonSerializer.SerializeToUtf8Bytes(plan);
         if (planBytes.LongLength > 4L * 1024 * 1024) throw new InvalidDataException("The targeted plan exceeds its bound.");
         string preparationId = plan.PreparationId.Value;
@@ -1010,6 +1059,21 @@ public sealed partial class AuthoritativeStore
             if (current.State != TargetedVerificationPreparationState.PreparingPlan)
                 throw new InvalidOperationException("The targeted preparation is not ready to publish a plan.");
             string payloadId = AdmitCoordinatorPayload(planBytes, "targeted-verification-plan", plan.PlanId.Value, now, transaction);
+            foreach (TargetedOperationInputPersistence input in preparedInputs)
+            {
+                string inputPayloadId = AdmitCoordinatorPayload(
+                    input.Bytes, input.InputKind, input.InputId, now, transaction);
+                string inputSha = Hash(input.Bytes);
+                string inputRowId = "targeted-input-" + Hash(string.Join('\n', preparationId,
+                    input.InputKind, input.InputId, inputSha))[..32];
+                Execute(
+                    "INSERT INTO targeted_operation_inputs(input_row_id,preparation_id,input_kind,input_id,payload_id,input_sha256,created_at) "
+                    + "VALUES($row,$preparation,$kind,$input,$payload,$sha,$now);",
+                    transaction,
+                    ("$row", inputRowId), ("$preparation", preparationId),
+                    ("$kind", input.InputKind), ("$input", input.InputId),
+                    ("$payload", inputPayloadId), ("$sha", inputSha), ("$now", ToText(now)));
+            }
             foreach (TargetedScopeMemberContract root in plan.Scope.DirectRoots)
                 Execute("INSERT INTO targeted_scope_roots(root_id,preparation_id,member_id,root_json,created_at) VALUES($id,$preparation,$member,$json,$now);",
                     transaction, ("$id", preparationId + "-root-" + Hash(root.MemberId.Value)[..16]),
@@ -1051,7 +1115,7 @@ public sealed partial class AuthoritativeStore
                 ("$scopeFingerprint", plan.Scope.CanonicalFingerprint.Value),
                 ("$coverage", plan.CorrelationCoverage.CoverageId.Value),
                 ("$coverageFingerprint", plan.CorrelationCoverage.CanonicalFingerprint.Value),
-                ("$manifest", plan.Source.ResolvedInputManifestId.Value), ("$startable", plan.Startable ? 1 : 0),
+                ("$manifest", plan.PreparedResolvedInputManifest.ArtifactId.Value), ("$startable", plan.Startable ? 1 : 0),
                 ("$limited", plan.Limited ? 1 : 0), ("$now", ToText(now)));
             long revision = checked(current.Revision + 1);
             TargetedVerificationPreparationState state = plan.Startable
@@ -1148,13 +1212,15 @@ public sealed partial class AuthoritativeStore
                     "SELECT COUNT(*) FROM targeted_verification_plans WHERE preparation_id=$preparation "
                     + "AND plan_id=$plan AND plan_fingerprint=$planFingerprint AND scope_id=$scope "
                     + "AND scope_fingerprint=$scopeFingerprint AND coverage_id=$coverage "
-                    + "AND coverage_fingerprint=$coverageFingerprint AND startable=$startable AND limited=$limited;",
+                    + "AND coverage_fingerprint=$coverageFingerprint AND resolved_manifest_id=$manifest "
+                    + "AND startable=$startable AND limited=$limited;",
                     null,
                     ("$preparation", plan.PreparationId.Value), ("$plan", plan.PlanId.Value),
                     ("$planFingerprint", plan.PlanFingerprint.Value), ("$scope", plan.Scope.ScopeId.Value),
                     ("$scopeFingerprint", plan.Scope.CanonicalFingerprint.Value),
                     ("$coverage", plan.CorrelationCoverage.CoverageId.Value),
                     ("$coverageFingerprint", plan.CorrelationCoverage.CanonicalFingerprint.Value),
+                    ("$manifest", plan.PreparedResolvedInputManifest.ArtifactId.Value),
                     ("$startable", plan.Startable ? 1 : 0), ("$limited", plan.Limited ? 1 : 0)) != 1
                 || ScalarLong("SELECT COUNT(*) FROM targeted_scope_roots WHERE preparation_id=$preparation;",
                     null, ("$preparation", plan.PreparationId.Value)) != plan.Scope.DirectRoots.Count
@@ -1165,7 +1231,27 @@ public sealed partial class AuthoritativeStore
                 || ScalarLong("SELECT COUNT(*) FROM targeted_correlation_rows WHERE preparation_id=$preparation;",
                     null, ("$preparation", plan.PreparationId.Value)) != plan.CorrelationCoverage.Rows.Count
                 || ScalarLong("SELECT COUNT(*) FROM targeted_reuse_decisions WHERE preparation_id=$preparation;",
-                    null, ("$preparation", plan.PreparationId.Value)) != plan.ReuseDecisions.Count)
+                    null, ("$preparation", plan.PreparationId.Value)) != plan.ReuseDecisions.Count
+                || ScalarLong("SELECT COUNT(*) FROM targeted_operation_inputs WHERE preparation_id=$preparation;",
+                    null, ("$preparation", plan.PreparationId.Value)) != 3
+                || ScalarLong(
+                    "SELECT COUNT(*) FROM targeted_operation_inputs WHERE preparation_id=$preparation "
+                    + "AND input_kind='targeted-candidate-delivered-input' AND input_id=$input AND input_sha256=$sha;",
+                    null, ("$preparation", plan.PreparationId.Value),
+                    ("$input", plan.PreparedDeliveredInput.ArtifactId.Value),
+                    ("$sha", plan.PreparedDeliveredInput.Fingerprint.Value)) != 1
+                || ScalarLong(
+                    "SELECT COUNT(*) FROM targeted_operation_inputs WHERE preparation_id=$preparation "
+                    + "AND input_kind='targeted-correlation-coverage' AND input_id=$input AND input_sha256=$sha;",
+                    null, ("$preparation", plan.PreparationId.Value),
+                    ("$input", plan.PreparedCoverageInput.ArtifactId.Value),
+                    ("$sha", plan.PreparedCoverageInput.Fingerprint.Value)) != 1
+                || ScalarLong(
+                    "SELECT COUNT(*) FROM targeted_operation_inputs WHERE preparation_id=$preparation "
+                    + "AND input_kind='targeted-resolved-input-manifest' AND input_id=$input AND input_sha256=$sha;",
+                    null, ("$preparation", plan.PreparationId.Value),
+                    ("$input", plan.PreparedResolvedInputManifest.ArtifactId.Value),
+                    ("$sha", plan.PreparedResolvedInputManifest.Fingerprint.Value)) != 1)
             {
                 throw new InvalidOperationException(
                     "The targeted plan projection, scope, correlation denominator, or reuse inventory drifted.");
@@ -1214,6 +1300,42 @@ public sealed partial class AuthoritativeStore
                     throw new InvalidOperationException("A retained targeted reuse proof projection drifted.");
                 }
             }
+        }
+    }
+
+    public IReadOnlyList<TargetedOperationInputPersistence> ReadTargetedPreparedOperationInputs(
+        string preparationId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(preparationId);
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT input_kind,input_id,payload_id,input_sha256 FROM targeted_operation_inputs "
+                + "WHERE preparation_id=$preparation ORDER BY input_kind,input_id;";
+            command.Parameters.AddWithValue("$preparation", preparationId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            List<(string Kind, string Id, string PayloadId, string Sha)> retained = [];
+            while (reader.Read())
+            {
+                retained.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
+            }
+            if (retained.Count != 3)
+            {
+                throw new InvalidOperationException(
+                    "The targeted preparation does not retain its complete prepared input authority.");
+            }
+            List<TargetedOperationInputPersistence> inputs = [];
+            foreach ((string kind, string id, string payloadId, string sha) in retained)
+            {
+                byte[] bytes = ReadCandidateAnalysisPayload(payloadId);
+                if (Hash(bytes) != sha)
+                {
+                    throw new InvalidOperationException("A retained targeted prepared input failed identity validation.");
+                }
+                inputs.Add(new(kind, id, bytes));
+            }
+            return inputs;
         }
     }
 
@@ -1299,7 +1421,7 @@ public sealed partial class AuthoritativeStore
         }
     }
 
-    public TargetedPreparationDiagnosticsPersistenceRecord GetTargetedPreparationDiagnostics(
+    private TargetedPreparationDiagnosticsPersistenceRecord GetTargetedPreparationDiagnostics(
         string preparationId)
     {
         lock (gate)
@@ -1334,7 +1456,7 @@ public sealed partial class AuthoritativeStore
         }
     }
 
-    public TargetedPreparationReadbackEvidenceRecord GetTargetedPreparationReadbackEvidence(
+    private TargetedPreparationReadbackEvidenceRecord GetTargetedPreparationReadbackEvidence(
         string preparationId,
         int maximumLifecycleEvents,
         long afterLifecycleSequence)
@@ -1346,19 +1468,50 @@ public sealed partial class AuthoritativeStore
         lock (gate)
         {
             TargetedPreparationPersistenceRecord preparation = GetTargetedPreparationCore(preparationId);
+            ValidateTargetedVerificationEventHistory(preparationId, preparation.EvidenceAcquisitionId);
             TargetedSnapshotReadbackEvidenceRecord? snapshot = null;
             using (SqliteCommand command = connection.CreateCommand())
             {
                 command.CommandText =
-                    "SELECT snapshot_payload_id,snapshot_fingerprint,source_structural_fingerprint," +
-                    "target_structural_fingerprint,structural_comparison,confirmed_profile_revision,created_at " +
-                    "FROM targeted_snapshot_links WHERE preparation_id=$preparation;";
+                    "SELECT link.snapshot_payload_id,link.snapshot_fingerprint,link.source_structural_fingerprint," +
+                    "link.target_structural_fingerprint,link.structural_comparison,link.confirmed_profile_revision," +
+                    "capture.request_json,capture.request_sha256,capture.installation_snapshot_id,capture.payload_id," +
+                    "publication.attempt_id,publication.coordinator_fencing_epoch,publication.attempt_fencing_token," +
+                    "publication.staged_manifest_sha256,publication.payload_id,publication.installation_snapshot_id," +
+                    "attempt.operation_id,attempt.coordinator_fencing_epoch,attempt.attempt_fencing_token,attempt.outcome " +
+                    "FROM targeted_snapshot_links link " +
+                    "JOIN snapshot_capture_operations capture ON capture.operation_id=link.capture_operation_id " +
+                    "AND capture.lifecycle_state='Completed' " +
+                    "JOIN snapshot_capture_publications publication ON publication.operation_id=capture.operation_id " +
+                    "JOIN snapshot_capture_attempts attempt ON attempt.attempt_id=publication.attempt_id " +
+                    "WHERE link.preparation_id=$preparation;";
                 command.Parameters.AddWithValue("$preparation", preparationId);
                 using SqliteDataReader reader = command.ExecuteReader();
                 if (reader.Read())
                 {
+                    string requestJson = reader.GetString(6);
+                    if (Hash(requestJson) != reader.GetString(7)
+                        || reader.GetString(8) != preparation.TargetSnapshotId
+                        || reader.GetString(9) != reader.GetString(0)
+                        || reader.GetString(14) != reader.GetString(0)
+                        || reader.GetString(15) != preparation.TargetSnapshotId
+                        || reader.GetString(16) != preparation.CaptureOperationId
+                        || reader.GetInt64(17) != reader.GetInt64(11)
+                        || reader.GetInt64(18) != reader.GetInt64(12)
+                        || reader.GetString(19) != "completed-staged")
+                    {
+                        throw new InvalidOperationException(
+                            "The targeted snapshot link, capture request, publication, or attempt fence drifted.");
+                    }
+                    ValidateSha256(reader.GetString(13));
+                    byte[] snapshotBytes = ReadPublishedSnapshotPayload(preparation.TargetSnapshotId!, 64 * 1024 * 1024);
+                    if (Hash(snapshotBytes) != reader.GetString(1))
+                    {
+                        throw new InvalidOperationException(
+                            "The targeted snapshot payload differs from its retained link fingerprint.");
+                    }
                     snapshot = new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
-                        reader.GetString(4), reader.GetInt64(5), ParseTargetedTimestamp(reader.GetString(6)));
+                        reader.GetString(4), reader.GetInt64(5), snapshotBytes);
                     if (reader.Read())
                     {
                         throw new InvalidOperationException("The targeted snapshot readback is ambiguous.");
@@ -1369,6 +1522,9 @@ public sealed partial class AuthoritativeStore
             TargetedAcquisitionReadbackEvidenceRecord? acquisition = null;
             if (preparation.EvidenceAcquisitionId is not null)
             {
+                SemanticAcquisitionPersistenceRecord retainedAcquisition =
+                    GetSemanticAcquisitionCore(preparation.EvidenceAcquisitionId);
+                ValidateSemanticAcquisitionLifecycleEvidence(retainedAcquisition);
                 using SqliteCommand command = connection.CreateCommand();
                 command.CommandText =
                     "SELECT r.request_sha256,r.sealed_input_fingerprint,r.producer_id,r.producer_version," +
@@ -1390,11 +1546,30 @@ public sealed partial class AuthoritativeStore
                     throw new InvalidOperationException("The targeted semantic acquisition readback is missing.");
                 }
                 string? provenance = reader.IsDBNull(12) ? null : reader.GetString(12);
+                byte[]? semanticBytes = null;
+                string? provenanceFingerprint = null;
+                if (!reader.IsDBNull(9))
+                {
+                    SemanticAcquisitionPublicationRecord publication =
+                        GetSemanticAcquisitionPublication(preparation.EvidenceAcquisitionId);
+                    ValidateSemanticAcquisitionPublicationEvidence(retainedAcquisition, publication);
+                    semanticBytes = ReadCandidateAnalysisPayload(publication.PayloadId);
+                    if (Hash(semanticBytes) != publication.PayloadSha256
+                        || semanticBytes.LongLength != publication.PayloadByteLength)
+                    {
+                        throw new InvalidOperationException(
+                            "The targeted semantic acquisition payload differs from its publication seal.");
+                    }
+                    ValidateSemanticAcquisitionProvenance(retainedAcquisition, publication,
+                        reader.GetString(2), reader.GetString(3));
+                    provenanceFingerprint = Hash(publication.ProvenanceJson);
+                }
                 acquisition = new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
                     reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetInt64(7), reader.GetInt64(8),
                     reader.IsDBNull(9) ? null : reader.GetString(9), reader.IsDBNull(10) ? null : reader.GetString(10),
-                    reader.IsDBNull(11) ? null : reader.GetString(11), provenance is null ? null : Hash(provenance),
-                    reader.IsDBNull(13) ? null : ParseTargetedTimestamp(reader.GetString(13)), reader.GetString(14));
+                    reader.IsDBNull(11) ? null : reader.GetString(11), provenance is null ? null : provenanceFingerprint,
+                    reader.IsDBNull(13) ? null : ParseTargetedTimestamp(reader.GetString(13)), reader.GetString(14),
+                    semanticBytes);
                 if (reader.Read())
                 {
                     throw new InvalidOperationException("The targeted semantic acquisition readback is ambiguous.");
@@ -1411,8 +1586,7 @@ public sealed partial class AuthoritativeStore
                 using SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    long sequence = checked(reader.GetInt64(0) * 2);
-                    allEvents.Add(new(sequence, "preparation", reader.GetString(1), reader.GetInt64(0), 0,
+                    allEvents.Add(new(reader.GetInt64(0), "preparation", reader.GetString(1), reader.GetInt64(0), 0,
                         ParseTargetedTimestamp(reader.GetString(3)), reader.GetString(2), reader.GetString(1)));
                 }
             }
@@ -1426,21 +1600,342 @@ public sealed partial class AuthoritativeStore
                 using SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    long sequence = checked(reader.GetInt64(0) * 2 + 1);
                     string eventJson = reader.GetString(4);
-                    allEvents.Add(new(sequence, "evidence-acquisition", reader.GetString(1), reader.GetInt64(2),
+                    allEvents.Add(new(reader.GetInt64(0), "evidence-acquisition", reader.GetString(1), reader.GetInt64(2),
                         reader.GetInt64(3), ParseTargetedTimestamp(reader.GetString(5)), Hash(eventJson), reader.GetString(1)));
                 }
             }
-            TargetedLifecycleReadbackEvent[] page = allEvents
+            TargetedLifecycleReadbackEvent[] ordered = allEvents
+                .OrderBy(item => item.OccurredAt)
+                .ThenBy(item => item.Owner, StringComparer.Ordinal)
+                .ThenBy(item => item.Sequence)
+                .Select((item, index) => item with { Sequence = checked(index + 1L) })
+                .ToArray();
+            TargetedLifecycleReadbackEvent[] page = ordered
                 .Where(item => item.Sequence > afterLifecycleSequence)
-                .OrderBy(item => item.Sequence)
                 .Take(maximumLifecycleEvents + 1)
                 .ToArray();
             bool hasMore = page.Length > maximumLifecycleEvents;
             IReadOnlyList<TargetedLifecycleReadbackEvent> visible = page.Take(maximumLifecycleEvents).ToArray();
             return new(snapshot, acquisition, visible,
                 hasMore ? visible[^1].Sequence : null);
+        }
+    }
+
+    public TargetedPreparationReadbackSnapshotRecord GetTargetedPreparationReadbackSnapshot(
+        string preparationId,
+        int maximumLifecycleEvents,
+        long afterLifecycleSequence)
+    {
+        lock (gate)
+        {
+            TargetedPreparationPersistenceRecord preparation = GetTargetedPreparationCore(preparationId);
+            TargetedReadbackLockedTestHook?.Invoke();
+            TargetedSourceReadbackEvidenceRecord source = GetTargetedSourceReadbackEvidence(preparation);
+            TargetedVerificationPlanContract? plan = preparation.PlanId is null
+                ? null
+                : ReadTargetedPlan(preparationId);
+            if (plan is not null)
+            {
+                ValidateTargetedPlanProjection(plan);
+                _ = ReadTargetedPreparedOperationInputs(preparationId);
+            }
+            TargetedPreparationDiagnosticsPersistenceRecord diagnostics =
+                GetTargetedPreparationDiagnostics(preparationId);
+            SemanticAcquisitionPersistenceRecord? acquisition = preparation.EvidenceAcquisitionId is null
+                ? null
+                : GetSemanticAcquisitionCore(preparation.EvidenceAcquisitionId);
+            SemanticAcquisitionPublicationRecord? publication = null;
+            if (acquisition is not null && acquisition.State is "Completed" or "CompletedWithGaps")
+            {
+                publication = GetSemanticAcquisitionPublication(acquisition.AcquisitionId);
+            }
+            TargetedPreparationReadbackEvidenceRecord evidence = GetTargetedPreparationReadbackEvidence(
+                preparationId, maximumLifecycleEvents, afterLifecycleSequence);
+            TargetedPreparationPersistenceRecord confirmed = GetTargetedPreparationCore(preparationId);
+            if (confirmed.Revision != preparation.Revision
+                || confirmed.PreparationFingerprint != preparation.PreparationFingerprint
+                || confirmed.State != preparation.State
+                || confirmed.PlanFingerprint != preparation.PlanFingerprint
+                || confirmed.EvidenceAcquisitionId != preparation.EvidenceAcquisitionId)
+            {
+                throw new InvalidOperationException(
+                    "The targeted preparation advanced during coherent readback.");
+            }
+            if (acquisition is not null)
+            {
+                SemanticAcquisitionPersistenceRecord confirmedAcquisition =
+                    GetSemanticAcquisitionCore(acquisition.AcquisitionId);
+                if (confirmedAcquisition.Generation != acquisition.Generation
+                    || confirmedAcquisition.DurableSequence != acquisition.DurableSequence
+                    || confirmedAcquisition.State != acquisition.State)
+                {
+                    throw new InvalidOperationException(
+                        "The targeted semantic acquisition advanced during coherent readback.");
+                }
+            }
+            return new(preparation, source, plan, diagnostics, acquisition, publication, evidence);
+        }
+    }
+
+    private TargetedSourceReadbackEvidenceRecord GetTargetedSourceReadbackEvidence(
+        TargetedPreparationPersistenceRecord preparation)
+    {
+        RunRecord sourceRun = GetRun(preparation.SourceRunId);
+        if (sourceRun.State is not (LifecycleState.Completed or LifecycleState.CompletedWithGaps
+                or LifecycleState.LimitReached))
+        {
+            throw new InvalidOperationException(
+                "The targeted source run no longer has the required terminal analytical state.");
+        }
+        RunOperationRecord sourceOperation = GetRunOperation(preparation.SourceRunId)
+            ?? throw new InvalidOperationException(
+                "The targeted source managed operation is not retained.");
+        if (sourceOperation.OperationKind != "managed-analysis-v1"
+            || Hash(sourceOperation.RequestJson) != sourceOperation.RequestSha256)
+        {
+            throw new InvalidOperationException(
+                "The targeted source managed operation failed retained identity validation.");
+        }
+        ResultItemPersistenceRecord occurrence = GetResultItem(
+            preparation.SourceRunId, preparation.SourceOccurrenceId);
+        AnalysisPhaseCheckpointRecord checkpoint = ReadLatestAnalysisPhaseCheckpoint(
+            preparation.SourceRunId, "finding-case-analysis")
+            ?? throw new InvalidOperationException(
+                "The targeted source run has no retained canonical finding/case checkpoint.");
+        byte[] canonicalBytes = ReadFindingCasePayload(checkpoint.PayloadId);
+        if (checkpoint.PayloadSha256 != Hash(canonicalBytes)
+            || checkpoint.PayloadByteLength != canonicalBytes.LongLength
+            || occurrence.SourcePayloadId != checkpoint.PayloadId
+            || occurrence.SourcePayloadSha256 != checkpoint.PayloadSha256)
+        {
+            throw new InvalidOperationException(
+                "The targeted source occurrence differs from its retained canonical checkpoint.");
+        }
+        byte[] sourceSnapshotBytes = ReadPublishedSnapshotPayload(
+            sourceRun.Binding.InstallationSnapshotId, 64 * 1024 * 1024);
+        return new(sourceRun, sourceOperation, occurrence, canonicalBytes, sourceSnapshotBytes);
+    }
+
+    private void ValidateTargetedVerificationEventHistory(
+        string preparationId,
+        string? acquisitionId)
+    {
+        using (SqliteCommand command = connection.CreateCommand())
+        {
+            command.CommandText =
+                "SELECT event_json,projection_json,event_sha256 FROM targeted_preparation_events "
+                + "WHERE preparation_id=$preparation ORDER BY revision;";
+            command.Parameters.AddWithValue("$preparation", preparationId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                if (TargetedEventHash(reader.GetString(0), reader.GetString(1)) != reader.GetString(2))
+                {
+                    throw new InvalidOperationException(
+                        "Targeted preparation event history failed projection identity validation.");
+                }
+            }
+        }
+        if (acquisitionId is null)
+        {
+            return;
+        }
+        using SqliteCommand acquisitionEvents = connection.CreateCommand();
+        acquisitionEvents.CommandText =
+            "SELECT event_json,projection_json FROM semantic_acquisition_events "
+            + "WHERE acquisition_id=$acquisition ORDER BY sequence;";
+        acquisitionEvents.Parameters.AddWithValue("$acquisition", acquisitionId);
+        using SqliteDataReader acquisitionReader = acquisitionEvents.ExecuteReader();
+        while (acquisitionReader.Read())
+        {
+            if (!SemanticProjectionIsBound(acquisitionReader.GetString(0), acquisitionReader.GetString(1)))
+            {
+                throw new InvalidOperationException(
+                    "Semantic acquisition event history failed projection identity validation.");
+            }
+        }
+    }
+
+    private void ValidateSemanticAcquisitionPublicationEvidence(
+        SemanticAcquisitionPersistenceRecord acquisition,
+        SemanticAcquisitionPublicationRecord publication)
+    {
+        ValidateSemanticAcquisitionPublicationSeal(acquisition, publication);
+        using (SqliteCommand publicationCheckpoint = connection.CreateCommand())
+        {
+            publicationCheckpoint.CommandText =
+                "SELECT checkpoint_json FROM semantic_acquisition_checkpoints "
+                + "WHERE acquisition_id=$acquisition AND attempt_id=$attempt;";
+            publicationCheckpoint.Parameters.AddWithValue("$acquisition", acquisition.AcquisitionId);
+            publicationCheckpoint.Parameters.AddWithValue("$attempt", publication.AttemptId);
+            string checkpointJson = publicationCheckpoint.ExecuteScalar() as string
+                ?? throw new InvalidOperationException(
+                    "The targeted semantic acquisition publication checkpoint is missing.");
+            using JsonDocument document = JsonDocument.Parse(checkpointJson);
+            JsonElement checkpoint = document.RootElement;
+            if (checkpoint.ValueKind != JsonValueKind.Object
+                || checkpoint.EnumerateObject().Count() != 9
+                || checkpoint.GetProperty("AcquisitionId").GetString() != acquisition.AcquisitionId
+                || checkpoint.GetProperty("AttemptId").GetString() != publication.AttemptId
+                || checkpoint.GetProperty("AttemptFencingToken").GetInt64() != publication.AttemptFencingToken
+                || checkpoint.GetProperty("TargetSnapshotId").GetString() != publication.TargetSnapshotId
+                || checkpoint.GetProperty("semanticOutputId").GetString() != publication.SemanticOutputId
+                || checkpoint.GetProperty("payloadId").GetString() != publication.PayloadId
+                || checkpoint.GetProperty("expectedSha256").GetString() != publication.PayloadSha256
+                || checkpoint.GetProperty("expectedByteLength").GetInt64() != publication.PayloadByteLength
+                || checkpoint.GetProperty("expectedManifestSha256").GetString()
+                    != publication.StagedManifestSha256)
+            {
+                throw new InvalidOperationException(
+                    "The targeted semantic acquisition publication differs from its sealed checkpoint.");
+            }
+        }
+        if (publication.AcquisitionId != acquisition.AcquisitionId
+            || publication.TargetSnapshotId != acquisition.TargetSnapshotId
+            || ScalarLong(
+                "SELECT COUNT(*) FROM semantic_acquisition_attempts WHERE acquisition_id=$acquisition "
+                + "AND sealed_input_fingerprint<>$seal;", null,
+                ("$acquisition", acquisition.AcquisitionId),
+                ("$seal", acquisition.SealedInputFingerprint)) != 0
+            || ScalarLong(
+                "SELECT COUNT(*) FROM semantic_acquisition_checkpoints checkpoint "
+                + "JOIN semantic_acquisition_attempts attempt ON attempt.attempt_id=checkpoint.attempt_id "
+                + "WHERE checkpoint.acquisition_id=$acquisition AND (attempt.acquisition_id<>$acquisition "
+                + "OR checkpoint.attempt_fencing_token<>attempt.attempt_fencing_token "
+                + "OR checkpoint.target_snapshot_id<>$snapshot "
+                + "OR checkpoint.sealed_input_fingerprint<>$seal);", null,
+                ("$acquisition", acquisition.AcquisitionId),
+                ("$snapshot", acquisition.TargetSnapshotId),
+                ("$seal", acquisition.SealedInputFingerprint)) != 0)
+        {
+            throw new InvalidOperationException(
+                "The targeted semantic acquisition attempt or checkpoint evidence drifted.");
+        }
+
+        using (SqliteCommand checkpoints = connection.CreateCommand())
+        {
+            checkpoints.CommandText =
+                "SELECT checkpoint_json,checkpoint_sha256 FROM semantic_acquisition_checkpoints "
+                + "WHERE acquisition_id=$acquisition;";
+            checkpoints.Parameters.AddWithValue("$acquisition", acquisition.AcquisitionId);
+            using SqliteDataReader reader = checkpoints.ExecuteReader();
+            while (reader.Read())
+            {
+                if (Hash(reader.GetString(0)) != reader.GetString(1))
+                {
+                    throw new InvalidOperationException(
+                        "The targeted semantic acquisition checkpoint payload drifted.");
+                }
+            }
+        }
+
+        if (ScalarLong(
+                "SELECT COUNT(*) FROM semantic_acquisition_progress progress "
+                + "JOIN semantic_acquisition_attempts attempt ON attempt.attempt_id=progress.attempt_id "
+                + "WHERE progress.acquisition_id=$acquisition AND attempt.acquisition_id<>$acquisition;", null,
+                ("$acquisition", acquisition.AcquisitionId)) != 0
+            || ScalarLong(
+                "SELECT COUNT(*) FROM semantic_acquisition_application_links link "
+                + "WHERE link.acquisition_id=$acquisition AND (link.preparation_id<>$preparation "
+                + "OR link.semantic_output_id<>$output "
+                + "OR (link.use_kind='preparation-prerequisite' AND link.successor_run_id IS NOT NULL) "
+                + "OR (link.use_kind='successor-input' AND link.successor_run_id IS NULL));", null,
+                ("$acquisition", acquisition.AcquisitionId),
+                ("$preparation", acquisition.PreparationId),
+                ("$output", publication.SemanticOutputId)) != 0
+            || ScalarLong(
+                "SELECT COUNT(*) FROM semantic_acquisition_application_links WHERE acquisition_id=$acquisition "
+                + "AND use_kind='preparation-prerequisite' AND successor_run_id IS NULL;", null,
+                ("$acquisition", acquisition.AcquisitionId)) != 1)
+        {
+            throw new InvalidOperationException(
+                "The targeted semantic acquisition progress or application link drifted.");
+        }
+    }
+
+    private void ValidateSemanticAcquisitionLifecycleEvidence(
+        SemanticAcquisitionPersistenceRecord acquisition)
+    {
+        if (ScalarLong(
+                "SELECT COUNT(*) FROM semantic_acquisition_runs WHERE acquisition_id=$acquisition "
+                + "AND producer_id='infinium.bethesda.semantic-index' AND producer_version='2.0.0' "
+                + "AND support_manifest_id='bethesda-semantic-support-v2' "
+                + "AND enumeration_policy_id='qualified-bethesda-enumeration' "
+                + "AND enumeration_policy_version='1.0.0';", null,
+                ("$acquisition", acquisition.AcquisitionId)) != 1
+            || ScalarLong(
+                "SELECT COUNT(*) FROM semantic_acquisition_attempts WHERE acquisition_id=$acquisition "
+                + "AND sealed_input_fingerprint<>$seal;", null,
+                ("$acquisition", acquisition.AcquisitionId),
+                ("$seal", acquisition.SealedInputFingerprint)) != 0
+            || acquisition.ActiveAttemptId is not null
+            && ScalarLong(
+                "SELECT COUNT(*) FROM semantic_acquisition_attempts WHERE attempt_id=$attempt "
+                + "AND acquisition_id=$acquisition AND sealed_input_fingerprint=$seal;", null,
+                ("$attempt", acquisition.ActiveAttemptId),
+                ("$acquisition", acquisition.AcquisitionId),
+                ("$seal", acquisition.SealedInputFingerprint)) != 1)
+        {
+            throw new InvalidOperationException(
+                "The targeted semantic acquisition request, producer, or attempt evidence drifted.");
+        }
+
+        using (SqliteCommand checkpoints = connection.CreateCommand())
+        {
+            checkpoints.CommandText =
+                "SELECT checkpoint.checkpoint_json,checkpoint.checkpoint_sha256," +
+                "checkpoint.attempt_fencing_token,attempt.attempt_fencing_token," +
+                "checkpoint.target_snapshot_id,checkpoint.sealed_input_fingerprint,attempt.acquisition_id " +
+                "FROM semantic_acquisition_checkpoints checkpoint " +
+                "JOIN semantic_acquisition_attempts attempt ON attempt.attempt_id=checkpoint.attempt_id " +
+                "WHERE checkpoint.acquisition_id=$acquisition;";
+            checkpoints.Parameters.AddWithValue("$acquisition", acquisition.AcquisitionId);
+            using SqliteDataReader reader = checkpoints.ExecuteReader();
+            while (reader.Read())
+            {
+                if (Hash(reader.GetString(0)) != reader.GetString(1)
+                    || reader.GetInt64(2) != reader.GetInt64(3)
+                    || reader.GetString(4) != acquisition.TargetSnapshotId
+                    || reader.GetString(5) != acquisition.SealedInputFingerprint
+                    || reader.GetString(6) != acquisition.AcquisitionId)
+                {
+                    throw new InvalidOperationException(
+                        "The targeted semantic acquisition checkpoint evidence drifted.");
+                }
+            }
+        }
+        if (ScalarLong(
+                "SELECT COUNT(*) FROM semantic_acquisition_progress progress "
+                + "JOIN semantic_acquisition_attempts attempt ON attempt.attempt_id=progress.attempt_id "
+                + "WHERE progress.acquisition_id=$acquisition AND attempt.acquisition_id<>$acquisition;", null,
+                ("$acquisition", acquisition.AcquisitionId)) != 0)
+        {
+            throw new InvalidOperationException(
+                "The targeted semantic acquisition progress evidence drifted.");
+        }
+    }
+
+    private static void ValidateSemanticAcquisitionProvenance(
+        SemanticAcquisitionPersistenceRecord acquisition,
+        SemanticAcquisitionPublicationRecord publication,
+        string producerId,
+        string producerVersion)
+    {
+        using JsonDocument document = JsonDocument.Parse(publication.ProvenanceJson);
+        JsonElement root = document.RootElement;
+        if (root.ValueKind != JsonValueKind.Object
+            || root.EnumerateObject().Count() != 7
+            || root.GetProperty("AcquisitionId").GetString() != acquisition.AcquisitionId
+            || root.GetProperty("TargetSnapshotId").GetString() != acquisition.TargetSnapshotId
+            || root.GetProperty("SealedInputFingerprint").GetString() != acquisition.SealedInputFingerprint
+            || root.GetProperty("producerId").GetString() != producerId
+            || root.GetProperty("producerVersion").GetString() != producerVersion
+            || root.GetProperty("Sha256").GetString() != publication.PayloadSha256
+            || root.GetProperty("ByteLength").GetInt64() != publication.PayloadByteLength)
+        {
+            throw new InvalidOperationException(
+                "The targeted semantic acquisition provenance is not bound to its retained publication.");
         }
     }
 
@@ -1473,6 +1968,22 @@ public sealed partial class AuthoritativeStore
             reader.GetInt64(25) == 1, reader.GetInt64(26) == 1, ParseTargetedTimestamp(reader.GetString(27)), ParseTargetedTimestamp(reader.GetString(28)));
         reader.Close();
         if (Hash(value.RequestJson) != value.RequestSha256
+            || ScalarLong(
+                "SELECT COUNT(*) FROM targeted_preparation_projection p "
+                + "JOIN targeted_preparation_events e ON e.event_id=p.last_event_id "
+                + "WHERE p.preparation_id=$preparation AND p.revision=json_extract(e.projection_json,'$.revision') "
+                + "AND p.lifecycle_state=json_extract(e.projection_json,'$.state') "
+                + "AND p.preparation_fingerprint=json_extract(e.projection_json,'$.fingerprint') "
+                + "AND p.terminal_reason=json_extract(e.projection_json,'$.terminal_reason') "
+                + "AND p.capture_operation_id=json_extract(e.projection_json,'$.capture_operation_id') "
+                + "AND p.target_snapshot_id IS json_extract(e.projection_json,'$.target_snapshot_id') "
+                + "AND p.evidence_acquisition_id IS json_extract(e.projection_json,'$.evidence_acquisition_id') "
+                + "AND p.plan_id IS json_extract(e.projection_json,'$.plan_id') "
+                + "AND p.plan_fingerprint IS json_extract(e.projection_json,'$.plan_fingerprint') "
+                + "AND p.startable=json_extract(e.projection_json,'$.startable') "
+                + "AND p.limited=json_extract(e.projection_json,'$.limited') "
+                + "AND p.updated_at=json_extract(e.projection_json,'$.updated_at');",
+                transaction, ("$preparation", preparationId)) != 1
             || ScalarLong(
                 "SELECT COUNT(*) FROM targeted_preparation_events e JOIN targeted_preparation_projection p "
                 + "ON p.preparation_id=e.preparation_id AND p.last_event_id=e.event_id AND p.revision=e.revision "
@@ -1528,6 +2039,19 @@ public sealed partial class AuthoritativeStore
             reader.GetString(12), ParseTargetedTimestamp(reader.GetString(13)), ParseTargetedTimestamp(reader.GetString(14)));
         reader.Close();
         if (Hash(value.RequestJson) != value.RequestSha256
+            || ScalarLong(
+                "SELECT COUNT(*) FROM semantic_acquisition_projection p "
+                + "JOIN semantic_acquisition_events e ON e.acquisition_id=p.acquisition_id "
+                + "AND e.sequence=p.durable_sequence WHERE p.acquisition_id=$acquisition "
+                + "AND p.lifecycle_state=json_extract(e.projection_json,'$.state') "
+                + "AND p.generation=json_extract(e.projection_json,'$.generation') "
+                + "AND p.durable_sequence=json_extract(e.projection_json,'$.sequence') "
+                + "AND p.progress_completed=json_extract(e.projection_json,'$.progress_completed') "
+                + "AND p.progress_denominator=json_extract(e.projection_json,'$.progress_denominator') "
+                + "AND p.active_attempt_id IS json_extract(e.projection_json,'$.active_attempt_id') "
+                + "AND p.terminal_reason=json_extract(e.projection_json,'$.terminal_reason') "
+                + "AND p.updated_at=json_extract(e.projection_json,'$.updated_at');",
+                transaction, ("$acquisition", acquisitionId)) != 1
             || ScalarLong("SELECT COUNT(*) FROM semantic_acquisition_events WHERE acquisition_id=$acquisition AND sequence=$sequence;",
                 transaction, ("$acquisition", acquisitionId), ("$sequence", value.DurableSequence)) != 1)
         {

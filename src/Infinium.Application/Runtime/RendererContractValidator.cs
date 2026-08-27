@@ -590,12 +590,15 @@ public static class ApplicationContractValidator
                 RequireOptionalOpaque(value.AfterArtifactKind, "targeted-preparation artifact-kind cursor");
                 RequireOptionalOpaque(value.AfterArtifactId, "targeted-preparation artifact-ID cursor");
                 if (value.MaximumDependencies is < 1 or > MaximumPhaseCCollectionItems
-                    || value.MaximumTargetAnalyzers is < 1 or > MaximumPhaseCCollectionItems)
+                    || value.MaximumTargetAnalyzers is < 1 or > MaximumPhaseCCollectionItems
+                    || value.MaximumTerminalGaps is < 1 or > MaximumPhaseCCollectionItems)
                 {
-                    throw new InvalidDataException("The targeted-preparation dependency or analyzer page is outside its bound.");
+                    throw new InvalidDataException(
+                        "The targeted-preparation dependency, analyzer, or terminal-gap page is outside its bound.");
                 }
                 RequireOptionalOpaque(value.AfterDependencyEdgeId, "targeted-preparation dependency cursor");
                 RequireOptionalOpaque(value.AfterTargetAnalyzerId, "targeted-preparation analyzer cursor");
+                RequireOptionalOpaque(value.AfterTerminalGap, "targeted-preparation terminal-gap cursor");
                 break;
             case CancelTargetedVerificationPreparationRequest value:
                 RequireOpaque(value.IdempotencyKey, "targeted-preparation cancellation idempotency key");

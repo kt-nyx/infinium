@@ -191,8 +191,11 @@ public sealed class TargetedVerificationExecutor
                 ValidateCurrentSelections(preparation);
                 SemanticAcquisitionPublicationRecord publication = runtime.Store
                     .GetSemanticAcquisitionPublication(preparation.EvidenceAcquisitionId!);
-                TargetedVerificationPlanContract plan = BuildPlan(preparation, publication);
-                _ = runtime.Store.StoreTargetedPlan(plan, DateTimeOffset.UtcNow);
+                PreparedTargetedPlan preparedPlan = BuildPlan(preparation, publication);
+                _ = runtime.Store.StoreTargetedPlan(
+                    preparedPlan.Plan,
+                    preparedPlan.OperationInputs,
+                    DateTimeOffset.UtcNow);
             }
         }
         catch (Exception exception)
@@ -372,7 +375,7 @@ public sealed class TargetedVerificationExecutor
         }
     }
 
-    private TargetedVerificationPlanContract BuildPlan(
+    private PreparedTargetedPlan BuildPlan(
         TargetedPreparationPersistenceRecord preparation,
         SemanticAcquisitionPublicationRecord publication)
     {
@@ -629,19 +632,118 @@ public sealed class TargetedVerificationExecutor
             new("targeted-configuration-proof-" + effectiveConfigurationFingerprint.Value[..24]),
             effectiveConfigurationFingerprint,
             "The exact active saved-configuration revision is rebound and revalidated at start."));
-        TargetedVerificationPlanContract draft = new("infinium/targeted-verification-plan", new(1, 1, 0),
+        string preparedSuccessorRunId = "targeted-run-" + Hash(string.Join('\n',
+            preparation.PreparationId,
+            publication.TargetSnapshotId,
+            publication.PayloadSha256,
+            scope.CanonicalFingerprint.Value,
+            coverage.CanonicalFingerprint.Value,
+            effectiveConfigurationFingerprint.Value))[..32];
+        CandidateDeliveredInputContract preparedDelivered = CandidateDeliveredInputAdapter.Create(
+            new(preparedSuccessorRunId), new(publication.TargetSnapshotId),
+            new(preparation.AnalysisContextId), new(preparation.SavedConfigurationId), targetSnapshot,
+            documentationEvidence: null);
+        HashSet<OpaqueId> executableMembers = coverage.Rows
+            .Where(item => item.Status is TargetedCorrelationStatus.MatchedExecutable
+                or TargetedCorrelationStatus.ChangedCorrelated)
+            .SelectMany(item => new[]
+            {
+                item.SourceStableIdentity,
+                item.TargetStableIdentity,
+                item.CurrentExecutionMemberId,
+            })
+            .Where(item => item is not null).Cast<OpaqueId>().ToHashSet();
+        preparedDelivered = preparedDelivered with
+        {
+            PayloadId = new("candidate-delivered-input-pending"),
+            LinkFacts = preparedDelivered.LinkFacts.Where(item => executableMembers.Contains(item.RecordParticipantId)
+                || executableMembers.Contains(item.PriorContributionId)
+                || executableMembers.Contains(item.WinningContributionId)
+                || item.PriorTargetParticipantId is not null && executableMembers.Contains(item.PriorTargetParticipantId)
+                || item.WinningTargetParticipantId is not null && executableMembers.Contains(item.WinningTargetParticipantId)).ToArray(),
+            FaceGenFacts = preparedDelivered.FaceGenFacts.Where(item => executableMembers.Contains(item.NpcParticipantId)
+                || executableMembers.Contains(item.MeshAssetId)
+                || executableMembers.Contains(item.TintAssetId)
+                || item.MeshProviderParticipantId is not null && executableMembers.Contains(item.MeshProviderParticipantId)
+                || item.TintProviderParticipantId is not null && executableMembers.Contains(item.TintProviderParticipantId)).ToArray(),
+            DocumentationFacts = [],
+        };
+        preparedDelivered = preparedDelivered with
+        {
+            PayloadId = CandidateDeliveredInputIdentity.ComputePayloadId(preparedDelivered),
+        };
+        CandidateDeliveredContractInvariants.Validate(preparedDelivered);
+        byte[] deliveredBytes = CandidateDeliveredInputJsonCodec.Serialize(preparedDelivered);
+        Sha256Fingerprint deliveredFingerprint = new(Hash(deliveredBytes));
+        byte[] coverageBytes = JsonSerializer.SerializeToUtf8Bytes(coverage);
+        Sha256Fingerprint coverageInputFingerprint = new(Hash(coverageBytes));
+        byte[] manifestBytes = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            schema = "infinium/targeted-resolved-input-manifest/v1",
+            preparationId = preparation.PreparationId,
+            successorRunId = preparedSuccessorRunId,
+            sourceRunId = source.SourceRunId.Value,
+            sourceOccurrenceId = source.RootOccurrenceId.Value,
+            sourcePayloadId = source.SourcePayloadId.Value,
+            sourcePayloadFingerprint = source.SourcePayloadFingerprint.Value,
+            targetSnapshotId = publication.TargetSnapshotId,
+            targetSnapshotFingerprint = Hash(qualifiedSnapshotBytes),
+            evidenceAcquisitionId = publication.AcquisitionId,
+            semanticOutputId = publication.SemanticOutputId,
+            semanticOutputFingerprint = publication.PayloadSha256,
+            scopeId = scope.ScopeId.Value,
+            scopeFingerprint = scope.CanonicalFingerprint.Value,
+            coverageId = coverage.CoverageId.Value,
+            coverageFingerprint = coverage.CanonicalFingerprint.Value,
+            coverageInputFingerprint = coverageInputFingerprint.Value,
+            deliveredInputId = preparedDelivered.PayloadId.Value,
+            deliveredInputFingerprint = deliveredFingerprint.Value,
+            savedConfigurationId = preparation.SavedConfigurationId,
+            savedConfigurationRevision = preparation.SavedConfigurationRevision,
+            savedConfigurationFingerprint = effectiveConfigurationFingerprint.Value,
+            analysisContextId = preparation.AnalysisContextId,
+            analysisContextRevision = preparation.AnalysisContextRevision,
+            analysisContextFingerprint = preparation.AnalysisContextFingerprint,
+            retainedExternalInputs = reuse
+                .Where(item => item.Disposition == "reuse-with-proof")
+                .OrderBy(item => item.ArtifactKind, StringComparer.Ordinal)
+                .ThenBy(item => item.ArtifactId.Value, StringComparer.Ordinal)
+                .Select(item => new
+                {
+                    item.ArtifactKind,
+                    artifactId = item.ArtifactId.Value,
+                    proofId = item.ProofId.Value,
+                    proofFingerprint = item.ProofFingerprint.Value,
+                }).ToArray(),
+        });
+        Sha256Fingerprint manifestFingerprint = new(Hash(manifestBytes));
+        OpaqueId manifestId = new("targeted-manifest-" + manifestFingerprint.Value[..32]);
+        ArtifactReferenceContract deliveredReference = new(preparedDelivered.PayloadId,
+            preparedDelivered.SchemaVersion, deliveredFingerprint, "retained");
+        ArtifactReferenceContract coverageReference = new(coverage.CoverageId,
+            coverage.SchemaVersion, coverageInputFingerprint, "retained");
+        ArtifactReferenceContract manifestReference = new(manifestId, new(1, 0, 0),
+            manifestFingerprint, "retained");
+        TargetedVerificationPlanContract draft = new("infinium/targeted-verification-plan", new(1, 2, 0),
             new("targeted-plan-pending"), new(preparation.PreparationId), preparation.Revision,
             source, new(preparation.CaptureOperationId), new(publication.TargetSnapshotId),
             new(Hash(qualifiedSnapshotBytes)),
             new(publication.AcquisitionId), new(publication.SemanticOutputId), new(publication.PayloadSha256),
-            scope, coverage, reuse, "scope-limited-no-readiness", coverage.Startable, coverage.Limited,
+            scope, coverage, new(preparedSuccessorRunId), deliveredReference, coverageReference, manifestReference,
+            reuse, "scope-limited-no-readiness", coverage.Startable, coverage.Limited,
             coverage.NonStartableReasons, coverage.Gaps, new(new string('0', 64)));
         Sha256Fingerprint planFingerprint = TargetedVerificationContractInvariants.ComputePlanFingerprint(draft);
-        return draft with
+        TargetedVerificationPlanContract plan = draft with
         {
             PlanId = new("targeted-plan-" + planFingerprint.Value[..32]),
             PlanFingerprint = planFingerprint,
         };
+        return new(plan,
+        [
+            new("targeted-candidate-delivered-input", preparedDelivered.PayloadId.Value, deliveredBytes),
+            new("targeted-correlation-coverage", coverage.CoverageId.Value, coverageBytes),
+            new("targeted-resolved-input-manifest", manifestId.Value, manifestBytes),
+        ]);
 
         void Add(TargetedScopeMemberContract value)
         {
@@ -962,6 +1064,10 @@ public sealed class TargetedVerificationExecutor
 
     private static OpaqueId DeliveredIdentity(string kind, string value) =>
         CandidateAnalysisIdentity.StableId("candidate-delivered-source", kind, value);
+
+    private sealed record PreparedTargetedPlan(
+        TargetedVerificationPlanContract Plan,
+        IReadOnlyList<TargetedOperationInputPersistence> OperationInputs);
 
     private static TargetedReuseDecisionContract Recompute(string kind, string artifactId, string proofId,
         string reason) => new(kind, new(artifactId), "recompute", new(proofId),

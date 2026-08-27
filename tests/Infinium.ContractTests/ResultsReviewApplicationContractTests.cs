@@ -53,11 +53,11 @@ public sealed class ResultsReviewApplicationContractTests
     [TestProperty("Category", "Contract")]
     public void PhaseCComputedVersionAxesAndFingerprintAreExact()
     {
-        Assert.AreEqual("1.11.0", ProtocolConstants.Compatibility.ApplicationContract.Value);
-        Assert.AreEqual("1.5.0", ProtocolConstants.Compatibility.DomainContract.Value);
+        Assert.AreEqual("1.12.0", ProtocolConstants.Compatibility.ApplicationContract.Value);
+        Assert.AreEqual("1.6.0", ProtocolConstants.Compatibility.DomainContract.Value);
         Assert.AreEqual("1.15.0", ProtocolConstants.StorageContractVersion);
         Assert.AreEqual(
-            "eaf72f2bd8c04ad16035ff7ae45ea4c08b514216a0b0f07ce50e7560c55342d8",
+            "77076fc13a34bfc7a3d2e3c6808c6e5dbb8048bd38622286eb078c7c705c918b",
             Convert.ToHexStringLower(ProtocolConstants.Version.SchemaFingerprintSha256.Span));
     }
 
@@ -119,6 +119,7 @@ public sealed class ResultsReviewApplicationContractTests
                 MaximumArtifactDecisions = 10,
                 MaximumDependencies = 10,
                 MaximumTargetAnalyzers = 10,
+                MaximumTerminalGaps = 10,
             }));
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationContractValidator.ValidatePhaseC(
             new GetTargetedVerificationPreparationRequest
@@ -130,6 +131,7 @@ public sealed class ResultsReviewApplicationContractTests
                 MaximumArtifactDecisions = 10,
                 MaximumDependencies = 10,
                 MaximumTargetAnalyzers = 10,
+                MaximumTerminalGaps = 10,
             }));
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationContractValidator.ValidatePhaseC(
             new GetTargetedVerificationPreparationRequest
@@ -140,6 +142,7 @@ public sealed class ResultsReviewApplicationContractTests
                 MaximumArtifactDecisions = 101,
                 MaximumDependencies = 10,
                 MaximumTargetAnalyzers = 10,
+                MaximumTerminalGaps = 10,
             }));
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationContractValidator.ValidatePhaseC(
             new GetTargetedVerificationPreparationRequest
@@ -151,6 +154,7 @@ public sealed class ResultsReviewApplicationContractTests
                 AfterArtifactKind = "candidate-delivered-input",
                 MaximumDependencies = 10,
                 MaximumTargetAnalyzers = 10,
+                MaximumTerminalGaps = 10,
             }));
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationContractValidator.ValidatePhaseC(
             new GetTargetedVerificationPreparationRequest
@@ -161,6 +165,7 @@ public sealed class ResultsReviewApplicationContractTests
                 MaximumArtifactDecisions = 10,
                 MaximumDependencies = 101,
                 MaximumTargetAnalyzers = 10,
+                MaximumTerminalGaps = 10,
             }));
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationContractValidator.ValidatePhaseC(
             new GetTargetedVerificationPreparationRequest
@@ -171,6 +176,18 @@ public sealed class ResultsReviewApplicationContractTests
                 MaximumArtifactDecisions = 10,
                 MaximumDependencies = 10,
                 MaximumTargetAnalyzers = 101,
+                MaximumTerminalGaps = 10,
+            }));
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationContractValidator.ValidatePhaseC(
+            new GetTargetedVerificationPreparationRequest
+            {
+                PreparationId = "targeted-preparation-contract-id",
+                MaximumMembers = 10,
+                MaximumLifecycleEvents = 10,
+                MaximumArtifactDecisions = 10,
+                MaximumDependencies = 10,
+                MaximumTargetAnalyzers = 10,
+                MaximumTerminalGaps = 101,
             }));
     }
 
@@ -236,8 +253,12 @@ public sealed class ResultsReviewApplicationContractTests
                 StagedManifestFingerprintSha256 = new string('5', 64),
                 ProvenanceFingerprintSha256 = new string('6', 64),
                 PublishedAt = new Instant { UnixSeconds = 1_800_000_001 },
+                TerminalGapCount = 2,
+                NextTerminalGap = "semantic:UnsupportedRecord:records:gap-2:unsupported record",
             },
         };
+        value.AcquisitionEvidence.InertTerminalGaps.Add(
+            "capture:missing-provider:plugins:provider was unavailable");
         value.ScopeMembers.Add(new TargetedScopeMember
         {
             MemberId = "member-roundtrip",
@@ -299,6 +320,8 @@ public sealed class ResultsReviewApplicationContractTests
         Assert.AreEqual("analyzer-cursor-roundtrip", reparsed.NextTargetAnalyzerId);
         Assert.AreEqual(1UL, reparsed.ExpectedWork.Unsupported);
         Assert.AreEqual(12UL, reparsed.AcquisitionEvidence.AttemptFencingToken);
+        Assert.AreEqual(2UL, reparsed.AcquisitionEvidence.TerminalGapCount);
+        Assert.IsNotEmpty(reparsed.AcquisitionEvidence.NextTerminalGap);
         Assert.AreEqual("recompute", reparsed.ArtifactDecisions[0].Disposition);
         Assert.AreEqual("published", reparsed.LifecycleEvents[0].EventKind);
     }
@@ -379,6 +402,7 @@ public sealed class ResultsReviewApplicationContractTests
                 MaximumArtifactDecisions = 10,
                 MaximumDependencies = 10,
                 MaximumTargetAnalyzers = 10,
+                MaximumTerminalGaps = 10,
             },
             new CancelTargetedVerificationPreparationRequest
             {

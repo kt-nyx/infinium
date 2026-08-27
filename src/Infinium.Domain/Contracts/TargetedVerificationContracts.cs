@@ -189,6 +189,10 @@ public sealed record TargetedVerificationPlanContract(
     Sha256Fingerprint SemanticOutputFingerprint,
     TargetedAnalysisScopeContract Scope,
     TargetedCorrelationCoverageContract CorrelationCoverage,
+    OpaqueId PreparedSuccessorRunId,
+    ArtifactReferenceContract PreparedDeliveredInput,
+    ArtifactReferenceContract PreparedCoverageInput,
+    ArtifactReferenceContract PreparedResolvedInputManifest,
     IReadOnlyList<TargetedReuseDecisionContract> ReuseDecisions,
     string ReadinessBoundary,
     bool Startable,
@@ -337,7 +341,7 @@ public static class TargetedVerificationContractInvariants
         Validate(plan.CorrelationCoverage, plan.Scope);
         ValidatePlanIdentity(plan);
         if (plan.SchemaId != "infinium/targeted-verification-plan"
-            || plan.SchemaVersion != new ContractVersion(1, 1, 0)
+            || plan.SchemaVersion != new ContractVersion(1, 2, 0)
             || plan.PreparationRevision < 1
             || plan.PreparationId != plan.Scope.PreparationId
             || plan.PreparationId != plan.CorrelationCoverage.PreparationId
@@ -345,6 +349,14 @@ public static class TargetedVerificationContractInvariants
             || plan.TargetSnapshotId != plan.CorrelationCoverage.TargetSnapshotId
             || plan.EvidenceAcquisitionId != plan.CorrelationCoverage.EvidenceAcquisitionId
             || plan.SemanticOutputId != plan.CorrelationCoverage.SemanticOutputId
+            || plan.PreparedSuccessorRunId.Value.Length is < 1 or > 160
+            || plan.PreparedDeliveredInput.ArtifactVersion != CandidateDeliveredInputIdentity.Version
+            || plan.PreparedDeliveredInput.Availability != "retained"
+            || plan.PreparedCoverageInput.ArtifactId != plan.CorrelationCoverage.CoverageId
+            || plan.PreparedCoverageInput.ArtifactVersion != plan.CorrelationCoverage.SchemaVersion
+            || plan.PreparedCoverageInput.Availability != "retained"
+            || plan.PreparedResolvedInputManifest.ArtifactVersion != new ContractVersion(1, 0, 0)
+            || plan.PreparedResolvedInputManifest.Availability != "retained"
             || plan.Startable != plan.CorrelationCoverage.Startable
             || plan.Limited != plan.CorrelationCoverage.Limited
             || !plan.NonStartableReasons.SequenceEqual(plan.CorrelationCoverage.NonStartableReasons)

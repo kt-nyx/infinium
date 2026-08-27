@@ -314,19 +314,18 @@ public sealed partial class AuthoritativeStore
                 }
                 foreach (TargetedOperationInputPersistence input in targetedStart.OperationInputs)
                 {
-                    string payloadId = AdmitCoordinatorPayload(
-                        input.Bytes, input.InputKind, input.InputId, now, transaction);
                     string inputSha = Convert.ToHexStringLower(SHA256.HashData(input.Bytes));
-                    string inputRowId = "targeted-input-" + Convert.ToHexStringLower(SHA256.HashData(
-                        Encoding.UTF8.GetBytes(string.Join('\n', targetedStart.PreparationId,
-                            input.InputKind, input.InputId, inputSha))))[..32];
-                    Execute(
-                        "INSERT INTO targeted_operation_inputs(input_row_id,preparation_id,input_kind,input_id,payload_id,input_sha256,created_at) "
-                        + "VALUES($row,$preparation,$kind,$input,$payload,$sha,$now);",
-                        transaction,
-                        ("$row", inputRowId), ("$preparation", targetedStart.PreparationId),
-                        ("$kind", input.InputKind), ("$input", input.InputId),
-                        ("$payload", payloadId), ("$sha", inputSha), ("$now", ToText(now)));
+                    if (ScalarLong(
+                            "SELECT COUNT(*) FROM targeted_operation_inputs i JOIN payloads p USING(payload_id) "
+                            + "WHERE i.preparation_id=$preparation AND i.input_kind=$kind AND i.input_id=$input "
+                            + "AND i.input_sha256=$sha AND p.content_sha256=$sha AND p.byte_length=$length;",
+                            transaction,
+                            ("$preparation", targetedStart.PreparationId), ("$kind", input.InputKind),
+                            ("$input", input.InputId), ("$sha", inputSha), ("$length", input.Bytes.LongLength)) != 1)
+                    {
+                        throw new InvalidOperationException(
+                            "The targeted start does not match its retained prepared operation inputs.");
+                    }
                 }
                 string lineageId = targetedStart.TargetedVerificationId + "-initiation-lineage";
                 Execute(

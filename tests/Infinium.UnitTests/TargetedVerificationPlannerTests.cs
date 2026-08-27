@@ -186,10 +186,17 @@ public sealed class TargetedVerificationPlannerTests
             new("source-occurrence"), new("source-logical"), new("source-payload"), new(new string('1', 64)),
             new(new string('2', 64)), "analyzer-family", new(1, 2, 3), new(2, 0, 0), new(3, 0, 0),
             new("source-snapshot"), new("context"), new("configuration"), new("manifest"));
-        TargetedVerificationPlanContract draft = new("infinium/targeted-verification-plan", new(1, 1, 0),
+        ArtifactReferenceContract delivered = new(new("delivered"), new(1, 0, 0),
+            new(new string('5', 64)), "retained");
+        ArtifactReferenceContract coverageInput = new(coverage.CoverageId, coverage.SchemaVersion,
+            new(new string('7', 64)), "retained");
+        ArtifactReferenceContract manifest = new(new("manifest"), new(1, 0, 0),
+            new(new string('6', 64)), "retained");
+        TargetedVerificationPlanContract draft = new("infinium/targeted-verification-plan", new(1, 2, 0),
             new("targeted-plan-pending"), new("preparation"), 4, source, new("capture"), new("target-snapshot"),
             new(new string('3', 64)), new("acquisition"), new("semantic-output"), new(new string('4', 64)),
-            scope, coverage, [], "scope-limited-no-readiness", true, false, [], [], new(new string('0', 64)));
+            scope, coverage, new("successor-run"), delivered, coverageInput, manifest, [], "scope-limited-no-readiness",
+            true, false, [], [], new(new string('0', 64)));
         Sha256Fingerprint fingerprint = TargetedVerificationContractInvariants.ComputePlanFingerprint(draft);
         TargetedVerificationPlanContract plan = draft with
         {

@@ -183,9 +183,9 @@ buffers/rate limits, process supervision, private-handle inheritance, staging
 authorization, and coordinator-side admission remain runtime obligations for
 later slices.
 
-The additive application v1 surface is at protocol 1.11.0. It separates the
-application 1.11.0, domain 1.5.0, storage 1.15.0, and renderer 1.1.0 version
-axes; the corrected persisted `TargetedVerificationPlan` is schema 1.1.0. The
+The additive application v1 surface is at protocol 1.12.0. It separates the
+application 1.12.0, domain 1.6.0, storage 1.15.0, and renderer 1.1.0 version
+axes; the corrected persisted `TargetedVerificationPlan` is schema 1.2.0. The
 surface exposes bounded display-safe bootstrap, typed setup/configuration,
 prepared manual-run, non-secret provider status, live progress, reconnect,
 canonical result exploration, FindingReport queues/detail, append-only durable
@@ -193,9 +193,10 @@ review shapes, structured-export deletion/tombstone operations, and an
 explicit unavailable state when retained results predate a durable report
 publication projection. Five native-only targeted-verification RPCs expose
 durable preparation, canonical finding/case identity-envelope authority,
-independently paged scope, dependency, target-analyzer, lifecycle, and artifact
-evidence, fresh snapshot/evidence acquisition, inspectable proof/correlation/
-reuse/limit state,
+independently paged scope, dependency, target-analyzer, lifecycle, artifact,
+and terminal-gap evidence, fresh snapshot/evidence acquisition, inspectable
+proof/correlation/reuse/limit state, a preparation-owned resolved input
+manifest and exact prepared successor inputs,
 atomic `managed-analysis-v1` successor admission, and immutable lineage/readback.
 `StartTargetedVerification` remains
 `native-only-never-map`; no renderer operation was added. The
@@ -203,7 +204,7 @@ renderer registry still contains only its five previously accepted
 operation/message combinations; renderer 1.1.0 updates bootstrap compatibility
 and Phase C capability flags without adding desktop operations. The full
 protobuf contract-set fingerprint is
-`eaf72f2bd8c04ad16035ff7ae45ea4c08b514216a0b0f07ce50e7560c55342d8`.
+`77076fc13a34bfc7a3d2e3c6808c6e5dbb8048bd38622286eb078c7c705c918b`.
 Helper v2 has a separate fingerprint over only its helper/common/identity
 transitive closure; its fail-closed decoder rejects unknown nested fields,
 unknown enum numerics, and contradictory assignment, revalidation, or receipt

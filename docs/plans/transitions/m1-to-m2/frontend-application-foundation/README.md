@@ -88,11 +88,18 @@ generated native clients receive the canonical finding/case signature and
 producer/semantic/identity versions, capture and acquisition lifecycle/fencing/
 publication/provenance evidence, direct roots and dependency proofs, typed
 correlation coverage, analyzer compatibility, reuse/recompute proofs, and work
-limits through independent bounded pages. Canonical typed identities are now
+limits through independent bounded pages. Readback is now revision-coherent:
+one store-locked snapshot validates historical events, capture/publication
+seals, acquisition checkpoints/provenance/application links, and the retained
+payloads before returning any authoritative history. Actual capture and
+semantic gaps have their own bounded page, while plan-wide limitation and
+non-startable summaries remain truthful on every member page. Canonical typed identities are now
 the only correlation authority; raw names, form keys, contribution strings,
 and paths cannot match a stable identity, and slot similarity alone cannot
-create changed-correlation authority. Application `1.11.0`, domain `1.5.0`,
-and persisted targeted-plan `1.1.0` identify the corrected contract bytes.
+create changed-correlation authority. The preparation also owns the exact
+resolved target manifest, delivered input, coverage input, and successor
+identity later consumed by atomic start. Application `1.12.0`, domain `1.6.0`,
+and persisted targeted-plan `1.2.0` identify the corrected contract bytes.
 
 M2 remains inactive until a separate accepted M2 plan exists. The transition's
 diagnostic React surface is development evidence, not the M2 interface.

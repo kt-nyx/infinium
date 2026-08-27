@@ -1664,6 +1664,8 @@ message GetTargetedVerificationPreparationRequest {
   string after_dependency_edge_id = 10;
   uint32 maximum_target_analyzers = 11;
   string after_target_analyzer_id = 12;
+  uint32 maximum_terminal_gaps = 13;
+  string after_terminal_gap = 14;
 
   reserved 90 to 99;
   reserved "sql", "path", "url", "query", "payload_path", "command", "filter";
@@ -1844,6 +1846,8 @@ message TargetedAcquisitionEvidence {
   infinium.common.v1.Instant published_at = 14;
   string inert_terminal_reason = 15;
   repeated string inert_terminal_gaps = 16;
+  uint64 terminal_gap_count = 17;
+  string next_terminal_gap = 18;
 }
 
 message TargetedPreparationLifecycleEvent {

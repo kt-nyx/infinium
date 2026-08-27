@@ -1896,14 +1896,44 @@
       "review_condition": "Review if the targeted-verification storage contract changes."
     },
     {
+      "path": "src/Infinium.Coordinator/TargetedVerificationExecutor.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "preallocated targeted run and prepared input manifest",
+      "classification": "functional-domain-term",
+      "reason": "Successor identifies the distinct new managed-analysis run whose exact inputs are retained by preparation.",
+      "retained_consumer": "Targeted-verification production planning, prepared input authority, and immutable lineage.",
+      "review_condition": "Review if targeted-verification preparation, execution, or lineage semantics change."
+    },
+    {
+      "path": "src/Infinium.Coordinator/TargetedVerificationOperationResolver.cs",
+      "scope": "content",
+      "token": "Successor",
+      "symbol_or_context": "prepared targeted run identity admission check",
+      "classification": "functional-domain-term",
+      "reason": "Successor identifies the distinct new managed-analysis run bound to the immutable prepared manifest.",
+      "retained_consumer": "Targeted-verification atomic admission and prepared-manifest validation.",
+      "review_condition": "Review if targeted-verification preparation, execution, or lineage semantics change."
+    },
+    {
       "path": "tests/Infinium.IntegrationTests/ManagedAnalysisPipelineCorpusIntegrationTests.cs",
       "scope": "content",
-      "token": "successor",
-      "symbol_or_context": "native targeted managed-analysis successor integration evidence",
+      "token": "Successor",
+      "symbol_or_context": "native targeted prepared-run and lineage integration evidence",
       "classification": "functional-domain-term",
       "reason": "Successor verifies the distinct new run and exact lineage created without mutating source analysis.",
       "retained_consumer": "Generated-client targeted-verification admission, execution, retry, and readback evidence.",
       "review_condition": "Review if targeted-verification execution or lineage semantics change."
+    },
+    {
+      "path": "tests/Infinium.UnitTests/TargetedVerificationPlannerTests.cs",
+      "scope": "content",
+      "token": "successor",
+      "symbol_or_context": "prepared targeted plan invariant fixture",
+      "classification": "functional-domain-term",
+      "reason": "Successor identifies the distinct managed-analysis run retained in a targeted preparation plan.",
+      "retained_consumer": "Targeted-verification plan contract and invariant evidence.",
+      "review_condition": "Review if targeted-verification plan or lineage semantics change."
     }
   ]
 }

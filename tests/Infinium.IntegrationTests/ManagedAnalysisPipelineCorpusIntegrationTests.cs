@@ -420,6 +420,48 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 "EvaluationHarness", DateTimeOffset.UtcNow.AddMinutes(2), "case-readback-capture",
                 caseCaptureJson, Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(caseCaptureJson)))),
                 authority.FencingEpoch, DateTimeOffset.UtcNow);
+            using ManualResetEventSlim readbackLocked = new();
+            using ManualResetEventSlim releaseReadback = new();
+            using ManualResetEventSlim transitionStarted = new();
+            store.TargetedReadbackLockedTestHook = () =>
+            {
+                readbackLocked.Set();
+                releaseReadback.Wait();
+            };
+            TargetedPreparationReadbackSnapshotRecord caseCoherentReadback;
+            TargetedPreparationPersistenceRecord advancedCasePreparation;
+            try
+            {
+                Task<TargetedPreparationReadbackSnapshotRecord> oldReadback = Task.Run(() =>
+                    store.GetTargetedPreparationReadbackSnapshot(casePreparation.PreparationId, 10, 0));
+                Assert.IsTrue(readbackLocked.Wait(TimeSpan.FromSeconds(5)));
+                Task<TargetedPreparationPersistenceRecord> advancePreparation = Task.Run(() =>
+                {
+                    transitionStarted.Set();
+                    return store.TransitionTargetedPreparation(casePreparation.PreparationId,
+                        casePreparation.Revision, casePreparation.State,
+                        Infinium.Domain.Contracts.TargetedVerificationPreparationState.CapturingSnapshot,
+                        "coherent-readback-concurrency-advance", "{}", string.Empty,
+                        null, null, null, null, false, false, DateTimeOffset.UtcNow);
+                });
+                Assert.IsTrue(transitionStarted.Wait(TimeSpan.FromSeconds(5)));
+                Assert.IsFalse(advancePreparation.IsCompleted,
+                    "The state advance must wait for the coherent readback lock.");
+                releaseReadback.Set();
+                caseCoherentReadback = await oldReadback;
+                advancedCasePreparation = await advancePreparation;
+            }
+            finally
+            {
+                releaseReadback.Set();
+                store.TargetedReadbackLockedTestHook = null;
+            }
+            Assert.AreEqual(casePreparation.Revision, caseCoherentReadback.Preparation.Revision);
+            Assert.AreEqual(casePreparation.State, caseCoherentReadback.Preparation.State);
+            TargetedPreparationReadbackSnapshotRecord newReadback =
+                store.GetTargetedPreparationReadbackSnapshot(casePreparation.PreparationId, 10, 0);
+            Assert.AreEqual(advancedCasePreparation.Revision, newReadback.Preparation.Revision);
+            Assert.AreEqual(advancedCasePreparation.State, newReadback.Preparation.State);
             GetTargetedVerificationPreparationResponse caseReadback =
                 await client.GetTargetedVerificationPreparationAsync(new GetTargetedVerificationPreparationRequest
                 {
@@ -429,6 +471,7 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                     MaximumArtifactDecisions = 10,
                     MaximumDependencies = 10,
                     MaximumTargetAnalyzers = 10,
+                    MaximumTerminalGaps = 10,
                 }).ResponseAsync;
             Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Preparation,
                 caseReadback.ResultCase, caseReadback.Failure?.Detail);
@@ -483,6 +526,7 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                     MaximumArtifactDecisions = 100,
                     MaximumDependencies = 100,
                     MaximumTargetAnalyzers = 100,
+                    MaximumTerminalGaps = 100,
                 }).ResponseAsync;
             Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Preparation,
                 begunStatus.ResultCase, begunStatus.Failure?.Detail);
@@ -542,6 +586,7 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                             MaximumArtifactDecisions = 100,
                             MaximumDependencies = 100,
                             MaximumTargetAnalyzers = 100,
+                            MaximumTerminalGaps = 100,
                         }).ResponseAsync;
                     Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Preparation,
                         productionReadyStatus.ResultCase, productionReadyStatus.Failure?.Detail);
@@ -596,6 +641,18 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             Assert.IsTrue(productionReadyStatus.Preparation.TargetSnapshotCapturedAt.UnixSeconds > 0);
             Assert.IsNotEmpty(productionReadyStatus.Preparation.EffectiveConfigurationFingerprintSha256);
             Assert.IsNotEmpty(productionReadyStatus.Preparation.ResolvedInputManifestFingerprintSha256);
+            Assert.AreEqual(productionPlan.PreparedResolvedInputManifest.ArtifactId.Value,
+                productionReadyStatus.Preparation.ResolvedInputManifestId);
+            Assert.AreEqual(productionPlan.PreparedResolvedInputManifest.Fingerprint.Value,
+                productionReadyStatus.Preparation.ResolvedInputManifestFingerprintSha256);
+            IReadOnlyList<TargetedOperationInputPersistence> productionPreparedInputs =
+                store.ReadTargetedPreparedOperationInputs(productionPlan.PreparationId.Value);
+            TargetedOperationInputPersistence productionPreparedManifest = productionPreparedInputs.Single(item =>
+                item.InputKind == "targeted-resolved-input-manifest");
+            Assert.AreEqual(productionPlan.PreparedResolvedInputManifest.ArtifactId.Value,
+                productionPreparedManifest.InputId);
+            Assert.AreEqual(productionPlan.PreparedResolvedInputManifest.Fingerprint.Value,
+                Convert.ToHexStringLower(SHA256.HashData(productionPreparedManifest.Bytes)));
             Assert.IsNotEmpty(productionReadyStatus.Preparation.AcquisitionEvidence.PublicationId);
             Assert.IsNotEmpty(productionReadyStatus.Preparation.AcquisitionEvidence.ProvenanceFingerprintSha256);
             Assert.IsTrue(productionReadyStatus.Preparation.AcquisitionEvidence.AttemptFencingToken > 0);
@@ -612,8 +669,14 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                     MaximumArtifactDecisions = 1,
                     MaximumDependencies = 1,
                     MaximumTargetAnalyzers = 1,
+                    MaximumTerminalGaps = 1,
                 }).ResponseAsync;
             Assert.HasCount(1, firstPage.Preparation.ScopeMembers);
+            CollectionAssert.AreEqual(productionPlan.Gaps.ToArray(), firstPage.Preparation.InertGaps.ToArray());
+            CollectionAssert.AreEqual(productionPlan.NonStartableReasons.ToArray(),
+                firstPage.Preparation.InertNonStartableReasons.ToArray());
+            Assert.AreEqual(productionPlan.Startable, firstPage.Preparation.Startable);
+            Assert.AreEqual(productionPlan.Limited, firstPage.Preparation.Limited);
             Assert.IsNotEmpty(firstPage.Preparation.NextMemberCursor);
             Assert.HasCount(1, firstPage.Preparation.LifecycleEvents);
             Assert.IsTrue(firstPage.Preparation.NextLifecycleSequence > 0);
@@ -637,6 +700,7 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                     MaximumDependencies = 1,
                     AfterDependencyEdgeId = firstPage.Preparation.NextDependencyEdgeId,
                     MaximumTargetAnalyzers = 1,
+                    MaximumTerminalGaps = 1,
                     AfterTargetAnalyzerId = firstPage.Preparation.NextTargetAnalyzerId,
                 }).ResponseAsync;
             Assert.AreNotEqual(firstPage.Preparation.ScopeMembers[0].MemberId,
@@ -654,7 +718,7 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 ExpectedPreparationFingerprintSha256 =
                     productionReadyStatus.Preparation.PreparationFingerprintSha256,
                 IdempotencyKey = "targeted-production-native-start-command",
-                RequestedRunId = "run-targeted-production-native-successor",
+                RequestedRunId = productionPlan.PreparedSuccessorRunId.Value,
                 InitiationKind = ManualInitiationKind.EvaluationHarness,
                 UserGestureId = "targeted-production-native-start-gesture",
                 DispatchDeadline = ProtoMapping.ToProto(DateTimeOffset.UtcNow.AddMinutes(2)),
@@ -664,10 +728,23 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             Dictionary<string, long> immutableSourceState = immutableSourceStateTables.ToDictionary(
                 table => table, table => CandidatePipelineIntegrationTests.Count(paths.Database, table),
                 StringComparer.Ordinal);
+            long runsBeforeMismatchedPreparedRun = CandidatePipelineIntegrationTests.Count(paths.Database, "runs");
+            StartTargetedVerificationRequest mismatchedPreparedRun = productionStartRequest.Clone();
+            mismatchedPreparedRun.IdempotencyKey = "targeted-production-mismatched-run-command";
+            mismatchedPreparedRun.RequestedRunId = "run-that-was-not-prepared";
+            mismatchedPreparedRun.UserGestureId = "targeted-production-mismatched-run-gesture";
+            StartTargetedVerificationResponse rejectedMismatchedPreparedRun =
+                await client.StartTargetedVerificationAsync(mismatchedPreparedRun).ResponseAsync;
+            Assert.AreEqual(CommandDisposition.Rejected, rejectedMismatchedPreparedRun.Disposition);
+            Assert.AreEqual(FailureCode.Conflict, rejectedMismatchedPreparedRun.Failure.Code);
+            Assert.AreEqual(runsBeforeMismatchedPreparedRun,
+                CandidatePipelineIntegrationTests.Count(paths.Database, "runs"));
             StartTargetedVerificationResponse productionStart = await client.StartTargetedVerificationAsync(
                 productionStartRequest).ResponseAsync;
             Assert.AreEqual(CommandDisposition.Accepted, productionStart.Disposition,
                 productionStart.Failure?.Detail);
+            Assert.AreEqual(productionPlan.PreparedResolvedInputManifest.ArtifactId.Value,
+                store.GetRun(productionStart.SuccessorRunId.Value).Binding.ResolvedInputManifestId);
             using (CancellationTokenSource productionSuccessorTimeout = new(TimeSpan.FromSeconds(45)))
             {
                 while (!LifecyclePolicy.IsTerminal(store.GetRun(productionStart.SuccessorRunId.Value).State))
@@ -806,9 +883,19 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 const string nativeSemanticName = "bethesda-semantic.v2.json";
                 File.WriteAllBytes(Path.Combine(paths.Staging, nativeAttempt.AttemptId, nativeSemanticName),
                     nativeSemanticBytes);
+                string nativeProvenance = JsonSerializer.Serialize(new
+                {
+                    nativeAcquisition.AcquisitionId,
+                    nativeAcquisition.TargetSnapshotId,
+                    nativeAcquisition.SealedInputFingerprint,
+                    producerId = nativeSemantic.Snapshot!.ProducerId,
+                    producerVersion = nativeSemantic.Snapshot.ProducerVersion.ToString(),
+                    Sha256 = nativeSemanticSha,
+                    ByteLength = nativeSemanticBytes.LongLength,
+                });
                 _ = store.PublishSemanticAcquisition(nativeAttempt, nativeSemanticName, nativeSemanticSha,
                     nativeSemanticBytes.LongLength, new string('8', 64), 64L * 1024 * 1024,
-                    "bethesda-semantic-targeted-native", "{\"producer\":\"native-diagnostic\"}", DateTimeOffset.UtcNow);
+                    "bethesda-semantic-targeted-native", nativeProvenance, DateTimeOffset.UtcNow);
             }
             TargetedPreparationPersistenceRecord preparingSeed = store.TransitionTargetedPreparation(
                 acquiringSeed.PreparationId, acquiringSeed.Revision, acquiringSeed.State,
@@ -877,11 +964,65 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 new TargetedReuseDecisionContract("analyzer-declaration", item.ArtifactId, "reuse-with-proof",
                     new("targeted-analyzer-proof-" + item.Fingerprint.Value[..24]), item.Fingerprint,
                     "The accepted analyzer declaration is reused only by exact bytes.")));
-            TargetedVerificationPlanContract nativeDraft = new("infinium/targeted-verification-plan", new(1, 1, 0),
+            const string preparedSuccessorRunId = "run-targeted-native-successor";
+            CandidateDeliveredInputContract nativeDelivered = CandidateDeliveredInputAdapter.Create(
+                new(preparedSuccessorRunId), new("snapshot-targeted"), sourceManaged.AnalysisContext.ContextId,
+                new(targetedConfigurationId), nativeSemantic.Snapshot, documentationEvidence: null);
+            HashSet<OpaqueId> nativeExecutableMembers = nativeCoverage.Rows
+                .SelectMany(item => new[] { item.SourceStableIdentity, item.TargetStableIdentity,
+                    item.CurrentExecutionMemberId })
+                .Where(item => item is not null).Cast<OpaqueId>().ToHashSet();
+            nativeDelivered = nativeDelivered with
+            {
+                PayloadId = new("candidate-delivered-input-pending"),
+                LinkFacts = nativeDelivered.LinkFacts.Where(item =>
+                    nativeExecutableMembers.Contains(item.RecordParticipantId)
+                    || nativeExecutableMembers.Contains(item.PriorContributionId)
+                    || nativeExecutableMembers.Contains(item.WinningContributionId)
+                    || item.PriorTargetParticipantId is not null
+                    && nativeExecutableMembers.Contains(item.PriorTargetParticipantId)
+                    || item.WinningTargetParticipantId is not null
+                    && nativeExecutableMembers.Contains(item.WinningTargetParticipantId)).ToArray(),
+                FaceGenFacts = nativeDelivered.FaceGenFacts.Where(item =>
+                    nativeExecutableMembers.Contains(item.NpcParticipantId)
+                    || nativeExecutableMembers.Contains(item.MeshAssetId)
+                    || nativeExecutableMembers.Contains(item.TintAssetId)
+                    || item.MeshProviderParticipantId is not null
+                    && nativeExecutableMembers.Contains(item.MeshProviderParticipantId)
+                    || item.TintProviderParticipantId is not null
+                    && nativeExecutableMembers.Contains(item.TintProviderParticipantId)).ToArray(),
+                DocumentationFacts = [],
+            };
+            nativeDelivered = nativeDelivered with
+            {
+                PayloadId = CandidateDeliveredInputIdentity.ComputePayloadId(nativeDelivered),
+            };
+            byte[] nativeDeliveredBytes = CandidateDeliveredInputJsonCodec.Serialize(nativeDelivered);
+            string nativeDeliveredSha = Convert.ToHexStringLower(SHA256.HashData(nativeDeliveredBytes));
+            byte[] nativeCoverageBytes = JsonSerializer.SerializeToUtf8Bytes(nativeCoverage);
+            string nativeCoverageInputSha = Convert.ToHexStringLower(SHA256.HashData(nativeCoverageBytes));
+            byte[] nativeManifestBytes = JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                schema = "infinium/targeted-resolved-input-manifest/v1",
+                preparationId = readySeed.PreparationId,
+                successorRunId = preparedSuccessorRunId,
+                deliveredInputId = nativeDelivered.PayloadId.Value,
+                deliveredInputFingerprint = nativeDeliveredSha,
+                coverageId = nativeCoverage.CoverageId.Value,
+                coverageFingerprint = nativeCoverage.CanonicalFingerprint.Value,
+            });
+            string nativeManifestSha = Convert.ToHexStringLower(SHA256.HashData(nativeManifestBytes));
+            OpaqueId nativeManifestId = new("targeted-manifest-" + nativeManifestSha[..32]);
+            TargetedVerificationPlanContract nativeDraft = new("infinium/targeted-verification-plan", new(1, 2, 0),
                 new("targeted-plan-pending"), new(readySeed.PreparationId), preparingSeed.Revision, nativeSource,
                 new(readySeed.CaptureOperationId), new("snapshot-targeted"), new(retainedTargetSha),
                 new(nativeAcquisitionId), new("bethesda-semantic-targeted-native"), new(nativeSemanticSha),
-                nativeScope, nativeCoverage, nativeReuse, "scope-limited-no-readiness", true, false, [], [],
+                nativeScope, nativeCoverage, new(preparedSuccessorRunId),
+                new(nativeDelivered.PayloadId, nativeDelivered.SchemaVersion, new(nativeDeliveredSha), "retained"),
+                new(nativeCoverage.CoverageId, nativeCoverage.SchemaVersion,
+                    new(nativeCoverageInputSha), "retained"),
+                new(nativeManifestId, new(1, 0, 0), new(nativeManifestSha), "retained"), nativeReuse,
+                "scope-limited-no-readiness", true, false, [], [],
                 new(new string('0', 64)));
             Sha256Fingerprint nativePlanFingerprint = TargetedVerificationContractInvariants.ComputePlanFingerprint(nativeDraft);
             TargetedVerificationPlanContract nativePlan = nativeDraft with
@@ -889,7 +1030,12 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 PlanId = new("targeted-plan-" + nativePlanFingerprint.Value[..32]),
                 PlanFingerprint = nativePlanFingerprint,
             };
-            TargetedPreparationPersistenceRecord ready = store.StoreTargetedPlan(nativePlan, DateTimeOffset.UtcNow);
+            TargetedPreparationPersistenceRecord ready = store.StoreTargetedPlan(nativePlan,
+            [
+                new("targeted-candidate-delivered-input", nativeDelivered.PayloadId.Value, nativeDeliveredBytes),
+                new("targeted-correlation-coverage", nativeCoverage.CoverageId.Value, nativeCoverageBytes),
+                new("targeted-resolved-input-manifest", nativeManifestId.Value, nativeManifestBytes),
+            ], DateTimeOffset.UtcNow);
             GetTargetedVerificationPreparationResponse readyStatus =
                 await client.GetTargetedVerificationPreparationAsync(
                     new GetTargetedVerificationPreparationRequest
@@ -900,6 +1046,7 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                         MaximumArtifactDecisions = 100,
                         MaximumDependencies = 100,
                         MaximumTargetAnalyzers = 100,
+                        MaximumTerminalGaps = 100,
                     }).ResponseAsync;
             Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Preparation,
                 readyStatus.ResultCase, readyStatus.Failure?.Detail);
@@ -909,6 +1056,143 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             Assert.IsNotEmpty(readyStatus.Preparation.EvidenceAcquisitionAttemptId);
             Assert.IsNotEmpty(readyStatus.Preparation.EvidenceCheckpointId);
             Assert.AreEqual("equivalent", readyStatus.Preparation.StructuralComparison);
+
+            async Task AssertReadbackTamperRejected(
+                string label,
+                string trigger,
+                string table,
+                string column,
+                string whereClause,
+                string owner,
+                object tamperedValue)
+            {
+                object original;
+                using (SqliteConnection tamperConnection = new($"Data Source={paths.Database};Pooling=False"))
+                {
+                    tamperConnection.Open();
+                    using SqliteCommand readOriginal = tamperConnection.CreateCommand();
+                    readOriginal.CommandText = $"SELECT {column} FROM {table} WHERE {whereClause};";
+                    readOriginal.Parameters.AddWithValue("$owner", owner);
+                    original = readOriginal.ExecuteScalar()!;
+                    using SqliteCommand tamper = tamperConnection.CreateCommand();
+                    tamper.CommandText = $"DROP TRIGGER {trigger}; UPDATE {table} SET {column}=$value WHERE {whereClause};";
+                    tamper.Parameters.AddWithValue("$owner", owner);
+                    tamper.Parameters.AddWithValue("$value", tamperedValue);
+                    Assert.AreEqual(1, tamper.ExecuteNonQuery(), label);
+                }
+                try
+                {
+                    GetTargetedVerificationPreparationResponse rejected =
+                        await client.GetTargetedVerificationPreparationAsync(
+                            new GetTargetedVerificationPreparationRequest
+                            {
+                                PreparationId = ready.PreparationId,
+                                MaximumMembers = 100,
+                                MaximumLifecycleEvents = 100,
+                                MaximumArtifactDecisions = 100,
+                                MaximumDependencies = 100,
+                                MaximumTargetAnalyzers = 100,
+                                MaximumTerminalGaps = 100,
+                            }).ResponseAsync;
+                    Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Failure,
+                        rejected.ResultCase, label);
+                    Assert.AreEqual(FailureCode.Conflict, rejected.Failure.Code, label);
+                }
+                finally
+                {
+                    using SqliteConnection restoreConnection = new($"Data Source={paths.Database};Pooling=False");
+                    restoreConnection.Open();
+                    using SqliteCommand restore = restoreConnection.CreateCommand();
+                    restore.CommandText = $"UPDATE {table} SET {column}=$value WHERE {whereClause}; "
+                        + $"CREATE TRIGGER {trigger} BEFORE UPDATE ON {table} "
+                        + "BEGIN SELECT RAISE(ABORT,'append-only history'); END;";
+                    restore.Parameters.AddWithValue("$owner", owner);
+                    restore.Parameters.AddWithValue("$value", original);
+                    Assert.IsTrue(restore.ExecuteNonQuery() >= 1, label);
+                }
+            }
+
+            await AssertReadbackTamperRejected("old-preparation-event",
+                "targeted_preparation_events_append_only_update", "targeted_preparation_events",
+                "event_sha256", "preparation_id=$owner AND revision=1", ready.PreparationId,
+                new string('0', 64));
+            await AssertReadbackTamperRejected("old-acquisition-event",
+                "semantic_acquisition_events_append_only_update", "semantic_acquisition_events",
+                "event_json", "acquisition_id=$owner AND sequence=1", nativeAcquisitionId, "{}");
+            await AssertReadbackTamperRejected("old-acquisition-event-projection",
+                "semantic_acquisition_events_append_only_update", "semantic_acquisition_events",
+                "projection_json", "acquisition_id=$owner AND sequence=1", nativeAcquisitionId, "{}");
+            await AssertReadbackTamperRejected("snapshot-link",
+                "targeted_snapshot_links_append_only_update", "targeted_snapshot_links",
+                "source_structural_fingerprint", "preparation_id=$owner", ready.PreparationId,
+                new string('0', 64));
+            await AssertReadbackTamperRejected("attempt-fence",
+                "semantic_acquisition_attempts_append_only_update", "semantic_acquisition_attempts",
+                "attempt_fencing_token", "attempt_id=$owner", nativeAttempt.AttemptId, 99_999L);
+            await AssertReadbackTamperRejected("checkpoint",
+                "semantic_acquisition_checkpoints_append_only_update", "semantic_acquisition_checkpoints",
+                "checkpoint_sha256", "acquisition_id=$owner", nativeAcquisitionId, new string('0', 64));
+            await AssertReadbackTamperRejected("publication-payload",
+                "semantic_acquisition_publications_append_only_update", "semantic_acquisition_publications",
+                "payload_sha256", "acquisition_id=$owner", nativeAcquisitionId, new string('0', 64));
+            await AssertReadbackTamperRejected("publication-payload-length",
+                "semantic_acquisition_publications_append_only_update", "semantic_acquisition_publications",
+                "payload_byte_length", "acquisition_id=$owner", nativeAcquisitionId, 1L);
+            await AssertReadbackTamperRejected("staged-manifest",
+                "semantic_acquisition_publications_append_only_update", "semantic_acquisition_publications",
+                "staged_manifest_sha256", "acquisition_id=$owner", nativeAcquisitionId, new string('0', 64));
+            await AssertReadbackTamperRejected("provenance",
+                "semantic_acquisition_publications_append_only_update", "semantic_acquisition_publications",
+                "provenance_json", "acquisition_id=$owner", nativeAcquisitionId, "{}");
+            await AssertReadbackTamperRejected("application-link",
+                "semantic_acquisition_application_links_append_only_update",
+                "semantic_acquisition_application_links", "semantic_output_id",
+                "acquisition_id=$owner AND use_kind='preparation-prerequisite'", nativeAcquisitionId,
+                "tampered-semantic-output");
+            string targetSnapshotRelativePath;
+            using (SqliteConnection snapshotPathConnection = new(
+                       $"Data Source={paths.Database};Mode=ReadOnly;Pooling=False"))
+            {
+                snapshotPathConnection.Open();
+                using SqliteCommand snapshotPath = snapshotPathConnection.CreateCommand();
+                snapshotPath.CommandText =
+                    "SELECT payload.object_relative_path FROM snapshot_capture_publications publication "
+                    + "JOIN payloads payload USING(payload_id) WHERE publication.installation_snapshot_id='snapshot-targeted';";
+                targetSnapshotRelativePath = (string)snapshotPath.ExecuteScalar()!;
+            }
+            string targetSnapshotPayloadPath = Path.Combine(paths.Payloads,
+                targetSnapshotRelativePath["payloads/".Length..].Replace('/', Path.DirectorySeparatorChar));
+            Mo2InstallationSnapshot timestampMutatedSnapshot = retainedTargetCapture.Snapshot! with
+            {
+                Contract = retainedTargetCapture.Snapshot.Contract with
+                {
+                    CapturedAt = new(DateTimeOffset.UtcNow.AddYears(10)),
+                },
+            };
+            File.WriteAllBytes(targetSnapshotPayloadPath,
+                JsonSerializer.SerializeToUtf8Bytes(retainedTargetCapture with { Snapshot = timestampMutatedSnapshot }));
+            try
+            {
+                GetTargetedVerificationPreparationResponse timestampTamper =
+                    await client.GetTargetedVerificationPreparationAsync(
+                        new GetTargetedVerificationPreparationRequest
+                        {
+                            PreparationId = ready.PreparationId,
+                            MaximumMembers = 100,
+                            MaximumLifecycleEvents = 100,
+                            MaximumArtifactDecisions = 100,
+                            MaximumDependencies = 100,
+                            MaximumTargetAnalyzers = 100,
+                            MaximumTerminalGaps = 100,
+                        }).ResponseAsync;
+                Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Failure,
+                    timestampTamper.ResultCase, "capture-timestamp");
+                Assert.AreEqual(FailureCode.Conflict, timestampTamper.Failure.Code, "capture-timestamp");
+            }
+            finally
+            {
+                File.WriteAllBytes(targetSnapshotPayloadPath, retainedTargetBytes);
+            }
             StartTargetedVerificationRequest nativeStartRequest = new()
             {
                 PreparationId = ready.PreparationId,
@@ -960,6 +1244,21 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 File.WriteAllBytes(planPayloadPath, JsonSerializer.SerializeToUtf8Bytes(mutation.Mutated));
                 try
                 {
+                    GetTargetedVerificationPreparationResponse rejectedReadback =
+                        await client.GetTargetedVerificationPreparationAsync(
+                            new GetTargetedVerificationPreparationRequest
+                            {
+                                PreparationId = ready.PreparationId,
+                                MaximumMembers = 100,
+                                MaximumLifecycleEvents = 100,
+                                MaximumArtifactDecisions = 100,
+                                MaximumDependencies = 100,
+                                MaximumTargetAnalyzers = 100,
+                                MaximumTerminalGaps = 100,
+                            }).ResponseAsync;
+                    Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Failure,
+                        rejectedReadback.ResultCase, mutation.Suffix);
+                    Assert.AreEqual(FailureCode.Conflict, rejectedReadback.Failure.Code, mutation.Suffix);
                     StartTargetedVerificationRequest staleStart = nativeStartRequest.Clone();
                     staleStart.IdempotencyKey = "targeted-stale-" + mutation.Suffix;
                     staleStart.RequestedRunId = "run-targeted-stale-" + mutation.Suffix;
@@ -1024,6 +1323,25 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
                 }
                 try
                 {
+                    if (suffix is "source-occurrence-fingerprint" or "capture-source-snapshot-substitution"
+                        or "acquisition-publication-state" or "preparation-fingerprint")
+                    {
+                        GetTargetedVerificationPreparationResponse rejectedReadback =
+                            await client.GetTargetedVerificationPreparationAsync(
+                                new GetTargetedVerificationPreparationRequest
+                                {
+                                    PreparationId = ready.PreparationId,
+                                    MaximumMembers = 100,
+                                    MaximumLifecycleEvents = 100,
+                                    MaximumArtifactDecisions = 100,
+                                    MaximumDependencies = 100,
+                                    MaximumTargetAnalyzers = 100,
+                                    MaximumTerminalGaps = 100,
+                                }).ResponseAsync;
+                        Assert.AreEqual(GetTargetedVerificationPreparationResponse.ResultOneofCase.Failure,
+                            rejectedReadback.ResultCase, suffix);
+                        Assert.AreEqual(FailureCode.Conflict, rejectedReadback.Failure.Code, suffix);
+                    }
                     StartTargetedVerificationRequest staleStart = nativeStartRequest.Clone();
                     staleStart.IdempotencyKey = "targeted-stale-" + suffix;
                     staleStart.RequestedRunId = "run-targeted-stale-" + suffix;

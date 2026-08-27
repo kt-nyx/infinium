@@ -5,6 +5,7 @@ using Grpc.Core;
 using Infinium.Application.Analysis;
 using Infinium.Application.Runtime;
 using Infinium.Application.Serialization;
+using Infinium.Bethesda;
 using Infinium.Contracts.Protobuf.Application.V1;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Domain.V1;
@@ -73,8 +74,9 @@ public sealed partial class ApplicationGrpcService
                 return Task.FromResult(new BeginTargetedVerificationPreparationResponse
                 {
                     Disposition = CommandDisposition.AlreadyAccepted,
-                    Preparation = ToTargetedPreparation(replay, 100, null, 100, 0, 100, null, null,
-                        100, null, 100, null),
+                    Preparation = ToTargetedPreparation(runtime.Store.GetTargetedPreparationReadbackSnapshot(
+                        replay.PreparationId, 100, 0), 100, null, 100, null, null,
+                        100, null, 100, null, 100, null),
                 });
             }
             if (!runtime.TryAdmitNewDurableCommand(DateTimeOffset.UtcNow))
@@ -161,8 +163,9 @@ public sealed partial class ApplicationGrpcService
             return Task.FromResult(new BeginTargetedVerificationPreparationResponse
             {
                 Disposition = replay is null ? CommandDisposition.Accepted : CommandDisposition.AlreadyAccepted,
-                Preparation = ToTargetedPreparation(admitted, 100, null, 100, 0, 100, null, null,
-                    100, null, 100, null),
+                Preparation = ToTargetedPreparation(runtime.Store.GetTargetedPreparationReadbackSnapshot(
+                    admitted.PreparationId, 100, 0), 100, null, 100, null, null,
+                    100, null, 100, null, 100, null),
             });
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException
@@ -190,14 +193,17 @@ public sealed partial class ApplicationGrpcService
 
         try
         {
-            TargetedPreparationPersistenceRecord value = runtime.Store.GetTargetedPreparation(request.PreparationId);
+            TargetedPreparationReadbackSnapshotRecord value =
+                runtime.Store.GetTargetedPreparationReadbackSnapshot(
+                    request.PreparationId, checked((int)request.MaximumLifecycleEvents),
+                    checked((long)request.AfterLifecycleSequence));
             return Task.FromResult(new GetTargetedVerificationPreparationResponse
             {
                 Preparation = ToTargetedPreparation(value, checked((int)request.MaximumMembers), request.AfterMemberId,
-                    checked((int)request.MaximumLifecycleEvents), checked((long)request.AfterLifecycleSequence),
                     checked((int)request.MaximumArtifactDecisions), request.AfterArtifactKind, request.AfterArtifactId,
                     checked((int)request.MaximumDependencies), request.AfterDependencyEdgeId,
-                    checked((int)request.MaximumTargetAnalyzers), request.AfterTargetAnalyzerId),
+                    checked((int)request.MaximumTargetAnalyzers), request.AfterTargetAnalyzerId,
+                    checked((int)request.MaximumTerminalGaps), request.AfterTerminalGap),
             });
         }
         catch (Exception exception) when (exception is InvalidOperationException or InvalidDataException
@@ -229,8 +235,9 @@ public sealed partial class ApplicationGrpcService
             return Task.FromResult(new CancelTargetedVerificationPreparationResponse
             {
                 Disposition = receipt.Replayed ? CommandDisposition.AlreadyAccepted : CommandDisposition.Accepted,
-                Preparation = ToTargetedPreparation(receipt.Preparation, 100, null, 100, 0, 100, null, null,
-                    100, null, 100, null),
+                Preparation = ToTargetedPreparation(runtime.Store.GetTargetedPreparationReadbackSnapshot(
+                    receipt.Preparation.PreparationId, 100, 0), 100, null, 100, null, null,
+                    100, null, 100, null, 100, null),
             });
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException
@@ -299,7 +306,7 @@ public sealed partial class ApplicationGrpcService
             ValidateCurrentTargetedSelections(preparation);
             TargetedVerificationPlanContract plan = runtime.Store.ReadTargetedPlan(preparation.PreparationId);
             string runId = string.IsNullOrWhiteSpace(request.RequestedRunId)
-                ? Guid.NewGuid().ToString("N") : request.RequestedRunId;
+                ? plan.PreparedSuccessorRunId.Value : request.RequestedRunId;
             ResolvedTargetedOperation resolved = TargetedVerificationOperationResolver.Bind(
                 runtime.Store, preparation, plan, request.IdempotencyKey, runId, request.UserGestureId,
                 dispatchDeadline, DateTimeOffset.UtcNow);
@@ -362,12 +369,14 @@ public sealed partial class ApplicationGrpcService
         }
     }
 
-    private TargetedVerificationPreparation ToTargetedPreparation(
-        TargetedPreparationPersistenceRecord value, int maximumMembers, string? afterMemberId,
-        int maximumLifecycleEvents, long afterLifecycleSequence, int maximumArtifactDecisions,
+    private static TargetedVerificationPreparation ToTargetedPreparation(
+        TargetedPreparationReadbackSnapshotRecord readback, int maximumMembers, string? afterMemberId,
+        int maximumArtifactDecisions,
         string? afterArtifactKind, string? afterArtifactId, int maximumDependencies,
-        string? afterDependencyEdgeId, int maximumTargetAnalyzers, string? afterTargetAnalyzerId)
+        string? afterDependencyEdgeId, int maximumTargetAnalyzers, string? afterTargetAnalyzerId,
+        int maximumTerminalGaps, string? afterTerminalGap)
     {
+        TargetedPreparationPersistenceRecord value = readback.Preparation;
         TargetedVerificationPreparation result = new()
         {
             PreparationId = value.PreparationId,
@@ -402,9 +411,8 @@ public sealed partial class ApplicationGrpcService
             result.SourceCaseOccurrenceId = value.SourceOccurrenceId;
         }
 
-        ResultItemPersistenceRecord sourceItem = runtime.Store.GetResultItem(value.SourceRunId, value.SourceOccurrenceId);
-        byte[] sourcePayloadBytes = TargetedVerificationSourceIdentity.ReadCanonicalPayload(
-            runtime.Store, value.SourceRunId, sourceItem);
+        ResultItemPersistenceRecord sourceItem = readback.Source.Occurrence;
+        byte[] sourcePayloadBytes = readback.Source.CanonicalPayloadBytes;
         TargetedCanonicalSourceIdentity canonicalIdentity = TargetedVerificationSourceIdentity.Resolve(
             FindingCaseJsonCodec.Deserialize(sourcePayloadBytes), value.SourceOccurrenceKind, value.SourceOccurrenceId);
         if (canonicalIdentity.LogicalId.Value != sourceItem.LogicalId
@@ -422,29 +430,19 @@ public sealed partial class ApplicationGrpcService
         result.SourceAnalyzerVersion = ToProto(canonicalIdentity.IdentityEnvelope.AnalyzerVersion);
         result.SourceSemanticContractVersion = ToProto(canonicalIdentity.IdentityEnvelope.SemanticContractVersion);
         result.SourceIdentityContractVersion = ToProto(canonicalIdentity.IdentityEnvelope.IdentityContractVersion);
-        result.SourceSnapshotId = runtime.Store.GetRun(value.SourceRunId).Binding.InstallationSnapshotId;
-        try
+        result.SourceSnapshotId = readback.Source.Run.Binding.InstallationSnapshotId;
+        if (readback.Acquisition is { } acquisition)
         {
-            SnapshotCaptureOperationRecord capture = runtime.Store.GetSnapshotCaptureOperation(value.CaptureOperationId);
-            result.TargetSnapshotId = capture.InstallationSnapshotId ?? result.TargetSnapshotId;
-        }
-        catch (KeyNotFoundException) { }
-        if (value.EvidenceAcquisitionId is not null)
-        {
-            SemanticAcquisitionPersistenceRecord acquisition = runtime.Store.GetSemanticAcquisition(value.EvidenceAcquisitionId);
             result.EvidenceAcquisitionState = acquisition.State;
             result.EvidenceAcquisitionGeneration = checked((ulong)acquisition.Generation);
-            try
+            if (readback.AcquisitionPublication is { } publication)
             {
-                SemanticAcquisitionPublicationRecord publication = runtime.Store.GetSemanticAcquisitionPublication(acquisition.AcquisitionId);
                 result.SemanticOutputId = publication.SemanticOutputId;
                 result.SemanticOutputFingerprintSha256 = publication.PayloadSha256;
             }
-            catch (KeyNotFoundException) { }
         }
-        if (value.PlanId is not null)
+        if (readback.Plan is { } plan)
         {
-            TargetedVerificationPlanContract plan = runtime.Store.ReadTargetedPlan(value.PreparationId);
             result.TargetSnapshotFingerprintSha256 = plan.TargetSnapshotFingerprint.Value;
             result.ScopeId = plan.Scope.ScopeId.Value;
             result.ScopeFingerprintSha256 = plan.Scope.CanonicalFingerprint.Value;
@@ -468,16 +466,8 @@ public sealed partial class ApplicationGrpcService
             {
                 result.CorrelationRows.Add(ToProto(row));
             }
-            result.InertGaps.Add(result.CorrelationRows
-                .Where(row => row.Status is Infinium.Contracts.Protobuf.Application.V1.TargetedCorrelationStatus.Unsupported
-                    or Infinium.Contracts.Protobuf.Application.V1.TargetedCorrelationStatus.Inaccessible
-                    or Infinium.Contracts.Protobuf.Application.V1.TargetedCorrelationStatus.Malformed
-                    or Infinium.Contracts.Protobuf.Application.V1.TargetedCorrelationStatus.Ambiguous
-                    or Infinium.Contracts.Protobuf.Application.V1.TargetedCorrelationStatus.MissingRequiredProof)
-                .Select(row => row.InertReason));
-            result.InertNonStartableReasons.Add(result.CorrelationRows
-                .Where(row => !row.CorrelationQualified)
-                .Select(row => row.InertReason));
+            result.InertGaps.Add(plan.Gaps.Select(Bounded));
+            result.InertNonStartableReasons.Add(plan.NonStartableReasons.Select(Bounded));
             TargetedScopeDependencyContract[] dependencyPage = plan.Scope.Dependencies
                 .OrderBy(item => item.EdgeId.Value, StringComparer.Ordinal)
                 .Where(item => string.IsNullOrWhiteSpace(afterDependencyEdgeId)
@@ -515,15 +505,14 @@ public sealed partial class ApplicationGrpcService
             result.EffectiveConfigurationId = plan.Source.EffectiveConfigurationId.Value;
             result.EffectiveConfigurationFingerprintSha256 =
                 effectiveConfiguration?.ProofFingerprint.Value ?? string.Empty;
-            result.ResolvedInputManifestId = plan.Source.ResolvedInputManifestId.Value;
+            result.ResolvedInputManifestId = plan.PreparedResolvedInputManifest.ArtifactId.Value;
+            result.ResolvedInputManifestFingerprintSha256 =
+                plan.PreparedResolvedInputManifest.Fingerprint.Value;
 
-            RunOperationRecord sourceOperation = runtime.Store.GetRunOperation(value.SourceRunId)
-                ?? throw new InvalidOperationException("The targeted source managed operation is not retained.");
+            RunOperationRecord sourceOperation = readback.Source.Operation;
             ManagedAnalysisOrchestrationRequest sourceRequest = JsonSerializer.Deserialize<ManagedAnalysisOrchestrationRequest>(
                 sourceOperation.RequestJson, ContractJsonSerializer.Options)
                 ?? throw new InvalidDataException("The targeted source managed operation is malformed.");
-            result.ResolvedInputManifestFingerprintSha256 =
-                sourceRequest.ExecutionInput.ResolvedInputManifest.Fingerprint.Value;
             ArtifactReferenceContract[] analyzerPage = sourceRequest.ExecutionInput.AnalyzerDeclarations
                 .OrderBy(item => item.ArtifactId.Value, StringComparer.Ordinal)
                 .Where(item => string.IsNullOrWhiteSpace(afterTargetAnalyzerId)
@@ -562,8 +551,7 @@ public sealed partial class ApplicationGrpcService
                 result.NextMemberCursor = page[maximumMembers - 1].MemberId.Value;
             }
         }
-        TargetedPreparationDiagnosticsPersistenceRecord diagnostics =
-            runtime.Store.GetTargetedPreparationDiagnostics(value.PreparationId);
+        TargetedPreparationDiagnosticsPersistenceRecord diagnostics = readback.Diagnostics;
         result.CaptureAttemptId = diagnostics.CaptureAttemptId ?? string.Empty;
         result.StructuralComparison = diagnostics.StructuralComparison ?? string.Empty;
         result.EvidenceAcquisitionAttemptCount = checked((ulong)diagnostics.EvidenceAttemptCount);
@@ -576,17 +564,35 @@ public sealed partial class ApplicationGrpcService
             result.EffectiveConfigurationId = value.SavedConfigurationId;
         }
 
-        TargetedPreparationReadbackEvidenceRecord evidence = runtime.Store.GetTargetedPreparationReadbackEvidence(
-            value.PreparationId, maximumLifecycleEvents, afterLifecycleSequence);
+        TargetedPreparationReadbackEvidenceRecord evidence = readback.Evidence;
         if (evidence.Snapshot is { } snapshot)
         {
-            result.TargetSnapshotCapturedAt = ProtoMapping.ToProto(snapshot.CapturedAt);
+            Mo2SnapshotCaptureResult targetCapture = JsonSerializer.Deserialize<Mo2SnapshotCaptureResult>(
+                snapshot.SnapshotPayloadBytes)
+                ?? throw new InvalidDataException("The retained targeted snapshot payload is malformed.");
+            Mo2InstallationSnapshot targetInstallation = targetCapture.Snapshot
+                ?? throw new InvalidDataException("The retained targeted snapshot has no completed snapshot.");
+            Mo2SnapshotCaptureResult retainedSourceCapture = JsonSerializer.Deserialize<Mo2SnapshotCaptureResult>(
+                readback.Source.SnapshotPayloadBytes)
+                ?? throw new InvalidDataException("The retained source snapshot payload is malformed.");
+            if (targetCapture.State is not (SnapshotCaptureState.Completed or SnapshotCaptureState.CompletedWithGaps)
+                || targetInstallation.Contract.SnapshotId.Value != value.TargetSnapshotId
+                || targetInstallation.Contract.StructuralManifestFingerprint.Value != snapshot.TargetStructuralFingerprint
+                || retainedSourceCapture.Snapshot?.Contract.StructuralManifestFingerprint.Value
+                    != snapshot.SourceStructuralFingerprint
+                || snapshot.ConfirmedProfileRevision != value.ConfirmedProfileRevision)
+            {
+                throw new AnalysisIdentityDriftException(
+                    "The targeted snapshot identity, structure, or confirmed-profile binding drifted.");
+            }
+            result.TargetSnapshotCapturedAt = ProtoMapping.ToProto(targetInstallation.Contract.CapturedAt.Value);
             result.ConfirmedProfileRevision = checked((ulong)snapshot.ConfirmedProfileRevision);
             result.TargetSnapshotFingerprintSha256 = snapshot.SnapshotFingerprint;
             result.StructuralComparison = snapshot.StructuralComparison;
         }
         if (evidence.Acquisition is { } readbackAcquisition)
         {
+            List<string> terminalGaps = [];
             result.AcquisitionEvidence = new TargetedAcquisitionEvidence
             {
                 AcquisitionRequestFingerprintSha256 = readbackAcquisition.RequestFingerprint,
@@ -610,7 +616,57 @@ public sealed partial class ApplicationGrpcService
             }
             if (!string.IsNullOrWhiteSpace(readbackAcquisition.TerminalReason))
             {
-                result.AcquisitionEvidence.InertTerminalGaps.Add(Bounded(readbackAcquisition.TerminalReason));
+                terminalGaps.Add(Bounded("lifecycle:" + readbackAcquisition.TerminalReason));
+            }
+            if (evidence.Snapshot is { } retainedSnapshot)
+            {
+                Mo2SnapshotCaptureResult targetCapture = JsonSerializer.Deserialize<Mo2SnapshotCaptureResult>(
+                    retainedSnapshot.SnapshotPayloadBytes)
+                    ?? throw new InvalidDataException("The retained targeted snapshot payload is malformed.");
+                IEnumerable<SnapshotGap> captureGaps = targetCapture.Gaps
+                    .Concat(targetCapture.Snapshot?.Gaps ?? []);
+                terminalGaps.AddRange(captureGaps
+                    .Select(gap => Bounded($"capture:{gap.Code}:{gap.Population}:{gap.Reason}")));
+
+                if (readbackAcquisition.SemanticPayloadBytes is { } semanticBytes
+                    && readback.Acquisition is { } retainedAcquisition)
+                {
+                    ManagedBethesdaSemanticIntent intent = JsonSerializer.Deserialize<ManagedBethesdaSemanticIntent>(
+                        retainedAcquisition.RequestJson)
+                        ?? throw new InvalidDataException("The retained semantic acquisition request is malformed.");
+                    ManagedBethesdaSemanticAssignment assignment = ManagedRunExecutor.SealBethesdaAssignment(
+                        new(targetCapture, intent.RequestedUnsupportedCapabilities));
+                    if (HashTargeted(JsonSerializer.Serialize(assignment)) != retainedAcquisition.SealedInputFingerprint)
+                    {
+                        throw new AnalysisIdentityDriftException(
+                            "The retained semantic acquisition seal no longer matches the target snapshot.");
+                    }
+                    BethesdaSemanticExtractionResult semantic =
+                        BethesdaSemanticPublicationValidator.DeserializeAndValidate(
+                            semanticBytes, assignment, 64 * 1024 * 1024);
+                    if (semantic.Snapshot!.ProducerId != readbackAcquisition.ProducerFamily
+                        || semantic.Snapshot.ProducerVersion.ToString() != readbackAcquisition.ProducerVersion)
+                    {
+                        throw new AnalysisIdentityDriftException(
+                            "The semantic producer identity differs from the retained acquisition authority.");
+                    }
+                    terminalGaps.AddRange(semantic.Gaps.Select(gap =>
+                        Bounded($"semantic:{gap.Category}:{gap.Population}:{gap.GapId}:{gap.Reason}")));
+                    terminalGaps.AddRange(semantic.Failures.Select(failure =>
+                        Bounded($"semantic-failure:{failure.Code}:{failure.Input}:{failure.Message}")));
+                }
+            }
+            string[] orderedGaps = terminalGaps.Distinct(StringComparer.Ordinal)
+                .Order(StringComparer.Ordinal).ToArray();
+            string[] gapPage = orderedGaps
+                .Where(item => string.IsNullOrWhiteSpace(afterTerminalGap)
+                    || StringComparer.Ordinal.Compare(item, afterTerminalGap) > 0)
+                .Take(maximumTerminalGaps + 1).ToArray();
+            result.AcquisitionEvidence.TerminalGapCount = checked((ulong)orderedGaps.LongLength);
+            result.AcquisitionEvidence.InertTerminalGaps.Add(gapPage.Take(maximumTerminalGaps));
+            if (gapPage.Length > maximumTerminalGaps)
+            {
+                result.AcquisitionEvidence.NextTerminalGap = gapPage[maximumTerminalGaps - 1];
             }
         }
         result.LifecycleEvents.Add(evidence.LifecycleEvents.Select(ToProto));

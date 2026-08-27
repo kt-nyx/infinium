@@ -1541,6 +1541,160 @@ validation, functional naming, dependency-manifest check, and `git diff --check`
 Repository-owned `dotnet`/`testhost`/`vstest` survivor count was zero after every
 .NET batch.
 
+## Corrected Checkpoint C coherent readback and prepared-manifest candidate
+
+Date: 2026-08-27
+Starting commit: `1b6e7927d027333a9a53a4c8a9ccb80be7e2599a`
+Status: Implementation candidate awaiting another corrected Checkpoint C
+architecture-steward review
+
+Plain-language result: one preparation status response can no longer combine
+an older preparation revision with newer acquisition, plan, diagnostic, or
+lifecycle state. The same read now verifies the retained evidence before it
+describes that evidence. Preparation also owns the exact target resolved
+manifest and analysis inputs before start; start consumes those exact bytes and
+cannot silently replace their meaning by accepting another successor run ID.
+This remains native implementation evidence, not acceptance of WP5, WP6,
+Checkpoint C, Phase D, or M2.
+
+### Coherent and evidence-bound readback
+
+`AuthoritativeStore.GetTargetedPreparationReadbackSnapshot` holds the store's
+read lock across preparation, canonical source occurrence/checkpoint/run/
+operation/snapshot, plan, prepared-input, diagnostic, acquisition,
+publication, and evidence hydration. It captures the preparation revision,
+fingerprint, lifecycle state, plan binding, and acquisition identity, then
+rechecks the exact preparation and acquisition generations before returning.
+Begin, Get, Cancel, and exact replay responses all use this one coherent
+operation. A deterministic lock-step integration test pauses readback while a
+producer tries to advance state; the producer remains blocked, the first
+response contains one complete old generation, and the next response contains
+one complete new generation.
+
+Before evidence is projected, readback validates every historical preparation
+event hash and every acquisition event-to-projection hash binding. It also
+validates the target snapshot link against the exact capture operation,
+completed attempt and fences, publication, payload identity and bytes,
+snapshot identity, source/target structural fingerprints, and confirmed-
+profile revision. `target_snapshot_captured_at` now comes from the retained
+`InstallationSnapshotContract.CapturedAt` value. Acquisition readback validates
+the request bytes/hash, sealed input, accepted producer and enumeration
+versions, attempts and fencing, all checkpoint bytes/hashes and publication
+checkpoint values, progress ownership, publication payload identity/hash/
+length and staged manifest, exact provenance fields, and application links.
+Only after that binding succeeds is a provenance fingerprint calculated.
+Tampered history returns the typed application conflict response and is never
+projected as authoritative history.
+
+The consolidated changed-surface review found that the older diagnostic and
+evidence component readers were still public even though only the aggregate
+read can prove revision coherence. They are now private implementation details;
+the coherent snapshot is the sole persistence readback operation exposed to
+the application layer. It also found that canonical source, source-operation,
+and source-snapshot hydration still occurred after the coherent store lock was
+released. Those retained bytes and records now participate in the same locked
+snapshot and are validated before return. The same review added explicit mutation coverage for a
+historical acquisition event's retained projection bytes and publication
+payload length, and made the deterministic concurrency hook fail-safe so a
+failed assertion cannot leave the store read lock held. Re-review found no
+remaining alternate readback authority.
+
+Preparation and acquisition events are merged by their retained occurrence
+times with deterministic tie-breaking; synthetic arithmetic no longer
+manufactures a chronology. The acquisition evidence page now contains the
+actual retained capture gaps, semantic extraction gaps, and semantic failures,
+classified as inert `lifecycle`, `capture`, `semantic`, or `semantic-failure`
+summaries. Terminal gaps have an independent cursor and a maximum of 100
+entries per response. Plan-wide limitation gaps and non-startable reasons are
+computed from the whole retained plan on every member page, while detailed
+coverage rows remain correlated to the visible member page.
+
+### Preparation-owned target input authority
+
+`TargetedVerificationPlan` schema `1.2.0` adds the preallocated successor run
+identity plus exact retained references for the recomputed target
+`CandidateDeliveredInput`, the separate complete correlation-coverage input,
+and the target resolved-input manifest. Production planning creates and
+content-addresses all three payloads in the same transaction that publishes
+the immutable plan. The manifest binds the preparation, preallocated successor,
+source occurrence/payload, fresh snapshot, acquisition/semantic output, scope,
+coverage and its serialized-input fingerprint, delivered input,
+configuration/context revisions and fingerprints, and explicit retained reuse
+proofs.
+
+Start recomputes everything dependent on the fresh snapshot, validates it
+byte-for-byte against the prepared delivered and coverage inputs, validates
+the prepared manifest bytes and content address, and binds those same retained
+rows into the ordinary `managed-analysis-v1` request and atomic admission. An
+omitted requested run ID resolves to the prepared successor; a different
+requested run ID fails before any run, command, operation input, admission,
+lineage, or scheduling write. Exact retry preserves the prepared manifest.
+There is no targeted analysis operation, generic fallback, renderer mapping,
+or caller-authored input authority.
+
+The correction reuses schema-16 `targeted_operation_inputs`, payload admission,
+and plan rows, so storage contract `1.15.0`, storage schema `16`, migration
+fingerprint `727285fbdb9a4a91e850a6bfad3749262be75e6388eae14edf9954eed23d783c`,
+and the expected-object inventory are unchanged. Existing unaccepted plan
+schema `1.1.0` bytes fail the clean-break `1.2.0` validator rather than being
+upgraded into successor authority.
+
+### Contract, evaluation, and focused evidence
+
+Application protocol/contract `1.12.0` adds bounded terminal-gap request and
+response pagination. Domain contract `1.6.0` owns the new plan bytes. The
+protobuf contract-set fingerprint is
+`77076fc13a34bfc7a3d2e3c6808c6e5dbb8048bd38622286eb078c7c705c918b`.
+Renderer contract `1.1.0`, its five operation mappings, storage contract
+`1.15.0`, 48 declared/42 implemented RPCs, and generated-output ownership are
+unchanged. C# client/server output remains build-owned by `Grpc.Tools` in
+`src/Infinium.Application/Infinium.Application.csproj`; no generated file is
+checked in.
+
+Focused Release verification passed 8 targeted planner unit tests, 35
+application/renderer contract tests, and 4 production correlation/native
+integration tests. The integration evidence includes revision-coherent
+readback, historical event/projection and snapshot/acquisition seal mutations,
+actual completed/cancelled/failed/limited gap projection, global pagination
+truth, pre-start manifest retention and tamper rejection, exact retry and
+requested-run conflict, and the unseeded generated-C# named-pipe path from
+begin through real capture, real semantic acquisition, production planning,
+exact `managed-analysis-v1` completion, and initiation/reconciliation lineage
+readback. Repository-owned `dotnet`/`testhost`/`vstest` survivor count was zero
+after the focused .NET batch.
+
+The implementation/evaluation trace remains the accepted EVAL-0019, EVAL-0020,
+EVAL-0027, EVAL-0040, EVAL-0041, EVAL-0043, EVAL-0047, EVAL-0048, EVAL-0069,
+EVAL-0078, EVAL-0079, and EVAL-0093 set recorded by the WP6 addendum, capability
+matrix, and application-contract inventory. Developer-owned conformance tests
+remain implementation evidence only; no private evaluator, archive, or
+independent semantic oracle was accessed or claimed.
+
+The consolidated semantic, security, provenance, lifecycle, persistence,
+migration, contract, generated-client, evaluation, naming, and diff review
+found and corrected four additional must-fix defects on the same candidate.
+The semantic acquisition record used a descriptive producer label rather than
+the real accepted producer identity; prepared coverage used its domain-ledger
+fingerprint where the managed operation requires the serialized payload
+fingerprint; component evidence readers and later canonical-source hydration
+left alternate or post-lock readback seams; and new legitimate product-lineage
+`successor` uses lacked exact functional-naming review entries. The corrections
+bind the real producer/version, keep the canonical ledger and payload-byte
+fingerprints distinct, make the single aggregate snapshot the only application
+readback authority including retained source bytes, and add exact reviewed
+functional-domain allowlist entries. Re-review found no remaining mixed
+generation, unvalidated evidence, manifest substitution, pagination truth,
+renderer/generic authority, source mutation, storage-migration, private-
+evaluator, or product-meaning defect. Owner decisions and remaining
+implementation limitations: none. Checkpoint C review remains the external
+acceptance gate.
+
+The complete final verification floor passed locked restore, warning-free
+Release build, all 738 tests with 10 expected skips, format verification,
+documentation validation, functional naming, dependency-manifest consistency,
+and `git diff --check`. Repository-owned `dotnet`/`testhost`/`vstest` survivor
+count was zero after every .NET batch and at closeout.
+
 ## Final closeout fields
 
 WP9 will replace this placeholder with the accepted contract maturity,

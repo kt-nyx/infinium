@@ -61,6 +61,11 @@ internal static class TargetedVerificationOperationResolver
             throw new AnalysisIdentityDriftException(
                 "The retained targeted preparation revision or plan binding drifted.");
         }
+        if (runId != plan.PreparedSuccessorRunId.Value)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The requested successor run identity differs from the prepared input authority.");
+        }
         if (Hash(preparation.RequestJson) != preparation.RequestSha256)
         {
             throw new AnalysisIdentityDriftException(
@@ -257,37 +262,37 @@ internal static class TargetedVerificationOperationResolver
                 "The targeted context or configuration reuse proof drifted.");
         }
 
-        string manifestId = "targeted-manifest-" + Hash(string.Join('\n', preparation.PreparationId,
-            plan.PlanFingerprint.Value, runId, deliveredFingerprint.Value, plan.CorrelationCoverage.CanonicalFingerprint.Value))[..32];
-        byte[] manifestBytes = JsonSerializer.SerializeToUtf8Bytes(new
+        IReadOnlyList<TargetedOperationInputPersistence> preparedInputs =
+            store.ReadTargetedPreparedOperationInputs(preparation.PreparationId);
+        TargetedOperationInputPersistence preparedDelivered = preparedInputs.Single(item =>
+            item.InputKind == "targeted-candidate-delivered-input");
+        TargetedOperationInputPersistence preparedCoverage = preparedInputs.Single(item =>
+            item.InputKind == "targeted-correlation-coverage");
+        TargetedOperationInputPersistence preparedManifest = preparedInputs.Single(item =>
+            item.InputKind == "targeted-resolved-input-manifest");
+        if (preparedDelivered.InputId != plan.PreparedDeliveredInput.ArtifactId.Value
+            || Hash(preparedDelivered.Bytes) != plan.PreparedDeliveredInput.Fingerprint.Value
+            || !preparedDelivered.Bytes.AsSpan().SequenceEqual(deliveredBytes)
+            || preparedCoverage.InputId != plan.PreparedCoverageInput.ArtifactId.Value
+            || Hash(preparedCoverage.Bytes) != plan.PreparedCoverageInput.Fingerprint.Value
+            || !preparedCoverage.Bytes.AsSpan().SequenceEqual(coverageBytes)
+            || preparedManifest.InputId != plan.PreparedResolvedInputManifest.ArtifactId.Value
+            || Hash(preparedManifest.Bytes) != plan.PreparedResolvedInputManifest.Fingerprint.Value)
         {
-            schema = "infinium/targeted-resolved-input-manifest/v1",
-            preparationId = preparation.PreparationId,
-            planId = plan.PlanId.Value,
-            sourceRunId = plan.Source.SourceRunId.Value,
-            targetSnapshotId = plan.TargetSnapshotId.Value,
-            semanticOutputId = plan.SemanticOutputId.Value,
-            scopeId = plan.Scope.ScopeId.Value,
-            scopeFingerprint = plan.Scope.CanonicalFingerprint.Value,
-            coverageId = plan.CorrelationCoverage.CoverageId.Value,
-            coverageFingerprint = plan.CorrelationCoverage.CanonicalFingerprint.Value,
-            deliveredInputId = delivered.PayloadId.Value,
-            deliveredInputFingerprint = deliveredFingerprint.Value,
-            savedConfigurationId = preparation.SavedConfigurationId,
-            savedConfigurationRevision = preparation.SavedConfigurationRevision,
-            savedConfigurationFingerprint = configurationFingerprint.Value,
-        });
-        Sha256Fingerprint manifestFingerprint = new(Hash(manifestBytes));
+            throw new AnalysisIdentityDriftException(
+                "The retained targeted delivered input, coverage, or resolved manifest drifted.");
+        }
+        byte[] manifestBytes = preparedManifest.Bytes;
+        Sha256Fingerprint manifestFingerprint = plan.PreparedResolvedInputManifest.Fingerprint;
 
         ArtifactReferenceContract deliveredReference = new(delivered.PayloadId, delivered.SchemaVersion,
             deliveredFingerprint, "retained");
-        ArtifactReferenceContract coverageReference = new(plan.CorrelationCoverage.CoverageId,
-            plan.CorrelationCoverage.SchemaVersion, plan.CorrelationCoverage.CanonicalFingerprint, "retained");
+        ArtifactReferenceContract coverageReference = plan.PreparedCoverageInput;
         ArtifactReferenceContract semanticReference = new(plan.SemanticOutputId,
             BethesdaSemanticContract.SchemaVersion, plan.SemanticOutputFingerprint, "retained");
         ArtifactReferenceContract configurationReference = new(new(preparation.SavedConfigurationId),
             source.ExecutionInput.EffectiveConfiguration.ArtifactVersion, configurationFingerprint, "retained");
-        ArtifactReferenceContract manifestReference = new(new(manifestId), new(1, 0, 0), manifestFingerprint, "retained");
+        ArtifactReferenceContract manifestReference = plan.PreparedResolvedInputManifest;
         Dictionary<OpaqueId, TargetedReuseDecisionContract> retainedSourceProofs = plan.ReuseDecisions
             .Where(item => item.Disposition == "reuse-with-proof"
                 && item.ArtifactKind == "documentation-evidence")
@@ -404,7 +409,7 @@ internal static class TargetedVerificationOperationResolver
             TargetedCorrelationCoverage = plan.CorrelationCoverage,
         };
         RunBinding binding = new(plan.TargetSnapshotId.Value, source.AnalysisContext.ContextId.Value,
-            preparation.SavedConfigurationId, manifestId);
+            preparation.SavedConfigurationId, plan.PreparedResolvedInputManifest.ArtifactId.Value);
         ManagedAnalysisOrchestrator.Validate(request, runId, binding);
         string requestJson = JsonSerializer.Serialize(request, ContractJsonSerializer.Options);
         string requestSha = Hash(requestJson);
@@ -416,9 +421,9 @@ internal static class TargetedVerificationOperationResolver
         string verificationId = "targeted-verification-" + runId;
         TargetedOperationInputPersistence[] operationInputs =
         [
-            new("targeted-candidate-delivered-input", delivered.PayloadId.Value, deliveredBytes),
-            new("targeted-correlation-coverage", plan.CorrelationCoverage.CoverageId.Value, coverageBytes),
-            new("targeted-resolved-input-manifest", manifestId, manifestBytes),
+            preparedDelivered,
+            preparedCoverage,
+            preparedManifest,
         ];
         return new(binding, request, requestJson, requestSha, submission, verificationId,
             "targeted-admission-" + submission[..32], operationInputs);

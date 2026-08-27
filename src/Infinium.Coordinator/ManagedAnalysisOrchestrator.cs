@@ -235,8 +235,10 @@ internal static class ManagedAnalysisOrchestrator
         {
             ArtifactReferenceContract? coverageReference = request.ExecutionInput.SourceInputs.SingleOrDefault(item =>
                 item.ArtifactId == request.TargetedCorrelationCoverage.CoverageId);
+            Sha256Fingerprint coverageInputFingerprint = new(Convert.ToHexStringLower(
+                SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(request.TargetedCorrelationCoverage))));
             if (coverageReference is null
-                || coverageReference.Fingerprint != request.TargetedCorrelationCoverage.CanonicalFingerprint
+                || coverageReference.Fingerprint != coverageInputFingerprint
                 || coverageReference.Availability != "retained"
                 || request.TargetedCorrelationCoverage.TargetSnapshotId
                     != request.ExecutionInput.InstallationSnapshot.ArtifactId
