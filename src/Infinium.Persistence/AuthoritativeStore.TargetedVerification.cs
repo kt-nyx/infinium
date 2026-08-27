@@ -2336,7 +2336,7 @@ public sealed partial class AuthoritativeStore
                 sequence = 0;
             }
             sequence = checked(sequence + 1);
-            ValidateTargetedLifecycleSourceEvent(item);
+            ValidateTargetedLifecycleSourceEvent(item, transaction);
             InsertTargetedLifecycleEvidence(item, sequence, transaction);
         }
     }
@@ -2360,7 +2360,7 @@ public sealed partial class AuthoritativeStore
         TargetedLifecycleSourceEvent item = new(preparationId, owner, ownerEventId, ownerSequence, eventKind,
             generation, coordinatorFencingEpoch, eventJson, projectionJson, occurredAt,
             owner == "preparation" ? Hash(eventJson + "\n" + projectionJson) : null);
-        ValidateTargetedLifecycleSourceEvent(item);
+        ValidateTargetedLifecycleSourceEvent(item, transaction);
         InsertTargetedLifecycleEvidence(item, lifecycleSequence, transaction);
     }
 
@@ -2481,7 +2481,7 @@ public sealed partial class AuthoritativeStore
 
         foreach ((TargetedLifecycleSourceEvent source, long sequence, string summary, string evidence) in rows)
         {
-            ValidateTargetedLifecycleSourceEvent(source);
+            ValidateTargetedLifecycleSourceEvent(source, transaction);
             if (!StringComparer.Ordinal.Equals(summary, source.EventKind)
                 || !StringComparer.Ordinal.Equals(evidence, TargetedLifecycleEvidenceFingerprint(
                     sequence, preparationId, source.Owner, source.OwnerEventId, source.OwnerSequence,
@@ -2523,7 +2523,9 @@ public sealed partial class AuthoritativeStore
         }
     }
 
-    private static void ValidateTargetedLifecycleSourceEvent(TargetedLifecycleSourceEvent item)
+    private void ValidateTargetedLifecycleSourceEvent(
+        TargetedLifecycleSourceEvent item,
+        SqliteTransaction? transaction = null)
     {
         if (item.Owner is not ("preparation" or "evidence-acquisition")
             || item.OwnerSequence <= 0
@@ -2534,7 +2536,8 @@ public sealed partial class AuthoritativeStore
         {
             throw new InvalidOperationException("The retained targeted lifecycle source metadata is invalid.");
         }
-        using JsonDocument projection = JsonDocument.Parse(item.ProjectionJson);
+        using JsonDocument projection = ParseTargetedLifecycleJson(
+            item.ProjectionJson, "projection");
         JsonElement root = projection.RootElement;
         string occurredAt = ToText(item.OccurredAt);
         if (!root.TryGetProperty("updated_at", out JsonElement updatedAt)
@@ -2544,7 +2547,12 @@ public sealed partial class AuthoritativeStore
         }
         if (item.Owner == "preparation")
         {
-            if (item.CoordinatorFencingEpoch != 0
+            RequireExactJsonProperties(root,
+                "revision", "state", "fingerprint", "terminal_reason", "capture_operation_id",
+                "target_snapshot_id", "evidence_acquisition_id", "plan_id", "plan_fingerprint",
+                "startable", "limited", "last_event_id", "updated_at");
+            if (item.OwnerEventId != item.PreparationId + "-event-" + item.OwnerSequence
+                || item.CoordinatorFencingEpoch != 0
                 || item.Generation != item.OwnerSequence
                 || !root.TryGetProperty("revision", out JsonElement revision)
                 || revision.GetInt64() != item.OwnerSequence
@@ -2555,15 +2563,313 @@ public sealed partial class AuthoritativeStore
                 throw new InvalidOperationException("The targeted preparation lifecycle metadata is not sealed.");
             }
         }
-        else if (item.CoordinatorFencingEpoch <= 0
-            || !SemanticProjectionIsBound(item.EventJson, item.ProjectionJson)
-            || !root.TryGetProperty("sequence", out JsonElement sequence)
-            || sequence.GetInt64() != item.OwnerSequence
-            || !root.TryGetProperty("generation", out JsonElement generation)
-            || generation.GetInt64() != item.Generation
-            || !AcquisitionEventKindMatchesState(item.EventKind, root.GetProperty("state").GetString()))
+        else
         {
-            throw new InvalidOperationException("The semantic acquisition lifecycle metadata is not sealed.");
+            RequireExactJsonProperties(root,
+                "state", "generation", "sequence", "progress_completed", "progress_denominator",
+                "active_attempt_id", "terminal_reason", "updated_at");
+            if (item.CoordinatorFencingEpoch <= 0
+                || !root.TryGetProperty("sequence", out JsonElement sequence)
+                || sequence.ValueKind != JsonValueKind.Number
+                || sequence.GetInt64() != item.OwnerSequence
+                || !root.TryGetProperty("generation", out JsonElement generation)
+                || generation.ValueKind != JsonValueKind.Number
+                || generation.GetInt64() != item.Generation
+                || !root.TryGetProperty("state", out JsonElement state)
+                || state.ValueKind != JsonValueKind.String
+                || !AcquisitionEventKindMatchesState(item.EventKind, state.GetString()))
+            {
+                throw new InvalidOperationException("The semantic acquisition lifecycle metadata is not sealed.");
+            }
+            using JsonDocument eventDocument = ParseTargetedLifecycleJson(
+                item.EventJson, "event");
+            ValidateAcquisitionEventJson(item, eventDocument.RootElement, root, transaction);
+        }
+    }
+
+    private void ValidateAcquisitionEventJson(
+        TargetedLifecycleSourceEvent item,
+        JsonElement eventRoot,
+        JsonElement projectionRoot,
+        SqliteTransaction? transaction)
+    {
+        string projectionSha256 = RequiredJsonString(eventRoot, "projectionSha256");
+        if (projectionSha256 != Hash(item.ProjectionJson))
+        {
+            throw new InvalidOperationException(
+                "The semantic acquisition lifecycle event JSON is not bound to its retained projection.");
+        }
+
+        switch (item.EventKind)
+        {
+            case "admitted":
+                RequireExactJsonProperties(eventRoot, "projectionSha256");
+                break;
+            case "recovered":
+                RequireExactJsonProperties(eventRoot, "interruptedAttemptId", "projectionSha256");
+                _ = RequiredJsonString(eventRoot, "interruptedAttemptId");
+                break;
+            case "dispatched":
+                RequireExactJsonProperties(eventRoot, "attemptId", "token", "expires", "projectionSha256");
+                _ = RequiredJsonString(eventRoot, "attemptId");
+                _ = RequiredPositiveJsonInt64(eventRoot, "token");
+                _ = RequiredCanonicalJsonTimestamp(eventRoot, "expires");
+                break;
+            case "published":
+                RequireExactJsonProperties(eventRoot, "publicationId", "semanticOutputId", "payloadId", "sha256",
+                    "projectionSha256");
+                _ = RequiredJsonString(eventRoot, "publicationId");
+                _ = RequiredJsonString(eventRoot, "semanticOutputId");
+                _ = RequiredJsonString(eventRoot, "payloadId");
+                ValidateSha256(RequiredJsonString(eventRoot, "sha256"));
+                break;
+            case "failed":
+                RequireExactJsonProperties(eventRoot, "reason", "projectionSha256");
+                if (RequiredJsonString(eventRoot, "reason")
+                    != RequiredJsonString(projectionRoot, "terminal_reason"))
+                {
+                    throw new InvalidOperationException(
+                        "The semantic acquisition failure reason is not bound to its retained projection.");
+                }
+                break;
+            case "cancelled":
+                RequireExactJsonProperties(eventRoot, "preparationCancellationCommandId", "preparationId",
+                    "projectionSha256");
+                if (RequiredJsonString(eventRoot, "preparationId") != item.PreparationId)
+                {
+                    throw new InvalidOperationException(
+                        "The semantic acquisition cancellation is not bound to its targeted preparation.");
+                }
+                _ = RequiredJsonString(eventRoot, "preparationCancellationCommandId");
+                break;
+            default:
+                throw new InvalidOperationException(
+                    "The semantic acquisition lifecycle event kind is not supported.");
+        }
+
+        ValidateAcquisitionEventRetainedBindings(item, eventRoot, projectionRoot, transaction);
+    }
+
+    private void ValidateAcquisitionEventRetainedBindings(
+        TargetedLifecycleSourceEvent item,
+        JsonElement eventRoot,
+        JsonElement projectionRoot,
+        SqliteTransaction? transaction)
+    {
+        string acquisitionId = ScalarString(
+            "SELECT event.acquisition_id FROM semantic_acquisition_events event "
+            + "JOIN semantic_acquisition_runs run USING(acquisition_id) "
+            + "WHERE event.event_id=$event AND run.preparation_id=$preparation;",
+            transaction, ("$event", item.OwnerEventId), ("$preparation", item.PreparationId));
+        if (item.OwnerEventId != acquisitionId + "-event-" + item.OwnerSequence)
+        {
+            throw new InvalidOperationException(
+                "The semantic acquisition lifecycle event identity differs from its retained owner sequence.");
+        }
+        string occurredAt = ToText(item.OccurredAt);
+        long matches;
+        switch (item.EventKind)
+        {
+            case "admitted":
+                matches = item.OwnerSequence == 1 && item.Generation == 0
+                    ? ScalarLong(
+                        "SELECT COUNT(*) FROM semantic_acquisition_runs run "
+                        + "JOIN semantic_acquisition_commands command USING(acquisition_id) "
+                        + "WHERE run.acquisition_id=$acquisition AND run.preparation_id=$preparation "
+                        + "AND run.created_at=$occurredAt AND command.command_kind='start' "
+                        + "AND command.expected_generation=0 AND command.request_sha256=run.request_sha256 "
+                        + "AND command.created_at=$occurredAt;", transaction,
+                        ("$acquisition", acquisitionId), ("$preparation", item.PreparationId),
+                        ("$occurredAt", occurredAt))
+                    : 0;
+                break;
+            case "recovered":
+                string interruptedAttemptId = RequiredJsonString(eventRoot, "interruptedAttemptId");
+                string recoveryRequestSha = item.Generation > 0
+                    ? Hash(string.Join('\n', "semantic-acquisition-recover/v1", acquisitionId,
+                        item.Generation - 1, interruptedAttemptId, item.CoordinatorFencingEpoch))
+                    : string.Empty;
+                matches = item.Generation > 0 && item.OwnerSequence > 1
+                    ? ScalarLong(
+                        "SELECT COUNT(*) FROM semantic_acquisition_attempts attempt "
+                        + "JOIN semantic_acquisition_events previous ON previous.acquisition_id=attempt.acquisition_id "
+                        + "JOIN semantic_acquisition_commands command ON command.acquisition_id=attempt.acquisition_id "
+                        + "WHERE attempt.acquisition_id=$acquisition AND attempt.attempt_id=$attempt "
+                        + "AND previous.sequence=$previousSequence "
+                        + "AND json_extract(previous.projection_json,'$.active_attempt_id')=$attempt "
+                        + "AND command.command_id=$command AND command.command_kind='recover' "
+                        + "AND command.expected_generation=$expectedGeneration "
+                        + "AND command.request_sha256=$requestSha AND command.created_at=$occurredAt;",
+                        transaction, ("$acquisition", acquisitionId), ("$attempt", interruptedAttemptId),
+                        ("$previousSequence", item.OwnerSequence - 1),
+                        ("$command", acquisitionId + "-recover-" + item.Generation),
+                        ("$expectedGeneration", item.Generation - 1), ("$requestSha", recoveryRequestSha),
+                        ("$occurredAt", occurredAt))
+                    : 0;
+                break;
+            case "dispatched":
+                string attemptId = RequiredJsonString(eventRoot, "attemptId");
+                long token = RequiredPositiveJsonInt64(eventRoot, "token");
+                string expires = RequiredCanonicalJsonTimestamp(eventRoot, "expires");
+                matches = item.OwnerSequence > 1
+                    && RequiredJsonString(projectionRoot, "active_attempt_id") == attemptId
+                    ? ScalarLong(
+                        "SELECT COUNT(*) FROM semantic_acquisition_attempts attempt "
+                        + "JOIN semantic_acquisition_events previous ON previous.acquisition_id=attempt.acquisition_id "
+                        + "WHERE attempt.acquisition_id=$acquisition AND attempt.attempt_id=$attempt "
+                        + "AND attempt.coordinator_fencing_epoch=$epoch "
+                        + "AND attempt.attempt_fencing_token=$token AND attempt.lease_expires_at=$expires "
+                        + "AND attempt.created_at=$occurredAt AND previous.sequence=$previousSequence "
+                        + "AND json_extract(previous.projection_json,'$.generation')=$generation "
+                        + "AND json_extract(previous.projection_json,'$.state') IN ('Queued','Retrying');",
+                        transaction, ("$acquisition", acquisitionId), ("$attempt", attemptId),
+                        ("$epoch", item.CoordinatorFencingEpoch), ("$token", token), ("$expires", expires),
+                        ("$occurredAt", occurredAt), ("$previousSequence", item.OwnerSequence - 1),
+                        ("$generation", item.Generation))
+                    : 0;
+                break;
+            case "published":
+                matches = item.OwnerSequence > 1
+                    ? ScalarLong(
+                        "SELECT COUNT(*) FROM semantic_acquisition_publications publication "
+                        + "JOIN semantic_acquisition_attempts attempt ON attempt.attempt_id=publication.attempt_id "
+                        + "JOIN semantic_acquisition_events previous ON previous.acquisition_id=publication.acquisition_id "
+                        + "WHERE publication.acquisition_id=$acquisition "
+                        + "AND publication.publication_id=$publication "
+                        + "AND publication.semantic_output_id=$output AND publication.payload_id=$payload "
+                        + "AND publication.payload_sha256=$sha AND publication.created_at=$occurredAt "
+                        + "AND attempt.coordinator_fencing_epoch=$epoch "
+                        + "AND previous.sequence=$previousSequence "
+                        + "AND json_extract(previous.projection_json,'$.active_attempt_id')=publication.attempt_id;",
+                        transaction, ("$acquisition", acquisitionId),
+                        ("$publication", RequiredJsonString(eventRoot, "publicationId")),
+                        ("$output", RequiredJsonString(eventRoot, "semanticOutputId")),
+                        ("$payload", RequiredJsonString(eventRoot, "payloadId")),
+                        ("$sha", RequiredJsonString(eventRoot, "sha256")), ("$occurredAt", occurredAt),
+                        ("$epoch", item.CoordinatorFencingEpoch),
+                        ("$previousSequence", item.OwnerSequence - 1))
+                    : 0;
+                break;
+            case "failed":
+                matches = item.OwnerSequence > 1
+                    ? ScalarLong(
+                        "SELECT COUNT(*) FROM semantic_acquisition_events previous "
+                        + "JOIN semantic_acquisition_attempts attempt "
+                        + "ON attempt.attempt_id=json_extract(previous.projection_json,'$.active_attempt_id') "
+                        + "WHERE previous.acquisition_id=$acquisition AND previous.sequence=$previousSequence "
+                        + "AND attempt.coordinator_fencing_epoch=$epoch;", transaction,
+                        ("$acquisition", acquisitionId), ("$previousSequence", item.OwnerSequence - 1),
+                        ("$epoch", item.CoordinatorFencingEpoch))
+                    : 0;
+                break;
+            case "cancelled":
+                string preparationCommandId = RequiredJsonString(eventRoot, "preparationCancellationCommandId");
+                string cancellationGesture = ScalarString(
+                    "SELECT user_gesture_id FROM targeted_preparation_commands "
+                    + "WHERE command_id=$command AND preparation_id=$preparation;", transaction,
+                    ("$command", preparationCommandId), ("$preparation", item.PreparationId));
+                string cancellationRequestSha = Hash(string.Join('\n',
+                    "semantic-acquisition-cancel/v1", preparationCommandId, acquisitionId,
+                    item.Generation, cancellationGesture));
+                matches = ScalarLong(
+                    "SELECT COUNT(*) FROM semantic_acquisition_commands acquisition_command "
+                    + "JOIN targeted_preparation_commands preparation_command "
+                    + "ON preparation_command.command_id=$preparationCommand "
+                    + "WHERE acquisition_command.command_id=$acquisitionCommand "
+                    + "AND acquisition_command.acquisition_id=$acquisition "
+                    + "AND acquisition_command.command_kind='cancel' "
+                    + "AND acquisition_command.expected_generation=$generation "
+                    + "AND acquisition_command.user_gesture_id=$gesture "
+                    + "AND acquisition_command.request_sha256=$requestSha "
+                    + "AND acquisition_command.created_at=$occurredAt "
+                    + "AND preparation_command.preparation_id=$preparation "
+                    + "AND preparation_command.command_kind='cancel' "
+                    + "AND preparation_command.created_at=$occurredAt;", transaction,
+                    ("$preparationCommand", preparationCommandId),
+                    ("$acquisitionCommand", preparationCommandId + "-semantic-acquisition"),
+                    ("$acquisition", acquisitionId), ("$generation", item.Generation),
+                    ("$gesture", cancellationGesture), ("$requestSha", cancellationRequestSha),
+                    ("$occurredAt", occurredAt), ("$preparation", item.PreparationId));
+                break;
+            default:
+                matches = 0;
+                break;
+        }
+        if (matches != 1)
+        {
+            throw new InvalidOperationException(
+                "The semantic acquisition lifecycle event JSON differs from its retained authority binding.");
+        }
+    }
+
+    private static JsonDocument ParseTargetedLifecycleJson(string value, string role)
+    {
+        try
+        {
+            JsonDocument document = JsonDocument.Parse(value);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                document.Dispose();
+                throw new InvalidOperationException(
+                    $"The targeted lifecycle {role} must be one closed JSON object.");
+            }
+            return document;
+        }
+        catch (JsonException exception)
+        {
+            throw new InvalidOperationException(
+                $"The targeted lifecycle {role} is malformed.", exception);
+        }
+    }
+
+    private static void RequireExactJsonProperties(JsonElement root, params string[] expected)
+    {
+        string[] actual = root.EnumerateObject().Select(property => property.Name).ToArray();
+        if (actual.Length != expected.Length
+            || actual.Distinct(StringComparer.Ordinal).Count() != actual.Length
+            || !actual.ToHashSet(StringComparer.Ordinal).SetEquals(expected))
+        {
+            throw new InvalidOperationException(
+                "The retained lifecycle JSON contains an unknown, missing, duplicated, or substituted field.");
+        }
+    }
+
+    private static string RequiredJsonString(JsonElement root, string propertyName)
+    {
+        if (!root.TryGetProperty(propertyName, out JsonElement property)
+            || property.ValueKind != JsonValueKind.String
+            || string.IsNullOrWhiteSpace(property.GetString()))
+        {
+            throw new InvalidOperationException(
+                $"The retained lifecycle JSON field '{propertyName}' is missing or invalid.");
+        }
+        return property.GetString()!;
+    }
+
+    private static long RequiredPositiveJsonInt64(JsonElement root, string propertyName)
+    {
+        if (!root.TryGetProperty(propertyName, out JsonElement property)
+            || property.ValueKind != JsonValueKind.Number
+            || !property.TryGetInt64(out long value)
+            || value <= 0)
+        {
+            throw new InvalidOperationException(
+                $"The retained lifecycle JSON field '{propertyName}' is missing or invalid.");
+        }
+        return value;
+    }
+
+    private static string RequiredCanonicalJsonTimestamp(JsonElement root, string propertyName)
+    {
+        string value = RequiredJsonString(root, propertyName);
+        try
+        {
+            return ToText(ParseTargetedTimestamp(value));
+        }
+        catch (FormatException exception)
+        {
+            throw new InvalidOperationException(
+                $"The retained lifecycle JSON field '{propertyName}' is not a valid timestamp.", exception);
         }
     }
 
@@ -2573,7 +2879,7 @@ public sealed partial class AuthoritativeStore
             ("admitted", "CapturingSnapshot") => true,
             ("fresh-snapshot-published", "AcquiringEvidence") => true,
             ("semantic-evidence-published", "PreparingPlan") => true,
-            ("plan-published", "Ready" or "ReadyWithGaps") => true,
+            ("plan-published", "Ready" or "ReadyWithGaps" or "Invalidated") => true,
             ("preparation-invalidated", "Invalidated") => true,
             ("preparation-failed", "Failed") => true,
             ("cancelled", "Cancelled") => true,

@@ -149,6 +149,9 @@ resealed or promoted through an ordinary tooling command.
   malformed/substituted/stale cursors, equal-timestamp lifecycle events,
   append-stable continuation, sealed owner metadata and event bytes, schema-17
   zero/nonzero migration, interrupted rollback, rebuild, restart, and restore.
+  Valid ambiguous and missing-proof plans remain inspectable non-startable
+  preparations, and schema-16 migration rejects closed-shape acquisition-event
+  tampering without accepting a damaged source schema or missing trigger.
   Corrected Checkpoint C review is pending;
   the checkpoint remains suspended. Remaining packages must
   exercise EVAL-0090 through EVAL-0094 plus every applicable existing case

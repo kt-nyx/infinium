@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Infinium.Application.Analysis;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
 using Microsoft.Data.Sqlite;
@@ -331,6 +332,169 @@ public sealed class PersistenceAndLifecycleTests
 
     [TestMethod]
     [TestCategory("Unit")]
+    [TestCategory("Lifecycle")]
+    [DataRow(TargetedCorrelationStatus.Ambiguous)]
+    [DataRow(TargetedCorrelationStatus.MissingRequiredProof)]
+    public void ProductionNonStartableTargetedPlanIsPublishedInspectableAndCannotCreateSuccessorAuthority(
+        TargetedCorrelationStatus status)
+    {
+        using TemporaryStore temporary = new();
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        using AuthoritativeStore store = temporary.Open();
+        TargetedLifecycleFixture fixture = SeedTargetedLifecycle(store, now);
+        PublishedTargetedPlan published = PublishTargetedPlan(store, fixture, status, now.AddSeconds(1));
+
+        Assert.AreEqual(TargetedVerificationPreparationState.Invalidated, published.Preparation.State);
+        Assert.IsFalse(published.Preparation.Startable);
+        Assert.IsFalse(published.Preparation.Limited);
+        Assert.AreEqual(published.Plan.PlanId.Value, published.Preparation.PlanId);
+        Assert.AreEqual(published.Plan.PlanFingerprint.Value, published.Preparation.PlanFingerprint);
+        Assert.AreEqual(1L, published.Plan.CorrelationCoverage.PopulationDenominator);
+        Assert.HasCount(1, published.Plan.CorrelationCoverage.Rows);
+        Assert.AreEqual(status, published.Plan.CorrelationCoverage.Rows[0].Status);
+        Assert.IsNotEmpty(published.Plan.NonStartableReasons);
+        Assert.IsNotEmpty(published.Plan.Gaps);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(published.Preparation.TerminalReason));
+        TargetedVerificationPlanContract readback = store.ReadTargetedPlan(
+            published.Preparation.PreparationId);
+        Assert.AreEqual(published.Plan.PlanFingerprint, readback.PlanFingerprint);
+        CollectionAssert.AreEqual(published.Plan.NonStartableReasons.ToArray(),
+            readback.NonStartableReasons.ToArray());
+        CollectionAssert.AreEqual(published.Plan.Gaps.ToArray(), readback.Gaps.ToArray());
+        TargetedLifecycleTestRow[] lifecycle = ReadTargetedLifecycleRows(
+            temporary.Root, published.Preparation.PreparationId);
+        Assert.AreEqual("plan-published", lifecycle[^1].EventKind);
+
+        long[] before = ReadTargetedStartMutationCounts(temporary.Root);
+        string successorRunId = "non-startable-successor-" + status;
+        string targetedVerificationId = "targeted-verification-" + successorRunId;
+        string operationJson = "{}";
+        string operationFingerprint = Sha256(operationJson);
+        TargetedStartAdmissionPersistence admission = new(
+            "non-startable-admission-" + status,
+            targetedVerificationId,
+            published.Preparation.PreparationId,
+            "non-startable-gesture-" + status,
+            new string('a', 64),
+            new string('b', 64),
+            published.Preparation.PreparationFingerprint,
+            published.Preparation.SourceRunId,
+            published.Preparation.SourceOccurrenceId,
+            published.Plan.TargetSnapshotId.Value,
+            published.Plan.EvidenceAcquisitionId.Value,
+            operationFingerprint)
+        {
+            OperationInputs = published.OperationInputs,
+        };
+        Assert.ThrowsExactly<InvalidOperationException>(() => store.CreateRun(
+            "non-startable-start-command-" + status,
+            successorRunId,
+            Binding("non-startable-" + status),
+            fixture.Authority.FencingEpoch,
+            now.AddSeconds(2),
+            "DiagnosticUserGesture",
+            now.AddMinutes(2),
+            ManagedRunOperationKinds.ManagedAnalysis,
+            operationJson,
+            admission.UserGestureId,
+            published.Preparation.PreparationId,
+            admission.SubmissionFingerprint,
+            admission));
+        CollectionAssert.AreEqual(before, ReadTargetedStartMutationCounts(temporary.Root));
+        Assert.AreEqual(TargetedVerificationPreparationState.Invalidated,
+            store.GetTargetedPreparation(published.Preparation.PreparationId).State);
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Migration")]
+    public void Schema16MigrationRetainsPublishedNonStartablePlanHistory()
+    {
+        using TemporaryStore temporary = new();
+        string preparationId;
+        string planFingerprint;
+        using (AuthoritativeStore store = temporary.Open())
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            TargetedLifecycleFixture fixture = SeedTargetedLifecycle(store, now);
+            PublishedTargetedPlan published = PublishTargetedPlan(
+                store, fixture, TargetedCorrelationStatus.Ambiguous, now.AddSeconds(1));
+            preparationId = published.Preparation.PreparationId;
+            planFingerprint = published.Plan.PlanFingerprint.Value;
+        }
+        DowngradeTargetedLifecycleEvidence(temporary.Root);
+
+        using AuthoritativeStore migrated = temporary.Open();
+        Assert.AreEqual(17, migrated.GetSchemaVersion());
+        TargetedPreparationPersistenceRecord preparation = migrated.GetTargetedPreparation(preparationId);
+        Assert.AreEqual(TargetedVerificationPreparationState.Invalidated, preparation.State);
+        Assert.IsFalse(preparation.Startable);
+        Assert.AreEqual(planFingerprint, migrated.ReadTargetedPlan(preparationId).PlanFingerprint.Value);
+        Assert.AreEqual("plan-published", ReadTargetedLifecycleRows(temporary.Root, preparationId)[^1].EventKind);
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Lifecycle")]
+    [DataRow(TargetedCorrelationStatus.MatchedExecutable,
+        TargetedVerificationPreparationState.Ready)]
+    [DataRow(TargetedCorrelationStatus.Unsupported,
+        TargetedVerificationPreparationState.ReadyWithGaps)]
+    public void StartableTargetedPlanPublicationRetainsReadyTaxonomy(
+        TargetedCorrelationStatus status,
+        TargetedVerificationPreparationState expectedState)
+    {
+        using TemporaryStore temporary = new();
+        string preparationId;
+        using (AuthoritativeStore store = temporary.Open())
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            TargetedLifecycleFixture fixture = SeedTargetedLifecycle(store, now);
+            PublishedTargetedPlan published = PublishTargetedPlan(store, fixture, status, now.AddSeconds(1));
+            preparationId = published.Preparation.PreparationId;
+            Assert.AreEqual(expectedState, published.Preparation.State);
+            Assert.IsTrue(published.Preparation.Startable);
+            Assert.AreEqual(expectedState == TargetedVerificationPreparationState.ReadyWithGaps,
+                published.Preparation.Limited);
+            store.RebuildProjections(now.AddSeconds(2));
+            Assert.AreEqual(expectedState, store.GetTargetedPreparation(preparationId).State);
+        }
+        using AuthoritativeStore restarted = temporary.Open();
+        Assert.AreEqual(expectedState, restarted.GetTargetedPreparation(preparationId).State);
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Lifecycle")]
+    [DataRow(TargetedVerificationPreparationState.Failed, "preparation-failed")]
+    [DataRow(TargetedVerificationPreparationState.Invalidated, "preparation-invalidated")]
+    public void OrdinaryTerminalPreparationTaxonomySurvivesRebuildAndRestart(
+        TargetedVerificationPreparationState terminalState,
+        string eventKind)
+    {
+        using TemporaryStore temporary = new();
+        string preparationId;
+        using (AuthoritativeStore store = temporary.Open())
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            TargetedLifecycleFixture fixture = SeedTargetedLifecycle(store, now);
+            TargetedPreparationPersistenceRecord current = store.GetTargetedPreparation(
+                fixture.Preparation.PreparationId);
+            TargetedPreparationPersistenceRecord terminal = store.TransitionTargetedPreparation(
+                current.PreparationId, current.Revision, current.State, terminalState, eventKind,
+                "{\"reason\":\"retained terminal evidence\"}", "retained terminal evidence",
+                null, null, null, null, false, false, now.AddSeconds(1));
+            preparationId = terminal.PreparationId;
+            Assert.AreEqual(terminalState, terminal.State);
+            store.RebuildProjections(now.AddSeconds(2));
+            Assert.AreEqual(terminalState, store.GetTargetedPreparation(preparationId).State);
+        }
+        using AuthoritativeStore restarted = temporary.Open();
+        Assert.AreEqual(terminalState, restarted.GetTargetedPreparation(preparationId).State);
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
     [TestCategory("Security")]
     [DataRow("preparation-kind")]
     [DataRow("preparation-revision")]
@@ -349,36 +513,36 @@ public sealed class PersistenceAndLifecycleTests
             _ = SeedTargetedLifecycle(store, occurredAt);
         }
 
-        string sql = mutation switch
+        (string Trigger, string Sql) tamper = mutation switch
         {
             "preparation-kind" =>
-                "DROP TRIGGER targeted_preparation_events_append_only_update; "
-                + "UPDATE targeted_preparation_events SET event_kind='cancelled' WHERE revision=1;",
+                ("targeted_preparation_events_append_only_update",
+                    "UPDATE targeted_preparation_events SET event_kind='cancelled' WHERE revision=1;"),
             "preparation-revision" =>
-                "DROP TRIGGER targeted_preparation_events_append_only_update; "
-                + "UPDATE targeted_preparation_events SET revision=7 WHERE revision=1;",
+                ("targeted_preparation_events_append_only_update",
+                    "UPDATE targeted_preparation_events SET revision=7 WHERE revision=1;"),
             "preparation-timestamp" =>
-                "DROP TRIGGER targeted_preparation_events_append_only_update; "
-                + "UPDATE targeted_preparation_events SET created_at='2026-08-27T12:30:01.0000000+00:00' WHERE revision=1;",
+                ("targeted_preparation_events_append_only_update",
+                    "UPDATE targeted_preparation_events SET created_at='2026-08-27T12:30:01.0000000+00:00' WHERE revision=1;"),
             "acquisition-kind" =>
-                "DROP TRIGGER semantic_acquisition_events_append_only_update; "
-                + "UPDATE semantic_acquisition_events SET event_kind='cancelled' WHERE sequence=1;",
+                ("semantic_acquisition_events_append_only_update",
+                    "UPDATE semantic_acquisition_events SET event_kind='cancelled' WHERE sequence=1;"),
             "acquisition-generation" =>
-                "DROP TRIGGER semantic_acquisition_events_append_only_update; "
-                + "UPDATE semantic_acquisition_events SET generation=7 WHERE sequence=1;",
+                ("semantic_acquisition_events_append_only_update",
+                    "UPDATE semantic_acquisition_events SET generation=7 WHERE sequence=1;"),
             "acquisition-fence" =>
-                "DROP TRIGGER semantic_acquisition_events_append_only_update; "
-                + "UPDATE semantic_acquisition_events SET coordinator_fencing_epoch=999 WHERE sequence=1;",
+                ("semantic_acquisition_events_append_only_update",
+                    "UPDATE semantic_acquisition_events SET coordinator_fencing_epoch=999 WHERE sequence=1;"),
             "acquisition-timestamp" =>
-                "DROP TRIGGER semantic_acquisition_events_append_only_update; "
-                + "UPDATE semantic_acquisition_events SET created_at='2026-08-27T12:30:01.0000000+00:00' WHERE sequence=1;",
+                ("semantic_acquisition_events_append_only_update",
+                    "UPDATE semantic_acquisition_events SET created_at='2026-08-27T12:30:01.0000000+00:00' WHERE sequence=1;"),
             "acquisition-event-json" =>
-                "DROP TRIGGER semantic_acquisition_events_append_only_update; "
-                + "UPDATE semantic_acquisition_events SET event_json=json_set(event_json,'$.hostileMutation','retained') "
-                + "WHERE sequence=1;",
+                ("semantic_acquisition_events_append_only_update",
+                    "UPDATE semantic_acquisition_events SET event_json=json_set(event_json,'$.hostileMutation','retained') "
+                    + "WHERE sequence=1;"),
             _ => throw new InvalidOperationException("Unknown targeted lifecycle mutation."),
         };
-        ExecuteRaw(temporary.Root, sql);
+        MutateAppendOnlyRowPreservingTrigger(temporary.Root, tamper.Trigger, tamper.Sql);
         if (mutation == "acquisition-event-json")
         {
             using SqliteConnection connection = OpenRaw(temporary.Root);
@@ -466,15 +630,83 @@ public sealed class PersistenceAndLifecycleTests
             _ = SeedTargetedLifecycle(store, DateTimeOffset.UtcNow);
         }
         DowngradeTargetedLifecycleEvidence(temporary.Root);
-        ExecuteRaw(temporary.Root,
-            "DROP TRIGGER targeted_preparation_events_append_only_update; "
-            + "UPDATE targeted_preparation_events SET event_kind='cancelled' WHERE revision=1;");
+        MutateAppendOnlyRowPreservingTrigger(temporary.Root,
+            "targeted_preparation_events_append_only_update",
+            "UPDATE targeted_preparation_events SET event_kind='cancelled' WHERE revision=1;");
+        AssertSchema16SourceAndTriggerIntact(
+            temporary.Root, "targeted_preparation_events_append_only_update");
 
-        Assert.ThrowsExactly<InvalidOperationException>(() =>
+        InvalidOperationException rejection = Assert.ThrowsExactly<InvalidOperationException>(() =>
         {
             using AuthoritativeStore _ = temporary.Open();
         });
-        using SqliteConnection connection = OpenRaw(temporary.Root);
+        StringAssert.Contains(rejection.ToString(), "preparation lifecycle");
+        AssertSchema16Rollback(temporary.Root);
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Migration")]
+    [TestCategory("Security")]
+    [DataRow("admitted", "added")]
+    [DataRow("admitted", "missing")]
+    [DataRow("admitted", "substituted")]
+    [DataRow("recovered", "added")]
+    [DataRow("recovered", "missing")]
+    [DataRow("recovered", "substituted")]
+    [DataRow("dispatched", "added")]
+    [DataRow("dispatched", "missing")]
+    [DataRow("dispatched", "substituted")]
+    [DataRow("published", "added")]
+    [DataRow("published", "missing")]
+    [DataRow("published", "substituted")]
+    [DataRow("failed", "added")]
+    [DataRow("failed", "missing")]
+    [DataRow("failed", "substituted")]
+    [DataRow("cancelled", "added")]
+    [DataRow("cancelled", "missing")]
+    [DataRow("cancelled", "substituted")]
+    public void Schema16MigrationRejectsClosedAcquisitionEventShapeTamper(
+        string eventKind,
+        string mutation)
+    {
+        using TemporaryStore temporary = new();
+        using (AuthoritativeStore store = temporary.Open())
+        {
+            SeedSemanticAcquisitionEvent(store, eventKind, DateTimeOffset.UtcNow);
+        }
+        DowngradeTargetedLifecycleEvidence(temporary.Root);
+        string eventJson = ReadAcquisitionEventJson(temporary.Root, eventKind);
+        JsonObject mutated = JsonNode.Parse(eventJson)?.AsObject()
+            ?? throw new InvalidOperationException("The acquisition event fixture is malformed.");
+        MutateAcquisitionEventJson(mutated, eventKind, mutation);
+        string mutatedJson = mutated.ToJsonString();
+        MutateAppendOnlyRowPreservingTrigger(temporary.Root,
+            "semantic_acquisition_events_append_only_update",
+            "UPDATE semantic_acquisition_events SET event_json=$json WHERE event_kind=$kind;",
+            ("$json", mutatedJson), ("$kind", eventKind));
+        AssertSchema16SourceAndTriggerIntact(
+            temporary.Root, "semantic_acquisition_events_append_only_update");
+        if (mutation == "added")
+        {
+            AssertAcquisitionProjectionFingerprintStillMatches(temporary.Root, eventKind);
+        }
+
+        InvalidOperationException rejection = Assert.ThrowsExactly<InvalidOperationException>(() =>
+        {
+            using AuthoritativeStore _ = temporary.Open();
+        }, eventKind + "/" + mutation);
+        string rejectionEvidence = rejection.ToString();
+        Assert.IsTrue(rejectionEvidence.Contains("lifecycle", StringComparison.OrdinalIgnoreCase)
+            || rejectionEvidence.Contains("retained", StringComparison.OrdinalIgnoreCase), rejectionEvidence);
+        AssertSchema16Rollback(temporary.Root);
+        AssertSchema16SourceAndTriggerIntact(
+            temporary.Root, "semantic_acquisition_events_append_only_update");
+    }
+
+    private static void AssertSchema16Rollback(string productRoot)
+    {
+        using SqliteConnection connection = OpenRaw(productRoot);
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText =
             "SELECT (SELECT user_version FROM pragma_user_version),"
@@ -3716,6 +3948,11 @@ public sealed class PersistenceAndLifecycleTests
         TargetedPreparationPersistenceRecord Preparation,
         SemanticAcquisitionPersistenceRecord Acquisition);
 
+    private sealed record PublishedTargetedPlan(
+        TargetedPreparationPersistenceRecord Preparation,
+        TargetedVerificationPlanContract Plan,
+        IReadOnlyList<TargetedOperationInputPersistence> OperationInputs);
+
     private sealed record TargetedLifecycleTestRow(
         long Sequence,
         long OwnerSequence,
@@ -3731,6 +3968,293 @@ public sealed class PersistenceAndLifecycleTests
         + "UPDATE store_metadata SET value='1.15.0' WHERE key='storage_contract_version'; "
         + $"UPDATE store_metadata SET value='{TargetedVerificationPersistenceDeclarations.PreparationSchemaFingerprint}' "
         + "WHERE key='schema_fingerprint'; PRAGMA user_version=16;");
+
+    private static PublishedTargetedPlan PublishTargetedPlan(
+        AuthoritativeStore store,
+        TargetedLifecycleFixture fixture,
+        TargetedCorrelationStatus status,
+        DateTimeOffset now)
+    {
+        TargetedPreparationPersistenceRecord current = store.GetTargetedPreparation(
+            fixture.Preparation.PreparationId);
+        TargetedPreparationPersistenceRecord preparing = store.TransitionTargetedPreparation(
+            current.PreparationId, current.Revision, current.State,
+            TargetedVerificationPreparationState.PreparingPlan,
+            "semantic-evidence-published", "{}", string.Empty, null,
+            fixture.Acquisition.AcquisitionId, null, null, false, false, now);
+        TargetedScopeMemberContract member = new(new("non-startable-member"),
+            TargetedScopeMemberKind.Finding, new("non-startable-stable-identity"),
+            "retained canonical finding member", true, [new("source-proof")]);
+        TargetedAnalysisScopeContract scope = TargetedVerificationPlanner.CloseScope(
+            new(preparing.PreparationId), new(preparing.SourceOccurrenceId), [member], [member], []);
+        IReadOnlyList<TargetedCurrentObservationContract> observations = status switch
+        {
+            TargetedCorrelationStatus.MatchedExecutable =>
+            [
+                new(member.StableIdentity, new("target-population"), member.StableIdentity, member.MemberId,
+                    TargetedCorrelationStatus.MatchedExecutable, true, true,
+                    "The exact typed member is executable.", [new("identity-proof")], null),
+            ],
+            TargetedCorrelationStatus.Unsupported =>
+            [
+                new(member.StableIdentity, new("target-population"), member.StableIdentity, null,
+                    TargetedCorrelationStatus.Unsupported, true, false,
+                    "The typed member is known but its accepted processor is unavailable.",
+                    [new("processing-proof")], null),
+            ],
+            TargetedCorrelationStatus.Ambiguous =>
+            [
+                new(member.StableIdentity, new("target-population"), null, null,
+                    TargetedCorrelationStatus.Ambiguous, false, false,
+                    "Retained typed identity evidence is ambiguous.", [new("ambiguity-proof")], null),
+            ],
+            TargetedCorrelationStatus.MissingRequiredProof => [],
+            _ => throw new InvalidOperationException("The non-startable plan fixture status is unsupported."),
+        };
+        TargetedCorrelationCoverageContract coverage = TargetedVerificationPlanner.Correlate(
+            new(preparing.PreparationId), scope, new("targeted-lifecycle-snapshot"),
+            new(fixture.Acquisition.AcquisitionId), new("semantic-output"), observations);
+        byte[] deliveredBytes = Encoding.UTF8.GetBytes("{\"schema\":\"targeted-delivered-test\"}");
+        byte[] coverageBytes = Encoding.UTF8.GetBytes("{\"schema\":\"targeted-coverage-test\"}");
+        byte[] manifestBytes = Encoding.UTF8.GetBytes("{\"schema\":\"targeted-manifest-test\"}");
+        ArtifactReferenceContract delivered = new(new("non-startable-delivered"),
+            CandidateDeliveredInputIdentity.Version, new(Sha256(deliveredBytes)), "retained");
+        ArtifactReferenceContract coverageInput = new(coverage.CoverageId, coverage.SchemaVersion,
+            new(Sha256(coverageBytes)), "retained");
+        ArtifactReferenceContract manifest = new(new("non-startable-manifest"), new(1, 0, 0),
+            new(Sha256(manifestBytes)), "retained");
+        TargetedVerificationSourceContract source = new(new(preparing.SourceRunId),
+            TargetedVerificationRootKind.Finding, new(preparing.SourceOccurrenceId),
+            new("source-logical-identity"), new("source-payload"), new(new string('1', 64)),
+            new(new string('2', 64)), "source-analyzer", new(1, 0, 0), new(1, 0, 0), new(1, 0, 0),
+            new("source-snapshot"), new("source-context"), new("source-configuration"),
+            new("source-manifest"));
+        TargetedVerificationPlanContract draft = new("infinium/targeted-verification-plan", new(1, 2, 0),
+            new("targeted-plan-pending"), new(preparing.PreparationId), preparing.Revision,
+            source, new(preparing.CaptureOperationId), new("targeted-lifecycle-snapshot"),
+            new(new string('3', 64)), new(fixture.Acquisition.AcquisitionId), new("semantic-output"),
+            new(new string('4', 64)), scope, coverage, new("non-startable-successor"),
+            delivered, coverageInput, manifest, [], "scope-limited-no-readiness",
+            coverage.Startable, coverage.Limited, coverage.NonStartableReasons, coverage.Gaps,
+            new(new string('0', 64)));
+        Sha256Fingerprint planFingerprint = TargetedVerificationContractInvariants.ComputePlanFingerprint(draft);
+        TargetedVerificationPlanContract plan = draft with
+        {
+            PlanId = new("targeted-plan-" + planFingerprint.Value[..32]),
+            PlanFingerprint = planFingerprint,
+        };
+        TargetedOperationInputPersistence[] operationInputs =
+        [
+            new("targeted-candidate-delivered-input", delivered.ArtifactId.Value, deliveredBytes),
+            new("targeted-correlation-coverage", coverageInput.ArtifactId.Value, coverageBytes),
+            new("targeted-resolved-input-manifest", manifest.ArtifactId.Value, manifestBytes),
+        ];
+        TargetedPreparationPersistenceRecord published = store.StoreTargetedPlan(plan, operationInputs, now);
+        return new(published, plan, operationInputs);
+    }
+
+    private static long[] ReadTargetedStartMutationCounts(string productRoot)
+    {
+        using SqliteConnection connection = OpenRaw(productRoot);
+        using SqliteCommand command = connection.CreateCommand();
+        string[] queries =
+        [
+            "SELECT COUNT(*) FROM runs;",
+            "SELECT COUNT(*) FROM job_nodes;",
+            "SELECT COUNT(*) FROM durable_commands;",
+            "SELECT COUNT(*) FROM run_operations;",
+            "SELECT COUNT(*) FROM targeted_start_admissions;",
+            "SELECT COUNT(*) FROM targeted_initiation_lineage;",
+            "SELECT COUNT(*) FROM semantic_acquisition_application_links WHERE successor_run_id IS NOT NULL;",
+            "SELECT COUNT(*) FROM targeted_lifecycle_evidence;",
+        ];
+        long[] counts = new long[queries.Length];
+        for (int index = 0; index < queries.Length; index++)
+        {
+            command.CommandText = queries[index];
+            counts[index] = (long)command.ExecuteScalar()!;
+        }
+        return counts;
+    }
+
+    private static void SeedSemanticAcquisitionEvent(
+        AuthoritativeStore store,
+        string eventKind,
+        DateTimeOffset now)
+    {
+        TargetedLifecycleFixture fixture = SeedTargetedLifecycle(store, now);
+        if (eventKind == "admitted")
+        {
+            return;
+        }
+        SemanticAcquisitionAttemptRecord attempt = store.DispatchSemanticAcquisition(
+            fixture.Acquisition.AcquisitionId, 0, fixture.Authority.FencingEpoch,
+            TimeSpan.FromMinutes(2), now.AddSeconds(1));
+        if (eventKind == "dispatched")
+        {
+            return;
+        }
+        if (eventKind == "recovered")
+        {
+            Assert.AreEqual(1, store.RecoverInterruptedSemanticAcquisitions(
+                fixture.Authority.FencingEpoch, now.AddSeconds(2)));
+            return;
+        }
+        if (eventKind == "published")
+        {
+            byte[] payload = "{\"semantic\":\"retained\"}"u8.ToArray();
+            string payloadSha = Sha256(payload);
+            using AttemptStagingAuthority staging = store.Paths.CreateAttemptStagingDirectory(attempt.AttemptId);
+            const string fileName = "semantic-acquisition-test.json";
+            File.WriteAllBytes(Path.Combine(store.Paths.Staging, attempt.AttemptId, fileName), payload);
+            _ = store.PublishSemanticAcquisition(attempt, fileName, payloadSha, payload.LongLength,
+                new string('8', 64), 1024 * 1024, "semantic-output", "{}", now.AddSeconds(2));
+            return;
+        }
+        if (eventKind == "failed")
+        {
+            store.FailSemanticAcquisition(attempt, "qualified extraction failed", now.AddSeconds(2));
+            return;
+        }
+        if (eventKind == "cancelled")
+        {
+            TargetedPreparationPersistenceRecord preparation = store.GetTargetedPreparation(
+                fixture.Preparation.PreparationId);
+            _ = store.CancelTargetedPreparation("migration-cancel-command", preparation.PreparationId,
+                preparation.Revision, "migration-cancel-gesture", fixture.Authority.FencingEpoch,
+                now.AddSeconds(2));
+            return;
+        }
+        throw new InvalidOperationException("The acquisition event fixture kind is unsupported.");
+    }
+
+    private static string ReadAcquisitionEventJson(string productRoot, string eventKind)
+    {
+        using SqliteConnection connection = OpenRaw(productRoot);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT event_json FROM semantic_acquisition_events WHERE event_kind=$kind ORDER BY sequence DESC LIMIT 1;";
+        command.Parameters.AddWithValue("$kind", eventKind);
+        return (string)(command.ExecuteScalar()
+            ?? throw new InvalidOperationException("The acquisition event fixture does not exist."));
+    }
+
+    private static void MutateAcquisitionEventJson(JsonObject value, string eventKind, string mutation)
+    {
+        string mutableField = eventKind switch
+        {
+            "admitted" => "projectionSha256",
+            "recovered" => "interruptedAttemptId",
+            "dispatched" => "attemptId",
+            "published" => "publicationId",
+            "failed" => "reason",
+            "cancelled" => "preparationCancellationCommandId",
+            _ => throw new InvalidOperationException("The acquisition event fixture kind is unsupported."),
+        };
+        switch (mutation)
+        {
+            case "added":
+                value["unknownRetainedField"] = "hostile";
+                break;
+            case "missing":
+                Assert.IsTrue(value.Remove(mutableField));
+                break;
+            case "substituted":
+                value[mutableField] = mutableField == "projectionSha256"
+                    ? new string('f', 64)
+                    : "substituted-retained-binding";
+                break;
+            default:
+                throw new InvalidOperationException("The acquisition event mutation is unsupported.");
+        }
+    }
+
+    private static void MutateAppendOnlyRowPreservingTrigger(
+        string productRoot,
+        string triggerName,
+        string mutationSql,
+        params (string Name, object? Value)[] parameters)
+    {
+        using SqliteConnection connection = OpenRaw(productRoot);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name=$trigger;";
+        command.Parameters.AddWithValue("$trigger", triggerName);
+        string triggerSql = (string)(command.ExecuteScalar()
+            ?? throw new InvalidOperationException("The accepted append-only trigger is missing."));
+        command.Parameters.Clear();
+        using SqliteTransaction transaction = connection.BeginTransaction();
+        command.Transaction = transaction;
+        command.CommandText = "DROP TRIGGER \"" + triggerName.Replace("\"", "\"\"", StringComparison.Ordinal) + "\";";
+        command.ExecuteNonQuery();
+        command.CommandText = mutationSql;
+        foreach ((string name, object? value) in parameters)
+        {
+            command.Parameters.AddWithValue(name, value ?? DBNull.Value);
+        }
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.Parameters.Clear();
+        command.CommandText = triggerSql;
+        command.ExecuteNonQuery();
+        transaction.Commit();
+    }
+
+    private static void AssertSchema16SourceAndTriggerIntact(string productRoot, string triggerName)
+    {
+        using SqliteConnection connection = OpenRaw(productRoot);
+        Assert.AreEqual(TargetedVerificationPersistenceDeclarations.PreparationSchemaFingerprint,
+            ComputeSchemaFingerprintForTest(connection));
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT (SELECT user_version FROM pragma_user_version),"
+            + "(SELECT value FROM store_metadata WHERE key='schema_fingerprint'),"
+            + "(SELECT COUNT(*) FROM sqlite_schema WHERE type='trigger' AND name=$trigger);";
+        command.Parameters.AddWithValue("$trigger", triggerName);
+        using SqliteDataReader reader = command.ExecuteReader();
+        Assert.IsTrue(reader.Read());
+        Assert.AreEqual(16L, reader.GetInt64(0));
+        Assert.AreEqual(TargetedVerificationPersistenceDeclarations.PreparationSchemaFingerprint,
+            reader.GetString(1));
+        Assert.AreEqual(1L, reader.GetInt64(2));
+    }
+
+    private static void AssertAcquisitionProjectionFingerprintStillMatches(
+        string productRoot,
+        string eventKind)
+    {
+        using SqliteConnection connection = OpenRaw(productRoot);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT event_json,projection_json FROM semantic_acquisition_events "
+            + "WHERE event_kind=$kind ORDER BY sequence DESC LIMIT 1;";
+        command.Parameters.AddWithValue("$kind", eventKind);
+        using SqliteDataReader reader = command.ExecuteReader();
+        Assert.IsTrue(reader.Read());
+        using JsonDocument eventDocument = JsonDocument.Parse(reader.GetString(0));
+        Assert.AreEqual(Sha256(reader.GetString(1)),
+            eventDocument.RootElement.GetProperty("projectionSha256").GetString());
+    }
+
+    private static string ComputeSchemaFingerprintForTest(SqliteConnection connection)
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT type,name,tbl_name,COALESCE(sql,'') FROM sqlite_schema "
+            + "WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name;";
+        StringBuilder canonical = new();
+        using SqliteDataReader reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            canonical.Append(reader.GetString(0)).Append('\u001f')
+                .Append(reader.GetString(1)).Append('\u001f')
+                .Append(reader.GetString(2)).Append('\u001f')
+                .Append(reader.GetString(3)).Append('\n');
+        }
+        return Sha256(canonical.ToString());
+    }
+
+    private static string Sha256(string value) => Sha256(Encoding.UTF8.GetBytes(value));
+
+    private static string Sha256(byte[] value) => Convert.ToHexStringLower(SHA256.HashData(value));
 
     private static TargetedLifecycleFixture SeedTargetedLifecycle(
         AuthoritativeStore store,

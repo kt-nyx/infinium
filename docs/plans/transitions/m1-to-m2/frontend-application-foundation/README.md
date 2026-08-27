@@ -106,5 +106,16 @@ later appends, rebuild, restart, and restore. Application `1.13.0`, domain
 `1.6.0`, storage `1.16.0`, schema `17`, and persisted targeted-plan `1.2.0`
 identify the corrected contract bytes.
 
+Valid dependency-closed plans with ambiguous identity or missing required
+proof now publish durably as inspectable, non-startable `Invalidated`
+preparations rather than rolling back or being mislabeled as execution
+failures. Their denominator, reasons, gaps, plan bytes, and lifecycle evidence
+remain readable, while atomic start admits no run, command, operation input,
+admission, or lineage mutation. Schema-16 acquisition history is also checked
+against an exact closed event shape and the retained authority for each event
+kind before schema 17 can seal it. Added, missing, or substituted fields fail
+migration with the source fingerprint and append-only triggers intact and no
+partial schema-17 objects.
+
 M2 remains inactive until a separate accepted M2 plan exists. The transition's
 diagnostic React surface is development evidence, not the M2 interface.

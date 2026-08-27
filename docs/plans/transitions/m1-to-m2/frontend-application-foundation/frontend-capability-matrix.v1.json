@@ -491,6 +491,8 @@
         "Readback exposes canonical identity versions, capture/semantic gaps, dependency and analyzer proofs, reuse decisions, limits, classifications, plan-wide status, opaque gap cursors, and append-stable sealed lifecycle pages",
         "Plan publication retains the exact prepared delivered input, complete coverage input, resolved target manifest, and successor identity; atomic start revalidates and consumes those same bytes without replacement",
         "Typed correlation rejects raw name, form-key, and path equality; contribution or asset slot changes remain non-startable without retained typed continuity proof",
+        "Ambiguous and missing-proof plans persist as inspectable Invalidated preparations with complete denominators, reasons, gaps, plan bytes, and lifecycle evidence while successor admission remains impossible",
+        "Schema-16 migration validates each acquisition event against a closed kind-specific JSON shape and retained authority before schema-17 sealing; trigger-preserving tamper cases roll back atomically",
         "StartTargetedVerification atomically admits exactly managed-analysis-v1 and remains native-only-never-map; no Phase D renderer authority exists"
       ],
       "gap": "The corrected Phase C candidate requires architecture-steward Checkpoint C review; this record does not accept WP5, WP6, Checkpoint C, Phase D, or M2.",

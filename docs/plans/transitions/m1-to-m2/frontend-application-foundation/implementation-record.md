@@ -1794,6 +1794,76 @@ contain its own final identity. Repository-owned `dotnet`/`testhost`/`vstest`
 survivor count was zero after every .NET batch and at closeout. WP5, WP6,
 Checkpoint C, Phase D, and M2 remain unaccepted/inactive.
 
+## Corrected Checkpoint C non-startable-plan and migration-tamper candidate
+
+Date: 2026-08-27
+
+Status: Implementation candidate awaiting another corrected Checkpoint C
+architecture-steward review
+
+Starting commit: `122d9523f04b793697a16f960234a0a81e3d3fc5`
+
+Plan publication now treats a dependency-closed but non-startable result as a
+valid product outcome. `plan-published` may seal `Invalidated` as well as
+`Ready` and `ReadyWithGaps`; `Failed` remains reserved for an actual
+preparation failure. Ambiguous and missing-required-proof production plans are
+retained with their immutable plan bytes, complete coverage denominator,
+non-startable reasons, gaps, prepared inputs, and lifecycle evidence. Readback
+remains available, while attempted admission is rejected before any run, job,
+durable command, operation input, targeted admission, initiation lineage, or
+successor acquisition link is written.
+
+Schema-16 acquisition-event migration now parses a closed JSON object and
+requires the exact field set for each retained event kind: `admitted`,
+`recovered`, `dispatched`, `published`, `failed`, and `cancelled`. The event's
+projection hash is checked and each kind is cross-bound to its retained run,
+command, generation, attempt, fence, lease, publication, payload, failure
+projection, or preparation cancellation authority as applicable. Event IDs,
+owner sequences, timestamps, and the closed acquisition projection shape are
+validated before schema 17 can seal the unified lifecycle row. Unknown, added,
+missing, duplicated, or substituted fields therefore cannot be normalized into
+new trusted history.
+
+Migration mutation tests temporarily remove the exact append-only trigger only
+inside the tamper transaction, restore the exact retained trigger SQL, and
+then prove the computed schema fingerprint, stored schema fingerprint,
+schema-16 user version, and trigger are all intact before migration. Rejection
+leaves schema 16 in place, creates no `targeted_lifecycle_evidence` table, and
+writes no schema-17 migration receipt. Legitimate non-startable history still
+migrates and remains inspectable after restart. Existing rebuild, restart,
+backup/restore, cancellation, ordinary invalidation, failure, `Ready`, and
+`ReadyWithGaps` evidence remains green.
+
+No serialized schema, protobuf, domain contract, generated-client input,
+expected database object, or migration SQL byte changed. Application remains
+`1.13.0`, domain remains `1.6.0`, storage remains `1.16.0`/schema `17`, the
+persisted targeted plan remains `1.2.0`, the protobuf fingerprint remains
+`d234d44dabf902041461b5c2318fd5c71f10eff46e7ec75f9a586812fab014c7`,
+and the storage schema fingerprint remains
+`69c73053cc861efd6edd2ce27cfeba6c8bda0c42afd22e713bdbc691fbdaca50`.
+The inventory remains 48 declared/42 implemented RPCs. Generated C# ownership
+and `StartTargetedVerification` native-only-never-map policy are unchanged.
+
+Focused Release evidence passed 36 correction/lifecycle/migration cases, the
+complete 70-test persistence/lifecycle class, and the primary generated-C#
+named-pipe corpus test. The named-pipe test continues to execute unseeded begin,
+real fresh capture, separately owned semantic acquisition, production
+planning, inspectable readback, exact `managed-analysis-v1` start and
+completion, and initiation/reconciliation lineage. A broad pre-floor pass
+reported 774 passed, 10 expected skips, and zero failures. Repository-owned
+`dotnet`/`testhost`/`vstest` survivor count was zero after every batch.
+
+The consolidated semantic, security, provenance, lifecycle, migration,
+contract, evaluation, naming, and diff review found one additional test-
+evidence defect: the trigger-preserving mutation helper proved the recomputed
+schema fingerprint but did not independently assert the stored fingerprint and
+schema-16 user version. The same candidate now verifies all three source
+authorities before and after rejected migration. Re-review found no remaining
+non-startable taxonomy, partial-successor, closed-event-shape, retained-binding,
+migration-rollback, renderer/generic authority, private-evaluator, or product-
+meaning defect. Remaining implementation limitations and owner decisions:
+none. WP5, WP6, Checkpoint C, Phase D, and M2 remain unaccepted/inactive.
+
 ## Final closeout fields
 
 WP9 will replace this placeholder with the accepted contract maturity,

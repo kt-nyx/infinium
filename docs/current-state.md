@@ -67,6 +67,14 @@ ordered gap set. Lifecycle continuation uses an append-only sealed cross-owner
 sequence, so equal timestamps and later events cannot renumber previously
 returned history. Schema 17 validates every projected lifecycle field against
 both its retained owner event and the sealed unified ordering before readback.
+Valid plans that cannot start because correlation is ambiguous or required
+proof is missing are retained as inspectable `Invalidated` preparations,
+including their complete denominator, reasons, gaps, and lifecycle evidence;
+they cannot create successor authority. Schema-16 migration validates the
+closed JSON shape and retained command, attempt, publication, and cancellation
+bindings for every acquisition event kind before schema 17 seals the history,
+and rejects tampering atomically while the accepted source schema and triggers
+remain intact.
 It binds finding and case roots to their retained canonical identity envelopes,
 including analyzer, analyzer-version, semantic-contract, and identity-contract
 versions. Raw plugin names, form keys, contribution strings, and normalized
@@ -92,7 +100,7 @@ work.
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
-| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) remain accepted at corrected Checkpoint B. The ADR-0038 targeted-verification vertical is implemented as a corrected Phase C/WP6 candidate with five native-only RPCs, complete bounded preparation readback, canonical identity-envelope authority, typed correlation, schema-17 sealed lifecycle durability, stable opaque pagination, real fresh acquisition, production limited-plan correlation, globally one-shot gestures, pre-mutation start revalidation, atomic `managed-analysis-v1` successor admission, and exact lineage. WP5/WP6 remain under correction and the earlier Checkpoint C receipt stays suspended. |
+| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) remain accepted at corrected Checkpoint B. The ADR-0038 targeted-verification vertical is implemented as a corrected Phase C/WP6 candidate with five native-only RPCs, complete bounded preparation readback, canonical identity-envelope authority, typed correlation, inspectable non-startable plans, schema-17 sealed lifecycle durability, closed-shape schema-16 acquisition-event migration, stable opaque pagination, real fresh acquisition, production limited-plan correlation, globally one-shot gestures, pre-mutation start revalidation, atomic `managed-analysis-v1` successor admission, and exact lineage. WP5/WP6 remain under correction and the earlier Checkpoint C receipt stays suspended. |
 | Next authorized action and gate | Perform corrected Checkpoint C architecture-steward review of the Phase C candidate. Phase D and `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` remain blocked. This does not activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |
