@@ -5,7 +5,7 @@
   "last_reviewed": "2026-08-28",
   "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
   "planning_base": "32dbb2c48754666336d2da571e554ad8897ed71c",
-  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint D is accepted at 6b9b92a5f3dae0e90219f521919555956a8b5623. WP9 composes the accepted native and diagnostic-desktop consumers into a passing 16-step integrated candidate while the corrected ADR-0038 targeted-verification path remains native-only-never-map and no generic renderer authority is granted. Checkpoint E acceptance, polished M2 delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, production readiness, and M2 acceptance are not claimed.",
+  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint D is accepted at 6b9b92a5f3dae0e90219f521919555956a8b5623. WP9 is correcting its 16-step acceptance evidence so every result derives from an exact clean committed candidate, verified TRX or hashed machine evidence, while ADR-0038 targeted verification remains native-only-never-map and no generic renderer authority is granted. The earlier aadad64cc5e9e328474cfeb1a7130ea80fe5a254 receipt is not Checkpoint E evidence. Checkpoint E acceptance, polished M2 delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, production readiness, and M2 acceptance are not claimed.",
   "application_contract_inventory": "application-contract-inventory.v1.json",
   "ownership_audit": {
     "capability_count": 19,

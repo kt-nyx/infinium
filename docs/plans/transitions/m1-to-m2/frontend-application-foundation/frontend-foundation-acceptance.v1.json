@@ -23,8 +23,8 @@
       "surface_maturity": "producer-consumer-validated",
       "evaluation_ids": ["EVAL-0090", "EVAL-0094"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"},
-        {"path": "tests/Infinium.DesktopTests/DesktopWebViewQualificationTests.cs", "selector": "ProtectedRendererLoadsWithAccessibleLandmarksAndBoundSession"}
+        {"proof_id": "bootstrap-native-generated-client", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.SolutionIntegrationTests.TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"},
+        {"proof_id": "bootstrap-protected-desktop", "kind": "desktop-qualification-test", "required": true, "batch": "live-desktop", "project": "tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj", "fully_qualified_name": "Infinium.Tests.DesktopWebViewQualificationTests.ProtectedRendererLoadsWithAccessibleLandmarksAndBoundSession", "receipt_assertions": [{"json_pointer": "/contract/registry_sha256", "predicate": {"operator": "matches", "expected": "^[0-9a-f]{64}$"}}, {"json_pointer": "/bridge_milliseconds/window_show_to_bootstrap/count", "predicate": {"operator": "at-least", "expected": 1}}, {"json_pointer": "/cleanup_survivor_count", "predicate": {"operator": "equals", "expected": 0}}]}
       ],
       "failure_boundary": "Unknown versions, fingerprints, message shapes, sessions, or sequence domains fail closed before state is accepted."
     },
@@ -36,7 +36,7 @@
       "surface_maturity": "producer-consumer-validated",
       "evaluation_ids": ["EVAL-0091"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
+        {"proof_id": "tool-gap-native-generated-client", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.SolutionIntegrationTests.TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
       ],
       "failure_boundary": "Missing or invalid tools remain explicit gaps; no implicit path, launch, or renderer authority is created."
     },
@@ -48,7 +48,7 @@
       "surface_maturity": "producer-consumer-validated",
       "evaluation_ids": ["EVAL-0091"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
+        {"proof_id": "profile-selection-native-generated-client", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.SolutionIntegrationTests.TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
       ],
       "failure_boundary": "Ambiguous, stale, missing, or unconfirmed profile selection cannot become effective run state."
     },
@@ -60,7 +60,7 @@
       "surface_maturity": "producer-consumer-validated",
       "evaluation_ids": ["EVAL-0091"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
+        {"proof_id": "saved-configuration-native-generated-client", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.SolutionIntegrationTests.TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
       ],
       "failure_boundary": "Revision conflict, invalid configuration, or stale selection is rejected rather than silently replaced."
     },
@@ -72,7 +72,7 @@
       "surface_maturity": "producer-consumer-validated",
       "evaluation_ids": ["EVAL-0091"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
+        {"proof_id": "pre-run-review-native-generated-client", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.SolutionIntegrationTests.TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
       ],
       "failure_boundary": "Provider, credential, budget, or unavailable capability state cannot fall back to a different execution mode."
     },
@@ -84,7 +84,7 @@
       "surface_maturity": "producer-consumer-validated",
       "evaluation_ids": ["EVAL-0090", "EVAL-0091"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
+        {"proof_id": "manual-run-native-generated-client", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.SolutionIntegrationTests.TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
       ],
       "failure_boundary": "Malformed, stale, conflicting, or unauthorized admission requests fail before a run is created."
     },
@@ -96,8 +96,8 @@
       "surface_maturity": "producer-consumer-validated",
       "evaluation_ids": ["EVAL-0090", "EVAL-0094"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"},
-        {"path": "tests/Infinium.DesktopTests/DesktopWebViewQualificationTests.cs", "selector": "ProtectedRendererLoadsWithAccessibleLandmarksAndBoundSession"}
+        {"proof_id": "progress-native-generated-client", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.SolutionIntegrationTests.TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"},
+        {"proof_id": "progress-protected-desktop", "kind": "desktop-qualification-test", "required": true, "batch": "live-desktop", "project": "tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj", "fully_qualified_name": "Infinium.Tests.DesktopWebViewQualificationTests.ProtectedRendererLoadsWithAccessibleLandmarksAndBoundSession", "receipt_assertions": [{"json_pointer": "/bridge_milliseconds/progress_bridge/count", "predicate": {"operator": "at-least", "expected": 10}}, {"json_pointer": "/bridge_milliseconds/authoritative_resync_bridge/count", "predicate": {"operator": "at-least", "expected": 5}}, {"json_pointer": "/cleanup_survivor_count", "predicate": {"operator": "equals", "expected": 0}}]}
       ],
       "failure_boundary": "Presentation state cannot rewrite coordinator progress, costs, failures, gaps, or terminal truth."
     },
@@ -109,8 +109,8 @@
       "surface_maturity": "producer-consumer-validated",
       "evaluation_ids": ["EVAL-0090", "EVAL-0094"],
       "proofs": [
-        {"path": "eng/qualify-desktop.ps1", "selector": "three renderer reloads and authoritative resync measurements"},
-        {"path": "tests/Infinium.DesktopTests/DesktopWebViewQualificationTests.cs", "selector": "RendererBrowserCoordinatorAndShellFailuresRecreateAuthoritativeSession"}
+        {"proof_id": "reconnect-desktop-lifecycle", "kind": "desktop-qualification-test", "required": true, "batch": "desktop-lifecycle", "project": "tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj", "fully_qualified_name": "Infinium.Tests.DesktopWebViewQualificationTests.RendererBrowserCoordinatorAndShellFailuresRecreateAuthoritativeSession", "receipt_assertions": [{"json_pointer": "/bridge_milliseconds/reload_to_bootstrap/count", "predicate": {"operator": "at-least", "expected": 3}}, {"json_pointer": "/bridge_milliseconds/authoritative_resync_bridge/count", "predicate": {"operator": "at-least", "expected": 5}}, {"json_pointer": "/cleanup_survivor_count", "predicate": {"operator": "equals", "expected": 0}}]},
+        {"proof_id": "reconnect-reload-receipt", "kind": "machine-evidence", "required": true, "path": "artifacts/desktop-qualification/summary.json", "json_pointer": "/bridge_milliseconds/reload_to_bootstrap/count", "predicate": {"operator": "at-least", "expected": 3}}
       ],
       "failure_boundary": "Lost events, stale sessions, or sequence gaps force a bounded authoritative resync instead of local replay as truth."
     },
@@ -122,8 +122,9 @@
       "surface_maturity": "implementation-active",
       "evaluation_ids": ["EVAL-0092"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/ManagedAnalysisPipelineCorpusIntegrationTests.cs", "selector": "FrozenAnalysisPipelineCorpusExecutesManagedCoordinatorAndTypedQueryBeforeOracleComparison"},
-        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "ResultExplorationIsDeterministicBoundedInertAndExactlyFocused"}
+        {"proof_id": "summary-native-managed-pipeline", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ManagedAnalysisPipelineCorpusIntegrationTests.FrozenAnalysisPipelineCorpusExecutesManagedCoordinatorAndTypedQueryBeforeOracleComparison"},
+        {"proof_id": "summary-native-result-review", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ResultReviewWorkflowIntegrationTests.ResultExplorationIsDeterministicBoundedInertAndExactlyFocused"},
+        {"proof_id": "summary-native-populated-migration", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ResultReviewWorkflowIntegrationTests.PopulatedResultsMigrationReturnsExplicitReportUnavailability"}
       ],
       "failure_boundary": "Absent report or readiness authority remains explicit and cannot be inferred from partial findings."
     },
@@ -135,8 +136,8 @@
       "surface_maturity": "implementation-active",
       "evaluation_ids": ["EVAL-0092"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "ResultExplorationIsDeterministicBoundedInertAndExactlyFocused"},
-        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "HundredThousandSummaryProjectionKeepsQueryAndMessageBounded"}
+        {"proof_id": "queue-native-result-review", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ResultReviewWorkflowIntegrationTests.ResultExplorationIsDeterministicBoundedInertAndExactlyFocused"},
+        {"proof_id": "queue-native-resource-bounds", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ResultReviewWorkflowIntegrationTests.HundredThousandSummaryProjectionKeepsQueryAndMessageBounded"}
       ],
       "failure_boundary": "Unsupported cases stay separate from lead-only queues; cursor, sort, filter, search, and size violations fail closed."
     },
@@ -148,8 +149,8 @@
       "surface_maturity": "implementation-active",
       "evaluation_ids": ["EVAL-0092"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "ResultExplorationIsDeterministicBoundedInertAndExactlyFocused"},
-        {"path": "tests/Infinium.IntegrationTests/ManagedAnalysisPipelineCorpusIntegrationTests.cs", "selector": "typed finding, case, report, evidence, provenance, and source readback"}
+        {"proof_id": "detail-native-result-review", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ResultReviewWorkflowIntegrationTests.ResultExplorationIsDeterministicBoundedInertAndExactlyFocused"},
+        {"proof_id": "detail-native-managed-pipeline", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ManagedAnalysisPipelineCorpusIntegrationTests.FrozenAnalysisPipelineCorpusExecutesManagedCoordinatorAndTypedQueryBeforeOracleComparison"}
       ],
       "failure_boundary": "Unknown identities, wrong source relationships, hostile text, and unavailable details remain inert and explicit."
     },
@@ -161,8 +162,8 @@
       "surface_maturity": "implementation-active",
       "evaluation_ids": ["EVAL-0093"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "DurableReviewAndExportDeletionPreserveSourcesAcrossFaultsRestartAndRestore"},
-        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "ReviewCarryoverRequiresRetainedFourGateExactContinuityEvidence"}
+        {"proof_id": "review-state-native-durability", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ResultReviewWorkflowIntegrationTests.DurableReviewAndExportDeletionPreserveSourcesAcrossFaultsRestartAndRestore"},
+        {"proof_id": "review-state-native-continuity", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ResultReviewWorkflowIntegrationTests.ReviewCarryoverRequiresRetainedFourGateExactContinuityEvidence"}
       ],
       "failure_boundary": "User state is append-only and revision-bound; conflicts, stale revisions, or insufficient carryover proof do not rewrite immutable analysis."
     },
@@ -174,8 +175,8 @@
       "surface_maturity": "producer-consumer-validated",
       "evaluation_ids": ["EVAL-0093"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/ManagedAnalysisPipelineCorpusIntegrationTests.cs", "selector": "targeted verification begin, status, cancel, start, readback, recovery, migration, and tamper rejection"},
-        {"path": "docs/plans/transitions/m1-to-m2/frontend-application-foundation/wp6-targeted-verification-addendum.md", "selector": "native-only consumer boundary"}
+        {"proof_id": "targeted-verification-native-generated-client", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ManagedAnalysisPipelineCorpusIntegrationTests.FrozenAnalysisPipelineCorpusExecutesManagedCoordinatorAndTypedQueryBeforeOracleComparison"},
+        {"proof_id": "targeted-verification-architecture-reference", "kind": "reference", "required": false, "path": "docs/plans/transitions/m1-to-m2/frontend-application-foundation/wp6-targeted-verification-addendum.md", "selector": "native-only consumer boundary; reference only and not behavioral pass evidence"}
       ],
       "failure_boundary": "The renderer has no targeted-verification mapping; incomplete lineage, unrelated readiness, tampering, or recursive requests fail closed."
     },
@@ -187,9 +188,9 @@
       "surface_maturity": "producer-consumer-validated",
       "evaluation_ids": ["EVAL-0090", "EVAL-0093", "EVAL-0094"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"},
-        {"path": "tests/Infinium.DesktopTests/DesktopWebViewQualificationTests.cs", "selector": "RendererBrowserCoordinatorAndShellFailuresRecreateAuthoritativeSession"},
-        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "DurableReviewAndExportDeletionPreserveSourcesAcrossFaultsRestartAndRestore"}
+        {"proof_id": "restart-native-run-readback", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.SolutionIntegrationTests.TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"},
+        {"proof_id": "restart-desktop-lifecycle", "kind": "desktop-qualification-test", "required": true, "batch": "desktop-lifecycle", "project": "tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj", "fully_qualified_name": "Infinium.Tests.DesktopWebViewQualificationTests.RendererBrowserCoordinatorAndShellFailuresRecreateAuthoritativeSession", "receipt_assertions": [{"json_pointer": "/bridge_milliseconds/reload_to_bootstrap/count", "predicate": {"operator": "at-least", "expected": 3}}, {"json_pointer": "/cleanup_survivor_count", "predicate": {"operator": "equals", "expected": 0}}]},
+        {"proof_id": "restart-native-review-readback", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ResultReviewWorkflowIntegrationTests.DurableReviewAndExportDeletionPreserveSourcesAcrossFaultsRestartAndRestore"}
       ],
       "failure_boundary": "Interrupted attempts, stale sessions, and incomplete durable state are fenced or reported; the shell cannot become the recovery authority."
     },
@@ -201,8 +202,8 @@
       "surface_maturity": "implementation-active",
       "evaluation_ids": ["EVAL-0093"],
       "proofs": [
-        {"path": "tests/Infinium.IntegrationTests/ManagedAnalysisPipelineCorpusIntegrationTests.cs", "selector": "structured export creation, inspection, source binding, and deletion"},
-        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "DurableReviewAndExportDeletionPreserveSourcesAcrossFaultsRestartAndRestore"}
+        {"proof_id": "export-native-managed-pipeline", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ManagedAnalysisPipelineCorpusIntegrationTests.FrozenAnalysisPipelineCorpusExecutesManagedCoordinatorAndTypedQueryBeforeOracleComparison"},
+        {"proof_id": "export-native-durability", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ResultReviewWorkflowIntegrationTests.DurableReviewAndExportDeletionPreserveSourcesAcrossFaultsRestartAndRestore"}
       ],
       "failure_boundary": "Export stays local-private and structured; deletion removes only the export object and never mutates source analysis or user-state history."
     },
@@ -214,10 +215,14 @@
       "surface_maturity": "producer-consumer-validated",
       "evaluation_ids": ["EVAL-0090", "EVAL-0092", "EVAL-0093", "EVAL-0094"],
       "proofs": [
-        {"path": "tests/Infinium.ContractTests/ApplicationFoundationAuthorityContractTests.cs", "selector": "CapabilityMatrixIsStrictFullyOwnedAndDeniesGenericRendererAuthority"},
-        {"path": "tests/Infinium.IntegrationTests/ManagedAnalysisPipelineCorpusIntegrationTests.cs", "selector": "ManagedRequestRejectsDeliveredInputFingerprintOrSourceReferenceDriftBeforeAdmission"},
-        {"path": "tests/Infinium.DesktopTests/RendererBridgeSessionTests.cs", "selector": "replay, stale session, concurrency, message size, overflow, and cancellation rejection"},
-        {"path": "tests/Infinium.DesktopTests/DesktopRuntimePolicyTests.cs", "selector": "origin, filesystem, browser override, navigation, and runtime policy rejection"}
+        {"proof_id": "fail-closed-contract-authority", "kind": "executable-test", "required": true, "batch": "contract-authority", "project": "tests/Infinium.ContractTests/Infinium.ContractTests.csproj", "fully_qualified_name": "Infinium.Tests.ApplicationFoundationAuthorityContractTests.CapabilityMatrixIsStrictFullyOwnedAndDeniesGenericRendererAuthority"},
+        {"proof_id": "fail-closed-native-input-drift", "kind": "executable-test", "required": true, "batch": "native-integrated-workflow", "project": "tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj", "fully_qualified_name": "Infinium.Tests.ManagedAnalysisPipelineCorpusIntegrationTests.ManagedRequestRejectsDeliveredInputFingerprintOrSourceReferenceDriftBeforeAdmission"},
+        {"proof_id": "fail-closed-desktop-replay", "kind": "desktop-qualification-test", "required": true, "batch": "ordinary-desktop", "project": "tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj", "fully_qualified_name": "Infinium.Tests.RendererBridgeSessionTests.SessionRejectsOrdinaryRequestBeforeExactAcknowledgementAndRejectsReplay", "receipt_assertions": [{"json_pointer": "/coverage/repository_launched_process_tree_override_markers_absent", "predicate": {"operator": "equals", "expected": true}}, {"json_pointer": "/cleanup_survivor_count", "predicate": {"operator": "equals", "expected": 0}}]},
+        {"proof_id": "fail-closed-desktop-stale-session", "kind": "desktop-qualification-test", "required": true, "batch": "ordinary-desktop", "project": "tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj", "fully_qualified_name": "Infinium.Tests.RendererBridgeSessionTests.BoundSessionRejectsAStaleSessionEnvelope", "receipt_assertions": [{"json_pointer": "/coverage/recovery_revalidation", "predicate": {"operator": "equals", "expected": true}}]},
+        {"proof_id": "fail-closed-desktop-oversize", "kind": "desktop-qualification-test", "required": true, "batch": "ordinary-desktop", "project": "tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj", "fully_qualified_name": "Infinium.Tests.RendererBridgeSessionTests.OversizedOutboundProjectionIsRejectedBeforeDelivery", "receipt_assertions": [{"json_pointer": "/maximum_message_bytes", "predicate": {"operator": "equals", "expected": 1048576}}]},
+        {"proof_id": "fail-closed-desktop-origin", "kind": "desktop-qualification-test", "required": true, "batch": "ordinary-desktop", "project": "tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj", "fully_qualified_name": "Infinium.Tests.DesktopRuntimePolicyTests.TopLevelNavigationIsExactAndOriginValidationRejectsAuthorityChanges", "receipt_assertions": [{"json_pointer": "/coverage/inherited_override_preflight", "predicate": {"operator": "equals", "expected": true}}]},
+        {"proof_id": "fail-closed-desktop-browser-policy", "kind": "desktop-qualification-test", "required": true, "batch": "ordinary-desktop", "project": "tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj", "fully_qualified_name": "Infinium.Tests.DesktopRuntimePolicyTests.ReleaseEnvironmentAndEveryPolicyHiveViewRejectBrowserArgumentOverrides", "receipt_assertions": [{"json_pointer": "/coverage/stable_only_runtime_selection", "predicate": {"operator": "equals", "expected": true}}, {"json_pointer": "/coverage/no_override_value_echo", "predicate": {"operator": "equals", "expected": true}}]},
+        {"proof_id": "fail-closed-desktop-receipt", "kind": "machine-evidence", "required": true, "path": "artifacts/desktop-qualification/summary.json", "json_pointer": "/cleanup_survivor_count", "predicate": {"operator": "equals", "expected": 0}}
       ],
       "failure_boundary": "No generic path, command, URL, provider, credential, filesystem, native proxy, evaluator, private fixture, or semantic-oracle authority is reachable."
     }

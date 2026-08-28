@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Infinium.Application.Evaluation;
@@ -190,12 +191,52 @@ public sealed partial class ApplicationFoundationAuthorityContractTests
                 .Distinct(StringComparer.Ordinal)
                 .ToArray());
 
-        foreach (JsonElement proof in steps.SelectMany(step => step.GetProperty("proofs").EnumerateArray()))
+        JsonElement[] proofs = steps
+            .SelectMany(step => step.GetProperty("proofs").EnumerateArray())
+            .ToArray();
+        Assert.AreEqual(
+            proofs.Length,
+            proofs.Select(proof => proof.GetProperty("proof_id").GetString())
+                .Distinct(StringComparer.Ordinal)
+                .Count());
+        foreach (JsonElement step in steps)
         {
-            string relativePath = proof.GetProperty("path").GetString()!;
-            Assert.IsTrue(
-                File.Exists(TestRepository.PathFromRoot([.. relativePath.Split('/')])),
-                $"Acceptance proof path does not exist: {relativePath}");
+            JsonElement[] stepProofs = step.GetProperty("proofs").EnumerateArray().ToArray();
+            Assert.IsTrue(stepProofs.Any(proof => !StringComparer.Ordinal.Equals(
+                proof.GetProperty("kind").GetString(),
+                "reference")));
+            foreach (JsonElement proof in stepProofs)
+            {
+                string kind = proof.GetProperty("kind").GetString()!;
+                if (StringComparer.Ordinal.Equals(kind, "executable-test") ||
+                    StringComparer.Ordinal.Equals(kind, "desktop-qualification-test"))
+                {
+                    string project = proof.GetProperty("project").GetString()!;
+                    Assert.IsTrue(
+                        File.Exists(TestRepository.PathFromRoot([.. project.Split('/')])),
+                        $"Acceptance test project does not exist: {project}");
+                    StringAssert.StartsWith(
+                        proof.GetProperty("fully_qualified_name").GetString(),
+                        "Infinium.Tests.");
+                    Assert.IsTrue(proof.GetProperty("required").GetBoolean());
+                }
+                else if (StringComparer.Ordinal.Equals(kind, "machine-evidence"))
+                {
+                    Assert.AreEqual(
+                        "artifacts/desktop-qualification/summary.json",
+                        proof.GetProperty("path").GetString());
+                    Assert.IsTrue(proof.GetProperty("required").GetBoolean());
+                }
+                else
+                {
+                    Assert.AreEqual("reference", kind);
+                    Assert.IsFalse(proof.GetProperty("required").GetBoolean());
+                    string reference = proof.GetProperty("path").GetString()!;
+                    Assert.IsTrue(
+                        File.Exists(TestRepository.PathFromRoot([.. reference.Split('/')])),
+                        $"Acceptance reference does not exist: {reference}");
+                }
+            }
         }
 
         JsonElement targetedVerification = steps.Single(step => step.GetProperty("step").GetInt32() == 13);
@@ -204,6 +245,11 @@ public sealed partial class ApplicationFoundationAuthorityContractTests
         Assert.AreEqual(
             "producer-consumer-validated",
             targetedVerification.GetProperty("surface_maturity").GetString());
+        Assert.IsTrue(targetedVerification.GetProperty("proofs").EnumerateArray().Any(proof =>
+            StringComparer.Ordinal.Equals(proof.GetProperty("kind").GetString(), "executable-test")));
+        Assert.IsTrue(targetedVerification.GetProperty("proofs").EnumerateArray().Any(proof =>
+            StringComparer.Ordinal.Equals(proof.GetProperty("kind").GetString(), "reference") &&
+            !proof.GetProperty("required").GetBoolean()));
 
         using JsonDocument inventory = JsonDocument.Parse(
             File.ReadAllBytes(FoundationPath("application-contract-inventory.v1.json")));
@@ -225,6 +271,45 @@ public sealed partial class ApplicationFoundationAuthorityContractTests
         Assert.IsTrue(inventoriedTargetedVerification.All(item => StringComparer.Ordinal.Equals(
             "native-only-never-map",
             item.GetProperty("renderer_policy").GetString())));
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Security")]
+    public void AcceptanceEvidenceBindingRejectsUnverifiedOrSubstitutedProofs()
+    {
+        ProcessStartInfo start = new()
+        {
+            FileName = "powershell",
+            WorkingDirectory = TestRepository.Root,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+        start.ArgumentList.Add("-NoProfile");
+        start.ArgumentList.Add("-ExecutionPolicy");
+        start.ArgumentList.Add("Bypass");
+        start.ArgumentList.Add("-File");
+        start.ArgumentList.Add(TestRepository.PathFromRoot(
+            "eng", "test-frontend-foundation-evidence.ps1"));
+
+        using Process process = Process.Start(start)
+            ?? throw new InvalidOperationException("The evidence mutation checks could not start.");
+        string output = process.StandardOutput.ReadToEnd();
+        string error = process.StandardError.ReadToEnd();
+        bool exited = process.WaitForExit(milliseconds: 30_000);
+        if (!exited)
+        {
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit();
+        }
+
+        Assert.IsTrue(exited, "Evidence mutation checks did not finish within 30 seconds.");
+        Assert.AreEqual(0, process.ExitCode, $"{output}{error}");
+        StringAssert.Contains(output, "Frontend foundation evidence mutation checks passed: 14");
     }
 
     private static string FoundationPath(string fileName) => Directory.EnumerateFiles(

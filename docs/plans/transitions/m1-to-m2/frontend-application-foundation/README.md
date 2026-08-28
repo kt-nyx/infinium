@@ -1,13 +1,13 @@
 # M1-to-M2 Foundation — Frontend Application Foundation
 
 Status: Accepted
-Disposition: WP9 integrated candidate passed; awaiting Checkpoint E architecture-steward and final owner acceptance; M2 inactive
+Disposition: WP9 evidence-integrity correction candidate; Checkpoint E pending; M2 inactive
 
 Last reviewed: 2026-08-28
 Owner: Project owner
 Accepted: 2026-08-25
 Plan ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`
-Next gate: Checkpoint E architecture-steward and final owner acceptance after WP9
+Next gate: exact clean-commit WP9 acceptance receipt, then Checkpoint E review
 
 ## Plain-language purpose
 
@@ -152,35 +152,44 @@ consumes the real bootstrap, paginated findings, detail, progress, event stream,
 host-attested cancellation, resync, reload, and coordinator-reconnect paths.
 Targeted verification remains native-only and unmapped.
 
-## WP9 integrated acceptance result
+## WP9 integrated acceptance correction
 
-The strict [integrated acceptance workflow](frontend-foundation-acceptance.v1.json)
-maps each of the required 16 actions to its real native or diagnostic-desktop
-consumer, exact evidence paths, maturity, evaluation cases, and fail-closed
-boundary. `eng/verify-frontend-foundation.ps1` validated that manifest, ran 3
-contract/authority tests and 8 native integration tests, then ran the complete
-offline desktop qualification. All 11 focused tests passed with no skips or
-failures. The desktop batches passed 31 ordinary desktop tests, one populated-
-state preparation test, one live WebView2/accessibility test, and one lifecycle
-test. Every .NET batch and the final desktop cleanup reported zero repository-
-owned survivors. The fresh post-correction complete repository floor also
-passed: 856 tests, 12 expected skips, zero failures, zero build warnings or
-errors, every documentation, functional-naming, dependency, formatting, and
-diff gate, and zero repository-owned process survivors.
+The initial candidate at
+`aadad64cc5e9e328474cfeb1a7130ea80fe5a254` retained useful implementation,
+desktop, and complete-floor diagnostics, but its generated acceptance receipt
+is invalid for Checkpoint E. The receipt bound `candidate_head` to the accepted
+Checkpoint D baseline `6b9b92a5f3dae0e90219f521919555956a8b5623`
+because Phase E was still uncommitted when the runner inspected HEAD. It also
+wrote `passed` for every workflow step without verifying the named test in TRX
+or evaluating machine-readable evidence. The earlier 856-test floor remains
+historical diagnostic evidence; it cannot repair those acceptance bindings.
 
-The first receipt attempt exposed one harness-only defect: Windows PowerShell
-returned an ordered dictionary without the property adapter expected by the
-counter aggregation. The runner was corrected to emit a property-bearing
-object, the complete integrated workflow was rerun, and the fresh rerun passed.
-No product contract, architecture boundary, renderer operation, or product
-meaning changed during that correction.
+The corrected [integrated acceptance workflow](frontend-foundation-acceptance.v1.json)
+uses a closed typed proof model. Executable proofs name the exact project,
+batch, and fully qualified test; desktop proofs additionally require exact
+receipt predicates; machine proofs name an exact JSON file, pointer, predicate,
+and retained SHA-256; architecture/documentation references are explicitly
+non-behavioral. `eng/verify-frontend-foundation.ps1` now requires an externally
+supplied commit and tree, rejects a dirty or mismatched worktree before any
+evidence command, repeats the binding after all commands, uses run-specific TRX
+files, verifies exact executed/passed results and desktop hashes, and derives
+each of the 16 step results from all required behavioral proofs. Declared
+offline/provider/credential/private/archive boundaries are labeled as declared
+scope controls rather than ambient-system observations.
 
-## Contract maturity at Checkpoint E
+Checkpoint E remains pending. Because a commit cannot contain its own identity,
+the complete correction must first be committed and the ignored acceptance
+artifact must then be produced against that exact clean commit/tree. The final
+handoff reports that binding and all proof results; this record does not
+pre-attest the post-commit run.
 
-The complete boundary is an **M2-ready contract candidate**. In plain language,
-the backend, generated clients, and diagnostic desktop now work together well
-enough to be a trustworthy input to a separately planned M2. This is not a
-claim that the interface is polished, production-ready, or Milestone-stable.
+## Contract maturity pending Checkpoint E
+
+The intended classification remains **M2-ready contract candidate**, but it is
+valid only when the corrected post-commit acceptance receipt verifies every
+required proof against the exact delivered commit/tree. Checkpoint E has not
+accepted that classification. This is not a claim that the interface is
+polished, production-ready, or Milestone-stable.
 
 | Maturity | Surfaces | Meaning for the next plan |
 |---|---|---|

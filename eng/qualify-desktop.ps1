@@ -1,10 +1,14 @@
 [CmdletBinding()]
 param(
-    [string]$Configuration = 'Release'
+    [string]$Configuration = 'Release',
+    [string]$ExpectedCandidateCommit,
+    [string]$ExpectedCandidateTree,
+    [string]$AcceptanceRunId
 )
 
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+. (Join-Path $PSScriptRoot 'frontend-foundation-evidence.ps1')
 $repositoryNeedle = $repositoryRoot.TrimEnd('\') + '\'
 $coordinatorProject = Join-Path $repositoryRoot 'src/Infinium.Coordinator/Infinium.Coordinator.csproj'
 $desktopTestProject = Join-Path $repositoryRoot 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj'
@@ -15,6 +19,8 @@ $qualificationRoot = Join-Path $temporaryRoot ('infinium-desktop-qualification-'
 $artifactRoot = Join-Path $repositoryRoot 'artifacts\desktop-qualification'
 $runtimeMeasurements = Join-Path $artifactRoot 'runtime-measurements.json'
 $summaryPath = Join-Path $artifactRoot 'summary.json'
+$testResultRoot = Join-Path $artifactRoot 'test-results'
+$testBatches = @()
 $priorRoot = $env:INFINIUM_DESKTOP_QUALIFICATION_ROOT
 $priorMeasurements = $env:INFINIUM_DESKTOP_QUALIFICATION_MEASUREMENTS
 $priorSecretCanary = $env:INFINIUM_DESKTOP_SECRET_CANARY
@@ -31,9 +37,11 @@ $privilegedWebViewVariables = @(
 )
 
 function Invoke-Checked([string]$FileName, [string[]]$ArgumentList) {
-    & $FileName @ArgumentList
-    if ($LASTEXITCODE -ne 0) {
-        throw "Qualification command failed with exit code ${LASTEXITCODE}: $FileName $($ArgumentList -join ' ')"
+    $commandOutput = @(& $FileName @ArgumentList 2>&1)
+    $exitCode = $LASTEXITCODE
+    $commandOutput | ForEach-Object { Write-Host $_ }
+    if ($exitCode -ne 0) {
+        throw "Qualification command failed with exit code ${exitCode}: $FileName $($ArgumentList -join ' ')"
     }
 }
 
@@ -66,16 +74,43 @@ function Stop-RepositoryOwnedTestProcess {
     if ($remaining.Count -ne 0) {
         throw "Repository-owned test-process cleanup is incomplete: $($remaining.ProcessId -join ',')."
     }
-    Write-Output 'Repository-owned dotnet/testhost/vstest processes remaining after desktop test batch: 0'
+    Write-Host 'Repository-owned dotnet/testhost/vstest processes remaining after desktop test batch: 0'
 }
 
-function Invoke-TestBatch([string]$Project, [string]$Filter) {
+function Get-TrxCount([string]$Path, [string]$Name) {
+    [xml]$document = [IO.File]::ReadAllText($Path)
+    $counters = $document.SelectSingleNode("//*[local-name()='Counters']")
+    if ($null -eq $counters -or $null -eq $counters.Attributes[$Name]) {
+        throw "The $Name counter is absent from $Path"
+    }
+    [int]$counters.Attributes[$Name].Value
+}
+
+function Invoke-TestBatch([string]$Name, [string]$Project, [string]$Filter) {
+    $trxName = $Name + '-' + $AcceptanceRunId + '.trx'
+    $trxPath = Join-Path $testResultRoot $trxName
     try {
         Invoke-Checked 'dotnet' @(
-            'test', $Project, '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', $Filter)
+            'test', $Project, '-c', $Configuration, '--no-build', '--no-restore', '--nologo',
+            '--filter', $Filter,
+            '--logger', "trx;LogFileName=$trxName",
+            '--results-directory', $testResultRoot)
     }
     finally {
         Stop-RepositoryOwnedTestProcess
+    }
+
+    [pscustomobject][ordered]@{
+        name = $Name
+        project = $Project.Substring($repositoryRoot.Length + 1).Replace('\', '/')
+        filter = $Filter
+        trx_path = $trxPath.Substring($repositoryRoot.Length + 1).Replace('\', '/')
+        trx_sha256 = Get-FoundationFileSha256 $trxPath
+        passed = Get-TrxCount $trxPath 'passed'
+        failed = Get-TrxCount $trxPath 'failed'
+        skipped = Get-TrxCount $trxPath 'notExecuted'
+        total = Get-TrxCount $trxPath 'total'
+        tests = @(Get-FoundationTrxResults $trxPath)
     }
 }
 
@@ -158,6 +193,25 @@ function Measure-Distribution([double[]]$Values) {
 
 try {
     Set-Location -LiteralPath $repositoryRoot
+    if ([string]::IsNullOrWhiteSpace($AcceptanceRunId)) {
+        $AcceptanceRunId = [Guid]::NewGuid().ToString('N')
+    }
+    if ($AcceptanceRunId -notmatch '^[0-9a-f]{32}$') {
+        throw 'The acceptance run identity must be an exact lowercase 128-bit hexadecimal value.'
+    }
+    $hasExpectedBinding = -not [string]::IsNullOrWhiteSpace($ExpectedCandidateCommit) -or
+        -not [string]::IsNullOrWhiteSpace($ExpectedCandidateTree)
+    if ($hasExpectedBinding -and
+        ([string]::IsNullOrWhiteSpace($ExpectedCandidateCommit) -or
+         [string]::IsNullOrWhiteSpace($ExpectedCandidateTree))) {
+        throw 'Candidate commit and tree must be supplied together.'
+    }
+    $candidate = if ($hasExpectedBinding) {
+        Assert-FoundationCandidateSnapshot `
+            $repositoryRoot $ExpectedCandidateCommit $ExpectedCandidateTree 'desktop-qualification-start'
+    } else {
+        Get-FoundationCandidateSnapshot $repositoryRoot
+    }
     foreach ($variable in $privilegedWebViewVariables) {
         $inheritedValue = [Environment]::GetEnvironmentVariable($variable)
         if ($null -ne $inheritedValue -and $inheritedValue.Length -ne 0) {
@@ -165,6 +219,12 @@ try {
         }
     }
     New-Item -ItemType Directory -Path $artifactRoot -Force | Out-Null
+    New-Item -ItemType Directory -Path $testResultRoot -Force | Out-Null
+    foreach ($staleReceipt in @($summaryPath, $runtimeMeasurements)) {
+        if (Test-Path -LiteralPath $staleReceipt) {
+            Remove-Item -LiteralPath $staleReceipt -Force
+        }
+    }
     $env:INFINIUM_DESKTOP_QUALIFICATION_ROOT = $qualificationRoot
     $env:INFINIUM_DESKTOP_QUALIFICATION_MEASUREMENTS = $runtimeMeasurements
     $env:INFINIUM_DESKTOP_SECRET_CANARY = 'INFINIUM-DESKTOP-QUALIFICATION-SECRET-CANARY-7B711839'
@@ -176,11 +236,23 @@ try {
     Invoke-Checked 'dotnet' @('build', $coordinatorProject, '-c', $Configuration, '--no-restore', '--nologo')
     Invoke-Checked 'dotnet' @('build', $desktopTestProject, '-c', $Configuration, '--no-restore', '--nologo')
     Invoke-Checked 'dotnet' @('build', $integrationTestProject, '-c', $Configuration, '--no-restore', '--nologo')
-    Invoke-TestBatch $desktopTestProject 'TestCategory!=DesktopQualification&TestCategory!=DesktopLifecycleQualification'
+    $testBatches += Invoke-TestBatch `
+        'ordinary-desktop' `
+        $desktopTestProject `
+        'TestCategory!=DesktopQualification&TestCategory!=DesktopLifecycleQualification'
     $env:INFINIUM_DESKTOP_PREFLIGHT_TESTS_PASSED = '1'
-    Invoke-TestBatch $integrationTestProject 'TestCategory=DesktopStatePreparation'
-    Invoke-TestBatch $desktopTestProject 'TestCategory=DesktopQualification'
-    Invoke-TestBatch $desktopTestProject 'TestCategory=DesktopLifecycleQualification'
+    $testBatches += Invoke-TestBatch `
+        'desktop-state-preparation' `
+        $integrationTestProject `
+        'TestCategory=DesktopStatePreparation'
+    $testBatches += Invoke-TestBatch `
+        'live-desktop' `
+        $desktopTestProject `
+        'TestCategory=DesktopQualification'
+    $testBatches += Invoke-TestBatch `
+        'desktop-lifecycle' `
+        $desktopTestProject `
+        'TestCategory=DesktopLifecycleQualification'
 
     $hostOutput = Join-Path $repositoryRoot "src\Infinium.DesktopHost\bin\$Configuration\net10.0-windows"
     $hostExecutable = Join-Path $hostOutput 'Infinium.DesktopHost.exe'
@@ -205,6 +277,12 @@ try {
     $summary = [ordered]@{
         schema = 'infinium.desktop-qualification-summary/v1'
         recorded_at = [DateTimeOffset]::UtcNow.ToString('O')
+        acceptance_run_id = $AcceptanceRunId
+        candidate = [ordered]@{
+            commit = $candidate.commit
+            tree = $candidate.tree
+        }
+        test_batches = $testBatches
         reference_machine = [ordered]@{
             os = $runtime.os
             processor = $runtime.processor
@@ -253,6 +331,10 @@ try {
             repository_launched_process_tree_override_markers_absent = $true
             repository_launched_process_tree_stable_evergreen_paths = $true
         }
+    }
+    if ($hasExpectedBinding) {
+        Assert-FoundationCandidateSnapshot `
+            $repositoryRoot $ExpectedCandidateCommit $ExpectedCandidateTree 'desktop-qualification-end' | Out-Null
     }
     Write-Utf8NoBom $summaryPath ($summary | ConvertTo-Json -Depth 12)
     Write-Output "Desktop qualification summary: $summaryPath"

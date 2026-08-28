@@ -1,7 +1,7 @@
 # Current project state
 
 Status: Accepted
-Disposition: WP9 integrated candidate passed; awaiting Checkpoint E architecture-steward and final owner acceptance; M2 inactive
+Disposition: Phase E/WP9 evidence-integrity correction candidate; Checkpoint E pending; M2 inactive
 
 Last reviewed: 2026-08-28
 Owner: Project owner
@@ -42,10 +42,15 @@ remaining finding. The corrected byte set passes the complete locked repository
 floor with 855 tests, 12 expected skips, zero failures, and zero repository-owned
 test-process survivors.
 The architecture steward accepted Checkpoint D at
-`6b9b92a5f3dae0e90219f521919555956a8b5623`. Phase E/WP9 now has a passing
-16-step integrated acceptance candidate at Checkpoint E and does not activate
-M2. Its fresh complete floor passes 856 tests with 12 expected skips and zero
-failures; every non-test gate and final process-survivor audit also passes.
+`6b9b92a5f3dae0e90219f521919555956a8b5623`. Phase E/WP9 produced an initial
+candidate at `aadad64cc5e9e328474cfeb1a7130ea80fe5a254`, but that candidate's
+generated acceptance receipt is not Checkpoint E evidence: it records the
+Checkpoint D commit because the runner observed HEAD before the Phase E bytes
+were committed, and its 16 step results were not derived from verified proof
+outcomes. A narrow evidence-integrity correction is being completed on the same
+mutable candidate. The corrected runner requires an exact clean committed commit/tree,
+retains run-specific TRX and desktop hashes, and derives every workflow step
+from closed typed proofs. M2 remains inactive.
 FindingReport
 query/readback, application validation,
 export deletion/recovery, provenance, paging, and populated migration gaps now
@@ -109,8 +114,8 @@ paths cannot grant identity, and a changed contribution or asset slot remains
 non-startable without retained typed continuity proof. Canonical analysis truth
 remains the authority. WP5/WP6 and Checkpoint C are accepted; WP7/WP8 and
 Checkpoint D are accepted at
-`6b9b92a5f3dae0e90219f521919555956a8b5623`. Phase E/WP9 has completed its
-integrated-acceptance candidate and is stopped at Checkpoint E for review.
+`6b9b92a5f3dae0e90219f521919555956a8b5623`. Phase E/WP9 remains active for the
+narrow acceptance-evidence correction; Checkpoint E has not been accepted.
 The renderer boundary permits nine operations and sixteen exact message shapes.
 Transport-only session establishment and host-attested gesture grant add no
 application authority. Separate renderer-request and host-event sequences,
@@ -131,8 +136,8 @@ diagnostic desktop proof. M2 remains separately planned and authorized work.
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
-| Active implementation | Frontend Application Foundation Phases A-C (WP1-WP6) and Checkpoint C are accepted at `2ec3be78da4d05d8c6ada68a3e18544a446f2f03`; WP7/WP8 and Checkpoint D are accepted at `6b9b92a5f3dae0e90219f521919555956a8b5623`; the WP9 integrated candidate passes and is stopped at Checkpoint E. The five targeted-verification RPCs remain native-only. |
-| Next authorized action and gate | Checkpoint E architecture-steward and final owner acceptance of the M2-ready contract candidate. Do not create, accept, or activate M2. |
+| Active implementation | Frontend Application Foundation Phases A-C (WP1-WP6) and Checkpoint C are accepted at `2ec3be78da4d05d8c6ada68a3e18544a446f2f03`; WP7/WP8 and Checkpoint D are accepted at `6b9b92a5f3dae0e90219f521919555956a8b5623`; WP9 is at the evidence-integrity correction boundary after the `aadad64cc5e9e328474cfeb1a7130ea80fe5a254` receipt proved invalid for Checkpoint E. The five targeted-verification RPCs remain native-only. |
+| Next authorized action and gate | Checkpoint E architecture-steward and final owner review, but only on a handoff carrying a passing receipt bound to the exact clean final commit/tree. Do not create, accept, or activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |
 
@@ -210,10 +215,12 @@ asset, script, configuration, dependency, performance, or runtime problem.
 - Phase C and Checkpoint C are accepted. WP7/WP8 and Checkpoint D are accepted
   at `6b9b92a5f3dae0e90219f521919555956a8b5623` with focused contract,
   security, lifecycle, accessibility, resource, dependency, and licence
-  evidence. The Phase E/WP9 integrated candidate passes 16/16 workflow steps,
-  its focused native and desktop qualification, and exact process cleanup; it
-  awaits Checkpoint E acceptance. This does not expand analyzer scope, qualify
-  an independent semantic oracle, or activate M2.
+  evidence. The earlier Phase E/WP9 16/16 receipt is not valid acceptance
+  evidence because it was bound to the Checkpoint D commit and self-attested
+  step results. The active correction must derive every step from exact test or
+  hashed machine evidence on one clean committed candidate. This does not
+  expand analyzer scope, qualify an independent semantic oracle, or activate
+  M2.
 
 ## Current authority
 

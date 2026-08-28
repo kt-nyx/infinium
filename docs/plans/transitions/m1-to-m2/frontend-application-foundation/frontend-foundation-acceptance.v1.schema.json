@@ -85,21 +85,165 @@
       "maxLength": 512
     },
     "proof": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/executable_test_proof"
+        },
+        {
+          "$ref": "#/$defs/desktop_test_proof"
+        },
+        {
+          "$ref": "#/$defs/machine_evidence_proof"
+        },
+        {
+          "$ref": "#/$defs/reference_proof"
+        }
+      ]
+    },
+    "proof_identity": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,95}$"
+    },
+    "project_path": {
+      "type": "string",
+      "pattern": "^tests/[A-Za-z0-9.]+/[A-Za-z0-9.]+\\.csproj$"
+    },
+    "fully_qualified_test_name": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_.]+$",
+      "maxLength": 512
+    },
+    "executable_test_proof": {
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "proof_id",
+        "kind",
+        "required",
+        "batch",
+        "project",
+        "fully_qualified_name"
+      ],
+      "properties": {
+        "proof_id": { "$ref": "#/$defs/proof_identity" },
+        "kind": { "const": "executable-test" },
+        "required": { "const": true },
+        "batch": { "enum": ["contract-authority", "native-integrated-workflow"] },
+        "project": { "$ref": "#/$defs/project_path" },
+        "fully_qualified_name": { "$ref": "#/$defs/fully_qualified_test_name" }
+      }
+    },
+    "desktop_test_proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proof_id",
+        "kind",
+        "required",
+        "batch",
+        "project",
+        "fully_qualified_name",
+        "receipt_assertions"
+      ],
+      "properties": {
+        "proof_id": { "$ref": "#/$defs/proof_identity" },
+        "kind": { "const": "desktop-qualification-test" },
+        "required": { "const": true },
+        "batch": {
+          "enum": [
+            "ordinary-desktop",
+            "desktop-state-preparation",
+            "live-desktop",
+            "desktop-lifecycle"
+          ]
+        },
+        "project": { "$ref": "#/$defs/project_path" },
+        "fully_qualified_name": { "$ref": "#/$defs/fully_qualified_test_name" },
+        "receipt_assertions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/evidence_assertion" }
+        }
+      }
+    },
+    "machine_evidence_proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proof_id",
+        "kind",
+        "required",
+        "path",
+        "json_pointer",
+        "predicate"
+      ],
+      "properties": {
+        "proof_id": { "$ref": "#/$defs/proof_identity" },
+        "kind": { "const": "machine-evidence" },
+        "required": { "const": true },
+        "path": {
+          "type": "string",
+          "pattern": "^artifacts/(?:[A-Za-z0-9][A-Za-z0-9._-]*/)*[A-Za-z0-9][A-Za-z0-9._-]*\\.json$"
+        },
+        "json_pointer": { "$ref": "#/$defs/json_pointer" },
+        "predicate": { "$ref": "#/$defs/evidence_predicate" }
+      }
+    },
+    "reference_proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proof_id",
+        "kind",
+        "required",
         "path",
         "selector"
       ],
       "properties": {
+        "proof_id": { "$ref": "#/$defs/proof_identity" },
+        "kind": { "const": "reference" },
+        "required": { "const": false },
         "path": {
           "type": "string",
-          "pattern": "^(?:src|tests|eng|docs)/[A-Za-z0-9._/-]+$"
+          "pattern": "^docs/(?:[A-Za-z0-9][A-Za-z0-9._-]*/)*[A-Za-z0-9][A-Za-z0-9._-]*$"
         },
-        "selector": {
-          "$ref": "#/$defs/short_text"
-        }
+        "selector": { "$ref": "#/$defs/short_text" }
       }
+    },
+    "json_pointer": {
+      "type": "string",
+      "pattern": "^(?:/(?:[^~/]|~0|~1)*)+$",
+      "maxLength": 512
+    },
+    "evidence_assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["json_pointer", "predicate"],
+      "properties": {
+        "json_pointer": { "$ref": "#/$defs/json_pointer" },
+        "predicate": { "$ref": "#/$defs/evidence_predicate" }
+      }
+    },
+    "evidence_predicate": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operator", "expected"],
+          "properties": {
+            "operator": { "enum": ["equals", "at-least", "at-most", "matches"] },
+            "expected": { "type": ["string", "number", "integer", "boolean"] }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operator"],
+          "properties": {
+            "operator": { "const": "nonempty" }
+          }
+        }
+      ]
     },
     "workflow_step": {
       "type": "object",

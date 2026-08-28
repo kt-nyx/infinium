@@ -1,7 +1,7 @@
 # M1-to-M2 Foundation — Frontend Application Foundation implementation record
 
-Status: Completed
-Disposition: WP9 integrated candidate passed; awaiting Checkpoint E architecture-steward and final owner acceptance; M2 inactive
+Status: Accepted
+Disposition: WP9 acceptance-evidence correction candidate; Checkpoint E pending; M2 inactive
 
 Last reviewed: 2026-08-28
 Owner: Project owner
@@ -27,8 +27,11 @@ architecture source `bd936a02562a8df1ddcb62f275cc45b6c225e594`. A fresh
 corrected WP6 implementation is accepted at Checkpoint C. WP7 and WP8 each
 completed focused implementation, review, correction, and re-review on the
 same mutable Phase D candidate. The architecture steward accepted Checkpoint D
-at `6b9b92a5f3dae0e90219f521919555956a8b5623`; the Phase E/WP9 integrated
-candidate passes and is stopped at Checkpoint E while M2 remains inactive.
+at `6b9b92a5f3dae0e90219f521919555956a8b5623`. The initial Phase E/WP9
+candidate at `aadad64cc5e9e328474cfeb1a7130ea80fe5a254` is under a narrow
+acceptance-evidence correction: its implementation diagnostics remain useful,
+but its receipt is not valid Checkpoint E evidence. Checkpoint E remains pending
+and M2 remains inactive.
 
 The implementation has assigned every foundation capability to an exact owner,
 and implemented the common and setup-to-live-run boundaries future frontend
@@ -51,7 +54,7 @@ acceptance.
 | C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6` | Accepted at Checkpoint C | Corrected targeted-verification evidence below; accepted at `2ec3be78da4d05d8c6ada68a3e18544a446f2f03` |
 | D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` | Focused cycle passed | Generated consumer implementation and correction/re-review evidence below |
 | D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP8` | Accepted at Checkpoint D | Executable desktop-consumption proof and correction/re-review evidence below; accepted at `6b9b92a5f3dae0e90219f521919555956a8b5623` |
-| E | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP9` | Integrated candidate passed | Complete evidence below; awaiting Checkpoint E architecture-steward and final owner acceptance |
+| E | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP9` | Acceptance-evidence correction active | Initial candidate `aadad64cc5e9e328474cfeb1a7130ea80fe5a254`; exact clean-commit proof rerun required before Checkpoint E review |
 
 ## Phase checkpoint receipts
 
@@ -2723,3 +2726,109 @@ review, same-candidate corrections, changed-surface re-review, integrated
 native/desktop qualification, measurement repeat, and complete repository
 floor. The candidate stops at Checkpoint E and requests architecture-steward
 and final owner acceptance. M2 remains inactive.
+
+## Checkpoint E evidence-integrity correction
+
+Date: 2026-08-28
+
+Starting candidate: `aadad64cc5e9e328474cfeb1a7130ea80fe5a254`
+
+Disposition: correction candidate on the same mutable Phase E candidate.
+Checkpoint E is not accepted and M2 remains inactive.
+
+The earlier Phase E section records the chronology and diagnostics that led to
+the initial candidate. A subsequent acceptance review found that its generated
+artifact at `artifacts/frontend-foundation-acceptance/summary.json` was not
+bound to the delivered candidate. It recorded
+`6b9b92a5f3dae0e90219f521919555956a8b5623`, the Checkpoint D baseline,
+because the runner inspected HEAD while Phase E still existed as uncommitted
+working-tree bytes. The same artifact wrote `passed` for all 16 workflow steps
+from manifest presence alone; descriptive selectors were not tied to selected,
+executed, passed tests or evaluated machine evidence. The earlier 856-test
+floor remains historical diagnostic evidence, but neither it nor the
+self-attested receipt can authorize Checkpoint E.
+
+The correction replaces that model with closed proof types:
+
+- executable proofs retain the exact project, batch, fully qualified test
+  identity, selection filter, test/execution identities, outcome, run-specific
+  TRX path, and TRX SHA-256;
+- desktop qualification proofs bind exact ordinary, live, or lifecycle test
+  identities to run-specific TRX plus required fields in the same desktop
+  receipt;
+- machine evidence names one exact JSON file, JSON Pointer, typed predicate,
+  observed value, and source SHA-256;
+- architecture and documentation references are explicitly optional,
+  non-behavioral references and cannot make a workflow step pass; and
+- each workflow-step result is derived only when every required behavioral
+  proof verifies, with at least one behavioral proof required per step.
+
+The acceptance runner now requires an externally supplied lowercase 40-byte
+commit and tree identity. It rejects dirty state or a commit/tree mismatch
+before building or testing, repeats the same check after all commands, and uses
+one 128-bit run identity in every retained TRX and the desktop receipt. Desktop
+qualification records its candidate commit, tree, run identity, four test-batch
+receipts, exact tests, and TRX hashes. The acceptance summary retains every
+proof receipt rather than a proof count.
+
+The old `ordinary_effects` booleans were removed. The new receipt distinguishes
+declared prohibited scope from enforced controls: .NET execution uses
+`--no-restore`, frontend restore uses the accepted offline task, candidate
+identity is checked before and after, and no provider or credential test is
+selected. These statements do not claim ambient network or process observation
+that the harness cannot enforce.
+
+Mutation coverage rejects a nonexistent or misspelled selector, a mismatched
+test project, an existing selected test absent from TRX, failed and skipped
+required tests, a missing required test receipt, a stale/substituted TRX hash,
+a stale desktop candidate receipt, dirty and mismatched candidates, a missing
+JSON evidence field, and an
+unverified workflow step. The standalone mutation suite passes 14/14, the four
+focused foundation authority tests pass, and the eight native integrated
+workflow tests pass, all with zero failures or skips. Repository-owned
+`dotnet`/`testhost`/`vstest` survivors after every focused .NET batch were zero.
+
+### Consolidated correction review
+
+The consolidated evidence, provenance, security, evaluation, functional-
+naming, and complete-diff review found and corrected these must-fix defects on
+the same candidate:
+
+- the first proof resolver compared the fully qualified test and TRX but did
+  not compare the manifest's declared project with the project that produced
+  that batch; exact project binding and a negative mutation now close the seam;
+- the first corrected runners overwrote a valid summary on success but could
+  leave an older ignored summary visible after a failed rerun; each runner now
+  removes only its exact prior summary after clean-candidate preflight, so a
+  failed attempt leaves no current-looking receipt;
+- the initial machine/reference path patterns were repository-prefixed but
+  still admitted dot-only path segments; the schema now permits only closed
+  ordinary repository-relative segments and the runtime independently checks
+  machine-evidence containment; and
+- changed-surface review found one stale internal catalog reference after test
+  discovery was simplified. The resolver now uses the manifest identity only
+  as the requested selection and requires the same exact identity to appear
+  once with `Passed` outcome in the retained TRX.
+
+Re-review confirms that every behavioral proof binds an executed project,
+selection, result, receipt/hash, and candidate run; reference material cannot
+contribute pass authority; all 16 steps require verified behavioral evidence;
+desktop receipt substitution, stale artifacts, hostile paths, missing fields,
+and dirty/mismatched candidates fail closed. The correction changes no domain
+or presentation authority, immutable analysis or append-only user state,
+provider/credential behavior, persistence contract, migration, renderer/IPC
+surface, generated contract, dependency, licence, accessibility claim, or
+measurement meaning. EVAL-0090 through EVAL-0094 remain the exact trace set,
+private/evaluator isolation is unchanged, and measurements remain planning
+observations rather than production guarantees. Mutation 14/14, foundation
+authority 4/4, documentation, functional naming, and `git diff --check` pass
+after the corrections with zero repository-owned test-process survivors.
+
+The complete correction must be committed before its integrated evidence can
+be produced. The ignored post-commit acceptance artifact and its exact final
+commit/tree binding are therefore reported in the orchestrator handoff rather
+than pre-attested here. Checkpoint E review may resume only if that clean
+committed run, changed-surface re-review, desktop qualification, and complete
+repository floor pass. This correction changes no product RPC, renderer
+operation, persistence contract, architecture boundary, product meaning, or
+M2 state.

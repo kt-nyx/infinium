@@ -151,11 +151,13 @@ resealed or promoted through an ordinary tooling command.
   floor with 855 tests passed, 12 expected skips, and zero failures. The five
   ADR-0038 targeted-verification RPCs remain native-only and renderer-
   inaccessible. WP9 composes those accepted native and desktop consumers into
-  an exact 16-step offline workflow. Its corrected integrated rerun passes 3
-  authority/contract tests, 8 native workflow tests, the complete desktop
-  qualification, EVAL-0090 through EVAL-0094, and exact zero-survivor cleanup.
-  The result is only an M2-ready contract candidate awaiting Checkpoint E
-  architecture-steward and final owner acceptance. M2 remains inactive.
+  an exact 16-step offline workflow. The initial `aadad64cc5e9e328474cfeb1a7130ea80fe5a254`
+  receipt is not Checkpoint E evidence because it names the Checkpoint D commit
+  and self-attests step results. The active correction requires exact clean
+  commit/tree binding, exact fully qualified executed/passed tests in retained
+  TRX, hashed machine-evidence predicates, and non-behavioral reference
+  separation before any step or EVAL-0090 through EVAL-0094 result can pass.
+  Checkpoint E remains pending and M2 remains inactive.
 - M2 remains separately planned and authorized work; it must satisfy the
   applicable six layers and its eventual accepted plan.
 - M2 acceptance exercises its stable product interfaces end to end and records
