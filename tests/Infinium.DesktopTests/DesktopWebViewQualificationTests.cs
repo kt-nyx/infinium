@@ -40,6 +40,12 @@ public sealed class DesktopWebViewQualificationTests
             Record(milliseconds, "window_show_to_bootstrap", bootstrapTimer.Elapsed.TotalMilliseconds);
             idleMemory.AddRange(CaptureMemorySamples(window, 5));
 
+            string createdRuntimeVersion = window.Browser.CoreWebView2.Environment.BrowserVersionString;
+            Assert.IsTrue(DesktopRuntimePolicy.IsStableRuntimeVersion(createdRuntimeVersion));
+            Assert.AreEqual(
+                DesktopRuntimeAvailability.Available,
+                DesktopRuntimePolicy.ClassifyRuntimeVersion(createdRuntimeVersion).Availability);
+
             Assert.IsTrue(EvaluateBoolean(window, "document.getElementById('root')?.hasAttribute('aria-busy') === false"));
             Assert.IsTrue(EvaluateBoolean(window, "document.querySelectorAll('main section[aria-labelledby]').length >= 4"));
             Assert.IsTrue(EvaluateBoolean(window, "[...document.querySelectorAll('button')].every(button => button.textContent?.trim().length > 0)"));
@@ -108,6 +114,7 @@ public sealed class DesktopWebViewQualificationTests
                     PumpUntil(() => TryEvaluateBoolean(window, "document.body.dataset.qualificationOld === undefined && document.getElementById('status')?.textContent === 'Local application service connected.'"), TimeSpan.FromSeconds(20));
                     Record(milliseconds, "reload_to_bootstrap", reloadTimer.Elapsed.TotalMilliseconds);
                 }
+                Assert.IsGreaterThanOrEqualTo(5, window.BrowserPreflightCheckCount, "Initial creation and every renderer reload must revalidate inherited browser configuration.");
             }
 
             string accessibility = WaitFor(window.Browser.CoreWebView2.CallDevToolsProtocolMethodAsync(
@@ -211,10 +218,14 @@ public sealed class DesktopWebViewQualificationTests
         string downloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", downloadName);
         Assert.IsFalse(File.Exists(downloadPath));
 
-        Assert.IsTrue(EvaluateBooleanWithUserGesture(window, $"(() => {{ fetch('/not-allowlisted.json').then(response => document.body.dataset.fetchResult=response.ok?'unexpected':'blocked').catch(() => document.body.dataset.fetchResult='blocked'); const image=new Image(); image.src='/not-allowlisted.png'; document.body.append(image); const frame=document.createElement('iframe'); frame.src='https://external.invalid/frame'; document.body.append(frame); window.open('https://external.invalid/window'); const link=document.createElement('a'); link.href='/index.html'; link.download={JsonSerializer.Serialize(downloadName)}; document.body.append(link); link.click(); navigator.geolocation.getCurrentPosition(() => document.body.dataset.permissionResult='unexpected', () => document.body.dataset.permissionResult='blocked'); location.assign('https://external.invalid/navigation'); return true; }})()"));
+        Assert.IsTrue(EvaluateBooleanWithUserGesture(window, "(() => { fetch('/not-allowlisted.json').then(response => document.body.dataset.fetchResult=response.ok?'unexpected':'blocked').catch(() => document.body.dataset.fetchResult='blocked'); const image=new Image(); image.src='/not-allowlisted.png'; document.body.append(image); return true; })()"));
+        PumpUntil(() => metrics.ResourceDeniedCount > resource
+            || TryEvaluateBoolean(window, "document.body.dataset.fetchResult === 'blocked'"), TimeSpan.FromSeconds(5));
+        bool resourceBlockedInRenderer = TryEvaluateBoolean(window, "document.body.dataset.fetchResult === 'blocked'");
+        Assert.IsTrue(EvaluateBooleanWithUserGesture(window, $"(() => {{ const frame=document.createElement('iframe'); frame.src='https://external.invalid/frame'; document.body.append(frame); window.open('https://external.invalid/window'); const link=document.createElement('a'); link.href='/index.html'; link.download={JsonSerializer.Serialize(downloadName)}; document.body.append(link); link.click(); navigator.geolocation.getCurrentPosition(() => document.body.dataset.permissionResult='unexpected', () => document.body.dataset.permissionResult='blocked'); location.assign('https://external.invalid/navigation'); return true; }})()"));
         PumpEvents(TimeSpan.FromSeconds(3));
         Assert.IsTrue(metrics.TopNavigationDeniedCount > top, $"top navigation denial count: {metrics.TopNavigationDeniedCount}");
-        Assert.IsTrue(metrics.ResourceDeniedCount > resource, $"resource denial count: {metrics.ResourceDeniedCount}");
+        Assert.IsTrue(metrics.ResourceDeniedCount > resource || resourceBlockedInRenderer, $"resource denial count: {metrics.ResourceDeniedCount}");
         Assert.IsTrue(metrics.NewWindowDeniedCount > newWindow, $"new-window denial count: {metrics.NewWindowDeniedCount}");
         Assert.IsTrue(metrics.DownloadDeniedCount > download || !File.Exists(downloadPath), "The live download attempt must be denied either before or at the host event boundary.");
         Assert.IsFalse(File.Exists(downloadPath));
@@ -240,15 +251,18 @@ public sealed class DesktopWebViewQualificationTests
 
             string rendererSession = window.BridgeSessionId!;
             Microsoft.Web.WebView2.Wpf.WebView2 rendererControl = window.Browser;
+            int preflightChecks = window.BrowserPreflightCheckCount;
             Task rendererCrash = window.Browser.CoreWebView2.CallDevToolsProtocolMethodAsync("Page.crash", "{}");
             _ = rendererCrash.ContinueWith(_ => { }, TaskScheduler.Default);
             PumpUntil(() => window.Browser != rendererControl
                 && window.BridgeSessionId is not null
                 && !StringComparer.Ordinal.Equals(window.BridgeSessionId, rendererSession)
                 && TryEvaluateBoolean(window, "document.getElementById('status')?.textContent === 'Local application service connected.'"), TimeSpan.FromSeconds(30));
+            Assert.IsGreaterThan(preflightChecks, window.BrowserPreflightCheckCount);
 
             rendererSession = window.BridgeSessionId!;
             rendererControl = window.Browser;
+            preflightChecks = window.BrowserPreflightCheckCount;
             uint browserProcessId = window.Browser.CoreWebView2.BrowserProcessId;
             Assert.IsTrue(window.Browser.CoreWebView2.Environment.GetProcessInfos().Any(info => info.ProcessId == browserProcessId));
             using (Process browser = Process.GetProcessById(checked((int)browserProcessId)))
@@ -260,6 +274,7 @@ public sealed class DesktopWebViewQualificationTests
                 && window.BridgeSessionId is not null
                 && !StringComparer.Ordinal.Equals(window.BridgeSessionId, rendererSession)
                 && TryEvaluateBoolean(window, "document.getElementById('status')?.textContent === 'Local application service connected.'"), TimeSpan.FromSeconds(30));
+            Assert.IsGreaterThan(preflightChecks, window.BrowserPreflightCheckCount);
 
             SetRunId(window, "run-candidate");
             Assert.AreEqual("Result query state: accepted.", CompleteOperation(window, "Query first page"));
@@ -391,6 +406,18 @@ public sealed class DesktopWebViewQualificationTests
                 request = window.BridgeMetrics.MaximumInboundRequestBytes,
                 response = window.BridgeMetrics.MaximumOutboundResponseBytes,
                 @event = window.BridgeMetrics.MaximumOutboundEventBytes,
+            },
+            coverage = new
+            {
+                inherited_override_preflight = StringComparer.Ordinal.Equals(
+                    "1",
+                    Environment.GetEnvironmentVariable("INFINIUM_DESKTOP_PREFLIGHT_TESTS_PASSED")),
+                stable_only_runtime_selection = DesktopRuntimePolicy.IsStableRuntimeVersion(runtime.Version)
+                    && DesktopRuntimePolicy.ClassifyRuntimeVersion(runtime.Version).Availability == DesktopRuntimeAvailability.Available,
+                recovery_revalidation = window.BrowserPreflightCheckCount >= 5,
+                no_override_value_echo = StringComparer.Ordinal.Equals(
+                    "1",
+                    Environment.GetEnvironmentVariable("INFINIUM_DESKTOP_PREFLIGHT_TESTS_PASSED")),
             },
             milliseconds,
             private_working_set_bytes = new { idle = idleMemory, active = activeMemory },

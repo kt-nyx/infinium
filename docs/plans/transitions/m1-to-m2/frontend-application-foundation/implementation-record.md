@@ -2404,6 +2404,136 @@ Checkpoint D architecture-steward review. It does not accept Checkpoint D,
 populate WP9 closeout, begin Phase E, activate M2, or claim the polished M2
 interface.
 
+### Inherited browser authority and stable-runtime correction
+
+A subsequent independent changed-surface review found that release startup
+covered only four legacy WebView2 environment variables and one registry
+family, while direct `MainWindow` use and browser recreation could bypass the
+startup check. It also found that the host relied on the default channel mask
+rather than binding discovery and creation to Stable Evergreen. The same Phase
+D candidate was corrected without changing product meaning, application RPCs,
+renderer registry `1.3.0`, renderer contract `1.4.0`, the nine-operation/
+sixteen-message closure, or registry SHA-256
+`411a9c05604c7664773aa62c36f62817273ecaff228f20e074063bed1414cfa9`.
+
+The corrected host now:
+
+- rejects nonempty browser executable, user-data, browser-argument, compatibility
+  channel-preference, channel-search, release-channel, wait-for-script-debugger,
+  and script-debugger-pipe environment variables;
+- scans `BrowserExecutableFolder`, `UserDataFolder`,
+  `AdditionalBrowserArguments`, compatibility `ReleaseChannelPreference`,
+  `ChannelSearchKind`, `ReleaseChannels`, and `DowngradeVersion` under HKLM then
+  HKCU in both 64-bit and 32-bit registry views, using the actual AUMID when
+  present, production and actual executable filenames, and only each policy's
+  supported wildcard identity;
+- accepts only absent or exact-empty values, but turns any unreadable
+  environment/policy/identity source
+  into inert value-free refusal text with no retained inner exception;
+- runs the production-used guard before launch-option parsing, root creation,
+  or `MainWindow` construction; runs it again at every browser initialization,
+  immediately before every new environment creation, and before a reloaded or
+  recovered renderer establishes a new transport session; and
+- uses one options instance with `ReleaseChannels=Stable` and
+  `ChannelSearchKind=MostStable` for both runtime discovery and `CreateAsync`,
+  then verifies the created `BrowserVersionString` is Stable and at least
+  `151.0.4129.50` before controller creation.
+
+The expanded Release direct desktop suite passes 31/31 with zero warnings or
+errors. Its deterministic matrix covers all eight environment variables, all
+seven policy families, both hives/views, AUMID/production/actual executable
+identities, supported and denied wildcards, empty values, extensionless-name
+non-matching, unreadable-reader sanitization, startup ordering, direct-window
+refusal before runtime/Core creation, the second pre-creation check, repeated
+initialization, stable options, exact floor, preview-channel, and malformed
+version states. The first live rerun exposed an evidence-counter mismatch:
+ordinary reload rotated the transport without re-entering browser initialization.
+Adding the same guard before post-navigation session establishment corrected
+that gap. The final dedicated qualification passed 31 direct desktop tests,
+1 populated-state preparation test, 1 hostile/accessibility WebView test, 1
+renderer/browser/coordinator/shell lifecycle test, and six production launches;
+all attempts cleaned exact owned process trees to zero. Two intermediate live
+runs then exposed that CSP can block a hostile resource before the host's
+resource-request event observes it. The test now issues that attempt separately
+and accepts either the renderer's blocked-fetch result or the host's explicit
+resource denial, while retaining the exact negative assertion that no hostile
+resource loads. This removed the evidence race without weakening the policy.
+
+The refreshed tracked receipt records Stable Evergreen `151.0.4129.107`, all
+four required inherited-override/stable-selection/recovery/value-exclusion
+coverage atoms, and boolean process-tree proof without retaining full command
+lines. Its new raw run records launch p50 `825 ms` and maximum `1,399 ms`,
+bootstrap `1,636.3623 ms`, finding-page p50 `62.3815 ms`, detail p50
+`62.7881 ms`, progress p50 `62.295 ms`, second page `61.8183 ms`, transport
+cancellation `1,044.4341 ms`, authoritative-resync p50 `62.4257 ms`, reload
+p50 `93.991 ms`, idle private-working-set p50 `355,110,912` bytes, active p50
+`410,873,856` bytes, and a `6,615,820`-byte 31-file host package. Observed
+message maxima and packaged assets remain `912 / 37,261 / 1,826` bytes and
+`279,745` bytes respectively.
+
+The complete-floor receipt immediately above remains truthful for the byte set
+that passed it, but this later host-policy correction postdates that run. The
+corrected bytes therefore await independent changed-surface re-review and a
+new complete accepted floor before commit. Checkpoint D remains pending; Phase
+E and M2 remain inactive.
+
+Architecture re-review then corrected one policy-identity detail on the same
+candidate: pinned WebView2 applies the AUMID-to-executable-to-wildcard fallback
+to `UserDataFolder` too; only `DowngradeVersion` is non-wildcard. The production
+metadata was corrected accordingly. Tests now bind independent literal lists
+of all eight environment variables and seven registry families (including each
+wildcard rule), plus mixed-case AUMID/production/actual executable evidence, so
+an omitted production entry or case-sensitive identity comparison cannot
+self-validate. Follow-up evaluation also tightened "empty" to only null or the
+exact empty string: whitespace-only environment/registry values now fail
+closed, environment-reader failures have no value echo, and the closed options
+test binds empty browser arguments, Stable/MostStable selection, disabled SSO,
+disabled extensions, exclusive user data, and disabled custom crash reporting.
+This correction changes host policy bytes only; the renderer
+9-operation/16-message boundary and all application contracts remain unchanged.
+
+Independent architecture and evaluation re-review of the final corrected bytes
+found no remaining must-fix, follow-up, owner/authority, safety/isolation, or
+ADR-0017 stack-reopen finding. The reviewers independently confirmed the exact
+eight-variable/seven-family matrix, `UserDataFolder` wildcard fallback, only
+`DowngradeVersion` remaining non-wildcard, null/exact-empty acceptance,
+nonempty-whitespace denial, value-free reader failures, Stable-only option
+parity, startup/create/recovery/session guard ordering, refreshed receipt
+parity, unchanged renderer authority, and exact zero process survivors. The
+corrected Phase D candidate therefore proceeds to one new complete accepted
+verification floor; Checkpoint D remains independent and pending.
+
+### Inherited WebView2 correction complete verification-floor receipt
+
+After the final independent re-review passed, the same corrected byte set ran
+the complete accepted repository floor:
+
+| Command | Result |
+|---|---|
+| `dotnet restore Infinium.sln --locked-mode --nologo` | Passed; every project was up to date under locked restore. |
+| `dotnet build Infinium.sln -c Release --no-restore --nologo` | Passed with zero warnings and zero errors; repository-owned `dotnet`/`testhost`/`vstest` survivors after the batch: 0. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo` | Passed: 855 tests, 12 expected skips, zero failures; repository-owned `dotnet`/`testhost`/`vstest` survivors after the batch: 0. |
+| `dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity minimal` | Passed with no formatting drift. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/validate-documentation.ps1` | Passed: 154 metadata files, 156 Markdown link sources, and 20 JSON files. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-functional-naming.ps1` | Passed: 195 exact reviewed exceptions and zero unexplained findings. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/update-dependency-manifest.ps1 -Check` | Passed with no dependency-manifest drift. |
+| `git diff --check` | Passed with no whitespace errors. |
+
+The solution totals were: Contract Tests 266 passed; Desktop Tests 31 passed
+and 2 expected live-harness skips; Unit Tests 316 passed and 1 expected skip;
+Evaluation Tests 68 passed and 9 expected skips; Integration Tests 142 passed;
+Fault Tests 10 passed; and Security Tests 22 passed. The aggregate is 855
+passed, 12 expected skips, and zero failures. The separate final desktop
+qualification passed 31 direct tests, 1 populated-state preparation test, 1
+live hostile/accessibility WebView test, 1 lifecycle/reconnect/reload/shell
+test, and six product-host launches with zero repository-launched desktop,
+coordinator, or WebView2 survivors. Final repository-owned
+`dotnet`/`testhost`/`vstest` survivors were also zero.
+
+This completes the requested WP8 correction implementation, review,
+correction, re-review, focused qualification, and complete floor on one Phase D
+candidate. It does not accept Checkpoint D, begin Phase E, or activate M2.
+
 ## Final closeout fields
 
 WP9 will replace this placeholder with the accepted contract maturity,

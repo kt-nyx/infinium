@@ -14,11 +14,17 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        DesktopLaunchOptions options;
         try
         {
-            options = DesktopLaunchOptions.Parse(e.Args);
-            DesktopRuntimePolicy.EnsureSafeBrowserEnvironment();
+            DesktopHostStartup.Start(
+                e.Args,
+                DesktopRuntimePolicy.EnsureSafeBrowserEnvironment,
+                DesktopLaunchOptions.Parse,
+                options =>
+                {
+                    MainWindow = new MainWindow(options);
+                    MainWindow.Show();
+                });
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
         {
@@ -27,7 +33,5 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        MainWindow = new MainWindow(options);
-        MainWindow.Show();
     }
 }

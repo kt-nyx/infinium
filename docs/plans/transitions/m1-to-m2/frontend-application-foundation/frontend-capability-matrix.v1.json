@@ -567,6 +567,7 @@
       "current_state": "available-and-reusable",
       "current_evidence": [
         "Minimal non-elevated WPF host with WebView2 SDK 1.0.4129.50 and exact Evergreen runtime floor 151.0.4129.50",
+        "Stable-only runtime discovery and creation share fixed options; eight environment overrides and seven HKLM/HKCU policy families fail closed before launch, creation, reload, or recovery without value echo",
         "Packaged React/ReactDOM 18.3.1 assets under exact https://app.infinium.invalid/index.html with restrictive CSP, Trusted Types none, deny-mapped virtual host, and compiled asset-manifest SHA anchor",
         "Host-owned registry-bound transport session, split directional sequences, successful-delivery event commits, and generated exhaustive request dispatch",
         "The bridge limits messages to 1 MiB, active requests/events to 64, chunks to 256 KiB, and cancellation to host-attested one-shot gestures",

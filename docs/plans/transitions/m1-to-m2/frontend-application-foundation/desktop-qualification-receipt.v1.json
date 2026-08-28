@@ -1,6 +1,6 @@
 {
   "schema": "infinium.desktop-qualification-receipt/v1",
-  "recorded_at": "2026-08-28T01:35:42.2992705-04:00",
+  "recorded_at": "2026-08-28T12:52:39.923757-04:00",
   "candidate_base_commit": "2ec3be78da4d05d8c6ada68a3e18544a446f2f03",
   "claim_boundary": "Sanitized repeatable Phase D diagnostic measurements on the recorded reference machine. This is implementation evidence awaiting Checkpoint D, not M2 acceptance, production readiness, or a semantic-oracle verdict.",
   "commands": [
@@ -25,59 +25,59 @@
     "cold_and_warm": "The first of six fresh exclusive process launches is cold; the next five are warm. Every launch is stopped by exact PID and descendant ownership."
   },
   "launch": {
-    "cold": { "browser_ready_milliseconds": 882, "host_private_bytes": 110325760, "browser_process_count": 6, "browser_private_bytes": 230039552 },
+    "cold": { "browser_ready_milliseconds": 1399, "host_private_bytes": 111726592, "browser_process_count": 6, "browser_private_bytes": 228028416, "override_markers_absent": true, "stable_evergreen_process_paths": true },
     "warm": [
-      { "browser_ready_milliseconds": 500, "host_private_bytes": 111136768, "browser_process_count": 6, "browser_private_bytes": 232992768 },
-      { "browser_ready_milliseconds": 682, "host_private_bytes": 110985216, "browser_process_count": 6, "browser_private_bytes": 229982208 },
-      { "browser_ready_milliseconds": 693, "host_private_bytes": 111984640, "browser_process_count": 6, "browser_private_bytes": 231243776 },
-      { "browser_ready_milliseconds": 650, "host_private_bytes": 112029696, "browser_process_count": 6, "browser_private_bytes": 230174720 },
-      { "browser_ready_milliseconds": 843, "host_private_bytes": 110780416, "browser_process_count": 6, "browser_private_bytes": 229568512 }
+      { "browser_ready_milliseconds": 754, "host_private_bytes": 110596096, "browser_process_count": 6, "browser_private_bytes": 228655104, "override_markers_absent": true, "stable_evergreen_process_paths": true },
+      { "browser_ready_milliseconds": 859, "host_private_bytes": 111960064, "browser_process_count": 6, "browser_private_bytes": 225300480, "override_markers_absent": true, "stable_evergreen_process_paths": true },
+      { "browser_ready_milliseconds": 841, "host_private_bytes": 108806144, "browser_process_count": 6, "browser_private_bytes": 225050624, "override_markers_absent": true, "stable_evergreen_process_paths": true },
+      { "browser_ready_milliseconds": 752, "host_private_bytes": 110559232, "browser_process_count": 6, "browser_private_bytes": 225341440, "override_markers_absent": true, "stable_evergreen_process_paths": true },
+      { "browser_ready_milliseconds": 825, "host_private_bytes": 110542848, "browser_process_count": 6, "browser_private_bytes": 228294656, "override_markers_absent": true, "stable_evergreen_process_paths": true }
     ],
-    "browser_ready_milliseconds": { "count": 6, "p50": 682, "p95": 882, "maximum": 882 }
+    "browser_ready_milliseconds": { "count": 6, "p50": 825, "p95": 1399, "maximum": 1399 }
   },
   "bridge_raw_milliseconds": {
-    "window_show_to_bootstrap": [748.0687],
-    "finding_page_bridge": [120.6313, 65.5956, 62.3786, 52.1327, 71.4928, 62.6119, 60.588, 62.4288, 63.9672, 61.6071],
-    "finding_detail_bridge": [183.4811, 63.8092, 70.2982, 69.8756, 68.6459, 62.1152, 62.4321, 62.2153, 62.9515, 59.0834],
-    "second_page_bridge": [62.1245],
-    "progress_bridge": [54.4875, 57.076, 64.3835, 61.1613, 60.9923, 63.064, 59.4861, 54.6886, 62.4291, 69.4699],
-    "subscription_cancel_bridge": [872.8485],
-    "authoritative_resync_bridge": [62.5618, 66.8109, 61.0578, 60.2418, 67.7657],
-    "reload_to_bootstrap": [122.298, 94.2052, 92.9187]
+    "window_show_to_bootstrap": [1636.3623],
+    "finding_page_bridge": [123.8808, 62.706, 62.1751, 78.6347, 62.5944, 62.3815, 63.4337, 61.9247, 62.3497, 61.7769],
+    "finding_detail_bridge": [265.235, 62.7042, 77.2895, 62.5764, 77.5142, 62.1131, 62.7881, 62.5756, 76.5564, 62.8097],
+    "second_page_bridge": [61.8183],
+    "progress_bridge": [62.4274, 62.6971, 62.7664, 58.0423, 61.9407, 62.295, 62.2701, 73.209, 62.2416, 62.605],
+    "subscription_cancel_bridge": [1044.4341],
+    "authoritative_resync_bridge": [62.4257, 62.359, 62.435, 62.4621, 61.6237],
+    "reload_to_bootstrap": [94.3546, 93.991, 92.3433]
   },
   "bridge_milliseconds": {
-    "window_show_to_bootstrap": { "count": 1, "p50": 748.0687, "p95": 748.0687, "maximum": 748.0687 },
-    "finding_page_bridge": { "count": 10, "p50": 62.4288, "p95": 120.6313, "maximum": 120.6313 },
-    "finding_detail_bridge": { "count": 10, "p50": 62.9515, "p95": 183.4811, "maximum": 183.4811 },
-    "second_page_bridge": { "count": 1, "p50": 62.1245, "p95": 62.1245, "maximum": 62.1245 },
-    "progress_bridge": { "count": 10, "p50": 60.9923, "p95": 69.4699, "maximum": 69.4699 },
-    "subscription_cancel_bridge": { "count": 1, "p50": 872.8485, "p95": 872.8485, "maximum": 872.8485 },
-    "authoritative_resync_bridge": { "count": 5, "p50": 62.5618, "p95": 67.7657, "maximum": 67.7657 },
-    "reload_to_bootstrap": { "count": 3, "p50": 94.2052, "p95": 122.298, "maximum": 122.298 }
+    "window_show_to_bootstrap": { "count": 1, "p50": 1636.3623, "p95": 1636.3623, "maximum": 1636.3623 },
+    "finding_page_bridge": { "count": 10, "p50": 62.3815, "p95": 123.8808, "maximum": 123.8808 },
+    "finding_detail_bridge": { "count": 10, "p50": 62.7881, "p95": 265.235, "maximum": 265.235 },
+    "second_page_bridge": { "count": 1, "p50": 61.8183, "p95": 61.8183, "maximum": 61.8183 },
+    "progress_bridge": { "count": 10, "p50": 62.295, "p95": 73.209, "maximum": 73.209 },
+    "subscription_cancel_bridge": { "count": 1, "p50": 1044.4341, "p95": 1044.4341, "maximum": 1044.4341 },
+    "authoritative_resync_bridge": { "count": 5, "p50": 62.4257, "p95": 62.4621, "maximum": 62.4621 },
+    "reload_to_bootstrap": { "count": 3, "p50": 93.991, "p95": 94.3546, "maximum": 94.3546 }
   },
   "private_working_set_raw_bytes": {
     "idle": [
-      { "host": 120905728, "browser": 242733056, "browser_process_count": 5, "total": 363638784 },
-      { "host": 121544704, "browser": 243646464, "browser_process_count": 5, "total": 365191168 },
-      { "host": 123400192, "browser": 244690944, "browser_process_count": 5, "total": 368091136 },
-      { "host": 125022208, "browser": 244166656, "browser_process_count": 5, "total": 369188864 },
-      { "host": 126361600, "browser": 241737728, "browser_process_count": 5, "total": 368099328 }
+      { "host": 117239808, "browser": 237584384, "browser_process_count": 5, "total": 354824192 },
+      { "host": 117641216, "browser": 237469696, "browser_process_count": 5, "total": 355110912 },
+      { "host": 117891072, "browser": 235438080, "browser_process_count": 5, "total": 353329152 },
+      { "host": 118890496, "browser": 236834816, "browser_process_count": 5, "total": 355725312 },
+      { "host": 118956032, "browser": 236810240, "browser_process_count": 5, "total": 355766272 }
     ],
     "active": [
-      { "host": 153096192, "browser": 286367744, "browser_process_count": 5, "total": 439463936 },
-      { "host": 153849856, "browser": 285970432, "browser_process_count": 5, "total": 439820288 },
-      { "host": 154181632, "browser": 286171136, "browser_process_count": 5, "total": 440352768 },
-      { "host": 154836992, "browser": 285077504, "browser_process_count": 5, "total": 439914496 },
-      { "host": 154902528, "browser": 285089792, "browser_process_count": 5, "total": 439992320 }
+      { "host": 133562368, "browser": 278536192, "browser_process_count": 5, "total": 412098560 },
+      { "host": 133570560, "browser": 277237760, "browser_process_count": 5, "total": 410808320 },
+      { "host": 133636096, "browser": 277237760, "browser_process_count": 5, "total": 410873856 },
+      { "host": 133636096, "browser": 277237760, "browser_process_count": 5, "total": 410873856 },
+      { "host": 133701632, "browser": 277237760, "browser_process_count": 5, "total": 410939392 }
     ]
   },
   "private_working_set_bytes": {
-    "idle": { "count": 5, "p50": 368091136, "p95": 369188864, "maximum": 369188864 },
-    "active": { "count": 5, "p50": 439914496, "p95": 440352768, "maximum": 440352768 }
+    "idle": { "count": 5, "p50": 355110912, "p95": 355766272, "maximum": 355766272 },
+    "active": { "count": 5, "p50": 410873856, "p95": 412098560, "maximum": 412098560 }
   },
   "observed_message_bytes": { "request": 912, "response": 37261, "event": 1826 },
   "configured_bounds": { "maximum_message_bytes": 1048576, "maximum_chunk_bytes": 262144, "maximum_queue_items": 64 },
-  "package": { "file_count": 31, "bytes": 6607628, "asset_file_count": 11, "asset_bytes": 279745, "largest_asset_bytes": 131835 },
+  "package": { "file_count": 31, "bytes": 6615820, "asset_file_count": 11, "asset_bytes": 279745, "largest_asset_bytes": 131835 },
   "runtime": { "installed_file_count": 779, "installed_bytes": 894464255 },
   "licenses": {
     "runtime_assets": [
@@ -101,6 +101,12 @@
     "renderer_and_browser_failure": true,
     "coordinator_same_session_reconnect": true,
     "shell_restart_authoritative_resume": true,
+    "inherited_override_preflight": true,
+    "stable_only_runtime_selection": true,
+    "recovery_revalidation": true,
+    "no_override_value_echo": true,
+    "repository_launched_process_tree_override_markers_absent": true,
+    "repository_launched_process_tree_stable_evergreen_paths": true,
     "hostile_webview_attempts": ["top-navigation", "frame", "resource", "window-open", "download", "permission"],
     "logical_100000_summary_proof": { "generated_bridge_pages": 1000, "maximum_page_transfer": 100, "maximum_cache": 500, "mounted_rows": 13 }
   },

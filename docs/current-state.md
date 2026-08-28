@@ -31,10 +31,16 @@ host-owned session handshake, packaged hash-verified assets, bounded
 pass focused checks and the independent WP8 correction/re-review cycle. Its
 tracked sanitized desktop receipt includes real second-page/cancel samples,
 process-split memory, package/runtime/license evidence, and exact zero-survivor
-cleanup. The corrected review-ready candidate also passes the complete locked
-repository floor: 845 tests passed, 12 expected skips, zero failures, a Release
-build with zero warnings/errors, all documentation/naming/dependency/format/
-diff gates passing, and zero repository-owned .NET test-process survivors.
+cleanup. A later inherited-browser-configuration correction now rejects every
+applicable environment and HKLM/HKCU policy override before launch-option or
+WebView construction, repeats that check before each runtime probe, environment
+creation, recovery, and session establishment, and selects only Stable
+Evergreen at or above `151.0.4129.50`. Its focused Release desktop and live
+qualification gates pass with zero owned process survivors. Independent
+changed-surface security, lifecycle, evidence, and diff re-review found no
+remaining finding. The corrected byte set passes the complete locked repository
+floor with 855 tests, 12 expected skips, zero failures, and zero repository-owned
+test-process survivors.
 The candidate awaits Checkpoint D review and does not
 activate M2. FindingReport
 query/readback, application validation,
@@ -119,7 +125,7 @@ diagnostic desktop proof. M2 remains separately planned and authorized work.
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
-| Active implementation | Frontend Application Foundation Phases A-C (WP1-WP6) and Checkpoint C are accepted at `2ec3be78da4d05d8c6ada68a3e18544a446f2f03`; WP7/WP8 form a completed Phase D candidate whose complete floor passes 845 tests with 12 expected skips and zero failures. The five targeted-verification RPCs remain native-only. |
+| Active implementation | Frontend Application Foundation Phases A-C (WP1-WP6) and Checkpoint C are accepted at `2ec3be78da4d05d8c6ada68a3e18544a446f2f03`; WP7/WP8 form a corrected Phase D candidate whose complete floor passes 855 tests with 12 expected skips and zero failures. The five targeted-verification RPCs remain native-only. |
 | Next authorized action and gate | Checkpoint D architecture-steward review. Do not begin Phase E or activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |

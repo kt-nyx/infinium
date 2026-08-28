@@ -70,10 +70,16 @@ cycle and WP8's executable desktop-consumer cycle, independent correction, and
 re-review pass on the same Phase D candidate. The tracked qualification receipt
 retains complete sanitized launch, bridge, process-split memory, message,
 package, runtime, license, coverage, and exact zero-survivor evidence. After
-the recorded first-floor defects were corrected on that same candidate, the
-complete locked repository floor passed 845 tests with 12 expected skips and
-zero failures; Release build, format, documentation, functional naming,
-dependency-manifest, diff, and exact process-cleanup gates also passed.
+the recorded first-floor defects were corrected on that same candidate, its
+then-current complete floor passed. A subsequent changed-surface review
+expanded inherited WebView2 override denial across eight environment variables
+and seven HKLM/HKCU policy families, moved refusal before launch-option/window
+construction, and added Stable-only runtime selection and revalidation before
+creation and recovery. The corrected focused Release and live qualification
+gates pass with zero owned survivors; independent architecture and evaluation
+re-review found no remaining finding. The corrected bytes pass the complete
+locked repository floor with 855 tests, 12 expected skips, zero failures, and
+zero repository-owned test-process survivors.
 Checkpoint D remains independent.
 This status does not activate M2. WP3 and WP4 provide typed
 tool/profile/configuration setup, honest local estimates, non-secret provider

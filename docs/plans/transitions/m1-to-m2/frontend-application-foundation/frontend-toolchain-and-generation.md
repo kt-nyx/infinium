@@ -29,6 +29,22 @@ install script, global Node dependency, or live package download in the final
 build. The Evergreen WebView2 runtime is an explicit local prerequisite; the
 host never downloads it and reports missing/outdated state inertly.
 
+The desktop host admits only the installed Stable Evergreen channel. One
+`CoreWebView2EnvironmentOptions` instance fixes `ReleaseChannels=Stable` and
+`ChannelSearchKind=MostStable` for both runtime discovery and environment
+creation; the created environment's exact version and stable-channel form are
+checked again before controller creation. Release preflight rejects nonempty
+browser executable/user-data/argument/channel/debugger environment overrides
+and the applicable HKLM/HKCU 64/32-bit policy families for the process AUMID,
+production executable, actual executable, and policy-supported wildcard.
+All listed policy families use the WebView2 AUMID-to-executable-to-wildcard
+fallback except `DowngradeVersion`, whose wildcard is not applicable.
+Only absent or exact-empty values are accepted; whitespace is nonempty and is
+rejected. Unreadable policy fails closed with value-free WPF text. The same guard runs
+before option/root/window construction, at every browser initialization,
+immediately before environment creation, and before a reloaded renderer can
+establish a new transport session.
+
 ## Generated ownership
 
 The sole reviewed generation source is
@@ -142,7 +158,9 @@ The latest complete sanitized output of that command is tracked as
 [`desktop-qualification-receipt.v1.json`](desktop-qualification-receipt.v1.json),
 including raw second-page and transport-cancel samples, host/browser memory
 splits, every launch sample, observed message maxima, package/runtime sizes,
-license identities, live coverage flags, and exact process-tree cleanup.
+license identities, inherited-override/stable-runtime/recovery/value-exclusion
+coverage flags, and exact process-tree cleanup. It records booleans rather than
+full browser command lines.
 
 `-Task All` runs ordinary locked restore followed by all four checks. The
 offline restore uses `--force-evaluate`, and its accepted run completed with
@@ -155,7 +173,7 @@ field vocabulary outside generated files.
 ## Current limitations
 
 WP7/WP8 supply a diagnostic proof, not the polished M2 interface or installer.
-The machine must already have Evergreen WebView2 `151.0.4129.50` or newer.
+The machine must already have Stable Evergreen WebView2 `151.0.4129.50` or newer.
 Public redistribution/SBOM closure remains a later distribution concern. This
 record does not accept Checkpoint D, begin Phase E, or activate M2. Automated
 accessibility qualification uses Chromium's full AX tree and Windows UI

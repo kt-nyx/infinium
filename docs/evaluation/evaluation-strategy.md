@@ -57,7 +57,9 @@ isolation facets under EVAL-0087 through EVAL-0089. The Phase D candidate adds
 only the EVAL-0088 desktop-consumer facets: exact-origin/version/session/
 directional-sequence/gesture validation, finite bridge and stream bounds,
 transport cancellation, authoritative resync, same-session coordinator
-reconnect, and renderer/browser/shell recovery. For EVAL-0089 it proves only
+reconnect, renderer/browser/shell recovery, inherited WebView2 override denial,
+and Stable-only runtime revalidation before creation and recovered sessions.
+For EVAL-0089 it proves only
 that this local diagnostic neither requests credentials nor leaks its secret
 canary; it does not add or claim a credential enrollment, replacement,
 revocation, or recovery workflow.

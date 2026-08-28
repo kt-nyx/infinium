@@ -11,27 +11,34 @@ public partial class MainWindow : Window, IAsyncDisposable
 {
     private readonly DesktopLaunchOptions options;
     private readonly string assetRoot;
-    private readonly Func<DesktopRuntimeStatus> inspectRuntime;
+    private readonly Action ensureSafeBrowserEnvironment;
+    private readonly Func<CoreWebView2EnvironmentOptions, DesktopRuntimeStatus> inspectRuntime;
     private CoreWebView2Environment? environment;
     private CoreWebView2? configuredCore;
     private RendererBridgeSession? bridge;
     private IReadOnlySet<string> allowedAssets = new HashSet<string>();
     private readonly System.Collections.Concurrent.ConcurrentDictionary<ulong, byte> deniedTopNavigations = new();
     private int recreating;
+    private int browserPreflightCheckCount;
     private long bridgeGeneration;
 
     internal RendererBridgeMetrics BridgeMetrics { get; } = new();
     internal DesktopSecurityEventMetrics SecurityEvents { get; } = new();
     internal string? BridgeSessionId => bridge?.SessionId;
+    internal int BrowserPreflightCheckCount => Volatile.Read(ref browserPreflightCheckCount);
 
     public MainWindow(DesktopLaunchOptions options)
-        : this(options, DesktopRuntimePolicy.InspectRuntime)
+        : this(options, DesktopRuntimePolicy.EnsureSafeBrowserEnvironment, DesktopRuntimePolicy.InspectRuntime)
     {
     }
 
-    internal MainWindow(DesktopLaunchOptions options, Func<DesktopRuntimeStatus> inspectRuntime)
+    internal MainWindow(
+        DesktopLaunchOptions options,
+        Action ensureSafeBrowserEnvironment,
+        Func<CoreWebView2EnvironmentOptions, DesktopRuntimeStatus> inspectRuntime)
     {
         this.options = options;
+        this.ensureSafeBrowserEnvironment = ensureSafeBrowserEnvironment;
         this.inspectRuntime = inspectRuntime;
         InitializeComponent();
         assetRoot = Path.Combine(AppContext.BaseDirectory, "Assets");
@@ -48,33 +55,28 @@ public partial class MainWindow : Window, IAsyncDisposable
 
     private async Task InitializeBrowserAsync()
     {
-        DesktopRuntimeStatus runtime = inspectRuntime();
-        if (runtime.Availability != DesktopRuntimeAvailability.Available)
-        {
-            RuntimeNotice.Text = runtime.InertReason;
-            RuntimeNotice.Visibility = Visibility.Visible;
-            Browser.Visibility = Visibility.Collapsed;
-            return;
-        }
         try
         {
+            RunBrowserPreflight();
+            CoreWebView2EnvironmentOptions environmentOptions = DesktopRuntimePolicy.CreateEnvironmentOptions();
+            DesktopRuntimeStatus runtime = inspectRuntime(environmentOptions);
+            if (runtime.Availability != DesktopRuntimeAvailability.Available)
+            {
+                ShowInertRuntimeNotice(runtime.InertReason);
+                return;
+            }
+
             allowedAssets = AssetManifestVerifier.Verify(assetRoot);
             string userData = options.IsQualification
                 ? Path.Combine(options.ProductRoot, "desktop-webview-user-data")
                 : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Infinium", "DesktopHost", "WebView2");
-            CoreWebView2EnvironmentOptions environmentOptions = new()
-            {
-                AdditionalBrowserArguments = string.Empty,
-                AllowSingleSignOnUsingOSPrimaryAccount = false,
-                AreBrowserExtensionsEnabled = false,
-                ExclusiveUserDataFolderAccess = true,
-                IsCustomCrashReportingEnabled = false,
-            };
             if (environment is null)
             {
+                RunBrowserPreflight();
                 environment = await CoreWebView2Environment.CreateAsync(null, userData, environmentOptions).ConfigureAwait(true);
                 environment.BrowserProcessExited += OnBrowserProcessExited;
             }
+            DesktopRuntimePolicy.EnsureCreatedEnvironmentIsSupported(environment);
             CoreWebView2ControllerOptions controllerOptions = environment.CreateCoreWebView2ControllerOptions();
             controllerOptions.IsInPrivateModeEnabled = true;
             await Browser.EnsureCoreWebView2Async(environment, controllerOptions).ConfigureAwait(true);
@@ -87,12 +89,29 @@ public partial class MainWindow : Window, IAsyncDisposable
             RuntimeNotice.Visibility = Visibility.Collapsed;
             Browser.Visibility = Visibility.Visible;
         }
+        catch (DesktopBrowserPreflightException exception)
+        {
+            ShowInertRuntimeNotice(exception.Message);
+        }
         catch (Exception exception) when (exception is WebView2RuntimeNotFoundException or InvalidDataException or UnauthorizedAccessException or IOException)
         {
-            RuntimeNotice.Text = "The protected local diagnostic renderer could not be initialized.";
-            RuntimeNotice.Visibility = Visibility.Visible;
-            Browser.Visibility = Visibility.Collapsed;
+            ShowInertRuntimeNotice("The protected local diagnostic renderer could not be initialized.");
         }
+    }
+
+    internal Task InitializeBrowserForTestAsync() => InitializeBrowserAsync();
+
+    private void RunBrowserPreflight()
+    {
+        Interlocked.Increment(ref browserPreflightCheckCount);
+        ensureSafeBrowserEnvironment();
+    }
+
+    private void ShowInertRuntimeNotice(string text)
+    {
+        RuntimeNotice.Text = text;
+        RuntimeNotice.Visibility = Visibility.Visible;
+        Browser.Visibility = Visibility.Collapsed;
     }
 
     private void ConfigureCore(CoreWebView2 core)
@@ -204,6 +223,21 @@ public partial class MainWindow : Window, IAsyncDisposable
         if (!args.IsSuccess || !DesktopRuntimePolicy.IsAllowedTopLevelNavigation(Browser.Source?.AbsoluteUri))
         {
             await RecreateBrowserAsync().ConfigureAwait(true);
+            return;
+        }
+        try
+        {
+            RunBrowserPreflight();
+        }
+        catch (DesktopBrowserPreflightException exception)
+        {
+            Interlocked.Increment(ref bridgeGeneration);
+            if (bridge is not null)
+            {
+                await bridge.DisposeAsync().ConfigureAwait(true);
+                bridge = null;
+            }
+            ShowInertRuntimeNotice(exception.Message);
             return;
         }
         await RotateBridgeAsync().ConfigureAwait(true);

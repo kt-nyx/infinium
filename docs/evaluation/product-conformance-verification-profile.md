@@ -143,10 +143,14 @@ resealed or promoted through an ordinary tooling command.
   WPF/WebView2/React diagnostic host exercises real bootstrap, bounded finding
   pages/detail, progress, event subscription, transport cancellation,
   reconnect, reload, crash recovery, and authoritative resynchronization. The
-  five ADR-0038 targeted-verification RPCs remain native-only and renderer
-  inaccessible. EVAL-0090 through EVAL-0094 and the narrowly applicable facets
-  of existing cases are exercised through the same six layers. Checkpoint D
-  remains pending; Phase E and M2 remain inactive.
+  host also rejects inherited WebView2 environment/policy authority before
+  construction and revalidates it through Stable-only creation and recovery.
+  Focused corrected-byte evidence passes; independent changed-surface review
+  and a new complete-floor run remain pending. The five ADR-0038
+  targeted-verification RPCs remain native-only and renderer-inaccessible.
+  EVAL-0090 through EVAL-0094 and the narrowly applicable facets of existing
+  cases are exercised through the same six layers. Checkpoint D remains
+  pending; Phase E and M2 remain inactive.
 - M2 remains separately planned and authorized work; it must satisfy the
   applicable six layers and its eventual accepted plan.
 - M2 acceptance exercises its stable product interfaces end to end and records

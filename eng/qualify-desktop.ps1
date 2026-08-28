@@ -14,6 +14,17 @@ $summaryPath = Join-Path $artifactRoot 'summary.json'
 $priorRoot = $env:INFINIUM_DESKTOP_QUALIFICATION_ROOT
 $priorMeasurements = $env:INFINIUM_DESKTOP_QUALIFICATION_MEASUREMENTS
 $priorSecretCanary = $env:INFINIUM_DESKTOP_SECRET_CANARY
+$priorPreflightEvidence = $env:INFINIUM_DESKTOP_PREFLIGHT_TESTS_PASSED
+$privilegedWebViewVariables = @(
+    'WEBVIEW2_BROWSER_EXECUTABLE_FOLDER',
+    'WEBVIEW2_USER_DATA_FOLDER',
+    'WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS',
+    'WEBVIEW2_RELEASE_CHANNEL_PREFERENCE',
+    'WEBVIEW2_CHANNEL_SEARCH_KIND',
+    'WEBVIEW2_RELEASE_CHANNELS',
+    'WEBVIEW2_WAIT_FOR_SCRIPT_DEBUGGER',
+    'WEBVIEW2_PIPE_FOR_SCRIPT_DEBUGGER'
+)
 
 function Invoke-Checked([string]$FileName, [string[]]$ArgumentList) {
     & $FileName @ArgumentList
@@ -59,11 +70,29 @@ function Measure-DesktopLaunch {
         }
         if ($null -eq $readyMilliseconds) { throw 'The release desktop host did not start its protected WebView2 runtime.' }
         $hostProcess.Refresh()
+        $forbiddenMarkers = @(
+            '--remote-debugging-port',
+            'WEBVIEW2_PIPE_FOR_SCRIPT_DEBUGGER',
+            'WEBVIEW2_WAIT_FOR_SCRIPT_DEBUGGER',
+            'script-debugger',
+            $env:INFINIUM_DESKTOP_SECRET_CANARY
+        ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+        $commandText = (($browserProcesses | ForEach-Object { [string]$_.CommandLine }) -join "`n")
+        $overrideMarkersAbsent = @($forbiddenMarkers | Where-Object {
+            $commandText.IndexOf($_, [StringComparison]::OrdinalIgnoreCase) -ge 0
+        }).Count -eq 0
+        $stableEvergreenPaths = $browserProcesses.Count -gt 0 -and @($browserProcesses | Where-Object {
+            [string]::IsNullOrWhiteSpace([string]$_.ExecutablePath) -or
+            ([string]$_.ExecutablePath).IndexOf('\Microsoft\EdgeWebView\Application\', [StringComparison]::OrdinalIgnoreCase) -lt 0 -or
+            ([string]$_.ExecutablePath).IndexOf($QualificationSession, [StringComparison]::OrdinalIgnoreCase) -ge 0
+        }).Count -eq 0
         [pscustomobject]@{
             browser_ready_milliseconds = $readyMilliseconds
             host_private_bytes = $hostProcess.PrivateMemorySize64
             browser_process_count = $browserProcesses.Count
             browser_private_bytes = (($browserProcesses | ForEach-Object { [uint64]$_.PrivatePageCount } | Measure-Object -Sum).Sum)
+            override_markers_absent = $overrideMarkersAbsent
+            stable_evergreen_process_paths = $stableEvergreenPaths
         }
     }
     finally {
@@ -83,6 +112,12 @@ function Measure-Distribution([double[]]$Values) {
 
 try {
     Set-Location -LiteralPath $repositoryRoot
+    foreach ($variable in $privilegedWebViewVariables) {
+        $inheritedValue = [Environment]::GetEnvironmentVariable($variable)
+        if ($null -ne $inheritedValue -and $inheritedValue.Length -ne 0) {
+            throw 'Desktop qualification requires an override-free inherited WebView2 environment.'
+        }
+    }
     New-Item -ItemType Directory -Path $artifactRoot -Force | Out-Null
     $env:INFINIUM_DESKTOP_QUALIFICATION_ROOT = $qualificationRoot
     $env:INFINIUM_DESKTOP_QUALIFICATION_MEASUREMENTS = $runtimeMeasurements
@@ -96,6 +131,7 @@ try {
     Invoke-Checked 'dotnet' @('build', 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj', '-c', $Configuration, '--no-restore', '--nologo')
     Invoke-Checked 'dotnet' @('build', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', $Configuration, '--no-restore', '--nologo')
     Invoke-Checked 'dotnet' @('test', 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj', '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', 'TestCategory!=DesktopQualification&TestCategory!=DesktopLifecycleQualification')
+    $env:INFINIUM_DESKTOP_PREFLIGHT_TESTS_PASSED = '1'
     Invoke-Checked 'dotnet' @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', 'TestCategory=DesktopStatePreparation')
     Invoke-Checked 'dotnet' @('test', 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj', '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', 'TestCategory=DesktopQualification')
     Invoke-Checked 'dotnet' @('test', 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj', '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', 'TestCategory=DesktopLifecycleQualification')
@@ -105,6 +141,9 @@ try {
     $launchSamples = @()
     for ($sample = 0; $sample -lt 6; $sample++) {
         $launchSamples += Measure-DesktopLaunch -Executable $hostExecutable -QualificationSession $qualificationSession
+    }
+    if (@($launchSamples | Where-Object { -not $_.override_markers_absent -or -not $_.stable_evergreen_process_paths }).Count -ne 0) {
+        throw 'The repository-launched WebView2 process tree did not retain the stable override-free runtime boundary.'
     }
     $packageFiles = @(Get-ChildItem -LiteralPath $hostOutput -File -Recurse)
     $assetFiles = @(Get-ChildItem -LiteralPath (Join-Path $hostOutput 'Assets') -File -Recurse)
@@ -160,6 +199,14 @@ try {
         largest_packaged_message_asset_bytes = (($assetFiles | Measure-Object Length -Maximum).Maximum)
         installed_webview_runtime_file_count = $runtimeFiles.Count
         installed_webview_runtime_bytes = (($runtimeFiles | Measure-Object Length -Sum).Sum)
+        coverage = [ordered]@{
+            inherited_override_preflight = [bool]$runtime.coverage.inherited_override_preflight
+            stable_only_runtime_selection = [bool]$runtime.coverage.stable_only_runtime_selection
+            recovery_revalidation = [bool]$runtime.coverage.recovery_revalidation
+            no_override_value_echo = [bool]$runtime.coverage.no_override_value_echo
+            repository_launched_process_tree_override_markers_absent = $true
+            repository_launched_process_tree_stable_evergreen_paths = $true
+        }
     }
     Write-Utf8NoBom $summaryPath ($summary | ConvertTo-Json -Depth 12)
     Write-Output "Desktop qualification summary: $summaryPath"
@@ -168,6 +215,7 @@ finally {
     $env:INFINIUM_DESKTOP_QUALIFICATION_ROOT = $priorRoot
     $env:INFINIUM_DESKTOP_QUALIFICATION_MEASUREMENTS = $priorMeasurements
     $env:INFINIUM_DESKTOP_SECRET_CANARY = $priorSecretCanary
+    $env:INFINIUM_DESKTOP_PREFLIGHT_TESTS_PASSED = $priorPreflightEvidence
     $resolvedQualification = [IO.Path]::GetFullPath($qualificationRoot)
     if ([IO.Path]::GetDirectoryName($resolvedQualification) -ne $temporaryRoot -or
         -not [IO.Path]::GetFileName($resolvedQualification).StartsWith('infinium-desktop-qualification-', [StringComparison]::Ordinal)) {
