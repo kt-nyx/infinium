@@ -104,7 +104,7 @@ versions. Raw plugin names, form keys, contribution strings, and normalized
 paths cannot grant identity, and a changed contribution or asset slot remains
 non-startable without retained typed continuity proof. Canonical analysis truth
 remains the authority. WP5/WP6 and Checkpoint C are accepted; WP7/WP8 form a
-completed Phase D candidate awaiting independent review.
+completed Phase D candidate awaiting Checkpoint D architecture-steward review.
 The renderer boundary permits nine operations and sixteen exact message shapes.
 Transport-only session establishment and host-attested gesture grant add no
 application authority. Separate renderer-request and host-event sequences,
