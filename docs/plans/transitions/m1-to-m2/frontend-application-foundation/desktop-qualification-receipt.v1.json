@@ -2,7 +2,7 @@
   "schema": "infinium.desktop-qualification-receipt/v1",
   "recorded_at": "2026-08-28T12:52:39.923757-04:00",
   "candidate_base_commit": "2ec3be78da4d05d8c6ada68a3e18544a446f2f03",
-  "claim_boundary": "Sanitized repeatable Phase D diagnostic measurements on the recorded reference machine. This is implementation evidence awaiting Checkpoint D, not M2 acceptance, production readiness, or a semantic-oracle verdict.",
+  "claim_boundary": "Sanitized repeatable diagnostic measurements on the recorded reference machine. The original detailed Phase D sample is retained below and a fresh Phase E repeat is summarized separately. These measurements inform M2 planning; they are not production guarantees, M2 acceptance, production readiness, or a semantic-oracle verdict.",
   "commands": [
     "powershell -NoProfile -ExecutionPolicy Bypass -File eng/qualify-desktop.ps1"
   ],
@@ -109,6 +109,38 @@
     "repository_launched_process_tree_stable_evergreen_paths": true,
     "hostile_webview_attempts": ["top-navigation", "frame", "resource", "window-open", "download", "permission"],
     "logical_100000_summary_proof": { "generated_bridge_pages": 1000, "maximum_page_transfer": 100, "maximum_cache": 500, "mounted_rows": 13 }
+  },
+  "phase_e_repeat": {
+    "recorded_at": "2026-08-28T19:35:06.3842965+00:00",
+    "checkpoint_d_base_commit": "6b9b92a5f3dae0e90219f521919555956a8b5623",
+    "claim_boundary": "Fresh WP9 repeat on the same reference-machine class. Values are planning observations, not service-level objectives or production guarantees.",
+    "browser_ready_milliseconds": { "count": 6, "p50": 1194, "p95": 1372, "maximum": 1372 },
+    "bridge_milliseconds": {
+      "window_show_to_bootstrap": { "count": 1, "p50": 1540.3463, "p95": 1540.3463, "maximum": 1540.3463 },
+      "finding_page_bridge": { "count": 10, "p50": 62.231, "p95": 124.074, "maximum": 124.074 },
+      "finding_detail_bridge": { "count": 10, "p50": 62.1908, "p95": 250.3641, "maximum": 250.3641 },
+      "second_page_bridge": { "count": 1, "p50": 62.0438, "p95": 62.0438, "maximum": 62.0438 },
+      "progress_bridge": { "count": 10, "p50": 62.2446, "p95": 63.1046, "maximum": 63.1046 },
+      "subscription_cancel_bridge": { "count": 1, "p50": 1122.6778, "p95": 1122.6778, "maximum": 1122.6778 },
+      "authoritative_resync_bridge": { "count": 5, "p50": 62.6954, "p95": 77.5468, "maximum": 77.5468 },
+      "reload_to_bootstrap": { "count": 3, "p50": 93.6069, "p95": 107.9423, "maximum": 107.9423 }
+    },
+    "private_working_set_bytes": {
+      "idle": { "count": 5, "p50": 355483648, "p95": 355770368, "maximum": 355770368 },
+      "active": { "count": 5, "p50": 411131904, "p95": 412028928, "maximum": 412028928 }
+    },
+    "observed_message_bytes": { "request": 912, "response": 37261, "event": 1826 },
+    "package": { "file_count": 31, "bytes": 6615820, "asset_file_count": 11, "asset_bytes": 279745, "largest_asset_bytes": 131835 },
+    "runtime": { "installed_file_count": 779, "installed_bytes": 894464255 },
+    "coverage": {
+      "inherited_override_preflight": true,
+      "stable_only_runtime_selection": true,
+      "recovery_revalidation": true,
+      "no_override_value_echo": true,
+      "repository_launched_process_tree_override_markers_absent": true,
+      "repository_launched_process_tree_stable_evergreen_paths": true
+    },
+    "cleanup_survivor_count": 0
   },
   "cleanup": { "exact_launched_process_and_descendant_survivor_count": 0 }
 }

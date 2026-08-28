@@ -1,13 +1,13 @@
 # M1-to-M2 Foundation — Frontend Application Foundation
 
 Status: Accepted
-Disposition: Checkpoint C accepted; WP7/WP8 Phase D candidate awaits Checkpoint D architecture-steward review
+Disposition: WP9 integrated candidate passed; awaiting Checkpoint E architecture-steward and final owner acceptance; M2 inactive
 
 Last reviewed: 2026-08-28
 Owner: Project owner
 Accepted: 2026-08-25
 Plan ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`
-Next gate: Checkpoint D architecture-steward review after WP7 and WP8
+Next gate: Checkpoint E architecture-steward and final owner acceptance after WP9
 
 ## Plain-language purpose
 
@@ -32,6 +32,8 @@ implemented against a producer-consumer-validated application boundary.
 - [Capability-matrix schema](frontend-capability-matrix.v1.schema.json)
 - [Application contract inventory](application-contract-inventory.v1.json)
 - [Application contract inventory schema](application-contract-inventory.v1.schema.json)
+- [Integrated acceptance workflow](frontend-foundation-acceptance.v1.json)
+- [Integrated acceptance workflow schema](frontend-foundation-acceptance.v1.schema.json)
 - [Implementation record](implementation-record.md)
 - [Frontend toolchain and generated-output ownership](frontend-toolchain-and-generation.md)
 - [Sanitized desktop qualification receipt](desktop-qualification-receipt.v1.json)
@@ -50,7 +52,7 @@ implemented against a producer-consumer-validated application boundary.
 | B — Setup and execution workflow | WP3-WP4 | One orchestrator implements setup/configuration and typed run/live-state paths together | A diagnostic native client can prepare, start, observe, and reconnect to a run |
 | C — Results and review workflow | WP5-WP6 | One orchestrator implements result exploration and durable user review actions together | Complete finding-to-review backend path is producer-consumer-validated |
 | D — Desktop consumption proof | WP7-WP8 | One orchestrator builds the generated TypeScript/native boundary and executable host/renderer qualification | WebView2 stack either qualifies for M2 planning or the stack decision is reopened |
-| E — Integrated acceptance and handoff | WP9 | A fresh closeout orchestrator reviews the whole candidate, runs the final floor, and records the M2 planning handoff | Accepted M2-ready application-contract candidate |
+| E — Integrated acceptance and handoff | WP9 | A fresh closeout orchestrator reviews the whole candidate, runs the final floor, and records the M2 planning handoff | M2-ready contract candidate awaiting Checkpoint E acceptance |
 
 Each package retains an individual implementation and verification receipt.
 The default orchestrator does not stop after each package. It continues through
@@ -80,8 +82,10 @@ gates pass with zero owned survivors; independent architecture and evaluation
 re-review found no remaining finding. The corrected bytes pass the complete
 locked repository floor with 855 tests, 12 expected skips, zero failures, and
 zero repository-owned test-process survivors.
-Checkpoint D remains independent.
-This status does not activate M2. WP3 and WP4 provide typed
+The architecture steward accepted Checkpoint D at
+`6b9b92a5f3dae0e90219f521919555956a8b5623`, whose parent is
+`ed870882cf6887b05fe91641cb3118b5252ea5d6`. Phase E/WP9 now has a passing
+integrated candidate at Checkpoint E. This status does not activate M2. WP3 and WP4 provide typed
 tool/profile/configuration setup, honest local estimates, non-secret provider
 status, prepared manual-run initiation, durable gesture/binding receipts, and
 an offline retained-input native diagnostic proof through the real durable
@@ -139,8 +143,84 @@ kind before schema 17 can seal it. Added, missing, or substituted fields fail
 migration with the source fingerprint and append-only triggers intact and no
 partial schema-17 objects.
 
-M2 remains inactive until a separate accepted M2 plan exists. The packaged
+M2 remains inactive until a separate accepted M2 plan exists. Phase E may
+classify the integrated boundary only as an M2-ready contract candidate and
+must stop at Checkpoint E for architecture-steward and final owner acceptance.
+The packaged
 React surface is diagnostic development evidence, not the M2 interface. It
 consumes the real bootstrap, paginated findings, detail, progress, event stream,
 host-attested cancellation, resync, reload, and coordinator-reconnect paths.
 Targeted verification remains native-only and unmapped.
+
+## WP9 integrated acceptance result
+
+The strict [integrated acceptance workflow](frontend-foundation-acceptance.v1.json)
+maps each of the required 16 actions to its real native or diagnostic-desktop
+consumer, exact evidence paths, maturity, evaluation cases, and fail-closed
+boundary. `eng/verify-frontend-foundation.ps1` validated that manifest, ran 3
+contract/authority tests and 8 native integration tests, then ran the complete
+offline desktop qualification. All 11 focused tests passed with no skips or
+failures. The desktop batches passed 31 ordinary desktop tests, one populated-
+state preparation test, one live WebView2/accessibility test, and one lifecycle
+test. Every .NET batch and the final desktop cleanup reported zero repository-
+owned survivors. The fresh post-correction complete repository floor also
+passed: 856 tests, 12 expected skips, zero failures, zero build warnings or
+errors, every documentation, functional-naming, dependency, formatting, and
+diff gate, and zero repository-owned process survivors.
+
+The first receipt attempt exposed one harness-only defect: Windows PowerShell
+returned an ordered dictionary without the property adapter expected by the
+counter aggregation. The runner was corrected to emit a property-bearing
+object, the complete integrated workflow was rerun, and the fresh rerun passed.
+No product contract, architecture boundary, renderer operation, or product
+meaning changed during that correction.
+
+## Contract maturity at Checkpoint E
+
+The complete boundary is an **M2-ready contract candidate**. In plain language,
+the backend, generated clients, and diagnostic desktop now work together well
+enough to be a trustworthy input to a separately planned M2. This is not a
+claim that the interface is polished, production-ready, or Milestone-stable.
+
+| Maturity | Surfaces | Meaning for the next plan |
+|---|---|---|
+| Producer-consumer-validated | Version/fingerprint negotiation; bounded bootstrap; typed setup, tool, profile, saved configuration, estimate, and prepared-run flow; durable run admission; progress/events/cancellation/reconnect/restart; canonical persistence/readback; generated native client; nine-operation generated renderer client; controlled desktop origin, bridge, accessibility mechanics, and lifecycle; native-only targeted-verification preparation/start/readback; structured export lifecycle | M2 planning may consume these exact boundaries without inventing replacements, while preserving their limits and authority rules. |
+| Implementation-active until the real M2 interface consumes them | Full summary/readiness and scope-limited presentation; supported-case and lead-only queue presentation; complete finding/case/report/evidence/provenance/focused-mod presentation; review/disposition/annotation and assumption controls; export interaction; any future user-facing targeted-verification interaction | The contracts and native diagnostics pass, but the real M2 presentation seam must validate meaning, empty/error/loading states, accessibility, bounds, and authority before these surfaces can be treated as stable. The five targeted-verification RPCs remain native-only unless separately authorized architecture creates a narrow interface. |
+| Deliberately unavailable | Six provider RPCs, native credential-entry choreography, generic path/command/URL/provider/credential/native proxy authority, polished installation/distribution, and independent semantic qualification | M2 must not infer or silently add these capabilities. Any product expansion needs its own accepted authority. |
+
+## Measurements and M2 planning recommendations
+
+The fresh Phase E repeat on the recorded Windows reference machine observed a
+1,194 ms median and 1,372 ms maximum browser-ready launch; 1,540.3463 ms bootstrap;
+approximately 62–63 ms median finding-page, detail, progress, resync, and
+second-page bridge operations; 93.6069 ms median renderer reload; 355,483,648
+bytes median idle and 411,131,904 bytes median active private working set; a
+6,615,820-byte 31-file desktop package; and zero launched-process survivors.
+The exact repeat is retained in
+[the desktop qualification receipt](desktop-qualification-receipt.v1.json).
+
+These are development-machine observations, not production guarantees. A
+future accepted M2 plan should:
+
+- begin with the observed launch, bridge, page, message, memory, package, and
+  100,000-summary virtualization evidence as measurement baselines, then set
+  acceptance thresholds only after representative hardware and workload runs;
+- keep the existing 100-item page, 500-summary cache, 13 mounted-row,
+  1 MiB-message, 256 KiB-chunk, and 64-item stream limits unless evidence and
+  accepted architecture justify a change;
+- design complete loading, empty, partial, unavailable, stale, conflict,
+  cancellation, reconnect, and scope-limited states before adding polish;
+- preserve coordinator-owned truth, immutable analysis, append-only user state,
+  exact lineage, local-private export, and no provider or credential fallback;
+- decide the narrow user-facing interaction model for results, review,
+  assumptions, export, and targeted verification without exposing generic
+  renderer authority; and
+- plan representative assistive-technology and hardware qualification,
+  installer/distribution/runtime servicing, and credential enrollment as
+  explicit work rather than treating diagnostic evidence as product closure.
+
+Remaining owner decisions are the M2 scope and accepted plan, the polished
+interaction model, any separately authorized targeted-verification exposure,
+credential enrollment, distribution/runtime servicing, and the breadth of
+hardware and assistive-technology qualification. None is decided here. M2
+remains inactive.

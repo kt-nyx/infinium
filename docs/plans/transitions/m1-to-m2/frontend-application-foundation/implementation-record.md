@@ -1,7 +1,7 @@
 # M1-to-M2 Foundation — Frontend Application Foundation implementation record
 
 Status: Completed
-Disposition: Checkpoint C accepted; WP7/WP8 focused and independent correction/re-review passed; Phase D candidate awaits Checkpoint D architecture-steward review
+Disposition: WP9 integrated candidate passed; awaiting Checkpoint E architecture-steward and final owner acceptance; M2 inactive
 
 Last reviewed: 2026-08-28
 Owner: Project owner
@@ -26,8 +26,9 @@ accepted RESEARCH-0058, ADR-0038, and the WP6 addendum on 2026-08-26 from
 architecture source `bd936a02562a8df1ddcb62f275cc45b6c225e594`. A fresh
 corrected WP6 implementation is accepted at Checkpoint C. WP7 and WP8 each
 completed focused implementation, review, correction, and re-review on the
-same mutable Phase D candidate. Checkpoint D remains independent; Phase E and
-M2 remain inactive.
+same mutable Phase D candidate. The architecture steward accepted Checkpoint D
+at `6b9b92a5f3dae0e90219f521919555956a8b5623`; the Phase E/WP9 integrated
+candidate passes and is stopped at Checkpoint E while M2 remains inactive.
 
 The implementation has assigned every foundation capability to an exact owner,
 and implemented the common and setup-to-live-run boundaries future frontend
@@ -49,8 +50,8 @@ acceptance.
 | C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5` | Accepted at Checkpoint C | Corrected producer/consumer evidence below; accepted at `2ec3be78da4d05d8c6ada68a3e18544a446f2f03` |
 | C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6` | Accepted at Checkpoint C | Corrected targeted-verification evidence below; accepted at `2ec3be78da4d05d8c6ada68a3e18544a446f2f03` |
 | D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` | Focused cycle passed | Generated consumer implementation and correction/re-review evidence below |
-| D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP8` | Focused cycle passed | Executable desktop-consumption proof and correction/re-review evidence below; awaits Checkpoint D |
-| E | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP9` | Not started | None |
+| D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP8` | Accepted at Checkpoint D | Executable desktop-consumption proof and correction/re-review evidence below; accepted at `6b9b92a5f3dae0e90219f521919555956a8b5623` |
+| E | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP9` | Integrated candidate passed | Complete evidence below; awaiting Checkpoint E architecture-steward and final owner acceptance |
 
 ## Phase checkpoint receipts
 
@@ -2534,9 +2535,191 @@ This completes the requested WP8 correction implementation, review,
 correction, re-review, focused qualification, and complete floor on one Phase D
 candidate. It does not accept Checkpoint D, begin Phase E, or activate M2.
 
-## Final closeout fields
+## Checkpoint D acceptance and Phase E activation receipt
 
-WP9 will replace this placeholder with the accepted contract maturity,
-diagnostic-consumer evidence, complete verification receipt, resource
-measurements, remaining limitations, M2 planning inputs, and exact final
-candidate.
+Date: 2026-08-28
+
+Accepted candidate: `6b9b92a5f3dae0e90219f521919555956a8b5623`
+
+Parent: `ed870882cf6887b05fe91641cb3118b5252ea5d6`
+
+Disposition: the architecture steward accepted Checkpoint D after the Phase D
+implementation, testing, correction, independent re-review, desktop
+qualification, and complete verification cycles. The accepted floor reported
+855 passed tests, 12 expected skips, zero failures, every non-test gate
+passing, a clean worktree, and zero repository-owned test-process survivors.
+No ADR-0017 stack-reopen trigger remains.
+
+Authority effect: Phase E/WP9 is active for integrated acceptance, same-
+candidate correction, measurement and evidence consolidation, authoritative
+record closeout, and the M2 planning handoff. It may classify the result only
+as an M2-ready contract candidate and must stop at Checkpoint E.
+
+Non-effect: this receipt does not create or accept an M2 plan, activate M2,
+change accepted product meaning or architecture, map the five native-only
+targeted-verification RPCs to the renderer, authorize private evaluator or
+archive access, or claim Milestone-stable or production-ready status.
+
+## Phase E/WP9 integrated acceptance and closeout candidate
+
+Date: 2026-08-28
+
+Starting commit: `6b9b92a5f3dae0e90219f521919555956a8b5623`
+
+Disposition: the complete frontend foundation is an **M2-ready contract
+candidate** awaiting Checkpoint E architecture-steward and final owner
+acceptance. This is not Milestone-stable, production-ready, an M2 plan, or M2
+activation.
+
+### Delivered diagnostic and evidence path
+
+Phase E added a strict, answer-free 16-step manifest and schema at
+`frontend-foundation-acceptance.v1.json` and
+`frontend-foundation-acceptance.v1.schema.json`. Every step names the real
+native-generated or diagnostic-desktop consumer, its authority, current
+maturity, applicable EVAL-0090 through EVAL-0094 cases, concrete proof paths,
+and fail-closed boundary. A contract test enforces the exact ordered 16 steps,
+all five evaluation identities, real evidence files, inactive M2 state, the
+accepted Checkpoint D baseline, and `native-only-never-map` policy for all five
+targeted-verification RPCs.
+
+`eng/verify-frontend-foundation.ps1` is the repeatable offline acceptance
+runner. It builds the exact contract and integration projects without restore,
+runs three authority/inventory/matrix tests and eight cross-package native
+workflow tests, invokes the accepted desktop qualification, reads the retained
+TRX and desktop receipts, writes a sanitized summary under
+`artifacts/frontend-foundation-acceptance/`, and proves zero repository-owned
+`dotnet`/`testhost`/`vstest` survivors. `eng/qualify-desktop.ps1` now uses
+absolute project paths and performs the same exact-root cleanup after each of
+its four .NET test batches. No runtime product operation or renderer mapping
+was added.
+
+The successful integrated rerun reported 16 of 16 workflow steps passing;
+3 contract/authority tests and 8 native integration tests passing with no skips
+or failures; 31 ordinary desktop tests, 1 populated-state preparation test,
+1 real hostile/accessibility WebView2 test, and 1 lifecycle/recovery test
+passing; and zero repository-owned test or desktop qualification survivors.
+Restore and all execution remained offline. No network, live or billable
+provider, credential, private evaluator, archive, or deferred semantic-oracle
+material was accessed.
+
+### Consolidated review, correction, and re-review
+
+The consolidated review covered product/workflow meaning; domain-versus-
+presentation authority; immutable analysis and append-only user state;
+setup/tool/profile/configuration; budget/provider/credential separation;
+progress/events/reconnect/recovery; result/report/evidence/provenance truth;
+pagination and resource bounds; renderer/bridge/IPC/local-operation security;
+persistence/migration/backup/replay/deletion/export; accessibility and measured
+performance; generated fake/real parity; functional naming, dependencies, and
+licences; evaluator isolation and claim wording; and the complete diff and
+documentation.
+
+One must-fix harness defect was found during the first receipt attempt. Windows
+PowerShell 5 did not expose ordered-dictionary keys as properties to
+`Measure-Object`, so the product and desktop proof passed but receipt total
+aggregation failed. The runner now emits a `PSCustomObject`; PowerShell parsing,
+strict JSON, documentation validation, and whitespace checks passed; and the
+entire integrated native-plus-desktop workflow was rerun successfully on the
+same candidate. No product, contract, architecture, authority, or security
+byte changed in that correction.
+
+The first attempted complete floor then found three functional-naming defects:
+the diagnostic runner embedded the transition path and next-milestone receipt
+labels literally, and the contract guard read the planning state key literally.
+The runner now discovers the uniquely named foundation planning root and
+composes planning-only milestone labels and keys; the contract guard likewise
+composes the frozen planning key. No allowlist entry was added. Functional
+naming then passed with the existing 195 reviewed exceptions and zero
+unexplained findings, and the complete 16-step native-plus-desktop runner was
+rerun successfully again with zero survivors. This correction also changed no
+product or architecture byte.
+
+Changed-surface re-review found no remaining must-fix, follow-up,
+owner/authority, safety/isolation, or ADR-0017 stack-reopen defect. The proof
+uses existing producer-owned state and real generated consumers, keeps the
+renderer at nine operations and sixteen message shapes, leaves targeted
+verification native-only, preserves exact lineage and bounded pagination,
+records local-private export without source mutation, retains zero generic
+path/command/URL/provider/credential authority, and makes no M2, production,
+semantic-accuracy, or semantic-oracle claim.
+
+Final diff re-review also corrected one maturity-label inconsistency: the exact
+native five-RPC targeted-verification step is producer-consumer-validated, while
+only a future user-facing M2 interaction remains implementation-active. The
+manifest and contract guard now enforce that distinction without changing the
+native-only renderer policy or any runtime byte.
+
+### Contract maturity
+
+Producer-consumer-validated surfaces are exact version/fingerprint
+negotiation; bounded bootstrap; setup/tool/profile/saved-configuration/estimate;
+prepared manual-run admission; progress, event, cancellation, reconnect, and
+restart; canonical persistence and readback; generated native clients; the
+closed generated renderer client and controlled desktop bridge; the native-only
+targeted-verification preparation/start/readback path; and structured export
+lifecycle and recovery.
+
+Surfaces remain implementation-active until the real M2 interface consumes
+them: complete summary/readiness and scope-limited presentation; supported-case
+and lead-only queues; complete finding/case/report/evidence/provenance/focused-
+mod presentation; review/disposition/annotation and assumption controls; export
+interaction; and any future user-facing targeted-verification interaction. The
+five targeted-verification RPCs cannot be renderer-mapped without separately
+accepted architecture. Six provider RPCs remain declared-unimplemented.
+
+### Measurements and M2 planning inputs
+
+The fresh reference-machine repeat observed browser-ready launch at 1,194 ms p50
+and 1,372 ms maximum; bootstrap at 1,540.3463 ms; finding page at 62.231 ms p50;
+detail at 62.1908 ms p50; progress at 62.2446 ms p50; authoritative resync at
+62.6954 ms p50; renderer reload at 93.6069 ms p50; idle private working set at
+355,483,648 bytes p50; active private working set at 411,131,904 bytes p50; a
+6,615,820-byte 31-file package; and zero launched-process survivors. These are
+development observations, not production guarantees or service-level
+objectives.
+
+The future M2 plan should start from the retained 100-item page, 500-summary
+cache, 13-mounted-row virtualization, 1 MiB message, 256 KiB chunk, and 64-item
+stream bounds; preserve exact coordinator-owned truth, lineage, privacy, and no
+fallback; cover every unavailable/partial/stale/conflict/reconnect state; and
+set performance acceptance thresholds only after representative hardware and
+workload measurement. It must separately decide polished result/review/export
+interaction, any authorized targeted-verification interaction, credential
+enrollment, installer/distribution/runtime servicing, and representative
+assistive-technology/hardware qualification.
+
+### Complete verification-floor receipt
+
+After the functional-naming correction and its complete integrated rerun, the
+same candidate ran one fresh complete accepted repository floor:
+
+| Command | Result |
+|---|---|
+| `dotnet restore Infinium.sln --locked-mode --nologo` | Passed; every project was up to date under locked restore; repository-owned test-process survivors: 0. |
+| `dotnet build Infinium.sln -c Release --no-restore --nologo` | Passed with zero warnings and zero errors; repository-owned test-process survivors: 0. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo` | Passed: 856 tests, 12 expected skips, zero failures; repository-owned `dotnet`/`testhost`/`vstest` survivors: 0. |
+| `dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity minimal` | Passed with no formatting drift; repository-owned test-process survivors: 0. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/validate-documentation.ps1` | Passed: 154 metadata files, 156 Markdown link sources, and 22 JSON files. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-functional-naming.ps1` | Passed: 195 exact reviewed exceptions and zero unexplained findings. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/update-dependency-manifest.ps1 -Check` | Passed with no dependency-manifest drift. |
+| `git diff --check` | Passed with no whitespace errors. |
+
+The exact solution totals are: Contract Tests 267 passed; Desktop Tests 31
+passed and 2 expected live-harness skips; Unit Tests 316 passed and 1 expected
+platform skip; Evaluation Tests 68 passed and 9 expected skips; Integration
+Tests 142 passed; Fault Tests 10 passed; and Security Tests 22 passed. The
+aggregate is 856 passed, 12 expected skips, and zero failures.
+
+The separate final corrected integrated receipt passes 3 contract/authority
+tests and 8 native workflow tests. Its desktop qualification passes 31 direct
+tests, 1 populated-state preparation test, 1 live hostile/accessibility
+WebView2 test, 1 lifecycle/reconnect/reload/shell test, and six fresh host
+launches. Every focused batch, every final-floor .NET command, the final
+desktop cleanup, and the final repository audit report zero owned survivors.
+
+This completes the WP9 implementation, focused verification, consolidated
+review, same-candidate corrections, changed-surface re-review, integrated
+native/desktop qualification, measurement repeat, and complete repository
+floor. The candidate stops at Checkpoint E and requests architecture-steward
+and final owner acceptance. M2 remains inactive.

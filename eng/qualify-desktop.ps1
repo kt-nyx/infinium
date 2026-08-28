@@ -5,6 +5,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+$repositoryNeedle = $repositoryRoot.TrimEnd('\') + '\'
+$coordinatorProject = Join-Path $repositoryRoot 'src/Infinium.Coordinator/Infinium.Coordinator.csproj'
+$desktopTestProject = Join-Path $repositoryRoot 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj'
+$integrationTestProject = Join-Path $repositoryRoot 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj'
 $temporaryRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd([IO.Path]::DirectorySeparatorChar)
 $qualificationSession = [Guid]::NewGuid().ToString('N')
 $qualificationRoot = Join-Path $temporaryRoot ('infinium-desktop-qualification-' + $qualificationSession)
@@ -30,6 +34,48 @@ function Invoke-Checked([string]$FileName, [string[]]$ArgumentList) {
     & $FileName @ArgumentList
     if ($LASTEXITCODE -ne 0) {
         throw "Qualification command failed with exit code ${LASTEXITCODE}: $FileName $($ArgumentList -join ' ')"
+    }
+}
+
+function Get-RepositoryOwnedTestProcess {
+    $ownedNames = @('dotnet.exe', 'testhost.exe', 'testhost.x86.exe', 'vstest.console.exe')
+    @(Get-CimInstance -ClassName Win32_Process | Where-Object {
+        $_.Name -in $ownedNames -and
+        -not [string]::IsNullOrWhiteSpace($_.CommandLine) -and
+        $_.CommandLine.IndexOf(
+            $repositoryNeedle,
+            [StringComparison]::OrdinalIgnoreCase) -ge 0
+    })
+}
+
+function Stop-RepositoryOwnedTestProcess {
+    $owned = @(Get-RepositoryOwnedTestProcess)
+    foreach ($snapshot in $owned) {
+        $current = Get-CimInstance -ClassName Win32_Process -Filter "ProcessId = $($snapshot.ProcessId)"
+        if ($null -ne $current -and
+            $current.Name -in @('dotnet.exe', 'testhost.exe', 'testhost.x86.exe', 'vstest.console.exe') -and
+            -not [string]::IsNullOrWhiteSpace($current.CommandLine) -and
+            $current.CommandLine.IndexOf(
+                $repositoryNeedle,
+                [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+            Stop-Process -Id $current.ProcessId -Force
+        }
+    }
+
+    $remaining = @(Get-RepositoryOwnedTestProcess)
+    if ($remaining.Count -ne 0) {
+        throw "Repository-owned test-process cleanup is incomplete: $($remaining.ProcessId -join ',')."
+    }
+    Write-Output 'Repository-owned dotnet/testhost/vstest processes remaining after desktop test batch: 0'
+}
+
+function Invoke-TestBatch([string]$Project, [string]$Filter) {
+    try {
+        Invoke-Checked 'dotnet' @(
+            'test', $Project, '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', $Filter)
+    }
+    finally {
+        Stop-RepositoryOwnedTestProcess
     }
 }
 
@@ -127,14 +173,14 @@ try {
     foreach ($frontendTask in @('CheckGenerated', 'CheckDesktop', 'TypeCheck', 'Lint', 'Test')) {
         Invoke-Checked 'powershell' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'eng/invoke-frontend.ps1', '-Task', $frontendTask)
     }
-    Invoke-Checked 'dotnet' @('build', 'src/Infinium.Coordinator/Infinium.Coordinator.csproj', '-c', $Configuration, '--no-restore', '--nologo')
-    Invoke-Checked 'dotnet' @('build', 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj', '-c', $Configuration, '--no-restore', '--nologo')
-    Invoke-Checked 'dotnet' @('build', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', $Configuration, '--no-restore', '--nologo')
-    Invoke-Checked 'dotnet' @('test', 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj', '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', 'TestCategory!=DesktopQualification&TestCategory!=DesktopLifecycleQualification')
+    Invoke-Checked 'dotnet' @('build', $coordinatorProject, '-c', $Configuration, '--no-restore', '--nologo')
+    Invoke-Checked 'dotnet' @('build', $desktopTestProject, '-c', $Configuration, '--no-restore', '--nologo')
+    Invoke-Checked 'dotnet' @('build', $integrationTestProject, '-c', $Configuration, '--no-restore', '--nologo')
+    Invoke-TestBatch $desktopTestProject 'TestCategory!=DesktopQualification&TestCategory!=DesktopLifecycleQualification'
     $env:INFINIUM_DESKTOP_PREFLIGHT_TESTS_PASSED = '1'
-    Invoke-Checked 'dotnet' @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', 'TestCategory=DesktopStatePreparation')
-    Invoke-Checked 'dotnet' @('test', 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj', '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', 'TestCategory=DesktopQualification')
-    Invoke-Checked 'dotnet' @('test', 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj', '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', 'TestCategory=DesktopLifecycleQualification')
+    Invoke-TestBatch $integrationTestProject 'TestCategory=DesktopStatePreparation'
+    Invoke-TestBatch $desktopTestProject 'TestCategory=DesktopQualification'
+    Invoke-TestBatch $desktopTestProject 'TestCategory=DesktopLifecycleQualification'
 
     $hostOutput = Join-Path $repositoryRoot "src\Infinium.DesktopHost\bin\$Configuration\net10.0-windows"
     $hostExecutable = Join-Path $hostOutput 'Infinium.DesktopHost.exe'

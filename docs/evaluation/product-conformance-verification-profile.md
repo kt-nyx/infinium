@@ -138,8 +138,9 @@ resealed or promoted through an ordinary tooling command.
   current pre-M2 implementation transition. Phases A-C and Checkpoint C were
   accepted at commit `2ec3be78da4d05d8c6ada68a3e18544a446f2f03` after the
   retained correction chronology and full verification receipt recorded by the
-  owning implementation record. WP7 and WP8 now form one Phase D implementation
-  candidate: a schema-generated closed TypeScript/C# consumer plus a minimal
+  owning implementation record. WP7 and WP8 form the Phase D implementation
+  accepted at Checkpoint D commit
+  `6b9b92a5f3dae0e90219f521919555956a8b5623`: a schema-generated closed TypeScript/C# consumer plus a minimal
   WPF/WebView2/React diagnostic host exercises real bootstrap, bounded finding
   pages/detail, progress, event subscription, transport cancellation,
   reconnect, reload, crash recovery, and authoritative resynchronization. The
@@ -149,10 +150,12 @@ resealed or promoted through an ordinary tooling command.
   with no remaining finding. The corrected candidate also passes the complete
   floor with 855 tests passed, 12 expected skips, and zero failures. The five
   ADR-0038 targeted-verification RPCs remain native-only and renderer-
-  inaccessible. EVAL-0090 through EVAL-0094 and the narrowly applicable facets
-  of existing cases are exercised through the same six layers. Checkpoint D
-  architecture-steward acceptance remains pending; Phase E and M2 remain
-  inactive.
+  inaccessible. WP9 composes those accepted native and desktop consumers into
+  an exact 16-step offline workflow. Its corrected integrated rerun passes 3
+  authority/contract tests, 8 native workflow tests, the complete desktop
+  qualification, EVAL-0090 through EVAL-0094, and exact zero-survivor cleanup.
+  The result is only an M2-ready contract candidate awaiting Checkpoint E
+  architecture-steward and final owner acceptance. M2 remains inactive.
 - M2 remains separately planned and authorized work; it must satisfy the
   applicable six layers and its eventual accepted plan.
 - M2 acceptance exercises its stable product interfaces end to end and records

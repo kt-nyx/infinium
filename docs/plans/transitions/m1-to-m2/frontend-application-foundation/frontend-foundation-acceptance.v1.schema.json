@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/planning/frontend-foundation-acceptance.v1.schema.json",
+  "title": "Infinium frontend foundation integrated acceptance manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_identity",
+    "status",
+    "last_reviewed",
+    "plan_id",
+    "checkpoint_d_commit",
+    "m2_state",
+    "claim_boundary",
+    "evaluation_ids",
+    "workflow"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "frontend-foundation-acceptance.v1.schema.json"
+    },
+    "schema_identity": {
+      "const": "infinium.planning.frontend-foundation-acceptance/1.0.0"
+    },
+    "status": {
+      "enum": [
+        "implementation-active",
+        "accepted-transition-closeout"
+      ]
+    },
+    "last_reviewed": {
+      "type": "string",
+      "format": "date"
+    },
+    "plan_id": {
+      "const": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION"
+    },
+    "checkpoint_d_commit": {
+      "$ref": "#/$defs/git_commit"
+    },
+    "m2_state": {
+      "const": "inactive"
+    },
+    "claim_boundary": {
+      "$ref": "#/$defs/text"
+    },
+    "evaluation_ids": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "EVAL-0090",
+          "EVAL-0091",
+          "EVAL-0092",
+          "EVAL-0093",
+          "EVAL-0094"
+        ]
+      }
+    },
+    "workflow": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/$defs/workflow_step"
+      }
+    }
+  },
+  "$defs": {
+    "git_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "short_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "selector"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(?:src|tests|eng|docs)/[A-Za-z0-9._/-]+$"
+        },
+        "selector": {
+          "$ref": "#/$defs/short_text"
+        }
+      }
+    },
+    "workflow_step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "step",
+        "action",
+        "consumer",
+        "authority",
+        "surface_maturity",
+        "evaluation_ids",
+        "proofs",
+        "failure_boundary"
+      ],
+      "properties": {
+        "step": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "action": {
+          "$ref": "#/$defs/text"
+        },
+        "consumer": {
+          "enum": [
+            "native-generated-client",
+            "desktop-diagnostic",
+            "native-and-desktop"
+          ]
+        },
+        "authority": {
+          "enum": [
+            "native-application",
+            "desktop-read-only",
+            "native-and-desktop"
+          ]
+        },
+        "surface_maturity": {
+          "enum": [
+            "producer-consumer-validated",
+            "implementation-active"
+          ]
+        },
+        "evaluation_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "EVAL-0090",
+              "EVAL-0091",
+              "EVAL-0092",
+              "EVAL-0093",
+              "EVAL-0094"
+            ]
+          }
+        },
+        "proofs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/proof"
+          }
+        },
+        "failure_boundary": {
+          "$ref": "#/$defs/text"
+        }
+      }
+    }
+  }
+}

@@ -3,8 +3,8 @@
   "schema_identity": "infinium.planning.application-contract-inventory/1.0.0",
   "status": "implementation-active",
   "last_reviewed": "2026-08-28",
-  "audited_commit": "2ec3be78da4d05d8c6ada68a3e18544a446f2f03",
-  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy after accepted Checkpoint C. WP7/WP8 add a generated closed renderer consumer and executable diagnostic desktop proof for bootstrap, result pagination/detail, progress, all four event variants, transport cancellation, and authoritative resync without mapping targeted verification or generic application authority. Checkpoint D, Phase E, M2 activation, broad analyzer claims, and semantic-oracle qualification remain outside this candidate.",
+  "audited_commit": "6b9b92a5f3dae0e90219f521919555956a8b5623",
+  "claim_boundary": "This answer-free inventory records the exact application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy accepted through Checkpoint D. WP9 composes the generated native client and closed diagnostic desktop consumer into a passing 16-step offline proof without changing the 48 declared RPCs, 42 implemented RPCs, five native-only targeted-verification mappings, six declared-unimplemented provider RPCs, or any generic application authority. Checkpoint E acceptance, M2 activation, broad analyzer claims, production readiness, and semantic-oracle qualification remain outside this candidate.",
   "protocol": {
     "package": "infinium.application.v1",
     "service": "ApplicationService",

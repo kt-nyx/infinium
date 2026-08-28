@@ -1,0 +1,225 @@
+{
+  "$schema": "frontend-foundation-acceptance.v1.schema.json",
+  "schema_identity": "infinium.planning.frontend-foundation-acceptance/1.0.0",
+  "status": "implementation-active",
+  "last_reviewed": "2026-08-28",
+  "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
+  "checkpoint_d_commit": "6b9b92a5f3dae0e90219f521919555956a8b5623",
+  "m2_state": "inactive",
+  "claim_boundary": "This manifest composes accepted native and diagnostic-desktop consumers into an offline foundation proof. It grants no new renderer, provider, credential, path, command, network, evaluator, semantic-oracle, or M2 authority and is not a production-readiness guarantee.",
+  "evaluation_ids": [
+    "EVAL-0090",
+    "EVAL-0091",
+    "EVAL-0092",
+    "EVAL-0093",
+    "EVAL-0094"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "action": "Bootstrap the application and negotiate exact contract versions and fingerprints.",
+      "consumer": "native-and-desktop",
+      "authority": "native-and-desktop",
+      "surface_maturity": "producer-consumer-validated",
+      "evaluation_ids": ["EVAL-0090", "EVAL-0094"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"},
+        {"path": "tests/Infinium.DesktopTests/DesktopWebViewQualificationTests.cs", "selector": "ProtectedRendererLoadsWithAccessibleLandmarksAndBoundSession"}
+      ],
+      "failure_boundary": "Unknown versions, fingerprints, message shapes, sessions, or sequence domains fail closed before state is accepted."
+    },
+    {
+      "step": 2,
+      "action": "Detect installed tools and expose typed capability gaps without inventing availability.",
+      "consumer": "native-generated-client",
+      "authority": "native-application",
+      "surface_maturity": "producer-consumer-validated",
+      "evaluation_ids": ["EVAL-0091"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
+      ],
+      "failure_boundary": "Missing or invalid tools remain explicit gaps; no implicit path, launch, or renderer authority is created."
+    },
+    {
+      "step": 3,
+      "action": "Select one profile explicitly and retain its typed identity.",
+      "consumer": "native-generated-client",
+      "authority": "native-application",
+      "surface_maturity": "producer-consumer-validated",
+      "evaluation_ids": ["EVAL-0091"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
+      ],
+      "failure_boundary": "Ambiguous, stale, missing, or unconfirmed profile selection cannot become effective run state."
+    },
+    {
+      "step": 4,
+      "action": "Create or select a revisioned saved scan configuration and preserve immutable effective run values.",
+      "consumer": "native-generated-client",
+      "authority": "native-application",
+      "surface_maturity": "producer-consumer-validated",
+      "evaluation_ids": ["EVAL-0091"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
+      ],
+      "failure_boundary": "Revision conflict, invalid configuration, or stale selection is rejected rather than silently replaced."
+    },
+    {
+      "step": 5,
+      "action": "Review estimates, bounded limits, offline or provider state, and unavailable authority before admission.",
+      "consumer": "native-generated-client",
+      "authority": "native-application",
+      "surface_maturity": "producer-consumer-validated",
+      "evaluation_ids": ["EVAL-0091"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
+      ],
+      "failure_boundary": "Provider, credential, budget, or unavailable capability state cannot fall back to a different execution mode."
+    },
+    {
+      "step": 6,
+      "action": "Start a typed manual run through coordinator-owned admission.",
+      "consumer": "native-generated-client",
+      "authority": "native-application",
+      "surface_maturity": "producer-consumer-validated",
+      "evaluation_ids": ["EVAL-0090", "EVAL-0091"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"}
+      ],
+      "failure_boundary": "Malformed, stale, conflicting, or unauthorized admission requests fail before a run is created."
+    },
+    {
+      "step": 7,
+      "action": "Observe bounded progress, time, cost, failures, coverage gaps, and explicit unavailable state.",
+      "consumer": "native-and-desktop",
+      "authority": "native-and-desktop",
+      "surface_maturity": "producer-consumer-validated",
+      "evaluation_ids": ["EVAL-0090", "EVAL-0094"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"},
+        {"path": "tests/Infinium.DesktopTests/DesktopWebViewQualificationTests.cs", "selector": "ProtectedRendererLoadsWithAccessibleLandmarksAndBoundSession"}
+      ],
+      "failure_boundary": "Presentation state cannot rewrite coordinator progress, costs, failures, gaps, or terminal truth."
+    },
+    {
+      "step": 8,
+      "action": "Reload the renderer and reconnect or resynchronize from authoritative application state.",
+      "consumer": "desktop-diagnostic",
+      "authority": "desktop-read-only",
+      "surface_maturity": "producer-consumer-validated",
+      "evaluation_ids": ["EVAL-0090", "EVAL-0094"],
+      "proofs": [
+        {"path": "eng/qualify-desktop.ps1", "selector": "three renderer reloads and authoritative resync measurements"},
+        {"path": "tests/Infinium.DesktopTests/DesktopWebViewQualificationTests.cs", "selector": "RendererBrowserCoordinatorAndShellFailuresRecreateAuthoritativeSession"}
+      ],
+      "failure_boundary": "Lost events, stale sessions, or sequence gaps force a bounded authoritative resync instead of local replay as truth."
+    },
+    {
+      "step": 9,
+      "action": "Open summary and readiness state, or explicit scope-limited status when readiness is unavailable.",
+      "consumer": "native-generated-client",
+      "authority": "native-application",
+      "surface_maturity": "implementation-active",
+      "evaluation_ids": ["EVAL-0092"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/ManagedAnalysisPipelineCorpusIntegrationTests.cs", "selector": "FrozenAnalysisPipelineCorpusExecutesManagedCoordinatorAndTypedQueryBeforeOracleComparison"},
+        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "ResultExplorationIsDeterministicBoundedInertAndExactlyFocused"}
+      ],
+      "failure_boundary": "Absent report or readiness authority remains explicit and cannot be inferred from partial findings."
+    },
+    {
+      "step": 10,
+      "action": "Page supported-case and lead-only queues through bounded deterministic keyset queries.",
+      "consumer": "native-generated-client",
+      "authority": "native-application",
+      "surface_maturity": "implementation-active",
+      "evaluation_ids": ["EVAL-0092"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "ResultExplorationIsDeterministicBoundedInertAndExactlyFocused"},
+        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "HundredThousandSummaryProjectionKeepsQueryAndMessageBounded"}
+      ],
+      "failure_boundary": "Unsupported cases stay separate from lead-only queues; cursor, sort, filter, search, and size violations fail closed."
+    },
+    {
+      "step": 11,
+      "action": "Open finding, case, report, evidence, provenance, and focused-mod details without presentation-side reinterpretation.",
+      "consumer": "native-generated-client",
+      "authority": "native-application",
+      "surface_maturity": "implementation-active",
+      "evaluation_ids": ["EVAL-0092"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "ResultExplorationIsDeterministicBoundedInertAndExactlyFocused"},
+        {"path": "tests/Infinium.IntegrationTests/ManagedAnalysisPipelineCorpusIntegrationTests.cs", "selector": "typed finding, case, report, evidence, provenance, and source readback"}
+      ],
+      "failure_boundary": "Unknown identities, wrong source relationships, hostile text, and unavailable details remain inert and explicit."
+    },
+    {
+      "step": 12,
+      "action": "Append a revision-bound disposition or annotation and an assumption revision without mutating analysis truth.",
+      "consumer": "native-generated-client",
+      "authority": "native-application",
+      "surface_maturity": "implementation-active",
+      "evaluation_ids": ["EVAL-0093"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "DurableReviewAndExportDeletionPreserveSourcesAcrossFaultsRestartAndRestore"},
+        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "ReviewCarryoverRequiresRetainedFourGateExactContinuityEvidence"}
+      ],
+      "failure_boundary": "User state is append-only and revision-bound; conflicts, stale revisions, or insufficient carryover proof do not rewrite immutable analysis."
+    },
+    {
+      "step": 13,
+      "action": "Request targeted verification through the five native-only RPCs while retaining exact scope, source, dependency, and correlation lineage.",
+      "consumer": "native-generated-client",
+      "authority": "native-application",
+      "surface_maturity": "producer-consumer-validated",
+      "evaluation_ids": ["EVAL-0093"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/ManagedAnalysisPipelineCorpusIntegrationTests.cs", "selector": "targeted verification begin, status, cancel, start, readback, recovery, migration, and tamper rejection"},
+        {"path": "docs/plans/transitions/m1-to-m2/frontend-application-foundation/wp6-targeted-verification-addendum.md", "selector": "native-only consumer boundary"}
+      ],
+      "failure_boundary": "The renderer has no targeted-verification mapping; incomplete lineage, unrelated readiness, tampering, or recursive requests fail closed."
+    },
+    {
+      "step": 14,
+      "action": "Restart the shell or coordinator and prove durable authoritative readback and recovery.",
+      "consumer": "native-and-desktop",
+      "authority": "native-and-desktop",
+      "surface_maturity": "producer-consumer-validated",
+      "evaluation_ids": ["EVAL-0090", "EVAL-0093", "EVAL-0094"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/SolutionIntegrationTests.cs", "selector": "TypedSetupAndPreparedManualRunSurviveReconnectAndRestartOffline"},
+        {"path": "tests/Infinium.DesktopTests/DesktopWebViewQualificationTests.cs", "selector": "RendererBrowserCoordinatorAndShellFailuresRecreateAuthoritativeSession"},
+        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "DurableReviewAndExportDeletionPreserveSourcesAcrossFaultsRestartAndRestore"}
+      ],
+      "failure_boundary": "Interrupted attempts, stale sessions, and incomplete durable state are fenced or reported; the shell cannot become the recovery authority."
+    },
+    {
+      "step": 15,
+      "action": "Create and inspect a local-private structured JSON export with exact selection, provenance, privacy, and source-policy evidence.",
+      "consumer": "native-generated-client",
+      "authority": "native-application",
+      "surface_maturity": "implementation-active",
+      "evaluation_ids": ["EVAL-0093"],
+      "proofs": [
+        {"path": "tests/Infinium.IntegrationTests/ManagedAnalysisPipelineCorpusIntegrationTests.cs", "selector": "structured export creation, inspection, source binding, and deletion"},
+        {"path": "tests/Infinium.IntegrationTests/ResultReviewWorkflowIntegrationTests.cs", "selector": "DurableReviewAndExportDeletionPreserveSourcesAcrossFaultsRestartAndRestore"}
+      ],
+      "failure_boundary": "Export stays local-private and structured; deletion removes only the export object and never mutates source analysis or user-state history."
+    },
+    {
+      "step": 16,
+      "action": "Reject hostile, unknown, oversized, replayed, out-of-order, and stale operations across native, bridge, IPC, and desktop boundaries.",
+      "consumer": "native-and-desktop",
+      "authority": "native-and-desktop",
+      "surface_maturity": "producer-consumer-validated",
+      "evaluation_ids": ["EVAL-0090", "EVAL-0092", "EVAL-0093", "EVAL-0094"],
+      "proofs": [
+        {"path": "tests/Infinium.ContractTests/ApplicationFoundationAuthorityContractTests.cs", "selector": "CapabilityMatrixIsStrictFullyOwnedAndDeniesGenericRendererAuthority"},
+        {"path": "tests/Infinium.IntegrationTests/ManagedAnalysisPipelineCorpusIntegrationTests.cs", "selector": "ManagedRequestRejectsDeliveredInputFingerprintOrSourceReferenceDriftBeforeAdmission"},
+        {"path": "tests/Infinium.DesktopTests/RendererBridgeSessionTests.cs", "selector": "replay, stale session, concurrency, message size, overflow, and cancellation rejection"},
+        {"path": "tests/Infinium.DesktopTests/DesktopRuntimePolicyTests.cs", "selector": "origin, filesystem, browser override, navigation, and runtime policy rejection"}
+      ],
+      "failure_boundary": "No generic path, command, URL, provider, credential, filesystem, native proxy, evaluator, private fixture, or semantic-oracle authority is reachable."
+    }
+  ]
+}

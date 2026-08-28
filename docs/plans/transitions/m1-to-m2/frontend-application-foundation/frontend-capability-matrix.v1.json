@@ -5,7 +5,7 @@
   "last_reviewed": "2026-08-28",
   "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
   "planning_base": "32dbb2c48754666336d2da571e554ad8897ed71c",
-  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint C and Phase C are accepted. WP7/WP8 now form a completed Phase D candidate with a generated closed renderer consumer and executable diagnostic WPF/WebView2/React proof. The corrected ADR-0038 targeted-verification path remains native-only-never-map, and no generic renderer authority is granted. Checkpoint D, Phase E, polished desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, and M2 acceptance are not claimed.",
+  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint D is accepted at 6b9b92a5f3dae0e90219f521919555956a8b5623. WP9 composes the accepted native and diagnostic-desktop consumers into a passing 16-step integrated candidate while the corrected ADR-0038 targeted-verification path remains native-only-never-map and no generic renderer authority is granted. Checkpoint E acceptance, polished M2 delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, production readiness, and M2 acceptance are not claimed.",
   "application_contract_inventory": "application-contract-inventory.v1.json",
   "ownership_audit": {
     "capability_count": 19,
@@ -83,7 +83,7 @@
         "RendererContractValidator",
         "renderer-operation-registry.v1.json"
       ],
-      "gap": "The Phase D diagnostic desktop consumes the bounded bootstrap; polished M2 presentation and Checkpoint D acceptance remain outside this candidate.",
+      "gap": "The accepted diagnostic desktop consumes the bounded bootstrap; polished M2 presentation remains outside this candidate.",
       "owning_phase": "A",
       "owning_work_package": "WP2",
       "transition_exit_evidence": "Generated native and TypeScript consumers recover the same bounded bootstrap and typed resync states."
@@ -495,7 +495,7 @@
         "Schema-16 migration validates each acquisition event against a closed kind-specific JSON shape and retained authority before schema-17 sealing; trigger-preserving tamper cases roll back atomically",
         "StartTargetedVerification atomically admits exactly managed-analysis-v1 and remains native-only-never-map; no Phase D renderer authority exists"
       ],
-      "gap": "Checkpoint C is accepted. The five targeted-verification RPCs intentionally remain native-only under ADR-0038; Phase D does not grant renderer authority, and M2 remains inactive.",
+      "gap": "The five targeted-verification RPCs intentionally remain native-only under ADR-0038. WP9 validates them through the generated native client without granting renderer authority, and M2 remains inactive.",
       "owning_phase": "C",
       "owning_work_package": "WP6",
       "transition_exit_evidence": "A fresh snapshot, separately owned semantic acquisition, and dependency-complete correlation ledger produce an inspectable preparation that atomically starts one managed-analysis-v1 successor; exact initiation and analytical lineage, proven-absence and limited-gap coverage, lifecycle/replay/migration behavior, and scope-limited readiness pass producer-consumer validation with no generic renderer authority."
@@ -543,7 +543,7 @@
         "Strict discriminated envelope types preserve required and forbidden branch fields; compile-time mutations, policy lint, and hostile/unknown/malformed/runtime cases pass",
         "Lossless integer, canonical cursor, metamorphic, and serialized generated-bridge/story-client semantic-equivalence tests pass"
       ],
-      "gap": "No generated-consumer gap remains in the Phase D candidate; Checkpoint D review is still pending and the diagnostic surface is not the M2 interface.",
+      "gap": "No generated-consumer gap remains in the integrated foundation candidate; the diagnostic surface is not the M2 interface and remains subject to Checkpoint E acceptance.",
       "owning_phase": "D",
       "owning_work_package": "WP7",
       "transition_exit_evidence": "Generated native and TypeScript consumers cover every renderer operation and strict story states without hidden handwritten authority."
@@ -575,7 +575,7 @@
         "Bounded 500-summary cache and at most 13 mounted variable-height rows prove 100000-summary logical virtualization without full transfer",
         "Keyboard/focus/names/landmarks/contrast/zoom/reduced-motion/accessibility-tree evidence plus repeatable startup, memory, bridge, message, package, runtime, dependency, licence, and cleanup receipt"
       ],
-      "gap": "No WP8 implementation gap remains in the Phase D candidate. Checkpoint D review, polished M2 interaction design, installer/distribution closure, and independent semantic qualification remain outside it.",
+      "gap": "No diagnostic desktop-consumption gap remains in the integrated foundation candidate. Checkpoint E acceptance, polished M2 interaction design, installer/distribution closure, and independent semantic qualification remain outside it.",
       "owning_phase": "D",
       "owning_work_package": "WP8",
       "transition_exit_evidence": "Executable diagnostic consumer passes controlled-origin, hostile-operation, reconnect, large-list, accessibility-mechanics, and measurement obligations."
