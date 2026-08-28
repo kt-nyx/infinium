@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "declaration": false,
+    "rootDir": "."
+  },
+  "include": ["desktop-renderer.ts", "client.ts", "decoders.ts", "schema-validator.ts", "generated/renderer-contract.generated.ts"],
+  "exclude": []
+}

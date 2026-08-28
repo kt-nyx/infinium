@@ -10,6 +10,7 @@ internal static class TestRepository
         ".git",
         ".packages",
         "artifacts",
+        "work",
         ".vs",
     ];
 

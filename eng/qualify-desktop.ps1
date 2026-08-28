@@ -1,0 +1,199 @@
+[CmdletBinding()]
+param(
+    [string]$Configuration = 'Release'
+)
+
+$ErrorActionPreference = 'Stop'
+$repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+$temporaryRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd([IO.Path]::DirectorySeparatorChar)
+$qualificationSession = [Guid]::NewGuid().ToString('N')
+$qualificationRoot = Join-Path $temporaryRoot ('infinium-desktop-qualification-' + $qualificationSession)
+$artifactRoot = Join-Path $repositoryRoot 'artifacts\desktop-qualification'
+$runtimeMeasurements = Join-Path $artifactRoot 'runtime-measurements.json'
+$summaryPath = Join-Path $artifactRoot 'summary.json'
+$priorRoot = $env:INFINIUM_DESKTOP_QUALIFICATION_ROOT
+$priorMeasurements = $env:INFINIUM_DESKTOP_QUALIFICATION_MEASUREMENTS
+$priorSecretCanary = $env:INFINIUM_DESKTOP_SECRET_CANARY
+
+function Invoke-Checked([string]$FileName, [string[]]$ArgumentList) {
+    & $FileName @ArgumentList
+    if ($LASTEXITCODE -ne 0) {
+        throw "Qualification command failed with exit code ${LASTEXITCODE}: $FileName $($ArgumentList -join ' ')"
+    }
+}
+
+function Write-Utf8NoBom([string]$Path, [string]$Value) {
+    [IO.File]::WriteAllText($Path, $Value, [Text.UTF8Encoding]::new($false))
+}
+
+function Get-DescendantProcesses([int]$RootProcessId) {
+    $all = @(Get-CimInstance Win32_Process)
+    $frontier = [Collections.Generic.Queue[int]]::new()
+    $frontier.Enqueue($RootProcessId)
+    $descendants = [Collections.Generic.List[object]]::new()
+    while ($frontier.Count -gt 0) {
+        $parent = $frontier.Dequeue()
+        foreach ($child in @($all | Where-Object { [int]$_.ParentProcessId -eq $parent })) {
+            $descendants.Add($child)
+            $frontier.Enqueue([int]$child.ProcessId)
+        }
+    }
+    return @($descendants)
+}
+
+function Measure-DesktopLaunch {
+    param([string]$Executable, [string]$QualificationSession)
+    $timer = [Diagnostics.Stopwatch]::StartNew()
+    $hostProcess = Start-Process -FilePath $Executable -WorkingDirectory (Split-Path $Executable) -ArgumentList @('--qualification-session', $QualificationSession) -PassThru -WindowStyle Hidden
+    $readyMilliseconds = $null
+    $browserProcesses = @()
+    try {
+        for ($attempt = 0; $attempt -lt 40; $attempt++) {
+            Start-Sleep -Milliseconds 250
+            $hostProcess.Refresh()
+            $browserProcesses = @(Get-DescendantProcesses $hostProcess.Id | Where-Object { $_.Name -eq 'msedgewebview2.exe' })
+            if ($null -eq $readyMilliseconds -and $browserProcesses.Count -gt 0) {
+                $readyMilliseconds = $timer.ElapsedMilliseconds
+            }
+            if ($null -ne $readyMilliseconds -and $attempt -ge 12) { break }
+        }
+        if ($null -eq $readyMilliseconds) { throw 'The release desktop host did not start its protected WebView2 runtime.' }
+        $hostProcess.Refresh()
+        [pscustomobject]@{
+            browser_ready_milliseconds = $readyMilliseconds
+            host_private_bytes = $hostProcess.PrivateMemorySize64
+            browser_process_count = $browserProcesses.Count
+            browser_private_bytes = (($browserProcesses | ForEach-Object { [uint64]$_.PrivatePageCount } | Measure-Object -Sum).Sum)
+        }
+    }
+    finally {
+        $exactDescendants = @(Get-DescendantProcesses $hostProcess.Id)
+        if (-not $hostProcess.HasExited) { Stop-Process -Id $hostProcess.Id -Force -ErrorAction SilentlyContinue }
+        foreach ($process in $exactDescendants) { Stop-Process -Id $process.ProcessId -Force -ErrorAction SilentlyContinue }
+    }
+}
+
+function Measure-Distribution([double[]]$Values) {
+    $ordered = @($Values | Sort-Object)
+    if ($ordered.Count -eq 0) { return $null }
+    $p50 = $ordered[[Math]::Max(0, [Math]::Ceiling($ordered.Count * 0.50) - 1)]
+    $p95 = $ordered[[Math]::Max(0, [Math]::Ceiling($ordered.Count * 0.95) - 1)]
+    [ordered]@{ count = $ordered.Count; p50 = $p50; p95 = $p95; maximum = $ordered[-1] }
+}
+
+try {
+    Set-Location -LiteralPath $repositoryRoot
+    New-Item -ItemType Directory -Path $artifactRoot -Force | Out-Null
+    $env:INFINIUM_DESKTOP_QUALIFICATION_ROOT = $qualificationRoot
+    $env:INFINIUM_DESKTOP_QUALIFICATION_MEASUREMENTS = $runtimeMeasurements
+    $env:INFINIUM_DESKTOP_SECRET_CANARY = 'INFINIUM-DESKTOP-QUALIFICATION-SECRET-CANARY-7B711839'
+
+    Invoke-Checked 'powershell' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'eng/invoke-frontend.ps1', '-Task', 'RestoreOffline')
+    foreach ($frontendTask in @('CheckGenerated', 'CheckDesktop', 'TypeCheck', 'Lint', 'Test')) {
+        Invoke-Checked 'powershell' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'eng/invoke-frontend.ps1', '-Task', $frontendTask)
+    }
+    Invoke-Checked 'dotnet' @('build', 'src/Infinium.Coordinator/Infinium.Coordinator.csproj', '-c', $Configuration, '--no-restore', '--nologo')
+    Invoke-Checked 'dotnet' @('build', 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj', '-c', $Configuration, '--no-restore', '--nologo')
+    Invoke-Checked 'dotnet' @('build', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', $Configuration, '--no-restore', '--nologo')
+    Invoke-Checked 'dotnet' @('test', 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj', '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', 'TestCategory!=DesktopQualification&TestCategory!=DesktopLifecycleQualification')
+    Invoke-Checked 'dotnet' @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', 'TestCategory=DesktopStatePreparation')
+    Invoke-Checked 'dotnet' @('test', 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj', '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', 'TestCategory=DesktopQualification')
+    Invoke-Checked 'dotnet' @('test', 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj', '-c', $Configuration, '--no-build', '--no-restore', '--nologo', '--filter', 'TestCategory=DesktopLifecycleQualification')
+
+    $hostOutput = Join-Path $repositoryRoot "src\Infinium.DesktopHost\bin\$Configuration\net10.0-windows"
+    $hostExecutable = Join-Path $hostOutput 'Infinium.DesktopHost.exe'
+    $launchSamples = @()
+    for ($sample = 0; $sample -lt 6; $sample++) {
+        $launchSamples += Measure-DesktopLaunch -Executable $hostExecutable -QualificationSession $qualificationSession
+    }
+    $packageFiles = @(Get-ChildItem -LiteralPath $hostOutput -File -Recurse)
+    $assetFiles = @(Get-ChildItem -LiteralPath (Join-Path $hostOutput 'Assets') -File -Recurse)
+    $runtime = Get-Content -LiteralPath $runtimeMeasurements -Raw | ConvertFrom-Json
+    $bridgeDistributions = [ordered]@{}
+    foreach ($property in $runtime.milliseconds.psobject.Properties) {
+        $bridgeDistributions[$property.Name] = Measure-Distribution @($property.Value)
+    }
+    $idleTotals = @($runtime.private_working_set_bytes.idle | ForEach-Object { [double]$_.Total })
+    $activeTotals = @($runtime.private_working_set_bytes.active | ForEach-Object { [double]$_.Total })
+    $runtimeFolder = Join-Path ${env:ProgramFiles(x86)} "Microsoft\EdgeWebView\Application\$($runtime.webview2_runtime)"
+    $runtimeFiles = if (Test-Path -LiteralPath $runtimeFolder) { @(Get-ChildItem -LiteralPath $runtimeFolder -File -Recurse) } else { @() }
+    $summary = [ordered]@{
+        schema = 'infinium.desktop-qualification-summary/v1'
+        recorded_at = [DateTimeOffset]::UtcNow.ToString('O')
+        reference_machine = [ordered]@{
+            os = $runtime.os
+            processor = $runtime.processor
+            logical_processors = $runtime.logical_processors
+            webview2_runtime = $runtime.webview2_runtime
+        }
+        contract = [ordered]@{
+            renderer = $runtime.renderer_contract
+            registry = $runtime.registry_version
+            registry_sha256 = $runtime.registry_sha256
+        }
+        definitions = [ordered]@{
+            process_to_browser_ready = 'Elapsed from Infinium.DesktopHost.exe process creation until its exclusive WebView2 user-data process tree is first observed.'
+            window_show_to_bootstrap = 'Elapsed in the STA qualification host from WPF Show through exact-origin navigation, transport session establishment acknowledgement, and accepted real GetApplicationBootstrap rendering.'
+            bridge_operation = 'Elapsed from a renderer button dispatch until the renderer records completion after the generated request, named-pipe application round trip, generated projection, exact bridge response, and React state update.'
+            private_working_set = 'Private working set for the qualification WPF process plus every WebView2 process reported by its exclusive CoreWebView2Environment.'
+        }
+        launch = [ordered]@{
+            cold = $launchSamples[0]
+            warm = @($launchSamples | Select-Object -Skip 1)
+            browser_ready_milliseconds = Measure-Distribution @($launchSamples | ForEach-Object { [double]$_.browser_ready_milliseconds })
+        }
+        bridge_raw_milliseconds = $runtime.milliseconds
+        bridge_milliseconds = $bridgeDistributions
+        private_working_set_raw_bytes = $runtime.private_working_set_bytes
+        private_working_set_bytes = [ordered]@{
+            idle = Measure-Distribution $idleTotals
+            active = Measure-Distribution $activeTotals
+        }
+        observed_message_bytes = $runtime.observed_message_bytes
+        maximum_message_bytes = $runtime.maximum_message_bytes
+        maximum_chunk_bytes = $runtime.maximum_chunk_bytes
+        maximum_queue_items = $runtime.maximum_queue_items
+        package_file_count = $packageFiles.Count
+        package_bytes = (($packageFiles | Measure-Object Length -Sum).Sum)
+        packaged_asset_file_count = $assetFiles.Count
+        packaged_asset_bytes = (($assetFiles | Measure-Object Length -Sum).Sum)
+        largest_packaged_message_asset_bytes = (($assetFiles | Measure-Object Length -Maximum).Maximum)
+        installed_webview_runtime_file_count = $runtimeFiles.Count
+        installed_webview_runtime_bytes = (($runtimeFiles | Measure-Object Length -Sum).Sum)
+    }
+    Write-Utf8NoBom $summaryPath ($summary | ConvertTo-Json -Depth 12)
+    Write-Output "Desktop qualification summary: $summaryPath"
+}
+finally {
+    $env:INFINIUM_DESKTOP_QUALIFICATION_ROOT = $priorRoot
+    $env:INFINIUM_DESKTOP_QUALIFICATION_MEASUREMENTS = $priorMeasurements
+    $env:INFINIUM_DESKTOP_SECRET_CANARY = $priorSecretCanary
+    $resolvedQualification = [IO.Path]::GetFullPath($qualificationRoot)
+    if ([IO.Path]::GetDirectoryName($resolvedQualification) -ne $temporaryRoot -or
+        -not [IO.Path]::GetFileName($resolvedQualification).StartsWith('infinium-desktop-qualification-', [StringComparison]::Ordinal)) {
+        throw "Refusing unexpected qualification cleanup target: $resolvedQualification"
+    }
+    $exactRootProcesses = @(Get-CimInstance Win32_Process | Where-Object {
+        $_.Name -in @('Infinium.Coordinator.exe', 'Infinium.DesktopHost.exe', 'msedgewebview2.exe') -and
+        $_.CommandLine -and
+        ($_.CommandLine.IndexOf($resolvedQualification, [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
+         $_.CommandLine.IndexOf($qualificationSession, [StringComparison]::OrdinalIgnoreCase) -ge 0)
+    })
+    foreach ($process in $exactRootProcesses) { Stop-Process -Id $process.ProcessId -Force -ErrorAction SilentlyContinue }
+    Start-Sleep -Milliseconds 250
+    $survivors = @(Get-CimInstance Win32_Process | Where-Object {
+        $_.Name -in @('Infinium.Coordinator.exe', 'Infinium.DesktopHost.exe', 'msedgewebview2.exe') -and
+        $_.CommandLine -and
+        ($_.CommandLine.IndexOf($resolvedQualification, [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
+         $_.CommandLine.IndexOf($qualificationSession, [StringComparison]::OrdinalIgnoreCase) -ge 0)
+    })
+    if ($survivors.Count -eq 0 -and (Test-Path -LiteralPath $resolvedQualification)) {
+        Remove-Item -LiteralPath $resolvedQualification -Recurse -Force
+    }
+    if (Test-Path -LiteralPath $summaryPath) {
+        $recordedSummary = Get-Content -LiteralPath $summaryPath -Raw | ConvertFrom-Json
+        $recordedSummary | Add-Member -NotePropertyName cleanup_survivor_count -NotePropertyValue $survivors.Count -Force
+        Write-Utf8NoBom $summaryPath ($recordedSummary | ConvertTo-Json -Depth 12)
+    }
+    Write-Output "Exact desktop qualification survivor count: $($survivors.Count)"
+}

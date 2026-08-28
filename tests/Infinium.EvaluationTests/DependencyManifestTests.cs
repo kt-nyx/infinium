@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using System.Xml.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -46,11 +47,32 @@ public sealed class DependencyManifestTests
             .Order(StringComparer.Ordinal)
             .ToArray();
 
-        string[] lockPackages = TestRepository
+        string[] projectFiles = TestRepository
             .EnumerateProjectFiles()
+            .Concat(Directory.EnumerateFiles(
+                TestRepository.PathFromRoot("eng", "tooling"),
+                "*.csproj",
+                SearchOption.AllDirectories))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        Assert.HasCount(21, projectFiles, "The dependency inventory must cover every product/test project plus the repository frontend toolchain.");
+        string[] lockFiles = projectFiles
             .Select(Path.GetDirectoryName)
             .OfType<string>()
             .Select(projectDirectory => Path.Combine(projectDirectory, "packages.lock.json"))
+            .ToArray();
+        Assert.IsTrue(lockFiles.All(File.Exists), "Every inventoried project must retain its lock file.");
+        string[] manifestLockPaths = manifest.RootElement.GetProperty("lockIdentity")
+            .GetProperty("projectLocks")
+            .EnumerateArray()
+            .Select(item => item.GetString()!)
+            .ToArray();
+        string[] expectedLockPaths = lockFiles
+            .Select(path => Path.GetRelativePath(TestRepository.Root, path).Replace(Path.DirectorySeparatorChar, '/'))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        CollectionAssert.AreEqual(expectedLockPaths, manifestLockPaths);
+        string[] lockPackages = lockFiles
             .SelectMany(ReadLockPackages)
             .Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal)
@@ -196,6 +218,23 @@ public sealed class DependencyManifestTests
 
         string buildProperties = TestRepository.Read("Directory.Build.props");
         StringAssert.Contains(buildProperties, "operative SPDX selector deferred");
+
+        ProcessStartInfo gitStart = new("git")
+        {
+            WorkingDirectory = TestRepository.Root,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        gitStart.ArgumentList.Add("ls-files");
+        gitStart.ArgumentList.Add("--");
+        gitStart.ArgumentList.Add("work");
+        using Process git = Process.Start(gitStart) ?? throw new InvalidOperationException("Could not start Git.");
+        string trackedWork = git.StandardOutput.ReadToEnd();
+        string gitError = git.StandardError.ReadToEnd();
+        git.WaitForExit();
+        Assert.AreEqual(0, git.ExitCode, gitError);
+        Assert.AreEqual(string.Empty, trackedWork, "The generated-root exclusion is valid only while work remains untracked.");
     }
 
     private static IEnumerable<string> EnumerateRepositoryFiles()

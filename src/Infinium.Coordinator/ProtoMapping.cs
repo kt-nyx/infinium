@@ -94,7 +94,7 @@ internal static class ProtoMapping
             GapUnits = state is DomainContracts.LifecycleState.CompletedWithGaps ? 1UL : 0UL,
         };
 
-    private static CostSummary EmptyCost() =>
+    public static CostSummary EmptyCost() =>
         new()
         {
             ReservedNanoUsd = UnavailableInt64(),

@@ -1,9 +1,9 @@
 # M1-to-M2 Foundation — Frontend Application Foundation implementation record
 
-Status: Accepted
-Disposition: Checkpoint C under correction; WP1-WP4 remain accepted, WP5-WP6 receipts are suspended, and Phase D is blocked
+Status: Completed
+Disposition: Checkpoint C accepted; WP7/WP8 focused and independent correction/re-review passed; Phase D candidate awaits Checkpoint D architecture-steward review
 
-Last reviewed: 2026-08-27
+Last reviewed: 2026-08-28
 Owner: Project owner
 Plan ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`
 Planning base: `32dbb2c48754666336d2da571e554ad8897ed71c`
@@ -14,8 +14,9 @@ Phase A verified the application authority surface. The Phase B correction
 binds typed prepared runs to the exact retained inputs and supported durable
 analysis operation it claims to execute. WP3 and WP4 passed focused correction,
 consolidated re-review, and the complete accepted verification floor. The first
-Phase C candidate reached `c551c12e22522e7a2cef8c21a322aa76db8fc23e`, but its
-Checkpoint C receipt remains suspended. Independent corrections now cover
+Phase C candidate reached `c551c12e22522e7a2cef8c21a322aa76db8fc23e`; the
+later corrected candidate at `2ec3be78da4d05d8c6ada68a3e18544a446f2f03` is
+accepted at Checkpoint C. Independent corrections cover
 report publication/readback, recursive request validation, export deletion,
 provenance, paging, and populated migration gaps. Targeted verification now
 has a corrected implementation candidate with fresh acquisition, closed scope
@@ -23,17 +24,19 @@ and correlation, atomic ordinary successor admission, and immutable lineage.
 The project owner
 accepted RESEARCH-0058, ADR-0038, and the WP6 addendum on 2026-08-26 from
 architecture source `bd936a02562a8df1ddcb62f275cc45b6c225e594`. A fresh
-corrected WP6 implementation candidate is awaiting architecture-steward
-Checkpoint C review; WP5/WP6 and Checkpoint C remain unaccepted.
+corrected WP6 implementation is accepted at Checkpoint C. WP7 and WP8 each
+completed focused implementation, review, correction, and re-review on the
+same mutable Phase D candidate. Checkpoint D remains independent; Phase E and
+M2 remain inactive.
 
 The implementation has assigned every foundation capability to an exact owner,
 and implemented the common and setup-to-live-run boundaries future frontend
 work can build on. WP3 adds typed
 tool/profile/configuration setup, honest estimates, and non-secret provider
 status. WP4 adds prepared manual-run initiation with immutable durable bindings,
-receipts, progress, reconnect, and restart behavior. Phase C code exists only as
-an under-correction candidate. No product UI, provider effect, or generic native
-authority was added.
+receipts, progress, reconnect, and restart behavior. Phase C is accepted. No
+product UI, provider effect, or generic native authority was added by that
+acceptance.
 
 ## Package status
 
@@ -43,10 +46,10 @@ authority was added.
 | A | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP2` | Accepted after correction | Corrected receipt and complete floor below |
 | B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP3` | Accepted after correction | Earlier receipt retained as superseded evidence; corrected receipt below |
 | B | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP4` | Accepted after correction | Earlier receipt retained as superseded evidence; corrected receipt below |
-| C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5` | Under correction | Earlier receipt below is suspended pending corrected producer/consumer evidence |
-| C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6` | Under correction | Corrected targeted-verification candidate below awaits architecture-steward Checkpoint C review; earlier receipt remains suspended |
-| D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` | Not started | None |
-| D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP8` | Not started | None |
+| C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP5` | Accepted at Checkpoint C | Corrected producer/consumer evidence below; accepted at `2ec3be78da4d05d8c6ada68a3e18544a446f2f03` |
+| C | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP6` | Accepted at Checkpoint C | Corrected targeted-verification evidence below; accepted at `2ec3be78da4d05d8c6ada68a3e18544a446f2f03` |
+| D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` | Focused cycle passed | Generated consumer implementation and correction/re-review evidence below |
+| D | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP8` | Focused cycle passed | Executable desktop-consumption proof and correction/re-review evidence below; awaits Checkpoint D |
 | E | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP9` | Not started | None |
 
 ## Phase checkpoint receipts
@@ -1863,6 +1866,543 @@ non-startable taxonomy, partial-successor, closed-event-shape, retained-binding,
 migration-rollback, renderer/generic authority, private-evaluator, or product-
 meaning defect. Remaining implementation limitations and owner decisions:
 none. WP5, WP6, Checkpoint C, Phase D, and M2 remain unaccepted/inactive.
+
+## Accepted Checkpoint C and Phase D activation receipt
+
+Date: 2026-08-27
+
+Accepted candidate: `2ec3be78da4d05d8c6ada68a3e18544a446f2f03`
+
+Disposition: the architecture steward independently accepted corrected WP5,
+WP6, and Checkpoint C and authorized Phase D. This receipt supersedes the
+earlier suspended Checkpoint C status while preserving every correction and
+review detail above.
+
+Independent verification reported 774 passed tests, 10 expected skips, zero
+failures, all non-test gates passing, a clean worktree, and zero
+repository-owned `dotnet`/`testhost`/`vstest` survivors. Phase D begins with
+WP7. WP8 remains gated on WP7's focused implementation, review, correction,
+and re-review cycle. Phase E remains blocked, Checkpoint D is not accepted,
+and M2 remains inactive.
+
+## WP7 generated consumer implementation and focused review
+
+Date: 2026-08-27
+
+WP7 now has one deterministic generator over the sole reviewed renderer
+envelope schema. The schema's closed metadata owns native targets and operation
+messages alongside payload fields; the generator emits the registry, strict
+schema-derived TypeScript payload/client bindings, and a generated C# catalog
+with closed native-client, projection-codec, exhaustive dispatch, and
+host-control adapter signatures. Registry `1.1.0` / renderer contract `1.2.0` contains seven
+operations and thirteen message shapes: bootstrap, `ListResultItems`,
+`GetResultDetail`, `GetProgress`, all four `SubscribeEvents` variants,
+transport-only cancellation, and authoritative resync. Each application
+operation maps to exactly one generated application-client method. Raw run
+commands and targeted-verification RPCs remain unmapped.
+
+The TypeScript consumer includes exhaustive runtime decoders, discriminated
+failure unions, lossless decimal-string `uint64`/`int64`, explicit optional-
+scalar availability, an 8,192-byte cursor / 10,923-character base64url bound,
+opaque product-identity UTF-8 validation, closed story fake/generated-bridge
+client selection,
+and deterministic setup, empty, active, completed, failed, gap, lead-only,
+stale, conflict, reconnect, and 100,000-summary paged stories. Product text,
+including hostile markup-shaped strings, remains inert data.
+
+The first review/correction pass found and corrected these must-fix defects on
+the same candidate:
+
+- the existing bootstrap adapter rejected the real `ResultExploration` and
+  `DurableUserReview` capability values;
+- initial result kinds, sorts, summary/detail fields, lifecycle values, and
+  progress shapes diverged from the real protobuf projection;
+- JSON integers could lose precision in JavaScript above `2^53`, and optional
+  scalar availability was collapsed;
+- the first cursor and identity grammar conflated authenticated cursors,
+  renderer IDs, and opaque product identities;
+- the first event union omitted lifecycle, projection-invalidated, resync,
+  coordinator/fence/durable-sequence/run-scope metadata, and the decoder read
+  progress before discriminating event kind;
+- case occurrence identity was incorrectly required for finding, gap, and
+  failure summaries;
+- the first failure union allowed mismatched outcomes/error codes and optional
+  conflict/resync metadata; and
+- the first generated C# output catalogued operations but did not generate the
+  exact native adapter signatures WP8 needs;
+- the first ownership model treated the handwritten registry and schema as two
+  reviewed inputs and still handwrote TypeScript field templates in the
+  generator; one schema now owns fields and native-target metadata and all
+  three checked-in outputs participate in the drift check;
+- the first native codec omitted request-derived conflict provenance and did
+  not prove result list/detail/progress or all four event protobuf projections
+  through the active renderer schema; the closed codec and round-trip suite now
+  cover accepted and typed non-success projections without invented values;
+- result-page continuation, signed cost bounds, and shared fake/generated-
+  bridge request validation initially left malformed parity gaps; the corrected
+  client rejects inconsistent cursors, overflow, duplicate kinds, bad bounds,
+  overlong/NUL-bearing search, and unknown native states before dispatch.
+
+A second consolidated review found and corrected these must-fix defects on the
+same candidate:
+
+- generator dispatch and signature metadata still relied on a fixed operation
+  count and handwritten native associations; the sole envelope source now owns
+  every operation kind, request/response or event type, and client method, and
+  generation derives the TypeScript and C# surfaces exhaustively;
+- the generated bridge client did not initially apply the complete runtime
+  schema to received responses/events, and runtime checks did not yet enforce
+  every required field, closed value, added-property denial, contract version,
+  message-size bound, opaque identity rule, or canonical cursor rule; the
+  shared validator and hostile mutation corpus now fail closed, including
+  base64url decode/re-encode equality and an 8,192 decoded-byte cursor ceiling;
+- projected result/detail/progress/event identities were not all bound to the
+  originating request; the C# codec and generated TypeScript client now reject
+  cross-run, cross-item, cross-subscription, and cross-request substitution;
+- initial story equivalence was list-only and did not cross an independent
+  serialized transport boundary; every required story now exercises and
+  compares its applicable bootstrap, list, detail, progress, cancellation, and
+  event semantics through both the story client and generated bridge client;
+- the gap story used the ordinary completed lifecycle and fake cancellation
+  skipped shared request validation; the corrected story uses
+  `completed-with-gaps`, and both client modes validate the same request;
+- drift checking regenerated tracked files before comparing them; it now
+  derives outputs in memory and performs a non-mutating byte comparison, with
+  a clean-tree proof;
+- the inventory and compact records contained stale ownership and package-gate
+  language, and functional naming found three chronology-flavored helper
+  tokens; the records now identify the exact mapped RPCs and explicitly
+  unmapped operations, and the helpers use product-behavior names; and
+- the first final rerun exposed one analyzer-only repeated-array finding in the
+  signature-reflection test; a shared immutable expected set corrected it
+  without changing product behavior; and
+- the renderer registry introduced an invented consumer-only maturity value,
+  outside the execution-policy maturity vocabulary; the sole source, registry
+  schema, and regenerated registry now use the established
+  `producer-consumer-validated` machine value.
+
+A third independent review reopened WP7 for these must-fix findings on the same
+candidate:
+
+- TypeScript request, response, and event operation partitions, payload maps,
+  and dispatch were not all generated from the sole schema metadata; the
+  generator now emits exact keyed partitions, handlers, exhaustive dispatch,
+  and runtime omission/extra-entry assertions;
+- the generated bridge validated payload shapes but did not bind every outer
+  response/event field to the originating request or subscription, reject
+  repeated/non-monotonic events, route cancellation through the same response
+  validator, or enforce the 1 MiB bound at the serialized production seam;
+- result pages did not reject kinds outside the request filter, and progress
+  event projections did not independently bind their inner run identity to the
+  request and event metadata;
+- story checks did not state an explicit semantic expectation for every story,
+  and the full typed non-success set was not compared through both client
+  modes; and
+- TypeScript's Apache-2.0 license was documented in prose but not explicitly
+  curated in the machine-readable dependency input.
+
+The corrected candidate uses a serialized string bridge, validates and binds
+contract/session/sequence/request/subscription/operation/revision fields,
+enforces monotonic envelope and durable-event sequences, rejects replay and
+oversize messages, and applies the same path to cancellation. C# and
+TypeScript reject cross-run and unrequested-kind list items and cross-run inner
+progress events. All eleven story names have exact configuration, list,
+detail, lifecycle, cancellation, and event expectations, while all seven typed
+non-success outcomes are compared across every unary operation in story-fake
+and generated-bridge modes. The dependency curation now names
+`Microsoft.TypeScript.MSBuild/5.9.3` as Apache-2.0 explicitly.
+
+The review item proposing renderer mappings for `ListFindings`,
+`ListFindingReports`, and `GetFindingReport` was rejected as a contract-
+authority mismatch, not deferred as a defect. The accepted Phase C consumer
+seam identifies `ListResultItems` plus `GetResultDetail` as the bounded
+100,000-item renderer path. The legacy `ListFindings` operation deliberately
+has no generated WP7 consumer, and the report operations remain native-only.
+No product meaning was invented to map them.
+
+Final re-review exercises every corrected seam. Repository-owned Node `24.14.1` and
+TypeScript `5.9.3` are NuGet-restored from a locked tool project; the cached
+restore passes with package sources cleared and forced assets reevaluation.
+Strict TypeScript compilation passes, the six-rule first-party security/source
+lint passes over six TypeScript files, and the compiled frontend unit suite
+passes. The suite pages exactly 100,000 summaries in pages of at most 100 and
+covers hostile, malformed, unknown, mutation, metamorphic, max-`uint64`,
+max/oversized cursor, opaque-identity, all lifecycle/event variants, stale,
+conflict, reconnect/resync, and generated bridge-client/story fake-client
+equivalence cases.
+
+Focused Release contract evidence passes 259/259 tests, including 71/71 in the
+renderer contract class. A real named-pipe
+coordinator integration test passes 1/1 and sends the exact
+`ApplicationGrpcService.GetApplicationBootstrap` projection through
+`RendererBootstrapAdapter`, proving both Phase C capabilities survive. Exact-
+root process cleanup reported zero repository-owned
+`dotnet`/`testhost`/`vstest` survivors after every batch.
+
+The generated ownership, commands, offline behavior, versions, licenses, and
+remaining WP8-only limitations are recorded in
+`frontend-toolchain-and-generation.md`. The focused WP7 implementation,
+review, correction, and re-review cycle passes and authorizes continuation to
+WP8 on the same Phase D candidate. WP7's real-service evidence is deliberately
+narrow: the named-pipe test proves the actual application bootstrap service and
+adapter; result, detail, progress, and event consumption are proved through
+real protobuf shapes and the generated serialized bridge boundary, while the
+desktop host's real-service request adapters belong to WP8. This does not
+accept Checkpoint D, begin Phase E, or activate M2.
+
+## WP8 receipt — Protected desktop consumption proof
+
+WP8 adds a minimal non-elevated WPF host, packaged React diagnostic renderer,
+and a narrow client-only application bridge. The host maps only
+`ApplicationQuery`, `EventStream`, and `KeysetCursor` capabilities through one
+session-owned named-pipe connection; it cannot acquire the native durable-
+command surface. Generated operation dispatch maps bootstrap, result pages,
+result detail, progress, and events to exact typed client methods. Targeted
+verification remains native-only and unmapped.
+The solution now contains 21 projects (20 under `src`/`tests` plus the existing
+public-fixture tool project), including the new narrow application client,
+desktop host, and dedicated desktop test projects.
+
+The browser is confined to exact
+`https://app.infinium.invalid/index.html`. Its non-resolving virtual host uses
+`HostResourceAccessKind.Deny`, an exact compiled asset-manifest hash, restrictive
+CSP, and `trusted-types 'none'`. Release disables host objects, DevTools,
+context menus, script dialogs, remote/debug overrides, downloads, permissions,
+new windows, external frames/resources, authentication, client/server
+certificate continuation, autofill, password saving, external drops, and
+inherited privileged WebView2 arguments. The runtime check uses
+`CompareBrowserVersions` against exact floor `151.0.4129.50`; missing,
+outdated, environment-overridden, and HKCU/HKLM policy-overridden states fail
+closed. Production accepts no filesystem-root argument and uses a fixed local
+root and exclusive WebView2 user-data folder.
+
+The generated transport contract is registry `1.3.0`, renderer contract
+`1.4.0`, and registry SHA-256
+`411a9c05604c7664773aa62c36f62817273ecaff228f20e074063bed1414cfa9`.
+It contains nine closed operations and sixteen exact message shapes. A fresh
+renderer receives a host-generated 128-bit session initialization only after
+exact-origin navigation and must acknowledge the same session, registry
+version, and SHA before any application request. Renderer requests and host
+events use separate contiguous sequence domains; responses echo request
+sequence. Reload, renderer failure, browser loss, or reconnect rotates the
+session and rejects stale/replayed traffic. One bounded serialized outbound
+queue assigns event order at committed delivery, permits at most 64 active
+requests, caps every UTF-8 message at 1 MiB and chunks at 256 KiB, and cancels
+rather than dropping durable events when its 64-item lossless queue overflows.
+Cancellation requires a one-shot host-attested native WPF gesture bound to the
+same session, operation, and prior active request; self, late, stale, or replayed
+cancellation is rejected.
+
+The first executable candidate exposed and corrected these must-fix defects:
+
+- a renderer-selected session could not prove host ownership; generated
+  transport initialization and acknowledgement now establish it;
+- one shared sequence counter raced renderer requests with host events;
+  independent directional domains and an interleaving test corrected it;
+- handwritten operation switching could drift from the registry; generated
+  typed dispatch and mutation/totality checks now own selection;
+- a 64-entry historical request-ID set exhausted a session before 100,000-item
+  paging; contiguous request sequence now prevents replay while the bound
+  applies only to concurrent work;
+- renderer-minted gesture UUIDs granted no user authority; the accessible WPF
+  cancel control now issues and consumes an exact host-attested grant;
+- the first pager multiplied page number by 100 and reused a global cursor,
+  corrupting partial and previous/next pages; cached page records now retain
+  exact logical start, accepted count, and continuation;
+- initial subscription/resync code captured stale React state and could leave
+  an old real host stream alive; explicit renderer refs and serialized host
+  replacement cancel and await the previous stream before resubscribing;
+- a stream failure invented a projection revision; the bridge now emits
+  resync only from the last authoritative event revision or re-establishes the
+  session when none exists;
+- outbound delivery and disposal did not initially prove slow-consumer,
+  overflow, blocked-send, and stale-post behavior; one owned queue and awaited
+  subscription tasks now provide that closure;
+- browser/controller loss initially reloaded a dead control and retained old
+  handlers; single-flight recreation detaches the old environment/controller,
+  disposes the old bridge, creates a new controller, and resynchronizes;
+- the first host transitively packaged the complete application, analysis,
+  persistence, MO2, and provider graph at about 92 MiB; the new
+  `Infinium.ApplicationClient` project carries only protobuf, descriptor,
+  named-pipe, generated-contract, codec, and client concerns;
+- the real progress path exposed a null `Cost` projection in the accepted
+  Phase A-C service; the service now returns its canonical empty cost shape;
+  and
+- mutable adjacent asset hashes and incomplete dependency evidence could not
+  prove provenance; the compiled manifest anchor, deterministic desktop-asset
+  generator, React source/package hashes, WebView2 notices, and curated license
+  files now fail drift independently.
+
+The corrected direct desktop suite passes 18/18. It covers exact origin,
+runtime and HKCU/HKLM/environment policy denial, session/sequence/replay,
+more than 1,000 sequential requests, 65-concurrent rejection, host gestures,
+self/late/stale cancellation, replacement subscriptions, stream failure before
+an authoritative event, oversized outbound denial, deterministic slow-consumer
+overflow/resync, awaited disposal, stale-send suppression, asset anchoring,
+and partial/previous/evicted/1,000-page logical paging. The populated-state
+integration seed passes 1/1 and retains 150 findings including hostile markup-
+shaped text. The actual WebView bridge qualification passes 1/1 through real
+accepted bootstrap, two cursor pages, detail, progress, event subscription,
+host cancellation, five authoritative resync-and-resubscribe cycles, and three
+reload/session rotations. The lifecycle qualification passes 1/1 after actual
+renderer crash, exact browser-process termination, coordinator termination and
+restart, and WPF shell restart. Exact-root cleanup reports zero repository-
+owned .NET, coordinator, desktop, or WebView2 survivors.
+
+Automated accessibility evidence covers Chromium's full accessibility tree and
+Windows UI Automation exposure for document, landmark/group, list, button,
+edit, text/status, accessible-name, and focus paths. Actual keyboard Tab
+movement, result-focus restoration, computed body contrast of at least 7:1,
+200% zoom/reflow without truncated rows or horizontal document overflow,
+reduced-motion emulation, bounded zoom policy, and ARIA logical position/count
+on mounted rows pass. This is a repeatable automated screen-reader-consumable
+surrogate; no manual Narrator walkthrough was performed or claimed.
+
+The repeatable command
+`powershell -NoProfile -ExecutionPolicy Bypass -File eng/qualify-desktop.ps1`
+passed with locked offline frontend restore, deterministic contract/asset
+drift, strict type, lint, and frontend tests before the native checks. On the
+recorded Windows `10.0.26200.0`, 32-logical-processor AMD64 reference machine
+with Evergreen WebView2 `151.0.4129.107`, its retained receipt reports:
+
+Process-to-browser-ready is measured from executable creation until the
+exclusive WebView2 process tree first appears. Window-show-to-bootstrap ends
+only after exact-origin navigation, transport acknowledgement, real
+`GetApplicationBootstrap`, and React rendering. Each bridge sample ends after
+the generated request, named-pipe round trip, generated projection, exact
+response, and React state update. Private working set sums the qualification
+WPF process and every process reported by its exclusive WebView2 environment.
+
+| Measurement | Raw samples / result |
+|---|---|
+| Process to browser-ready | `597, 547, 559, 463, 517, 526 ms`; p50 `526`, p95/max `597` |
+| Window show to accepted bootstrap | `814.5471 ms` |
+| Finding page bridge | `125.6093, 63.0448, 63.0681, 62.2585, 62.6262, 64.2206, 58.4372, 62.6299, 62.8699, 62.8668 ms`; p50 `62.8668`, p95/max `125.6093` |
+| Finding detail bridge | `250.1823, 62.6795, 62.6340, 56.2876, 61.7804, 60.8160, 61.9753, 62.9696, 61.5254, 62.0303 ms`; p50 `61.9753`, p95/max `250.1823` |
+| Progress bridge | `69.6017, 62.9998, 61.7418, 60.6117, 62.7543, 62.5354, 62.2732, 62.9664, 62.9582, 63.5777 ms`; p50 `62.7543`, p95/max `69.6017` |
+| Authoritative resync | `62.5677, 62.9370, 61.6318, 62.8755, 61.1398 ms`; p50 `62.5677`, max `62.9370` |
+| Reload to bootstrap | `92.5748, 91.8473, 93.4831 ms`; p50 `92.5748`, max `93.4831` |
+| Idle WPF + WebView private set | `358,297,600, 358,305,792, 359,387,136, 358,711,296, 356,519,936` bytes; p50 `358,305,792`, max `359,387,136` |
+| Active WPF + WebView private set | `411,574,272, 411,574,272, 411,996,160, 412,983,296, 412,057,600` bytes; p50 `411,996,160`, max `412,983,296` |
+| Observed request/response/event maxima | `912 / 37,261 / 1,826` UTF-8 bytes |
+| Host package / assets | `6,592,576` bytes in 31 files / `278,005` bytes in 11 files |
+| Installed Evergreen runtime | `894,464,255` bytes in 779 files |
+
+The secret-canary evidence spans thrown application-client failures, serialized
+bridge output, renderer/WPF text and focus state, coordinator stdout/stderr,
+ordinary retained root/IPC/log files, reload, renderer/browser crash, and
+failure artifacts in the exclusive qualification user-data root. The canary
+was absent. Hostile product text remained a text node, with no created image or
+script effect. React/ReactDOM `18.3.1` are MIT; WebView2 SDK `1.0.4129.50` is
+BSD-3-Clause with bundled notices; repository Node `24.14.1` and TypeScript
+`5.9.3` remain locked and offline-capable. No credential or live provider was
+used.
+
+Focused WP8 re-review result: no remaining must-fix, owner/authority, or
+safety/isolation finding. Remaining limitations are intentional: this is a
+diagnostic surface, not the M2 interface or installer; Evergreen WebView2 must
+already be installed; public redistribution/SBOM closure remains later
+distribution work; and the automated accessibility surrogate does not claim a
+manual Narrator session. The Phase D candidate awaits Checkpoint D. It does not
+accept that checkpoint, begin Phase E, or activate M2.
+
+### Independent WP8 correction and re-review receipt
+
+The first WP8 re-review above was reopened by independent review. The same
+mutable candidate corrected every must-fix finding without changing product
+meaning or renderer authority:
+
+- host events now require exactly the prior host-event sequence plus one;
+  forward gaps and replay fail without committing sequence state, and an exact
+  recovery event succeeds;
+- generated TypeScript owns complete schema-derived discriminated request,
+  response, and transport-event envelopes. Only `application.cancel` may carry
+  the generated gesture proof, and renderer subscription-request maps remain
+  bounded to 64;
+- `DesktopApplicationClient` now owns one reconnectable least-authority
+  session connection. It rereads a fresh descriptor and creates a fresh pipe
+  for at most three bounded attempts, invalidates failed channels, and proves
+  same-renderer-session coordinator recovery. A renderer reports successful
+  resynchronization only after accepted bootstrap, progress, and first-page
+  results;
+- host gesture grants expire after five seconds and are retired when delivery
+  fails or their target completes. Self, late, stale, wrong-target, and replay
+  cancels remain rejected, and the WPF async click handler contains delivery
+  errors without granting authority;
+- a closed replaced subscription could previously discard a final serialized
+  event without advancing the shared host-event domain. The generated client
+  now validates and advances that closed-subscription event before dropping its
+  content, preserving exact sequence continuity for the next live event or
+  gesture;
+- live hostile navigation found that a deliberately cancelled top navigation
+  was being mistaken for renderer failure by `NavigationCompleted`. The host
+  now records and consumes the exact denied navigation identity without
+  rotating a valid session;
+- actual WebView qualification now asserts release settings and attempts denied
+  top navigation, external frame/resource, `window.open`, download, and
+  geolocation permission. The exact canonical origin remains loaded and no
+  download artifact is created;
+- the 100,000-summary proof runs all 1,000 pages through
+  `GeneratedBridgeApplicationClient`, transfers no page larger than 100,
+  retains no more than 500 summaries, and mounts exactly 13 logical rows;
+- lifecycle qualification performs accepted real finding/progress work,
+  recovers a coordinator restart inside the same renderer session, and then
+  resumes authoritative state and one real subscription after renderer reload
+  and WPF shell restart. The separate no-prior-event failure path still rotates
+  rather than inventing a revision;
+- missing and outdated Evergreen states now exercise the actual inert WPF
+  fallback without creating a WebView; and
+- qualification launches use only a 128-bit opaque qualification identity that
+  derives one fixed temporary root. Memory and cleanup traverse only the exact
+  launched process tree; cleanup never scans or stops the shared production
+  WebView root or another repository application; and
+- the repeated final harness exposed a cancellation/disposal race when a
+  subscription token source was disposed between ownership lookup and
+  cancellation. Cancellation is now idempotent and contains
+  `ObjectDisposedException`; five consecutive direct-suite runs and the full
+  focused harness rerun passed after the correction;
+- a final generated-type mutation review found that the envelope merge omitted
+  branch-level `not.required` exclusions. The sole-source generator now emits
+  every forbidden branch property as exact optional `never`; nine compile-time
+  mutations prove non-cancel gesture denial, required cancel proof, transport
+  event omission, and response gesture denial;
+- host-event sequences were previously consumed before `PostWebMessage`
+  succeeded. The single ordered outbound pump now peeks the next sequence and
+  commits it only after successful delivery; the failed-grant test validates
+  initialization and the next delivered grant through renderer acceptance as
+  exact sequences one and two; and
+- no-prior-event stream recovery previously awaited browser recreation from
+  the owned subscription that recreation must dispose. Recovery is now
+  generation-guarded and scheduled after fail-closed lifetime cancellation;
+  a callback that disposes the originating bridge completes without deadlock
+  and creates a distinct replacement session. The live rerun also corrected a
+  transient-status assertion to observe the durable active-subscription state
+  after an accepted event updates the status region;
+- the real application bootstrap still described frontend planning and
+  checkpoint chronology to users. Its capability reasons now state only
+  durable functional availability and native-only limitations, and the real
+  coordinator integration asserts the exact text and excludes phase,
+  checkpoint, and milestone language;
+- story progress previously relied on defaults that could contradict the
+  represented lifecycle. Every story now owns explicit mutually exclusive
+  counters whose sum equals its total: setup is queued, active/reconnect split
+  completed/running/queued, completed and lead-only are completed, failed is
+  failed, gap is gap-only, and terminal empty remains zero;
+- story detail could fabricate an accepted projection for a requested identity
+  absent from the story, while list ignored kind and search. Detail now accepts
+  only an exact present run/kind/item and otherwise returns typed `not-found`;
+  list applies kind filtering and a case-insensitive inert-summary substring
+  search over source-offset pagination. Story-fake and generated bridge tests
+  prove exact parity for both positive and negative cases; and
+- evaluation traceability and contract entry documentation overstated Phase D
+  coverage or omitted independent version axes. The corrected records narrow
+  EVAL-0088, EVAL-0089, and EVAL-0091 to exercised facets and identify the
+  renderer `1.4.0`, registry `1.3.0`, 9-operation/16-message, sole-source,
+  fingerprinted boundary and its denied authorities; and
+- the story client treated an unknown run as an empty list and synthesized a
+  progress/event projection, unlike the real application. The story boundary
+  now exports one exact accepted run identity, returns typed `not-found` for
+  unknown-run list/progress requests, and fails unknown-run subscription
+  initiation without delivering an event. Same-request fake/generated bridge
+  tests prove all three failure paths and all ordinary story inputs use the
+  accepted run; and
+- the first complete-floor attempt exposed five integration-policy defects:
+  live WebView categories shared a WPF `Application` with another test thread,
+  two capability evidence atoms exceeded the repository short-text bound,
+  central package expectations omitted the three pinned frontend/desktop
+  packages, the dependency test omitted the repository frontend toolchain
+  lock, and the completed React acquisition directory remained under `work`.
+  Live categories now become explicitly inconclusive before touching WPF when
+  the qualification harness root is absent, while `eng/qualify-desktop.ps1`
+  still runs each in its own populated process. The evidence atoms are split,
+  the exact 17-package policy and 21 product/test/toolchain locks are asserted,
+  and generator scope matches the manifest's exact sorted lock list. The
+  verified task-owned acquisition directory was removed, repository scans now
+  exclude the ignored `work` root, a Git-index assertion keeps it untracked,
+  and future third-party acquisition is directed outside the repository.
+- final dependency prose review removed an inaccurate umbrella MIT statement:
+  the README now names every license family recorded by the manifest, and
+  explicit provenance limitations describe admitted use within each package's
+  recorded build, test, or runtime role rather than claiming all are runtime
+  dependencies.
+
+The corrected direct desktop suite passes 21/21; an unfiltered desktop run
+passes those 21 with two expected live-qualification skips when the exclusive
+harness root is absent. The focused renderer contract class passes 78/78. The populated-state seed, actual hostile/accessible
+WebView qualification, and renderer/browser/coordinator/reload/shell lifecycle
+qualification each pass 1/1. The locked offline frontend restore, generated
+contract/asset drift, strict type check, six-policy lint, and frontend unit
+suite all pass. Exact launched desktop/WebView and repository-owned
+`dotnet`/`testhost`/`vstest` survivor counts are zero.
+
+The complete sanitized measurement bytes are now tracked, rather than claimed
+from an ignored artifact, in
+`desktop-qualification-receipt.v1.json`. The repeatable final focused run on
+Windows `10.0.26200.0`, 32-logical-processor AMD64 and Evergreen WebView2
+`151.0.4129.107` records six process-to-browser samples with p50 `682 ms`, p95
+and maximum `882 ms`; accepted bootstrap `748.0687 ms`; finding-page p50
+`62.4288 ms`; finding-detail p50 `62.9515 ms`; progress p50 `60.9923 ms`;
+second-page `62.1245 ms`; transport cancel `872.8485 ms`; authoritative-resync
+p50 `62.5618 ms`; and reload p50 `94.2052 ms`. Idle combined private working
+set has p50 `368,091,136` bytes and maximum `369,188,864`; active has p50
+`439,914,496` and maximum `440,352,768`. Observed request/response/event maxima
+are `912 / 37,261 / 1,826` UTF-8 bytes. The host package is `6,607,628` bytes
+in 31 files, assets are `279,745` bytes in 11 files, and the installed runtime
+is `894,464,255` bytes in 779 files. The tracked receipt retains every raw
+launch, host/browser memory split, bridge sample, second-page/cancel result,
+package/runtime count, exact contract fingerprint, licence entry, coverage
+flag, and zero-survivor result.
+
+Independent corrected WP8 re-review result: no remaining must-fix,
+owner/authority, or safety/isolation finding. Intentional limitations remain
+unchanged: this diagnostic is not the polished M2 interface or installer;
+Evergreen is an inertly reported prerequisite; public distribution/SBOM
+closure remains later work; and automated Chromium AX plus Windows UI
+Automation evidence is a screen-reader-consumable surrogate, not a claimed
+manual Narrator walkthrough. Checkpoint D remains external and pending. Phase E
+and M2 remain inactive.
+
+### Phase D complete verification-floor receipt
+
+After the first complete-floor defects recorded above were corrected and their
+changed surfaces re-reviewed, the same review-ready Phase D candidate passed
+the complete accepted repository floor on 2026-08-28:
+
+| Command | Result |
+|---|---|
+| `dotnet restore Infinium.sln --locked-mode --nologo` | Passed; all locked project graphs restored without changing accepted dependency identities. |
+| `dotnet build Infinium.sln -c Release --no-restore --nologo` | Passed with 0 warnings and 0 errors; repository-owned build-process survivors: 0. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo` | Passed: 845 tests, 12 expected skips, 0 failures; repository-owned `dotnet`/`testhost`/`vstest` survivors: 0. |
+| `dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity minimal` | Passed with no formatting drift; repository-owned format-process survivors: 0. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/validate-documentation.ps1` | Passed: 154 metadata files, 156 Markdown link sources, and 20 JSON files. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-functional-naming.ps1` | Passed: 195 exact reviewed exceptions and 0 unexplained findings. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/update-dependency-manifest.ps1 -Check` | Passed; the generated manifest matches the exact sorted 21-project lock set and curated dependency/licence/provenance bytes. |
+| `git diff --check` | Passed. |
+
+| Test assembly | Passed | Expected skips | Failed |
+|---|---:|---:|---:|
+| `Infinium.ContractTests` | 266 | 0 | 0 |
+| `Infinium.DesktopTests` | 21 | 2 | 0 |
+| `Infinium.UnitTests` | 316 | 1 | 0 |
+| `Infinium.EvaluationTests` | 68 | 9 | 0 |
+| `Infinium.IntegrationTests` | 142 | 0 | 0 |
+| `Infinium.FaultTests` | 10 | 0 | 0 |
+| `Infinium.SecurityTests` | 22 | 0 | 0 |
+| **Complete solution** | **845** | **12** | **0** |
+
+The two desktop skips are intentional in the unfiltered solution process:
+live WPF/WebView2 categories fail closed before touching `Application.Current`
+unless the exclusive qualification harness root is present. The separate
+`powershell -NoProfile -ExecutionPolicy Bypass -File eng/qualify-desktop.ps1`
+run passed the 21 direct desktop tests, populated real-state preparation, live
+hostile/accessibility WebView qualification, and renderer/browser/coordinator/
+reload/shell lifecycle qualification, with each live category executing rather
+than skipping and an exact qualification-process survivor count of 0.
+
+This receipt establishes only a completed Phase D candidate awaiting
+Checkpoint D architecture-steward review. It does not accept Checkpoint D,
+populate WP9 closeout, begin Phase E, activate M2, or claim the polished M2
+interface.
 
 ## Final closeout fields
 

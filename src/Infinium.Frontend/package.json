@@ -1,0 +1,12 @@
+{
+  "name": "@infinium/desktop-consumer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": "24.14.1" },
+  "infiniumToolchain": {
+    "nodePackage": "Node.js.redist.win/24.14.1",
+    "typescriptPackage": "Microsoft.TypeScript.MSBuild/5.9.3",
+    "lockfile": "../../eng/tooling/Infinium.FrontendToolchain/packages.lock.json"
+  }
+}

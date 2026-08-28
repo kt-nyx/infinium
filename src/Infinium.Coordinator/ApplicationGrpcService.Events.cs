@@ -560,6 +560,7 @@ public sealed partial class ApplicationGrpcService
                 RunId = new RunId { Value = run.RunId },
                 LifecycleState = ProtoMapping.ToProto(run.State),
                 Progress = ProtoMapping.EmptyProgress(run.State),
+                Cost = ProtoMapping.EmptyCost(),
                 ProjectionVersion = new ProjectionVersion { Value = "1" },
                 DurableEventSequence = checked((ulong)run.DurableSequence),
                 ObservedAt = ProtoMapping.ToProto(DateTimeOffset.UtcNow),

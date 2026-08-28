@@ -242,14 +242,15 @@ public sealed class ManagedAnalysisPipelineCorpusIntegrationTests
             ApplicationCapabilityState resultCapability = bootstrap.Bootstrap.Capabilities.Single(
                 value => value.Capability == ApplicationCapability.ResultExploration);
             Assert.AreEqual(Availability.Partial, resultCapability.Availability);
-            StringAssert.Contains(resultCapability.InertReason, "FindingReport query/readback");
-            StringAssert.Contains(resultCapability.InertReason, "Checkpoint C");
+            Assert.AreEqual(
+                "Bounded result queries and detail readback are available; the diagnostic desktop exposes only its registered result subset.",
+                resultCapability.InertReason);
             ApplicationCapabilityState reviewCapability = bootstrap.Bootstrap.Capabilities.Single(
                 value => value.Capability == ApplicationCapability.DurableUserReview);
             Assert.AreEqual(Availability.Partial, reviewCapability.Availability);
-            StringAssert.Contains(reviewCapability.InertReason, "export deletion/recovery");
-            StringAssert.Contains(reviewCapability.InertReason, "native targeted-verification workflow are implemented");
-            StringAssert.Contains(reviewCapability.InertReason, "desktop delivery remain pending");
+            Assert.AreEqual(
+                "Review and export deletion/recovery are available through native contracts; the diagnostic desktop does not expose review, export, or targeted-verification operations.",
+                reviewCapability.InertReason);
 
             Dictionary<string, ManagedCaseObservation> observations = new(StringComparer.Ordinal);
             List<string> executionOrder = [];

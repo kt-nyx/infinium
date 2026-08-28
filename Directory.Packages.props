@@ -15,9 +15,12 @@
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="9.0.14" />
     <PackageVersion Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
     <PackageVersion Include="Microsoft.ML.Tokenizers.Data.O200kBase" Version="2.0.0" />
+    <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="5.9.3" />
+    <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.4129.50" />
     <PackageVersion Include="MSTest.TestAdapter" Version="4.3.2" />
     <PackageVersion Include="MSTest.TestFramework" Version="4.3.2" />
     <PackageVersion Include="Mutagen.Bethesda.Skyrim" Version="0.54.2" />
+    <PackageVersion Include="Node.js.redist.win" Version="24.14.1" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
   </ItemGroup>
 </Project>

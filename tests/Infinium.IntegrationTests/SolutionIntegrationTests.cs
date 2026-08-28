@@ -39,7 +39,7 @@ public sealed class SolutionIntegrationTests
             .Order(StringComparer.Ordinal)
             .ToArray();
 
-        Assert.HasCount(17, projectFiles);
+        Assert.HasCount(20, projectFiles);
         foreach (string projectFile in projectFiles)
         {
             StringAssert.Contains(solution, $"\"{projectFile}\"");
@@ -1134,7 +1134,8 @@ public sealed class SolutionIntegrationTests
                 }).ResponseAsync;
             Assert.AreEqual(
                 GetApplicationBootstrapResponse.ResultOneofCase.Bootstrap,
-                bootstrap.ResultCase);
+                bootstrap.ResultCase,
+                $"Bootstrap failed with {bootstrap.Error?.Code}: {bootstrap.Error?.InertDetail}");
             Assert.AreEqual(ProtocolConstants.ContractVersion,
                 bootstrap.Bootstrap.Compatibility.ApplicationContract.Value);
             Assert.AreEqual(ProtocolConstants.DomainContractVersion,
@@ -1147,6 +1148,33 @@ public sealed class SolutionIntegrationTests
             Assert.IsTrue(bootstrap.Bootstrap.Capabilities.All(item =>
                 item.Capability != ApplicationCapability.Unspecified
                 && item.Availability != Availability.Unspecified));
+            Assert.AreEqual(
+                "Non-secret enrollment intent and status are available; credential entry remains restricted to the native OS-backed enrollment surface.",
+                bootstrap.Bootstrap.Capabilities.Single(item =>
+                    item.Capability == ApplicationCapability.ProviderEnrollment).InertReason);
+            Assert.AreEqual(
+                "Bounded result queries and detail readback are available; the diagnostic desktop exposes only its registered result subset.",
+                bootstrap.Bootstrap.Capabilities.Single(item =>
+                    item.Capability == ApplicationCapability.ResultExploration).InertReason);
+            Assert.AreEqual(
+                "Review and export deletion/recovery are available through native contracts; the diagnostic desktop does not expose review, export, or targeted-verification operations.",
+                bootstrap.Bootstrap.Capabilities.Single(item =>
+                    item.Capability == ApplicationCapability.DurableUserReview).InertReason);
+            Assert.IsFalse(bootstrap.Bootstrap.Capabilities.Any(item =>
+                item.InertReason.Contains("phase", StringComparison.OrdinalIgnoreCase)
+                || item.InertReason.Contains("checkpoint", StringComparison.OrdinalIgnoreCase)
+                || item.InertReason.Contains("milestone", StringComparison.OrdinalIgnoreCase)));
+            byte[] rendererBootstrap = RendererBootstrapAdapter.BuildResponse(
+                bootstrap.Bootstrap,
+                "host_session_0001",
+                sequence: 1,
+                requestId: "request_identity_0001");
+            using JsonDocument rendererBootstrapDocument = JsonDocument.Parse(rendererBootstrap);
+            string[] renderedCapabilities = rendererBootstrapDocument.RootElement
+                .GetProperty("payload").GetProperty("bootstrap").GetProperty("capabilities")
+                .EnumerateArray().Select(value => value.GetProperty("capability").GetString()!).ToArray();
+            CollectionAssert.Contains(renderedCapabilities, "result-exploration");
+            CollectionAssert.Contains(renderedCapabilities, "durable-user-review");
 
             GetApplicationBootstrapResponse incompatibleBootstrap =
                 await application.GetApplicationBootstrapAsync(new GetApplicationBootstrapRequest

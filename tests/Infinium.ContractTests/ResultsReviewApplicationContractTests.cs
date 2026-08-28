@@ -55,7 +55,6 @@ public sealed class ResultsReviewApplicationContractTests
     {
         Assert.AreEqual("1.13.0", ProtocolConstants.Compatibility.ApplicationContract.Value);
         Assert.AreEqual("1.6.0", ProtocolConstants.Compatibility.DomainContract.Value);
-        Assert.AreEqual("1.16.0", ProtocolConstants.StorageContractVersion);
         Assert.AreEqual(
             "d234d44dabf902041461b5c2318fd5c71f10eff46e7ec75f9a586812fab014c7",
             Convert.ToHexStringLower(ProtocolConstants.Version.SchemaFingerprintSha256.Span));

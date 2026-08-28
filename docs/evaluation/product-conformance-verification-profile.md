@@ -2,7 +2,7 @@
 
 Status: Accepted
 Disposition: Active and effective
-Last reviewed: 2026-08-25
+Last reviewed: 2026-08-28
 
 Authority: [ADR-0032](../architecture/decisions/ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md)
 and [ADR-0035](../architecture/decisions/ADR-0035-defer-independent-semantic-oracle-qualification.md)
@@ -135,27 +135,18 @@ resealed or promoted through an ordinary tooling command.
 
 - M1 and its post-M1 cleanup are complete under this profile.
 - The accepted M1-to-M2 Foundation — Frontend Application Foundation is the
-  current pre-M2 implementation transition. Phases A and B are accepted at
-  Checkpoint B. Phase C is under correction: its independent FindingReport,
-  request-validation, export-deletion, provenance, paging, and populated
-  migration-gap defects have focused evidence. Its five native-only targeted-
-  verification RPCs now have a producer-to-consumer implementation candidate
-  covering fresh acquisition, closed scope/correlation, atomic ordinary
-  successor admission, and lineage. The corrected candidate also exercises the
-  complete native producer-to-consumer path without seeding ready persistence,
-  retains qualified processing gaps as limited plans, rejects pre-start drift
-  before successor mutation, and enforces cross-family one-shot gestures. Its
-  corrected readback evidence also exercises hostile bounded terminal gaps,
-  malformed/substituted/stale cursors, equal-timestamp lifecycle events,
-  append-stable continuation, sealed owner metadata and event bytes, schema-17
-  zero/nonzero migration, interrupted rollback, rebuild, restart, and restore.
-  Valid ambiguous and missing-proof plans remain inspectable non-startable
-  preparations, and schema-16 migration rejects closed-shape acquisition-event
-  tampering without accepting a damaged source schema or missing trigger.
-  Corrected Checkpoint C review is pending;
-  the checkpoint remains suspended. Remaining packages must
-  exercise EVAL-0090 through EVAL-0094 plus every applicable existing case
-  through the same six layers.
+  current pre-M2 implementation transition. Phases A-C and Checkpoint C were
+  accepted at commit `2ec3be78da4d05d8c6ada68a3e18544a446f2f03` after the
+  retained correction chronology and full verification receipt recorded by the
+  owning implementation record. WP7 and WP8 now form one Phase D implementation
+  candidate: a schema-generated closed TypeScript/C# consumer plus a minimal
+  WPF/WebView2/React diagnostic host exercises real bootstrap, bounded finding
+  pages/detail, progress, event subscription, transport cancellation,
+  reconnect, reload, crash recovery, and authoritative resynchronization. The
+  five ADR-0038 targeted-verification RPCs remain native-only and renderer
+  inaccessible. EVAL-0090 through EVAL-0094 and the narrowly applicable facets
+  of existing cases are exercised through the same six layers. Checkpoint D
+  remains pending; Phase E and M2 remain inactive.
 - M2 remains separately planned and authorized work; it must satisfy the
   applicable six layers and its eventual accepted plan.
 - M2 acceptance exercises its stable product interfaces end to end and records

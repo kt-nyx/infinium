@@ -1,7 +1,6 @@
 using Google.Protobuf;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Protocol.V1;
-using Infinium.Persistence;
 
 namespace Infinium.Application.Runtime;
 
@@ -11,9 +10,8 @@ public static class ProtocolConstants
     public const uint Minor = 13;
     public const string ContractVersion = "1.13.0";
     public const string DomainContractVersion = "1.6.0";
-    public static readonly string StorageContractVersion =
-        AuthoritativeStore.CurrentStorageContractVersion;
-    public const string RendererContractVersion = "1.1.0";
+    public const string StorageContractVersion = "1.16.0";
+    public const string RendererContractVersion = "1.4.0";
     public const uint MaximumBootstrapRecentRuns = 20;
     public const uint MaximumMessageBytes = 1_048_576;
     public const uint MaximumPageItems = 100;

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Node.js.redist.win" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" GeneratePathProperty="true" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

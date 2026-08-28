@@ -184,8 +184,9 @@ authorization, and coordinator-side admission remain runtime obligations for
 later slices.
 
 The additive application v1 surface is at protocol 1.13.0. It separates the
-application 1.13.0, domain 1.6.0, storage 1.16.0, and renderer 1.1.0 version
-axes; the corrected persisted `TargetedVerificationPlan` is schema 1.2.0. The
+application 1.13.0, domain 1.6.0, storage 1.16.0, renderer contract 1.4.0, and
+renderer registry schema 1.3.0 version axes; none may substitute for another.
+The corrected persisted `TargetedVerificationPlan` is schema 1.2.0. The
 surface exposes bounded display-safe bootstrap, typed setup/configuration,
 prepared manual-run, non-secret provider status, live progress, reconnect,
 canonical result exploration, FindingReport queues/detail, append-only durable
@@ -202,9 +203,17 @@ manifest and exact prepared successor inputs,
 atomic `managed-analysis-v1` successor admission, and immutable lineage/readback.
 `StartTargetedVerification` remains
 `native-only-never-map`; no renderer operation was added. The
-renderer registry still contains only its five previously accepted
-operation/message combinations; renderer 1.1.0 updates bootstrap compatibility
-and Phase C capability flags without adding desktop operations. The full
+renderer registry is generated from the sole source
+`contracts/json-schema/renderer-envelope.v1.schema.json`. It contains nine
+closed operations and sixteen exact directional message shapes under renderer
+contract 1.4.0 and registry schema 1.3.0, with canonical generated-registry
+SHA-256 `411a9c05604c7664773aa62c36f62817273ecaff228f20e074063bed1414cfa9`.
+It covers host-owned session establishment and gesture grants, bootstrap,
+`ListResultItems`, `GetResultDetail`, `GetProgress`, `SubscribeEvents`,
+transport cancellation, and authoritative resync. The renderer schema denies
+`path`, `sql`, `command`, `command_line`, `url`, `credential`,
+`provider_request`, `filesystem`, and `coordinator_proxy`; targeted
+verification and generic RPC authority remain unmapped. The full
 protobuf contract-set fingerprint is
 `d234d44dabf902041461b5c2318fd5c71f10eff46e7ec75f9a586812fab014c7`.
 Helper v2 has a separate fingerprint over only its helper/common/identity

@@ -1,9 +1,9 @@
 # Current project state
 
 Status: Accepted
-Disposition: Frontend Application Foundation Checkpoint C under correction; Phase D blocked and not started, and M2 remains inactive
+Disposition: Checkpoint C accepted; WP7/WP8 Phase D candidate awaits Checkpoint D architecture-steward review; M2 inactive
 
-Last reviewed: 2026-08-27
+Last reviewed: 2026-08-28
 Owner: Project owner
 
 This is the single live handoff for Infinium. Product documents define what the
@@ -19,8 +19,25 @@ specific family of suspicious conflict outcomes, retain the evidence and
 uncertainty behind each result, reproduce stored results, and project those
 internal results into a stable report format for a future interface.
 
-Phases A and B of the accepted frontend foundation are complete. Phase C is
-under correction. FindingReport query/readback, application validation,
+Phases A through C of the accepted frontend foundation are complete. The
+architecture steward accepted corrected WP5/WP6 and Checkpoint C at
+`2ec3be78da4d05d8c6ada68a3e18544a446f2f03` after independent verification
+reported 774 passed tests, 10 expected skips, zero failures, all non-test gates
+passing, a clean worktree, and zero repository-owned .NET test-process
+survivors. WP7's generated consumer and WP8's minimal WPF/WebView2/React
+diagnostic consumer now form one Phase D candidate. The generated closed bridge,
+host-owned session handshake, packaged hash-verified assets, bounded
+100,000-summary pager, and real query/detail/progress/event/cancel/resync paths
+pass focused checks and the independent WP8 correction/re-review cycle. Its
+tracked sanitized desktop receipt includes real second-page/cancel samples,
+process-split memory, package/runtime/license evidence, and exact zero-survivor
+cleanup. The corrected review-ready candidate also passes the complete locked
+repository floor: 845 tests passed, 12 expected skips, zero failures, a Release
+build with zero warnings/errors, all documentation/naming/dependency/format/
+diff gates passing, and zero repository-owned .NET test-process survivors.
+The candidate awaits Checkpoint D review and does not
+activate M2. FindingReport
+query/readback, application validation,
 export deletion/recovery, provenance, paging, and populated migration gaps now
 have focused evidence. Targeted verification now has accepted executable
 architecture in RESEARCH-0058, ADR-0038, and the accepted WP6 addendum: capture
@@ -43,9 +60,9 @@ status, and prepared manual-run initiation with immutable durable bindings.
 The independent Phase C correction surface now has a real FindingReport
 publication/queue/detail consumer, recursive closed request validation,
 append-only structured-export deletion with crash recovery, and corrected
-provenance and cursor binding. Checkpoint C remains suspended because the new
-targeted-verification candidate still requires corrected architecture-steward
-Checkpoint C review; implementation does not accept its own checkpoint.
+provenance and cursor binding. The targeted-verification implementation is
+part of the accepted Checkpoint C foundation. Its five application operations
+remain native-only; Phase D maps none of them and grants no renderer authority.
 The correction now proves the complete native named-pipe path without manually
 publishing a ready plan: the actual snapshot and semantic producers feed the
 production planner, qualified known-member processing failures remain visible
@@ -80,17 +97,19 @@ including analyzer, analyzer-version, semantic-contract, and identity-contract
 versions. Raw plugin names, form keys, contribution strings, and normalized
 paths cannot grant identity, and a changed contribution or asset slot remains
 non-startable without retained typed continuity proof. Canonical analysis truth
-remains the authority, WP5/WP6 are not accepted, and Phase D remains blocked.
-The renderer boundary still permits exactly five Phase A operation/message combinations,
-keeps gesture proof request-only, represents accepted and explicit non-success
-outcomes separately, and commits replay state only after complete validation.
+remains the authority. WP5/WP6 and Checkpoint C are accepted; WP7/WP8 form a
+completed Phase D candidate awaiting independent review.
+The renderer boundary permits nine operations and sixteen exact message shapes.
+Transport-only session establishment and host-attested gesture grant add no
+application authority. Separate renderer-request and host-event sequences,
+bounded active work, and complete validation reject replay and stale sessions.
 
-It is not yet a complete end-user application. There is no graphical interface,
-ordinary mod-manager workflow, broad analyzer catalog, or claim that an entire
+It is not yet a complete end-user application. The graphical surface is a
+minimal diagnostic proof, not an ordinary mod-manager workflow, broad analyzer
+catalog, or claim that an entire
 modlist is safe. The accepted M1-to-M2 Foundation — Frontend Application Foundation now
-defines the missing backend/application layer and diagnostic desktop proof that
-must be implemented before M2. M2 remains separately planned and authorized
-work.
+defines the backend/application layer and the Phase D candidate supplies its
+diagnostic desktop proof. M2 remains separately planned and authorized work.
 
 ## Live handoff
 
@@ -100,8 +119,8 @@ work.
 | Completed transition | Post-M1 cleanup, including archive consolidation, modularization, report projection, functional renaming, governance, and local hygiene. |
 | Accepted cleanup implementation | Base cleanup commit `58e0401b9510ab287ee44a83a547eefee82c79ae`; final naming/documentation/governance correction `c7b365eefb30aa6c066a7ab8e5d537c983415ca9`; complete final floor: 674 passed, 10 expected skips, 0 failed. |
 | Accepted next plan | `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`, with five orchestration phases and nine work packages. Planning base `32dbb2c48754666336d2da571e554ad8897ed71c`. |
-| Active implementation | Frontend Application Foundation Phases A-B (WP1-WP4) remain accepted at corrected Checkpoint B. The ADR-0038 targeted-verification vertical is implemented as a corrected Phase C/WP6 candidate with five native-only RPCs, complete bounded preparation readback, canonical identity-envelope authority, typed correlation, inspectable non-startable plans, schema-17 sealed lifecycle durability, closed-shape schema-16 acquisition-event migration, stable opaque pagination, real fresh acquisition, production limited-plan correlation, globally one-shot gestures, pre-mutation start revalidation, atomic `managed-analysis-v1` successor admission, and exact lineage. WP5/WP6 remain under correction and the earlier Checkpoint C receipt stays suspended. |
-| Next authorized action and gate | Perform corrected Checkpoint C architecture-steward review of the Phase C candidate. Phase D and `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7` remain blocked. This does not activate M2. |
+| Active implementation | Frontend Application Foundation Phases A-C (WP1-WP6) and Checkpoint C are accepted at `2ec3be78da4d05d8c6ada68a3e18544a446f2f03`; WP7/WP8 form a completed Phase D candidate whose complete floor passes 845 tests with 12 expected skips and zero failures. The five targeted-verification RPCs remain native-only. |
+| Next authorized action and gate | Checkpoint D architecture-steward review. Do not begin Phase E or activate M2. |
 | External provider authority | Development-only OpenAI use is available through the explicit, budgeted, offline-by-default path accepted by ADR-0036. No live call is implicit, and the shipped product cannot silently use the development credential. |
 | Independent semantic evaluation | Deferred through M2 by ADR-0035. Current fixtures prove contract and bounded behavior, not independent real-world accuracy or production readiness. |
 
@@ -151,7 +170,7 @@ asset, script, configuration, dependency, performance, or runtime problem.
   semantic admission, persistence, and replay are separated by responsibility.
 - Functional naming is enforced automatically across ordinary source,
   scripts, projects, protobuf, structured contract names, and repository
-  paths. The reviewed allowlist contains 190 exact compatibility,
+  paths. The reviewed allowlist contains 195 exact compatibility,
   governance, retained-evidence, or genuine domain-term exceptions, with zero
   cleanup-debt and zero unexplained findings.
 - Verification closeout now requires zero repository-owned .NET/test-host
@@ -172,18 +191,14 @@ asset, script, configuration, dependency, performance, or runtime problem.
   consumers together.
 - Coverage outside the implemented record families remains explicit rather
   than being treated as safe or compatible.
-- There is no graphical interface, installer, ordinary user workflow, or
-  production-readiness claim yet.
+- There is no polished product interface, installer, ordinary user workflow,
+  or production-readiness claim yet; the WPF/React surface is diagnostic only.
 - Native credential entry remains unavailable in Phase B; provider status is
   non-secret and local-only setup/run evidence remains available.
-- Phase C remains under correction. FindingReport query/readback, recursive
-  Phase C request validation, export deletion/recovery, and corrected
-  provenance/paging have focused offline producer-consumer evidence. Populated
-  pre-publication stores now expose a typed report-projection-unavailable gap
-  instead of an ambiguous empty page. Targeted verification now has an
-  implementation candidate, but that does not restore or accept Checkpoint C
-  before architecture-steward review. It does not build the desktop, expand analyzer scope, qualify
-  an independent semantic oracle, or activate M2.
+- Phase C and Checkpoint C are accepted, and the WP7/WP8 Phase D candidate has
+  focused contract, security, lifecycle, accessibility, resource, dependency,
+  and licence evidence. It still requires Checkpoint D review. This does not expand analyzer scope,
+  qualify an independent semantic oracle, begin Phase E, or activate M2.
 
 ## Current authority
 

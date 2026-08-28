@@ -6,6 +6,26 @@
   "policy": "docs/governance/functional-implementation-naming.md",
   "entries": [
     {
+      "path": "src/Infinium.DesktopHost/RendererBridgeSession.cs",
+      "scope": "content",
+      "token": "Continuation",
+      "symbol_or_context": "TaskContinuationOptions and asynchronous task completion options",
+      "classification": "language-runtime-api",
+      "reason": "Continuation is part of the exact .NET task API used to keep bridge delivery and cleanup callbacks from running inside a producer lock; it does not name implementation chronology.",
+      "retained_consumer": "Bounded renderer delivery and owned subscription cleanup.",
+      "review_condition": "Remove if the bridge no longer uses the .NET task APIs that contain this runtime term."
+    },
+    {
+      "path": "tests/Infinium.DesktopTests/RendererBridgeSessionTests.cs",
+      "scope": "content",
+      "token": "Continuation",
+      "symbol_or_context": "TaskCreationOptions asynchronous test synchronization",
+      "classification": "language-runtime-api",
+      "reason": "Continuation is part of the exact .NET task API used by deterministic concurrency tests; it does not name implementation chronology.",
+      "retained_consumer": "Renderer bridge concurrency, cancellation, overflow, and disposal tests.",
+      "review_condition": "Remove if the tests no longer use the .NET task API that contains this runtime term."
+    },
+    {
       "path": "contracts/json-schema/candidate-investigation-execution-input.v1.schema.json",
       "scope": "content",
       "token": "m1",

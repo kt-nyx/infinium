@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net10.0": {
+      "Microsoft.TypeScript.MSBuild": {
+        "type": "Direct",
+        "requested": "[5.9.3, )",
+        "resolved": "5.9.3",
+        "contentHash": "zWwWVvtPYBM/j/mICB0e1/71P1mPzECatHZNxYiu4mmmFOc+pQ1JU14famcyiTl8LQ5Yg8k6Ha4d6vEwVay/2g=="
+      },
+      "Node.js.redist.win": {
+        "type": "Direct",
+        "requested": "[24.14.1, )",
+        "resolved": "24.14.1",
+        "contentHash": "I/VQjNwLLAw25G+yJG6iYOQ7RRqpZ2K9hbT1ueDsdJ1HPLvXMZwKD0F/NPBTrf1jUy91bngWkWswpbfdspKaNg=="
+      }
+    }
+  }
+}

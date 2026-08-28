@@ -61,9 +61,12 @@ public sealed class BuildPolicyTests
             ["Microsoft.ML.Tokenizers"] = "2.0.0",
             ["Microsoft.ML.Tokenizers.Data.O200kBase"] = "2.0.0",
             ["Microsoft.NET.Test.Sdk"] = "18.8.1",
+            ["Microsoft.TypeScript.MSBuild"] = "5.9.3",
+            ["Microsoft.Web.WebView2"] = "1.0.4129.50",
             ["MSTest.TestAdapter"] = "4.3.2",
             ["MSTest.TestFramework"] = "4.3.2",
             ["Mutagen.Bethesda.Skyrim"] = "0.54.2",
+            ["Node.js.redist.win"] = "24.14.1",
             ["SQLitePCLRaw.bundle_e_sqlite3"] = "3.0.5",
         };
         Dictionary<string, string> actualPackages = TestRepository.ReadXml("Directory.Packages.props")

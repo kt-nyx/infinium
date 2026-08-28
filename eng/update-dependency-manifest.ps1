@@ -44,8 +44,24 @@ foreach ($item in $central.Project.ItemGroup.PackageVersion) {
 }
 
 $resolved = @{}
-$locks = Get-ChildItem $RepositoryRoot -Recurse -Filter packages.lock.json |
-    Where-Object { $_.FullName -notmatch '\\(?:bin|obj|\.packages)\\' }
+$lockRoots = @('src', 'tests', 'eng/tooling')
+$projectFiles = foreach ($relativeRoot in $lockRoots) {
+    Get-ChildItem (Join-Path $RepositoryRoot $relativeRoot) -Recurse -Filter *.csproj |
+        Where-Object { $_.FullName -notmatch '\\(?:bin|obj|\.packages)\\' }
+}
+$locks = foreach ($project in ($projectFiles | Sort-Object FullName)) {
+    $lockPath = Join-Path $project.DirectoryName 'packages.lock.json'
+    if (-not (Test-Path -LiteralPath $lockPath -PathType Leaf)) {
+        throw "Project lock is missing for '$($project.FullName)'."
+    }
+    Get-Item -LiteralPath $lockPath
+}
+if ($locks.Count -ne 21) {
+    throw "Expected exactly 21 product, test, and frontend-toolchain project locks; found $($locks.Count)."
+}
+$relativeLockPaths = @($locks | ForEach-Object {
+    [System.IO.Path]::GetRelativePath($RepositoryRoot, $_.FullName).Replace('\', '/')
+} | Sort-Object)
 foreach ($lock in $locks) {
     $document = Get-Content -Raw $lock.FullName | ConvertFrom-Json
     foreach ($framework in $document.dependencies.PSObject.Properties) {
@@ -132,6 +148,8 @@ $direct = foreach ($id in ($directVersions.Keys | Sort-Object)) {
             'test-only'
         } elseif ($id -eq 'Grpc.Tools') {
             'build-time protobuf code generation'
+        } elseif ($id -in @('Microsoft.TypeScript.MSBuild', 'Node.js.redist.win')) {
+            'build-time frontend generation, type checking, lint, and tests'
         } else {
             'production runtime'
         }
@@ -182,17 +200,19 @@ foreach ($identity in ($resolved.Keys | Sort-Object)) {
             projectUrl = $metadata.ProjectUrl
             sourceRevision = $null
             control = 'Exact NuGet identity and SHA-512 remain locked; immutable source revision is unavailable in package metadata.'
-            effect = 'Runtime use is admitted; redistribution and source-compliance closure remain separately reviewable.'
+            effect = 'Use within the recorded build, test, or runtime role is admitted; redistribution and source-compliance closure remain separately reviewable.'
         }
     }
 }
 
 $manifest.revision = 'dependency-manifest/1'
-$manifest.reviewedOn = '2026-08-12'
-$manifest.scope = 'NuGet packages and .NET toolchain used by the current Infinium solution'
-$manifest.lockIdentity.resolvedPackageCount = $resolvedEntries.Count
-$manifest.lockIdentity.productionGraph = 'src/Infinium.Persistence/packages.lock.json'
-$manifest.lockIdentity.emptyProjectLocks = 'Project-local locks without external package dependencies'
+$manifest.reviewedOn = '2026-08-28'
+$manifest.scope = 'NuGet packages, packaged React renderer assets, and repository-owned .NET, Node.js, TypeScript, WPF, and WebView2 tooling used by the current Infinium solution and desktop qualification checks'
+$manifest.lockIdentity = [ordered]@{
+    formatVersion = 2
+    projectLocks = $relativeLockPaths
+    resolvedPackageCount = $resolvedEntries.Count
+}
 $manifest.directPackages = @($direct)
 $manifest.resolvedPackages = @($resolvedEntries)
 $manifest.provenanceGroups = @($curation.provenanceGroups)
@@ -200,7 +220,7 @@ $manifest.individuallyVerifiedProvenance = @($verified)
 $manifest.explicitProvenanceLimitations = @($limitations)
 $manifest.excludedDependencies = @(
     $manifest.excludedDependencies |
-        Where-Object { $_ -ne 'SQLite binding' } |
+        Where-Object { $_ -notin @('SQLite binding', 'React', 'WebView2', 'WPF package payload') } |
         Sort-Object
 )
 

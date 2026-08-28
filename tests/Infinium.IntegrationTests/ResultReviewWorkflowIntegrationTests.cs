@@ -23,6 +23,33 @@ public sealed class ResultReviewWorkflowIntegrationTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    [TestCategory("DesktopStatePreparation")]
+    public void PrepareProtectedPopulatedDesktopQualificationState()
+    {
+        string? retainedRoot = Environment.GetEnvironmentVariable("INFINIUM_DESKTOP_QUALIFICATION_ROOT");
+        bool preserve = !string.IsNullOrWhiteSpace(retainedRoot);
+        using CandidateStoreContext context = new(retainedRoot, preserveRoot: preserve);
+        _ = Publish(context, hostileCause: true);
+        ResultItemPersistenceRecord source = context.Store.ListResultItems(
+            "run-candidate", ["finding"], string.Empty, "identity", 1, null).Items.Single();
+        ResultItemPersistenceRecord[] additional = Enumerable.Range(0, 148)
+            .Select(index => source with
+            {
+                ItemId = $"desktop-finding-{index:D6}",
+                LogicalId = $"desktop-logical-{index:D6}",
+                Summary = index == 0
+                    ? "<img src=x onerror=alert('inert')> retained as inert diagnostic text"
+                    : $"Bounded desktop qualification finding {index:D6}",
+            })
+            .ToArray();
+        context.Store.IndexResultProjectionBatch(additional, DateTimeOffset.UtcNow);
+        ResultItemPagePersistenceRecord first = context.Store.ListResultItems(
+            "run-candidate", ["finding"], string.Empty, "identity", 100, null);
+        Assert.HasCount(100, first.Items);
+        Assert.IsTrue(first.HasMore);
+    }
+
+    [TestMethod]
     [TestCategory("Integration")]
     [TestCategory("Security")]
     [TestProperty("Category", "Integration")]

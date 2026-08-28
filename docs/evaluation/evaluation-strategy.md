@@ -2,7 +2,7 @@
 
 Status: Accepted
 Disposition: actively maintained
-Last reviewed: 2026-08-25
+Last reviewed: 2026-08-28
 Current timing authority: ADR-0035 defers independent semantic-oracle
 qualification through M1 and M2. Those milestones still require the six-layer
 [product-conformance profile](product-conformance-verification-profile.md), but no
@@ -49,6 +49,18 @@ architecture, RESEARCH-0046 records Dapr's rejection without a prototype, and
 ADR-0024 is rejected. Gate E is met at the M0 architecture/design layer.
 None of those cases is passed or fully specified merely because the
 architecture is accepted.
+
+Current implementation status is recorded by exercised facet, not inherited
+from that earlier architecture gate. The accepted M1 backend passed its
+bounded persistence, process/IPC, credential-lifecycle, recovery, and secret-
+isolation facets under EVAL-0087 through EVAL-0089. The Phase D candidate adds
+only the EVAL-0088 desktop-consumer facets: exact-origin/version/session/
+directional-sequence/gesture validation, finite bridge and stream bounds,
+transport cancellation, authoritative resync, same-session coordinator
+reconnect, and renderer/browser/shell recovery. For EVAL-0089 it proves only
+that this local diagnostic neither requests credentials nor leaks its secret
+canary; it does not add or claim a credential enrollment, replacement,
+revocation, or recovery workflow.
 
 RESEARCH-0047 defines the accepted empirical readiness/maturity calibration
 protocol. M1 retains raw outputs and the measurements needed later; it does not
@@ -407,8 +419,11 @@ generalization plus controlled-real evidence, and fresh review/claim control.
 Slice 7 proved two materially different generic domains, and Slice 8 ran
 EVAL-0016 and EVAL-0017. These are public development/validation evidence, not
 held-out results. M1 is complete without claiming M3 reliability or readiness.
-The accepted M1-to-M2 Foundation — Frontend Application Foundation now plans EVAL-0090
-through EVAL-0094 under the same profile; implementation has not started.
+The accepted M1-to-M2 Foundation — Frontend Application Foundation implements
+EVAL-0090 through EVAL-0094 incrementally under the same profile. WP7/WP8 now
+form a completed Phase D candidate awaiting Checkpoint D review; the evidence
+is a bounded generated consumer and diagnostic desktop proof, not the polished
+M2 interface or M2 activation.
 
 Slice 5 applies those layers incrementally. WP1 is limited to product
 contracts, codecs, invariants, migration/storage declarations, answer-free

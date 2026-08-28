@@ -19,6 +19,7 @@ internal static class ActiveJsonSchemaValidator
         "$id",
         "$ref",
         "$defs",
+        "x-infinium-registry",
         "title",
         "description",
         "type",

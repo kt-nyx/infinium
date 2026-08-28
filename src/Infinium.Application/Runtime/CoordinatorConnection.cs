@@ -25,7 +25,23 @@ public sealed class CoordinatorConnection : IAsyncDisposable
     public static async Task<CoordinatorConnection> ConnectAsync(
         string productRoot,
         CancellationToken cancellationToken)
+        => await ConnectAsync(productRoot, ApplicationClientKind.Cli, cancellationToken).ConfigureAwait(false);
+
+    public static async Task<CoordinatorConnection> ConnectDesktopHostAsync(
+        string productRoot,
+        CancellationToken cancellationToken)
+        => await ConnectAsync(productRoot, ApplicationClientKind.DesktopHost, cancellationToken).ConfigureAwait(false);
+
+    private static async Task<CoordinatorConnection> ConnectAsync(
+        string productRoot,
+        ApplicationClientKind clientKind,
+        CancellationToken cancellationToken)
     {
+        if (clientKind is not (ApplicationClientKind.Cli or ApplicationClientKind.DesktopHost))
+        {
+            throw new ArgumentOutOfRangeException(nameof(clientKind), "Only first-party interactive application clients may use this connection path.");
+        }
+
         RuntimeDescriptor descriptor = RuntimeDescriptor.Read(productRoot);
         GrpcChannel channel = NamedPipeGrpcChannel.Create(descriptor.ApplicationPipe);
         ApplicationService.ApplicationServiceClient client = new(channel);
@@ -38,13 +54,16 @@ public sealed class CoordinatorConnection : IAsyncDisposable
                 MaximumMinor = ProtocolConstants.Minor,
             },
             Compatibility = ProtocolConstants.Compatibility,
-            ClientKind = ApplicationClientKind.Cli,
+            ClientKind = clientKind,
             CoordinatorInstanceNonce = ByteString.CopyFrom(descriptor.GetNonce()),
         };
         request.RequestedCapabilities.Add(Capability.ApplicationQuery);
-        request.RequestedCapabilities.Add(Capability.DurableCommand);
         request.RequestedCapabilities.Add(Capability.EventStream);
         request.RequestedCapabilities.Add(Capability.KeysetCursor);
+        if (clientKind == ApplicationClientKind.Cli)
+        {
+            request.RequestedCapabilities.Add(Capability.DurableCommand);
+        }
         try
         {
             HandshakeResponse response = await client.NegotiateAsync(

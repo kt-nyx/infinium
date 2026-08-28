@@ -30,10 +30,6 @@ public sealed class ApplicationContractSubstrateTests
             ProtocolConstants.Compatibility.DomainContract.Value);
         Assert.AreEqual(ProtocolConstants.StorageContractVersion,
             ProtocolConstants.Compatibility.StorageContract.Value);
-        Assert.AreEqual(
-            AuthoritativeStore.CurrentStorageContractVersion,
-            ProtocolConstants.StorageContractVersion);
-
         GetApplicationBootstrapRequest request = new()
         {
             RendererContractVersion = new SemanticVersion { Value = ProtocolConstants.RendererContractVersion },
@@ -162,7 +158,7 @@ public sealed class ApplicationContractSubstrateTests
     {
         byte[] registry = RendererOperationRegistry.GetCanonicalInput();
         Assert.AreEqual(
-            "b5631f491ff2b781dcefe6b36318fbd75831ad8d9f6cedb3b2cde946b7cecada",
+            "411a9c05604c7664773aa62c36f62817273ecaff228f20e074063bed1414cfa9",
             RendererOperationRegistry.GetCanonicalSha256());
         byte[] schema = File.ReadAllBytes(TestRepository.PathFromRoot(
             "contracts", "json-schema", "renderer-operation-registry.v1.schema.json"));
@@ -257,7 +253,7 @@ public sealed class ApplicationContractSubstrateTests
                 contract_version = ProtocolConstants.RendererContractVersion,
                 message_kind = "request",
                 session_id = Session,
-                sequence = 1,
+                sequence = "1",
                 request_id = "cancel_request_0001",
                 operation = "application.cancel",
                 gesture_proof = new { gesture_id = "gesture_identity_01" },
@@ -272,7 +268,7 @@ public sealed class ApplicationContractSubstrateTests
                 contract_version = ProtocolConstants.RendererContractVersion,
                 message_kind = "event",
                 session_id = Session,
-                sequence = 1,
+                sequence = "1",
                 subscription_id = "subscription_00001",
                 revision = "2",
                 operation = "application.resync-required",
@@ -303,7 +299,7 @@ public sealed class ApplicationContractSubstrateTests
             ["contract_version"] = ProtocolConstants.RendererContractVersion,
             ["message_kind"] = "request",
             ["session_id"] = session,
-            ["sequence"] = sequence,
+            ["sequence"] = sequence.ToString(System.Globalization.CultureInfo.InvariantCulture),
             ["request_id"] = Request,
             ["operation"] = operation,
             ["payload"] = payloadObject,

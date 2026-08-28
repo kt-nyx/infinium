@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Infinium.ApplicationClient</AssemblyName>
+    <RootNamespace>Infinium.ApplicationClient</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Core.Api" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="..\..\contracts\protobuf\infinium\**\*.proto"
+              ProtoRoot="..\..\contracts\protobuf"
+              GrpcServices="Client" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\contracts\json-schema\*.json">
+      <LogicalName>Infinium.Contracts.JsonSchema.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\contracts\renderer\*.json">
+      <LogicalName>Infinium.Contracts.Renderer.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Infinium.Application\Evaluation\ActiveJsonSchemaValidator.cs" Link="Evaluation\ActiveJsonSchemaValidator.cs" />
+    <Compile Include="..\Infinium.Application\Evaluation\BoundedJsonDocumentReader.cs" Link="Evaluation\BoundedJsonDocumentReader.cs" />
+    <Compile Include="..\Infinium.Application\Runtime\CoordinatorConnection.cs" Link="Runtime\CoordinatorConnection.cs" />
+    <Compile Include="..\Infinium.Application\Runtime\NamedPipeGrpcChannel.cs" Link="Runtime\NamedPipeGrpcChannel.cs" />
+    <Compile Include="..\Infinium.Application\Runtime\ProtocolConstants.cs" Link="Runtime\ProtocolConstants.cs" />
+    <Compile Include="..\Infinium.Application\Runtime\RendererApplicationProjectionCodec.cs" Link="Runtime\RendererApplicationProjectionCodec.cs" />
+    <Compile Include="..\Infinium.Application\Runtime\RendererContractValidator.cs" Link="Runtime\RendererContractValidator.cs" />
+    <Compile Include="..\Infinium.Application\Runtime\RendererOperationCatalog.Generated.cs" Link="Runtime\RendererOperationCatalog.Generated.cs" />
+    <Compile Include="..\Infinium.Application\Runtime\RuntimeDescriptor.cs" Link="Runtime\RuntimeDescriptor.cs" />
+  </ItemGroup>
+</Project>

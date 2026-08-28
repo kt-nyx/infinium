@@ -2,10 +2,10 @@
   "$schema": "frontend-capability-matrix.v1.schema.json",
   "schema_identity": "infinium.planning.frontend-capability-matrix/1.0.0",
   "status": "implementation-active",
-  "last_reviewed": "2026-08-27",
+  "last_reviewed": "2026-08-28",
   "plan_id": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION",
   "planning_base": "32dbb2c48754666336d2da571e554ad8897ed71c",
-  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint C and Phase C acceptance remain suspended. Focused offline evidence covers FindingReport publication/query/readback, recursive request validation, export deletion/recovery, provenance, paging, explicit populated-migration unavailability, and the corrected ADR-0038 targeted-verification candidate: an unseeded native named-pipe path performs real fresh-snapshot capture, separately owned semantic acquisition, production dependency/correlation planning, preparation-owned input-manifest retention, exact managed-analysis-v1 successor admission, completion, and lineage readback. Preparation readback is revision-coherent, uses bounded generation-bound terminal-gap cursors and durable sealed lifecycle ordering, and validates historical lifecycle, snapshot, acquisition, publication, provenance, application-link, and payload evidence before returning bounded history. Production planning retains qualified unsupported, inaccessible, and malformed processing gaps as limited plans, while identity/scope failures remain non-startable. StartTargetedVerification remains native-only-never-map and no renderer authority is granted. No desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, or M2 acceptance is claimed.",
+  "claim_boundary": "This matrix maps every frontend-foundation capability to one exact phase and work-package owner. Checkpoint C and Phase C are accepted. WP7/WP8 now form a completed Phase D candidate with a generated closed renderer consumer and executable diagnostic WPF/WebView2/React proof. The corrected ADR-0038 targeted-verification path remains native-only-never-map, and no generic renderer authority is granted. Checkpoint D, Phase E, polished desktop delivery, broad semantic accuracy, semantic-oracle qualification, M2 activation, and M2 acceptance are not claimed.",
   "application_contract_inventory": "application-contract-inventory.v1.json",
   "ownership_audit": {
     "capability_count": 19,
@@ -83,7 +83,7 @@
         "RendererContractValidator",
         "renderer-operation-registry.v1.json"
       ],
-      "gap": "The bounded producer and reference consumer include Phase C capability flags; the product desktop host and TypeScript renderer consumer remain WP7.",
+      "gap": "The Phase D diagnostic desktop consumes the bounded bootstrap; polished M2 presentation and Checkpoint D acceptance remain outside this candidate.",
       "owning_phase": "A",
       "owning_work_package": "WP2",
       "transition_exit_evidence": "Generated native and TypeScript consumers recover the same bounded bootstrap and typed resync states."
@@ -132,7 +132,7 @@
         "Canonical MO2 installation identity plus profile identity",
         "PrepareManualRun revalidates confirmed profile presence"
       ],
-      "gap": "The desktop presentation remains WP7; the application contract and generated native consumer preserve explicit confirmation.",
+      "gap": "Explicit profile selection was intentionally not added to the Phase D diagnostic registry; the application contract and generated native consumer preserve confirmation for later polished M2 presentation.",
       "owning_phase": "B",
       "owning_work_package": "WP3",
       "transition_exit_evidence": "Suggested and confirmed selection remain distinct and an unconfirmed suggestion cannot start a run."
@@ -237,7 +237,7 @@
         "Canonical exact-retry fingerprint over requested start and resolved operation",
         "Atomic managed-analysis-v1 registration and offline retained-input native diagnostic execution"
       ],
-      "gap": "The raw developer-only SubmitRunCommand remains native-internal and denied to renderers; no product desktop mapping exists before WP7.",
+      "gap": "The raw developer-only SubmitRunCommand remains native-internal and denied to renderers; the closed WP7 registry deliberately provides no mapping.",
       "owning_phase": "B",
       "owning_work_package": "WP4",
       "transition_exit_evidence": "Typed user input resolves internally to the durable M1 path and raw orchestration/provider operations are unreachable from the renderer."
@@ -267,7 +267,7 @@
         "Prepared-run reconnect/restart native diagnostic evidence",
         "Authoritative configured-analyzer progress, output, coverage, and gap readback"
       ],
-      "gap": "Desktop reload/session mapping remains WP7; the native setup-to-live-run path proves authoritative reconnect and restart without UI-owned durable state.",
+      "gap": "The Phase D diagnostic proves reload, same-session coordinator reconnect, event resubscription, renderer/browser recreation, and shell restart without UI-owned durable state; polished M2 presentation remains later work.",
       "owning_phase": "B",
       "owning_work_package": "WP4",
       "transition_exit_evidence": "Native and desktop diagnostic consumers recover from loss without owning durable state or duplicating cost."
@@ -291,7 +291,7 @@
         "Explicit scope-limited, no-readiness, provisional, stale, failure, gap, cost, duration, and no-safety-guarantee fields",
         "ResultReviewWorkflowIntegrationTests deterministic summary and generated-client corpus readback"
       ],
-      "gap": "No desktop presentation exists before WP7; readiness remains bounded to retained analyzer coverage and never claims whole-modlist safety.",
+      "gap": "The Phase D diagnostic does not present the full result overview; later polished M2 presentation must preserve bounded readiness and never claim whole-modlist safety.",
       "owning_phase": "C",
       "owning_work_package": "WP5",
       "transition_exit_evidence": "All result states produce truthful bounded summaries and no absence-of-findings safety claim."
@@ -316,7 +316,7 @@
         "Separate supported-case and lead-only-case kinds with allowlisted filters, search, and two deterministic sorts",
         "Authenticated query/projection/sort-bound keyset cursor and 100000-summary bounded-query evidence"
       ],
-      "gap": "No desktop queue consumer or user-chosen priority overlay exists before WP7; canonical severity is preserved rather than rewritten.",
+      "gap": "The Phase D diagnostic presents bounded finding pages and canonical severity; supported-case and lead-only polished M2 queue design remains later work.",
       "owning_phase": "C",
       "owning_work_package": "WP5",
       "transition_exit_evidence": "Supported and lead-only items remain distinct through paginated queue and detail consumers."
@@ -417,7 +417,7 @@
         "Append-only review_events plus rebuildable optimistic review_projection",
         "Concurrency conflict, restart, replay, source immutability, and four-gate exact-continuity carryover of the unchanged retained source review state"
       ],
-      "gap": "Only exact finding/case occurrences are reviewable and only the newest 100 history events are returned with explicit truncation; desktop controls remain WP7.",
+      "gap": "Only exact finding/case occurrences are reviewable and only the newest 100 history events are returned with explicit truncation; review mutation controls are deliberately outside the closed WP7 registry.",
       "owning_phase": "C",
       "owning_work_package": "WP6",
       "transition_exit_evidence": "Revision-bound append-only events survive restart and cannot mutate or suppress an unrelated/new analytical revision."
@@ -443,7 +443,7 @@
         "Append-only assumption_events plus rebuildable effective successor projection",
         "Immutable inferred/user-provided origin, explicit confirmation, successor context, removal, restart, and replay evidence"
       ],
-      "gap": "Phase C exposes bounded effective assumption state rather than an unbounded all-profile history download; desktop lifecycle controls remain WP7.",
+      "gap": "Phase C exposes bounded effective assumption state rather than an unbounded all-profile history download; assumption lifecycle controls are deliberately outside the closed WP7 registry.",
       "owning_phase": "C",
       "owning_work_package": "WP6",
       "transition_exit_evidence": "Origin and confirmation remain distinct and every edit creates successor effective context state with history intact."
@@ -495,7 +495,7 @@
         "Schema-16 migration validates each acquisition event against a closed kind-specific JSON shape and retained authority before schema-17 sealing; trigger-preserving tamper cases roll back atomically",
         "StartTargetedVerification atomically admits exactly managed-analysis-v1 and remains native-only-never-map; no Phase D renderer authority exists"
       ],
-      "gap": "The corrected Phase C candidate requires architecture-steward Checkpoint C review; this record does not accept WP5, WP6, Checkpoint C, Phase D, or M2.",
+      "gap": "Checkpoint C is accepted. The five targeted-verification RPCs intentionally remain native-only under ADR-0038; Phase D does not grant renderer authority, and M2 remains inactive.",
       "owning_phase": "C",
       "owning_work_package": "WP6",
       "transition_exit_evidence": "A fresh snapshot, separately owned semantic acquisition, and dependency-complete correlation ledger produce an inspectable preparation that atomically starts one managed-analysis-v1 successor; exact initiation and analytical lineage, proven-absence and limited-gap coverage, lifecycle/replay/migration behavior, and scope-limited readiness pass producer-consumer validation with no generic renderer authority."
@@ -518,7 +518,7 @@
         "LocalPrivateExport typed write class, append-only exact manifest, deletion events, and current-state projection",
         "Focused create/get/delete/exact-retry, missing/tampered artifact, interrupted deletion recovery, restart, backup/restore, provenance, and source-immutability evidence"
       ],
-      "gap": "Exports are local-private, selection-bounded artifacts and are not whole-run/full-population downloads; no desktop selection workflow exists before WP7.",
+      "gap": "Exports are local-private, selection-bounded artifacts and are not whole-run/full-population downloads; export operations are deliberately outside the closed WP7 registry.",
       "owning_phase": "C",
       "owning_work_package": "WP6",
       "transition_exit_evidence": "Export records exact source revisions, filters, sharing class, omissions, privacy/source-policy choices, and does not mutate source truth."
@@ -534,11 +534,16 @@
         "EVAL-0090",
         "EVAL-0094"
       ],
-      "current_state": "missing-desktop-consumer",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "Generated C# protobuf application client"
+        "Renderer registry 1.3.0 and renderer contract 1.4.0 generate nine closed operations and sixteen strict TypeScript/C# message mappings",
+        "Generated application-client signatures bind bootstrap, ListResultItems, GetResultDetail, GetProgress, and SubscribeEvents to one exact native method each",
+        "Deterministic setup, empty, active, completed, failed, gap, lead-only, stale, conflict, reconnect, and 100,000-summary pagination stories",
+        "Repository-owned locked Node 24.14.1 and TypeScript 5.9.3 toolchain with sources-disabled cached restore proof",
+        "Strict discriminated envelope types preserve required and forbidden branch fields; compile-time mutations, policy lint, and hostile/unknown/malformed/runtime cases pass",
+        "Lossless integer, canonical cursor, metamorphic, and serialized generated-bridge/story-client semantic-equivalence tests pass"
       ],
-      "gap": "No TypeScript renderer contract/client, operation registry, story states, or generation-drift check exists.",
+      "gap": "No generated-consumer gap remains in the Phase D candidate; Checkpoint D review is still pending and the diagnostic surface is not the M2 interface.",
       "owning_phase": "D",
       "owning_work_package": "WP7",
       "transition_exit_evidence": "Generated native and TypeScript consumers cover every renderer operation and strict story states without hidden handwritten authority."
@@ -559,12 +564,17 @@
         "EVAL-0088",
         "EVAL-0094"
       ],
-      "current_state": "missing-desktop-consumer",
+      "current_state": "available-and-reusable",
       "current_evidence": [
-        "ADR-0017 selected WPF/WebView2/React stack",
-        "ADR-0021 accepted renderer security boundary"
+        "Minimal non-elevated WPF host with WebView2 SDK 1.0.4129.50 and exact Evergreen runtime floor 151.0.4129.50",
+        "Packaged React/ReactDOM 18.3.1 assets under exact https://app.infinium.invalid/index.html with restrictive CSP, Trusted Types none, deny-mapped virtual host, and compiled asset-manifest SHA anchor",
+        "Host-owned registry-bound transport session, split directional sequences, successful-delivery event commits, and generated exhaustive request dispatch",
+        "The bridge limits messages to 1 MiB, active requests/events to 64, chunks to 256 KiB, and cancellation to host-attested one-shot gestures",
+        "Real populated bootstrap, 100-item finding page and cursor continuation, detail, progress, event subscription/cancel, authoritative resync, reload, renderer/browser recovery, coordinator restart, and shell restart qualification",
+        "Bounded 500-summary cache and at most 13 mounted variable-height rows prove 100000-summary logical virtualization without full transfer",
+        "Keyboard/focus/names/landmarks/contrast/zoom/reduced-motion/accessibility-tree evidence plus repeatable startup, memory, bridge, message, package, runtime, dependency, licence, and cleanup receipt"
       ],
-      "gap": "No WPF host, packaged React diagnostic surface, closed bridge, renderer recovery, accessibility evidence, or resource measurements exist.",
+      "gap": "No WP8 implementation gap remains in the Phase D candidate. Checkpoint D review, polished M2 interaction design, installer/distribution closure, and independent semantic qualification remain outside it.",
       "owning_phase": "D",
       "owning_work_package": "WP8",
       "transition_exit_evidence": "Executable diagnostic consumer passes controlled-origin, hostile-operation, reconnect, large-list, accessibility-mechanics, and measurement obligations."

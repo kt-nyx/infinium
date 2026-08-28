@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Globalization;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -24,6 +25,7 @@ public sealed record RendererEnvelope(
 public sealed record RendererMessageDefinition(
     string Operation,
     string MessageKind,
+    string Direction,
     string PayloadShape,
     string Gesture,
     IReadOnlyList<string> Outcomes);
@@ -35,11 +37,45 @@ public sealed record RendererMessageDefinition(
 public sealed class RendererContractValidator(string expectedSessionId)
 {
     private readonly object sessionState = new();
-    private ulong lastSequence;
-    private readonly HashSet<string> observedRequestIds = new(StringComparer.Ordinal);
+    private ulong lastRendererRequestSequence;
+    private ulong lastHostEventSequence;
     private readonly HashSet<string> observedGestureIds = new(StringComparer.Ordinal);
 
+    /// <summary>
+    /// Reads the next host-event session sequence without consuming it.
+    /// The single ordered host delivery pump commits the value only after delivery succeeds.
+    /// </summary>
+    public ulong PeekNextHostEventSequence()
+    {
+        lock (sessionState)
+        {
+            return checked(lastHostEventSequence + 1);
+        }
+    }
+
+    /// <summary>
+    /// Commits an exactly-next host-event sequence after ordered delivery succeeds.
+    /// </summary>
+    public void CommitHostEventSequence(ulong sequence)
+    {
+        lock (sessionState)
+        {
+            ulong expected = checked(lastHostEventSequence + 1);
+            if (sequence != expected)
+            {
+                throw new InvalidOperationException("The host event sequence commit was not exactly next.");
+            }
+            lastHostEventSequence = sequence;
+        }
+    }
+
     public RendererEnvelope ValidateAndAdvance(ReadOnlyMemory<byte> bytes)
+        => ValidateAndAdvance(bytes, rendererToHostOnly: false);
+
+    public RendererEnvelope ValidateRendererRequestAndAdvance(ReadOnlyMemory<byte> bytes)
+        => ValidateAndAdvance(bytes, rendererToHostOnly: true);
+
+    private RendererEnvelope ValidateAndAdvance(ReadOnlyMemory<byte> bytes, bool rendererToHostOnly)
     {
         if (bytes.Length is 0 || bytes.Length > ProtocolConstants.MaximumMessageBytes)
         {
@@ -52,6 +88,7 @@ public sealed class RendererContractValidator(string expectedSessionId)
             maximumDepth: 32);
         ActiveJsonSchemaValidator.Validate(snapshot.Document.RootElement, "renderer-envelope.v1.schema.json");
         JsonElement root = snapshot.Document.RootElement;
+        ValidateLosslessRendererValues(root);
         string sessionId = root.GetProperty("session_id").GetString()!;
         if (!StringComparer.Ordinal.Equals(sessionId, expectedSessionId))
         {
@@ -84,31 +121,51 @@ public sealed class RendererContractValidator(string expectedSessionId)
             throw new InvalidDataException("A renderer request cannot claim an operation outcome.");
         }
 
-        ulong sequence = root.GetProperty("sequence").GetUInt64();
+        if (!ulong.TryParse(
+                root.GetProperty("sequence").GetString(),
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out ulong sequence)
+            || sequence == 0)
+        {
+            throw new InvalidDataException("The renderer sequence is not a canonical positive unsigned integer.");
+        }
         string? requestId = root.TryGetProperty("request_id", out JsonElement request)
             ? request.GetString()
             : null;
-        bool commitsRequestId = messageKind == "request";
         lock (sessionState)
         {
-            if (sequence <= lastSequence)
+            if (rendererToHostOnly && definition.Direction != "renderer-to-host")
+            {
+                throw new InvalidDataException("The host rejected a message whose registered direction is host-to-renderer.");
+            }
+
+            if (definition.Direction != "renderer-to-host")
+            {
+                if (messageKind == "event")
+                {
+                    if (sequence != checked(lastHostEventSequence + 1))
+                    {
+                        throw new InvalidDataException("The host event is out of order; resync is required.");
+                    }
+
+                    lastHostEventSequence = sequence;
+                }
+                return new RendererEnvelope(
+                    messageKind, sessionId, sequence, operation, requestId,
+                    root.TryGetProperty("subscription_id", out JsonElement hostSubscription) ? hostSubscription.GetString() : null,
+                    root.TryGetProperty("revision", out JsonElement hostRevision) ? hostRevision.GetString() : null,
+                    gestureId, outcome);
+            }
+
+            if (sequence <= lastRendererRequestSequence)
             {
                 throw new InvalidDataException("The renderer envelope was replayed.");
             }
 
-            if (sequence != checked(lastSequence + 1))
+            if (sequence != checked(lastRendererRequestSequence + 1))
             {
                 throw new InvalidDataException("The renderer envelope is out of order; resync is required.");
-            }
-
-            if (commitsRequestId && observedRequestIds.Contains(requestId!))
-            {
-                throw new InvalidDataException("The renderer request identifier was replayed.");
-            }
-
-            if (commitsRequestId && observedRequestIds.Count == ProtocolConstants.MaximumStreamQueueItems)
-            {
-                throw new InvalidDataException("The renderer request replay window is exhausted; resync is required.");
             }
 
             if (gestureId is not null && observedGestureIds.Contains(gestureId))
@@ -121,17 +178,12 @@ public sealed class RendererContractValidator(string expectedSessionId)
                 throw new InvalidDataException("The renderer gesture replay window is exhausted; resync is required.");
             }
 
-            if (commitsRequestId)
-            {
-                observedRequestIds.Add(requestId!);
-            }
-
             if (gestureId is not null)
             {
                 observedGestureIds.Add(gestureId);
             }
 
-            lastSequence = sequence;
+            lastRendererRequestSequence = sequence;
         }
 
         return new RendererEnvelope(
@@ -144,6 +196,98 @@ public sealed class RendererContractValidator(string expectedSessionId)
             root.TryGetProperty("revision", out JsonElement revision) ? revision.GetString() : null,
             gestureId,
             outcome);
+    }
+
+    private static readonly HashSet<string> UnsignedDecimalFields = new(StringComparer.Ordinal)
+    {
+        "sequence", "lifecycle_generation", "coordinator_fencing_epoch", "population_revision",
+        "completed_units", "reused_units", "queued_units", "running_units", "failed_units",
+        "skipped_units", "unsupported_units", "limited_units", "invalidated_units", "gap_units",
+        "durable_event_sequence",
+    };
+
+    private static readonly HashSet<string> ProductIdentityFields = new(StringComparer.Ordinal)
+    {
+        "run_id", "item_id", "logical_id", "case_occurrence_id", "source_payload_id",
+        "transition_id", "coordinator_instance_id", "run_scope", "evidence_ids",
+        "contradicting_evidence_ids", "recommendation_ids", "taxonomy_assignment_ids",
+        "finding_occurrence_ids", "hypothesis_ids", "subject_ids",
+    };
+
+    private static readonly HashSet<string> CursorFields = new(StringComparer.Ordinal)
+    {
+        "after_cursor", "next_cursor", "resume_cursor",
+    };
+
+    private static void ValidateLosslessRendererValues(JsonElement element, string? propertyName = null, string? parentName = null)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (JsonProperty property in element.EnumerateObject())
+            {
+                ValidateLosslessRendererValues(property.Value, property.Name, propertyName);
+            }
+
+            return;
+        }
+
+        if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (JsonElement item in element.EnumerateArray())
+            {
+                ValidateLosslessRendererValues(item, propertyName, parentName);
+            }
+
+            return;
+        }
+
+        if (element.ValueKind != JsonValueKind.String || propertyName is null)
+        {
+            return;
+        }
+
+        string value = element.GetString()!;
+        bool optionalUnsigned = propertyName == "value"
+            && parentName is "total_units" or "provider_input_tokens" or "provider_output_tokens"
+                or "provider_reasoning_tokens" or "provider_dispatch_count" or "provider_tool_call_count";
+        bool optionalSigned = propertyName == "value"
+            && parentName is "reserved_nano_usd" or "calculated_actual_nano_usd";
+        if ((UnsignedDecimalFields.Contains(propertyName) || optionalUnsigned)
+            && !ulong.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out _))
+        {
+            throw new InvalidDataException("A renderer unsigned integer is outside the lossless uint64 contract.");
+        }
+
+        if (optionalSigned
+            && !long.TryParse(value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out _))
+        {
+            throw new InvalidDataException("A renderer signed integer is outside the lossless int64 contract.");
+        }
+
+        if (ProductIdentityFields.Contains(propertyName)
+            && (string.IsNullOrWhiteSpace(value) || Encoding.UTF8.GetByteCount(value) > 160))
+        {
+            throw new InvalidDataException("A renderer product identity exceeds its opaque UTF-8 bound.");
+        }
+
+        if (CursorFields.Contains(propertyName))
+        {
+            try
+            {
+                string standard = value.Replace('-', '+').Replace('_', '/');
+                standard += new string('=', (4 - standard.Length % 4) % 4);
+                byte[] decoded = Convert.FromBase64String(standard);
+                string canonical = Convert.ToBase64String(decoded).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+                if (decoded.Length > 8_192 || !StringComparer.Ordinal.Equals(value, canonical))
+                {
+                    throw new InvalidDataException("A renderer cursor is not canonical base64url or exceeds its 8,192-byte bound.");
+                }
+            }
+            catch (FormatException exception)
+            {
+                throw new InvalidDataException("A renderer cursor is not canonical base64url.", exception);
+            }
+        }
     }
 }
 
@@ -197,6 +341,7 @@ public static class RendererOperationRegistry
                 definitions.Add(new RendererMessageDefinition(
                     operationName,
                     message.GetProperty("message_kind").GetString()!,
+                    message.GetProperty("direction").GetString()!,
                     message.GetProperty("payload_shape").GetString()!,
                     message.GetProperty("gesture").GetString()!,
                     outcomes.AsReadOnly()));
@@ -240,7 +385,8 @@ public static class RendererBootstrapAdapter
         JsonArray recentRuns = [];
         foreach (RunSummary item in bootstrap.RecentRuns)
         {
-            if (string.IsNullOrWhiteSpace(item.RunId?.Value))
+            if (string.IsNullOrWhiteSpace(item.RunId?.Value)
+                || Encoding.UTF8.GetByteCount(item.RunId.Value) > 160)
             {
                 throw new InvalidDataException("A bootstrap run identity is missing.");
             }
@@ -249,8 +395,14 @@ public static class RendererBootstrapAdapter
             {
                 ["run_id"] = item.RunId.Value,
                 ["lifecycle_state"] = ClosedEnumName(item.LifecycleState),
-                ["lifecycle_generation"] = item.LifecycleGeneration,
+                ["lifecycle_generation"] = item.LifecycleGeneration.ToString(CultureInfo.InvariantCulture),
             });
+        }
+
+        if (string.IsNullOrWhiteSpace(bootstrap.CoordinatorInstanceId?.Value)
+            || Encoding.UTF8.GetByteCount(bootstrap.CoordinatorInstanceId.Value) > 160)
+        {
+            throw new InvalidDataException("The bootstrap coordinator identity is missing or exceeds its bound.");
         }
 
         JsonObject document = new()
@@ -258,7 +410,7 @@ public static class RendererBootstrapAdapter
             ["contract_version"] = ProtocolConstants.RendererContractVersion,
             ["message_kind"] = "response",
             ["session_id"] = sessionId,
-            ["sequence"] = sequence,
+            ["sequence"] = sequence.ToString(CultureInfo.InvariantCulture),
             ["request_id"] = requestId,
             ["revision"] = bootstrap.ProjectionVersion?.Value,
             ["operation"] = "application.bootstrap",
@@ -277,7 +429,7 @@ public static class RendererBootstrapAdapter
                     ["recent_runs"] = recentRuns,
                     ["projection_version"] = bootstrap.ProjectionVersion?.Value,
                     ["coordinator_instance_id"] = bootstrap.CoordinatorInstanceId?.Value,
-                    ["coordinator_fencing_epoch"] = bootstrap.CoordinatorFencingEpoch,
+                    ["coordinator_fencing_epoch"] = bootstrap.CoordinatorFencingEpoch.ToString(CultureInfo.InvariantCulture),
                 },
             },
         };
@@ -293,6 +445,8 @@ public static class RendererBootstrapAdapter
         ApplicationCapability.EventResync => "event-resync",
         ApplicationCapability.Configuration => "configuration",
         ApplicationCapability.ProviderEnrollment => "provider-enrollment",
+        ApplicationCapability.ResultExploration => "result-exploration",
+        ApplicationCapability.DurableUserReview => "durable-user-review",
         _ => throw new InvalidDataException("The bootstrap contains an unknown or unsupported capability."),
     };
 

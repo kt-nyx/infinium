@@ -1,13 +1,13 @@
 # M1-to-M2 Foundation — Frontend Application Foundation
 
 Status: Accepted
-Disposition: Checkpoint C under correction; Phase D blocked and not started
+Disposition: Checkpoint C accepted; WP7/WP8 Phase D candidate awaits Checkpoint D architecture-steward review
 
-Last reviewed: 2026-08-27
+Last reviewed: 2026-08-28
 Owner: Project owner
 Accepted: 2026-08-25
 Plan ID: `TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION`
-Next gate: corrected Checkpoint C architecture-steward review
+Next gate: Checkpoint D architecture-steward review after WP7 and WP8
 
 ## Plain-language purpose
 
@@ -33,6 +33,8 @@ implemented against a producer-consumer-validated application boundary.
 - [Application contract inventory](application-contract-inventory.v1.json)
 - [Application contract inventory schema](application-contract-inventory.v1.schema.json)
 - [Implementation record](implementation-record.md)
+- [Frontend toolchain and generated-output ownership](frontend-toolchain-and-generation.md)
+- [Sanitized desktop qualification receipt](desktop-qualification-receipt.v1.json)
 - [Accepted WP6 targeted-verification addendum](wp6-targeted-verification-addendum.md)
 - [Gap investigation](../../../../research/investigations/RESEARCH-0057-frontend-application-foundation-gap.md)
 - [Targeted-verification architecture investigation](../../../../research/investigations/RESEARCH-0058-targeted-verification-executable-architecture.md)
@@ -58,13 +60,27 @@ escalation defined by the plan.
 
 ## Current authority
 
-The owner accepted the planning package, corrected Phase A implementation, and
-the corrected Phase B implementation. WP3 and WP4 provide typed
+The owner accepted the planning package and the corrected Phase A and Phase B
+implementations. The architecture steward independently accepted corrected
+WP5/WP6 and Checkpoint C at
+`2ec3be78da4d05d8c6ada68a3e18544a446f2f03`; verification reported 774 passed,
+10 expected skips, zero failures, all non-test gates passing, a clean worktree,
+and zero repository-owned .NET test-process survivors. WP7's generated-consumer
+cycle and WP8's executable desktop-consumer cycle, independent correction, and
+re-review pass on the same Phase D candidate. The tracked qualification receipt
+retains complete sanitized launch, bridge, process-split memory, message,
+package, runtime, license, coverage, and exact zero-survivor evidence. After
+the recorded first-floor defects were corrected on that same candidate, the
+complete locked repository floor passed 845 tests with 12 expected skips and
+zero failures; Release build, format, documentation, functional naming,
+dependency-manifest, diff, and exact process-cleanup gates also passed.
+Checkpoint D remains independent.
+This status does not activate M2. WP3 and WP4 provide typed
 tool/profile/configuration setup, honest local estimates, non-secret provider
 status, prepared manual-run initiation, durable gesture/binding receipts, and
 an offline retained-input native diagnostic proof through the real durable
 analysis operation, including reconnect and restart. Phase C result/review
-primitives are present but under correction. The independent report-query,
+primitives are accepted. The independent report-query,
 recursive request-validation, export-deletion/recovery, provenance, and cursor
 defects now have focused offline producer-consumer evidence. Populated
 pre-publication stores report an explicit unavailable projection gap. The
@@ -79,9 +95,9 @@ and immutable lineage/readback. The corrected candidate additionally proves an
 unseeded native preparation-to-completed-successor path through the actual
 snapshot and semantic producers, makes qualified limited processing gaps
 reachable in production planning, enforces cross-family one-shot gestures, and
-revalidates all retained authority before atomic start. WP5/WP6 are not accepted, the earlier
-Checkpoint C receipt remains suspended pending architecture-steward review,
-and Phase D has not started.
+revalidates all retained authority before atomic start. WP5/WP6 and Checkpoint
+C are accepted. Phase D maps none of the five targeted-verification RPCs, so
+they remain native-only under ADR-0038.
 
 The latest contract correction completes the accepted preparation readback:
 generated native clients receive the canonical finding/case signature and
@@ -117,5 +133,8 @@ kind before schema 17 can seal it. Added, missing, or substituted fields fail
 migration with the source fingerprint and append-only triggers intact and no
 partial schema-17 objects.
 
-M2 remains inactive until a separate accepted M2 plan exists. The transition's
-diagnostic React surface is development evidence, not the M2 interface.
+M2 remains inactive until a separate accepted M2 plan exists. The packaged
+React surface is diagnostic development evidence, not the M2 interface. It
+consumes the real bootstrap, paginated findings, detail, progress, event stream,
+host-attested cancellation, resync, reload, and coordinator-reconnect paths.
+Targeted verification remains native-only and unmapped.

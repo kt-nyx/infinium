@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.0.0",
-  "renderer_contract_version": "1.1.0",
+  "schema_version": "1.3.0",
+  "renderer_contract_version": "1.4.0",
   "limits": {
     "maximum_message_bytes": 1048576,
     "maximum_page_items": 100,
@@ -12,19 +12,236 @@
   },
   "operations": [
     {
+      "operation": "transport.session.establish",
+      "native_target": "DesktopHost.EstablishRendererSession",
+      "native_adapter": {
+        "kind": "transport",
+        "request_type": "RendererSessionAcknowledgement",
+        "event_type": "RendererSessionInitialization"
+      },
+      "messages": [
+        {
+          "message_kind": "event",
+          "direction": "host-to-renderer",
+          "payload_shape": "session-initialization-event",
+          "schema_definition": "sessionInitializationEvent",
+          "gesture": "not-allowed",
+          "outcomes": [
+            "accepted"
+          ]
+        },
+        {
+          "message_kind": "request",
+          "direction": "renderer-to-host",
+          "payload_shape": "session-acknowledgement-request",
+          "schema_definition": "sessionAcknowledgementRequest",
+          "gesture": "not-allowed"
+        }
+      ],
+      "maturity": "producer-consumer-validated",
+      "owner": "desktop-host-transport"
+    },
+    {
+      "operation": "transport.gesture.grant",
+      "native_target": "DesktopHost.GrantRendererGesture",
+      "native_adapter": {
+        "kind": "transport",
+        "event_type": "RendererGestureGrant"
+      },
+      "messages": [
+        {
+          "message_kind": "event",
+          "direction": "host-to-renderer",
+          "payload_shape": "gesture-grant-event",
+          "schema_definition": "gestureGrantEvent",
+          "gesture": "not-allowed",
+          "outcomes": [
+            "accepted"
+          ]
+        }
+      ],
+      "maturity": "producer-consumer-validated",
+      "owner": "desktop-host-transport"
+    },
+    {
       "operation": "application.bootstrap",
       "native_target": "ApplicationService.GetApplicationBootstrap",
+      "native_adapter": {
+        "kind": "unary",
+        "request_type": "GetApplicationBootstrapRequest",
+        "response_type": "GetApplicationBootstrapResponse",
+        "client_method": "GetApplicationBootstrapAsync"
+      },
       "messages": [
         {
           "message_kind": "request",
+          "direction": "renderer-to-host",
           "payload_shape": "bootstrap-request",
+          "schema_definition": "bootstrapRequest",
           "gesture": "not-allowed"
         },
         {
           "message_kind": "response",
+          "direction": "host-to-renderer",
           "payload_shape": "bootstrap-response",
+          "schema_definition": "bootstrapResponse",
           "gesture": "not-allowed",
-          "outcomes": ["accepted", "rejected", "conflict", "unsupported", "unavailable", "cancelled", "indeterminate", "resync-required"]
+          "outcomes": [
+            "accepted",
+            "rejected",
+            "conflict",
+            "unsupported",
+            "unavailable",
+            "cancelled",
+            "indeterminate",
+            "resync-required"
+          ]
+        }
+      ],
+      "maturity": "producer-consumer-validated",
+      "owner": "frontend-application-contract-foundation"
+    },
+    {
+      "operation": "results.list",
+      "native_target": "ApplicationService.ListResultItems",
+      "native_adapter": {
+        "kind": "unary",
+        "request_type": "ListResultItemsRequest",
+        "response_type": "ListResultItemsResponse",
+        "client_method": "ListResultItemsAsync"
+      },
+      "messages": [
+        {
+          "message_kind": "request",
+          "direction": "renderer-to-host",
+          "payload_shape": "result-list-request",
+          "schema_definition": "resultListRequest",
+          "gesture": "not-allowed"
+        },
+        {
+          "message_kind": "response",
+          "direction": "host-to-renderer",
+          "payload_shape": "result-list-response",
+          "schema_definition": "resultListResponse",
+          "gesture": "not-allowed",
+          "outcomes": [
+            "accepted",
+            "rejected",
+            "conflict",
+            "unsupported",
+            "unavailable",
+            "cancelled",
+            "indeterminate",
+            "resync-required"
+          ]
+        }
+      ],
+      "maturity": "producer-consumer-validated",
+      "owner": "frontend-application-contract-foundation"
+    },
+    {
+      "operation": "results.detail",
+      "native_target": "ApplicationService.GetResultDetail",
+      "native_adapter": {
+        "kind": "unary",
+        "request_type": "GetResultDetailRequest",
+        "response_type": "GetResultDetailResponse",
+        "client_method": "GetResultDetailAsync"
+      },
+      "messages": [
+        {
+          "message_kind": "request",
+          "direction": "renderer-to-host",
+          "payload_shape": "result-detail-request",
+          "schema_definition": "resultDetailRequest",
+          "gesture": "not-allowed"
+        },
+        {
+          "message_kind": "response",
+          "direction": "host-to-renderer",
+          "payload_shape": "result-detail-response",
+          "schema_definition": "resultDetailResponse",
+          "gesture": "not-allowed",
+          "outcomes": [
+            "accepted",
+            "rejected",
+            "conflict",
+            "unsupported",
+            "unavailable",
+            "cancelled",
+            "indeterminate",
+            "resync-required"
+          ]
+        }
+      ],
+      "maturity": "producer-consumer-validated",
+      "owner": "frontend-application-contract-foundation"
+    },
+    {
+      "operation": "progress.read",
+      "native_target": "ApplicationService.GetProgress",
+      "native_adapter": {
+        "kind": "unary",
+        "request_type": "GetProgressRequest",
+        "response_type": "GetProgressResponse",
+        "client_method": "GetProgressAsync"
+      },
+      "messages": [
+        {
+          "message_kind": "request",
+          "direction": "renderer-to-host",
+          "payload_shape": "progress-request",
+          "schema_definition": "progressRequest",
+          "gesture": "not-allowed"
+        },
+        {
+          "message_kind": "response",
+          "direction": "host-to-renderer",
+          "payload_shape": "progress-response",
+          "schema_definition": "progressResponse",
+          "gesture": "not-allowed",
+          "outcomes": [
+            "accepted",
+            "rejected",
+            "conflict",
+            "unsupported",
+            "unavailable",
+            "cancelled",
+            "indeterminate",
+            "resync-required"
+          ]
+        }
+      ],
+      "maturity": "producer-consumer-validated",
+      "owner": "frontend-application-contract-foundation"
+    },
+    {
+      "operation": "progress.subscribe",
+      "native_target": "ApplicationService.SubscribeEvents",
+      "native_adapter": {
+        "kind": "stream",
+        "request_type": "SubscribeEventsRequest",
+        "event_type": "ApplicationEvent",
+        "client_method": "SubscribeEventsAsync"
+      },
+      "messages": [
+        {
+          "message_kind": "request",
+          "direction": "renderer-to-host",
+          "payload_shape": "progress-subscription-request",
+          "schema_definition": "progressSubscriptionRequest",
+          "gesture": "not-allowed"
+        },
+        {
+          "message_kind": "event",
+          "direction": "host-to-renderer",
+          "payload_shape": "progress-event",
+          "schema_definition": "progressEvent",
+          "gesture": "not-allowed",
+          "outcomes": [
+            "accepted",
+            "resync-required"
+          ]
         }
       ],
       "maturity": "producer-consumer-validated",
@@ -33,17 +250,36 @@
     {
       "operation": "application.cancel",
       "native_target": "DesktopHost.TransportCancellation",
+      "native_adapter": {
+        "kind": "host",
+        "request_type": "RendererCancellationRequest",
+        "response_type": "RendererHostControlReceipt",
+        "client_method": "CancelTransportAsync"
+      },
       "messages": [
         {
           "message_kind": "request",
+          "direction": "renderer-to-host",
           "payload_shape": "cancel-request",
+          "schema_definition": "cancelRequest",
           "gesture": "required"
         },
         {
           "message_kind": "response",
+          "direction": "host-to-renderer",
           "payload_shape": "cancel-response",
+          "schema_definition": "cancelResponse",
           "gesture": "not-allowed",
-          "outcomes": ["accepted", "rejected", "conflict", "unsupported", "unavailable", "cancelled", "indeterminate", "resync-required"]
+          "outcomes": [
+            "accepted",
+            "rejected",
+            "conflict",
+            "unsupported",
+            "unavailable",
+            "cancelled",
+            "indeterminate",
+            "resync-required"
+          ]
         }
       ],
       "maturity": "producer-consumer-validated",
@@ -52,17 +288,37 @@
     {
       "operation": "application.resync-required",
       "native_target": "DesktopHost.ResyncProjection",
+      "native_adapter": {
+        "kind": "host",
+        "request_type": "RendererResyncRequest",
+        "response_type": "RendererHostControlReceipt",
+        "client_method": "ResyncProjectionAsync"
+      },
       "messages": [
         {
           "message_kind": "event",
+          "direction": "host-to-renderer",
           "payload_shape": "resync-required-event",
+          "schema_definition": "resyncEvent",
           "gesture": "not-allowed",
-          "outcomes": ["resync-required"]
+          "outcomes": [
+            "resync-required"
+          ]
         }
       ],
       "maturity": "producer-consumer-validated",
       "owner": "frontend-application-contract-foundation"
     }
   ],
-  "denied_authority_fields": ["path", "sql", "command", "command_line", "url", "credential", "provider_request", "filesystem", "coordinator_proxy"]
+  "denied_authority_fields": [
+    "path",
+    "sql",
+    "command",
+    "command_line",
+    "url",
+    "credential",
+    "provider_request",
+    "filesystem",
+    "coordinator_proxy"
+  ]
 }

@@ -146,9 +146,9 @@ public sealed partial class ApplicationGrpcService(
             BuildApplicationCapability(ApplicationCapability.RunQuery, Availability.Available, "Typed prepared-run initiation and bounded run queries are active."),
             BuildApplicationCapability(ApplicationCapability.EventResync, Availability.Available, "Bounded event resync is active."),
             BuildApplicationCapability(ApplicationCapability.Configuration, Availability.Available, "Versioned setup configuration and prepared-run review are active."),
-            BuildApplicationCapability(ApplicationCapability.ProviderEnrollment, Availability.Partial, "Non-secret enrollment intent and status are active; native secret entry remains unavailable in this phase."),
-            BuildApplicationCapability(ApplicationCapability.ResultExploration, Availability.Partial, "FindingReport query/readback and adversarial request validation have focused correction evidence; Checkpoint C and desktop consumption remain unaccepted."),
-            BuildApplicationCapability(ApplicationCapability.DurableUserReview, Availability.Partial, "Review, export deletion/recovery, and the native targeted-verification workflow are implemented; corrected Checkpoint C review and desktop delivery remain pending."),
+            BuildApplicationCapability(ApplicationCapability.ProviderEnrollment, Availability.Partial, "Non-secret enrollment intent and status are available; credential entry remains restricted to the native OS-backed enrollment surface."),
+            BuildApplicationCapability(ApplicationCapability.ResultExploration, Availability.Partial, "Bounded result queries and detail readback are available; the diagnostic desktop exposes only its registered result subset."),
+            BuildApplicationCapability(ApplicationCapability.DurableUserReview, Availability.Partial, "Review and export deletion/recovery are available through native contracts; the diagnostic desktop does not expose review, export, or targeted-verification operations."),
         ]);
         return Task.FromResult(new GetApplicationBootstrapResponse { Bootstrap = bootstrap });
     }
@@ -306,6 +306,7 @@ public sealed partial class ApplicationGrpcService(
                     RunId = new RunId { Value = run.RunId },
                     LifecycleState = ProtoMapping.ToProto(run.State),
                     Progress = ProtoMapping.EmptyProgress(run.State),
+                    Cost = ProtoMapping.EmptyCost(),
                     ProjectionVersion = new ProjectionVersion { Value = "1" },
                     DurableEventSequence = checked((ulong)run.DurableSequence),
                     ObservedAt = ProtoMapping.ToProto(DateTimeOffset.UtcNow),

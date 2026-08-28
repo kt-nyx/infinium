@@ -1,0 +1,19 @@
+:root { color-scheme: light dark; font: 16px/1.45 "Segoe UI", sans-serif; background: #101419; color: #f5f7fa; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #101419; color: #f5f7fa; }
+.shell { max-width: 72rem; margin: 0 auto; padding: 1.5rem; }
+header, section { margin-block-end: 1.5rem; padding: 1rem; border: 1px solid #8794a3; border-radius: .35rem; background: #18212b; }
+h1, h2 { line-height: 1.2; }
+label { display: block; font-weight: 650; margin-block-end: .35rem; }
+input { width: min(100%, 42rem); padding: .65rem; color: #101419; background: #fff; border: 2px solid #8794a3; }
+button { min-height: 2.75rem; padding: .55rem .9rem; border: 2px solid #b8c5d3; border-radius: .25rem; color: #101419; background: #f5f7fa; font-weight: 650; }
+button:hover { background: #d9e7f7; }
+button:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 3px solid #67c8ff; outline-offset: 3px; }
+.actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-block-start: 1rem; }
+.result-viewport { min-height: 27rem; border: 1px solid #8794a3; }
+.result-row { min-height: 2.25rem; overflow-wrap: anywhere; padding: .4rem .65rem; border-block-end: 1px solid #4b5968; }
+.skip-link { position: absolute; left: .5rem; top: -5rem; padding: .75rem; background: #fff; color: #000; z-index: 2; }
+.skip-link:focus { top: .5rem; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+@media (forced-colors: active) { header, section, .result-viewport, .result-row { border-color: CanvasText; } }

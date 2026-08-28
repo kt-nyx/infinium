@@ -2,9 +2,9 @@
   "$schema": "application-contract-inventory.v1.schema.json",
   "schema_identity": "infinium.planning.application-contract-inventory/1.0.0",
   "status": "implementation-active",
-  "last_reviewed": "2026-08-27",
-  "audited_commit": "122d9523f04b793697a16f960234a0a81e3d3fc5",
-  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy for the corrected targeted-verification implementation candidate authorized by ADR-0038 and its accepted WP6 addendum. The five native-only RPCs expose durable preparation, canonical finding/case identity-envelope authority, one revision-coherent and tamper-evident bounded preparation readback with generation-bound terminal-gap cursors and durable sealed lifecycle ordering, real fresh acquisition, typed scope/correlation planning including qualified limited processing gaps, a preparation-owned resolved manifest and exact prepared inputs, atomically revalidated managed-analysis-v1 successor admission, and lineage/readback without renderer authority. A primary generated-C# named-pipe test proves the complete preparation-to-completed-successor path without seeding a ready plan. Checkpoint C remains under architecture-steward review. Desktop delivery, Phase D, M2 activation, broad analyzer claims, and semantic-oracle qualification remain outside this candidate.",
+  "last_reviewed": "2026-08-28",
+  "audited_commit": "2ec3be78da4d05d8c6ada68a3e18544a446f2f03",
+  "claim_boundary": "This answer-free inventory records the application RPC surface, current consumers, persistence/readback owners, finite bounds, independent version axes, traceability, and renderer policy after accepted Checkpoint C. WP7/WP8 add a generated closed renderer consumer and executable diagnostic desktop proof for bootstrap, result pagination/detail, progress, all four event variants, transport cancellation, and authoritative resync without mapping targeted verification or generic application authority. Checkpoint D, Phase E, M2 activation, broad analyzer claims, and semantic-oracle qualification remain outside this candidate.",
   "protocol": {
     "package": "infinium.application.v1",
     "service": "ApplicationService",
@@ -13,7 +13,7 @@
     "application_contract_version": "1.13.0",
     "domain_contract_version": "1.6.0",
     "storage_contract_version": "1.16.0",
-    "renderer_contract_version": "1.1.0",
+    "renderer_contract_version": "1.4.0",
     "schema_fingerprint_sha256": "d234d44dabf902041461b5c2318fd5c71f10eff46e7ec75f9a586812fab014c7",
     "declared_rpc_count": 48,
     "implemented_rpc_count": 42,
@@ -34,6 +34,7 @@
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#Negotiate",
       "current_consumers": [
         "src/Infinium.Application/Runtime/CoordinatorConnection.cs",
+        "src/Infinium.ApplicationClient linked CoordinatorConnection used by the least-authority DesktopHost role",
         "src/Infinium.Cli through CoordinatorConnection",
         "integration harnesses"
       ],
@@ -90,13 +91,13 @@
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#GetApplicationBootstrap",
       "current_consumers": [
-        "generated C# gRPC consumer and WP2 contract tests; desktop host consumer remains WP7"
+        "generated C# gRPC consumer, generated C#/TypeScript adapter signature, deterministic story fake client, real narrow desktop application client, WPF/WebView2 diagnostic host, and contract/desktop qualification tests"
       ],
       "persistence_readback": [
         "AuthoritativeStore.ListRuns and CoordinatorRuntime authority; no durable write"
       ],
       "bounds_and_versions": [
-        "renderer contract 1.1.0, maximum 20 recent runs, projection version 1, negotiated message limits"
+        "renderer contract 1.4.0, maximum 20 recent runs, projection version 1, negotiated message limits"
       ],
       "requirement_ids": [
         "OPS-001",
@@ -175,7 +176,7 @@
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#ListFindings",
       "current_consumers": [
-        "no non-test generated-client consumer found at audited commit"
+        "no non-test generated-client consumer found at audited commit; deliberately not mapped by WP7"
       ],
       "persistence_readback": [
         "No finding producer/readback path; only an empty unfiltered page is implemented"
@@ -202,7 +203,7 @@
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.cs#GetProgress",
       "current_consumers": [
-        "no non-test generated-client consumer found at audited commit"
+        "generated C#/TypeScript progress adapter, story fake-client equivalence consumer, and real WPF/WebView2 desktop application client"
       ],
       "persistence_readback": [
         "AuthoritativeStore.GetRun; current progress body is lifecycle-derived and otherwise empty"
@@ -292,7 +293,7 @@
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.Events.cs#SubscribeEvents",
       "current_consumers": [
-        "integration harnesses; no production UI consumer"
+        "generated C#/TypeScript four-variant event adapter plus real desktop subscribe/cancel/reconnect/resync consumer"
       ],
       "persistence_readback": [
         "AuthoritativeStore.GetRun and durable sequence; stream is non-authoritative"
@@ -522,7 +523,7 @@
       "rpc": "GetResultOverview",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#GetResultOverview",
-      "current_consumers": ["generated C# contracts and ResultReviewWorkflowIntegrationTests; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# contracts and ResultReviewWorkflowIntegrationTests; not renderer-mapped by the completed Phase D diagnostic subset and remains a native-only or later typed projection option"],
       "persistence_readback": ["AuthoritativeStore.GetResultOverview over immutable finding/case and coverage state"],
       "bounds_and_versions": ["Application 1.13.0, projection version 1, bounded summary/failure/gap disclosure, explicit scope-limited or no-readiness state"],
       "requirement_ids": ["PROD-004", "COVER-003", "UX-001"],
@@ -534,7 +535,7 @@
       "rpc": "ListResultItems",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#ListResultItems",
-      "current_consumers": ["generated C# contracts and bounded 100000-summary integration consumer; desktop consumer remains WP7"],
+      "current_consumers": ["generated C#/TypeScript adapters, bounded 100000-summary story consumer, real desktop paged finding consumer, and existing integration consumer"],
       "persistence_readback": ["AuthoritativeStore.ListResultItems from the run-bound result projection"],
       "bounds_and_versions": ["At most 100 items, six allowlisted kinds, 160-character inert search, two allowlisted sorts, authenticated five-minute query-bound keyset cursor"],
       "requirement_ids": ["PROD-003", "FIND-002", "FIND-011", "UX-001"],
@@ -546,7 +547,7 @@
       "rpc": "GetResultDetail",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#GetResultDetail",
-      "current_consumers": ["generated C# contracts and canonical round-trip integration consumer; desktop consumer remains WP7"],
+      "current_consumers": ["generated C#/TypeScript adapters, canonical round-trip consumer, and real desktop detail consumer"],
       "persistence_readback": ["AuthoritativeStore.GetResultItem plus exact retained FindingCaseJsonCodec source readback"],
       "bounds_and_versions": ["One exact run/item/kind tuple; inert typed fields and payload identity/fingerprint without payload path or invented evidence"],
       "requirement_ids": ["FIND-001", "FIND-003", "FIND-004", "UX-002"],
@@ -558,7 +559,7 @@
       "rpc": "GetEvidenceExpansion",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#GetEvidenceExpansion",
-      "current_consumers": ["generated C# contracts and Phase C contract tests; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# contracts and Phase C contract tests; not renderer-mapped by the completed Phase D diagnostic subset and remains a native-only or later typed projection option"],
       "persistence_readback": ["Exact result-item evidence allowlist plus AuthoritativeStore.GetAnalysisArtifact metadata"],
       "bounds_and_versions": ["At most 100 exact item-owned evidence identities; unavailable expansion remains an explicit reference-only gap; no path, URL, markup, or generic query"],
       "requirement_ids": ["EVID-002", "EVID-004", "EVID-007", "UX-002"],
@@ -570,7 +571,7 @@
       "rpc": "GetFocusedModView",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#GetFocusedModView",
-      "current_consumers": ["generated C# contracts and exact-subject isolation integration consumer; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# contracts and exact-subject isolation integration consumer; not renderer-mapped by the completed Phase D diagnostic subset and remains a native-only or later typed projection option"],
       "persistence_readback": ["AuthoritativeStore.GetFocusedResultItems exact json_each subject match plus exact-subject coverage and a generic unrelated-gap notice"],
       "bounds_and_versions": ["One exact opaque subject identity and at most 100 related result items; substring/lookalike subjects do not match and unrelated run-gap details are not merged"],
       "requirement_ids": ["UX-003", "UX-004"],
@@ -582,7 +583,7 @@
       "rpc": "ListFindingReports",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#ListFindingReports",
-      "current_consumers": ["generated C# named-pipe consumer and focused report publication/readback plus explicit-unavailability tests; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# named-pipe consumer and focused report publication/readback plus explicit-unavailability tests; deliberately not mapped by the closed WP7 renderer subset"],
       "persistence_readback": ["AuthoritativeStore.ListFindingReports over append-only finding_report_publications and retained schema-validated report payloads; populated pre-publication runs return typed unavailable state without reinterpreting retained result bytes"],
       "bounds_and_versions": ["At most 100 reports, six allowlisted report states, 160-byte inert search, two allowlisted sorts, authenticated five-minute run/projection/query/sort/page/key cursor; application 1.9 adds explicit report-projection availability"],
       "requirement_ids": ["FIND-001", "FIND-003", "FIND-004", "UX-002"],
@@ -594,7 +595,7 @@
       "rpc": "GetFindingReport",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#GetFindingReport",
-      "current_consumers": ["generated C# named-pipe consumer proving exact report detail and canonical finding-case provenance; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# named-pipe consumer proving exact report detail and canonical finding-case provenance; deliberately not mapped by the closed WP7 renderer subset"],
       "persistence_readback": ["AuthoritativeStore.GetFindingReport validates the retained report payload SHA and reads the exact retained finding-case source for recommendation fields"],
       "bounds_and_versions": ["One exact run/report tuple; bounded inert presentation fields, recommendation or explicit non-applicability, evidence identities, coverage/failures/gaps, and exact report/source provenance without payload path"],
       "requirement_ids": ["FIND-001", "FIND-003", "FIND-004", "UX-002"],
@@ -606,7 +607,7 @@
       "rpc": "GetReviewState",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#GetReviewState",
-      "current_consumers": ["generated C# contracts and restart/replay integration consumer; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# contracts and restart/replay integration consumer; not renderer-mapped by the completed Phase D diagnostic subset and remains a native-only or later typed projection option"],
       "persistence_readback": ["AuthoritativeStore.GetReviewState over append-only review_events and rebuildable review_projection"],
       "bounds_and_versions": ["Exact run-bound finding/case occurrence and at most 100 newest history events with explicit truncation"],
       "requirement_ids": ["FIND-005", "FIND-006", "FIND-007", "FIND-014"],
@@ -618,7 +619,7 @@
       "rpc": "SubmitReviewEvent",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#SubmitReviewEvent",
-      "current_consumers": ["generated C# contracts and concurrency/carryover integration consumers; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# contracts and concurrency/carryover integration consumers; not renderer-mapped by the completed Phase D diagnostic subset and remains a native-only or later typed projection option"],
       "persistence_readback": ["AuthoritativeStore.ApplyReviewEvent append-only revision event and optimistic current projection"],
       "bounds_and_versions": ["Seven dispositions, five event kinds, 16 KiB inert annotation, typed stale-revision conflict, carryover only through retained exact four-gate continuity and exact unchanged source review state"],
       "requirement_ids": ["FIND-005", "FIND-006", "FIND-007", "FIND-014"],
@@ -630,7 +631,7 @@
       "rpc": "ListAssumptions",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#ListAssumptions",
-      "current_consumers": ["generated C# contracts and replay/restart integration consumer; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# contracts and replay/restart integration consumer; not renderer-mapped by the completed Phase D diagnostic subset and remains a native-only or later typed projection option"],
       "persistence_readback": ["AuthoritativeStore.ListAssumptions from append-only successor events and rebuildable effective projection"],
       "bounds_and_versions": ["Exact profile identity, at most 100 items, authenticated five-minute cursor bound to profile, page size, and authoritative projection fingerprint; relevant successor mutation invalidates replay"],
       "requirement_ids": ["INTENT-001", "INTENT-002", "INTENT-004", "INTENT-005"],
@@ -642,7 +643,7 @@
       "rpc": "SubmitAssumptionEvent",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#SubmitAssumptionEvent",
-      "current_consumers": ["generated C# contracts and successor-state integration consumer; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# contracts and successor-state integration consumer; not renderer-mapped by the completed Phase D diagnostic subset and remains a native-only or later typed projection option"],
       "persistence_readback": ["AuthoritativeStore.ApplyAssumptionEvent append-only history and effective successor projection"],
       "bounds_and_versions": ["Five event kinds, distinct immutable inferred/user-provided origin, explicit confirmation, 16 KiB value, 100 dependencies, typed stale-revision conflict"],
       "requirement_ids": ["INTENT-001", "INTENT-002", "INTENT-004", "INTENT-005"],
@@ -717,7 +718,7 @@
       "rpc": "CreateStructuredExport",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#CreateStructuredExport",
-      "current_consumers": ["generated C# create/get/delete consumer plus focused restart/backup/source-immutability lifecycle tests; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# create/get/delete consumer plus focused restart/backup/source-immutability lifecycle tests; not renderer-mapped by the completed Phase D diagnostic subset and remains native-only"],
       "persistence_readback": ["AuthoritativeStore.CreateStructuredExport and Export write class with append-only manifest row plus selected inert records, exact revisions, and source-run binding in the retained JSON artifact"],
       "bounds_and_versions": ["LocalPrivateExport only, at most 100 exact selected identities, 1 MiB artifact, exact run/revision/filter/omission/privacy/source-policy/provenance manifest"],
       "requirement_ids": ["OPS-003", "SEC-004"],
@@ -729,7 +730,7 @@
       "rpc": "GetStructuredExport",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#GetStructuredExport",
-      "current_consumers": ["generated C# restart/backup-integrity and deleted/tombstoned current-state consumers; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# restart/backup-integrity and deleted/tombstoned current-state consumers; not renderer-mapped by the completed Phase D diagnostic subset and remains native-only"],
       "persistence_readback": ["AuthoritativeStore.GetStructuredExport validates active artifacts and returns typed append-only lifecycle history/current state without returning a path"],
       "bounds_and_versions": ["One opaque export identity and bounded manifest metadata only; no whole-run or full-population download"],
       "requirement_ids": ["OPS-003", "SEC-004"],
@@ -741,7 +742,7 @@
       "rpc": "PreviewStructuredExportDeletion",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#PreviewStructuredExportDeletion",
-      "current_consumers": ["generated C# named-pipe deletion-preview consumer and focused lifecycle tests; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# named-pipe deletion-preview consumer and focused lifecycle tests; not renderer-mapped by the completed Phase D diagnostic subset and remains native-only"],
       "persistence_readback": ["AuthoritativeStore.PreviewStructuredExportDeletion reads typed current state and local artifact presence without exposing a path"],
       "bounds_and_versions": ["One exact opaque export identity; explicitly reports that source run/results/review/assumptions/provenance are not mutated and audit history is retained"],
       "requirement_ids": ["OPS-003", "SEC-004"],
@@ -753,7 +754,7 @@
       "rpc": "DeleteStructuredExport",
       "implementation_state": "implemented",
       "implementation_owner": "src/Infinium.Coordinator/ApplicationGrpcService.ResultsReview.cs#DeleteStructuredExport",
-      "current_consumers": ["generated C# named-pipe deletion consumer and focused exact-retry/fault/restart/restore tests; desktop consumer remains WP7"],
+      "current_consumers": ["generated C# named-pipe deletion consumer and focused exact-retry/fault/restart/restore tests; not renderer-mapped by the completed Phase D diagnostic subset and remains native-only"],
       "persistence_readback": ["AuthoritativeStore.DeleteStructuredExport appends deletion-requested/deleted events, removes only the guarded local-private artifact, and retains the tombstoned current state"],
       "bounds_and_versions": ["One exact export identity and one bounded idempotency key; missing/tampered files are safely removed, interrupted pending deletion is recovered on restart, and source records remain immutable"],
       "requirement_ids": ["OPS-003", "SEC-004"],
@@ -1137,7 +1138,7 @@
     {
       "family": "application-grpc",
       "source": "contracts/protobuf/infinium/application/v1/application.proto",
-      "owner": "Infinium.Application generation and Infinium.Coordinator handlers",
+      "owner": "Infinium.Application and narrow Infinium.ApplicationClient protobuf generation plus Infinium.Coordinator handlers",
       "maturity": "implementation-active"
     },
     {
@@ -1148,8 +1149,8 @@
     },
     {
       "family": "renderer-envelope-and-registry",
-      "source": "contracts/json-schema/renderer-envelope.v1.schema.json and contracts/renderer/renderer-operation-registry.v1.json",
-      "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP2",
+      "source": "sole reviewed source contracts/json-schema/renderer-envelope.v1.schema.json; generated registry output contracts/renderer/renderer-operation-registry.v1.json",
+      "owner": "TRANSITION/M1-TO-M2/FRONTEND-APPLICATION-FOUNDATION/WP7",
       "maturity": "producer-consumer-validated"
     },
     {
@@ -1198,15 +1199,15 @@
   "generation_ownership": [
     {
       "input": "contracts/protobuf/infinium/**/*.proto",
-      "generated_consumer": "C# protobuf and gRPC bindings under obj generated by Grpc.Tools",
-      "owner": "src/Infinium.Application/Infinium.Application.csproj",
+      "generated_consumer": "C# protobuf and gRPC bindings under obj generated independently by Grpc.Tools for the full application service and narrow desktop client",
+      "owner": "src/Infinium.Application/Infinium.Application.csproj and src/Infinium.ApplicationClient/Infinium.ApplicationClient.csproj",
       "drift_check": "contract compilation plus exact protocol fingerprint verification"
     },
     {
-      "input": "contracts/json-schema/renderer-envelope.v1.schema.json and contracts/renderer/renderer-operation-registry.v1.json",
-      "generated_consumer": "C# reference validator now; TypeScript renderer bindings and host adapters remain WP7",
-      "owner": "WP2 contract source and reference validator; WP7 generated product consumers",
-      "drift_check": "canonical registry SHA-256 b5631f491ff2b781dcefe6b36318fbd75831ad8d9f6cedb3b2cde946b7cecada plus schema and generated-binding checks"
+      "input": "sole reviewed source contracts/json-schema/renderer-envelope.v1.schema.json including closed x-infinium-registry native-target metadata",
+      "generated_consumer": "contracts/renderer/renderer-operation-registry.v1.json, strict discriminated TypeScript payload/client bindings with branch-required fields and forbidden properties emitted as exact optional never, and generated C# operation catalog, native/host adapter, projection-codec, and exhaustive dispatch signatures",
+      "owner": "eng/generate-renderer-contracts.mjs; checked-in outputs under src/Infinium.Frontend/generated and src/Infinium.Application/Runtime",
+      "drift_check": "renderer registry 1.3.0, renderer contract 1.4.0, canonical generated registry SHA-256 411a9c05604c7664773aa62c36f62817273ecaff228f20e074063bed1414cfa9, non-mutating eng/invoke-frontend.ps1 -Task CheckGenerated comparison over registry/TypeScript/C# outputs, compile-time forbidden-field mutations under the strict TypeScript build, and -Task CheckDesktop comparison over packaged assets/manifest/compiled SHA anchor"
     }
   ]
 }
