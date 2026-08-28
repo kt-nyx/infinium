@@ -40,13 +40,19 @@ function Assert-InRepository([string]$Path) {
     $full
 }
 
+function Get-DirectoryFileBytes([string]$Path) {
+    $files = @(Get-ChildItem -LiteralPath $Path -Recurse -File -Force)
+    if ($files.Count -eq 0) { return [long]0 }
+    [long](($files | Measure-Object Length -Sum).Sum)
+}
+
 $directoryTargets = [Collections.Generic.List[object]]::new()
 $packageRoot = Join-Path $repositoryRootPath '.packages'
 if (Test-Path -LiteralPath $packageRoot -PathType Container) {
     $directoryTargets.Add([ordered]@{ relative_path='.packages'; absolute_path=(Assert-InRepository $packageRoot); category='package-cache' })
 }
 
-foreach ($top in @('src','tests','fixtures')) {
+foreach ($top in @('src','tests','fixtures','eng')) {
     $topRoot = Join-Path $repositoryRootPath $top
     if (-not (Test-Path -LiteralPath $topRoot -PathType Container)) { continue }
     foreach ($directory in Get-ChildItem -LiteralPath $topRoot -Recurse -Directory -Force |
@@ -61,6 +67,19 @@ foreach ($top in @('src','tests','fixtures')) {
         $category = if ($directory.Name -eq '__pycache__') { 'python-cache' } else { $directory.Name.ToLowerInvariant() }
         $directoryTargets.Add([ordered]@{ relative_path=$relative; absolute_path=$absolute; category=$category })
     }
+}
+
+$workRoot = Join-Path $repositoryRootPath 'work'
+if (Test-Path -LiteralPath $workRoot -PathType Container) {
+    $workItem = Get-Item -LiteralPath $workRoot -Force
+    if (($workItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+        throw "Refusing generated-data reparse point: $($workItem.FullName)"
+    }
+    $absolute = Assert-InRepository $workItem.FullName
+    $relative = [IO.Path]::GetRelativePath($repositoryRootPath, $absolute).Replace('\','/')
+    $tracked = @($trackedPaths | Where-Object { $_.StartsWith($relative + '/', [StringComparison]::Ordinal) })
+    if ($tracked.Count -ne 0) { throw "Generated directory contains tracked files: $relative" }
+    $directoryTargets.Add([ordered]@{ relative_path=$relative; absolute_path=$absolute; category='work-output' })
 }
 
 $artifactFileTargets = [Collections.Generic.List[object]]::new()
@@ -79,7 +98,7 @@ $directoryTargets = @($directoryTargets | Sort-Object { $_.absolute_path.Length 
 $artifactFileTargets = @($artifactFileTargets | Sort-Object relative_path)
 $bytes = [long]0
 foreach ($target in $directoryTargets) {
-    $bytes += [long]((Get-ChildItem -LiteralPath $target.absolute_path -Recurse -File -Force | Measure-Object Length -Sum).Sum)
+    $bytes += Get-DirectoryFileBytes $target.absolute_path
 }
 $bytes += [long](($artifactFileTargets | ForEach-Object { (Get-Item -LiteralPath $_.absolute_path).Length } | Measure-Object -Sum).Sum)
 
@@ -115,6 +134,9 @@ if (Test-Path -LiteralPath $artifactsRoot -PathType Container) {
                 Remove-Item -LiteralPath $absolute -Force
             }
         }
+    if (@(Get-ChildItem -LiteralPath $artifactsRoot -Force).Count -eq 0) {
+        Remove-Item -LiteralPath (Assert-InRepository $artifactsRoot) -Force
+    }
 }
 
 Write-Host 'Generated-data cleanup completed.'

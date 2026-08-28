@@ -202,6 +202,44 @@ public sealed class BuildPolicyTests
     }
 
     [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
+    public void GeneratedDataCleanerIsBoundedAndCoversEveryRepositoryBuildRoot()
+    {
+        ProcessStartInfo start = new()
+        {
+            FileName = "powershell",
+            WorkingDirectory = TestRepository.Root,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+        start.ArgumentList.Add("-NoProfile");
+        start.ArgumentList.Add("-ExecutionPolicy");
+        start.ArgumentList.Add("Bypass");
+        start.ArgumentList.Add("-File");
+        start.ArgumentList.Add(TestRepository.PathFromRoot("eng", "test-clean-local-generated-data.ps1"));
+
+        using Process process = Process.Start(start)
+            ?? throw new InvalidOperationException("The generated-data cleanup boundary test could not start.");
+        string output = process.StandardOutput.ReadToEnd();
+        string error = process.StandardError.ReadToEnd();
+        bool exited = process.WaitForExit(milliseconds: 30_000);
+        if (!exited)
+        {
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit();
+        }
+
+        Assert.IsTrue(exited, "The generated-data cleanup boundary test did not finish within 30 seconds.");
+        Assert.AreEqual(0, process.ExitCode, $"{output}{error}");
+        StringAssert.Contains(output, "Generated-data cleanup boundary test passed.");
+    }
+
+    [TestMethod]
     [TestCategory("Fault")]
     [TestProperty("Category", "Fault")]
     public void RestorePolicyRequiresLockFiles()

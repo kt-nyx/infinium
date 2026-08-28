@@ -2832,3 +2832,41 @@ committed run, changed-surface re-review, desktop qualification, and complete
 repository floor pass. This correction changes no product RPC, renderer
 operation, persistence contract, architecture boundary, product meaning, or
 M2 state.
+
+## Checkpoint E architecture-steward acceptance
+
+Date: 2026-08-28
+
+Accepted implementation commit:
+`2538f64dda36179c27aad51fbfe6d18ba57ccfd3`
+
+Accepted implementation tree:
+`93070325b228ebba47fae420ad5bd480484855c7`
+
+Disposition: Checkpoint E accepted. The Frontend Application Foundation is
+complete and ready to inform a separately accepted M2 plan. M2 remains
+inactive.
+
+The post-commit acceptance run
+`961a1191be884e44b939380f81c31eca` bound both its start and end checks to the
+exact accepted commit and tree and recorded a clean worktree at each boundary.
+Its sanitized summary SHA-256 was
+`48b3ad58343121dd2ed3051e36321f0c9d6bbde3dce770cc2e7ad98331523f1a`.
+All 16 integrated workflow steps were derived from verified behavioral proofs.
+The focused batches passed 4 contract/authority tests and 8 native integration
+tests with zero failures or skips. Desktop qualification passed 31 ordinary
+desktop tests, 1 populated-state preparation test, 1 live desktop test, and 1
+lifecycle test; its summary SHA-256 was
+`0dffce9f23a418f975fae341a1fa31c6eb344e0a39b4996d87465ab001e1994a`.
+Every recorded cleanup boundary reported zero repository-owned test or desktop
+process survivors.
+
+The architecture-steward re-review confirmed the accepted product meaning,
+security and provenance boundaries, capability ownership, EVAL-0090 through
+EVAL-0094 traceability, functional naming, native-only targeted-verification
+boundary, and private-evaluator and semantic-oracle isolation. The complete
+repository floor retained 856 passed tests, 12 expected skips, zero failures,
+and all non-test gates passing. No unresolved correction remains.
+
+This acceptance authorizes neither M2 implementation nor a product-readiness
+claim. M2 requires its own accepted plan and explicit activation.

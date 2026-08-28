@@ -9,7 +9,6 @@ param(
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 . (Join-Path $PSScriptRoot 'frontend-foundation-evidence.ps1')
-$repositoryNeedle = $repositoryRoot.TrimEnd('\') + '\'
 $coordinatorProject = Join-Path $repositoryRoot 'src/Infinium.Coordinator/Infinium.Coordinator.csproj'
 $desktopTestProject = Join-Path $repositoryRoot 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj'
 $integrationTestProject = Join-Path $repositoryRoot 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj'
@@ -36,68 +35,19 @@ $privilegedWebViewVariables = @(
     'WEBVIEW2_PIPE_FOR_SCRIPT_DEBUGGER'
 )
 
-function Invoke-Checked([string]$FileName, [string[]]$ArgumentList) {
-    $commandOutput = @(& $FileName @ArgumentList 2>&1)
-    $exitCode = $LASTEXITCODE
-    $commandOutput | ForEach-Object { Write-Host $_ }
-    if ($exitCode -ne 0) {
-        throw "Qualification command failed with exit code ${exitCode}: $FileName $($ArgumentList -join ' ')"
-    }
-}
-
-function Get-RepositoryOwnedTestProcess {
-    $ownedNames = @('dotnet.exe', 'testhost.exe', 'testhost.x86.exe', 'vstest.console.exe')
-    @(Get-CimInstance -ClassName Win32_Process | Where-Object {
-        $_.Name -in $ownedNames -and
-        -not [string]::IsNullOrWhiteSpace($_.CommandLine) -and
-        $_.CommandLine.IndexOf(
-            $repositoryNeedle,
-            [StringComparison]::OrdinalIgnoreCase) -ge 0
-    })
-}
-
-function Stop-RepositoryOwnedTestProcess {
-    $owned = @(Get-RepositoryOwnedTestProcess)
-    foreach ($snapshot in $owned) {
-        $current = Get-CimInstance -ClassName Win32_Process -Filter "ProcessId = $($snapshot.ProcessId)"
-        if ($null -ne $current -and
-            $current.Name -in @('dotnet.exe', 'testhost.exe', 'testhost.x86.exe', 'vstest.console.exe') -and
-            -not [string]::IsNullOrWhiteSpace($current.CommandLine) -and
-            $current.CommandLine.IndexOf(
-                $repositoryNeedle,
-                [StringComparison]::OrdinalIgnoreCase) -ge 0) {
-            Stop-Process -Id $current.ProcessId -Force
-        }
-    }
-
-    $remaining = @(Get-RepositoryOwnedTestProcess)
-    if ($remaining.Count -ne 0) {
-        throw "Repository-owned test-process cleanup is incomplete: $($remaining.ProcessId -join ',')."
-    }
-    Write-Host 'Repository-owned dotnet/testhost/vstest processes remaining after desktop test batch: 0'
-}
-
-function Get-TrxCount([string]$Path, [string]$Name) {
-    [xml]$document = [IO.File]::ReadAllText($Path)
-    $counters = $document.SelectSingleNode("//*[local-name()='Counters']")
-    if ($null -eq $counters -or $null -eq $counters.Attributes[$Name]) {
-        throw "The $Name counter is absent from $Path"
-    }
-    [int]$counters.Attributes[$Name].Value
-}
-
 function Invoke-TestBatch([string]$Name, [string]$Project, [string]$Filter) {
     $trxName = $Name + '-' + $AcceptanceRunId + '.trx'
     $trxPath = Join-Path $testResultRoot $trxName
     try {
-        Invoke-Checked 'dotnet' @(
+        Invoke-FoundationCheckedCommand 'dotnet' @(
             'test', $Project, '-c', $Configuration, '--no-build', '--no-restore', '--nologo',
             '--filter', $Filter,
             '--logger', "trx;LogFileName=$trxName",
-            '--results-directory', $testResultRoot)
+            '--results-directory', $testResultRoot) 'Desktop qualification test batch'
     }
     finally {
-        Stop-RepositoryOwnedTestProcess
+        $survivors = Stop-FoundationRepositoryOwnedTestProcess $repositoryRoot
+        Write-Host "Repository-owned dotnet/testhost/vstest processes remaining after ${Name}: $survivors"
     }
 
     [pscustomobject][ordered]@{
@@ -106,10 +56,10 @@ function Invoke-TestBatch([string]$Name, [string]$Project, [string]$Filter) {
         filter = $Filter
         trx_path = $trxPath.Substring($repositoryRoot.Length + 1).Replace('\', '/')
         trx_sha256 = Get-FoundationFileSha256 $trxPath
-        passed = Get-TrxCount $trxPath 'passed'
-        failed = Get-TrxCount $trxPath 'failed'
-        skipped = Get-TrxCount $trxPath 'notExecuted'
-        total = Get-TrxCount $trxPath 'total'
+        passed = Get-FoundationTrxCount $trxPath 'passed'
+        failed = Get-FoundationTrxCount $trxPath 'failed'
+        skipped = Get-FoundationTrxCount $trxPath 'notExecuted'
+        total = Get-FoundationTrxCount $trxPath 'total'
         tests = @(Get-FoundationTrxResults $trxPath)
     }
 }
@@ -229,13 +179,13 @@ try {
     $env:INFINIUM_DESKTOP_QUALIFICATION_MEASUREMENTS = $runtimeMeasurements
     $env:INFINIUM_DESKTOP_SECRET_CANARY = 'INFINIUM-DESKTOP-QUALIFICATION-SECRET-CANARY-7B711839'
 
-    Invoke-Checked 'powershell' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'eng/invoke-frontend.ps1', '-Task', 'RestoreOffline')
+    Invoke-FoundationCheckedCommand 'powershell' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'eng/invoke-frontend.ps1', '-Task', 'RestoreOffline') 'Offline frontend restore' | Out-Null
     foreach ($frontendTask in @('CheckGenerated', 'CheckDesktop', 'TypeCheck', 'Lint', 'Test')) {
-        Invoke-Checked 'powershell' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'eng/invoke-frontend.ps1', '-Task', $frontendTask)
+        Invoke-FoundationCheckedCommand 'powershell' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'eng/invoke-frontend.ps1', '-Task', $frontendTask) "Frontend $frontendTask" | Out-Null
     }
-    Invoke-Checked 'dotnet' @('build', $coordinatorProject, '-c', $Configuration, '--no-restore', '--nologo')
-    Invoke-Checked 'dotnet' @('build', $desktopTestProject, '-c', $Configuration, '--no-restore', '--nologo')
-    Invoke-Checked 'dotnet' @('build', $integrationTestProject, '-c', $Configuration, '--no-restore', '--nologo')
+    Invoke-FoundationDotNetCommand $repositoryRoot @('build', $coordinatorProject, '-c', $Configuration, '--no-restore', '--nologo') 'coordinator-build'
+    Invoke-FoundationDotNetCommand $repositoryRoot @('build', $desktopTestProject, '-c', $Configuration, '--no-restore', '--nologo') 'desktop-tests-build'
+    Invoke-FoundationDotNetCommand $repositoryRoot @('build', $integrationTestProject, '-c', $Configuration, '--no-restore', '--nologo') 'integration-tests-build'
     $testBatches += Invoke-TestBatch `
         'ordinary-desktop' `
         $desktopTestProject `

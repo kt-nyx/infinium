@@ -1,5 +1,71 @@
 Set-StrictMode -Version Latest
 
+function Invoke-FoundationCheckedCommand(
+    [string]$FileName,
+    [string[]]$ArgumentList,
+    [string]$FailureContext = 'Foundation command'
+) {
+    $commandOutput = @(& $FileName @ArgumentList 2>&1)
+    $exitCode = $LASTEXITCODE
+    $commandOutput | ForEach-Object { Write-Host $_ }
+    if ($exitCode -ne 0) {
+        throw "$FailureContext failed with exit code ${exitCode}: $FileName $($ArgumentList -join ' ')"
+    }
+}
+
+function Get-FoundationRepositoryOwnedTestProcesses([string]$RepositoryRoot) {
+    $repositoryNeedle = [IO.Path]::GetFullPath($RepositoryRoot).TrimEnd('\') + '\'
+    $ownedNames = @('dotnet.exe', 'testhost.exe', 'testhost.x86.exe', 'vstest.console.exe')
+    @(Get-CimInstance -ClassName Win32_Process | Where-Object {
+        $_.Name -in $ownedNames -and
+        -not [string]::IsNullOrWhiteSpace($_.CommandLine) -and
+        $_.CommandLine.IndexOf($repositoryNeedle, [StringComparison]::OrdinalIgnoreCase) -ge 0
+    })
+}
+
+function Stop-FoundationRepositoryOwnedTestProcess([string]$RepositoryRoot) {
+    $repositoryNeedle = [IO.Path]::GetFullPath($RepositoryRoot).TrimEnd('\') + '\'
+    $ownedNames = @('dotnet.exe', 'testhost.exe', 'testhost.x86.exe', 'vstest.console.exe')
+    foreach ($snapshot in @(Get-FoundationRepositoryOwnedTestProcesses $RepositoryRoot)) {
+        $current = Get-CimInstance -ClassName Win32_Process -Filter "ProcessId = $($snapshot.ProcessId)"
+        if ($null -ne $current -and
+            $current.Name -in $ownedNames -and
+            -not [string]::IsNullOrWhiteSpace($current.CommandLine) -and
+            $current.CommandLine.IndexOf($repositoryNeedle, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+            Stop-Process -Id $current.ProcessId -Force
+        }
+    }
+
+    $remaining = @(Get-FoundationRepositoryOwnedTestProcesses $RepositoryRoot)
+    if ($remaining.Count -ne 0) {
+        throw "Repository-owned test-process cleanup is incomplete: $($remaining.ProcessId -join ',')."
+    }
+    0
+}
+
+function Invoke-FoundationDotNetCommand(
+    [string]$RepositoryRoot,
+    [string[]]$ArgumentList,
+    [string]$Name
+) {
+    try {
+        Invoke-FoundationCheckedCommand 'dotnet' $ArgumentList "$Name command" | Out-Null
+    }
+    finally {
+        $survivors = Stop-FoundationRepositoryOwnedTestProcess $RepositoryRoot
+        Write-Host "Repository-owned dotnet/testhost/vstest processes remaining after ${Name}: $survivors"
+    }
+}
+
+function Get-FoundationTrxCount([string]$Path, [string]$Name) {
+    [xml]$document = [IO.File]::ReadAllText($Path)
+    $counters = $document.SelectSingleNode("//*[local-name()='Counters']")
+    if ($null -eq $counters -or $null -eq $counters.Attributes[$Name]) {
+        throw "The $Name counter is absent from $Path"
+    }
+    [int]$counters.Attributes[$Name].Value
+}
+
 function Get-FoundationFileSha256([string]$Path) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
         throw "Required evidence file is missing: $Path"

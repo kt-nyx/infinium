@@ -13,7 +13,6 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 . (Join-Path $PSScriptRoot 'frontend-foundation-evidence.ps1')
-$repositoryNeedle = $repositoryRoot.TrimEnd('\') + '\'
 $foundationRoots = @(Get-ChildItem -LiteralPath (Join-Path $repositoryRoot 'docs/plans/transitions') -Directory -Recurse |
     Where-Object { $_.Name -eq 'frontend-application-foundation' })
 if ($foundationRoots.Count -ne 1) { throw 'The exact frontend application foundation planning root could not be resolved.' }
@@ -23,65 +22,18 @@ $artifactRoot = Join-Path $repositoryRoot 'artifacts/frontend-foundation-accepta
 $acceptanceRunId = [Guid]::NewGuid().ToString('N')
 $runStartedAt = [DateTimeOffset]::UtcNow
 
-function Invoke-Checked([string]$FileName, [string[]]$ArgumentList) {
-    $commandOutput = @(& $FileName @ArgumentList 2>&1)
-    $exitCode = $LASTEXITCODE
-    $commandOutput | ForEach-Object { Write-Host $_ }
-    if ($exitCode -ne 0) { throw "Acceptance command failed with exit code ${exitCode}: $FileName $($ArgumentList -join ' ')" }
-    $commandOutput
-}
-
-function Get-RepositoryOwnedTestProcess {
-    $ownedNames = @('dotnet.exe', 'testhost.exe', 'testhost.x86.exe', 'vstest.console.exe')
-    @(Get-CimInstance -ClassName Win32_Process | Where-Object {
-        $_.Name -in $ownedNames -and -not [string]::IsNullOrWhiteSpace($_.CommandLine) -and
-        $_.CommandLine.IndexOf($repositoryNeedle, [StringComparison]::OrdinalIgnoreCase) -ge 0
-    })
-}
-
-function Stop-RepositoryOwnedTestProcess {
-    $owned = @(Get-RepositoryOwnedTestProcess)
-    foreach ($snapshot in $owned) {
-        $current = Get-CimInstance -ClassName Win32_Process -Filter "ProcessId = $($snapshot.ProcessId)"
-        if ($null -ne $current -and
-            $current.Name -in @('dotnet.exe', 'testhost.exe', 'testhost.x86.exe', 'vstest.console.exe') -and
-            -not [string]::IsNullOrWhiteSpace($current.CommandLine) -and
-            $current.CommandLine.IndexOf($repositoryNeedle, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
-            Stop-Process -Id $current.ProcessId -Force
-        }
-    }
-    $remaining = @(Get-RepositoryOwnedTestProcess)
-    if ($remaining.Count -ne 0) { throw "Repository-owned test-process cleanup is incomplete: $($remaining.ProcessId -join ',')." }
-    0
-}
-
-function Invoke-DotNetChecked([string[]]$ArgumentList, [string]$Name) {
-    try { Invoke-Checked 'dotnet' $ArgumentList | Out-Null }
-    finally {
-        $survivors = Stop-RepositoryOwnedTestProcess
-        Write-Host "Repository-owned dotnet/testhost/vstest processes remaining after ${Name}: $survivors"
-    }
-}
-
-function Get-TrxCount([string]$Path, [string]$Name) {
-    [xml]$document = [IO.File]::ReadAllText($Path)
-    $counters = $document.SelectSingleNode("//*[local-name()='Counters']")
-    if ($null -eq $counters -or $null -eq $counters.Attributes[$Name]) { throw "The $Name counter is absent from $Path" }
-    [int]$counters.Attributes[$Name].Value
-}
-
 function Invoke-TestBatch([string]$Name, [string]$Project, [string[]]$FullyQualifiedNames) {
     $selected = @($FullyQualifiedNames | Sort-Object -Unique)
     $trxName = $Name + '-' + $acceptanceRunId + '.trx'
     $trxPath = Join-Path $artifactRoot $trxName
     $filter = ($selected | ForEach-Object { 'FullyQualifiedName=' + $_ }) -join '|'
     try {
-        Invoke-Checked 'dotnet' @(
+        Invoke-FoundationCheckedCommand 'dotnet' @(
             'test', $Project, '-c', $Configuration, '--no-build', '--no-restore', '--nologo',
-            '--filter', $filter, '--logger', "trx;LogFileName=$trxName", '--results-directory', $artifactRoot) | Out-Null
+            '--filter', $filter, '--logger', "trx;LogFileName=$trxName", '--results-directory', $artifactRoot) 'Acceptance test batch' | Out-Null
     }
     finally {
-        $survivors = Stop-RepositoryOwnedTestProcess
+        $survivors = Stop-FoundationRepositoryOwnedTestProcess $repositoryRoot
         Write-Host "Repository-owned dotnet/testhost/vstest processes remaining after ${Name}: $survivors"
     }
     [pscustomobject][ordered]@{
@@ -91,10 +43,10 @@ function Invoke-TestBatch([string]$Name, [string]$Project, [string[]]$FullyQuali
         selected_tests = $selected
         trx_path = $trxPath.Substring($repositoryRoot.Length + 1).Replace('\', '/')
         trx_sha256 = Get-FoundationFileSha256 $trxPath
-        passed = Get-TrxCount $trxPath 'passed'
-        failed = Get-TrxCount $trxPath 'failed'
-        skipped = Get-TrxCount $trxPath 'notExecuted'
-        total = Get-TrxCount $trxPath 'total'
+        passed = Get-FoundationTrxCount $trxPath 'passed'
+        failed = Get-FoundationTrxCount $trxPath 'failed'
+        skipped = Get-FoundationTrxCount $trxPath 'notExecuted'
+        total = Get-FoundationTrxCount $trxPath 'total'
         tests = @(Get-FoundationTrxResults $trxPath)
     }
 }
@@ -128,7 +80,7 @@ try {
     $integrationProject = Join-Path $repositoryRoot 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj'
     $desktopProject = Join-Path $repositoryRoot 'tests/Infinium.DesktopTests/Infinium.DesktopTests.csproj'
     foreach ($project in @($contractProject, $integrationProject, $desktopProject)) {
-        Invoke-DotNetChecked @('build', $project, '-c', $Configuration, '--no-restore', '--nologo') ([IO.Path]::GetFileNameWithoutExtension($project) + '-build')
+        Invoke-FoundationDotNetCommand $repositoryRoot @('build', $project, '-c', $Configuration, '--no-restore', '--nologo') ([IO.Path]::GetFileNameWithoutExtension($project) + '-build')
     }
     $contractAuthorityNames = @(
         'Infinium.Tests.ApplicationFoundationAuthorityContractTests.IntegratedAcceptanceWorkflowIsExactOfflineAndPreservesNativeOnlyAuthority',
@@ -141,10 +93,10 @@ try {
         Invoke-TestBatch 'contract-authority' $contractProject @($contractAuthorityNames + $contractProofNames)
         Invoke-TestBatch 'native-integrated-workflow' $integrationProject $nativeProofNames)
 
-    Invoke-Checked 'powershell' @(
+    Invoke-FoundationCheckedCommand 'powershell' @(
         '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $repositoryRoot 'eng/qualify-desktop.ps1'),
         '-Configuration', $Configuration, '-ExpectedCandidateCommit', $ExpectedCandidateCommit,
-        '-ExpectedCandidateTree', $ExpectedCandidateTree, '-AcceptanceRunId', $acceptanceRunId) | Out-Null
+        '-ExpectedCandidateTree', $ExpectedCandidateTree, '-AcceptanceRunId', $acceptanceRunId) 'Desktop qualification' | Out-Null
 
     $desktopSummaryPath = Join-Path $repositoryRoot 'artifacts/desktop-qualification/summary.json'
     $desktopSummary = Get-Content -LiteralPath $desktopSummaryPath -Raw | ConvertFrom-Json
@@ -244,7 +196,7 @@ try {
     }
     $overallResult = 'passed'
 
-    $finalSurvivors = Stop-RepositoryOwnedTestProcess
+    $finalSurvivors = Stop-FoundationRepositoryOwnedTestProcess $repositoryRoot
     $endCandidate = Assert-FoundationCandidateSnapshot $repositoryRoot $ExpectedCandidateCommit $ExpectedCandidateTree 'acceptance-end'
     $receipt = [ordered]@{
         schema = 'infinium.frontend-foundation-acceptance-receipt/v2'
@@ -311,7 +263,7 @@ try {
 }
 finally {
     try {
-        $cleanupSurvivors = Stop-RepositoryOwnedTestProcess
+        $cleanupSurvivors = Stop-FoundationRepositoryOwnedTestProcess $repositoryRoot
         Write-Host "Repository-owned dotnet/testhost/vstest processes remaining after acceptance cleanup: $cleanupSurvivors"
     }
     finally { Pop-Location }
